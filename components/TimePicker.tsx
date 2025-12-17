@@ -13,16 +13,39 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   const [isOpen, setIsOpen] = useState(false);
   const [hours, setHours] = useState<string>('10');
   const [minutes, setMinutes] = useState<string>('00');
+  const [isPM, setIsPM] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const isUpdatingFromParent = useRef(false);
+
+  // Convert 24-hour to 12-hour format for display
+  const convert24To12 = (h: string): { hours12: string; isPM: boolean } => {
+    const hours24 = parseInt(h);
+    const isPM = hours24 >= 12;
+    let hours12 = hours24 % 12;
+    if (hours12 === 0) hours12 = 12;
+    return { hours12: String(hours12).padStart(2, '0'), isPM };
+  };
+
+  // Convert 12-hour to 24-hour format for storage
+  const convert12To24 = (h: string, pm: boolean): string => {
+    let hours24 = parseInt(h);
+    if (pm && hours24 !== 12) {
+      hours24 += 12;
+    } else if (!pm && hours24 === 12) {
+      hours24 = 0;
+    }
+    return String(hours24).padStart(2, '0');
+  };
 
   // Parse the initial value
   useEffect(() => {
     if (value) {
       const [h, m] = value.split(':');
+      const { hours12, isPM: ispm } = convert24To12(h);
       isUpdatingFromParent.current = true;
-      setHours(h);
+      setHours(hours12);
       setMinutes(m);
+      setIsPM(ispm);
     }
   }, [value]);
 
@@ -38,22 +61,24 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleTimeChange = (h: string, m: string) => {
-    const formattedHours = String(parseInt(h) || 0).padStart(2, '0');
+  const handleTimeChange = (h: string, m: string, pm: boolean = isPM) => {
     const formattedMinutes = String(parseInt(m) || 0).padStart(2, '0');
-    const timeValue = `${formattedHours}:${formattedMinutes}`;
+    const hours24 = convert12To24(h, pm);
+    const timeValue = `${hours24}:${formattedMinutes}`;
     onChange(timeValue);
   };
 
   const incrementHours = () => {
-    const newHours = (parseInt(hours) + 1) % 24;
+    let newHours = parseInt(hours) + 1;
+    if (newHours > 12) newHours = 1;
     const formattedHours = String(newHours).padStart(2, '0');
     setHours(formattedHours);
     handleTimeChange(formattedHours, minutes);
   };
 
   const decrementHours = () => {
-    const newHours = (parseInt(hours) - 1 + 24) % 24;
+    let newHours = parseInt(hours) - 1;
+    if (newHours < 1) newHours = 12;
     const formattedHours = String(newHours).padStart(2, '0');
     setHours(formattedHours);
     handleTimeChange(formattedHours, minutes);
@@ -77,7 +102,8 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
     let val = e.target.value.replace(/\D/g, '');
     if (val.length > 2) val = val.slice(0, 2);
     const numVal = parseInt(val) || 0;
-    if (numVal > 23) val = '23';
+    if (numVal > 12) val = '12';
+    if (numVal < 1 && val !== '') val = '1';
     const formattedVal = val.padStart(2, '0');
     setHours(formattedVal);
     handleTimeChange(formattedVal, minutes);
@@ -106,7 +132,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
         className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)] flex items-center justify-between"
         style={{ padding: '10px 12px' }}
       >
-        <span className="text-sm font-medium">{hours}:{minutes}</span>
+        <span className="text-sm font-medium">{hours}:{minutes} {isPM ? 'PM' : 'AM'}</span>
         <ChevronUp
           size={18}
           className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
@@ -177,6 +203,38 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
                 </button>
                 <span className="text-xs text-[var(--text-muted)] mt-1">minutes</span>
               </div>
+            </div>
+
+            {/* AM/PM Toggle */}
+            <div className="flex gap-2 justify-center mt-4 border-t border-[var(--border)] pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPM(false);
+                  handleTimeChange(hours, minutes, false);
+                }}
+                className={`px-3 py-1 rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
+                  !isPM
+                    ? 'bg-[var(--accent)] text-white'
+                    : 'bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
+                }`}
+              >
+                AM
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPM(true);
+                  handleTimeChange(hours, minutes, true);
+                }}
+                className={`px-3 py-1 rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
+                  isPM
+                    ? 'bg-[var(--accent)] text-white'
+                    : 'bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
+                }`}
+              >
+                PM
+              </button>
             </div>
           </div>
         </div>
