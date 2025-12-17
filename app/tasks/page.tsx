@@ -8,7 +8,6 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import Badge from '@/components/ui/Badge';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
 
 export default function TasksPage() {
@@ -163,8 +162,9 @@ export default function TasksPage() {
 
             {/* Add Task Form */}
             {showForm && (
-            <Card>
-              <form onSubmit={handleSubmit} className="space-y-5" style={{ paddingBottom: '20px' }}>
+            <div style={{ marginBottom: '24px' }}>
+              <Card>
+                <form onSubmit={handleSubmit} className="space-y-5">
                 <Input
                   label="Task title"
                   value={formData.title}
@@ -207,7 +207,8 @@ export default function TasksPage() {
                   </Button>
                 </div>
               </form>
-            </Card>
+              </Card>
+            </div>
           )}
 
           {/* Task List */}
@@ -216,20 +217,36 @@ export default function TasksPage() {
               <div className="space-y-4 divide-y divide-[var(--border)]">
                 {filtered.map((t) => {
                   const course = courses.find((c) => c.id === t.courseId);
+                  const dueHours = t.dueAt ? new Date(t.dueAt).getHours() : null;
+                  const dueMinutes = t.dueAt ? new Date(t.dueAt).getMinutes() : null;
                   const dueTime = t.dueAt ? new Date(t.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
                   const isOverdueTask = t.dueAt && isOverdue(t.dueAt) && t.status === 'open';
-                  const shouldShowTime = dueTime && !dueTime.startsWith('23:59');
+                  const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
                   return (
-                    <div key={t.id} className="py-5 pb-6 first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors">
+                    <div key={t.id} style={{ paddingTop: '16px', paddingBottom: '20px', opacity: t.status === 'done' ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors border-b border-[var(--border)] last:border-b-0">
                       <input
                         type="checkbox"
                         checked={t.status === 'done'}
                         onChange={() => toggleTaskDone(t.id)}
-                        className="w-5 h-5 cursor-pointer flex-shrink-0 appearance-none border-2 border-[var(--border)] rounded-sm checked:bg-[var(--accent)] checked:border-[var(--accent)] transition-colors"
+                        style={{
+                          appearance: 'none',
+                          width: '20px',
+                          height: '20px',
+                          border: t.status === 'done' ? 'none' : '2px solid var(--border)',
+                          borderRadius: '4px',
+                          backgroundColor: t.status === 'done' ? '#4a7c59' : 'transparent',
+                          cursor: 'pointer',
+                          flexShrink: 0,
+                          backgroundImage: t.status === 'done' ? 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22white%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z%22 clip-rule=%22evenodd%22 /%3E%3C/svg%3E")' : 'none',
+                          backgroundSize: '100%',
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'center',
+                          transition: 'all 0.3s ease'
+                        }}
                         title={t.status === 'done' ? 'Mark as incomplete' : 'Mark as complete'}
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start gap-2">
+                        <div className="flex items-center gap-1">
                           <div
                             className={`text-sm font-medium ${
                               t.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'
@@ -237,7 +254,7 @@ export default function TasksPage() {
                           >
                             {t.title}
                           </div>
-                          {isOverdueTask && <Badge variant="danger">Overdue</Badge>}
+                          {isOverdueTask && <span style={{ display: 'inline-block', width: '6px', height: '6px', backgroundColor: 'var(--danger)', borderRadius: '50%', marginLeft: '4px' }} title="Overdue"></span>}
                         </div>
                         {t.notes && (
                           <div className="text-xs text-[var(--text-muted)] mt-1">
