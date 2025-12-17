@@ -46,23 +46,23 @@ export function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-semibold text-[var(--text)] mb-3">
+        <div className="text-center" style={{ marginBottom: '40px' }}>
+          <h1 className="text-3xl font-semibold text-[var(--text)]" style={{ marginBottom: '24px' }}>
             BYU Survival Tool
           </h1>
-          <p className="text-[var(--text-muted)]">Sign in to your account</p>
+          <p className="text-[var(--text-muted)]" style={{ marginBottom: '24px' }}>Sign in to your account</p>
         </div>
 
         <Card>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {error && (
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
                 <p className="text-sm text-red-500">{error}</p>
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-[var(--text)] mb-2">
+            <div style={{ marginBottom: '12px' }}>
+              <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
                 Email
               </label>
               <Input
@@ -74,8 +74,8 @@ export function LoginForm() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[var(--text)] mb-2">
+            <div style={{ marginBottom: '12px' }}>
+              <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
                 Password
               </label>
               <Input
@@ -87,7 +87,7 @@ export function LoginForm() {
               />
             </div>
 
-            <div className="pt-2 pb-2">
+            <div style={{ paddingTop: '16px', paddingBottom: '16px' }}>
               <Button
                 type="submit"
                 variant="primary"
@@ -100,7 +100,7 @@ export function LoginForm() {
             </div>
           </form>
 
-          <div className="mt-8 text-center">
+          <div className="text-center" style={{ marginTop: '32px' }}>
             <p className="text-sm text-[var(--text-muted)]">
               Don't have an account?{' '}
               <Link
