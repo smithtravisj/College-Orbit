@@ -6,6 +6,31 @@
   box-sizing: border-box;
 }
 
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --primary-light: #3b82f6;
+  --accent: #0ea5e9;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --bg-light: #f8fafc;
+  --bg-white: #ffffff;
+  --text-dark: #0f172a;
+  --text-gray: #64748b;
+  --border-light: #e2e8f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-light: #0f172a;
+    --bg-white: #1e293b;
+    --text-dark: #f1f5f9;
+    --text-gray: #cbd5e1;
+    --border-light: #334155;
+  }
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -16,21 +41,16 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #fafafa;
-  color: #333;
-}
-
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #1a1a1a;
-    color: #e0e0e0;
-  }
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  line-height: 1.6;
 }
 
 button {
   cursor: pointer;
   font-size: inherit;
   font-family: inherit;
+  transition: all 0.2s ease;
 }
 
 input,
@@ -42,8 +62,100 @@ select {
 
 /* Accessibility */
 :focus-visible {
-  outline: 2px solid #0066cc;
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+/* Card styles */
+.card {
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-light);
+}
+
+/* Button styles */
+.btn {
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+}
+
+.btn-secondary {
+  background: var(--bg-light);
+  color: var(--text-dark);
+  border: 1px solid var(--border-light);
+}
+
+.btn-secondary:hover {
+  background: var(--border-light);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+/* Input styles */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="datetime-local"],
+input[type="date"],
+input[type="time"],
+input[type="number"],
+input[type="url"],
+textarea,
+select {
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  color: var(--text-dark);
+  padding: 0.625rem 0.875rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="datetime-local"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="number"]:focus,
+input[type="url"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 /* Toast styles */
@@ -56,21 +168,15 @@ select {
 }
 
 .toast {
-  background: #333;
-  color: white;
+  background: var(--text-dark);
+  color: var(--bg-light);
   padding: 1rem 1.5rem;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  margin-bottom: 0.5rem;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  margin-bottom: 0.75rem;
   animation: slideIn 0.3s ease-out;
   pointer-events: auto;
-}
-
-@media (prefers-color-scheme: dark) {
-  .toast {
-    background: #2a2a2a;
-    color: #e0e0e0;
-  }
+  border-left: 4px solid var(--success);
 }
 
 @keyframes slideIn {

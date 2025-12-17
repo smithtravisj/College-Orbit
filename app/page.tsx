@@ -79,7 +79,10 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 p-4 md:p-8">
-      <h2 className="text-2xl font-bold">Dashboard</h2>
+      <div>
+        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h2>
+        <p className="mt-1 text-slate-600 dark:text-slate-400">Welcome back! Here's what's happening today.</p>
+      </div>
 
       {/* Grid Layout */}
       <div className="grid gap-6 md:grid-cols-2">
