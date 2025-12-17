@@ -12,7 +12,7 @@ interface TimePickerProps {
 export default function TimePicker({ value, onChange, label }: TimePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hours, setHours] = useState<string>('10');
-  const [minutes, setMinutes] = useState<string>('00');
+  const [minutes, setMinutes] = useState<string>('0');
   const [isPM, setIsPM] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const isUpdatingFromParent = useRef(false);
@@ -104,9 +104,8 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
     const numVal = parseInt(val) || 0;
     if (numVal > 12) val = '12';
     if (numVal < 1 && val !== '') val = '1';
-    const formattedVal = val.padStart(2, '0');
-    setHours(formattedVal);
-    handleTimeChange(formattedVal, minutes);
+    setHours(val);
+    handleTimeChange(val.padStart(2, '0'), minutes.padStart(2, '0'));
   };
 
   const handleMinuteInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,9 +113,8 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
     if (val.length > 2) val = val.slice(0, 2);
     const numVal = parseInt(val) || 0;
     if (numVal > 59) val = '59';
-    const formattedVal = val.padStart(2, '0');
-    setMinutes(formattedVal);
-    handleTimeChange(hours, formattedVal);
+    setMinutes(val);
+    handleTimeChange(hours, val.padStart(2, '0'));
   };
 
   return (
@@ -132,7 +130,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
         className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)] flex items-center justify-between"
         style={{ padding: '10px 12px' }}
       >
-        <span className="text-sm font-medium">{hours}:{minutes} {isPM ? 'PM' : 'AM'}</span>
+        <span className="text-sm font-medium">{hours.padStart(2, '0')}:{minutes.padStart(2, '0')} {isPM ? 'PM' : 'AM'}</span>
         <ChevronUp
           size={18}
           className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
@@ -158,7 +156,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
                 </button>
                 <input
                   type="text"
-                  value={hours}
+                  value={hours.padStart(2, '0')}
                   onChange={handleHourInput}
                   className="w-12 text-center bg-[var(--panel)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] text-sm font-semibold"
                   style={{ padding: '6px' }}
@@ -188,7 +186,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
                 </button>
                 <input
                   type="text"
-                  value={minutes}
+                  value={minutes.padStart(2, '0')}
                   onChange={handleMinuteInput}
                   className="w-12 text-center bg-[var(--panel)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] text-sm font-semibold"
                   style={{ padding: '6px' }}
