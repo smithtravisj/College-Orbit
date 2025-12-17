@@ -26,14 +26,16 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)] px-4 py-6">
-        <div className="mb-8 flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg bg-[var(--accent-2)] flex items-center justify-center flex-shrink-0">
-            <span className="text-sm font-bold text-[var(--text)]">B</span>
+      <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)] px-5 py-8">
+        <div className="mb-12 flex items-center gap-4">
+          <div className="h-11 w-11 rounded-[var(--radius-control)] bg-[var(--accent)] flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
           </div>
-          <h1 className="text-base font-semibold text-[var(--text)] leading-tight">BYU Survival Tool</h1>
+          <h1 className="text-sm font-bold text-[var(--text)] leading-tight">BYU Survival Tool</h1>
         </div>
-        <div className="space-y-2 flex-1">
+        <div className="space-y-3 flex-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -42,7 +44,7 @@ export default function Navigation() {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
-                className={`relative flex items-center gap-3 h-11 px-4 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
+                className={`relative flex items-center gap-4 h-11 px-4 py-2.5 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   isActive
                     ? 'text-[var(--text)] bg-[var(--accent-2)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
