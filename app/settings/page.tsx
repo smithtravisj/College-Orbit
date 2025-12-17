@@ -115,7 +115,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Download a backup of all your data as a JSON file
                 </p>
-                <Button variant="primary" size="lg" onClick={handleExport} style={{ marginBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
+                <Button size="lg" onClick={handleExport} style={{ marginBottom: '16px', paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#3b5bdb', color: 'white' }}>
                   <Download size={18} />
                   Export Data
                 </Button>
@@ -161,7 +161,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Permanently delete all your data. This action cannot be undone.
                 </p>
-                <Button variant="danger" onClick={handleDeleteAllData}>
+                <Button onClick={handleDeleteAllData} style={{ backgroundColor: '#b71c1c', color: 'white' }}>
                   <Trash2 size={18} />
                   Delete All Data
                 </Button>

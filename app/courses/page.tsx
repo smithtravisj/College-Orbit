@@ -36,7 +36,7 @@ export default function CoursesPage() {
         subtitle="Manage your classes"
         actions={
           !isAdding && !editingId && (
-            <Button variant="primary" size="md" onClick={() => setIsAdding(true)}>
+            <Button variant="secondary" size="md" onClick={() => setIsAdding(true)}>
               <Plus size={18} />
               New Course
             </Button>
