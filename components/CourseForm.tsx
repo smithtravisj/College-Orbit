@@ -45,7 +45,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
       code: form.code,
       name: form.name,
       term: form.term,
-      meetingTimes: form.meetingTimes.filter((mt) => mt.location),
+      meetingTimes: form.meetingTimes.filter((mt) => mt.days && mt.days.length > 0 && mt.start && mt.end),
       links: form.links
         .filter((l) => l.label && l.url)
         .map((l) => ({

@@ -48,17 +48,17 @@ export default function CourseList({ courses, onEdit }: CourseListProps) {
                   {course.name}
                 </div>
               )}
-              <div className="flex items-center gap-3 mt-2 flex-wrap">
+              <div className="flex flex-col gap-2 mt-2">
                 {course.meetingTimes && course.meetingTimes.length > 0 && (
                   <div className="flex flex-col gap-0.5 text-xs text-[var(--text-muted)]">
                     {course.meetingTimes.map((mt, idx) => (
-                      <span key={idx}>{mt.days.join(', ')} {formatTime12Hour(mt.start)} – {formatTime12Hour(mt.end)}</span>
+                      <span key={idx}>{mt.days.join(', ')} {formatTime12Hour(mt.start)} – {formatTime12Hour(mt.end)}{mt.location && ` at ${mt.location}`}</span>
                     ))}
                   </div>
                 )}
 
                 {course.links && course.links.length > 0 && (
-                  <>
+                  <div className="flex gap-2 flex-wrap">
                     {course.links.map((link, idx) => (
                       <a
                         key={idx}
@@ -70,7 +70,7 @@ export default function CourseList({ courses, onEdit }: CourseListProps) {
                         {link.label}
                       </a>
                     ))}
-                  </>
+                  </div>
                 )}
               </div>
             </div>
