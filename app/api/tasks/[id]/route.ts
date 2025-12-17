@@ -65,16 +65,34 @@ export async function PATCH(
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
+    // Handle dueAt update with proper null handling
+    let updateDueAt = existingTask.dueAt;
+    if ('dueAt' in data) {
+      if (data.dueAt) {
+        try {
+          updateDueAt = new Date(data.dueAt);
+          if (isNaN(updateDueAt.getTime())) {
+            updateDueAt = null;
+          }
+        } catch (dateError) {
+          updateDueAt = null;
+        }
+      } else {
+        updateDueAt = null;
+      }
+    }
+
     const task = await prisma.task.update({
       where: { id },
       data: {
-        title: data.title ?? existingTask.title,
-        courseId: data.courseId ?? existingTask.courseId,
-        dueAt: data.dueAt ? new Date(data.dueAt) : existingTask.dueAt,
-        pinned: data.pinned ?? existingTask.pinned,
-        checklist: data.checklist ?? existingTask.checklist,
-        notes: data.notes ?? existingTask.notes,
-        status: data.status ?? existingTask.status,
+        title: 'title' in data ? data.title : existingTask.title,
+        courseId: 'courseId' in data ? data.courseId : existingTask.courseId,
+        dueAt: 'dueAt' in data ? updateDueAt : existingTask.dueAt,
+        pinned: 'pinned' in data ? data.pinned : existingTask.pinned,
+        checklist: 'checklist' in data ? data.checklist : existingTask.checklist,
+        notes: 'notes' in data ? data.notes : existingTask.notes,
+        link: 'link' in data ? data.link : existingTask.link,
+        status: 'status' in data ? data.status : existingTask.status,
       },
     });
 

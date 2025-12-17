@@ -60,6 +60,7 @@ export default function CaptureInput() {
         pinned: false,
         checklist: [],
         notes: '',
+        link: null,
         status: 'open',
       });
     }

@@ -27,6 +27,7 @@ export default function Dashboard() {
     dueDate: '',
     dueTime: '',
     notes: '',
+    link: '',
   });
   const [deadlineFormData, setDeadlineFormData] = useState({
     title: '',
@@ -55,11 +56,32 @@ export default function Dashboard() {
     e.preventDefault();
     if (!taskFormData.title.trim()) return;
 
-    let dueAt = null;
-    if (taskFormData.dueDate) {
-      const dateTimeString = taskFormData.dueTime ? `${taskFormData.dueDate}T${taskFormData.dueTime}` : `${taskFormData.dueDate}T23:59`;
-      dueAt = new Date(dateTimeString).toISOString();
+    let dueAt: string | null = null;
+    // Only set dueAt if we have a valid date string (not empty, not null, not whitespace)
+    if (taskFormData.dueDate && taskFormData.dueDate.trim()) {
+      try {
+        // If date is provided but time is not, default to 11:59 PM
+        const dateTimeString = taskFormData.dueTime ? `${taskFormData.dueDate}T${taskFormData.dueTime}` : `${taskFormData.dueDate}T23:59`;
+        const dateObj = new Date(dateTimeString);
+        // Verify it's a valid date and not the epoch
+        if (dateObj.getTime() > 0) {
+          dueAt = dateObj.toISOString();
+        }
+      } catch (err) {
+        // If date parsing fails, leave dueAt as null
+        console.error('Date parsing error:', err);
+      }
+    } else {
+      // If time is provided but date is not, ignore the time
+      taskFormData.dueTime = '';
     }
+
+    // Handle link - normalize empty string to null
+    const link = taskFormData.link?.trim() ? (
+      taskFormData.link.startsWith('http://') || taskFormData.link.startsWith('https://')
+        ? taskFormData.link
+        : `https://${taskFormData.link}`
+    ) : null;
 
     if (editingTaskId) {
       await updateTask(editingTaskId, {
@@ -67,6 +89,7 @@ export default function Dashboard() {
         courseId: taskFormData.courseId || null,
         dueAt,
         notes: taskFormData.notes,
+        link,
       });
       setEditingTaskId(null);
     } else {
@@ -77,11 +100,12 @@ export default function Dashboard() {
         pinned: false,
         checklist: [],
         notes: taskFormData.notes,
+        link,
         status: 'open',
       });
     }
 
-    setTaskFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '' });
+    setTaskFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', link: '' });
     setShowTaskForm(false);
   };
 
@@ -103,13 +127,14 @@ export default function Dashboard() {
       dueDate: dateStr,
       dueTime: timeStr,
       notes: task.notes,
+      link: task.link || '',
     });
     setShowTaskForm(true);
   };
 
   const cancelEditTask = () => {
     setEditingTaskId(null);
-    setTaskFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '' });
+    setTaskFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', link: '' });
     setShowTaskForm(false);
   };
 
@@ -537,6 +562,13 @@ export default function Dashboard() {
                       onChange={(e) => setTaskFormData({ ...taskFormData, dueTime: e.target.value })}
                     />
                   </div>
+                  <Input
+                    label="Link (optional)"
+                    type="text"
+                    value={taskFormData.link}
+                    onChange={(e) => setTaskFormData({ ...taskFormData, link: e.target.value })}
+                    placeholder="example.com or https://..."
+                  />
                   <div className="flex gap-3" style={{ paddingTop: '8px' }}>
                     <Button variant="primary" type="submit" size="sm">
                       {editingTaskId ? 'Save Changes' : 'Add Task'}
@@ -638,6 +670,16 @@ export default function Dashboard() {
                             <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
                               {course.code}
                             </span>
+                          )}
+                          {t.link && (
+                            <a
+                              href={t.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
+                            >
+                              {extractDomain(t.link)}
+                            </a>
                           )}
                         </div>
                       </div>

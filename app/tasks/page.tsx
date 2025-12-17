@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
-import { isToday, formatDate, isOverdue } from '@/lib/utils';
+import { isToday, formatDate, isOverdue, extractDomain } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -22,6 +22,7 @@ export default function TasksPage() {
     dueDate: '',
     dueTime: '',
     notes: '',
+    link: '',
   });
   const [filter, setFilter] = useState('all');
 
@@ -44,11 +45,32 @@ export default function TasksPage() {
     e.preventDefault();
     if (!formData.title.trim()) return;
 
-    let dueAt = null;
-    if (formData.dueDate) {
-      const dateTimeString = formData.dueTime ? `${formData.dueDate}T${formData.dueTime}` : `${formData.dueDate}T23:59`;
-      dueAt = new Date(dateTimeString).toISOString();
+    let dueAt: string | null = null;
+    // Only set dueAt if we have a valid date string (not empty, not null, not whitespace)
+    if (formData.dueDate && formData.dueDate.trim()) {
+      try {
+        // If date is provided but time is not, default to 11:59 PM
+        const dateTimeString = formData.dueTime ? `${formData.dueDate}T${formData.dueTime}` : `${formData.dueDate}T23:59`;
+        const dateObj = new Date(dateTimeString);
+        // Verify it's a valid date and not the epoch
+        if (dateObj.getTime() > 0) {
+          dueAt = dateObj.toISOString();
+        }
+      } catch (err) {
+        // If date parsing fails, leave dueAt as null
+        console.error('Date parsing error:', err);
+      }
+    } else {
+      // If time is provided but date is not, ignore the time
+      formData.dueTime = '';
     }
+
+    // Handle link - normalize empty string to null
+    const link = formData.link?.trim() ? (
+      formData.link.startsWith('http://') || formData.link.startsWith('https://')
+        ? formData.link
+        : `https://${formData.link}`
+    ) : null;
 
     if (editingId) {
       await updateTask(editingId, {
@@ -56,6 +78,7 @@ export default function TasksPage() {
         courseId: formData.courseId || null,
         dueAt,
         notes: formData.notes,
+        link,
       });
       setEditingId(null);
     } else {
@@ -66,11 +89,12 @@ export default function TasksPage() {
         pinned: false,
         checklist: [],
         notes: formData.notes,
+        link,
         status: 'open',
       });
     }
 
-    setFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '' });
+    setFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', link: '' });
     setShowForm(false);
   };
 
@@ -92,13 +116,14 @@ export default function TasksPage() {
       dueDate: dateStr,
       dueTime: timeStr,
       notes: task.notes,
+      link: task.link || '',
     });
     setShowForm(true);
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '' });
+    setFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', link: '' });
     setShowForm(false);
   };
 
@@ -215,6 +240,13 @@ export default function TasksPage() {
                     onChange={(e) => setFormData({ ...formData, dueTime: e.target.value })}
                   />
                 </div>
+                <Input
+                  label="Link (optional)"
+                  type="text"
+                  value={formData.link}
+                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                  placeholder="example.com or https://..."
+                />
                 <div className="flex gap-3" style={{ paddingTop: '12px' }}>
                   <Button variant="primary" type="submit">
                     {editingId ? 'Save Changes' : 'Add Task'}
@@ -313,6 +345,16 @@ export default function TasksPage() {
                             <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
                               {course.code}
                             </span>
+                          )}
+                          {t.link && (
+                            <a
+                              href={t.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
+                            >
+                              {extractDomain(t.link)}
+                            </a>
                           )}
                         </div>
                       </div>

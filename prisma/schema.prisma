@@ -75,6 +75,7 @@ model Task {
   pinned        Boolean   @default(false)
   checklist     Json      @default("[]")
   notes         String    @default("")
+  link          String?
   status        String    @default("open")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

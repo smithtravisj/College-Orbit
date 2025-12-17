@@ -39,6 +39,7 @@ export interface Task {
     done: boolean;
   }>;
   notes: string;
+  link: string | null;
   status: 'open' | 'done';
   createdAt: string; // ISO datetime
 }

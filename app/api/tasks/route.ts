@@ -38,15 +38,30 @@ export async function POST(req: NextRequest) {
 
     const data = await req.json();
 
+    // Handle dueAt - only convert to Date if it's not null/undefined
+    let dueAt: Date | null = null;
+    if (data.dueAt) {
+      try {
+        dueAt = new Date(data.dueAt);
+        // Validate it's a valid date (not epoch)
+        if (isNaN(dueAt.getTime())) {
+          dueAt = null;
+        }
+      } catch (dateError) {
+        dueAt = null;
+      }
+    }
+
     const task = await prisma.task.create({
       data: {
         userId: session.user.id,
         title: data.title,
         courseId: data.courseId || null,
-        dueAt: data.dueAt ? new Date(data.dueAt) : null,
+        dueAt,
         pinned: data.pinned || false,
         checklist: data.checklist || [],
         notes: data.notes || '',
+        link: data.link || null,
         status: data.status || 'open',
       },
     });
