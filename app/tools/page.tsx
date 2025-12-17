@@ -107,19 +107,34 @@ export default function ToolsPage() {
   };
 
   const calculateGPA = async () => {
-    // First, save all form courses to database
-    for (const course of formCourses) {
+    // First, save/update all form courses to database
+    const updatedCourses = [...formCourses];
+
+    for (let i = 0; i < updatedCourses.length; i++) {
+      const course = updatedCourses[i];
       if (!course.courseName || !course.credits) continue;
 
       const selectedCourse = courses.find((c) => c.name === course.courseName);
 
       if (course.id) {
-        // Already saved, skip
-        continue;
+        // Already saved, update it
+        try {
+          await fetch(`/api/gpa-entries/${course.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              courseName: course.courseName,
+              grade: course.grade,
+              credits: course.credits,
+            }),
+          });
+        } catch (error) {
+          console.error('Error updating GPA entry:', error);
+        }
       } else {
         // New course, save it
         try {
-          await fetch('/api/gpa-entries', {
+          const res = await fetch('/api/gpa-entries', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -129,17 +144,24 @@ export default function ToolsPage() {
               credits: course.credits,
             }),
           });
+
+          if (res.ok) {
+            const { entry } = await res.json();
+            updatedCourses[i] = { ...course, id: entry.id };
+          }
         } catch (error) {
           console.error('Error saving GPA entry:', error);
         }
       }
     }
 
+    setFormCourses(updatedCourses);
+
     // Calculate GPA
     let totalPoints = 0;
     let totalCredits = 0;
 
-    formCourses.forEach((course) => {
+    updatedCourses.forEach((course) => {
       const points = getGradePoints(course.grade, course.gradeType);
       const credits = parseFloat(course.credits) || 0;
       totalPoints += points * credits;
