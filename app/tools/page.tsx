@@ -161,18 +161,36 @@ export default function ToolsPage() {
   const removeCourse = async (index: number) => {
     const course = formCourses[index];
 
-    // If it's a saved course (has an ID), delete from database
-    if (course.id) {
-      try {
-        await fetch(`/api/gpa-entries/${course.id}`, {
-          method: 'DELETE',
-        });
-      } catch (error) {
-        console.error('Error deleting GPA entry:', error);
+    if (index === 0) {
+      // Clear the first row instead of removing it
+      updateCourse(0, 'courseName', '');
+      updateCourse(0, 'grade', 'A');
+      updateCourse(0, 'credits', '3');
+      updateCourse(0, 'gradeType', 'letter');
+      // Delete from database if it's saved
+      if (course.id) {
+        try {
+          await fetch(`/api/gpa-entries/${course.id}`, {
+            method: 'DELETE',
+          });
+        } catch (error) {
+          console.error('Error deleting GPA entry:', error);
+        }
       }
-    }
+    } else {
+      // If it's a saved course (has an ID), delete from database
+      if (course.id) {
+        try {
+          await fetch(`/api/gpa-entries/${course.id}`, {
+            method: 'DELETE',
+          });
+        } catch (error) {
+          console.error('Error deleting GPA entry:', error);
+        }
+      }
 
-    setFormCourses(formCourses.filter((_, i) => i !== index));
+      setFormCourses(formCourses.filter((_, i) => i !== index));
+    }
   };
 
   const updateCourse = (index: number, field: keyof FormCourse, value: string) => {
@@ -275,16 +293,14 @@ export default function ToolsPage() {
                         />
                       </div>
 
-                      {idx > 0 && (
-                        <button
-                          onClick={() => removeCourse(idx)}
-                          className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                          style={{ padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40px' }}
-                          title="Remove course"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => removeCourse(idx)}
+                        className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                        style={{ padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        title="Remove course"
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
                   </div>
                 ))}
