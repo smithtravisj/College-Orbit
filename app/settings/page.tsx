@@ -115,7 +115,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Download a backup of all your data as a JSON file
                 </p>
-                <Button variant="primary" onClick={handleExport} style={{ marginBottom: '16px' }}>
+                <Button variant="primary" size="lg" onClick={handleExport} style={{ marginBottom: '16px' }}>
                   <Download size={18} />
                   Export Data
                 </Button>
