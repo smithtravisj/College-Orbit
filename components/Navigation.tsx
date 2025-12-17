@@ -68,7 +68,7 @@ export default function Navigation() {
 
         {/* Profile and Logout */}
         {session?.user && (
-          <div className="mt-4 pt-4 border-t border-[var(--border)] space-y-2">
+          <div className="mt-4 space-y-2">
             <Link
               href="/profile"
               className="flex items-center gap-3 w-full h-12 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5"
