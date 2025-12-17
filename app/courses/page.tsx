@@ -100,7 +100,7 @@ export default function CoursesPage() {
 
             {/* Courses List */}
             {filteredCourses.length > 0 ? (
-              <CourseList courses={filteredCourses} onEdit={setEditingId} />
+              <CourseList courses={filteredCourses} onEdit={setEditingId} showSemester={termFilter === 'all'} />
             ) : (
               <EmptyState
                 title={termFilter === 'all' ? 'No courses yet' : 'No courses in this term'}

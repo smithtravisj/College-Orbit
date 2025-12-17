@@ -10,6 +10,7 @@ import { Course } from '@/types';
 interface CourseListProps {
   courses: Course[];
   onEdit: (courseId: string) => void;
+  showSemester?: boolean;
 }
 
 const formatTime12Hour = (time24: string): string => {
@@ -20,7 +21,7 @@ const formatTime12Hour = (time24: string): string => {
   return `${hours12}:${String(minutes).padStart(2, '0')} ${ampm}`;
 };
 
-export default function CourseList({ courses, onEdit }: CourseListProps) {
+export default function CourseList({ courses, onEdit, showSemester = false }: CourseListProps) {
   const { deleteCourse } = useAppStore();
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
@@ -47,17 +48,14 @@ export default function CourseList({ courses, onEdit }: CourseListProps) {
             className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors border-b border-[var(--border)] last:border-b-0"
           >
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-medium text-[var(--text)]">{course.code}</h3>
-                {course.term && (
-                  <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
-                    {course.term}
-                  </span>
-                )}
+              <div>
+                <h3 className="text-sm font-medium text-[var(--text)]">
+                  {course.code}{course.name ? ` - ${course.name}` : ''}
+                </h3>
               </div>
-              {course.name && (
+              {showSemester && course.term && (
                 <div className="text-xs text-[var(--text-muted)] mt-1">
-                  {course.name}
+                  {course.term}
                 </div>
               )}
               <div className="flex flex-col gap-2 mt-2">
