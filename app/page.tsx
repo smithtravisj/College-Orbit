@@ -323,7 +323,15 @@ export default function Dashboard() {
                         type="checkbox"
                         checked={t.status === 'done'}
                         onChange={() => {
-                          setToggledTasks(prev => new Set(prev).add(t.id));
+                          setToggledTasks(prev => {
+                            const newSet = new Set(prev);
+                            if (newSet.has(t.id)) {
+                              newSet.delete(t.id);
+                            } else {
+                              newSet.add(t.id);
+                            }
+                            return newSet;
+                          });
                           toggleTaskDone(t.id);
                           setTimeout(() => {
                             setHidingTasks(prev => new Set(prev).add(t.id));
