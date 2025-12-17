@@ -44,7 +44,7 @@ export default function CoursesPage() {
         }
       />
       <div className="bg-[var(--bg)] min-h-screen">
-        <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
+        <div className="page-container space-y-6">
           {isAdding && (
             <Card title="Add Course" padding="lg">
               <CourseForm onClose={() => setIsAdding(false)} />

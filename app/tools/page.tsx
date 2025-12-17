@@ -60,7 +60,7 @@ export default function ToolsPage() {
     <>
       <Header title="Tools" subtitle="Useful utilities for your semester" />
       <div className="bg-[var(--bg)] min-h-screen">
-        <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
+        <div className="page-container space-y-6">
           {/* GPA Calculator */}
           <Card title="GPA Calculator" padding="lg">
             <div className="space-y-4">

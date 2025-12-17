@@ -75,7 +75,7 @@ export default function SettingsPage() {
     <>
       <Header title="Settings" subtitle="Customize your experience" />
       <div className="bg-[var(--bg)] min-h-screen">
-        <div className="p-6 md:p-8 max-w-2xl mx-auto space-y-6">
+        <div className="page-container-narrow space-y-6">
           {/* Due Soon Window */}
           <Card title="Appearance" padding="lg">
             <div className="space-y-4">
