@@ -163,7 +163,7 @@ export default function TasksPage() {
         title="Tasks"
         subtitle="Organize your work"
         actions={
-          <Button variant="primary" size="md" onClick={() => setShowForm(!showForm)}>
+          <Button variant="secondary" size="md" onClick={() => setShowForm(!showForm)}>
             <Plus size={18} />
             New Task
           </Button>

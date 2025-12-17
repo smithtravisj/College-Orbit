@@ -175,7 +175,7 @@ export default function DeadlinesPage() {
         title="Deadlines"
         subtitle="Track your assignments and exams"
         actions={
-          <Button variant="primary" size="md" onClick={() => setShowForm(!showForm)}>
+          <Button variant="secondary" size="md" onClick={() => setShowForm(!showForm)}>
             <Plus size={18} />
             New Deadline
           </Button>
