@@ -179,37 +179,34 @@ export default function ToolsPage() {
     ]);
   };
 
-  const removeCourse = async (index: number) => {
-    const course = formCourses[index];
-
+  const removeCourse = (index: number) => {
     if (index === 0) {
-      // Delete from database if it's saved
-      if (course.id) {
-        try {
-          await fetch(`/api/gpa-entries/${course.id}`, {
-            method: 'DELETE',
-          });
-        } catch (error) {
-          console.error('Error deleting GPA entry:', error);
-        }
-      }
       // Clear the first row instead of removing it
-      const newCourses = [...formCourses];
-      newCourses[0] = { courseName: '', gradeType: 'letter', grade: 'A', credits: '3' };
-      setFormCourses(newCourses);
-    } else {
-      // If it's a saved course (has an ID), delete from database
-      if (course.id) {
-        try {
-          await fetch(`/api/gpa-entries/${course.id}`, {
-            method: 'DELETE',
-          });
-        } catch (error) {
+      const course = formCourses[index];
+      setFormCourses((prev) => {
+        const newCourses = [...prev];
+        newCourses[0] = { courseName: '', gradeType: 'letter', grade: 'A', credits: '3' };
+        return newCourses;
+      });
+      // Delete from database if it's saved
+      if (course?.id) {
+        fetch(`/api/gpa-entries/${course.id}`, {
+          method: 'DELETE',
+        }).catch((error) => {
           console.error('Error deleting GPA entry:', error);
-        }
+        });
       }
-
-      setFormCourses(formCourses.filter((_, i) => i !== index));
+    } else {
+      const course = formCourses[index];
+      setFormCourses((prev) => prev.filter((_, i) => i !== index));
+      // If it's a saved course (has an ID), delete from database
+      if (course?.id) {
+        fetch(`/api/gpa-entries/${course.id}`, {
+          method: 'DELETE',
+        }).catch((error) => {
+          console.error('Error deleting GPA entry:', error);
+        });
+      }
     }
   };
 
