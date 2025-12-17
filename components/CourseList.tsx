@@ -19,7 +19,7 @@ export default function CourseList({ onEdit }: CourseListProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       {courses.map((course) => (
-        <Card key={course.id} padding="lg" hoverable>
+        <Card key={course.id} hoverable>
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-semibold text-[var(--text)]">{course.code}</h3>

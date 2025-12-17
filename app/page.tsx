@@ -85,7 +85,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-12 gap-8 flex-1 auto-rows-fr">
           {/* Top row - 3 cards */}
           <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
-            <Card title="Next Class" padding="lg" className="h-full flex flex-col">
+            <Card title="Next Class" className="h-full flex flex-col">
               {nextClass ? (
                 <div className="flex flex-col gap-4">
                   <div className="space-y-2">
@@ -118,7 +118,7 @@ export default function Dashboard() {
 
           {/* Due Soon */}
           <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
-            <Card title="Due Soon" padding="lg" className="h-full flex flex-col">
+            <Card title="Due Soon" className="h-full flex flex-col">
               {dueSoon.length > 0 ? (
                 <div className="space-y-0">
                   {dueSoon.slice(0, 3).map((d, idx) => {
@@ -146,7 +146,7 @@ export default function Dashboard() {
 
           {/* Overview */}
           <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
-            <Card title="Overview" padding="lg" className="h-full flex flex-col">
+            <Card title="Overview" className="h-full flex flex-col">
               <div className="space-y-0">
                 <div className="flex items-center justify-between py-3 border-b border-[var(--border)] first:pt-0">
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Classes remaining</div>
@@ -172,7 +172,7 @@ export default function Dashboard() {
 
           {/* Second row - Tasks and Quick Links */}
           <div className="col-span-12 lg:col-span-8 h-full min-h-[240px]">
-            <Card title="Today's Tasks" padding="lg" className="h-full flex flex-col">
+            <Card title="Today's Tasks" className="h-full flex flex-col">
                 {todayTasks.length > 0 || pinnedTask ? (
                   <div className="space-y-1">
                     {pinnedTask && (
@@ -238,7 +238,7 @@ export default function Dashboard() {
 
           {/* Quick Links */}
           <div className="col-span-12 lg:col-span-4 h-full min-h-[240px]">
-            <Card title="Quick Links" padding="lg" className="h-full flex flex-col">
+            <Card title="Quick Links" className="h-full flex flex-col">
               {quickLinks.length > 0 ? (
                 <div className="space-y-2">
                   {quickLinks.map((link, idx) => (
@@ -271,7 +271,7 @@ export default function Dashboard() {
 
           {/* Upcoming This Week */}
           <div className="col-span-12 min-h-[180px]">
-            <Card title="Upcoming This Week" subtitle="Your schedule for the next 7 days" padding="lg" className="h-full flex flex-col">
+            <Card title="Upcoming This Week" subtitle="Your schedule for the next 7 days" className="h-full flex flex-col">
               <div className="text-sm text-[var(--muted)]">
                 <p>No upcoming events</p>
               </div>

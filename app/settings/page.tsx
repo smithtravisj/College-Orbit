@@ -76,7 +76,7 @@ export default function SettingsPage() {
       <PageHeader title="Settings" subtitle="Customize your experience" />
       <div className="mx-auto max-w-[768px] px-20 py-16 space-y-7">
           {/* Due Soon Window */}
-          <Card title="Appearance" padding="lg">
+          <Card title="Appearance">
             <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-[var(--text)] mb-2">
@@ -105,7 +105,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Data Management */}
-          <Card title="Data & Backup" padding="lg">
+          <Card title="Data & Backup">
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[var(--text)] mb-3">
@@ -146,7 +146,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Privacy & Danger Zone */}
-          <Card title="Privacy" padding="lg">
+          <Card title="Privacy">
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-[var(--text-muted)] mb-4">
@@ -169,7 +169,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* About */}
-          <Card title="About" padding="lg">
+          <Card title="About">
             <div className="space-y-3 text-sm">
               <div>
                 <p className="font-semibold text-[var(--text)]">BYU Survival Tool</p>

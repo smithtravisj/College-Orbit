@@ -76,7 +76,7 @@ export default function TasksPage() {
         <div className="grid grid-cols-12 gap-7">
           {/* Filters sidebar - 3 columns */}
           <div className="col-span-12 lg:col-span-3">
-            <Card padding="lg">
+            <Card>
               <h3 className="text-sm font-semibold text-[var(--text)] mb-3">Filters</h3>
               <div className="space-y-1">
                 {[
@@ -105,7 +105,7 @@ export default function TasksPage() {
 
             {/* Add Task Form */}
             {showForm && (
-            <Card padding="lg">
+            <Card>
               <form onSubmit={handleSubmit} className="space-y-5">
                 <Input
                   label="Task title"
@@ -148,7 +148,7 @@ export default function TasksPage() {
 
           {/* Task List */}
           {filtered.length > 0 ? (
-            <Card padding="lg">
+            <Card>
               <div className="space-y-0 divide-y divide-[var(--border)]">
                 {filtered.map((t) => {
                   const course = courses.find((c) => c.id === t.courseId);

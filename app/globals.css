@@ -63,11 +63,11 @@
 
   /* Layout system */
   --max-content-width: 1280px;
-  --content-padding-desktop: 32px;
+  --content-padding-desktop: 48px;
   --content-padding-tablet: 20px;
   --content-padding-mobile: 16px;
-  --grid-gap: 20px;
-  --card-padding: 20px;
+  --grid-gap: 32px;
+  --card-padding: 32px;
   --card-border-radius: 16px;
   --list-row-height: 48px;
 
@@ -114,8 +114,8 @@
   --font-size-4xl: 32px;
 
   --line-height-tight: 1.4;
-  --line-height-base: 1.5;
-  --line-height-relaxed: 1.6;
+  --line-height-base: 1.6;
+  --line-height-relaxed: 1.75;
 }
 
 html {

@@ -27,8 +27,8 @@ export default function Navigation() {
     <>
       {/* Desktop Sidebar */}
       <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)] px-6 py-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[var(--text)] leading-tight">BYU Survival Tool</h1>
+        <div className="mb-8">
+          <h1 className="text-lg font-semibold text-[var(--text)] leading-tight">BYU Survival Tool</h1>
         </div>
         <div className="space-y-3 flex-1">
           {NAV_ITEMS.map((item) => {

@@ -45,7 +45,7 @@ export default function CoursesPage() {
       />
       <div className="mx-auto max-w-[var(--container)] px-20 py-16 space-y-7">
           {isAdding && (
-            <Card title="Add Course" padding="lg">
+            <Card title="Add Course">
               <div className="mt-2">
                 <CourseForm onClose={() => setIsAdding(false)} />
               </div>
@@ -53,7 +53,7 @@ export default function CoursesPage() {
           )}
 
           {editingId && (
-            <Card title="Edit Course" padding="lg">
+            <Card title="Edit Course">
               <div className="mt-2">
                 <CourseForm courseId={editingId} onClose={() => setEditingId(null)} />
               </div>

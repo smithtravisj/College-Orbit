@@ -61,7 +61,7 @@ export default function ToolsPage() {
       <PageHeader title="Tools" subtitle="Useful utilities for your semester" />
       <div className="mx-auto max-w-[var(--container)] px-20 py-16 space-y-7">
           {/* GPA Calculator */}
-          <Card title="GPA Calculator" padding="lg">
+          <Card title="GPA Calculator">
             <div className="space-y-5">
               <div className="space-y-4">
                 {gpaForm.courses.map((course, idx) => (
@@ -132,7 +132,7 @@ export default function ToolsPage() {
           </Card>
 
           {/* Quick Links */}
-          <Card title="Quick Links" subtitle="Useful BYU resources" padding="lg">
+          <Card title="Quick Links" subtitle="Useful BYU resources">
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: 'BYU', url: 'https://byui.edu' },
