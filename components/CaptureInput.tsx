@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useRef } from 'react';
 import useAppStore from '@/lib/store';
-import Card from './Card';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import { Plus } from 'lucide-react';
 
 export default function CaptureInput() {
   const [input, setInput] = useState('');
@@ -67,26 +69,24 @@ export default function CaptureInput() {
   };
 
   return (
-    <Card title="Add Task or Deadline">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex gap-2">
+    <Card title="Quick Add" subtitle="Type a task or deadline" padding="lg">
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="flex gap-3">
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="What needs to be done..."
-            className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-500 transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+            className="flex-1 h-10 px-3 py-2 bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] rounded-[12px] transition-colors focus:outline-none focus:border-[var(--border-active)] focus:ring-3 focus:ring-[var(--accent-bg)]"
           />
-          <button
-            type="submit"
-            className="btn btn-primary"
-          >
+          <Button variant="primary" size="md" type="submit">
+            <Plus size={18} />
             Add
-          </button>
+          </Button>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Tip: Type "tomorrow" or "today" for quick deadlines
+        <p className="text-xs text-[var(--text-muted)]">
+          💡 Tip: Type "tomorrow" or "today" for quick deadlines
         </p>
       </form>
     </Card>
