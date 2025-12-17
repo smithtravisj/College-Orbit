@@ -113,14 +113,16 @@ export default function ToolsPage() {
                 ))}
               </div>
 
-              <Button variant="secondary" type="button" onClick={addCourse}>
-                <Plus size={18} />
-                Add Course
-              </Button>
+              <div className="flex gap-3">
+                <Button variant="secondary" size="md" type="button" onClick={addCourse}>
+                  <Plus size={18} />
+                  Add Course
+                </Button>
 
-              <Button variant="primary" onClick={calculateGPA}>
-                Calculate GPA
-              </Button>
+                <Button variant="primary" size="md" onClick={calculateGPA}>
+                  Calculate GPA
+                </Button>
+              </div>
 
               {gpaResult !== null && (
                 <div className="rounded-[16px] bg-[var(--accent-bg)] border border-[var(--accent)] text-center" style={{ marginTop: '24px', padding: '16px' }}>

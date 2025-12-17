@@ -224,10 +224,10 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
       </div>
 
       <div className="flex gap-3" style={{ paddingTop: '16px' }}>
-        <Button variant="primary" type="submit">
+        <Button variant="primary" size="md" type="submit">
           {courseId ? 'Update' : 'Add'} Course
         </Button>
-        <Button variant="secondary" type="button" onClick={onClose}>
+        <Button variant="secondary" size="md" type="button" onClick={onClose}>
           Cancel
         </Button>
       </div>
