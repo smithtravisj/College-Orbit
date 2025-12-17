@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import useAppStore from '@/lib/store';
-import Input from '@/components/ui/Input';
+import Input, { Select } from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { Plus, Trash2 } from 'lucide-react';
 
@@ -91,67 +91,66 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
 
       <div style={{ paddingTop: '20px' }}>
         <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Meeting Times</label>
-        <div className="space-y-3">
+        <div className="space-y-2">
           {form.meetingTimes.map((mt, idx) => (
-            <div key={idx}>
-              {idx === 0 && (
-                <label className="block text-sm font-medium text-[var(--text)] mb-2">Days</label>
-              )}
-              <div className="flex gap-3 items-end flex-wrap">
-                <div className="flex gap-2 flex-wrap">
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                    <label key={day} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={mt.days.includes(day)}
-                        onChange={(e) => {
-                          const newMeetingTimes = [...form.meetingTimes];
-                          if (e.target.checked) {
-                            newMeetingTimes[idx].days = [...mt.days, day];
-                          } else {
-                            newMeetingTimes[idx].days = mt.days.filter(d => d !== day);
-                          }
-                          setForm({ ...form, meetingTimes: newMeetingTimes });
-                        }}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm">{day}</span>
-                    </label>
-                  ))}
-                </div>
-                <Input
-                  label={idx === 0 ? 'Start' : ''}
-                  type="time"
-                  value={mt.start}
-                  onChange={(e) => {
-                    const newMeetingTimes = [...form.meetingTimes];
-                    newMeetingTimes[idx].start = e.target.value;
-                    setForm({ ...form, meetingTimes: newMeetingTimes });
-                  }}
-                />
-                <Input
-                  label={idx === 0 ? 'End' : ''}
-                  type="time"
-                  value={mt.end}
-                  onChange={(e) => {
-                    const newMeetingTimes = [...form.meetingTimes];
-                    newMeetingTimes[idx].end = e.target.value;
-                    setForm({ ...form, meetingTimes: newMeetingTimes });
-                  }}
-                />
-                <Input
-                  label={idx === 0 ? 'Location' : ''}
-                  type="text"
-                  value={mt.location}
-                  onChange={(e) => {
-                    const newMeetingTimes = [...form.meetingTimes];
-                    newMeetingTimes[idx].location = e.target.value;
-                    setForm({ ...form, meetingTimes: newMeetingTimes });
-                  }}
-                  placeholder="e.g., Room 101"
-                  className="flex-1"
-                />
-              </div>
+            <div key={idx} className="flex gap-3 items-end">
+              <Select
+                label={idx === 0 ? 'Days' : ''}
+                multiple
+                value={mt.days}
+                onChange={(e) => {
+                  const newMeetingTimes = [...form.meetingTimes];
+                  newMeetingTimes[idx].days = Array.from(
+                    (e.target as HTMLSelectElement).selectedOptions,
+                    (option) => option.value
+                  );
+                  setForm({ ...form, meetingTimes: newMeetingTimes });
+                }}
+                options={[
+                  { value: 'Sun', label: 'Sun' },
+                  { value: 'Mon', label: 'Mon' },
+                  { value: 'Tue', label: 'Tue' },
+                  { value: 'Wed', label: 'Wed' },
+                  { value: 'Thu', label: 'Thu' },
+                  { value: 'Fri', label: 'Fri' },
+                  { value: 'Sat', label: 'Sat' },
+                ]}
+                className="w-40"
+              />
+              <Input
+                label={idx === 0 ? 'Start' : ''}
+                type="time"
+                value={mt.start}
+                onChange={(e) => {
+                  const newMeetingTimes = [...form.meetingTimes];
+                  newMeetingTimes[idx].start = e.target.value;
+                  setForm({ ...form, meetingTimes: newMeetingTimes });
+                }}
+                className="w-32"
+              />
+              <Input
+                label={idx === 0 ? 'End' : ''}
+                type="time"
+                value={mt.end}
+                onChange={(e) => {
+                  const newMeetingTimes = [...form.meetingTimes];
+                  newMeetingTimes[idx].end = e.target.value;
+                  setForm({ ...form, meetingTimes: newMeetingTimes });
+                }}
+                className="w-32"
+              />
+              <Input
+                label={idx === 0 ? 'Location' : ''}
+                type="text"
+                value={mt.location}
+                onChange={(e) => {
+                  const newMeetingTimes = [...form.meetingTimes];
+                  newMeetingTimes[idx].location = e.target.value;
+                  setForm({ ...form, meetingTimes: newMeetingTimes });
+                }}
+                placeholder="e.g., Room 101"
+                className="flex-1"
+              />
               <button
                 type="button"
                 onClick={() => {
