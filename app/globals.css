@@ -9,7 +9,7 @@
 
 :root {
   /* Backgrounds */
-  --bg: #1a0f14;
+  --bg: #0b0f14;
   --panel: #101826;
   --panel-2: #0f1724;
 
@@ -63,11 +63,11 @@
 
   /* Layout system */
   --max-content-width: 1280px;
-  --content-padding-desktop: 56px;
-  --content-padding-tablet: 32px;
-  --content-padding-mobile: 20px;
-  --grid-gap: 40px;
-  --card-padding: 36px;
+  --content-padding-desktop: 80px;
+  --content-padding-tablet: 48px;
+  --content-padding-mobile: 32px;
+  --grid-gap: 48px;
+  --card-padding: 48px;
   --card-border-radius: 16px;
   --list-row-height: 60px;
 
