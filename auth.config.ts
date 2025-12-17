@@ -52,12 +52,31 @@ export const authConfig: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.name = user.name;
+        token.email = user.email;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
+
+        // Fetch fresh user data from database to ensure updates are reflected
+        try {
+          const freshUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { name: true, email: true },
+          });
+
+          if (freshUser) {
+            session.user.name = freshUser.name;
+            session.user.email = freshUser.email;
+            token.name = freshUser.name;
+            token.email = freshUser.email;
+          }
+        } catch (error) {
+          console.error('Error fetching fresh user data in session:', error);
+        }
       }
       return session;
     },
