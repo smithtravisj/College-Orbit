@@ -345,29 +345,6 @@ export default function ToolsPage() {
               )}
             </div>
           </Card>
-
-          {/* Quick Links */}
-          <Card title="Quick Links" subtitle="Useful BYU resources">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: 'BYU', url: 'https://byui.edu' },
-                { label: 'MyMAP', url: 'https://mymap.byu.edu' },
-                { label: 'Registration', url: 'https://registration.byu.edu' },
-                { label: 'Library', url: 'https://lib.byu.edu' },
-              ].map((link) => (
-                <a
-                  key={link.url}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-[12px] bg-[var(--panel-2)] hover:bg-[var(--panel-3)] text-center text-sm font-medium text-[var(--text)] transition-colors"
-                  style={{ display: 'block', padding: '12px' }}
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          </Card>
         </div>
       </div>
     </>
