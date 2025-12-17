@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import useAppStore from '@/lib/store';
-import Input, { Select } from '@/components/ui/Input';
+import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import DaysDropdown from '@/components/DaysDropdown';
 import { Plus, Trash2 } from 'lucide-react';
 
 interface CourseFormProps {
@@ -94,28 +95,14 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
         <div className="space-y-2">
           {form.meetingTimes.map((mt, idx) => (
             <div key={idx} className="flex gap-3 items-end">
-              <Select
+              <DaysDropdown
                 label={idx === 0 ? 'Days' : ''}
-                multiple
                 value={mt.days}
-                onChange={(e) => {
+                onChange={(days) => {
                   const newMeetingTimes = [...form.meetingTimes];
-                  newMeetingTimes[idx].days = Array.from(
-                    (e.target as HTMLSelectElement).selectedOptions,
-                    (option) => option.value
-                  );
+                  newMeetingTimes[idx].days = days;
                   setForm({ ...form, meetingTimes: newMeetingTimes });
                 }}
-                options={[
-                  { value: 'Sun', label: 'Sun' },
-                  { value: 'Mon', label: 'Mon' },
-                  { value: 'Tue', label: 'Tue' },
-                  { value: 'Wed', label: 'Wed' },
-                  { value: 'Thu', label: 'Thu' },
-                  { value: 'Fri', label: 'Fri' },
-                  { value: 'Sat', label: 'Sat' },
-                ]}
-                className="w-40"
               />
               <Input
                 label={idx === 0 ? 'Start' : ''}
