@@ -122,7 +122,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   return (
     <div ref={dropdownRef} className="relative w-full" style={{ minWidth: '120px' }}>
       {label && (
-        <label className="block text-sm font-medium text-[var(--text)] mb-2">
+        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
           {label}
         </label>
       )}
@@ -142,8 +142,8 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
 
       {isOpen && (
         <div
-          className="absolute top-full left-0 right-0 mt-1 bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg z-10"
-          style={{ minWidth: '180px' }}
+          className="absolute top-full left-0 right-0 bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg z-10"
+          style={{ minWidth: '180px', marginTop: '4px' }}
         >
           <div style={{ padding: '16px' }}>
             <div className="flex items-center gap-4 justify-center">
@@ -171,7 +171,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
                 >
                   <ChevronDown size={18} />
                 </button>
-                <span className="text-xs text-[var(--text-muted)] mt-1">hours</span>
+                <span className="text-xs text-[var(--text-muted)]" style={{ marginTop: '4px' }}>hours</span>
               </div>
 
               {/* Separator */}
@@ -201,12 +201,12 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
                 >
                   <ChevronDown size={18} />
                 </button>
-                <span className="text-xs text-[var(--text-muted)] mt-1">minutes</span>
+                <span className="text-xs text-[var(--text-muted)]" style={{ marginTop: '4px' }}>minutes</span>
               </div>
             </div>
 
             {/* AM/PM Toggle */}
-            <div className="flex gap-2 justify-center mt-8 border-t border-[var(--border)] pt-6">
+            <div className="flex gap-2 justify-center border-t border-[var(--border)]" style={{ marginTop: '32px', paddingTop: '24px' }}>
               <button
                 type="button"
                 onClick={() => {
