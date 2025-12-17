@@ -27,10 +27,7 @@ export default function Navigation() {
     <>
       {/* Desktop Sidebar */}
       <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)] px-6 py-10">
-        <div className="mb-16 mt-4 ml-2 flex items-center gap-4">
-          <div className="h-10 w-10 rounded-md bg-[#1f2329] flex items-center justify-center flex-shrink-0">
-            <Calendar size={20} className="text-white" />
-          </div>
+        <div className="mb-16 mt-4">
           <h1 className="text-2xl font-bold text-[var(--text)] leading-tight">BYU Survival Tool</h1>
         </div>
         <div className="space-y-4 flex-1 mt-8">
