@@ -107,7 +107,7 @@ export default function DeadlinesPage() {
             {/* Add Deadline Form */}
             {showForm && (
             <Card padding="lg">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <Input
                   label="Deadline title"
                   value={formData.title}
@@ -163,7 +163,7 @@ export default function DeadlinesPage() {
                   const course = courses.find((c) => c.id === d.courseId);
                   const isOverd = isOverdue(d.dueAt);
                   return (
-                    <div key={d.id} className="py-4 first:pt-0 last:pb-0 flex items-start justify-between group hover:bg-[var(--panel-2)] -mx-4 px-4 rounded transition-colors">
+                    <div key={d.id} className="py-5 first:pt-0 last:pb-0 flex items-start justify-between group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           {isOverd && <Badge variant="danger">Overdue</Badge>}

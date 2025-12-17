@@ -77,7 +77,7 @@ export default function SettingsPage() {
       <div className="mx-auto max-w-[768px] px-8 py-8 space-y-7">
           {/* Due Soon Window */}
           <Card title="Appearance" padding="lg">
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-[var(--text)] mb-2">
                   Due Soon Window

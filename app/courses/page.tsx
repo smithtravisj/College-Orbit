@@ -46,13 +46,17 @@ export default function CoursesPage() {
       <div className="mx-auto max-w-[var(--container)] px-8 py-8 space-y-7">
           {isAdding && (
             <Card title="Add Course" padding="lg">
-              <CourseForm onClose={() => setIsAdding(false)} />
+              <div className="mt-2">
+                <CourseForm onClose={() => setIsAdding(false)} />
+              </div>
             </Card>
           )}
 
           {editingId && (
             <Card title="Edit Course" padding="lg">
-              <CourseForm courseId={editingId} onClose={() => setEditingId(null)} />
+              <div className="mt-2">
+                <CourseForm courseId={editingId} onClose={() => setEditingId(null)} />
+              </div>
             </Card>
           )}
 

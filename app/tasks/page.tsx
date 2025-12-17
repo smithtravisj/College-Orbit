@@ -106,7 +106,7 @@ export default function TasksPage() {
             {/* Add Task Form */}
             {showForm && (
             <Card padding="lg">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <Input
                   label="Task title"
                   value={formData.title}
@@ -153,7 +153,7 @@ export default function TasksPage() {
                 {filtered.map((t) => {
                   const course = courses.find((c) => c.id === t.courseId);
                   return (
-                    <div key={t.id} className="py-4 first:pt-0 last:pb-0 flex items-start gap-4 group hover:bg-[var(--panel-2)] -mx-4 px-4 rounded transition-colors">
+                    <div key={t.id} className="py-5 first:pt-0 last:pb-0 flex items-start gap-4 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors">
                       <input
                         type="checkbox"
                         checked={t.status === 'done'}

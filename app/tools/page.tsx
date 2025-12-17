@@ -62,8 +62,8 @@ export default function ToolsPage() {
       <div className="mx-auto max-w-[var(--container)] px-8 py-8 space-y-7">
           {/* GPA Calculator */}
           <Card title="GPA Calculator" padding="lg">
-            <div className="space-y-4">
-              <div className="space-y-3">
+            <div className="space-y-5">
+              <div className="space-y-4">
                 {gpaForm.courses.map((course, idx) => (
                   <div key={idx} className="flex gap-3 items-end">
                     <Input

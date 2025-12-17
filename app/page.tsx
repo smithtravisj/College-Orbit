@@ -87,7 +87,7 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-4 h-full">
             <Card title="Next Class" padding="lg" className="h-full flex flex-col">
               {nextClass ? (
-                <div className="space-y-4">
+                <div className="space-y-5">
                   <div>
                     <div className="text-xs text-[var(--text-muted)] uppercase tracking-wide font-medium">
                       {nextClass.start} - {nextClass.end}
@@ -120,7 +120,7 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-4 h-full">
             <Card title="Due Soon" padding="lg" className="h-full flex flex-col">
               {dueSoon.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-4">
                   {dueSoon.slice(0, 3).map((d, idx) => {
                     const course = courses.find((c) => c.id === d.courseId);
                     const isOverd = isOverdue(d.dueAt);
@@ -148,21 +148,21 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-4 h-full">
             <Card title="Overview" padding="lg" className="h-full flex flex-col">
               <div className="space-y-0 divide-y divide-[var(--border)]">
-                <div className="flex items-center justify-between py-3 first:pt-0">
+                <div className="flex items-center justify-between py-4 first:pt-0">
                   <div className="text-xs text-[var(--muted)]">Classes remaining</div>
                   <div className="text-sm font-semibold tabular-nums text-[var(--accent)]">{classesLeft}</div>
                 </div>
-                <div className="flex items-center justify-between py-3">
+                <div className="flex items-center justify-between py-4">
                   <div className="text-xs text-[var(--muted)]">Due soon</div>
                   <div className="text-sm font-semibold tabular-nums text-[var(--text)]">{dueSoon.length}</div>
                 </div>
-                <div className="flex items-center justify-between py-3">
+                <div className="flex items-center justify-between py-4">
                   <div className="text-xs text-[var(--muted)]">Overdue</div>
                   <div className={`text-sm font-semibold tabular-nums ${overdueCount > 0 ? 'text-[var(--danger)]' : 'text-[var(--text)]'}`}>
                     {overdueCount}
                   </div>
                 </div>
-                <div className="flex items-center justify-between py-3 last:pb-0">
+                <div className="flex items-center justify-between py-4 last:pb-0">
                   <div className="text-xs text-[var(--muted)]">Tasks today</div>
                   <div className="text-sm font-semibold tabular-nums text-[var(--text)]">{todayTasks.length}</div>
                 </div>
@@ -174,7 +174,7 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-8 h-full">
             <Card title="Today's Tasks" padding="lg" className="h-full flex flex-col">
                 {todayTasks.length > 0 || pinnedTask ? (
-                  <div className="space-y-0">
+                  <div className="space-y-1">
                     {pinnedTask && (
                       <div className="mb-3 pb-3 border-b border-[var(--border)] last:border-0">
                         <div className="flex items-start gap-3">
@@ -240,7 +240,7 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-4 h-full">
             <Card title="Quick Links" padding="lg" className="h-full flex flex-col">
               {quickLinks.length > 0 ? (
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {quickLinks.map((link, idx) => (
                     <a
                       key={idx}
