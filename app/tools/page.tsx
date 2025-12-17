@@ -39,6 +39,7 @@ export default function ToolsPage() {
   const [saving, setSaving] = useState(false);
 
   const gradePoints: { [key: string]: number } = {
+    'A+': 4.0,
     'A': 4.0,
     'A-': 3.7,
     'B+': 3.3,
