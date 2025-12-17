@@ -119,7 +119,7 @@ export default function ProfilePage() {
               </div>
 
               <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-                <h3 className="text-sm font-semibold text-[var(--text)]" style={{ marginBottom: '16px' }}>
+                <h3 className="text-base font-semibold text-[var(--text)]" style={{ marginBottom: '16px' }}>
                   Change Password
                 </h3>
 
