@@ -118,9 +118,18 @@ export default function Dashboard() {
     if (!deadlineFormData.title.trim()) return;
 
     let dueAt: string | null = null;
-    if (deadlineFormData.dueDate) {
-      const dateTimeString = deadlineFormData.dueTime ? `${deadlineFormData.dueDate}T${deadlineFormData.dueTime}` : `${deadlineFormData.dueDate}T23:59`;
-      dueAt = new Date(dateTimeString).toISOString();
+    // Only set dueAt if we have a valid date string (not empty, not null, not whitespace)
+    if (deadlineFormData.dueDate && deadlineFormData.dueDate.trim()) {
+      try {
+        const dateTimeString = deadlineFormData.dueTime ? `${deadlineFormData.dueDate}T${deadlineFormData.dueTime}` : `${deadlineFormData.dueDate}T23:59`;
+        const dateObj = new Date(dateTimeString);
+        // Verify it's a valid date and not the epoch
+        if (dateObj.getTime() > 0) {
+          dueAt = dateObj.toISOString();
+        }
+      } catch (err) {
+        console.error('Date parsing error:', err);
+      }
     } else if (deadlineFormData.dueTime) {
       deadlineFormData.dueTime = '';
     }

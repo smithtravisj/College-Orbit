@@ -46,11 +46,21 @@ export default function DeadlinesPage() {
     if (!formData.title.trim()) return;
 
     let dueAt: string | null = null;
-    if (formData.dueDate) {
-      // If date is provided but time is not, default to 11:59 PM (not 23:59)
-      const dateTimeString = formData.dueTime ? `${formData.dueDate}T${formData.dueTime}` : `${formData.dueDate}T23:59`;
-      dueAt = new Date(dateTimeString).toISOString();
-    } else if (formData.dueTime) {
+    // Only set dueAt if we have a valid date string (not empty, not null, not whitespace)
+    if (formData.dueDate && formData.dueDate.trim()) {
+      try {
+        // If date is provided but time is not, default to 11:59 PM
+        const dateTimeString = formData.dueTime ? `${formData.dueDate}T${formData.dueTime}` : `${formData.dueDate}T23:59`;
+        const dateObj = new Date(dateTimeString);
+        // Verify it's a valid date and not the epoch
+        if (dateObj.getTime() > 0) {
+          dueAt = dateObj.toISOString();
+        }
+      } catch (err) {
+        // If date parsing fails, leave dueAt as null
+        console.error('Date parsing error:', err);
+      }
+    } else {
       // If time is provided but date is not, ignore the time
       formData.dueTime = '';
     }
