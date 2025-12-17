@@ -31,12 +31,10 @@ interface FormCourse {
 
 export default function ToolsPage() {
   const [courses, setCourses] = useState<Course[]>([]);
-  const [entries, setEntries] = useState<GpaEntry[]>([]);
   const [formCourses, setFormCourses] = useState<FormCourse[]>([
     { courseName: '', gradeType: 'letter', grade: 'A', credits: '3' },
   ]);
   const [gpaResult, setGpaResult] = useState<number | null>(null);
-  const [saving, setSaving] = useState(false);
 
   const gradePoints: { [key: string]: number } = {
     'A+': 4.0,
@@ -53,7 +51,7 @@ export default function ToolsPage() {
     'F': 0.0,
   };
 
-  // Fetch courses and GPA entries on mount
+  // Fetch courses and load saved GPA entries on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -69,7 +67,17 @@ export default function ToolsPage() {
 
         if (entriesRes.ok) {
           const { entries: fetchedEntries } = await entriesRes.json();
-          setEntries(fetchedEntries);
+          if (fetchedEntries.length > 0) {
+            // Convert saved entries to form courses
+            const savedCourses = fetchedEntries.map((entry: GpaEntry) => ({
+              id: entry.id,
+              courseName: entry.courseName,
+              gradeType: entry.grade.includes('.') || !Object.keys({ 'A+': 4.0, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D+': 1.3, 'D': 1.0, 'F': 0.0 }).includes(entry.grade) ? 'percentage' : 'letter',
+              grade: entry.grade,
+              credits: entry.credits.toString(),
+            }));
+            setFormCourses(savedCourses);
+          }
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -99,23 +107,44 @@ export default function ToolsPage() {
     return gradePoints[grade] || 0;
   };
 
-  const calculateGPA = () => {
+  const calculateGPA = async () => {
+    // First, save all form courses to database
+    for (const course of formCourses) {
+      if (!course.courseName || !course.credits) continue;
+
+      const selectedCourse = courses.find((c) => c.name === course.courseName);
+
+      if (course.id) {
+        // Already saved, skip
+        continue;
+      } else {
+        // New course, save it
+        try {
+          await fetch('/api/gpa-entries', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              courseId: selectedCourse?.id || null,
+              courseName: course.courseName,
+              grade: course.grade,
+              credits: course.credits,
+            }),
+          });
+        } catch (error) {
+          console.error('Error saving GPA entry:', error);
+        }
+      }
+    }
+
+    // Calculate GPA
     let totalPoints = 0;
     let totalCredits = 0;
 
-    // Calculate from form courses
     formCourses.forEach((course) => {
       const points = getGradePoints(course.grade, course.gradeType);
       const credits = parseFloat(course.credits) || 0;
       totalPoints += points * credits;
       totalCredits += credits;
-    });
-
-    // Calculate from saved entries
-    entries.forEach((entry) => {
-      const points = getGradePoints(entry.grade, entry.grade.includes('.') || !gradePoints[entry.grade] ? 'percentage' : 'letter');
-      totalPoints += points * entry.credits;
-      totalCredits += entry.credits;
     });
 
     const gpa = totalCredits > 0 ? totalPoints / totalCredits : 0;
@@ -129,7 +158,20 @@ export default function ToolsPage() {
     ]);
   };
 
-  const removeCourse = (index: number) => {
+  const removeCourse = async (index: number) => {
+    const course = formCourses[index];
+
+    // If it's a saved course (has an ID), delete from database
+    if (course.id) {
+      try {
+        await fetch(`/api/gpa-entries/${course.id}`, {
+          method: 'DELETE',
+        });
+      } catch (error) {
+        console.error('Error deleting GPA entry:', error);
+      }
+    }
+
     setFormCourses(formCourses.filter((_, i) => i !== index));
   };
 
@@ -137,55 +179,6 @@ export default function ToolsPage() {
     const newCourses = [...formCourses];
     newCourses[index] = { ...newCourses[index], [field]: value };
     setFormCourses(newCourses);
-  };
-
-  const saveCourse = async (index: number) => {
-    const course = formCourses[index];
-    if (!course.courseName || !course.credits) return;
-
-    setSaving(true);
-    try {
-      const selectedCourse = courses.find((c) => c.name === course.courseName);
-
-      const res = await fetch('/api/gpa-entries', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          courseId: selectedCourse?.id || null,
-          courseName: course.courseName,
-          grade: course.grade,
-          credits: course.credits,
-        }),
-      });
-
-      if (res.ok) {
-        const { entry } = await res.json();
-        setEntries([...entries, entry]);
-        // Reset the form field
-        updateCourse(index, 'courseName', '');
-        updateCourse(index, 'grade', 'A');
-        updateCourse(index, 'credits', '3');
-        updateCourse(index, 'gradeType', 'letter');
-      }
-    } catch (error) {
-      console.error('Error saving GPA entry:', error);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const deleteEntry = async (entryId: string, index: number) => {
-    try {
-      const res = await fetch(`/api/gpa-entries/${entryId}`, {
-        method: 'DELETE',
-      });
-
-      if (res.ok) {
-        setEntries(entries.filter((_, i) => i !== index));
-      }
-    } catch (error) {
-      console.error('Error deleting GPA entry:', error);
-    }
   };
 
   return (
@@ -196,37 +189,6 @@ export default function ToolsPage() {
           {/* GPA Calculator */}
           <Card title="GPA Calculator">
             <div className="space-y-5">
-              {/* Saved Entries */}
-              {entries.length > 0 && (
-                <div style={{ paddingBottom: '16px' }}>
-                  <div style={{ marginBottom: '12px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
-                    Saved Courses
-                  </div>
-                  <div className="space-y-3">
-                    {entries.map((entry, idx) => (
-                      <div key={entry.id} className="flex gap-3 items-center p-3 rounded-[8px] bg-[var(--panel-2)]">
-                        <div className="flex-1">
-                          <div style={{ marginBottom: '2px', fontSize: '0.875rem', color: 'var(--text)' }}>
-                            {entry.courseName}
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            {entry.grade} • {entry.credits} {entry.credits === 1 ? 'credit' : 'credits'}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => deleteEntry(entry.id, idx)}
-                          className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                          style={{ padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          title="Remove course"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Form Fields */}
               <div className="space-y-4">
                 {formCourses.map((course, idx) => (
@@ -297,27 +259,16 @@ export default function ToolsPage() {
                         />
                       </div>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
+                      {idx > 0 && (
                         <button
-                          onClick={() => saveCourse(idx)}
-                          disabled={!course.courseName || !course.credits || saving}
-                          className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          style={{ padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          title="Save course"
+                          onClick={() => removeCourse(idx)}
+                          className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                          style={{ padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40px' }}
+                          title="Remove course"
                         >
-                          <Plus size={18} />
+                          <Trash2 size={18} />
                         </button>
-                        {idx > 0 && (
-                          <button
-                            onClick={() => removeCourse(idx)}
-                            className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                            style={{ padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            title="Remove field"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
                 ))}
