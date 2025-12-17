@@ -148,21 +148,21 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
             <Card title="Overview" className="h-full flex flex-col">
               <div className="space-y-0">
-                <div className="flex items-center justify-between py-5 border-b border-[var(--border)] first:pt-0">
+                <div className="flex items-center justify-between border-b border-[var(--border)] first:pt-0" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Classes remaining</div>
                   <div className="text-base font-semibold tabular-nums text-[var(--accent)]">{classesLeft}</div>
                 </div>
-                <div className="flex items-center justify-between py-5 border-b border-[var(--border)]">
+                <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Due soon</div>
                   <div className="text-base font-semibold tabular-nums text-[var(--text)]">{dueSoon.length}</div>
                 </div>
-                <div className="flex items-center justify-between py-5 border-b border-[var(--border)]">
+                <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Overdue</div>
                   <div className={`text-base font-semibold tabular-nums ${overdueCount > 0 ? 'text-[var(--danger)]' : 'text-[var(--text)]'}`}>
                     {overdueCount}
                   </div>
                 </div>
-                <div className="flex items-center justify-between py-5 last:pb-0">
+                <div className="flex items-center justify-between last:pb-0" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Tasks today</div>
                   <div className="text-base font-semibold tabular-nums text-[var(--text)]">{todayTasks.length}</div>
                 </div>
