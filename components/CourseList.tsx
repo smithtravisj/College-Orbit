@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import useAppStore from '@/lib/store';
 import Card from '@/components/ui/Card';
+import ConfirmationModal from '@/components/ConfirmationModal';
 import { Edit2, Trash2 } from 'lucide-react';
 import { Course } from '@/types';
 
@@ -20,13 +22,23 @@ const formatTime12Hour = (time24: string): string => {
 
 export default function CourseList({ courses, onEdit }: CourseListProps) {
   const { deleteCourse } = useAppStore();
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    courseId: string;
+    courseName: string;
+  }>({
+    isOpen: false,
+    courseId: '',
+    courseName: '',
+  });
 
   if (courses.length === 0) {
     return null;
   }
 
   return (
-    <Card className="h-full">
+    <>
+      <Card className="h-full">
       <div className="space-y-4 divide-y divide-[var(--border)]">
         {courses.map((course) => (
           <div
@@ -85,13 +97,11 @@ export default function CourseList({ courses, onEdit }: CourseListProps) {
               </button>
               <button
                 onClick={() => {
-                  if (
-                    confirm(
-                      `Delete ${course.code}? This will not delete associated tasks and deadlines.`
-                    )
-                  ) {
-                    deleteCourse(course.id);
-                  }
+                  setDeleteConfirmation({
+                    isOpen: true,
+                    courseId: course.id,
+                    courseName: course.code,
+                  });
                 }}
                 className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
                 title="Delete course"
@@ -103,5 +113,30 @@ export default function CourseList({ courses, onEdit }: CourseListProps) {
         ))}
       </div>
     </Card>
+
+      <ConfirmationModal
+        isOpen={deleteConfirmation.isOpen}
+        title="Delete Course"
+        message={`Delete ${deleteConfirmation.courseName}? This will not delete associated tasks and deadlines.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDangerous={true}
+        onConfirm={() => {
+          deleteCourse(deleteConfirmation.courseId);
+          setDeleteConfirmation({
+            isOpen: false,
+            courseId: '',
+            courseName: '',
+          });
+        }}
+        onCancel={() => {
+          setDeleteConfirmation({
+            isOpen: false,
+            courseId: '',
+            courseName: '',
+          });
+        }}
+      />
+    </>
   );
 }
