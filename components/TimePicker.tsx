@@ -160,7 +160,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
                   onChange={handleHourInput}
                   className="w-12 text-center bg-[var(--panel)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] text-sm font-semibold"
                   style={{ padding: '6px' }}
-                  maxLength={2}
+                  maxLength={3}
                 />
                 <button
                   type="button"
@@ -190,7 +190,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
                   onChange={handleMinuteInput}
                   className="w-12 text-center bg-[var(--panel)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] text-sm font-semibold"
                   style={{ padding: '6px' }}
-                  maxLength={2}
+                  maxLength={3}
                 />
                 <button
                   type="button"
