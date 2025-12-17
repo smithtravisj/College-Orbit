@@ -26,11 +26,11 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)] px-8 py-10">
-        <div className="mb-16 mt-4">
+      <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)] px-6 py-6">
+        <div className="mb-6">
           <h1 className="text-2xl font-bold text-[var(--text)] leading-tight">BYU Survival Tool</h1>
         </div>
-        <div className="space-y-4 flex-1 mt-8">
+        <div className="space-y-3 flex-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -39,7 +39,7 @@ export default function Navigation() {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
-                className={`relative flex items-center gap-5 h-13 px-7 py-3 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
+                className={`relative flex items-center gap-3 h-12 px-4 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   isActive
                     ? 'text-[var(--text)] bg-[var(--accent-2)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'

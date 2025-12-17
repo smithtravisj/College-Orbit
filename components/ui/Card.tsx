@@ -15,25 +15,18 @@ const Card: React.FC<CardProps> = ({
   subtitle,
   action,
   children,
-  padding = 'lg',
   hoverable = false,
   className = '',
 }) => {
-  const paddingStyles = {
-    sm: 'p-4',
-    md: 'p-5',
-    lg: 'p-6',
-  };
-
   return (
     <div
-      className={`bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] transition-colors ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${paddingStyles[padding]} ${className}`}
+      className={`rounded-[16px] border border-[var(--border)] bg-[var(--panel)] p-6 lg:p-8 transition-colors ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${className}`}
     >
       {title && (
-        <div className="mb-4 flex items-start justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-[var(--text)]">{title}</h3>
-            {subtitle && <p className="text-xs text-[var(--muted)] mt-1">{subtitle}</p>}
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <h3 className="text-base font-semibold leading-tight text-[var(--text)]">{title}</h3>
+            {subtitle && <p className="text-xs text-[var(--muted)] leading-relaxed">{subtitle}</p>}
           </div>
           {action && <div>{action}</div>}
         </div>

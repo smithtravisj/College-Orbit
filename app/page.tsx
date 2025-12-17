@@ -87,14 +87,14 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
             <Card title="Next Class" padding="lg" className="h-full flex flex-col">
               {nextClass ? (
-                <div className="space-y-5">
-                  <div>
-                    <div className="text-xs text-[var(--text-muted)] uppercase tracking-wide font-medium">
+                <div className="flex flex-col gap-4">
+                  <div className="space-y-2">
+                    <div className="text-xs text-[var(--muted)] uppercase tracking-wide font-medium leading-relaxed">
                       {nextClass.start} - {nextClass.end}
                     </div>
-                    <div className="text-xl font-semibold text-[var(--text)] mt-2">{nextClass.courseCode}</div>
+                    <div className="text-xl font-semibold text-[var(--text)] leading-tight">{nextClass.courseCode}</div>
                   </div>
-                  <div className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
+                  <div className="flex items-start gap-3 text-sm text-[var(--text-secondary)] leading-relaxed">
                     <MapPin size={16} className="flex-shrink-0 mt-0.5" />
                     <span>{nextClass.location}</span>
                   </div>
@@ -120,19 +120,19 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
             <Card title="Due Soon" padding="lg" className="h-full flex flex-col">
               {dueSoon.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-0">
                   {dueSoon.slice(0, 3).map((d, idx) => {
                     const course = courses.find((c) => c.id === d.courseId);
                     const isOverd = isOverdue(d.dueAt);
                     return (
-                      <div key={d.id} className={`pb-2 ${idx < dueSoon.length - 1 ? 'border-b border-[var(--border)]' : ''}`}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            {isOverd && <Badge variant="danger" className="mb-1">Overdue</Badge>}
-                            <div className="text-sm font-medium text-[var(--text)] truncate">{d.title}</div>
-                            {course && <div className="text-xs text-[var(--text-muted)] mt-1">{course.code}</div>}
+                      <div key={d.id} className={`py-3 ${idx < dueSoon.length - 1 ? 'border-b border-[var(--border)]' : ''}`}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0 space-y-2">
+                            {isOverd && <Badge variant="danger">Overdue</Badge>}
+                            <div className="text-sm font-medium leading-tight text-[var(--text)] truncate">{d.title}</div>
+                            {course && <div className="text-xs text-[var(--text-muted)] leading-relaxed">{course.code}</div>}
                           </div>
-                          <div className="text-xs text-[var(--text-muted)] flex-shrink-0 text-right">{formatTime(d.dueAt)}</div>
+                          <div className="text-xs text-[var(--text-muted)] flex-shrink-0 text-right leading-relaxed">{formatTime(d.dueAt)}</div>
                         </div>
                       </div>
                     );
@@ -147,24 +147,24 @@ export default function Dashboard() {
           {/* Overview */}
           <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
             <Card title="Overview" padding="lg" className="h-full flex flex-col">
-              <div className="space-y-0 divide-y divide-[var(--border)]">
-                <div className="flex items-center justify-between py-4 first:pt-0">
-                  <div className="text-xs text-[var(--muted)]">Classes remaining</div>
-                  <div className="text-sm font-semibold tabular-nums text-[var(--accent)]">{classesLeft}</div>
+              <div className="space-y-0">
+                <div className="flex items-center justify-between py-3 border-b border-[var(--border)] first:pt-0">
+                  <div className="text-sm text-[var(--muted)] leading-relaxed">Classes remaining</div>
+                  <div className="text-base font-semibold tabular-nums text-[var(--accent)]">{classesLeft}</div>
                 </div>
-                <div className="flex items-center justify-between py-4">
-                  <div className="text-xs text-[var(--muted)]">Due soon</div>
-                  <div className="text-sm font-semibold tabular-nums text-[var(--text)]">{dueSoon.length}</div>
+                <div className="flex items-center justify-between py-3 border-b border-[var(--border)]">
+                  <div className="text-sm text-[var(--muted)] leading-relaxed">Due soon</div>
+                  <div className="text-base font-semibold tabular-nums text-[var(--text)]">{dueSoon.length}</div>
                 </div>
-                <div className="flex items-center justify-between py-4">
-                  <div className="text-xs text-[var(--muted)]">Overdue</div>
-                  <div className={`text-sm font-semibold tabular-nums ${overdueCount > 0 ? 'text-[var(--danger)]' : 'text-[var(--text)]'}`}>
+                <div className="flex items-center justify-between py-3 border-b border-[var(--border)]">
+                  <div className="text-sm text-[var(--muted)] leading-relaxed">Overdue</div>
+                  <div className={`text-base font-semibold tabular-nums ${overdueCount > 0 ? 'text-[var(--danger)]' : 'text-[var(--text)]'}`}>
                     {overdueCount}
                   </div>
                 </div>
-                <div className="flex items-center justify-between py-4 last:pb-0">
-                  <div className="text-xs text-[var(--muted)]">Tasks today</div>
-                  <div className="text-sm font-semibold tabular-nums text-[var(--text)]">{todayTasks.length}</div>
+                <div className="flex items-center justify-between py-3 last:pb-0">
+                  <div className="text-sm text-[var(--muted)] leading-relaxed">Tasks today</div>
+                  <div className="text-base font-semibold tabular-nums text-[var(--text)]">{todayTasks.length}</div>
                 </div>
               </div>
             </Card>
