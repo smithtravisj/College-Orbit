@@ -162,11 +162,6 @@ export default function ToolsPage() {
     const course = formCourses[index];
 
     if (index === 0) {
-      // Clear the first row instead of removing it
-      updateCourse(0, 'courseName', '');
-      updateCourse(0, 'grade', 'A');
-      updateCourse(0, 'credits', '3');
-      updateCourse(0, 'gradeType', 'letter');
       // Delete from database if it's saved
       if (course.id) {
         try {
@@ -177,6 +172,10 @@ export default function ToolsPage() {
           console.error('Error deleting GPA entry:', error);
         }
       }
+      // Clear the first row instead of removing it
+      const newCourses = [...formCourses];
+      newCourses[0] = { courseName: '', gradeType: 'letter', grade: 'A', credits: '3' };
+      setFormCourses(newCourses);
     } else {
       // If it's a saved course (has an ID), delete from database
       if (course.id) {
