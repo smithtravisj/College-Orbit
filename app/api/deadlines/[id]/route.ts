@@ -74,12 +74,12 @@ export async function PATCH(
     const deadline = await prisma.deadline.update({
       where: { id },
       data: {
-        title: data.title ?? existingDeadline.title,
-        courseId: data.courseId ?? existingDeadline.courseId,
-        dueAt: data.dueAt ? new Date(data.dueAt) : existingDeadline.dueAt,
-        notes: data.notes ?? existingDeadline.notes,
-        link: data.link ?? existingDeadline.link,
-        status: data.status ?? existingDeadline.status,
+        title: 'title' in data ? data.title : existingDeadline.title,
+        courseId: 'courseId' in data ? data.courseId : existingDeadline.courseId,
+        dueAt: 'dueAt' in data ? (data.dueAt ? new Date(data.dueAt) : null) : existingDeadline.dueAt,
+        notes: 'notes' in data ? data.notes : existingDeadline.notes,
+        link: 'link' in data ? data.link : existingDeadline.link,
+        status: 'status' in data ? data.status : existingDeadline.status,
       },
     });
 
