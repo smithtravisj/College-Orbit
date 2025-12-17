@@ -88,3 +88,14 @@ export function isCurrentClass(
   return compareTime(start, nowTime) <= 0 && compareTime(nowTime, end) < 0;
 }
 
+export function extractDomain(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch {
+    // If URL parsing fails, try to extract manually
+    const match = url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/]+)/);
+    return match ? match[1] : url;
+  }
+}
+

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
-import { isToday, formatDate, isOverdue } from '@/lib/utils';
+import { isToday, formatDate, isOverdue, extractDomain } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -15,6 +15,8 @@ export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [showDeadlineForm, setShowDeadlineForm] = useState(false);
+  const [editingDeadlineId, setEditingDeadlineId] = useState<string | null>(null);
   const [hidingTasks, setHidingTasks] = useState<Set<string>>(new Set());
   const [toggledTasks, setToggledTasks] = useState<Set<string>>(new Set());
   const [hidingDeadlines, setHidingDeadlines] = useState<Set<string>>(new Set());
@@ -25,6 +27,14 @@ export default function Dashboard() {
     dueDate: '',
     dueTime: '',
     notes: '',
+  });
+  const [deadlineFormData, setDeadlineFormData] = useState({
+    title: '',
+    courseId: '',
+    dueDate: '',
+    dueTime: '',
+    notes: '',
+    link: '',
   });
   const { courses, deadlines, tasks, settings, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone, updateDeadline, deleteDeadline } = useAppStore();
 
@@ -101,6 +111,76 @@ export default function Dashboard() {
     setEditingTaskId(null);
     setTaskFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '' });
     setShowTaskForm(false);
+  };
+
+  const handleDeadlineSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!deadlineFormData.title.trim()) return;
+
+    let dueAt: string | null = null;
+    if (deadlineFormData.dueDate) {
+      const dateTimeString = deadlineFormData.dueTime ? `${deadlineFormData.dueDate}T${deadlineFormData.dueTime}` : `${deadlineFormData.dueDate}T23:59`;
+      dueAt = new Date(dateTimeString).toISOString();
+    } else if (deadlineFormData.dueTime) {
+      deadlineFormData.dueTime = '';
+    }
+
+    const link = deadlineFormData.link?.trim() ? (
+      deadlineFormData.link.startsWith('http://') || deadlineFormData.link.startsWith('https://')
+        ? deadlineFormData.link
+        : `https://${deadlineFormData.link}`
+    ) : null;
+
+    if (editingDeadlineId) {
+      await updateDeadline(editingDeadlineId, {
+        title: deadlineFormData.title,
+        courseId: deadlineFormData.courseId || null,
+        dueAt,
+        notes: deadlineFormData.notes,
+        link,
+      });
+      setEditingDeadlineId(null);
+    } else {
+      await updateDeadline(editingDeadlineId || '', {
+        title: deadlineFormData.title,
+        courseId: deadlineFormData.courseId || null,
+        dueAt,
+        notes: deadlineFormData.notes,
+        link,
+      });
+    }
+
+    setDeadlineFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', link: '' });
+    setShowDeadlineForm(false);
+  };
+
+  const startEditDeadline = (deadline: any) => {
+    setEditingDeadlineId(deadline.id);
+    const dueDate = deadline.dueAt ? new Date(deadline.dueAt) : null;
+    let dateStr = '';
+    let timeStr = '';
+    if (dueDate) {
+      const year = dueDate.getFullYear();
+      const month = String(dueDate.getMonth() + 1).padStart(2, '0');
+      const date = String(dueDate.getDate()).padStart(2, '0');
+      dateStr = `${year}-${month}-${date}`;
+      timeStr = `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}`;
+    }
+    setDeadlineFormData({
+      title: deadline.title,
+      courseId: deadline.courseId || '',
+      dueDate: dateStr,
+      dueTime: timeStr,
+      notes: deadline.notes,
+      link: deadline.link || '',
+    });
+    setShowDeadlineForm(true);
+  };
+
+  const cancelEditDeadline = () => {
+    setEditingDeadlineId(null);
+    setDeadlineFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', link: '' });
+    setShowDeadlineForm(false);
   };
 
   // Get next class
@@ -215,6 +295,60 @@ export default function Dashboard() {
           {/* Due Soon */}
           <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
             <Card title="Due Soon" className="h-full flex flex-col">
+              {showDeadlineForm && (
+                <div style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid var(--border)' }}>
+                  <form onSubmit={handleDeadlineSubmit} className="space-y-5">
+                    <Input
+                      label="Deadline title"
+                      value={deadlineFormData.title}
+                      onChange={(e) => setDeadlineFormData({ ...deadlineFormData, title: e.target.value })}
+                      placeholder="What needs to be done?"
+                      required
+                    />
+                    <Select
+                      label="Course (optional)"
+                      value={deadlineFormData.courseId}
+                      onChange={(e) => setDeadlineFormData({ ...deadlineFormData, courseId: e.target.value })}
+                      options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                    />
+                    <Textarea
+                      label="Notes (optional)"
+                      value={deadlineFormData.notes}
+                      onChange={(e) => setDeadlineFormData({ ...deadlineFormData, notes: e.target.value })}
+                      placeholder="Add details..."
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input
+                        label="Due date (optional)"
+                        type="date"
+                        value={deadlineFormData.dueDate}
+                        onChange={(e) => setDeadlineFormData({ ...deadlineFormData, dueDate: e.target.value })}
+                      />
+                      <Input
+                        label="Due time (optional)"
+                        type="time"
+                        value={deadlineFormData.dueTime}
+                        onChange={(e) => setDeadlineFormData({ ...deadlineFormData, dueTime: e.target.value })}
+                      />
+                    </div>
+                    <Input
+                      label="Link (optional)"
+                      type="text"
+                      value={deadlineFormData.link}
+                      onChange={(e) => setDeadlineFormData({ ...deadlineFormData, link: e.target.value })}
+                      placeholder="example.com or https://..."
+                    />
+                    <div className="flex gap-3" style={{ paddingTop: '8px' }}>
+                      <Button variant="primary" type="submit" size="sm">
+                        {editingDeadlineId ? 'Save Changes' : 'Add Deadline'}
+                      </Button>
+                      <Button variant="secondary" type="button" onClick={cancelEditDeadline} size="sm">
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              )}
               {dueSoon.length > 0 ? (
                 <div className="space-y-4 divide-y divide-[var(--border)]">
                   {dueSoon.slice(0, 3).map((d) => {
@@ -290,15 +424,34 @@ export default function Dashboard() {
                                 {course.code}
                               </span>
                             )}
+                            {d.link && (
+                              <a
+                                href={d.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
+                              >
+                                {extractDomain(d.link)}
+                              </a>
+                            )}
                           </div>
                         </div>
-                        <button
-                          onClick={() => deleteDeadline(d.id)}
-                          className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0"
-                          title="Delete deadline"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
+                          <button
+                            onClick={() => startEditDeadline(d)}
+                            className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                            title="Edit deadline"
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                          <button
+                            onClick={() => deleteDeadline(d.id)}
+                            className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                            title="Delete deadline"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                     );
                   })}

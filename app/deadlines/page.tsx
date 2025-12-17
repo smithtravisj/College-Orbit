@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
-import { formatDate, isOverdue } from '@/lib/utils';
+import { formatDate, isOverdue, extractDomain } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -339,7 +339,7 @@ export default function DeadlinesPage() {
                               rel="noopener noreferrer"
                               className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
                             >
-                              Link
+                              {extractDomain(d.link)}
                             </a>
                           )}
                         </div>
