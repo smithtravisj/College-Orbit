@@ -206,18 +206,19 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
             </div>
 
             {/* AM/PM Toggle */}
-            <div className="flex gap-2 justify-center border-t border-[var(--border)]" style={{ marginTop: '32px', paddingTop: '24px' }}>
+            <div className="flex gap-2 justify-center border-t border-[var(--border)]" style={{ marginTop: '12px', paddingTop: '12px' }}>
               <button
                 type="button"
                 onClick={() => {
                   setIsPM(false);
                   handleTimeChange(hours, minutes, false);
                 }}
-                className={`px-3 py-1 rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
+                className={`text-sm font-medium transition-colors ${
                   !isPM
                     ? 'bg-[var(--accent)] text-white'
                     : 'bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
+                style={{ padding: '8px 16px', borderRadius: '6px' }}
               >
                 AM
               </button>
@@ -227,11 +228,12 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
                   setIsPM(true);
                   handleTimeChange(hours, minutes, true);
                 }}
-                className={`px-3 py-1 rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
+                className={`text-sm font-medium transition-colors ${
                   isPM
                     ? 'bg-[var(--accent)] text-white'
                     : 'bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
+                style={{ padding: '8px 16px', borderRadius: '6px' }}
               >
                 PM
               </button>
