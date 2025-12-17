@@ -605,8 +605,8 @@ export default function Dashboard() {
                         borderWidth: '1px',
                         borderStyle: 'solid',
                         borderColor: 'var(--border)',
-                        paddingLeft: '24px',
-                        paddingRight: '24px'
+                        paddingLeft: '16px',
+                        paddingRight: '16px'
                       }}
                     >
                       {editingTaskId ? 'Save Changes' : 'Add Task'}
