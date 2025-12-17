@@ -7,10 +7,12 @@ export default function Card({
 }) {
   return (
     <div className="card p-6">
-      <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+      <h3 className="mb-5 text-base font-semibold tracking-tight text-gray-900 dark:text-white">
         {title}
       </h3>
-      {children}
+      <div className="text-gray-700 dark:text-gray-300">
+        {children}
+      </div>
     </div>
   );
 }

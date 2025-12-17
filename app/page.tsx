@@ -78,14 +78,19 @@ export default function Dashboard() {
   ).length;
 
   return (
-    <div className="space-y-6 p-4 md:p-8">
-      <div>
-        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h2>
-        <p className="mt-1 text-slate-600 dark:text-slate-400">Welcome back! Here's what's happening today.</p>
-      </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+      <div className="p-6 md:p-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Dashboard
+          </h1>
+          <p className="mt-2 text-base text-gray-600 dark:text-gray-400">
+            Welcome back. Here's your schedule and tasks for today.
+          </p>
+        </div>
 
-      {/* Grid Layout */}
-      <div className="grid gap-6 md:grid-cols-2">
+        {/* Grid Layout */}
+        <div className="grid gap-6 md:grid-cols-2">
         {/* Next Class */}
         <Card title="Next Class">
           {nextClass ? (

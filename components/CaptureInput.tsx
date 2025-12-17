@@ -67,16 +67,16 @@ export default function CaptureInput() {
   };
 
   return (
-    <Card title="Quick Capture">
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="flex gap-3">
+    <Card title="Add Task or Deadline">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex gap-2">
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Add task or deadline... (press / to focus)"
-            className="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 placeholder-slate-500 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder-slate-400"
+            placeholder="What needs to be done..."
+            className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-500 transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-10 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
           />
           <button
             type="submit"
@@ -85,8 +85,8 @@ export default function CaptureInput() {
             Add
           </button>
         </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          💡 Tip: Type "tomorrow" or "today" for quick deadlines
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Tip: Type "tomorrow" or "today" for quick deadlines
         </p>
       </form>
     </Card>
