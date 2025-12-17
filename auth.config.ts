@@ -51,9 +51,12 @@ export const authConfig: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        console.log('JWT callback - creating token for user:', user.id);
         token.id = user.id;
         token.name = user.name;
         token.email = user.email;
+      } else {
+        console.log('JWT callback - no user, token:', token ? 'exists' : 'null');
       }
       return token;
     },
