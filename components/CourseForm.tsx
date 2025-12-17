@@ -240,7 +240,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
         </Button>
       </div>
 
-      <div className="flex gap-3" style={{ paddingTop: '12px' }}>
+      <div className="flex gap-3" style={{ paddingTop: '20px' }}>
         <Button
           variant="primary"
           size="md"
