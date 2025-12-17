@@ -69,22 +69,22 @@ export default function CaptureInput() {
   };
 
   return (
-    <Card padding="md">
-      <form onSubmit={handleSubmit} className="flex items-center gap-3">
+    <Card padding="lg">
+      <form onSubmit={handleSubmit} className="flex items-center gap-4">
         <input
           ref={inputRef}
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="What needs to be done..."
-          className="flex-1 h-10 px-3 py-2 bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] rounded-[var(--radius-control)] transition-colors focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)]"
+          className="flex-1 h-11 px-4 py-3 bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--muted)] rounded-[var(--radius-control)] transition-colors focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)]"
         />
         <Button variant="primary" size="md" type="submit">
           <Plus size={18} />
           Add
         </Button>
       </form>
-      <p className="text-xs text-[var(--text-muted)] mt-2">
+      <p className="text-xs text-[var(--muted)] mt-4">
         Tip: Type "tomorrow" or "today" for quick deadlines
       </p>
     </Card>

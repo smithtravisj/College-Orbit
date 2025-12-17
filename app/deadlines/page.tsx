@@ -73,8 +73,8 @@ export default function DeadlinesPage() {
           </Button>
         }
       />
-      <div className="mx-auto max-w-[var(--container)] px-6 py-6">
-        <div className="grid grid-cols-12 gap-6">
+      <div className="mx-auto max-w-[var(--container)] px-8 py-8">
+        <div className="grid grid-cols-12 gap-7">
           {/* Filters sidebar - 3 columns */}
           <div className="col-span-12 lg:col-span-3">
             <Card padding="lg">

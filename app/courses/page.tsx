@@ -43,7 +43,7 @@ export default function CoursesPage() {
           )
         }
       />
-      <div className="mx-auto max-w-[var(--container)] px-6 py-6 space-y-6">
+      <div className="mx-auto max-w-[var(--container)] px-8 py-8 space-y-7">
           {isAdding && (
             <Card title="Add Course" padding="lg">
               <CourseForm onClose={() => setIsAdding(false)} />

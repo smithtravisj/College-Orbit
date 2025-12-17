@@ -59,7 +59,7 @@ export default function ToolsPage() {
   return (
     <>
       <PageHeader title="Tools" subtitle="Useful utilities for your semester" />
-      <div className="mx-auto max-w-[var(--container)] px-6 py-6 space-y-6">
+      <div className="mx-auto max-w-[var(--container)] px-8 py-8 space-y-7">
           {/* GPA Calculator */}
           <Card title="GPA Calculator" padding="lg">
             <div className="space-y-4">

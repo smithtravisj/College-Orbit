@@ -81,11 +81,11 @@ export default function Dashboard() {
   return (
     <>
       <PageHeader title="Dashboard" subtitle="Welcome back. Here's your schedule and tasks for today." />
-      <div className="mx-auto max-w-[var(--container)] px-6 py-6">
-        <div className="grid grid-cols-12 gap-6">
+      <div className="mx-auto max-w-[var(--container)] px-8 py-8">
+        <div className="grid grid-cols-12 gap-7">
           {/* Top row - 3 cards */}
-          <div className="col-span-12 lg:col-span-4">
-            <Card title="Next Class" padding="lg">
+          <div className="col-span-12 lg:col-span-4 h-full">
+            <Card title="Next Class" padding="lg" className="h-full flex flex-col">
               {nextClass ? (
                 <div className="space-y-4">
                   <div>
@@ -117,8 +117,8 @@ export default function Dashboard() {
           </div>
 
           {/* Due Soon */}
-          <div className="col-span-12 lg:col-span-4">
-            <Card title="Due Soon" padding="lg">
+          <div className="col-span-12 lg:col-span-4 h-full">
+            <Card title="Due Soon" padding="lg" className="h-full flex flex-col">
               {dueSoon.length > 0 ? (
                 <div className="space-y-2">
                   {dueSoon.slice(0, 3).map((d, idx) => {
@@ -145,8 +145,8 @@ export default function Dashboard() {
           </div>
 
           {/* Overview */}
-          <div className="col-span-12 lg:col-span-4">
-            <Card title="Overview" padding="lg">
+          <div className="col-span-12 lg:col-span-4 h-full">
+            <Card title="Overview" padding="lg" className="h-full flex flex-col">
               <div className="space-y-0 divide-y divide-[var(--border)]">
                 <div className="flex items-center justify-between py-3 first:pt-0">
                   <div className="text-xs text-[var(--muted)]">Classes remaining</div>
@@ -171,8 +171,8 @@ export default function Dashboard() {
           </div>
 
           {/* Second row - Tasks and Quick Links */}
-          <div className="col-span-12 lg:col-span-8">
-            <Card title="Today's Tasks" padding="lg">
+          <div className="col-span-12 lg:col-span-8 h-full">
+            <Card title="Today's Tasks" padding="lg" className="h-full flex flex-col">
                 {todayTasks.length > 0 || pinnedTask ? (
                   <div className="space-y-0">
                     {pinnedTask && (
@@ -237,8 +237,8 @@ export default function Dashboard() {
           </div>
 
           {/* Quick Links */}
-          <div className="col-span-12 lg:col-span-4">
-            <Card title="Quick Links" padding="lg">
+          <div className="col-span-12 lg:col-span-4 h-full">
+            <Card title="Quick Links" padding="lg" className="h-full flex flex-col">
               {quickLinks.length > 0 ? (
                 <div className="space-y-1">
                   {quickLinks.map((link, idx) => (
