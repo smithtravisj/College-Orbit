@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [hidingTasks, setHidingTasks] = useState<Set<string>>(new Set());
   const [toggledTasks, setToggledTasks] = useState<Set<string>>(new Set());
+  const [hidingDeadlines, setHidingDeadlines] = useState<Set<string>>(new Set());
   const [taskFormData, setTaskFormData] = useState({
     title: '',
     courseId: '',
@@ -24,7 +25,7 @@ export default function Dashboard() {
     dueTime: '',
     notes: '',
   });
-  const { courses, deadlines, tasks, settings, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone } = useAppStore();
+  const { courses, deadlines, tasks, settings, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone, updateDeadline, deleteDeadline } = useAppStore();
 
   useEffect(() => {
     initializeStore();
@@ -214,30 +215,71 @@ export default function Dashboard() {
                     const isOverdueDeadline = isOverdue(d.dueAt) && d.status === 'open';
                     const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
                     return (
-                      <div key={d.id} style={{ paddingTop: '10px', paddingBottom: '10px' }} className="first:pt-0 last:pb-0">
-                        <div className="flex items-start gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <div className="text-sm font-medium text-[var(--text)]">{d.title}</div>
-                              {isOverdueDeadline && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
-                            </div>
-                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <div key={d.id} style={{ paddingTop: '10px', paddingBottom: '10px', opacity: hidingDeadlines.has(d.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group">
+                        <input
+                          type="checkbox"
+                          checked={d.status === 'done'}
+                          onChange={() => {
+                            const isCurrentlyDone = d.status === 'done';
+                            updateDeadline(d.id, {
+                              status: isCurrentlyDone ? 'open' : 'done',
+                            });
+                            if (!isCurrentlyDone) {
+                              setTimeout(() => {
+                                setHidingDeadlines(prev => new Set(prev).add(d.id));
+                              }, 50);
+                            } else {
+                              setHidingDeadlines(prev => {
+                                const newSet = new Set(prev);
+                                newSet.delete(d.id);
+                                return newSet;
+                              });
+                            }
+                          }}
+                          style={{
+                            appearance: 'none',
+                            width: '16px',
+                            height: '16px',
+                            border: d.status === 'done' ? 'none' : '2px solid var(--border)',
+                            borderRadius: '3px',
+                            backgroundColor: d.status === 'done' ? '#4a7c59' : 'transparent',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            backgroundImage: d.status === 'done' ? 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22white%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z%22 clip-rule=%22evenodd%22 /%3E%3C/svg%3E")' : 'none',
+                            backgroundSize: '100%',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'center',
+                            transition: 'all 0.3s ease'
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <div className={`text-sm font-medium ${d.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'}`}>{d.title}</div>
+                            {isOverdueDeadline && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
+                          </div>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                              {formatDate(d.dueAt)}
+                            </span>
+                            {shouldShowTime && (
                               <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
-                                {formatDate(d.dueAt)}
+                                {dueTime}
                               </span>
-                              {shouldShowTime && (
-                                <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
-                                  {dueTime}
-                                </span>
-                              )}
-                              {course && (
-                                <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
-                                  {course.code}
-                                </span>
-                              )}
-                            </div>
+                            )}
+                            {course && (
+                              <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                                {course.code}
+                              </span>
+                            )}
                           </div>
                         </div>
+                        <button
+                          onClick={() => deleteDeadline(d.id)}
+                          className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0"
+                          title="Delete deadline"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     );
                   })}
