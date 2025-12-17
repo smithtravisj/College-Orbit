@@ -62,7 +62,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <Input
-          label="Course Code *"
+          label="Course Code"
           type="text"
           value={form.code}
           onChange={(e) => setForm({ ...form, code: e.target.value })}
@@ -70,7 +70,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
           required
         />
         <Input
-          label="Course Name *"
+          label="Course Name"
           type="text"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
