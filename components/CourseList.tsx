@@ -52,7 +52,7 @@ export default function CourseList({ courses, onEdit }: CourseListProps) {
                 {course.meetingTimes && course.meetingTimes.length > 0 && (
                   <div className="flex flex-col gap-0.5 text-xs text-[var(--text-muted)]">
                     {course.meetingTimes.map((mt, idx) => (
-                      <span key={idx}>{mt.days.join(', ')} {formatTime12Hour(mt.start)}–{formatTime12Hour(mt.end)}</span>
+                      <span key={idx}>{mt.days.join(', ')} {formatTime12Hour(mt.start)} – {formatTime12Hour(mt.end)}</span>
                     ))}
                   </div>
                 )}
