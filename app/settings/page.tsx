@@ -75,7 +75,7 @@ export default function SettingsPage() {
     <>
       <PageHeader title="Settings" subtitle="Customize your experience" />
       <div className="mx-auto w-full max-w-[768px]" style={{ padding: '24px' }}>
-        <div className="grid grid-cols-1 gap-[var(--grid-gap)]">
+        <div className="w-full grid grid-cols-1 gap-[var(--grid-gap)]">
           {/* Due Soon Window */}
           <Card title="Appearance">
             <div className="space-y-5">
