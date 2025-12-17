@@ -54,11 +54,11 @@ export default function CourseList({ courses, onEdit, showSemester = false }: Co
                 </h3>
               </div>
               {showSemester && course.term && (
-                <div className="text-xs text-[var(--text-muted)] mt-1">
+                <div className="text-xs text-[var(--text-muted)]" style={{ marginTop: '6px' }}>
                   {course.term}
                 </div>
               )}
-              <div className="flex flex-col gap-2 mt-2">
+              <div className="flex flex-col gap-2" style={{ marginTop: '8px' }}>
                 {course.meetingTimes && course.meetingTimes.length > 0 && (
                   <div className="flex flex-col gap-0.5 text-xs text-[var(--text-muted)]">
                     {course.meetingTimes.map((mt, idx) => (
