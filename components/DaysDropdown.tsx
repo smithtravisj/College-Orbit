@@ -70,7 +70,6 @@ export default function DaysDropdown({ value, onChange, label }: DaysDropdownPro
                   type="checkbox"
                   checked={value.includes(day)}
                   onChange={() => handleToggleDay(day)}
-                  className="w-4 h-4 rounded accent-[#2563eb] cursor-pointer"
                 />
                 <span className="text-sm text-[var(--text)]">{day}</span>
               </label>
