@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
-import { isToday, formatTime, formatDate, isOverdue } from '@/lib/utils';
+import { isToday, formatDate, isOverdue } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import Badge from '@/components/ui/Badge';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 import Link from 'next/link';
@@ -206,19 +205,38 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
             <Card title="Due Soon" className="h-full flex flex-col">
               {dueSoon.length > 0 ? (
-                <div className="space-y-0">
-                  {dueSoon.slice(0, 3).map((d, idx) => {
+                <div className="space-y-4 divide-y divide-[var(--border)]">
+                  {dueSoon.slice(0, 3).map((d) => {
                     const course = courses.find((c) => c.id === d.courseId);
-                    const isOverd = isOverdue(d.dueAt);
+                    const dueHours = new Date(d.dueAt).getHours();
+                    const dueMinutes = new Date(d.dueAt).getMinutes();
+                    const dueTime = new Date(d.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const isOverdueDeadline = isOverdue(d.dueAt) && d.status === 'open';
+                    const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
                     return (
-                      <div key={d.id} className={`py-6 ${idx < dueSoon.length - 1 ? 'border-b border-[var(--border)]' : ''}`}>
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0 space-y-3">
-                            {isOverd && <Badge variant="danger">Overdue</Badge>}
-                            <div className="text-sm font-medium leading-tight text-[var(--text)] truncate">{d.title}</div>
-                            {course && <div className="text-xs text-[var(--text-muted)] leading-relaxed">{course.code}</div>}
+                      <div key={d.id} style={{ paddingTop: '10px', paddingBottom: '10px' }} className="first:pt-0 last:pb-0">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <div className="text-sm font-medium text-[var(--text)]">{d.title}</div>
+                              {isOverdueDeadline && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
+                            </div>
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                                {formatDate(d.dueAt)}
+                              </span>
+                              {shouldShowTime && (
+                                <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                                  {dueTime}
+                                </span>
+                              )}
+                              {course && (
+                                <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                                  {course.code}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <div className="text-xs text-[var(--text-muted)] flex-shrink-0 text-right leading-relaxed">{formatTime(d.dueAt)}</div>
                         </div>
                       </div>
                     );
