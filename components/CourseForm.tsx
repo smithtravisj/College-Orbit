@@ -19,7 +19,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
     code: '',
     name: '',
     term: '',
-    meetingTimes: [{ day: 'Mon', start: '10:00', end: '10:50', location: '' }],
+    meetingTimes: [{ days: ['Mon'], start: '10:00', end: '10:50', location: '' }],
     links: [{ label: '', url: '' }],
     colorTag: '',
   });
@@ -30,7 +30,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
         code: course.code,
         name: course.name,
         term: course.term,
-        meetingTimes: course.meetingTimes || [{ day: 'Mon', start: '10:00', end: '10:50', location: '' }],
+        meetingTimes: course.meetingTimes || [{ days: ['Mon'], start: '10:00', end: '10:50', location: '' }],
         links: course.links || [{ label: '', url: '' }],
         colorTag: course.colorTag || '',
       });
@@ -93,50 +93,65 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
         <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Meeting Times</label>
         <div className="space-y-3">
           {form.meetingTimes.map((mt, idx) => (
-            <div key={idx} className="flex gap-3 items-end">
-              <Select
-                label={idx === 0 ? 'Day' : ''}
-                value={mt.day}
-                onChange={(e) => {
-                  const newMeetingTimes = [...form.meetingTimes];
-                  newMeetingTimes[idx].day = e.target.value;
-                  setForm({ ...form, meetingTimes: newMeetingTimes });
-                }}
-                options={['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => ({ value: d, label: d }))}
-                className="w-24"
-              />
-              <Input
-                label={idx === 0 ? 'Start' : ''}
-                type="time"
-                value={mt.start}
-                onChange={(e) => {
-                  const newMeetingTimes = [...form.meetingTimes];
-                  newMeetingTimes[idx].start = e.target.value;
-                  setForm({ ...form, meetingTimes: newMeetingTimes });
-                }}
-              />
-              <Input
-                label={idx === 0 ? 'End' : ''}
-                type="time"
-                value={mt.end}
-                onChange={(e) => {
-                  const newMeetingTimes = [...form.meetingTimes];
-                  newMeetingTimes[idx].end = e.target.value;
-                  setForm({ ...form, meetingTimes: newMeetingTimes });
-                }}
-              />
-              <Input
-                label={idx === 0 ? 'Location' : ''}
-                type="text"
-                value={mt.location}
-                onChange={(e) => {
-                  const newMeetingTimes = [...form.meetingTimes];
-                  newMeetingTimes[idx].location = e.target.value;
-                  setForm({ ...form, meetingTimes: newMeetingTimes });
-                }}
-                placeholder="e.g., Room 101"
-                className="flex-1"
-              />
+            <div key={idx}>
+              {idx === 0 && (
+                <label className="block text-sm font-medium text-[var(--text)] mb-2">Days</label>
+              )}
+              <div className="flex gap-3 items-end flex-wrap">
+                <div className="flex gap-2 flex-wrap">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                    <label key={day} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={mt.days.includes(day)}
+                        onChange={(e) => {
+                          const newMeetingTimes = [...form.meetingTimes];
+                          if (e.target.checked) {
+                            newMeetingTimes[idx].days = [...mt.days, day];
+                          } else {
+                            newMeetingTimes[idx].days = mt.days.filter(d => d !== day);
+                          }
+                          setForm({ ...form, meetingTimes: newMeetingTimes });
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">{day}</span>
+                    </label>
+                  ))}
+                </div>
+                <Input
+                  label={idx === 0 ? 'Start' : ''}
+                  type="time"
+                  value={mt.start}
+                  onChange={(e) => {
+                    const newMeetingTimes = [...form.meetingTimes];
+                    newMeetingTimes[idx].start = e.target.value;
+                    setForm({ ...form, meetingTimes: newMeetingTimes });
+                  }}
+                />
+                <Input
+                  label={idx === 0 ? 'End' : ''}
+                  type="time"
+                  value={mt.end}
+                  onChange={(e) => {
+                    const newMeetingTimes = [...form.meetingTimes];
+                    newMeetingTimes[idx].end = e.target.value;
+                    setForm({ ...form, meetingTimes: newMeetingTimes });
+                  }}
+                />
+                <Input
+                  label={idx === 0 ? 'Location' : ''}
+                  type="text"
+                  value={mt.location}
+                  onChange={(e) => {
+                    const newMeetingTimes = [...form.meetingTimes];
+                    newMeetingTimes[idx].location = e.target.value;
+                    setForm({ ...form, meetingTimes: newMeetingTimes });
+                  }}
+                  placeholder="e.g., Room 101"
+                  className="flex-1"
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -159,7 +174,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
             ...form,
             meetingTimes: [
               ...form.meetingTimes,
-              { day: 'Mon', start: '10:00', end: '10:50', location: '' },
+              { days: ['Mon'], start: '10:00', end: '10:50', location: '' },
             ],
           });
         }} style={{ marginTop: '12px', paddingLeft: '16px', paddingRight: '16px' }}>

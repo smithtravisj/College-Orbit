@@ -4,7 +4,7 @@ export interface Course {
   name: string;
   term: string;
   meetingTimes: Array<{
-    day: string;
+    days: string[];
     start: string;
     end: string;
     location: string;

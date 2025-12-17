@@ -60,7 +60,7 @@ export default function CourseList({ courses, onEdit }: CourseListProps) {
                 {course.meetingTimes && course.meetingTimes.length > 0 && (
                   <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
                     {course.meetingTimes.map((mt, idx) => (
-                      <span key={idx}>{mt.day} {mt.start}–{mt.end}</span>
+                      <span key={idx}>{mt.days?.join(', ') || mt.day} {mt.start}–{mt.end}</span>
                     ))}
                   </div>
                 )}
