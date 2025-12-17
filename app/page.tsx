@@ -410,42 +410,45 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {/* Quick Links */}
-            <div className="col-span-12 lg:col-span-4 lg:flex">
-              <Card title="Quick Links" className="h-full flex flex-col w-full">
-              {quickLinks.length > 0 ? (
-                <div className="space-y-3">
-                  {quickLinks.map((link, idx) => (
-                    <a
-                      key={idx}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-between px-4 py-4 rounded-[var(--radius-control)] hover:bg-white/5 transition-colors group text-sm"
-                    >
-                      <span className="text-[var(--muted)] group-hover:text-[var(--text)] truncate">{link.label}</span>
-                      <ExternalLink size={16} className="text-[var(--muted)] group-hover:text-[var(--accent)] flex-shrink-0 ml-2" />
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  title="No quick links"
-                  description="Add links in your courses"
-                  action={{ label: 'Go to Courses', onClick: () => (window.location.href = '/courses') }}
-                />
-              )}
-              </Card>
-            </div>
-          </div>
-
-          {/* Upcoming This Week */}
-          <div className="col-span-12 min-h-[180px]">
-            <Card title="Upcoming This Week" subtitle="Your schedule for the next 7 days" className="h-full flex flex-col">
-              <div className="text-sm text-[var(--muted)]">
-                <p>No upcoming events</p>
+            {/* Upcoming This Week & Quick Links Row */}
+            <div className="col-span-12 lg:flex lg:gap-[var(--grid-gap)]">
+              {/* Upcoming This Week */}
+              <div className="col-span-12 lg:col-span-7 lg:flex">
+                <Card title="Upcoming This Week" subtitle="Your schedule for the next 7 days" className="h-full flex flex-col w-full">
+                  <div className="text-sm text-[var(--muted)]">
+                    <p>No upcoming events</p>
+                  </div>
+                </Card>
               </div>
-            </Card>
+
+              {/* Quick Links */}
+              <div className="col-span-12 lg:col-span-5 lg:flex">
+                <Card title="Quick Links" className="h-full flex flex-col w-full">
+                {quickLinks.length > 0 ? (
+                  <div className="space-y-3">
+                    {quickLinks.map((link, idx) => (
+                      <a
+                        key={idx}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between px-4 py-4 rounded-[var(--radius-control)] hover:bg-white/5 transition-colors group text-sm"
+                      >
+                        <span className="text-[var(--muted)] group-hover:text-[var(--text)] truncate">{link.label}</span>
+                        <ExternalLink size={16} className="text-[var(--muted)] group-hover:text-[var(--accent)] flex-shrink-0 ml-2" />
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="No quick links"
+                    description="Add links in your courses"
+                    action={{ label: 'Go to Courses', onClick: () => (window.location.href = '/courses') }}
+                  />
+                )}
+                </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>
