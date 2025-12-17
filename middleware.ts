@@ -24,7 +24,12 @@ export async function middleware(request: NextRequest) {
 
   // Redirect to dashboard if accessing auth pages with valid token
   if (isAuthPage && token) {
+    console.log('User on auth page with valid token, redirecting to dashboard');
     return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  if (isAuthPage && !token) {
+    console.log('User on auth page without token, allowing access to login/signup');
   }
 
   return NextResponse.next();
