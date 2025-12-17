@@ -13,7 +13,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label className="block text-sm font-medium text-[var(--text)] mb-2">
             {label}
-            {props.required && <span className="text-[var(--danger)]">*</span>}
+            {props.required && <span className="text-[var(--danger)]"> *</span>}
           </label>
         )}
         <input
@@ -47,7 +47,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         {label && (
           <label className="block text-sm font-medium text-[var(--text)] mb-2">
             {label}
-            {props.required && <span className="text-[var(--danger)]">*</span>}
+            {props.required && <span className="text-[var(--danger)]"> *</span>}
           </label>
         )}
         <textarea
@@ -80,7 +80,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label className="block text-sm font-medium text-[var(--text)] mb-2">
             {label}
-            {props.required && <span className="text-[var(--danger)]">*</span>}
+            {props.required && <span className="text-[var(--danger)]"> *</span>}
           </label>
         )}
         <select
