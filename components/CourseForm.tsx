@@ -62,7 +62,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <Input
-          label="Course Code"
+          label="Course Code *"
           type="text"
           value={form.code}
           onChange={(e) => setForm({ ...form, code: e.target.value })}
@@ -70,7 +70,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
           required
         />
         <Input
-          label="Course Name"
+          label="Course Name *"
           type="text"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -79,16 +79,18 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
         />
       </div>
 
-      <Input
-        label="Term"
-        type="text"
-        value={form.term}
-        onChange={(e) => setForm({ ...form, term: e.target.value })}
-        placeholder="e.g., Winter 2026"
-      />
+      <div style={{ paddingTop: '12px' }}>
+        <Input
+          label="Term"
+          type="text"
+          value={form.term}
+          onChange={(e) => setForm({ ...form, term: e.target.value })}
+          placeholder="e.g., Winter 2026"
+        />
+      </div>
 
-      <div>
-        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Meeting Times</label>
+      <div style={{ paddingTop: '12px' }}>
+        <label className="block text-base font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Meeting Times</label>
         <div className="space-y-3">
           {form.meetingTimes.map((mt, idx) => (
             <div key={idx} className="flex gap-3 items-end">
@@ -152,7 +154,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
             </div>
           ))}
         </div>
-        <Button variant="secondary" type="button" onClick={() => {
+        <Button variant="secondary" size="sm" type="button" onClick={() => {
           setForm({
             ...form,
             meetingTimes: [
@@ -160,14 +162,14 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
               { day: 'Mon', start: '10:00', end: '10:50', location: '' },
             ],
           });
-        }} style={{ marginTop: '12px' }}>
-          <Plus size={18} />
+        }} style={{ marginTop: '12px', paddingLeft: '16px', paddingRight: '16px' }}>
+          <Plus size={16} />
           Add Time
         </Button>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links</label>
+      <div style={{ paddingTop: '12px' }}>
+        <label className="block text-base font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links</label>
         <div className="space-y-3">
           {form.links.map((link, idx) => (
             <div key={idx} className="flex gap-3 items-end">
@@ -212,19 +214,30 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
             </div>
           ))}
         </div>
-        <Button variant="secondary" type="button" onClick={() => {
+        <Button variant="secondary" size="sm" type="button" onClick={() => {
           setForm({
             ...form,
             links: [...form.links, { label: '', url: '' }],
           });
-        }} style={{ marginTop: '12px' }}>
-          <Plus size={18} />
+        }} style={{ marginTop: '12px', paddingLeft: '16px', paddingRight: '16px' }}>
+          <Plus size={16} />
           Add Link
         </Button>
       </div>
 
       <div className="flex gap-3" style={{ paddingTop: '12px' }}>
-        <Button variant="primary" size="md" type="submit">
+        <Button
+          variant="primary"
+          size="md"
+          type="submit"
+          style={{
+            backgroundColor: '#132343',
+            color: 'white',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderColor: 'var(--border)'
+          }}
+        >
           {courseId ? 'Update' : 'Add'} Course
         </Button>
         <Button variant="secondary" size="md" type="button" onClick={onClose}>

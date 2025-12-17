@@ -82,7 +82,7 @@ export default function CoursesPage() {
             {isAdding && (
             <div style={{ marginBottom: '24px' }}>
               <Card>
-                <h3 className="text-sm font-semibold text-[var(--text)]" style={{ marginBottom: '20px' }}>Add Course</h3>
+                <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: '20px' }}>Add Course</h3>
                 <CourseForm onClose={() => setIsAdding(false)} />
               </Card>
             </div>
@@ -92,7 +92,7 @@ export default function CoursesPage() {
             {editingId && (
             <div style={{ marginBottom: '24px' }}>
               <Card>
-                <h3 className="text-sm font-semibold text-[var(--text)]" style={{ marginBottom: '20px' }}>Edit Course</h3>
+                <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: '20px' }}>Edit Course</h3>
                 <CourseForm courseId={editingId} onClose={() => setEditingId(null)} />
               </Card>
             </div>
