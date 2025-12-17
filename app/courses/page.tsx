@@ -80,23 +80,21 @@ export default function CoursesPage() {
           <div className="col-span-12 lg:col-span-9 space-y-6">
             {/* Add Course Form */}
             {isAdding && (
-              <div style={{ marginBottom: '24px' }}>
-                <Card>
-                  <h3 className="text-sm font-semibold text-[var(--text)] mb-4">Add Course</h3>
-                  <CourseForm onClose={() => setIsAdding(false)} />
-                </Card>
-              </div>
-            )}
+            <div style={{ marginBottom: '24px' }}>
+              <Card>
+                <CourseForm onClose={() => setIsAdding(false)} />
+              </Card>
+            </div>
+          )}
 
             {/* Edit Course Form */}
             {editingId && (
-              <div style={{ marginBottom: '24px' }}>
-                <Card>
-                  <h3 className="text-sm font-semibold text-[var(--text)] mb-4">Edit Course</h3>
-                  <CourseForm courseId={editingId} onClose={() => setEditingId(null)} />
-                </Card>
-              </div>
-            )}
+            <div style={{ marginBottom: '24px' }}>
+              <Card>
+                <CourseForm courseId={editingId} onClose={() => setEditingId(null)} />
+              </Card>
+            </div>
+          )}
 
             {/* Courses List */}
             {filteredCourses.length > 0 ? (
