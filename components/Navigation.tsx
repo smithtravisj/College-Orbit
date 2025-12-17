@@ -59,9 +59,6 @@ export default function Navigation() {
                 }`}
                 style={{ padding: '0 12px' }}
               >
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-full bg-[var(--accent)]" />
-                )}
                 <Icon size={22} className="h-[22px] w-[22px] opacity-80 group-hover:opacity-100 flex-shrink-0" />
                 <span className="truncate">{item.label}</span>
               </Link>
