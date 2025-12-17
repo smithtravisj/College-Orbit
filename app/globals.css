@@ -437,18 +437,3 @@ select:disabled {
   }
 }
 
-/* DEBUG: Verify CSS tokens are live */
-body::before {
-  content: "SPACING TOKEN TEST";
-  position: fixed;
-  bottom: 12px;
-  left: 12px;
-  z-index: 9999;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: rgba(37, 99, 235, 0.2);
-  border: 1px solid rgba(37, 99, 235, 0.35);
-  color: #e6edf6;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-}

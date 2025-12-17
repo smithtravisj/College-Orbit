@@ -26,9 +26,9 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)] px-6 py-6">
-        <div className="mb-8">
-          <h1 className="text-lg font-semibold text-[var(--text)] leading-tight">BYU Survival Tool</h1>
+      <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)]" style={{ padding: '20px 16px' }}>
+        <div style={{ marginBottom: '16px' }}>
+          <h1 className="text-lg font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px' }}>BYU Survival Tool</h1>
         </div>
         <div className="space-y-3 flex-1">
           {NAV_ITEMS.map((item) => {
@@ -39,11 +39,12 @@ export default function Navigation() {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
-                className={`relative flex items-center gap-3 h-12 px-4 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
+                className={`relative flex items-center gap-3 h-12 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   isActive
                     ? 'text-[var(--text)] bg-[var(--accent-2)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
+                style={{ padding: '0 12px' }}
               >
                 {isActive && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-full bg-[var(--accent)]" />
@@ -67,9 +68,10 @@ export default function Navigation() {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex flex-1 flex-col items-center justify-center py-3 text-xs font-medium transition-colors duration-150 ${
+                className={`flex flex-1 flex-col items-center justify-center text-xs font-medium transition-colors duration-150 ${
                   isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
                 }`}
+                style={{ padding: '12px 8px' }}
               >
                 <Icon size={24} className="mb-1" />
                 <span>{item.label}</span>

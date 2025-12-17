@@ -22,10 +22,10 @@ const Card: React.FC<CardProps> = ({
       className={`rounded-[16px] border border-[var(--border)] bg-[var(--panel)] shadow-[var(--shadow-sm)] transition-colors h-full flex flex-col ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${className}`}
     >
       {/* Inner content wrapper: padding is HARDCODED and CANNOT be bypassed */}
-      <div className="flex flex-col flex-1" style={{ padding: '28px' }}>
+      <div className="flex flex-col flex-1" style={{ padding: '24px' }}>
         {/* Header block: enforced spacing */}
         {title && (
-          <div className="mb-8 flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between gap-4" style={{ marginBottom: '16px' }}>
             <div className="space-y-2">
               <h3 className="text-lg md:text-xl font-semibold leading-[1.25] text-[var(--text)]">{title}</h3>
               {subtitle && <p className="text-sm leading-[1.8] text-[var(--muted)]">{subtitle}</p>}

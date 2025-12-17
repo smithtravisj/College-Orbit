@@ -74,15 +74,15 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader title="Settings" subtitle="Customize your experience" />
-      <div className="mx-auto w-full max-w-[768px] px-[var(--content-padding-desktop)] py-12 space-y-[var(--grid-gap)]">
+      <div className="mx-auto w-full max-w-[768px] space-y-[var(--grid-gap)]" style={{ padding: '40px 60px' }}>
           {/* Due Soon Window */}
           <Card title="Appearance">
             <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-[var(--text)] mb-2">
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
                   Due Soon Window
                 </label>
-                <p className="text-sm text-[var(--text-muted)] mb-3">
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
                   Show deadlines within this many days
                 </p>
                 <div className="flex items-center gap-3">
@@ -108,10 +108,10 @@ export default function SettingsPage() {
           <Card title="Data & Backup">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[var(--text)] mb-3">
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
                   Export your data
                 </label>
-                <p className="text-sm text-[var(--text-muted)] mb-4">
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Download a backup of all your data as a JSON file
                 </p>
                 <Button variant="primary" onClick={handleExport}>
@@ -119,15 +119,15 @@ export default function SettingsPage() {
                   Export Data
                 </Button>
                 {exportMessage && (
-                  <p className="text-sm text-[var(--success)] mt-2">{exportMessage}</p>
+                  <p className="text-sm text-[var(--success)]" style={{ marginTop: '8px' }}>{exportMessage}</p>
                 )}
               </div>
 
-              <div className="pt-4 border-t border-[var(--border)]">
-                <label className="block text-sm font-medium text-[var(--text)] mb-3">
+              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
                   Import your data
                 </label>
-                <p className="text-sm text-[var(--text-muted)] mb-4">
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Restore data from a previous backup
                 </p>
                 <input
@@ -149,15 +149,15 @@ export default function SettingsPage() {
           <Card title="Privacy">
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-[var(--text-muted)] mb-4">
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   This app stores all data locally on your device. No information is sent to external servers. You have complete control over your data.
                 </p>
               </div>
-              <div className="pt-4 border-t border-[var(--border)]">
-                <label className="block text-sm font-medium text-[var(--danger)] mb-2">
+              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
+                <label className="block text-sm font-medium text-[var(--danger)]" style={{ marginBottom: '8px' }}>
                   Danger Zone
                 </label>
-                <p className="text-sm text-[var(--text-muted)] mb-4">
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Permanently delete all your data. This action cannot be undone.
                 </p>
                 <Button variant="danger" onClick={handleDeleteAllData}>
