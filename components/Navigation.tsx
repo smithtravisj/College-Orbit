@@ -10,6 +10,7 @@ import {
   Calendar,
   Wrench,
   Settings,
+  User,
   LogOut,
 } from 'lucide-react';
 
@@ -38,7 +39,7 @@ export default function Navigation() {
           <h1 className="font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px', fontSize: '24px' }}>BYU Survival Tool</h1>
           {session?.user && (
             <div className="mt-3 px-2 text-sm text-[var(--text-muted)] truncate">
-              {session.user.email}
+              {session.user.name || session.user.email}
             </div>
           )}
         </div>
@@ -68,9 +69,17 @@ export default function Navigation() {
           })}
         </div>
 
-        {/* Logout Button */}
+        {/* Profile and Logout */}
         {session?.user && (
-          <div className="mt-4 pt-4 border-t border-[var(--border)]">
+          <div className="mt-4 pt-4 border-t border-[var(--border)] space-y-2">
+            <Link
+              href="/profile"
+              className="flex items-center gap-3 w-full h-12 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5"
+              style={{ padding: '0 12px' }}
+            >
+              <User size={22} className="opacity-80" />
+              <span>Profile</span>
+            </Link>
             <button
               onClick={handleLogout}
               className="flex items-center gap-3 w-full h-12 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5"
