@@ -42,11 +42,13 @@ export async function PATCH(req: NextRequest) {
     const session = await getServerSession(authConfig);
 
     if (!session?.user?.id) {
+      console.error('No session found');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const data = await req.json();
     const { name, email, password } = data;
+    console.log('Updating profile for user:', session.user.id, { name, email, password: password ? 'provided' : 'not provided' });
 
     // Check if email is already in use by another user
     if (email) {
@@ -64,9 +66,9 @@ export async function PATCH(req: NextRequest) {
 
     // Prepare update data
     const updateData: any = {};
-    if (name !== undefined) updateData.name = name;
-    if (email !== undefined) updateData.email = email;
-    if (password !== undefined) {
+    if (name !== undefined && name !== '') updateData.name = name;
+    if (email !== undefined && email !== '') updateData.email = email;
+    if (password !== undefined && password !== '') {
       if (password.length < 8) {
         return NextResponse.json(
           { error: 'Password must be at least 8 characters' },
