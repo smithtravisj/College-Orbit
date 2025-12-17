@@ -324,7 +324,7 @@ export default function TasksPage() {
                           height: '20px',
                           border: t.status === 'done' ? 'none' : '2px solid var(--border)',
                           borderRadius: '4px',
-                          backgroundColor: t.status === 'done' ? '#4a7c59' : 'transparent',
+                          backgroundColor: t.status === 'done' ? '#132343' : 'transparent',
                           cursor: 'pointer',
                           flexShrink: 0,
                           backgroundImage: t.status === 'done' ? 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22white%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z%22 clip-rule=%22evenodd%22 /%3E%3C/svg%3E")' : 'none',
