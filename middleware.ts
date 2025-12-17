@@ -14,7 +14,8 @@ export async function middleware(request: NextRequest) {
 
   const isApiAuthRoute = request.nextUrl.pathname.startsWith('/api/auth');
   const isPublicApiRoute = request.nextUrl.pathname.startsWith('/api/user/signup') ||
-    request.nextUrl.pathname.startsWith('/api/migrate');
+    request.nextUrl.pathname.startsWith('/api/migrate') ||
+    request.nextUrl.pathname.startsWith('/api/user/profile');
 
   // Allow API auth routes and public API routes
   if (isApiAuthRoute || isPublicApiRoute) {
@@ -38,6 +39,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api/auth|api/user/signup|api/migrate|_next/static|_next/image|favicon.svg|public).*)',
+    '/((?!api/auth|api/user/signup|api/user/profile|api/migrate|_next/static|_next/image|favicon.svg|public).*)',
   ],
 };
