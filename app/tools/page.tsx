@@ -113,7 +113,7 @@ export default function ToolsPage() {
                 ))}
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3" style={{ marginTop: '20px' }}>
                 <Button variant="secondary" size="md" type="button" onClick={addCourse}>
                   <Plus size={18} />
                   Add Course
