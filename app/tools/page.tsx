@@ -103,7 +103,7 @@ export default function ToolsPage() {
                     />
                     <button
                       onClick={() => removeCourse(idx)}
-                      className="p-2 rounded-md text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors mb-0"
+                      className="p-2 rounded-[10px] text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors mb-0"
                       title="Remove course"
                     >
                       <Trash2 size={18} />

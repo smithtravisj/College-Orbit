@@ -166,7 +166,7 @@ export default function DeadlinesPage() {
                             deleteDeadline(d.id);
                           }
                         }}
-                        className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 ml-2"
+                        className="p-1.5 rounded-[10px] text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 ml-2"
                         title="Delete deadline"
                       >
                         <Trash2 size={18} />
