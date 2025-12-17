@@ -26,7 +26,7 @@ export default function DeadlinesPage() {
   });
   const [filter, setFilter] = useState('all');
 
-  const { courses, deadlines, addDeadline, updateDeadline, deleteDeadline, initializeStore } = useAppStore();
+  const { courses, deadlines, settings, addDeadline, updateDeadline, deleteDeadline, initializeStore } = useAppStore();
 
   useEffect(() => {
     initializeStore();
@@ -150,6 +150,13 @@ export default function DeadlinesPage() {
       }
 
       if (filter === 'overdue') return d.dueAt && isOverdue(d.dueAt) && d.status === 'open';
+      if (filter === 'due-soon') {
+        if (!d.dueAt || d.status !== 'open') return false;
+        const dueDate = new Date(d.dueAt);
+        const windowEnd = new Date();
+        windowEnd.setDate(windowEnd.getDate() + settings.dueSoonWindowDays);
+        return dueDate <= windowEnd && !isOverdue(d.dueAt);
+      }
       if (filter === 'done') return d.status === 'done';
       return d.status === 'open';
     })
@@ -190,6 +197,7 @@ export default function DeadlinesPage() {
               <div className="space-y-2">
                 {[
                   { value: 'all', label: 'All' },
+                  { value: 'due-soon', label: 'Due Soon' },
                   { value: 'overdue', label: 'Overdue' },
                   { value: 'done', label: 'Completed' },
                 ].map((f) => (
