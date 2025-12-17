@@ -119,7 +119,7 @@ export default function ToolsPage() {
                   Add Course
                 </Button>
 
-                <Button size="md" onClick={calculateGPA} style={{ backgroundColor: '#2563eb', color: 'white' }}>
+                <Button size="md" onClick={calculateGPA} style={{ backgroundColor: '#1e40af', color: 'white' }}>
                   Calculate GPA
                 </Button>
               </div>
