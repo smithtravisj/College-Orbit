@@ -323,6 +323,7 @@ export default function Dashboard() {
                         type="checkbox"
                         checked={t.status === 'done'}
                         onChange={() => {
+                          const isCurrentlyDone = t.status === 'done';
                           setToggledTasks(prev => {
                             const newSet = new Set(prev);
                             if (newSet.has(t.id)) {
@@ -333,9 +334,19 @@ export default function Dashboard() {
                             return newSet;
                           });
                           toggleTaskDone(t.id);
-                          setTimeout(() => {
-                            setHidingTasks(prev => new Set(prev).add(t.id));
-                          }, 50);
+                          // Only fade out when marking as done, not when unchecking
+                          if (!isCurrentlyDone) {
+                            setTimeout(() => {
+                              setHidingTasks(prev => new Set(prev).add(t.id));
+                            }, 50);
+                          } else {
+                            // Remove from hiding when unchecking
+                            setHidingTasks(prev => {
+                              const newSet = new Set(prev);
+                              newSet.delete(t.id);
+                              return newSet;
+                            });
+                          }
                         }}
                         style={{
                           appearance: 'none',
