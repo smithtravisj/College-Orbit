@@ -63,10 +63,10 @@
 
   /* Layout system */
   --max-content-width: 1280px;
-  --content-padding-desktop: 80px;
-  --content-padding-tablet: 48px;
-  --content-padding-mobile: 32px;
-  --grid-gap: 48px;
+  --content-padding-desktop: 24px;
+  --content-padding-tablet: 24px;
+  --content-padding-mobile: 20px;
+  --grid-gap: 24px;
   --card-padding: 48px;
   --card-border-radius: 16px;
   --list-row-height: 60px;
