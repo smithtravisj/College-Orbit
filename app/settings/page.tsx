@@ -2,6 +2,11 @@
 
 import { useEffect, useState, useRef } from 'react';
 import useAppStore from '@/lib/store';
+import Header from '@/components/Header';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import { Download, Upload, Trash2 } from 'lucide-react';
 
 export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
@@ -18,7 +23,11 @@ export default function SettingsPage() {
   }, [settings, initializeStore]);
 
   if (!mounted) {
-    return <div className="p-6">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-[var(--text-muted)]">Loading...</div>
+      </div>
+    );
   }
 
   const handleExport = () => {
@@ -34,7 +43,7 @@ export default function SettingsPage() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    setExportMessage('✓ Data exported successfully');
+    setExportMessage('Data exported successfully');
     setTimeout(() => setExportMessage(''), 3000);
   };
 
@@ -56,104 +65,127 @@ export default function SettingsPage() {
   };
 
   const handleDeleteAllData = () => {
-    if (
-      confirm(
-        'Are you sure? This will delete ALL data (courses, tasks, deadlines). This cannot be undone.'
-      )
-    ) {
+    if (confirm('Are you sure? This will delete ALL data (courses, tasks, deadlines). This cannot be undone.')) {
       deleteAllData();
       alert('All data deleted');
     }
   };
 
   return (
-    <div className="space-y-8 p-4 md:p-8">
-      <h2 className="text-2xl font-bold">Settings</h2>
+    <>
+      <Header title="Settings" subtitle="Customize your experience" />
+      <div className="bg-[var(--bg)] min-h-screen">
+        <div className="p-6 md:p-8 max-w-2xl mx-auto space-y-6">
+          {/* Due Soon Window */}
+          <Card title="Appearance" padding="lg">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--text)] mb-2">
+                  Due Soon Window
+                </label>
+                <p className="text-sm text-[var(--text-muted)] mb-3">
+                  Show deadlines within this many days
+                </p>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="number"
+                    min="1"
+                    max="30"
+                    value={dueSoonDays}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      setDueSoonDays(val);
+                      updateSettings({ dueSoonWindowDays: val });
+                    }}
+                    className="w-24"
+                  />
+                  <span className="text-sm text-[var(--text-secondary)]">days</span>
+                </div>
+              </div>
+            </div>
+          </Card>
 
-      {/* Due Soon Window */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-950">
-        <h3 className="mb-4 text-lg font-semibold">Due Soon Window</h3>
-        <div className="flex items-center gap-4">
-          <input
-            type="number"
-            min="1"
-            max="30"
-            value={dueSoonDays}
-            onChange={(e) => {
-              const val = parseInt(e.target.value);
-              setDueSoonDays(val);
-              updateSettings({ dueSoonWindowDays: val });
-            }}
-            className="w-20 rounded border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-          />
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            Show deadlines within this many days
-          </span>
+          {/* Data Management */}
+          <Card title="Data & Backup" padding="lg">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--text)] mb-3">
+                  Export your data
+                </label>
+                <p className="text-sm text-[var(--text-muted)] mb-4">
+                  Download a backup of all your data as a JSON file
+                </p>
+                <Button variant="primary" onClick={handleExport}>
+                  <Download size={18} />
+                  Export Data
+                </Button>
+                {exportMessage && (
+                  <p className="text-sm text-[var(--success)] mt-2">{exportMessage}</p>
+                )}
+              </div>
+
+              <div className="pt-4 border-t border-[var(--border)]">
+                <label className="block text-sm font-medium text-[var(--text)] mb-3">
+                  Import your data
+                </label>
+                <p className="text-sm text-[var(--text-muted)] mb-4">
+                  Restore data from a previous backup
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleImport}
+                  className="hidden"
+                />
+                <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
+                  <Upload size={18} />
+                  Import Data
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          {/* Privacy & Danger Zone */}
+          <Card title="Privacy" padding="lg">
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-[var(--text-muted)] mb-4">
+                  This app stores all data locally on your device. No information is sent to external servers. You have complete control over your data.
+                </p>
+              </div>
+              <div className="pt-4 border-t border-[var(--border)]">
+                <label className="block text-sm font-medium text-[var(--danger)] mb-2">
+                  Danger Zone
+                </label>
+                <p className="text-sm text-[var(--text-muted)] mb-4">
+                  Permanently delete all your data. This action cannot be undone.
+                </p>
+                <Button variant="danger" onClick={handleDeleteAllData}>
+                  <Trash2 size={18} />
+                  Delete All Data
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          {/* About */}
+          <Card title="About" padding="lg">
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="font-semibold text-[var(--text)]">BYU Survival Tool</p>
+                <p className="text-[var(--text-muted)]">v1.0</p>
+              </div>
+              <p className="text-[var(--text-secondary)]">
+                A personal, privacy-first dashboard for BYU students to manage courses, deadlines, and tasks.
+              </p>
+              <p className="text-[var(--text-muted)] text-xs">
+                All data is stored locally. No tracking, no ads, no third-party analytics.
+              </p>
+            </div>
+          </Card>
         </div>
       </div>
-
-      {/* Data Import/Export */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-950">
-        <h3 className="mb-4 text-lg font-semibold">Data Backup</h3>
-        <div className="space-y-3">
-          <button
-            onClick={handleExport}
-            className="block w-full rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Export Data (JSON)
-          </button>
-          {exportMessage && (
-            <p className="text-sm text-green-600 dark:text-green-400">{exportMessage}</p>
-          )}
-
-          <div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              className="hidden"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="block w-full rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              Import Data (JSON)
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Privacy */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-950">
-        <h3 className="mb-4 text-lg font-semibold">Privacy</h3>
-        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-          This app stores all data locally on your device. No information is sent to external servers.
-          You can delete all data at any time.
-        </p>
-        <button
-          onClick={handleDeleteAllData}
-          className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-        >
-          Delete All Data
-        </button>
-      </div>
-
-      {/* About */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-950">
-        <h3 className="mb-4 text-lg font-semibold">About</h3>
-        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-          <p>
-            <strong>BYU Survival Tool</strong> v1.0
-          </p>
-          <p>
-            A personal, privacy-first dashboard for BYU students.
-          </p>
-          <p>
-            All data is stored locally. No tracking, no ads, no third-party analytics.
-          </p>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

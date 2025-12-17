@@ -2,8 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
+import Header from '@/components/Header';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import EmptyState from '@/components/ui/EmptyState';
 import CourseForm from '@/components/CourseForm';
 import CourseList from '@/components/CourseList';
+import { Plus } from 'lucide-react';
 
 export default function CoursesPage() {
   const [mounted, setMounted] = useState(false);
@@ -17,51 +22,52 @@ export default function CoursesPage() {
   }, [initializeStore]);
 
   if (!mounted) {
-    return <div className="p-6">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-[var(--text-muted)]">Loading...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6 p-4 md:p-8">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Courses</h2>
-        {!isAdding && !editingId && (
-          <button
-            onClick={() => setIsAdding(true)}
-            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            + New Course
-          </button>
-        )}
+    <>
+      <Header
+        title="Courses"
+        subtitle="Manage your classes"
+        actions={
+          !isAdding && !editingId && (
+            <Button variant="primary" size="md" onClick={() => setIsAdding(true)}>
+              <Plus size={18} />
+              New Course
+            </Button>
+          )
+        }
+      />
+      <div className="bg-[var(--bg)] min-h-screen">
+        <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
+          {isAdding && (
+            <Card title="Add Course" padding="lg">
+              <CourseForm onClose={() => setIsAdding(false)} />
+            </Card>
+          )}
+
+          {editingId && (
+            <Card title="Edit Course" padding="lg">
+              <CourseForm courseId={editingId} onClose={() => setEditingId(null)} />
+            </Card>
+          )}
+
+          <CourseList onEdit={setEditingId} />
+
+          {courses.length === 0 && !isAdding && !editingId && (
+            <EmptyState
+              title="No courses yet"
+              description="Add your first course to get started"
+              action={{ label: 'Add Course', onClick: () => setIsAdding(true) }}
+            />
+          )}
+        </div>
       </div>
-
-      {isAdding && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-950">
-          <h3 className="mb-4 text-lg font-semibold">Add Course</h3>
-          <CourseForm
-            onClose={() => setIsAdding(false)}
-          />
-        </div>
-      )}
-
-      {editingId && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-950">
-          <h3 className="mb-4 text-lg font-semibold">Edit Course</h3>
-          <CourseForm
-            courseId={editingId}
-            onClose={() => setEditingId(null)}
-          />
-        </div>
-      )}
-
-      <CourseList onEdit={setEditingId} />
-
-      {courses.length === 0 && !isAdding && (
-        <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-900">
-          <p className="text-gray-600 dark:text-gray-400">
-            No courses yet. Add one to get started!
-          </p>
-        </div>
-      )}
-    </div>
+    </>
   );
 }

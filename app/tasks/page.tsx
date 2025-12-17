@@ -3,6 +3,12 @@
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { isToday, formatDate } from '@/lib/utils';
+import Header from '@/components/Header';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Input, { Select, Textarea } from '@/components/ui/Input';
+import EmptyState from '@/components/ui/EmptyState';
+import { Plus, Star, Trash2 } from 'lucide-react';
 
 export default function TasksPage() {
   const [mounted, setMounted] = useState(false);
@@ -23,7 +29,11 @@ export default function TasksPage() {
   }, [initializeStore]);
 
   if (!mounted) {
-    return <div className="p-6">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-[var(--text-muted)]">Loading...</div>
+      </div>
+    );
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -51,155 +61,164 @@ export default function TasksPage() {
   });
 
   return (
-    <div className="space-y-6 p-4 md:p-8">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Tasks</h2>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          + New Task
-        </button>
-      </div>
-
-      <div className="flex gap-2">
-        {['all', 'today', 'done'].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`rounded px-3 py-1 text-sm ${
-              filter === f
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-            }`}
-          >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
-          </button>
-        ))}
-      </div>
-
-      {showForm && (
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-950"
-        >
-          <input
-            type="text"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            placeholder="Task title"
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            required
-          />
-          <div className="mt-2 flex gap-2">
-            <select
-              value={formData.courseId}
-              onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-              className="w-1/3 rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            >
-              <option value="">No Course</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.code}
-                </option>
-              ))}
-            </select>
-            <input
-              type="datetime-local"
-              value={formData.dueAt}
-              onChange={(e) => setFormData({ ...formData, dueAt: e.target.value })}
-              placeholder="Due (optional)"
-              className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            />
+    <>
+      <Header
+        title="Tasks"
+        subtitle="Organize your work"
+        actions={
+          <Button variant="primary" size="md" onClick={() => setShowForm(!showForm)}>
+            <Plus size={18} />
+            New Task
+          </Button>
+        }
+      />
+      <div className="bg-[var(--bg)] min-h-screen">
+        <div className="p-6 md:p-8 max-w-4xl mx-auto">
+          {/* Filter Pills */}
+          <div className="flex gap-3 mb-6">
+            {[
+              { value: 'all', label: 'All Tasks' },
+              { value: 'today', label: 'Today' },
+              { value: 'done', label: 'Completed' },
+            ].map((f) => (
+              <button
+                key={f.value}
+                onClick={() => setFilter(f.value)}
+                className={`px-4 py-2 rounded-[10px] text-sm font-medium transition-colors ${
+                  filter === f.value
+                    ? 'bg-[var(--accent)] text-white'
+                    : 'bg-[var(--panel-2)] text-[var(--text-secondary)] hover:bg-[var(--panel-3)] hover:text-[var(--text)]'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
-          <textarea
-            value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            placeholder="Notes (optional)"
-            className="mt-2 w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            rows={2}
-          />
-          <div className="mt-4 flex gap-2">
-            <button
-              type="submit"
-              className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
-              Add
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowForm(false)}
-              className="rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
 
-      <div className="space-y-2">
-        {filtered.map((t) => {
-          const course = courses.find((c) => c.id === t.courseId);
-          return (
-            <div
-              key={t.id}
-              className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-950"
-            >
-              <div className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={t.status === 'done'}
-                  onChange={() => toggleTaskDone(t.id)}
-                  className="mt-1"
+          {/* Add Task Form */}
+          {showForm && (
+            <Card padding="lg" className="mb-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <Input
+                  label="Task title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="What needs to be done?"
+                  required
                 />
-                <div className="flex-1">
-                  <div
-                    className={`font-semibold ${
-                      t.status === 'done'
-                        ? 'line-through text-gray-500'
-                        : 'text-gray-900 dark:text-gray-100'
-                    }`}
-                  >
-                    {t.title}
-                  </div>
-                  {t.dueAt && (
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Due: {formatDate(t.dueAt)}
-                    </div>
-                  )}
-                  {course && (
-                    <div className="text-xs text-gray-500 dark:text-gray-500">
-                      {course.code}
-                    </div>
-                  )}
+                <div className="grid grid-cols-2 gap-4">
+                  <Select
+                    label="Course (optional)"
+                    value={formData.courseId}
+                    onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
+                    options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                  />
+                  <Input
+                    label="Due date (optional)"
+                    type="datetime-local"
+                    value={formData.dueAt}
+                    onChange={(e) => setFormData({ ...formData, dueAt: e.target.value })}
+                  />
                 </div>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => toggleTaskPin(t.id)}
-                    className={`text-xs ${
-                      t.pinned
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-gray-400 dark:text-gray-600'
-                    }`}
-                  >
-                    📌
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm('Delete this task?')) {
-                        deleteTask(t.id);
-                      }
-                    }}
-                    className="text-xs text-red-600 dark:text-red-400"
-                  >
-                    ✕
-                  </button>
+                <Textarea
+                  label="Notes (optional)"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Add any additional notes..."
+                />
+                <div className="flex gap-3 pt-4">
+                  <Button variant="primary" type="submit">
+                    Add Task
+                  </Button>
+                  <Button variant="secondary" type="button" onClick={() => setShowForm(false)}>
+                    Cancel
+                  </Button>
                 </div>
+              </form>
+            </Card>
+          )}
+
+          {/* Task List */}
+          {filtered.length > 0 ? (
+            <Card padding="lg">
+              <div className="space-y-0 divide-y divide-[var(--border)]">
+                {filtered.map((t) => {
+                  const course = courses.find((c) => c.id === t.courseId);
+                  return (
+                    <div key={t.id} className="py-4 first:pt-0 last:pb-0 flex items-start gap-4 group hover:bg-[var(--panel-2)] -mx-4 px-4 rounded transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={t.status === 'done'}
+                        onChange={() => toggleTaskDone(t.id)}
+                        className="mt-1 w-5 h-5 accent-[var(--accent)] cursor-pointer flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className={`text-sm font-medium ${
+                            t.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'
+                          }`}
+                        >
+                          {t.title}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          {t.dueAt && (
+                            <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                              {formatDate(t.dueAt)}
+                            </span>
+                          )}
+                          {course && (
+                            <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                              {course.code}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                        <button
+                          onClick={() => toggleTaskPin(t.id)}
+                          className={`p-1.5 rounded-md transition-colors ${
+                            t.pinned ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--panel-2)]'
+                          }`}
+                          title={t.pinned ? 'Unpin task' : 'Pin task'}
+                        >
+                          <Star size={18} fill={t.pinned ? 'currentColor' : 'none'} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm('Delete this task?')) {
+                              deleteTask(t.id);
+                            }
+                          }}
+                          className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors"
+                          title="Delete task"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-          );
-        })}
+            </Card>
+          ) : (
+            <EmptyState
+              title="No tasks"
+              description={
+                filter === 'all'
+                  ? 'Create a new task to get started'
+                  : filter === 'today'
+                    ? 'No tasks due today'
+                    : 'No completed tasks yet'
+              }
+              action={
+                filter !== 'all'
+                  ? { label: 'View all tasks', onClick: () => setFilter('all') }
+                  : { label: 'Create a task', onClick: () => setShowForm(true) }
+              }
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,7 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import Card from '@/components/Card';
+import Header from '@/components/Header';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Input, { Select } from '@/components/ui/Input';
+import { Plus, Trash2 } from 'lucide-react';
 
 export default function ToolsPage() {
   const [gpaForm, setGpaForm] = useState({
@@ -53,119 +57,104 @@ export default function ToolsPage() {
   };
 
   return (
-    <div className="space-y-6 p-4 md:p-8">
-      <h2 className="text-2xl font-bold">Tools</h2>
-
-      <Card title="GPA Calculator">
-        <div className="space-y-3">
-          {gpaForm.courses.map((course, idx) => (
-            <div key={idx} className="flex gap-2">
-              <input
-                type="text"
-                value={course.name}
-                onChange={(e) => {
-                  const newCourses = [...gpaForm.courses];
-                  newCourses[idx].name = e.target.value;
-                  setGpaForm({ ...gpaForm, courses: newCourses });
-                }}
-                placeholder="Course name"
-                className="flex-1 rounded border border-gray-300 px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-              />
-              <select
-                value={course.grade}
-                onChange={(e) => {
-                  const newCourses = [...gpaForm.courses];
-                  newCourses[idx].grade = e.target.value;
-                  setGpaForm({ ...gpaForm, courses: newCourses });
-                }}
-                className="w-20 rounded border border-gray-300 px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-              >
-                {Object.keys(gradePoints).map((g) => (
-                  <option key={g} value={g}>{g}</option>
+    <>
+      <Header title="Tools" subtitle="Useful utilities for your semester" />
+      <div className="bg-[var(--bg)] min-h-screen">
+        <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
+          {/* GPA Calculator */}
+          <Card title="GPA Calculator" padding="lg">
+            <div className="space-y-4">
+              <div className="space-y-3">
+                {gpaForm.courses.map((course, idx) => (
+                  <div key={idx} className="flex gap-3 items-end">
+                    <Input
+                      label={idx === 0 ? 'Course name' : ''}
+                      value={course.name}
+                      onChange={(e) => {
+                        const newCourses = [...gpaForm.courses];
+                        newCourses[idx].name = e.target.value;
+                        setGpaForm({ ...gpaForm, courses: newCourses });
+                      }}
+                      placeholder="e.g., Math 101"
+                      className="flex-1"
+                    />
+                    <Select
+                      label={idx === 0 ? 'Grade' : ''}
+                      value={course.grade}
+                      onChange={(e) => {
+                        const newCourses = [...gpaForm.courses];
+                        newCourses[idx].grade = e.target.value;
+                        setGpaForm({ ...gpaForm, courses: newCourses });
+                      }}
+                      options={Object.keys(gradePoints).map((g) => ({ value: g, label: g }))}
+                    />
+                    <Input
+                      label={idx === 0 ? 'Credits' : ''}
+                      type="number"
+                      value={course.credits}
+                      onChange={(e) => {
+                        const newCourses = [...gpaForm.courses];
+                        newCourses[idx].credits = e.target.value;
+                        setGpaForm({ ...gpaForm, courses: newCourses });
+                      }}
+                      min="1"
+                      max="12"
+                      className="w-20"
+                    />
+                    <button
+                      onClick={() => removeCourse(idx)}
+                      className="p-2 rounded-md text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors mb-0"
+                      title="Remove course"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 ))}
-              </select>
-              <input
-                type="number"
-                value={course.credits}
-                onChange={(e) => {
-                  const newCourses = [...gpaForm.courses];
-                  newCourses[idx].credits = e.target.value;
-                  setGpaForm({ ...gpaForm, courses: newCourses });
-                }}
-                min="1"
-                max="12"
-                className="w-16 rounded border border-gray-300 px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-              />
-              <button
-                onClick={() => removeCourse(idx)}
-                className="text-red-600 dark:text-red-400"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-
-          <button
-            onClick={addCourse}
-            className="text-xs text-blue-600 dark:text-blue-400"
-          >
-            + Add Course
-          </button>
-
-          <button
-            onClick={calculateGPA}
-            className="w-full rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Calculate GPA
-          </button>
-
-          {gpaResult !== null && (
-            <div className="mt-4 rounded bg-blue-50 p-4 text-center dark:bg-blue-950">
-              <div className="text-xs text-gray-600 dark:text-gray-400">Your GPA</div>
-              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                {gpaResult}
               </div>
-            </div>
-          )}
-        </div>
-      </Card>
 
-      <Card title="Quick Links">
-        <div className="grid grid-cols-2 gap-2">
-          <a
-            href="https://byui.edu"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded bg-gray-100 px-3 py-2 text-sm text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
-          >
-            BYU
-          </a>
-          <a
-            href="https://mymap.byu.edu"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded bg-gray-100 px-3 py-2 text-sm text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
-          >
-            MyMAP
-          </a>
-          <a
-            href="https://registration.byu.edu"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded bg-gray-100 px-3 py-2 text-sm text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
-          >
-            Registration
-          </a>
-          <a
-            href="https://lib.byu.edu"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded bg-gray-100 px-3 py-2 text-sm text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
-          >
-            Library
-          </a>
+              <Button variant="secondary" type="button" onClick={addCourse}>
+                <Plus size={18} />
+                Add Course
+              </Button>
+
+              <Button variant="primary" onClick={calculateGPA}>
+                Calculate GPA
+              </Button>
+
+              {gpaResult !== null && (
+                <div className="mt-6 p-4 rounded-[16px] bg-[var(--accent-bg)] border border-[var(--accent)] text-center">
+                  <div className="text-sm text-[var(--text-muted)] mb-2">Your GPA</div>
+                  <div className="text-4xl font-bold text-[var(--accent)]">
+                    {gpaResult}
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Quick Links */}
+          <Card title="Quick Links" subtitle="Useful BYU resources" padding="lg">
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'BYU', url: 'https://byui.edu' },
+                { label: 'MyMAP', url: 'https://mymap.byu.edu' },
+                { label: 'Registration', url: 'https://registration.byu.edu' },
+                { label: 'Library', url: 'https://lib.byu.edu' },
+              ].map((link) => (
+                <a
+                  key={link.url}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-3 rounded-[12px] bg-[var(--panel-2)] hover:bg-[var(--panel-3)] text-center text-sm font-medium text-[var(--text)] transition-colors"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </Card>
         </div>
-      </Card>
-    </div>
+      </div>
+    </>
   );
 }

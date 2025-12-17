@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   description: 'A personal, privacy-first BYU dashboard',
   viewport: 'width=device-width, initial-scale=1',
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
   },
 };
 
