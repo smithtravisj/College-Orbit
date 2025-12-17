@@ -2,7 +2,7 @@
 
 import useAppStore from '@/lib/store';
 import Card from '@/components/ui/Card';
-import { Edit2, Trash2, MapPin, Clock, Link as LinkIcon } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 
 interface Course {
   id: string;
