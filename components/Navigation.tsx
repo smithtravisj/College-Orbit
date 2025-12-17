@@ -31,7 +31,7 @@ export default function Navigation() {
           <div className="h-8 w-8 rounded-md bg-[#3a3f47] flex items-center justify-center flex-shrink-0">
             <Calendar size={18} className="text-white" />
           </div>
-          <h1 className="text-base font-bold text-[var(--text)] leading-snug">BYU Survival Tool</h1>
+          <h1 className="text-3xl font-bold text-[var(--text)] leading-tight">BYU Survival Tool</h1>
         </div>
         <div className="space-y-4 flex-1">
           {NAV_ITEMS.map((item) => {
