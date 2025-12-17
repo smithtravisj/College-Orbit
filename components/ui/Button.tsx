@@ -13,9 +13,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const baseStyles = 'inline-flex items-center justify-center gap-2 font-medium transition active:translate-y-[1px] disabled:opacity-50 disabled:pointer-events-none';
 
     const sizeStyles = {
-      sm: 'h-8 px-3 text-xs rounded-[var(--radius-control)]',
-      md: 'h-10 px-4 text-sm rounded-[var(--radius-control)]',
-      lg: 'h-11 px-5 text-base rounded-[var(--radius-control)]',
+      sm: 'h-9 px-3 text-xs rounded-[var(--radius-control)]',
+      md: 'h-[var(--button-height)] px-5 text-sm rounded-[var(--radius-control)]',
+      lg: 'h-12 px-6 text-base rounded-[var(--radius-control)]',
     };
 
     const variantStyles = {

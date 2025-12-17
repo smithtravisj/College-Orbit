@@ -73,12 +73,12 @@ export default function TasksPage() {
         }
       />
       <div className="mx-auto w-full max-w-[1400px] px-[var(--content-padding-desktop)] py-12">
-        <div className="grid grid-cols-12 gap-7">
+        <div className="grid grid-cols-12 gap-[var(--grid-gap)]">
           {/* Filters sidebar - 3 columns */}
           <div className="col-span-12 lg:col-span-3">
             <Card>
               <h3 className="text-sm font-semibold text-[var(--text)] mb-3">Filters</h3>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {[
                   { value: 'all', label: 'All Tasks' },
                   { value: 'today', label: 'Today' },

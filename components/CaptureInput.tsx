@@ -70,7 +70,7 @@ export default function CaptureInput() {
 
   return (
     <Card>
-      <form onSubmit={handleSubmit} className="flex items-center gap-4">
+      <form onSubmit={handleSubmit} className="flex items-center gap-5">
         <input
           ref={inputRef}
           type="text"

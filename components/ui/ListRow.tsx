@@ -15,7 +15,7 @@ const ListRow = React.forwardRef<HTMLDivElement, ListRowProps>(
       <div
         ref={ref}
         onClick={onClick}
-        className={`flex items-center justify-between h-12 px-3 rounded-[var(--radius-control)] hover:bg-white/5 transition-colors ${
+        className={`flex items-center justify-between h-[var(--list-row-height)] px-6 rounded-[var(--radius-control)] hover:bg-white/5 transition-colors ${
           onClick ? 'cursor-pointer' : ''
         } group ${className}`}
       >
@@ -33,7 +33,7 @@ const ListRow = React.forwardRef<HTMLDivElement, ListRowProps>(
         )}
 
         {actions && (
-          <div className="flex-shrink-0 ml-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex-shrink-0 ml-4 flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
             {actions}
           </div>
         )}

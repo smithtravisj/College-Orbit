@@ -69,7 +69,7 @@
   --grid-gap: 40px;
   --card-padding: 36px;
   --card-border-radius: 16px;
-  --list-row-height: 56px;
+  --list-row-height: 60px;
 
   /* Container widths */
   --container-dashboard: 1280px;
@@ -77,8 +77,8 @@
   --container-narrow: 768px;
 
   /* Component heights */
-  --input-height: 40px;
-  --button-height: 40px;
+  --input-height: 48px;
+  --button-height: 48px;
 
   /* Border radius */
   --radius-xs: 6px;

@@ -17,7 +17,7 @@ export default function CourseList({ onEdit }: CourseListProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[var(--grid-gap)]">
       {courses.map((course) => (
         <Card key={course.id} hoverable>
           <div className="flex items-start justify-between gap-4">
@@ -33,7 +33,7 @@ export default function CourseList({ onEdit }: CourseListProps) {
               )}
 
               {course.meetingTimes && course.meetingTimes.length > 0 && (
-                <div className="mt-3 space-y-2">
+                <div className="mt-3 space-y-3">
                   {course.meetingTimes.map((mt, idx) => (
                     <div
                       key={idx}

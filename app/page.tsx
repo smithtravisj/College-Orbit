@@ -87,8 +87,8 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
             <Card title="Next Class" className="h-full flex flex-col">
               {nextClass ? (
-                <div className="flex flex-col gap-4">
-                  <div className="space-y-2">
+                <div className="flex flex-col gap-6">
+                  <div className="space-y-3">
                     <div className="text-xs text-[var(--muted)] uppercase tracking-wide font-medium leading-relaxed">
                       {nextClass.start} - {nextClass.end}
                     </div>
@@ -125,9 +125,9 @@ export default function Dashboard() {
                     const course = courses.find((c) => c.id === d.courseId);
                     const isOverd = isOverdue(d.dueAt);
                     return (
-                      <div key={d.id} className={`py-3 ${idx < dueSoon.length - 1 ? 'border-b border-[var(--border)]' : ''}`}>
+                      <div key={d.id} className={`py-4 ${idx < dueSoon.length - 1 ? 'border-b border-[var(--border)]' : ''}`}>
                         <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0 space-y-2">
+                          <div className="flex-1 min-w-0 space-y-3">
                             {isOverd && <Badge variant="danger">Overdue</Badge>}
                             <div className="text-sm font-medium leading-tight text-[var(--text)] truncate">{d.title}</div>
                             {course && <div className="text-xs text-[var(--text-muted)] leading-relaxed">{course.code}</div>}
@@ -174,7 +174,7 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-8 h-full min-h-[240px]">
             <Card title="Today's Tasks" className="h-full flex flex-col">
                 {todayTasks.length > 0 || pinnedTask ? (
-                  <div className="space-y-1">
+                  <div className="space-y-4">
                     {pinnedTask && (
                       <div className="mb-3 pb-3 border-b border-[var(--border)] last:border-0">
                         <div className="flex items-start gap-3">
@@ -240,7 +240,7 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-4 h-full min-h-[240px]">
             <Card title="Quick Links" className="h-full flex flex-col">
               {quickLinks.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {quickLinks.map((link, idx) => (
                     <a
                       key={idx}
