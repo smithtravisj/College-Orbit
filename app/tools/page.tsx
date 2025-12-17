@@ -1,17 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input, { Select } from '@/components/ui/Input';
 import { Plus, Trash2 } from 'lucide-react';
 
+interface Course {
+  id: string;
+  name: string;
+  code: string;
+}
+
+interface GpaEntry {
+  id: string;
+  courseId: string | null;
+  courseName: string;
+  grade: string;
+  credits: number;
+}
+
+interface FormCourse {
+  id?: string;
+  courseName: string;
+  gradeType: 'letter' | 'percentage';
+  grade: string;
+  credits: string;
+}
+
 export default function ToolsPage() {
-  const [gpaForm, setGpaForm] = useState({
-    courses: [{ name: 'Course 1', grade: 'A', credits: '3' }],
-  });
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [entries, setEntries] = useState<GpaEntry[]>([]);
+  const [formCourses, setFormCourses] = useState<FormCourse[]>([
+    { courseName: '', gradeType: 'letter', grade: 'A', credits: '3' },
+  ]);
   const [gpaResult, setGpaResult] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const gradePoints: { [key: string]: number } = {
     'A': 4.0,
@@ -27,15 +52,69 @@ export default function ToolsPage() {
     'F': 0.0,
   };
 
+  // Fetch courses and GPA entries on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [coursesRes, entriesRes] = await Promise.all([
+          fetch('/api/courses'),
+          fetch('/api/gpa-entries'),
+        ]);
+
+        if (coursesRes.ok) {
+          const { courses: fetchedCourses } = await coursesRes.json();
+          setCourses(fetchedCourses);
+        }
+
+        if (entriesRes.ok) {
+          const { entries: fetchedEntries } = await entriesRes.json();
+          setEntries(fetchedEntries);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const getGradePoints = (grade: string, gradeType: 'letter' | 'percentage'): number => {
+    if (gradeType === 'percentage') {
+      const percentage = parseFloat(grade);
+      if (isNaN(percentage)) return 0;
+      // Convert percentage to GPA scale (0-4.0)
+      if (percentage >= 93) return 4.0;
+      if (percentage >= 90) return 3.7;
+      if (percentage >= 87) return 3.3;
+      if (percentage >= 83) return 3.0;
+      if (percentage >= 80) return 2.7;
+      if (percentage >= 77) return 2.3;
+      if (percentage >= 73) return 2.0;
+      if (percentage >= 70) return 1.7;
+      if (percentage >= 67) return 1.3;
+      if (percentage >= 63) return 1.0;
+      return 0;
+    }
+    return gradePoints[grade] || 0;
+  };
+
   const calculateGPA = () => {
     let totalPoints = 0;
     let totalCredits = 0;
 
-    gpaForm.courses.forEach((course) => {
-      const points = gradePoints[course.grade] || 0;
-      const credits = parseInt(course.credits) || 0;
+    // Calculate from form courses
+    formCourses.forEach((course) => {
+      const points = getGradePoints(course.grade, course.gradeType);
+      const credits = parseFloat(course.credits) || 0;
       totalPoints += points * credits;
       totalCredits += credits;
+    });
+
+    // Calculate from saved entries
+    entries.forEach((entry) => {
+      const points = getGradePoints(entry.grade, entry.grade.includes('.') || !gradePoints[entry.grade] ? 'percentage' : 'letter');
+      totalPoints += points * entry.credits;
+      totalCredits += entry.credits;
     });
 
     const gpa = totalCredits > 0 ? totalPoints / totalCredits : 0;
@@ -43,17 +122,69 @@ export default function ToolsPage() {
   };
 
   const addCourse = () => {
-    setGpaForm({
-      ...gpaForm,
-      courses: [...gpaForm.courses, { name: '', grade: 'A', credits: '3' }],
-    });
+    setFormCourses([
+      ...formCourses,
+      { courseName: '', gradeType: 'letter', grade: 'A', credits: '3' },
+    ]);
   };
 
   const removeCourse = (index: number) => {
-    setGpaForm({
-      ...gpaForm,
-      courses: gpaForm.courses.filter((_, i) => i !== index),
-    });
+    setFormCourses(formCourses.filter((_, i) => i !== index));
+  };
+
+  const updateCourse = (index: number, field: keyof FormCourse, value: string) => {
+    const newCourses = [...formCourses];
+    newCourses[index] = { ...newCourses[index], [field]: value };
+    setFormCourses(newCourses);
+  };
+
+  const saveCourse = async (index: number) => {
+    const course = formCourses[index];
+    if (!course.courseName || !course.credits) return;
+
+    setSaving(true);
+    try {
+      const selectedCourse = courses.find((c) => c.name === course.courseName);
+
+      const res = await fetch('/api/gpa-entries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseId: selectedCourse?.id || null,
+          courseName: course.courseName,
+          grade: course.grade,
+          credits: course.credits,
+        }),
+      });
+
+      if (res.ok) {
+        const { entry } = await res.json();
+        setEntries([...entries, entry]);
+        // Reset the form field
+        updateCourse(index, 'courseName', '');
+        updateCourse(index, 'grade', 'A');
+        updateCourse(index, 'credits', '3');
+        updateCourse(index, 'gradeType', 'letter');
+      }
+    } catch (error) {
+      console.error('Error saving GPA entry:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteEntry = async (entryId: string, index: number) => {
+    try {
+      const res = await fetch(`/api/gpa-entries/${entryId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        setEntries(entries.filter((_, i) => i !== index));
+      }
+    } catch (error) {
+      console.error('Error deleting GPA entry:', error);
+    }
   };
 
   return (
@@ -64,51 +195,129 @@ export default function ToolsPage() {
           {/* GPA Calculator */}
           <Card title="GPA Calculator">
             <div className="space-y-5">
+              {/* Saved Entries */}
+              {entries.length > 0 && (
+                <div style={{ paddingBottom: '16px' }}>
+                  <div style={{ marginBottom: '12px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                    Saved Courses
+                  </div>
+                  <div className="space-y-3">
+                    {entries.map((entry, idx) => (
+                      <div key={entry.id} className="flex gap-3 items-center p-3 rounded-[8px] bg-[var(--panel-2)]">
+                        <div className="flex-1">
+                          <div style={{ marginBottom: '2px', fontSize: '0.875rem', color: 'var(--text)' }}>
+                            {entry.courseName}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            {entry.grade} • {entry.credits} {entry.credits === 1 ? 'credit' : 'credits'}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => deleteEntry(entry.id, idx)}
+                          className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                          style={{ padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          title="Remove course"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Form Fields */}
               <div className="space-y-4">
-                {gpaForm.courses.map((course, idx) => (
-                  <div key={idx} className="flex gap-3 items-end">
-                    <Input
-                      label={idx === 0 ? 'Course name' : ''}
-                      value={course.name}
-                      onChange={(e) => {
-                        const newCourses = [...gpaForm.courses];
-                        newCourses[idx].name = e.target.value;
-                        setGpaForm({ ...gpaForm, courses: newCourses });
-                      }}
-                      placeholder="e.g., Math 101"
-                      className="flex-1"
-                    />
-                    <Select
-                      label={idx === 0 ? 'Grade' : ''}
-                      value={course.grade}
-                      onChange={(e) => {
-                        const newCourses = [...gpaForm.courses];
-                        newCourses[idx].grade = e.target.value;
-                        setGpaForm({ ...gpaForm, courses: newCourses });
-                      }}
-                      options={Object.keys(gradePoints).map((g) => ({ value: g, label: g }))}
-                    />
-                    <Input
-                      label={idx === 0 ? 'Credits' : ''}
-                      type="number"
-                      value={course.credits}
-                      onChange={(e) => {
-                        const newCourses = [...gpaForm.courses];
-                        newCourses[idx].credits = e.target.value;
-                        setGpaForm({ ...gpaForm, courses: newCourses });
-                      }}
-                      min="1"
-                      max="12"
-                      className="w-20"
-                    />
-                    <button
-                      onClick={() => removeCourse(idx)}
-                      className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                      style={{ padding: '8px', marginBottom: 0 }}
-                      title="Remove course"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                {formCourses.map((course, idx) => (
+                  <div key={idx} style={{ paddingBottom: '8px' }}>
+                    <div className="flex gap-3 items-end">
+                      <div className="flex-1">
+                        <div style={{ marginBottom: '4px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                          Course
+                        </div>
+                        <Select
+                          value={course.courseName}
+                          onChange={(e) => updateCourse(idx, 'courseName', e.target.value)}
+                          options={[
+                            { value: '', label: 'Select a course...' },
+                            ...courses.map((c) => ({ value: c.name, label: c.name })),
+                          ]}
+                        />
+                      </div>
+
+                      <div style={{ minWidth: '140px' }}>
+                        <div style={{ marginBottom: '4px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                          Grade
+                        </div>
+                        <Select
+                          value={course.gradeType}
+                          onChange={(e) => updateCourse(idx, 'gradeType', e.target.value)}
+                          options={[
+                            { value: 'letter', label: 'Letter Grade' },
+                            { value: 'percentage', label: 'Percentage' },
+                          ]}
+                        />
+                      </div>
+
+                      <div style={{ minWidth: '120px' }}>
+                        <div style={{ marginBottom: '4px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                          {course.gradeType === 'letter' ? 'Grade' : 'Grade'}
+                        </div>
+                        {course.gradeType === 'letter' ? (
+                          <Select
+                            value={course.grade}
+                            onChange={(e) => updateCourse(idx, 'grade', e.target.value)}
+                            options={Object.keys(gradePoints).map((g) => ({ value: g, label: g }))}
+                          />
+                        ) : (
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="100"
+                            value={course.grade}
+                            onChange={(e) => updateCourse(idx, 'grade', e.target.value)}
+                            placeholder="e.g., 89.75"
+                          />
+                        )}
+                      </div>
+
+                      <div style={{ minWidth: '80px' }}>
+                        <div style={{ marginBottom: '4px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                          Credits
+                        </div>
+                        <Input
+                          type="number"
+                          step="0.5"
+                          min="0.5"
+                          max="12"
+                          value={course.credits}
+                          onChange={(e) => updateCourse(idx, 'credits', e.target.value)}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
+                        <button
+                          onClick={() => saveCourse(idx)}
+                          disabled={!course.courseName || !course.credits || saving}
+                          className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{ padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          title="Save course"
+                        >
+                          <Plus size={18} />
+                        </button>
+                        {idx > 0 && (
+                          <button
+                            onClick={() => removeCourse(idx)}
+                            className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                            style={{ padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            title="Remove field"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -116,7 +325,7 @@ export default function ToolsPage() {
               <div className="flex gap-3" style={{ marginTop: '20px' }}>
                 <Button variant="secondary" size="md" type="button" onClick={addCourse}>
                   <Plus size={18} />
-                  Add Course
+                  Add Row
                 </Button>
 
                 <Button size="lg" onClick={calculateGPA} style={{ backgroundColor: '#132343', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', paddingLeft: '24px', paddingRight: '24px' }}>

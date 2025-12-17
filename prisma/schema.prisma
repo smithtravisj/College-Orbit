@@ -22,6 +22,7 @@ model User {
   courses       Course[]
   deadlines     Deadline[]
   tasks         Task[]
+  gpaEntries    GpaEntry[]
   settings      Settings?
 
   @@index([email])
@@ -42,6 +43,7 @@ model Course {
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   deadlines     Deadline[]
   tasks         Task[]
+  gpaEntries    GpaEntry[]
 
   @@index([userId])
 }
@@ -87,6 +89,22 @@ model Task {
   @@index([courseId])
   @@index([status])
   @@index([pinned])
+}
+
+model GpaEntry {
+  id            String    @id @default(cuid())
+  userId        String
+  courseId      String?
+  courseName    String
+  grade         String
+  credits       Float
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
 }
 
 model Settings {
