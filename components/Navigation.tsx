@@ -26,7 +26,7 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)] px-6 py-10">
+      <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)] px-8 py-10">
         <div className="mb-16 mt-4">
           <h1 className="text-2xl font-bold text-[var(--text)] leading-tight">BYU Survival Tool</h1>
         </div>
