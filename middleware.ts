@@ -8,12 +8,15 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
+  console.log('Middleware - Path:', request.nextUrl.pathname, 'Token:', token ? 'exists' : 'null');
+
   const isAuthPage =
     request.nextUrl.pathname.startsWith('/login') ||
     request.nextUrl.pathname.startsWith('/signup');
 
   // Redirect to login if accessing protected page without token
   if (!isAuthPage && !token) {
+    console.log('No token found, redirecting to login');
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
