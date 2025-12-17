@@ -14,6 +14,7 @@ export default function TasksPage() {
   const [mounted, setMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [hidingTasks, setHidingTasks] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
     title: '',
     courseId: '',
@@ -74,11 +75,12 @@ export default function TasksPage() {
 
   const startEdit = (task: any) => {
     setEditingId(task.id);
+    const dueDate = task.dueAt ? new Date(task.dueAt) : null;
     setFormData({
       title: task.title,
       courseId: task.courseId || '',
-      dueDate: task.dueAt ? new Date(task.dueAt).toISOString().split('T')[0] : '',
-      dueTime: task.dueAt ? new Date(task.dueAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '',
+      dueDate: dueDate ? dueDate.toISOString().split('T')[0] : '',
+      dueTime: dueDate ? `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}` : '',
       notes: task.notes,
     });
     setShowForm(true);
@@ -92,6 +94,7 @@ export default function TasksPage() {
 
   const filtered = tasks
     .filter((t) => {
+      if (hidingTasks.has(t.id)) return false;
       if (filter === 'today') return t.dueAt && isToday(t.dueAt) && t.status === 'open';
       if (filter === 'done') return t.status === 'done';
       if (filter === 'overdue') {
@@ -223,11 +226,16 @@ export default function TasksPage() {
                   const isOverdueTask = t.dueAt && isOverdue(t.dueAt) && t.status === 'open';
                   const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
                   return (
-                    <div key={t.id} style={{ paddingTop: '10px', paddingBottom: '10px', opacity: t.status === 'done' ? 0.5 : 1, transition: 'opacity 0.3s ease 2s' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors border-b border-[var(--border)] last:border-b-0">
+                    <div key={t.id} style={{ paddingTop: '10px', paddingBottom: '10px', opacity: hidingTasks.has(t.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors border-b border-[var(--border)] last:border-b-0">
                       <input
                         type="checkbox"
                         checked={t.status === 'done'}
-                        onChange={() => toggleTaskDone(t.id)}
+                        onChange={() => {
+                          setHidingTasks(prev => new Set(prev).add(t.id));
+                          setTimeout(() => {
+                            toggleTaskDone(t.id);
+                          }, 2000);
+                        }}
                         style={{
                           appearance: 'none',
                           width: '20px',

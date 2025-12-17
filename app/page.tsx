@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { isToday, formatTime, isOverdue } from '@/lib/utils';
-import CaptureInput from '@/components/CaptureInput';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -17,6 +16,7 @@ export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [hidingTasks, setHidingTasks] = useState<Set<string>>(new Set());
   const [taskFormData, setTaskFormData] = useState({
     title: '',
     courseId: '',
@@ -75,11 +75,12 @@ export default function Dashboard() {
 
   const startEditTask = (task: any) => {
     setEditingTaskId(task.id);
+    const dueDate = task.dueAt ? new Date(task.dueAt) : null;
     setTaskFormData({
       title: task.title,
       courseId: task.courseId || '',
-      dueDate: task.dueAt ? new Date(task.dueAt).toISOString().split('T')[0] : '',
-      dueTime: task.dueAt ? new Date(task.dueAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '',
+      dueDate: dueDate ? dueDate.toISOString().split('T')[0] : '',
+      dueTime: dueDate ? `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}` : '',
       notes: task.notes,
     });
     setShowTaskForm(true);
@@ -126,7 +127,7 @@ export default function Dashboard() {
 
   // Get today's tasks and overdue tasks
   const todayTasks = tasks
-    .filter((t) => t.dueAt && isToday(t.dueAt) && t.status === 'open')
+    .filter((t) => t.dueAt && (isToday(t.dueAt) || isOverdue(t.dueAt)) && t.status === 'open')
     .sort((a, b) => {
       // Sort by due time if both have times
       if (a.dueAt && b.dueAt) {
@@ -293,7 +294,7 @@ export default function Dashboard() {
 
               {todayTasks.length > 0 || showTaskForm ? (
                 <div className="space-y-4 divide-y divide-[var(--border)]">
-                  {todayTasks.slice(0, 5).map((t) => {
+                  {todayTasks.filter(t => !hidingTasks.has(t.id)).slice(0, 5).map((t) => {
                     const dueHours = t.dueAt ? new Date(t.dueAt).getHours() : null;
                     const dueMinutes = t.dueAt ? new Date(t.dueAt).getMinutes() : null;
                     const dueTime = t.dueAt ? new Date(t.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
@@ -301,11 +302,16 @@ export default function Dashboard() {
                     const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
                     const course = courses.find((c) => c.id === t.courseId);
                     return (
-                      <div key={t.id} style={{ paddingTop: '10px', paddingBottom: '10px', opacity: t.status === 'done' ? 0.5 : 1, transition: 'opacity 0.3s ease 2s' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group border-b border-[var(--border)] last:border-b-0">
+                      <div key={t.id} style={{ paddingTop: '10px', paddingBottom: '10px', opacity: hidingTasks.has(t.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group border-b border-[var(--border)] last:border-b-0">
                         <input
                           type="checkbox"
                           checked={t.status === 'done'}
-                          onChange={() => toggleTaskDone(t.id)}
+                          onChange={() => {
+                            setHidingTasks(prev => new Set(prev).add(t.id));
+                            setTimeout(() => {
+                              toggleTaskDone(t.id);
+                            }, 2000);
+                          }}
                           style={{
                             appearance: 'none',
                             width: '16px',
@@ -420,11 +426,6 @@ export default function Dashboard() {
                 />
               )}
             </Card>
-          </div>
-
-          {/* Capture Input */}
-          <div className="col-span-12 min-h-[120px]">
-            <CaptureInput />
           </div>
 
           {/* Upcoming This Week */}
