@@ -161,7 +161,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Permanently delete all your data. This action cannot be undone.
                 </p>
-                <Button variant="danger" onClick={handleDeleteAllData}>
+                <Button size="lg" onClick={handleDeleteAllData} style={{ paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                   <Trash2 size={18} />
                   Delete All Data
                 </Button>
