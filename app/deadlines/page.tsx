@@ -47,32 +47,37 @@ export default function DeadlinesPage() {
 
     let dueAt: string | null = null;
     if (formData.dueDate) {
+      // If date is provided but time is not, default to 11:59 PM (not 23:59)
       const dateTimeString = formData.dueTime ? `${formData.dueDate}T${formData.dueTime}` : `${formData.dueDate}T23:59`;
       dueAt = new Date(dateTimeString).toISOString();
+    } else if (formData.dueTime) {
+      // If time is provided but date is not, ignore the time
+      formData.dueTime = '';
     }
 
-    // Add https:// to link if it doesn't start with http:// or https://
-    let link: string | null = formData.link || null;
-    if (link && !link.startsWith('http://') && !link.startsWith('https://')) {
-      link = `https://${link}`;
-    }
+    // Handle link - normalize empty string to null
+    const link = formData.link?.trim() ? (
+      formData.link.startsWith('http://') || formData.link.startsWith('https://')
+        ? formData.link
+        : `https://${formData.link}`
+    ) : null;
 
     if (editingId) {
       await updateDeadline(editingId, {
         title: formData.title,
         courseId: formData.courseId || null,
-        dueAt: dueAt || null,
+        dueAt,
         notes: formData.notes,
-        link: link || null,
+        link,
       });
       setEditingId(null);
     } else {
       await addDeadline({
         title: formData.title,
         courseId: formData.courseId || null,
-        dueAt: dueAt || null,
+        dueAt,
         notes: formData.notes,
-        link: link || null,
+        link,
         status: 'open',
       });
     }
