@@ -251,6 +251,8 @@ export default function Dashboard() {
           </div>
         </div>
       </Card>
+      </div>
+      </div>
     </div>
   );
 }
