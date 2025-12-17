@@ -74,7 +74,7 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader title="Settings" subtitle="Customize your experience" />
-      <div className="mx-auto w-full max-w-[768px] space-y-[var(--grid-gap)]" style={{ padding: '24px' }}>
+      <div className="mx-auto w-full max-w-[768px] flex flex-col min-h-[calc(100vh-var(--header-h))] space-y-[var(--grid-gap)]" style={{ padding: '24px' }}>
           {/* Due Soon Window */}
           <Card title="Appearance">
             <div className="space-y-5">
@@ -114,7 +114,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Download a backup of all your data as a JSON file
                 </p>
-                <Button variant="primary" onClick={handleExport}>
+                <Button variant="primary" onClick={handleExport} style={{ marginBottom: '16px' }}>
                   <Download size={18} />
                   Export Data
                 </Button>
