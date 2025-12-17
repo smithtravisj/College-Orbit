@@ -88,7 +88,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
       />
 
       <div>
-        <label className="block text-sm font-medium text-[var(--text)] mb-2">Meeting Times</label>
+        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Meeting Times</label>
         <div className="space-y-3">
           {form.meetingTimes.map((mt, idx) => (
             <div key={idx} className="flex gap-3 items-end">
@@ -143,7 +143,8 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
                     meetingTimes: form.meetingTimes.filter((_, i) => i !== idx),
                   });
                 }}
-                className="p-2 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors mb-0"
+                className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                style={{ padding: '8px', marginBottom: 0 }}
                 title="Remove meeting time"
               >
                 <Trash2 size={18} />
@@ -159,14 +160,14 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
               { day: 'Mon', start: '10:00', end: '10:50', location: '' },
             ],
           });
-        }} className="mt-3">
+        }} style={{ marginTop: '12px' }}>
           <Plus size={18} />
           Add Time
         </Button>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[var(--text)] mb-2">Links</label>
+        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links</label>
         <div className="space-y-3">
           {form.links.map((link, idx) => (
             <div key={idx} className="flex gap-3 items-end">
@@ -202,7 +203,8 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
                     links: form.links.filter((_, i) => i !== idx),
                   });
                 }}
-                className="p-2 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors mb-0"
+                className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                style={{ padding: '8px', marginBottom: 0 }}
                 title="Remove link"
               >
                 <Trash2 size={18} />
@@ -215,13 +217,13 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
             ...form,
             links: [...form.links, { label: '', url: '' }],
           });
-        }} className="mt-3">
+        }} style={{ marginTop: '12px' }}>
           <Plus size={18} />
           Add Link
         </Button>
       </div>
 
-      <div className="flex gap-3 pt-4">
+      <div className="flex gap-3" style={{ paddingTop: '16px' }}>
         <Button variant="primary" type="submit">
           {courseId ? 'Update' : 'Add'} Course
         </Button>

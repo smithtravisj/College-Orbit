@@ -59,7 +59,7 @@ export default function ToolsPage() {
   return (
     <>
       <PageHeader title="Tools" subtitle="Useful utilities for your semester" />
-      <div className="mx-auto w-full max-w-[1400px] px-[var(--content-padding-desktop)] py-12 space-y-[var(--grid-gap)]">
+      <div className="mx-auto w-full max-w-[1400px] space-y-[var(--grid-gap)]" style={{ padding: '48px 80px' }}>
           {/* GPA Calculator */}
           <Card title="GPA Calculator">
             <div className="space-y-5">
@@ -102,7 +102,8 @@ export default function ToolsPage() {
                     />
                     <button
                       onClick={() => removeCourse(idx)}
-                      className="p-2 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors mb-0"
+                      className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                      style={{ padding: '8px', marginBottom: 0 }}
                       title="Remove course"
                     >
                       <Trash2 size={18} />
@@ -121,8 +122,8 @@ export default function ToolsPage() {
               </Button>
 
               {gpaResult !== null && (
-                <div className="mt-6 p-4 rounded-[16px] bg-[var(--accent-bg)] border border-[var(--accent)] text-center">
-                  <div className="text-sm text-[var(--text-muted)] mb-2">Your GPA</div>
+                <div className="rounded-[16px] bg-[var(--accent-bg)] border border-[var(--accent)] text-center" style={{ marginTop: '24px', padding: '16px' }}>
+                  <div className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>Your GPA</div>
                   <div className="text-4xl font-bold text-[var(--accent)]">
                     {gpaResult}
                   </div>
@@ -145,7 +146,8 @@ export default function ToolsPage() {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-3 rounded-[12px] bg-[var(--panel-2)] hover:bg-[var(--panel-3)] text-center text-sm font-medium text-[var(--text)] transition-colors"
+                  className="rounded-[12px] bg-[var(--panel-2)] hover:bg-[var(--panel-3)] text-center text-sm font-medium text-[var(--text)] transition-colors"
+                  style={{ display: 'block', padding: '12px' }}
                 >
                   {link.label}
                 </a>

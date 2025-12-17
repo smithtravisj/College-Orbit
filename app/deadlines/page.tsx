@@ -88,11 +88,12 @@ export default function DeadlinesPage() {
                   <button
                     key={f.value}
                     onClick={() => setFilter(f.value)}
-                    className={`w-full text-left px-6 py-4 rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
+                    className={`w-full text-left rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
                       filter === f.value
                         ? 'bg-[var(--accent-2)] text-[var(--text)]'
                         : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                     }`}
+                    style={{ padding: '12px 16px' }}
                   >
                     {f.label}
                   </button>

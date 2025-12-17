@@ -77,14 +77,15 @@ export default function CaptureInput() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="What needs to be done..."
-          className="flex-1 h-11 px-4 py-3 bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--muted)] rounded-[var(--radius-control)] transition-colors focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)]"
+          className="flex-1 h-11 bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--muted)] rounded-[var(--radius-control)] transition-colors focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)]"
+          style={{ padding: '8px 12px' }}
         />
         <Button variant="primary" size="md" type="submit">
           <Plus size={18} />
           Add
         </Button>
       </form>
-      <p className="text-xs text-[var(--muted)] mt-4">
+      <p className="text-xs text-[var(--muted)]" style={{ marginTop: '16px' }}>
         Tip: Type "tomorrow" or "today" for quick deadlines
       </p>
     </Card>
