@@ -193,11 +193,33 @@ export default function ToolsPage() {
               <div className="space-y-4">
                 {formCourses.map((course, idx) => (
                   <div key={idx} style={{ paddingBottom: '8px' }}>
+                    {idx === 0 && (
+                      <div className="flex gap-3 mb-2">
+                        <div className="flex-1">
+                          <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                            Course
+                          </div>
+                        </div>
+                        <div style={{ minWidth: '140px' }}>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                            Grade Type
+                          </div>
+                        </div>
+                        <div style={{ minWidth: '120px' }}>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                            Grade
+                          </div>
+                        </div>
+                        <div style={{ minWidth: '80px' }}>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                            Credits
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <div className="flex gap-3 items-end">
                       <div className="flex-1">
-                        <div style={{ marginBottom: '4px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
-                          Course
-                        </div>
+                        {idx === 0 && <div style={{ marginBottom: '4px' }}></div>}
                         <Select
                           value={course.courseName}
                           onChange={(e) => updateCourse(idx, 'courseName', e.target.value)}
@@ -209,9 +231,7 @@ export default function ToolsPage() {
                       </div>
 
                       <div style={{ minWidth: '140px' }}>
-                        <div style={{ marginBottom: '4px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
-                          Grade
-                        </div>
+                        {idx === 0 && <div style={{ marginBottom: '4px' }}></div>}
                         <Select
                           value={course.gradeType}
                           onChange={(e) => updateCourse(idx, 'gradeType', e.target.value)}
@@ -223,9 +243,7 @@ export default function ToolsPage() {
                       </div>
 
                       <div style={{ minWidth: '120px' }}>
-                        <div style={{ marginBottom: '4px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
-                          {course.gradeType === 'letter' ? 'Grade' : 'Grade'}
-                        </div>
+                        {idx === 0 && <div style={{ marginBottom: '4px' }}></div>}
                         {course.gradeType === 'letter' ? (
                           <Select
                             value={course.grade}
@@ -246,9 +264,7 @@ export default function ToolsPage() {
                       </div>
 
                       <div style={{ minWidth: '80px' }}>
-                        <div style={{ marginBottom: '4px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
-                          Credits
-                        </div>
+                        {idx === 0 && <div style={{ marginBottom: '4px' }}></div>}
                         <Input
                           type="number"
                           step="0.5"
