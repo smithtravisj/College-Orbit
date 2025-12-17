@@ -22,7 +22,7 @@ const Card: React.FC<CardProps> = ({
       className={`rounded-[16px] border-4 border-red-500 bg-[var(--panel)] shadow-[var(--shadow-sm)] transition-colors h-full flex flex-col ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${className}`}
     >
       {/* Inner content wrapper: padding is HARDCODED and CANNOT be bypassed */}
-      <div className="px-12 py-12 flex flex-col flex-1">
+      <div className="flex flex-col flex-1" style={{ padding: '48px' }}>
         {/* Header block: enforced spacing */}
         {title && (
           <div className="mb-8 flex items-start justify-between gap-4">
