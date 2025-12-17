@@ -78,6 +78,13 @@ export async function PATCH(req: NextRequest) {
       updateData.passwordHash = await bcrypt.hash(password, 10);
     }
 
+    console.log('Update data:', updateData);
+
+    if (Object.keys(updateData).length === 0) {
+      console.log('No fields to update');
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+    }
+
     const user = await prisma.user.update({
       where: { id: session.user.id },
       data: updateData,
@@ -88,6 +95,7 @@ export async function PATCH(req: NextRequest) {
       },
     });
 
+    console.log('User updated successfully:', user);
     return NextResponse.json({ user });
   } catch (error) {
     console.error('Error updating profile:', error);
