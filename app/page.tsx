@@ -339,18 +339,22 @@ export default function Dashboard() {
                       placeholder="What needs to be done?"
                       required
                     />
-                    <Select
-                      label="Course (optional)"
-                      value={deadlineFormData.courseId}
-                      onChange={(e) => setDeadlineFormData({ ...deadlineFormData, courseId: e.target.value })}
-                      options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
-                    />
-                    <Textarea
-                      label="Notes (optional)"
-                      value={deadlineFormData.notes}
-                      onChange={(e) => setDeadlineFormData({ ...deadlineFormData, notes: e.target.value })}
-                      placeholder="Add details..."
-                    />
+                    <div style={{ paddingTop: '12px' }}>
+                      <Select
+                        label="Course (optional)"
+                        value={deadlineFormData.courseId}
+                        onChange={(e) => setDeadlineFormData({ ...deadlineFormData, courseId: e.target.value })}
+                        options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                      />
+                    </div>
+                    <div style={{ paddingTop: '12px' }}>
+                      <Textarea
+                        label="Notes (optional)"
+                        value={deadlineFormData.notes}
+                        onChange={(e) => setDeadlineFormData({ ...deadlineFormData, notes: e.target.value })}
+                        placeholder="Add details..."
+                      />
+                    </div>
                     <div className="grid grid-cols-2 gap-4">
                       <Input
                         label="Due date (optional)"
@@ -365,15 +369,28 @@ export default function Dashboard() {
                         onChange={(e) => setDeadlineFormData({ ...deadlineFormData, dueTime: e.target.value })}
                       />
                     </div>
-                    <Input
-                      label="Link (optional)"
-                      type="text"
-                      value={deadlineFormData.link}
-                      onChange={(e) => setDeadlineFormData({ ...deadlineFormData, link: e.target.value })}
-                      placeholder="example.com or https://..."
-                    />
+                    <div style={{ paddingTop: '12px' }}>
+                      <Input
+                        label="Link (optional)"
+                        type="text"
+                        value={deadlineFormData.link}
+                        onChange={(e) => setDeadlineFormData({ ...deadlineFormData, link: e.target.value })}
+                        placeholder="example.com or https://..."
+                      />
+                    </div>
                     <div className="flex gap-3" style={{ paddingTop: '8px' }}>
-                      <Button variant="primary" type="submit" size="sm">
+                      <Button
+                        variant="primary"
+                        type="submit"
+                        size="sm"
+                        style={{
+                          backgroundColor: '#132343',
+                          color: 'white',
+                          borderWidth: '1px',
+                          borderStyle: 'solid',
+                          borderColor: 'var(--border)'
+                        }}
+                      >
                         {editingDeadlineId ? 'Save Changes' : 'Add Deadline'}
                       </Button>
                       <Button variant="secondary" type="button" onClick={cancelEditDeadline} size="sm">
@@ -536,18 +553,22 @@ export default function Dashboard() {
                     placeholder="What needs to be done?"
                     required
                   />
-                  <Select
-                    label="Course (optional)"
-                    value={taskFormData.courseId}
-                    onChange={(e) => setTaskFormData({ ...taskFormData, courseId: e.target.value })}
-                    options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
-                  />
-                  <Textarea
-                    label="Notes (optional)"
-                    value={taskFormData.notes}
-                    onChange={(e) => setTaskFormData({ ...taskFormData, notes: e.target.value })}
-                    placeholder="Add any additional notes..."
-                  />
+                  <div style={{ paddingTop: '12px' }}>
+                    <Select
+                      label="Course (optional)"
+                      value={taskFormData.courseId}
+                      onChange={(e) => setTaskFormData({ ...taskFormData, courseId: e.target.value })}
+                      options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                    />
+                  </div>
+                  <div style={{ paddingTop: '12px' }}>
+                    <Textarea
+                      label="Notes (optional)"
+                      value={taskFormData.notes}
+                      onChange={(e) => setTaskFormData({ ...taskFormData, notes: e.target.value })}
+                      placeholder="Add any additional notes..."
+                    />
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <Input
                       label="Due date (optional)"
@@ -562,15 +583,28 @@ export default function Dashboard() {
                       onChange={(e) => setTaskFormData({ ...taskFormData, dueTime: e.target.value })}
                     />
                   </div>
-                  <Input
-                    label="Link (optional)"
-                    type="text"
-                    value={taskFormData.link}
-                    onChange={(e) => setTaskFormData({ ...taskFormData, link: e.target.value })}
-                    placeholder="example.com or https://..."
-                  />
+                  <div style={{ paddingTop: '12px' }}>
+                    <Input
+                      label="Link (optional)"
+                      type="text"
+                      value={taskFormData.link}
+                      onChange={(e) => setTaskFormData({ ...taskFormData, link: e.target.value })}
+                      placeholder="example.com or https://..."
+                    />
+                  </div>
                   <div className="flex gap-3" style={{ paddingTop: '8px' }}>
-                    <Button variant="primary" type="submit" size="sm">
+                    <Button
+                      variant="primary"
+                      type="submit"
+                      size="sm"
+                      style={{
+                        backgroundColor: '#132343',
+                        color: 'white',
+                        borderWidth: '1px',
+                        borderStyle: 'solid',
+                        borderColor: 'var(--border)'
+                      }}
+                    >
                       {editingTaskId ? 'Save Changes' : 'Add Task'}
                     </Button>
                     <Button variant="secondary" type="button" onClick={cancelEditTask} size="sm">
