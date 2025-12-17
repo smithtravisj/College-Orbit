@@ -45,25 +45,36 @@ export default function DeadlinesPage() {
     e.preventDefault();
     if (!formData.title.trim()) return;
 
+    console.log('[Deadlines] Form submission started');
+    console.log('[Deadlines] Form data:', JSON.stringify(formData, null, 2));
+
     let dueAt: string | null = null;
     // Only set dueAt if we have a valid date string (not empty, not null, not whitespace)
     if (formData.dueDate && formData.dueDate.trim()) {
       try {
         // If date is provided but time is not, default to 11:59 PM
         const dateTimeString = formData.dueTime ? `${formData.dueDate}T${formData.dueTime}` : `${formData.dueDate}T23:59`;
+        console.log('[Deadlines] Date time string:', dateTimeString);
         const dateObj = new Date(dateTimeString);
+        console.log('[Deadlines] Parsed date:', dateObj.toISOString(), 'getTime():', dateObj.getTime());
         // Verify it's a valid date and not the epoch
         if (dateObj.getTime() > 0) {
           dueAt = dateObj.toISOString();
+          console.log('[Deadlines] Valid dueAt set to:', dueAt);
+        } else {
+          console.log('[Deadlines] Date getTime() <= 0, rejecting');
         }
       } catch (err) {
         // If date parsing fails, leave dueAt as null
-        console.error('Date parsing error:', err);
+        console.error('[Deadlines] Date parsing error:', err);
       }
     } else {
       // If time is provided but date is not, ignore the time
+      console.log('[Deadlines] No date provided, dueAt will be null');
       formData.dueTime = '';
     }
+
+    console.log('[Deadlines] Final dueAt before API call:', dueAt);
 
     // Handle link - normalize empty string to null
     const link = formData.link?.trim() ? (
@@ -72,7 +83,19 @@ export default function DeadlinesPage() {
         : `https://${formData.link}`
     ) : null;
 
+    const payload = {
+      title: formData.title,
+      courseId: formData.courseId || null,
+      dueAt,
+      notes: formData.notes,
+      link,
+      status: 'open' as const,
+    };
+
+    console.log('[Deadlines] Payload being sent:', JSON.stringify(payload, null, 2));
+
     if (editingId) {
+      console.log('[Deadlines] Updating deadline:', editingId);
       await updateDeadline(editingId, {
         title: formData.title,
         courseId: formData.courseId || null,
@@ -82,14 +105,8 @@ export default function DeadlinesPage() {
       });
       setEditingId(null);
     } else {
-      await addDeadline({
-        title: formData.title,
-        courseId: formData.courseId || null,
-        dueAt,
-        notes: formData.notes,
-        link,
-        status: 'open',
-      });
+      console.log('[Deadlines] Creating new deadline');
+      await addDeadline(payload);
     }
 
     setFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', link: '' });

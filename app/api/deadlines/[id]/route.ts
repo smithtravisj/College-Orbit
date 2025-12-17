@@ -55,6 +55,8 @@ export async function PATCH(
 
     const { id } = await params;
     const data = await req.json();
+    console.log('[PATCH /deadlines/:id] ID:', id);
+    console.log('[PATCH /deadlines/:id] Request body:', JSON.stringify(data, null, 2));
 
     // Verify ownership
     const existingDeadline = await prisma.deadline.findFirst({
@@ -65,10 +67,34 @@ export async function PATCH(
     });
 
     if (!existingDeadline) {
+      console.error('[PATCH /deadlines/:id] Deadline not found:', id);
       return NextResponse.json(
         { error: 'Deadline not found' },
         { status: 404 }
       );
+    }
+
+    // Handle dueAt update with proper null handling
+    let updateDueAt = existingDeadline.dueAt;
+    if ('dueAt' in data) {
+      console.log('[PATCH /deadlines/:id] dueAt in data, value:', data.dueAt);
+      if (data.dueAt) {
+        try {
+          updateDueAt = new Date(data.dueAt);
+          if (isNaN(updateDueAt.getTime())) {
+            console.warn('[PATCH /deadlines/:id] Invalid date received:', data.dueAt);
+            updateDueAt = null;
+          } else {
+            console.log('[PATCH /deadlines/:id] Valid dueAt:', updateDueAt.toISOString());
+          }
+        } catch (dateError) {
+          console.error('[PATCH /deadlines/:id] Date parsing error:', dateError);
+          updateDueAt = null;
+        }
+      } else {
+        console.log('[PATCH /deadlines/:id] dueAt is null/empty, clearing');
+        updateDueAt = null;
+      }
     }
 
     const deadline = await prisma.deadline.update({
@@ -76,18 +102,21 @@ export async function PATCH(
       data: {
         title: 'title' in data ? data.title : existingDeadline.title,
         courseId: 'courseId' in data ? data.courseId : existingDeadline.courseId,
-        dueAt: 'dueAt' in data ? (data.dueAt ? new Date(data.dueAt) : null) : existingDeadline.dueAt,
+        dueAt: 'dueAt' in data ? updateDueAt : existingDeadline.dueAt,
         notes: 'notes' in data ? data.notes : existingDeadline.notes,
         link: 'link' in data ? data.link : existingDeadline.link,
         status: 'status' in data ? data.status : existingDeadline.status,
       },
     });
 
+    console.log('[PATCH /deadlines/:id] Deadline updated successfully:', deadline.id);
+    console.log('[PATCH /deadlines/:id] Final dueAt:', deadline.dueAt);
     return NextResponse.json({ deadline });
   } catch (error) {
-    console.error('Error updating deadline:', error);
+    console.error('[PATCH /deadlines/:id] Error updating deadline:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to update deadline' },
+      { error: 'Failed to update deadline', details: errorMessage },
       { status: 500 }
     );
   }

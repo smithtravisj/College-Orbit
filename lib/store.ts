@@ -206,6 +206,7 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   addDeadline: async (deadline) => {
+    console.log('[Store] addDeadline called with:', JSON.stringify(deadline, null, 2));
     // Optimistic update
     const tempId = uuidv4();
     const createdAt = new Date().toISOString();
@@ -218,15 +219,23 @@ const useAppStore = create<AppStore>((set, get) => ({
 
     try {
       // API call
+      const requestBody = JSON.stringify(deadline);
+      console.log('[Store] Sending request body:', requestBody);
       const response = await fetch('/api/deadlines', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(deadline),
+        body: requestBody,
       });
 
-      if (!response.ok) throw new Error('Failed to create deadline');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('[Store] API error response:', errorData);
+        throw new Error(`Failed to create deadline: ${response.status}`);
+      }
 
-      const { deadline: newDeadline } = await response.json();
+      const responseData = await response.json();
+      console.log('[Store] API response:', JSON.stringify(responseData, null, 2));
+      const { deadline: newDeadline } = responseData;
 
       // Replace optimistic with real data
       set((state) => ({
@@ -239,12 +248,14 @@ const useAppStore = create<AppStore>((set, get) => ({
       set((state) => ({
         deadlines: state.deadlines.filter((d) => d.id !== tempId),
       }));
-      console.error('Error creating deadline:', error);
+      console.error('[Store] Error creating deadline:', error);
       throw error;
     }
   },
 
   updateDeadline: async (id, deadline) => {
+    console.log('[Store] updateDeadline called for ID:', id);
+    console.log('[Store] Update payload:', JSON.stringify(deadline, null, 2));
     try {
       // Optimistic update
       set((state) => ({
@@ -254,15 +265,23 @@ const useAppStore = create<AppStore>((set, get) => ({
       }));
 
       // API call
+      const requestBody = JSON.stringify(deadline);
+      console.log('[Store] Sending PATCH request body:', requestBody);
       const response = await fetch(`/api/deadlines/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(deadline),
+        body: requestBody,
       });
 
-      if (!response.ok) throw new Error('Failed to update deadline');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('[Store] API error response:', errorData);
+        throw new Error(`Failed to update deadline: ${response.status}`);
+      }
 
-      const { deadline: updatedDeadline } = await response.json();
+      const responseData = await response.json();
+      console.log('[Store] API response:', JSON.stringify(responseData, null, 2));
+      const { deadline: updatedDeadline } = responseData;
 
       // Update with server response
       set((state) => ({
@@ -273,7 +292,7 @@ const useAppStore = create<AppStore>((set, get) => ({
     } catch (error) {
       // Reload from database on error
       await get().loadFromDatabase();
-      console.error('Error updating deadline:', error);
+      console.error('[Store] Error updating deadline:', error);
       throw error;
     }
   },
