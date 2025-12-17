@@ -90,7 +90,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
       </div>
 
       <div style={{ paddingTop: '12px' }}>
-        <label className="block text-base font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Meeting Times</label>
+        <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Meeting Times</label>
         <div className="space-y-3">
           {form.meetingTimes.map((mt, idx) => (
             <div key={idx} className="flex gap-3 items-end">
@@ -169,7 +169,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
       </div>
 
       <div style={{ paddingTop: '12px' }}>
-        <label className="block text-base font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links</label>
+        <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links</label>
         <div className="space-y-3">
           {form.links.map((link, idx) => (
             <div key={idx} className="flex gap-3 items-end">
