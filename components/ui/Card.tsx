@@ -15,7 +15,7 @@ const Card: React.FC<CardProps> = ({
   subtitle,
   action,
   children,
-  padding = 'md',
+  padding = 'lg',
   hoverable = false,
   className = '',
 }) => {

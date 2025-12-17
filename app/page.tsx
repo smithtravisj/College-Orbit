@@ -81,10 +81,10 @@ export default function Dashboard() {
   return (
     <>
       <PageHeader title="Dashboard" subtitle="Welcome back. Here's your schedule and tasks for today." />
-      <div className="mx-auto max-w-[var(--container)] px-20 py-16">
-        <div className="grid grid-cols-12 gap-7">
+      <div className="mx-auto max-w-[1400px] 2xl:max-w-[1600px] px-10 py-10 min-h-[calc(100vh-var(--header-h))] flex flex-col">
+        <div className="grid grid-cols-12 gap-8 flex-1 auto-rows-fr">
           {/* Top row - 3 cards */}
-          <div className="col-span-12 lg:col-span-4 h-full">
+          <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
             <Card title="Next Class" padding="lg" className="h-full flex flex-col">
               {nextClass ? (
                 <div className="space-y-5">
@@ -117,7 +117,7 @@ export default function Dashboard() {
           </div>
 
           {/* Due Soon */}
-          <div className="col-span-12 lg:col-span-4 h-full">
+          <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
             <Card title="Due Soon" padding="lg" className="h-full flex flex-col">
               {dueSoon.length > 0 ? (
                 <div className="space-y-4">
@@ -145,7 +145,7 @@ export default function Dashboard() {
           </div>
 
           {/* Overview */}
-          <div className="col-span-12 lg:col-span-4 h-full">
+          <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
             <Card title="Overview" padding="lg" className="h-full flex flex-col">
               <div className="space-y-0 divide-y divide-[var(--border)]">
                 <div className="flex items-center justify-between py-4 first:pt-0">
@@ -171,7 +171,7 @@ export default function Dashboard() {
           </div>
 
           {/* Second row - Tasks and Quick Links */}
-          <div className="col-span-12 lg:col-span-8 h-full">
+          <div className="col-span-12 lg:col-span-8 h-full min-h-[240px]">
             <Card title="Today's Tasks" padding="lg" className="h-full flex flex-col">
                 {todayTasks.length > 0 || pinnedTask ? (
                   <div className="space-y-1">
@@ -237,7 +237,7 @@ export default function Dashboard() {
           </div>
 
           {/* Quick Links */}
-          <div className="col-span-12 lg:col-span-4 h-full">
+          <div className="col-span-12 lg:col-span-4 h-full min-h-[240px]">
             <Card title="Quick Links" padding="lg" className="h-full flex flex-col">
               {quickLinks.length > 0 ? (
                 <div className="space-y-2">
@@ -265,13 +265,13 @@ export default function Dashboard() {
           </div>
 
           {/* Capture Input */}
-          <div className="col-span-12">
+          <div className="col-span-12 min-h-[120px]">
             <CaptureInput />
           </div>
 
           {/* Upcoming This Week */}
-          <div className="col-span-12">
-            <Card title="Upcoming This Week" subtitle="Your schedule for the next 7 days" padding="lg">
+          <div className="col-span-12 min-h-[180px]">
+            <Card title="Upcoming This Week" subtitle="Your schedule for the next 7 days" padding="lg" className="h-full flex flex-col">
               <div className="text-sm text-[var(--muted)]">
                 <p>No upcoming events</p>
               </div>
