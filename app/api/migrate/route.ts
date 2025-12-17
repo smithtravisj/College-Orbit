@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
           userId,
           title: deadline.title,
           courseId: deadline.courseId || null,
-          dueAt: new Date(deadline.dueAt),
+          dueAt: deadline.dueAt ? new Date(deadline.dueAt) : null,
           notes: deadline.notes,
           link: deadline.link,
           status: deadline.status,

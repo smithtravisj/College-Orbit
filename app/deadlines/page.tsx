@@ -43,13 +43,16 @@ export default function DeadlinesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim() || !formData.dueDate) return;
+    if (!formData.title.trim()) return;
 
-    const dateTimeString = formData.dueTime ? `${formData.dueDate}T${formData.dueTime}` : `${formData.dueDate}T23:59`;
-    const dueAt = new Date(dateTimeString).toISOString();
+    let dueAt: string | null = null;
+    if (formData.dueDate) {
+      const dateTimeString = formData.dueTime ? `${formData.dueDate}T${formData.dueTime}` : `${formData.dueDate}T23:59`;
+      dueAt = new Date(dateTimeString).toISOString();
+    }
 
     // Add https:// to link if it doesn't start with http:// or https://
-    let link = formData.link || null;
+    let link: string | null = formData.link || null;
     if (link && !link.startsWith('http://') && !link.startsWith('https://')) {
       link = `https://${link}`;
     }
@@ -58,18 +61,18 @@ export default function DeadlinesPage() {
       await updateDeadline(editingId, {
         title: formData.title,
         courseId: formData.courseId || null,
-        dueAt,
+        dueAt: dueAt || null,
         notes: formData.notes,
-        link,
+        link: link || null,
       });
       setEditingId(null);
     } else {
       await addDeadline({
         title: formData.title,
         courseId: formData.courseId || null,
-        dueAt,
+        dueAt: dueAt || null,
         notes: formData.notes,
-        link,
+        link: link || null,
         status: 'open',
       });
     }
@@ -114,7 +117,7 @@ export default function DeadlinesPage() {
         return true;
       }
 
-      if (filter === 'overdue') return isOverdue(d.dueAt) && d.status === 'open';
+      if (filter === 'overdue') return d.dueAt && isOverdue(d.dueAt) && d.status === 'open';
       if (filter === 'done') return d.status === 'done';
       return d.status === 'open';
     })
@@ -204,11 +207,10 @@ export default function DeadlinesPage() {
                 />
                 <div className="grid grid-cols-2 gap-4">
                   <Input
-                    label="Due date (required)"
+                    label="Due date (optional)"
                     type="date"
                     value={formData.dueDate}
                     onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                    required
                   />
                   <Input
                     label="Due time (optional)"
@@ -219,10 +221,10 @@ export default function DeadlinesPage() {
                 </div>
                 <Input
                   label="Link (optional)"
-                  type="url"
+                  type="text"
                   value={formData.link}
                   onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                  placeholder="https://..."
+                  placeholder="example.com or https://..."
                 />
                 <div className="flex gap-3" style={{ paddingTop: '12px' }}>
                   <Button variant="primary" type="submit">

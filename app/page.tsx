@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [hidingTasks, setHidingTasks] = useState<Set<string>>(new Set());
   const [toggledTasks, setToggledTasks] = useState<Set<string>>(new Set());
   const [hidingDeadlines, setHidingDeadlines] = useState<Set<string>>(new Set());
+  const [toggledDeadlines, setToggledDeadlines] = useState<Set<string>>(new Set());
   const [taskFormData, setTaskFormData] = useState({
     title: '',
     courseId: '',
@@ -127,12 +128,21 @@ export default function Dashboard() {
   // Get due soon items
   const dueSoon = deadlines
     .filter((d) => {
+      if (!d.dueAt) return false;
       const dueDate = new Date(d.dueAt);
       const windowEnd = new Date();
       windowEnd.setDate(windowEnd.getDate() + settings.dueSoonWindowDays);
-      return dueDate <= windowEnd && d.status === 'open';
+      const isInWindow = dueDate <= windowEnd;
+      // Keep toggled deadlines visible regardless of status
+      if (toggledDeadlines.has(d.id)) {
+        return isInWindow;
+      }
+      return isInWindow && d.status === 'open';
     })
-    .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime())
+    .sort((a, b) => {
+      if (!a.dueAt || !b.dueAt) return 0;
+      return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
+    })
     .slice(0, 5);
 
   // Get today's tasks and overdue tasks
@@ -162,7 +172,7 @@ export default function Dashboard() {
 
   // Status summary
   const classesLeft = todayClasses.filter((c) => c.start > nowTime).length;
-  const overdueCount = overdueTasks.length + deadlines.filter((d) => isOverdue(d.dueAt) && d.status === 'open').length;
+  const overdueCount = overdueTasks.length + deadlines.filter((d) => d.dueAt && isOverdue(d.dueAt) && d.status === 'open').length;
 
   return (
     <>
@@ -209,10 +219,10 @@ export default function Dashboard() {
                 <div className="space-y-4 divide-y divide-[var(--border)]">
                   {dueSoon.slice(0, 3).map((d) => {
                     const course = courses.find((c) => c.id === d.courseId);
-                    const dueHours = new Date(d.dueAt).getHours();
-                    const dueMinutes = new Date(d.dueAt).getMinutes();
-                    const dueTime = new Date(d.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const isOverdueDeadline = isOverdue(d.dueAt) && d.status === 'open';
+                    const dueHours = new Date(d.dueAt!).getHours();
+                    const dueMinutes = new Date(d.dueAt!).getMinutes();
+                    const dueTime = new Date(d.dueAt!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const isOverdueDeadline = d.dueAt && isOverdue(d.dueAt) && d.status === 'open';
                     const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
                     return (
                       <div key={d.id} style={{ paddingTop: '10px', paddingBottom: '10px', opacity: hidingDeadlines.has(d.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group">
@@ -221,6 +231,15 @@ export default function Dashboard() {
                           checked={d.status === 'done'}
                           onChange={() => {
                             const isCurrentlyDone = d.status === 'done';
+                            setToggledDeadlines(prev => {
+                              const newSet = new Set(prev);
+                              if (newSet.has(d.id)) {
+                                newSet.delete(d.id);
+                              } else {
+                                newSet.add(d.id);
+                              }
+                              return newSet;
+                            });
                             updateDeadline(d.id, {
                               status: isCurrentlyDone ? 'open' : 'done',
                             });
@@ -259,7 +278,7 @@ export default function Dashboard() {
                           </div>
                           <div className="flex items-center gap-2 mt-2 flex-wrap">
                             <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
-                              {formatDate(d.dueAt)}
+                              {formatDate(d.dueAt!)}
                             </span>
                             {shouldShowTime && (
                               <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">

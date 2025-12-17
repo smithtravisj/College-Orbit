@@ -20,7 +20,7 @@ export interface Deadline {
   id: string;
   title: string;
   courseId: string | null;
-  dueAt: string; // ISO datetime
+  dueAt: string | null; // ISO datetime
   notes: string;
   link: string | null;
   status: 'open' | 'done';
