@@ -162,6 +162,13 @@ export default function ProfilePage() {
                   size="lg"
                   disabled={loading}
                   className="w-full"
+                  style={{
+                    backgroundColor: '#132343',
+                    color: 'white',
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: 'var(--border)'
+                  }}
                 >
                   {loading ? 'Saving Changes...' : 'Save Changes'}
                 </Button>
