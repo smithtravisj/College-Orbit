@@ -100,7 +100,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
 
   const handleHourInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, '');
-    if (val.length > 2) val = val.slice(0, 2);
+    if (val.length > 2) val = val.slice(-2);
     const numVal = parseInt(val) || 0;
     if (numVal > 12) val = '12';
     if (numVal < 1 && val !== '') val = '1';
@@ -110,7 +110,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
 
   const handleMinuteInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, '');
-    if (val.length > 2) val = val.slice(0, 2);
+    if (val.length > 2) val = val.slice(-2);
     const numVal = parseInt(val) || 0;
     if (numVal > 59) val = '59';
     setMinutes(val);
