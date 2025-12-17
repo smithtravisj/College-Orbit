@@ -232,6 +232,7 @@ export default function ToolsPage() {
                             Credits
                           </div>
                         </div>
+                        <div style={{ width: '34px' }}></div>
                       </div>
                     )}
                     <div className="flex gap-3 items-end">
