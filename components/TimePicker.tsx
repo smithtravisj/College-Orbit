@@ -14,11 +14,13 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   const [hours, setHours] = useState<string>('10');
   const [minutes, setMinutes] = useState<string>('00');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const isUpdatingFromParent = useRef(false);
 
   // Parse the initial value
   useEffect(() => {
     if (value) {
       const [h, m] = value.split(':');
+      isUpdatingFromParent.current = true;
       setHours(h);
       setMinutes(m);
     }
@@ -36,31 +38,39 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleTimeChange = () => {
-    const formattedHours = String(parseInt(hours) || 0).padStart(2, '0');
-    const formattedMinutes = String(parseInt(minutes) || 0).padStart(2, '0');
+  const handleTimeChange = (h: string, m: string) => {
+    const formattedHours = String(parseInt(h) || 0).padStart(2, '0');
+    const formattedMinutes = String(parseInt(m) || 0).padStart(2, '0');
     const timeValue = `${formattedHours}:${formattedMinutes}`;
     onChange(timeValue);
   };
 
   const incrementHours = () => {
     const newHours = (parseInt(hours) + 1) % 24;
-    setHours(String(newHours).padStart(2, '0'));
+    const formattedHours = String(newHours).padStart(2, '0');
+    setHours(formattedHours);
+    handleTimeChange(formattedHours, minutes);
   };
 
   const decrementHours = () => {
     const newHours = (parseInt(hours) - 1 + 24) % 24;
-    setHours(String(newHours).padStart(2, '0'));
+    const formattedHours = String(newHours).padStart(2, '0');
+    setHours(formattedHours);
+    handleTimeChange(formattedHours, minutes);
   };
 
   const incrementMinutes = () => {
     const newMinutes = (parseInt(minutes) + 15) % 60;
-    setMinutes(String(newMinutes).padStart(2, '0'));
+    const formattedMinutes = String(newMinutes).padStart(2, '0');
+    setMinutes(formattedMinutes);
+    handleTimeChange(hours, formattedMinutes);
   };
 
   const decrementMinutes = () => {
     const newMinutes = (parseInt(minutes) - 15 + 60) % 60;
-    setMinutes(String(newMinutes).padStart(2, '0'));
+    const formattedMinutes = String(newMinutes).padStart(2, '0');
+    setMinutes(formattedMinutes);
+    handleTimeChange(hours, formattedMinutes);
   };
 
   const handleHourInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,7 +78,9 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
     if (val.length > 2) val = val.slice(0, 2);
     const numVal = parseInt(val) || 0;
     if (numVal > 23) val = '23';
-    setHours(val.padStart(2, '0'));
+    const formattedVal = val.padStart(2, '0');
+    setHours(formattedVal);
+    handleTimeChange(formattedVal, minutes);
   };
 
   const handleMinuteInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,12 +88,10 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
     if (val.length > 2) val = val.slice(0, 2);
     const numVal = parseInt(val) || 0;
     if (numVal > 59) val = '59';
-    setMinutes(val.padStart(2, '0'));
+    const formattedVal = val.padStart(2, '0');
+    setMinutes(formattedVal);
+    handleTimeChange(hours, formattedVal);
   };
-
-  useEffect(() => {
-    handleTimeChange();
-  }, [hours, minutes]);
 
   return (
     <div ref={dropdownRef} className="relative w-full" style={{ minWidth: '120px' }}>
