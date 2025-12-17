@@ -8,13 +8,23 @@ import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 import Link from 'next/link';
-import { MapPin, ExternalLink } from 'lucide-react';
+import { MapPin, ExternalLink, Edit2, Trash2, Plus } from 'lucide-react';
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
-  const { courses, deadlines, tasks, settings, initializeStore } = useAppStore();
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [taskFormData, setTaskFormData] = useState({
+    title: '',
+    courseId: '',
+    dueDate: '',
+    dueTime: '',
+    notes: '',
+  });
+  const { courses, deadlines, tasks, settings, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone } = useAppStore();
 
   useEffect(() => {
     initializeStore();
@@ -28,6 +38,58 @@ export default function Dashboard() {
       </div>
     );
   }
+
+  const handleTaskSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!taskFormData.title.trim()) return;
+
+    let dueAt = null;
+    if (taskFormData.dueDate) {
+      const dateTimeString = taskFormData.dueTime ? `${taskFormData.dueDate}T${taskFormData.dueTime}` : `${taskFormData.dueDate}T23:59`;
+      dueAt = new Date(dateTimeString).toISOString();
+    }
+
+    if (editingTaskId) {
+      await updateTask(editingTaskId, {
+        title: taskFormData.title,
+        courseId: taskFormData.courseId || null,
+        dueAt,
+        notes: taskFormData.notes,
+      });
+      setEditingTaskId(null);
+    } else {
+      await addTask({
+        title: taskFormData.title,
+        courseId: taskFormData.courseId || null,
+        dueAt,
+        pinned: false,
+        checklist: [],
+        notes: taskFormData.notes,
+        status: 'open',
+      });
+    }
+
+    setTaskFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '' });
+    setShowTaskForm(false);
+  };
+
+  const startEditTask = (task: any) => {
+    setEditingTaskId(task.id);
+    setTaskFormData({
+      title: task.title,
+      courseId: task.courseId || '',
+      dueDate: task.dueAt ? new Date(task.dueAt).toISOString().split('T')[0] : '',
+      dueTime: task.dueAt ? new Date(task.dueAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '',
+      notes: task.notes,
+    });
+    setShowTaskForm(true);
+  };
+
+  const cancelEditTask = () => {
+    setEditingTaskId(null);
+    setTaskFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '' });
+    setShowTaskForm(false);
+  };
 
   // Get next class
   const today = new Date();
@@ -62,7 +124,7 @@ export default function Dashboard() {
     .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime())
     .slice(0, 5);
 
-  // Get today's tasks
+  // Get today's tasks and overdue tasks
   const todayTasks = tasks
     .filter((t) => t.dueAt && isToday(t.dueAt) && t.status === 'open')
     .sort((a, b) => {
@@ -74,6 +136,8 @@ export default function Dashboard() {
       return a.title.localeCompare(b.title);
     });
 
+  const overdueTasks = tasks.filter((d) => d.dueAt && isOverdue(d.dueAt) && d.status === 'open');
+
   // Get quick links
   const quickLinks = courses
     .flatMap((c) => c.links.map((l) => ({ ...l, courseId: c.id, courseName: c.name })))
@@ -81,7 +145,7 @@ export default function Dashboard() {
 
   // Status summary
   const classesLeft = todayClasses.filter((c) => c.start > nowTime).length;
-  const overdueCount = deadlines.filter((d) => isOverdue(d.dueAt) && d.status === 'open').length;
+  const overdueCount = overdueTasks.length + deadlines.filter((d) => isOverdue(d.dueAt) && d.status === 'open').length;
 
   return (
     <>
@@ -178,25 +242,71 @@ export default function Dashboard() {
           {/* Second row - Tasks and Quick Links */}
           <div className="col-span-12 lg:col-span-8 h-full min-h-[240px]">
             <Card title="Today's Tasks" className="h-full flex flex-col">
-                {todayTasks.length > 0 ? (
-                  <div className="space-y-4">
-                    {todayTasks.slice(0, 5).map((t, idx) => {
-                      const dueTime = t.dueAt ? new Date(t.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
-                      const course = courses.find((c) => c.id === t.courseId);
-                      return (
-                        <div
-                          key={t.id}
-                          className={`py-4 flex items-start gap-4 ${
-                            idx < Math.min(5, todayTasks.length) - 1 ? 'border-b border-[var(--border)]' : ''
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={t.status === 'done'}
-                            readOnly
-                            className="mt-1 w-4 h-4 accent-[var(--accent)] cursor-default appearance-none border-2 border-[var(--border)] rounded-sm checked:bg-[var(--accent)] checked:border-[var(--accent)] transition-colors"
-                          />
-                          <div className="flex-1 min-w-0">
+              {/* Task Form */}
+              {showTaskForm && (
+                <div className="mb-6 pb-6 border-b border-[var(--border)]">
+                  <form onSubmit={handleTaskSubmit} className="space-y-5">
+                    <Input
+                      label="Task title"
+                      value={taskFormData.title}
+                      onChange={(e) => setTaskFormData({ ...taskFormData, title: e.target.value })}
+                      placeholder="What needs to be done?"
+                      required
+                    />
+                    <Select
+                      label="Course (optional)"
+                      value={taskFormData.courseId}
+                      onChange={(e) => setTaskFormData({ ...taskFormData, courseId: e.target.value })}
+                      options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                    />
+                    <Textarea
+                      label="Notes (optional)"
+                      value={taskFormData.notes}
+                      onChange={(e) => setTaskFormData({ ...taskFormData, notes: e.target.value })}
+                      placeholder="Add any additional notes..."
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input
+                        label="Due date (optional)"
+                        type="date"
+                        value={taskFormData.dueDate}
+                        onChange={(e) => setTaskFormData({ ...taskFormData, dueDate: e.target.value })}
+                      />
+                      <Input
+                        label="Due time (optional)"
+                        type="time"
+                        value={taskFormData.dueTime}
+                        onChange={(e) => setTaskFormData({ ...taskFormData, dueTime: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex gap-3 pt-4">
+                      <Button variant="primary" type="submit" size="sm">
+                        {editingTaskId ? 'Save Changes' : 'Add Task'}
+                      </Button>
+                      <Button variant="secondary" type="button" onClick={cancelEditTask} size="sm">
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {todayTasks.length > 0 || showTaskForm ? (
+                <div className="space-y-4 divide-y divide-[var(--border)]">
+                  {todayTasks.slice(0, 5).map((t) => {
+                    const dueTime = t.dueAt ? new Date(t.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+                    const shouldShowTime = dueTime && !dueTime.startsWith('23:59');
+                    const course = courses.find((c) => c.id === t.courseId);
+                    return (
+                      <div key={t.id} className="py-5 pb-6 first:pt-0 last:pb-0 flex items-center gap-4 group">
+                        <input
+                          type="checkbox"
+                          checked={t.status === 'done'}
+                          onChange={() => toggleTaskDone(t.id)}
+                          className="w-4 h-4 cursor-pointer flex-shrink-0 appearance-none border-2 border-[var(--border)] rounded-sm checked:bg-[var(--accent)] checked:border-[var(--accent)] transition-colors"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start gap-2">
                             <div
                               className={`text-sm font-medium ${
                                 t.status === 'done'
@@ -206,42 +316,64 @@ export default function Dashboard() {
                             >
                               {t.title}
                             </div>
-                            {t.notes && (
-                              <div className="text-xs text-[var(--text-muted)] mt-1">
-                                {t.notes}
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2 mt-2">
-                              {dueTime && (
-                                <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
-                                  {dueTime}
-                                </span>
-                              )}
-                              {course && (
-                                <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
-                                  {course.code}
-                                </span>
-                              )}
+                          </div>
+                          {t.notes && (
+                            <div className="text-xs text-[var(--text-muted)] mt-1">
+                              {t.notes}
                             </div>
+                          )}
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            {shouldShowTime && (
+                              <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                                {dueTime}
+                              </span>
+                            )}
+                            {course && (
+                              <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                                {course.code}
+                              </span>
+                            )}
                           </div>
                         </div>
-                      );
-                    })}
-                    {todayTasks.length > 5 && (
-                      <div className="pt-3 border-t border-[var(--border)]">
-                        <Link
-                          href="/tasks"
-                          className="text-sm text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium transition-colors"
-                        >
-                          View all tasks →
-                        </Link>
+                        <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
+                          <button
+                            onClick={() => startEditTask(t)}
+                            className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                            title="Edit task"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => deleteTask(t.id)}
+                            className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                            title="Delete task"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
+                    );
+                  })}
+                  <div className="pt-4 flex gap-2">
+                    {!showTaskForm && (
+                      <Button variant="secondary" size="sm" onClick={() => setShowTaskForm(true)} className="flex items-center gap-2">
+                        <Plus size={16} />
+                        Add Task
+                      </Button>
+                    )}
+                    {todayTasks.length > 5 && (
+                      <Link href="/tasks" className="inline-flex">
+                        <Button variant="secondary" size="sm">
+                          View all →
+                        </Button>
+                      </Link>
                     )}
                   </div>
-                ) : (
-                  <EmptyState title="No tasks today" description="Add a task to get started" />
-                )}
-              </Card>
+                </div>
+              ) : (
+                <EmptyState title="No tasks today" description="Add a task to get started" action={{ label: 'Add Task', onClick: () => setShowTaskForm(true) }} />
+              )}
+            </Card>
           </div>
 
           {/* Quick Links */}

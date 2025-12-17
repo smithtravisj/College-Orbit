@@ -2,17 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
-import { isToday, formatDate } from '@/lib/utils';
+import { isToday, formatDate, isOverdue } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2 } from 'lucide-react';
+import Badge from '@/components/ui/Badge';
+import { Plus, Trash2, Edit2 } from 'lucide-react';
 
 export default function TasksPage() {
   const [mounted, setMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     courseId: '',
@@ -22,7 +24,7 @@ export default function TasksPage() {
   });
   const [filter, setFilter] = useState('all');
 
-  const { courses, tasks, addTask, deleteTask, toggleTaskDone, initializeStore } = useAppStore();
+  const { courses, tasks, addTask, updateTask, deleteTask, toggleTaskDone, initializeStore } = useAppStore();
 
   useEffect(() => {
     initializeStore();
@@ -37,26 +39,54 @@ export default function TasksPage() {
     );
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
 
     let dueAt = null;
     if (formData.dueDate) {
-      const dateTimeString = formData.dueTime ? `${formData.dueDate}T${formData.dueTime}` : `${formData.dueDate}T00:00`;
+      const dateTimeString = formData.dueTime ? `${formData.dueDate}T${formData.dueTime}` : `${formData.dueDate}T23:59`;
       dueAt = new Date(dateTimeString).toISOString();
     }
 
-    addTask({
-      title: formData.title,
-      courseId: formData.courseId || null,
-      dueAt,
-      pinned: false,
-      checklist: [],
-      notes: formData.notes,
-      status: 'open',
-    });
+    if (editingId) {
+      await updateTask(editingId, {
+        title: formData.title,
+        courseId: formData.courseId || null,
+        dueAt,
+        notes: formData.notes,
+      });
+      setEditingId(null);
+    } else {
+      await addTask({
+        title: formData.title,
+        courseId: formData.courseId || null,
+        dueAt,
+        pinned: false,
+        checklist: [],
+        notes: formData.notes,
+        status: 'open',
+      });
+    }
 
+    setFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '' });
+    setShowForm(false);
+  };
+
+  const startEdit = (task: any) => {
+    setEditingId(task.id);
+    setFormData({
+      title: task.title,
+      courseId: task.courseId || '',
+      dueDate: task.dueAt ? new Date(task.dueAt).toISOString().split('T')[0] : '',
+      dueTime: task.dueAt ? new Date(task.dueAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '',
+      notes: task.notes,
+    });
+    setShowForm(true);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
     setFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '' });
     setShowForm(false);
   };
@@ -170,9 +200,9 @@ export default function TasksPage() {
                 </div>
                 <div className="flex gap-3 pt-4">
                   <Button variant="primary" type="submit">
-                    Add Task
+                    {editingId ? 'Save Changes' : 'Add Task'}
                   </Button>
-                  <Button variant="secondary" type="button" onClick={() => setShowForm(false)}>
+                  <Button variant="secondary" type="button" onClick={cancelEdit}>
                     Cancel
                   </Button>
                 </div>
@@ -187,32 +217,37 @@ export default function TasksPage() {
                 {filtered.map((t) => {
                   const course = courses.find((c) => c.id === t.courseId);
                   const dueTime = t.dueAt ? new Date(t.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+                  const isOverdueTask = t.dueAt && isOverdue(t.dueAt) && t.status === 'open';
+                  const shouldShowTime = dueTime && !dueTime.startsWith('23:59');
                   return (
-                    <div key={t.id} className="py-4 first:pt-0 last:pb-0 flex items-start gap-4 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors">
+                    <div key={t.id} className="py-5 pb-6 first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors">
                       <input
                         type="checkbox"
                         checked={t.status === 'done'}
                         onChange={() => toggleTaskDone(t.id)}
-                        className="mt-1 w-5 h-5 cursor-pointer flex-shrink-0 appearance-none border-2 border-[var(--border)] rounded-sm checked:bg-[var(--accent)] checked:border-[var(--accent)] transition-colors"
+                        className="w-5 h-5 cursor-pointer flex-shrink-0 appearance-none border-2 border-[var(--border)] rounded-sm checked:bg-[var(--accent)] checked:border-[var(--accent)] transition-colors"
                         title={t.status === 'done' ? 'Mark as incomplete' : 'Mark as complete'}
                       />
                       <div className="flex-1 min-w-0">
-                        <div
-                          className={`text-sm font-medium ${
-                            t.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'
-                          }`}
-                        >
-                          {t.title}
+                        <div className="flex items-start gap-2">
+                          <div
+                            className={`text-sm font-medium ${
+                              t.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'
+                            }`}
+                          >
+                            {t.title}
+                          </div>
+                          {isOverdueTask && <Badge variant="danger">Overdue</Badge>}
                         </div>
                         {t.notes && (
                           <div className="text-xs text-[var(--text-muted)] mt-1">
                             {t.notes}
                           </div>
                         )}
-                        <div className="flex items-center gap-3 mt-2">
+                        <div className="flex items-center gap-3 mt-2 flex-wrap">
                           {t.dueAt && (
                             <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
-                              {formatDate(t.dueAt)} {dueTime && `at ${dueTime}`}
+                              {formatDate(t.dueAt)} {shouldShowTime && `at ${dueTime}`}
                             </span>
                           )}
                           {course && (
@@ -223,6 +258,13 @@ export default function TasksPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
+                        <button
+                          onClick={() => startEdit(t)}
+                          className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                          title="Edit task"
+                        >
+                          <Edit2 size={18} />
+                        </button>
                         <button
                           onClick={() => deleteTask(t.id)}
                           className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
