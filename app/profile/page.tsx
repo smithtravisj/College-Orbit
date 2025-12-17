@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 
 export default function ProfilePage() {
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
+  const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -60,6 +62,12 @@ export default function ProfilePage() {
       setPassword('');
       setConfirmPassword('');
       setLoading(false);
+
+      // Refresh the session to update user data
+      await updateSession();
+
+      // Refresh the page data
+      router.refresh();
     } catch (err) {
       setError('An error occurred. Please try again.');
       setLoading(false);
