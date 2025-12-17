@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Star, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 export default function TasksPage() {
   const [mounted, setMounted] = useState(false);
@@ -16,12 +16,13 @@ export default function TasksPage() {
   const [formData, setFormData] = useState({
     title: '',
     courseId: '',
-    dueAt: '',
+    dueDate: '',
+    dueTime: '',
     notes: '',
   });
   const [filter, setFilter] = useState('all');
 
-  const { courses, tasks, addTask, deleteTask, toggleTaskDone, toggleTaskPin, initializeStore } = useAppStore();
+  const { courses, tasks, addTask, deleteTask, toggleTaskDone, initializeStore } = useAppStore();
 
   useEffect(() => {
     initializeStore();
@@ -40,25 +41,50 @@ export default function TasksPage() {
     e.preventDefault();
     if (!formData.title.trim()) return;
 
+    let dueAt = null;
+    if (formData.dueDate) {
+      const dateTimeString = formData.dueTime ? `${formData.dueDate}T${formData.dueTime}` : `${formData.dueDate}T00:00`;
+      dueAt = new Date(dateTimeString).toISOString();
+    }
+
     addTask({
       title: formData.title,
       courseId: formData.courseId || null,
-      dueAt: formData.dueAt ? new Date(formData.dueAt).toISOString() : null,
+      dueAt,
       pinned: false,
       checklist: [],
       notes: formData.notes,
       status: 'open',
     });
 
-    setFormData({ title: '', courseId: '', dueAt: '', notes: '' });
+    setFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '' });
     setShowForm(false);
   };
 
-  const filtered = tasks.filter((t) => {
-    if (filter === 'today') return t.dueAt && isToday(t.dueAt) && t.status === 'open';
-    if (filter === 'done') return t.status === 'done';
-    return t.status === 'open';
-  });
+  const filtered = tasks
+    .filter((t) => {
+      if (filter === 'today') return t.dueAt && isToday(t.dueAt) && t.status === 'open';
+      if (filter === 'done') return t.status === 'done';
+      if (filter === 'overdue') {
+        return t.dueAt && new Date(t.dueAt) < new Date() && t.status === 'open';
+      }
+      return t.status === 'open';
+    })
+    .sort((a, b) => {
+      // Sort by due date first
+      const aHasDue = !!a.dueAt;
+      const bHasDue = !!b.dueAt;
+
+      if (aHasDue && bHasDue) {
+        return new Date(a.dueAt!).getTime() - new Date(b.dueAt!).getTime();
+      }
+
+      if (aHasDue && !bHasDue) return -1; // Tasks with dates come first
+      if (!aHasDue && bHasDue) return 1; // Tasks without dates come last
+
+      // Both don't have due dates, sort alphabetically
+      return a.title.localeCompare(b.title);
+    });
 
   return (
     <>
@@ -82,6 +108,7 @@ export default function TasksPage() {
                 {[
                   { value: 'all', label: 'All Tasks' },
                   { value: 'today', label: 'Today' },
+                  { value: 'overdue', label: 'Overdue' },
                   { value: 'done', label: 'Completed' },
                 ].map((f) => (
                   <button
@@ -107,7 +134,7 @@ export default function TasksPage() {
             {/* Add Task Form */}
             {showForm && (
             <Card>
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-5" style={{ paddingBottom: '20px' }}>
                 <Input
                   label="Task title"
                   value={formData.title}
@@ -115,26 +142,32 @@ export default function TasksPage() {
                   placeholder="What needs to be done?"
                   required
                 />
-                <div className="grid grid-cols-2 gap-4">
-                  <Select
-                    label="Course (optional)"
-                    value={formData.courseId}
-                    onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                    options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
-                  />
-                  <Input
-                    label="Due date (optional)"
-                    type="datetime-local"
-                    value={formData.dueAt}
-                    onChange={(e) => setFormData({ ...formData, dueAt: e.target.value })}
-                  />
-                </div>
+                <Select
+                  label="Course (optional)"
+                  value={formData.courseId}
+                  onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
+                  options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                />
                 <Textarea
                   label="Notes (optional)"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Add any additional notes..."
                 />
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="Due date (optional)"
+                    type="date"
+                    value={formData.dueDate}
+                    onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                  />
+                  <Input
+                    label="Due time (optional)"
+                    type="time"
+                    value={formData.dueTime}
+                    onChange={(e) => setFormData({ ...formData, dueTime: e.target.value })}
+                  />
+                </div>
                 <div className="flex gap-3 pt-4">
                   <Button variant="primary" type="submit">
                     Add Task
@@ -150,16 +183,18 @@ export default function TasksPage() {
           {/* Task List */}
           {filtered.length > 0 ? (
             <Card className="h-full">
-              <div className="space-y-0 divide-y divide-[var(--border)]">
+              <div className="space-y-4 divide-y divide-[var(--border)]">
                 {filtered.map((t) => {
                   const course = courses.find((c) => c.id === t.courseId);
+                  const dueTime = t.dueAt ? new Date(t.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
                   return (
-                    <div key={t.id} className="py-7 first:pt-0 last:pb-0 flex items-start gap-5 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors">
+                    <div key={t.id} className="py-4 first:pt-0 last:pb-0 flex items-start gap-4 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors">
                       <input
                         type="checkbox"
                         checked={t.status === 'done'}
                         onChange={() => toggleTaskDone(t.id)}
-                        className="mt-1 w-5 h-5 accent-[var(--accent)] cursor-pointer flex-shrink-0"
+                        className="mt-1 w-5 h-5 cursor-pointer flex-shrink-0 appearance-none border-2 border-[var(--border)] rounded-sm checked:bg-[var(--accent)] checked:border-[var(--accent)] transition-colors"
+                        title={t.status === 'done' ? 'Mark as incomplete' : 'Mark as complete'}
                       />
                       <div className="flex-1 min-w-0">
                         <div
@@ -169,10 +204,15 @@ export default function TasksPage() {
                         >
                           {t.title}
                         </div>
-                        <div className="flex items-center gap-3 mt-3">
+                        {t.notes && (
+                          <div className="text-xs text-[var(--text-muted)] mt-1">
+                            {t.notes}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-3 mt-2">
                           {t.dueAt && (
                             <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
-                              {formatDate(t.dueAt)}
+                              {formatDate(t.dueAt)} {dueTime && `at ${dueTime}`}
                             </span>
                           )}
                           {course && (
@@ -184,20 +224,7 @@ export default function TasksPage() {
                       </div>
                       <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
                         <button
-                          onClick={() => toggleTaskPin(t.id)}
-                          className={`p-1.5 rounded-[var(--radius-control)] transition-colors ${
-                            t.pinned ? 'text-[var(--accent)] bg-[var(--accent-2)]' : 'text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5'
-                          }`}
-                          title={t.pinned ? 'Unpin task' : 'Pin task'}
-                        >
-                          <Star size={18} fill={t.pinned ? 'currentColor' : 'none'} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm('Delete this task?')) {
-                              deleteTask(t.id);
-                            }
-                          }}
+                          onClick={() => deleteTask(t.id)}
                           className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
                           title="Delete task"
                         >

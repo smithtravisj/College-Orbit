@@ -37,7 +37,6 @@ interface AppStore {
   updateTask: (id: string, task: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   toggleTaskDone: (id: string) => Promise<void>;
-  toggleTaskPin: (id: string) => Promise<void>;
   toggleChecklistItem: (taskId: string, itemId: string) => Promise<void>;
 
   // Settings
@@ -391,13 +390,6 @@ const useAppStore = create<AppStore>((set, get) => ({
       await get().updateTask(id, {
         status: task.status === 'done' ? 'open' : 'done',
       });
-    }
-  },
-
-  toggleTaskPin: async (id) => {
-    const task = get().tasks.find((t) => t.id === id);
-    if (task) {
-      await get().updateTask(id, { pinned: !task.pinned });
     }
   },
 

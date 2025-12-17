@@ -65,9 +65,14 @@ export default function Dashboard() {
   // Get today's tasks
   const todayTasks = tasks
     .filter((t) => t.dueAt && isToday(t.dueAt) && t.status === 'open')
-    .sort((_a, b) => (b.pinned ? 1 : -1));
-
-  const pinnedTask = tasks.find((t) => t.pinned);
+    .sort((a, b) => {
+      // Sort by due time if both have times
+      if (a.dueAt && b.dueAt) {
+        return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
+      }
+      // Otherwise sort alphabetically
+      return a.title.localeCompare(b.title);
+    });
 
   // Get quick links
   const quickLinks = courses
@@ -173,52 +178,55 @@ export default function Dashboard() {
           {/* Second row - Tasks and Quick Links */}
           <div className="col-span-12 lg:col-span-8 h-full min-h-[240px]">
             <Card title="Today's Tasks" className="h-full flex flex-col">
-                {todayTasks.length > 0 || pinnedTask ? (
+                {todayTasks.length > 0 ? (
                   <div className="space-y-4">
-                    {pinnedTask && (
-                      <div className="mb-3 pb-3 border-b border-[var(--border)] last:border-0">
-                        <div className="flex items-start gap-3">
+                    {todayTasks.slice(0, 5).map((t, idx) => {
+                      const dueTime = t.dueAt ? new Date(t.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+                      const course = courses.find((c) => c.id === t.courseId);
+                      return (
+                        <div
+                          key={t.id}
+                          className={`py-4 flex items-start gap-4 ${
+                            idx < Math.min(5, todayTasks.length) - 1 ? 'border-b border-[var(--border)]' : ''
+                          }`}
+                        >
                           <input
                             type="checkbox"
-                            checked={pinnedTask.status === 'done'}
+                            checked={t.status === 'done'}
                             readOnly
-                            className="mt-1 w-4 h-4 accent-[var(--accent)] cursor-default"
+                            className="mt-1 w-4 h-4 accent-[var(--accent)] cursor-default appearance-none border-2 border-[var(--border)] rounded-sm checked:bg-[var(--accent)] checked:border-[var(--accent)] transition-colors"
                           />
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-[var(--accent)]">{pinnedTask.title}</div>
-                            <span className="inline-block text-xs text-[var(--text-muted)] mt-1 bg-[var(--panel-2)] px-2 py-0.5 rounded">
-                              Pinned
-                            </span>
+                            <div
+                              className={`text-sm font-medium ${
+                                t.status === 'done'
+                                  ? 'line-through text-[var(--text-muted)]'
+                                  : 'text-[var(--text)]'
+                              }`}
+                            >
+                              {t.title}
+                            </div>
+                            {t.notes && (
+                              <div className="text-xs text-[var(--text-muted)] mt-1">
+                                {t.notes}
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2 mt-2">
+                              {dueTime && (
+                                <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                                  {dueTime}
+                                </span>
+                              )}
+                              {course && (
+                                <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                                  {course.code}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                    {todayTasks.slice(0, 5).map((t, idx) => (
-                      <div
-                        key={t.id}
-                        className={`py-5 flex items-start gap-4 ${
-                          idx < Math.min(5, todayTasks.length) - 1 ? 'border-b border-[var(--border)]' : ''
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={t.status === 'done'}
-                          readOnly
-                          className="mt-1 w-4 h-4 accent-[var(--accent)] cursor-default"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div
-                            className={`text-sm ${
-                              t.status === 'done'
-                                ? 'line-through text-[var(--text-muted)]'
-                                : 'text-[var(--text)]'
-                            }`}
-                          >
-                            {t.title}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {todayTasks.length > 5 && (
                       <div className="pt-3 border-t border-[var(--border)]">
                         <Link
