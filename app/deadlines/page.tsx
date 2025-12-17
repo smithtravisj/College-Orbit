@@ -48,13 +48,19 @@ export default function DeadlinesPage() {
     const dateTimeString = formData.dueTime ? `${formData.dueDate}T${formData.dueTime}` : `${formData.dueDate}T23:59`;
     const dueAt = new Date(dateTimeString).toISOString();
 
+    // Add https:// to link if it doesn't start with http:// or https://
+    let link = formData.link || null;
+    if (link && !link.startsWith('http://') && !link.startsWith('https://')) {
+      link = `https://${link}`;
+    }
+
     if (editingId) {
       await updateDeadline(editingId, {
         title: formData.title,
         courseId: formData.courseId || null,
         dueAt,
         notes: formData.notes,
-        link: formData.link || null,
+        link,
       });
       setEditingId(null);
     } else {
@@ -63,7 +69,7 @@ export default function DeadlinesPage() {
         courseId: formData.courseId || null,
         dueAt,
         notes: formData.notes,
-        link: formData.link || null,
+        link,
         status: 'open',
       });
     }
