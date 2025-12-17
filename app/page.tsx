@@ -223,7 +223,7 @@ export default function Dashboard() {
     (course.meetingTimes || [])
       .filter((mt) => {
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        return mt.day === days[today.getDay()];
+        return mt.days?.includes(days[today.getDay()]) || false;
       })
       .map((mt) => ({
         ...mt,

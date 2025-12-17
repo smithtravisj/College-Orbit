@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import useAppStore from '@/lib/store';
-import Input, { Select } from '@/components/ui/Input';
+import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { Plus, Trash2 } from 'lucide-react';
 

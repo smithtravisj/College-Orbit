@@ -3,23 +3,7 @@
 import useAppStore from '@/lib/store';
 import Card from '@/components/ui/Card';
 import { Edit2, Trash2 } from 'lucide-react';
-
-interface Course {
-  id: string;
-  code: string;
-  name: string;
-  term: string;
-  meetingTimes?: Array<{
-    day: string;
-    start: string;
-    end: string;
-    location: string;
-  }>;
-  links?: Array<{
-    label: string;
-    url: string;
-  }>;
-}
+import { Course } from '@/types';
 
 interface CourseListProps {
   courses: Course[];
@@ -60,7 +44,7 @@ export default function CourseList({ courses, onEdit }: CourseListProps) {
                 {course.meetingTimes && course.meetingTimes.length > 0 && (
                   <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
                     {course.meetingTimes.map((mt, idx) => (
-                      <span key={idx}>{mt.days?.join(', ') || mt.day} {mt.start}–{mt.end}</span>
+                      <span key={idx}>{mt.days.join(', ')} {mt.start}–{mt.end}</span>
                     ))}
                   </div>
                 )}
