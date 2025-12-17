@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Header from '@/components/Header';
+import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input, { Select } from '@/components/ui/Input';
@@ -58,9 +58,8 @@ export default function ToolsPage() {
 
   return (
     <>
-      <Header title="Tools" subtitle="Useful utilities for your semester" />
-      <div className="bg-[var(--bg)] min-h-screen">
-        <div className="page-container space-y-6">
+      <PageHeader title="Tools" subtitle="Useful utilities for your semester" />
+      <div className="mx-auto max-w-[var(--container)] px-6 py-6 space-y-6">
           {/* GPA Calculator */}
           <Card title="GPA Calculator" padding="lg">
             <div className="space-y-4">
@@ -103,7 +102,7 @@ export default function ToolsPage() {
                     />
                     <button
                       onClick={() => removeCourse(idx)}
-                      className="p-2 rounded-[10px] text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors mb-0"
+                      className="p-2 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors mb-0"
                       title="Remove course"
                     >
                       <Trash2 size={18} />
@@ -153,7 +152,6 @@ export default function ToolsPage() {
               ))}
             </div>
           </Card>
-        </div>
       </div>
     </>
   );

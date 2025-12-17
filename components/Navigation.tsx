@@ -26,12 +26,14 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <nav className="hidden w-[260px] flex-col border-r border-[var(--border)] bg-[var(--panel)] px-6 py-8 md:flex fixed md:static h-screen md:h-auto">
-        <div className="mb-12">
-          <h1 className="text-xl font-semibold text-[var(--text)]">BYU</h1>
-          <p className="mt-1 text-sm font-regular text-[var(--text-muted)]">Survival Tool</p>
+      <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)] px-3 py-4">
+        <div className="mb-4 flex items-center gap-2">
+          <div className="h-8 w-8 rounded-xl bg-[var(--accent-2)] flex items-center justify-center">
+            <span className="text-sm font-semibold text-[var(--text)]">B</span>
+          </div>
+          <h1 className="text-sm font-semibold text-[var(--text)] leading-tight">BYU Survival Tool</h1>
         </div>
-        <div className="space-y-2 flex-1">
+        <div className="space-y-1 flex-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -40,16 +42,16 @@ export default function Navigation() {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
-                className={`relative flex items-center gap-3 px-3 py-3 rounded-[12px] font-medium text-sm transition-all duration-150 group ${
+                className={`relative flex items-center gap-2 h-10 px-3 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   isActive
-                    ? 'text-[var(--accent)] bg-[var(--panel-2)]'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--panel-2)]'
+                    ? 'text-[var(--text)] bg-[var(--accent-2)]'
+                    : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
               >
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-[var(--accent)] rounded-r-md" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-full bg-[var(--accent)]" />
                 )}
-                <Icon size={20} className={`transition-colors ${isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'}`} />
+                <Icon size={18} className="h-[18px] w-[18px] opacity-80 group-hover:opacity-100" />
                 <span>{item.label}</span>
               </Link>
             );

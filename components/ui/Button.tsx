@@ -10,19 +10,19 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = 'primary', size = 'md', disabled = false, loading = false, className = '', children, ...props }, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center gap-2 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed';
+    const baseStyles = 'inline-flex items-center justify-center gap-2 font-medium transition active:translate-y-[1px] disabled:opacity-50 disabled:pointer-events-none';
 
     const sizeStyles = {
-      sm: 'h-8 px-3 text-xs rounded-[10px]',
-      md: 'h-10 px-4 text-sm rounded-[10px]',
-      lg: 'h-11 px-5 text-base rounded-[10px]',
+      sm: 'h-8 px-3 text-xs rounded-[var(--radius-control)]',
+      md: 'h-10 px-4 text-sm rounded-[var(--radius-control)]',
+      lg: 'h-11 px-5 text-base rounded-[var(--radius-control)]',
     };
 
     const variantStyles = {
-      primary: 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] active:bg-[var(--accent-muted)]',
-      secondary: 'bg-transparent border border-[var(--border)] text-[var(--text)] hover:bg-[var(--panel-2)] hover:border-[var(--border-hover)] active:bg-[var(--panel-3)]',
-      danger: 'bg-[var(--danger)] text-white hover:bg-[var(--danger)] active:bg-[var(--danger)] opacity-90 hover:opacity-100',
-      ghost: 'bg-transparent text-[var(--text)] hover:bg-[var(--panel-2)] active:bg-[var(--panel-3)]',
+      primary: 'bg-[var(--accent)] text-white hover:brightness-110 active:translate-y-[1px]',
+      secondary: 'bg-white/5 text-[var(--text)] hover:bg-white/8 border border-[var(--border)] active:translate-y-[1px]',
+      danger: 'bg-[var(--danger)] text-white hover:brightness-110 active:translate-y-[1px]',
+      ghost: 'bg-transparent hover:bg-white/5 text-[var(--muted)] hover:text-[var(--text)] active:translate-y-[1px]',
     };
 
     return (
@@ -34,7 +34,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading ? (
           <>
-            <span className="animate-spin">⚙️</span>
+            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             {children}
           </>
         ) : (

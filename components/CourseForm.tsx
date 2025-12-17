@@ -143,7 +143,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
                     meetingTimes: form.meetingTimes.filter((_, i) => i !== idx),
                   });
                 }}
-                className="p-2 rounded-[10px] text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors mb-0"
+                className="p-2 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors mb-0"
                 title="Remove meeting time"
               >
                 <Trash2 size={18} />
@@ -202,7 +202,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
                     links: form.links.filter((_, i) => i !== idx),
                   });
                 }}
-                className="p-2 rounded-[10px] text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors mb-0"
+                className="p-2 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors mb-0"
                 title="Remove link"
               >
                 <Trash2 size={18} />

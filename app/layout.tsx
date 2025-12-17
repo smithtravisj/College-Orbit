@@ -27,9 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.className} style={{ backgroundColor: 'var(--bg)' }}>
       <body style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
-        <div className="flex min-h-screen flex-col md:flex-row bg-[var(--bg)]">
+        <div className="min-h-screen bg-[var(--bg)] md:grid md:grid-cols-[264px_1fr]">
           <Navigation />
-          <main className="flex-1 pb-20 md:pb-0 md:overflow-auto">
+          <main className="min-w-0 pb-20 md:pb-0">
             {children}
           </main>
         </div>

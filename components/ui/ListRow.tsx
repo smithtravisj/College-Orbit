@@ -15,9 +15,9 @@ const ListRow = React.forwardRef<HTMLDivElement, ListRowProps>(
       <div
         ref={ref}
         onClick={onClick}
-        className={`flex items-center justify-between h-[var(--list-row-height)] px-5 py-3 border-b border-[var(--border)] hover:bg-[var(--panel-2)] transition-colors cursor-pointer group ${
+        className={`flex items-center justify-between h-12 px-3 rounded-[var(--radius-control)] hover:bg-white/5 transition-colors ${
           onClick ? 'cursor-pointer' : ''
-        } ${className}`}
+        } group ${className}`}
       >
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium text-[var(--text)] truncate">{title}</div>

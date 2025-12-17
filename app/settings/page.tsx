@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import useAppStore from '@/lib/store';
-import Header from '@/components/Header';
+import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -73,9 +73,8 @@ export default function SettingsPage() {
 
   return (
     <>
-      <Header title="Settings" subtitle="Customize your experience" />
-      <div className="bg-[var(--bg)] min-h-screen">
-        <div className="page-container-narrow space-y-6">
+      <PageHeader title="Settings" subtitle="Customize your experience" />
+      <div className="mx-auto max-w-[768px] px-6 py-6 space-y-6">
           {/* Due Soon Window */}
           <Card title="Appearance" padding="lg">
             <div className="space-y-4">
@@ -184,7 +183,6 @@ export default function SettingsPage() {
               </p>
             </div>
           </Card>
-        </div>
       </div>
     </>
   );

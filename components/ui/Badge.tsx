@@ -16,7 +16,7 @@ const Badge: React.FC<BadgeProps> = ({ variant = 'neutral', children, className 
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-1 rounded-[6px] text-xs font-medium ${variantStyles[variant]} ${className}`}
+      className={`inline-flex items-center px-2 py-1 rounded-[var(--radius-xs)] text-xs font-medium ${variantStyles[variant]} ${className}`}
     >
       {children}
     </span>

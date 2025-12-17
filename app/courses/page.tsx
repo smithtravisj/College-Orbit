@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
-import Header from '@/components/Header';
+import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
@@ -31,7 +31,7 @@ export default function CoursesPage() {
 
   return (
     <>
-      <Header
+      <PageHeader
         title="Courses"
         subtitle="Manage your classes"
         actions={
@@ -43,8 +43,7 @@ export default function CoursesPage() {
           )
         }
       />
-      <div className="bg-[var(--bg)] min-h-screen">
-        <div className="page-container space-y-6">
+      <div className="mx-auto max-w-[var(--container)] px-6 py-6 space-y-6">
           {isAdding && (
             <Card title="Add Course" padding="lg">
               <CourseForm onClose={() => setIsAdding(false)} />
@@ -66,7 +65,6 @@ export default function CoursesPage() {
               action={{ label: 'Add Course', onClick: () => setIsAdding(true) }}
             />
           )}
-        </div>
       </div>
     </>
   );

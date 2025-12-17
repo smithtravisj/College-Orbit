@@ -17,7 +17,7 @@ export default function CourseList({ onEdit }: CourseListProps) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       {courses.map((course) => (
         <Card key={course.id} padding="lg" hoverable>
           <div className="flex items-start justify-between gap-4">
@@ -66,7 +66,7 @@ export default function CourseList({ onEdit }: CourseListProps) {
               )}
             </div>
 
-            <div className="flex gap-2 opacity-0 hover:opacity-100 transition-opacity flex-shrink-0">
+            <div className="flex gap-2 opacity-100 lg:opacity-0 lg:hover:opacity-100 transition-opacity flex-shrink-0">
               <Button
                 variant="ghost"
                 size="sm"

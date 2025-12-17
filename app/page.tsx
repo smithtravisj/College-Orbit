@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { isToday, formatTime, isOverdue } from '@/lib/utils';
 import CaptureInput from '@/components/CaptureInput';
-import Header from '@/components/Header';
+import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import Link from 'next/link';
@@ -79,12 +80,11 @@ export default function Dashboard() {
 
   return (
     <>
-      <Header title="Dashboard" subtitle="Welcome back. Here's your schedule and tasks for today." />
-      <div className="bg-[var(--bg)] min-h-screen pt-0">
-        <div className="dashboard-container">
+      <PageHeader title="Dashboard" subtitle="Welcome back. Here's your schedule and tasks for today." />
+      <div className="mx-auto max-w-[var(--container)] px-6 py-6">
+        <div className="grid grid-cols-12 gap-6">
           {/* Top row - 3 cards */}
-          <div className="dashboard-grid-3 mb-6">
-            {/* Next Class */}
+          <div className="col-span-12 lg:col-span-4">
             <Card title="Next Class" padding="lg">
               {nextClass ? (
                 <div className="space-y-4">
@@ -102,18 +102,22 @@ export default function Dashboard() {
                     href={`https://maps.google.com/?q=${encodeURIComponent(nextClass.location || '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 h-10 px-3 rounded-[10px] bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
+                    className="inline-flex"
                   >
-                    Directions
-                    <ExternalLink size={16} />
+                    <Button variant="primary" size="md">
+                      Directions
+                      <ExternalLink size={16} />
+                    </Button>
                   </a>
                 </div>
               ) : (
                 <EmptyState title="No classes today" description="You're free for the rest of the day!" />
               )}
             </Card>
+          </div>
 
-            {/* Due Soon */}
+          {/* Due Soon */}
+          <div className="col-span-12 lg:col-span-4">
             <Card title="Due Soon" padding="lg">
               {dueSoon.length > 0 ? (
                 <div className="space-y-2">
@@ -138,37 +142,37 @@ export default function Dashboard() {
                 <EmptyState title="No deadlines soon" description="You're all caught up!" />
               )}
             </Card>
+          </div>
 
-            {/* Overview */}
+          {/* Overview */}
+          <div className="col-span-12 lg:col-span-4">
             <Card title="Overview" padding="lg">
-              <div className="space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="text-sm text-[var(--text-muted)]">Classes remaining</div>
-                  <div className="text-lg font-semibold text-[var(--accent)]">{classesLeft}</div>
+              <div className="space-y-0 divide-y divide-[var(--border)]">
+                <div className="flex items-center justify-between py-3 first:pt-0">
+                  <div className="text-xs text-[var(--muted)]">Classes remaining</div>
+                  <div className="text-sm font-semibold tabular-nums text-[var(--accent)]">{classesLeft}</div>
                 </div>
-                <div className="flex items-start justify-between">
-                  <div className="text-sm text-[var(--text-muted)]">Due soon</div>
-                  <div className="text-lg font-semibold text-[var(--text)]">{dueSoon.length}</div>
+                <div className="flex items-center justify-between py-3">
+                  <div className="text-xs text-[var(--muted)]">Due soon</div>
+                  <div className="text-sm font-semibold tabular-nums text-[var(--text)]">{dueSoon.length}</div>
                 </div>
-                <div className="flex items-start justify-between">
-                  <div className="text-sm text-[var(--text-muted)]">Overdue</div>
-                  <div className={`text-lg font-semibold ${overdueCount > 0 ? 'text-[var(--danger)]' : 'text-[var(--text)]'}`}>
+                <div className="flex items-center justify-between py-3">
+                  <div className="text-xs text-[var(--muted)]">Overdue</div>
+                  <div className={`text-sm font-semibold tabular-nums ${overdueCount > 0 ? 'text-[var(--danger)]' : 'text-[var(--text)]'}`}>
                     {overdueCount}
                   </div>
                 </div>
-                <div className="flex items-start justify-between pt-2 border-t border-[var(--border)]">
-                  <div className="text-sm text-[var(--text-muted)]">Tasks today</div>
-                  <div className="text-lg font-semibold text-[var(--text)]">{todayTasks.length}</div>
+                <div className="flex items-center justify-between py-3 last:pb-0">
+                  <div className="text-xs text-[var(--muted)]">Tasks today</div>
+                  <div className="text-sm font-semibold tabular-nums text-[var(--text)]">{todayTasks.length}</div>
                 </div>
               </div>
             </Card>
           </div>
 
           {/* Second row - Tasks and Quick Links */}
-          <div className="dashboard-grid-2-1 mb-6">
-            {/* Today's Tasks */}
-            <div className="lg:col-span-2">
-              <Card title="Today's Tasks" padding="lg">
+          <div className="col-span-12 lg:col-span-8">
+            <Card title="Today's Tasks" padding="lg">
                 {todayTasks.length > 0 || pinnedTask ? (
                   <div className="space-y-0">
                     {pinnedTask && (
@@ -230,22 +234,23 @@ export default function Dashboard() {
                   <EmptyState title="No tasks today" description="Add a task to get started" />
                 )}
               </Card>
-            </div>
+          </div>
 
-            {/* Quick Links */}
+          {/* Quick Links */}
+          <div className="col-span-12 lg:col-span-4">
             <Card title="Quick Links" padding="lg">
               {quickLinks.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {quickLinks.map((link, idx) => (
                     <a
                       key={idx}
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-between p-2 rounded-[10px] hover:bg-[var(--panel-2)] transition-colors group"
+                      className="flex items-center justify-between px-3 py-2 rounded-[var(--radius-control)] hover:bg-white/5 transition-colors group text-sm"
                     >
-                      <span className="text-sm text-[var(--text-secondary)] group-hover:text-[var(--text)] truncate">{link.label}</span>
-                      <ExternalLink size={16} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] flex-shrink-0 ml-2" />
+                      <span className="text-[var(--muted)] group-hover:text-[var(--text)] truncate">{link.label}</span>
+                      <ExternalLink size={16} className="text-[var(--muted)] group-hover:text-[var(--accent)] flex-shrink-0 ml-2" />
                     </a>
                   ))}
                 </div>
@@ -260,8 +265,17 @@ export default function Dashboard() {
           </div>
 
           {/* Capture Input */}
-          <div className="mb-6">
+          <div className="col-span-12">
             <CaptureInput />
+          </div>
+
+          {/* Upcoming This Week */}
+          <div className="col-span-12">
+            <Card title="Upcoming This Week" subtitle="Your schedule for the next 7 days" padding="lg">
+              <div className="text-sm text-[var(--muted)]">
+                <p>No upcoming events</p>
+              </div>
+            </Card>
           </div>
         </div>
       </div>

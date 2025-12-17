@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from './Button';
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -13,17 +14,16 @@ interface EmptyStateProps {
 
 const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description, action, className = '' }) => {
   return (
-    <div className={`flex flex-col items-center justify-center py-12 px-4 text-center ${className}`}>
-      {icon && <div className="mb-4 text-4xl text-[var(--text-muted)]">{icon}</div>}
-      <h3 className="text-base font-semibold text-[var(--text)] mb-2">{title}</h3>
-      <p className="text-sm text-[var(--text-muted)] max-w-xs mb-6">{description}</p>
+    <div className={`rounded-[var(--radius-card)] border border-dashed border-[var(--border)] bg-white/2 p-6 ${className}`}>
+      <div className="flex items-center gap-3 mb-2">
+        {icon && <div className="text-xl text-[var(--muted)]">{icon}</div>}
+        <h3 className="text-sm font-semibold text-[var(--text)]">{title}</h3>
+      </div>
+      <p className="text-xs text-[var(--muted)] mb-4">{description}</p>
       {action && (
-        <button
-          onClick={action.onClick}
-          className="inline-flex items-center justify-center h-10 px-4 rounded-[10px] bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
-        >
+        <Button variant="secondary" size="md" onClick={action.onClick}>
           {action.label}
-        </button>
+        </Button>
       )}
     </div>
   );

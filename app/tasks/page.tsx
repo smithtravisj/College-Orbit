@@ -3,12 +3,11 @@
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { isToday, formatDate } from '@/lib/utils';
-import Header from '@/components/Header';
+import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import FilterPills from '@/components/ui/FilterPills';
 import { Plus, Star, Trash2 } from 'lucide-react';
 
 export default function TasksPage() {
@@ -63,7 +62,7 @@ export default function TasksPage() {
 
   return (
     <>
-      <Header
+      <PageHeader
         title="Tasks"
         subtitle="Organize your work"
         actions={
@@ -73,23 +72,40 @@ export default function TasksPage() {
           </Button>
         }
       />
-      <div className="bg-[var(--bg)] min-h-screen">
-        <div className="page-container">
-          {/* Filter Pills */}
-          <FilterPills
-            filters={[
-              { value: 'all', label: 'All Tasks' },
-              { value: 'today', label: 'Today' },
-              { value: 'done', label: 'Completed' },
-            ]}
-            activeFilter={filter}
-            onChange={setFilter}
-            className="mb-6"
-          />
+      <div className="mx-auto max-w-[var(--container)] px-6 py-6">
+        <div className="grid grid-cols-12 gap-6">
+          {/* Filters sidebar - 3 columns */}
+          <div className="col-span-12 lg:col-span-3">
+            <Card padding="lg">
+              <h3 className="text-sm font-semibold text-[var(--text)] mb-3">Filters</h3>
+              <div className="space-y-1">
+                {[
+                  { value: 'all', label: 'All Tasks' },
+                  { value: 'today', label: 'Today' },
+                  { value: 'done', label: 'Completed' },
+                ].map((f) => (
+                  <button
+                    key={f.value}
+                    onClick={() => setFilter(f.value)}
+                    className={`w-full text-left px-3 py-2 rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
+                      filter === f.value
+                        ? 'bg-[var(--accent-2)] text-[var(--text)]'
+                        : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </Card>
+          </div>
 
-          {/* Add Task Form */}
-          {showForm && (
-            <Card padding="lg" className="mb-6">
+          {/* Task list - 9 columns */}
+          <div className="col-span-12 lg:col-span-9 space-y-6">
+
+            {/* Add Task Form */}
+            {showForm && (
+            <Card padding="lg">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <Input
                   label="Task title"
@@ -165,11 +181,11 @@ export default function TasksPage() {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
                         <button
                           onClick={() => toggleTaskPin(t.id)}
-                          className={`p-1.5 rounded-[10px] transition-colors ${
-                            t.pinned ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--panel-2)]'
+                          className={`p-1.5 rounded-[var(--radius-control)] transition-colors ${
+                            t.pinned ? 'text-[var(--accent)] bg-[var(--accent-2)]' : 'text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5'
                           }`}
                           title={t.pinned ? 'Unpin task' : 'Pin task'}
                         >
@@ -181,7 +197,7 @@ export default function TasksPage() {
                               deleteTask(t.id);
                             }
                           }}
-                          className="p-1.5 rounded-[10px] text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors"
+                          className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
                           title="Delete task"
                         >
                           <Trash2 size={18} />
@@ -209,6 +225,7 @@ export default function TasksPage() {
               }
             />
           )}
+          </div>
         </div>
       </div>
     </>

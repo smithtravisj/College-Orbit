@@ -3,13 +3,12 @@
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { formatDateTime, isOverdue } from '@/lib/utils';
-import Header from '@/components/Header';
+import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
-import FilterPills from '@/components/ui/FilterPills';
 import { Plus, Trash2 } from 'lucide-react';
 
 export default function DeadlinesPage() {
@@ -64,7 +63,7 @@ export default function DeadlinesPage() {
 
   return (
     <>
-      <Header
+      <PageHeader
         title="Deadlines"
         subtitle="Track your assignments and exams"
         actions={
@@ -74,23 +73,40 @@ export default function DeadlinesPage() {
           </Button>
         }
       />
-      <div className="bg-[var(--bg)] min-h-screen">
-        <div className="page-container">
-          {/* Filter Pills */}
-          <FilterPills
-            filters={[
-              { value: 'all', label: 'All' },
-              { value: 'overdue', label: 'Overdue' },
-              { value: 'done', label: 'Completed' },
-            ]}
-            activeFilter={filter}
-            onChange={setFilter}
-            className="mb-6"
-          />
+      <div className="mx-auto max-w-[var(--container)] px-6 py-6">
+        <div className="grid grid-cols-12 gap-6">
+          {/* Filters sidebar - 3 columns */}
+          <div className="col-span-12 lg:col-span-3">
+            <Card padding="lg">
+              <h3 className="text-sm font-semibold text-[var(--text)] mb-3">Filters</h3>
+              <div className="space-y-1">
+                {[
+                  { value: 'all', label: 'All' },
+                  { value: 'overdue', label: 'Overdue' },
+                  { value: 'done', label: 'Completed' },
+                ].map((f) => (
+                  <button
+                    key={f.value}
+                    onClick={() => setFilter(f.value)}
+                    className={`w-full text-left px-3 py-2 rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
+                      filter === f.value
+                        ? 'bg-[var(--accent-2)] text-[var(--text)]'
+                        : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </Card>
+          </div>
 
-          {/* Add Deadline Form */}
-          {showForm && (
-            <Card padding="lg" className="mb-6">
+          {/* Deadlines list - 9 columns */}
+          <div className="col-span-12 lg:col-span-9 space-y-6">
+
+            {/* Add Deadline Form */}
+            {showForm && (
+            <Card padding="lg">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <Input
                   label="Deadline title"
@@ -166,7 +182,7 @@ export default function DeadlinesPage() {
                             deleteDeadline(d.id);
                           }
                         }}
-                        className="p-1.5 rounded-[10px] text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 ml-2"
+                        className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100 flex-shrink-0 ml-2"
                         title="Delete deadline"
                       >
                         <Trash2 size={18} />
@@ -193,6 +209,7 @@ export default function DeadlinesPage() {
               }
             />
           )}
+          </div>
         </div>
       </div>
     </>
