@@ -48,6 +48,11 @@ export const authConfig: NextAuthOptions = {
       },
     }),
   ],
+  events: {
+    async signOut() {
+      console.log('User signed out');
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -91,6 +96,17 @@ export const authConfig: NextAuthOptions = {
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+      },
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
