@@ -296,7 +296,7 @@ export default function ToolsPage() {
                       <button
                         onClick={() => removeCourse(idx)}
                         className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                        style={{ padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        style={{ padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px' }}
                         title="Remove course"
                       >
                         <Trash2 size={18} />
