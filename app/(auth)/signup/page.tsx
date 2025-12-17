@@ -91,16 +91,16 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] p-4">
       <div className="w-full max-w-md">
-        <div className="text-center" style={{ marginBottom: '40px' }}>
-          <h1 className="text-3xl font-semibold text-[var(--text)]" style={{ marginBottom: '24px' }}>
+        <div className="text-center" style={{ marginBottom: '28px' }}>
+          <h1 className="text-3xl font-semibold text-[var(--text)]" style={{ marginBottom: '12px' }}>
             BYU Survival Tool
           </h1>
-          <p className="text-[var(--text-muted)]" style={{ marginBottom: '24px' }}>Create your account</p>
+          <p className="text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>Create your account</p>
         </div>
 
         <Card>
           {hasLocalData && (
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3" style={{ marginBottom: '24px' }}>
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3" style={{ marginBottom: '16px' }}>
               <p className="text-sm text-blue-400">
                 We detected existing data on this device. It will be automatically
                 migrated to your new account.
@@ -108,15 +108,15 @@ export default function SignupPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {error && (
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
                 <p className="text-sm text-red-500">{error}</p>
               </div>
             )}
 
-            <div style={{ marginBottom: '12px' }}>
-              <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
+            <div>
+              <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px' }}>
                 Name
               </label>
               <Input
@@ -127,8 +127,8 @@ export default function SignupPage() {
               />
             </div>
 
-            <div style={{ marginBottom: '12px' }}>
-              <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
+            <div>
+              <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px' }}>
                 Email
               </label>
               <Input
@@ -140,8 +140,8 @@ export default function SignupPage() {
               />
             </div>
 
-            <div style={{ marginBottom: '12px' }}>
-              <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
+            <div>
+              <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px' }}>
                 Password
               </label>
               <Input
@@ -157,7 +157,7 @@ export default function SignupPage() {
               </p>
             </div>
 
-            <div style={{ paddingTop: '16px', paddingBottom: '16px' }}>
+            <div style={{ paddingTop: '8px', paddingBottom: '8px' }}>
               <Button
                 type="submit"
                 variant="primary"
@@ -170,7 +170,7 @@ export default function SignupPage() {
             </div>
           </form>
 
-          <div className="text-center" style={{ marginTop: '32px' }}>
+          <div className="text-center" style={{ marginTop: '20px' }}>
             <p className="text-sm text-[var(--text-muted)]">
               Already have an account?{' '}
               <Link
