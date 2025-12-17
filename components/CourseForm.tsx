@@ -89,7 +89,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
         />
       </div>
 
-      <div style={{ paddingTop: '12px' }}>
+      <div style={{ paddingTop: '20px' }}>
         <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Meeting Times</label>
         <div className="space-y-3">
           {form.meetingTimes.map((mt, idx) => (
@@ -168,7 +168,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
         </Button>
       </div>
 
-      <div style={{ paddingTop: '12px' }}>
+      <div style={{ paddingTop: '20px' }}>
         <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links</label>
         <div className="space-y-3">
           {form.links.map((link, idx) => (
