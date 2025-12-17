@@ -78,7 +78,7 @@ export default function DeadlinesPage() {
           {/* Filters sidebar - 3 columns */}
           <div className="col-span-12 lg:col-span-3">
             <Card className="h-full">
-              <h3 className="text-sm font-semibold text-[var(--text)] mb-3">Filters</h3>
+              <h3 className="text-sm font-semibold text-[var(--text)]" style={{ marginBottom: '16px' }}>Filters</h3>
               <div className="space-y-2">
                 {[
                   { value: 'all', label: 'All' },
