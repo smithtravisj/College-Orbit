@@ -81,9 +81,9 @@ export default function Dashboard() {
     <>
       <Header title="Dashboard" subtitle="Welcome back. Here's your schedule and tasks for today." />
       <div className="bg-[var(--bg)] min-h-screen pt-0">
-        <div className="p-6 md:p-8 max-w-7xl mx-auto">
+        <div className="dashboard-container">
           {/* Top row - 3 cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="dashboard-grid-3 mb-6">
             {/* Next Class */}
             <Card title="Next Class" padding="lg">
               {nextClass ? (
@@ -165,7 +165,7 @@ export default function Dashboard() {
           </div>
 
           {/* Second row - Tasks and Quick Links */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="dashboard-grid-2-1 mb-6">
             {/* Today's Tasks */}
             <div className="lg:col-span-2">
               <Card title="Today's Tasks" padding="lg">
