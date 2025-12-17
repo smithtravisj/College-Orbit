@@ -38,7 +38,7 @@ export default function Navigation() {
         <div style={{ marginBottom: '16px' }}>
           <h1 className="font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px', fontSize: '24px' }}>BYU Survival Tool</h1>
           {session?.user && (
-            <div className="mt-3 px-2 text-sm text-[var(--text-muted)] truncate">
+            <div className="mt-3 text-sm text-[var(--text-muted)] truncate" style={{ paddingLeft: '20px' }}>
               {session.user.name || session.user.email}
             </div>
           )}
