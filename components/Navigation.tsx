@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 import {
   Home,
   CheckSquare,
@@ -9,6 +10,7 @@ import {
   Calendar,
   Wrench,
   Settings,
+  LogOut,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -22,6 +24,11 @@ const NAV_ITEMS = [
 
 export default function Navigation() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: '/login' });
+  };
 
   return (
     <>
@@ -29,6 +36,11 @@ export default function Navigation() {
       <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)]" style={{ padding: '20px 16px' }}>
         <div style={{ marginBottom: '16px' }}>
           <h1 className="font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px', fontSize: '24px' }}>BYU Survival Tool</h1>
+          {session?.user && (
+            <div className="mt-3 px-2 text-sm text-[var(--text-muted)] truncate">
+              {session.user.email}
+            </div>
+          )}
         </div>
         <div className="space-y-3 flex-1">
           {NAV_ITEMS.map((item) => {
@@ -55,6 +67,20 @@ export default function Navigation() {
             );
           })}
         </div>
+
+        {/* Logout Button */}
+        {session?.user && (
+          <div className="mt-4 pt-4 border-t border-[var(--border)]">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 w-full h-12 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5"
+              style={{ padding: '0 12px' }}
+            >
+              <LogOut size={22} className="opacity-80" />
+              <span>Log Out</span>
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* Mobile Bottom Tab Bar */}
