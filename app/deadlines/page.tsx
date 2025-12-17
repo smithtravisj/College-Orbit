@@ -9,6 +9,7 @@ import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
+import FilterPills from '@/components/ui/FilterPills';
 import { Plus, Trash2 } from 'lucide-react';
 
 export default function DeadlinesPage() {
@@ -74,27 +75,18 @@ export default function DeadlinesPage() {
         }
       />
       <div className="bg-[var(--bg)] min-h-screen">
-        <div className="p-6 md:p-8 max-w-4xl mx-auto">
+        <div className="page-container">
           {/* Filter Pills */}
-          <div className="flex gap-3 mb-6">
-            {[
+          <FilterPills
+            filters={[
               { value: 'all', label: 'All' },
               { value: 'overdue', label: 'Overdue' },
               { value: 'done', label: 'Completed' },
-            ].map((f) => (
-              <button
-                key={f.value}
-                onClick={() => setFilter(f.value)}
-                className={`px-4 py-2 rounded-[10px] text-sm font-medium transition-colors ${
-                  filter === f.value
-                    ? 'bg-[var(--accent)] text-white'
-                    : 'bg-[var(--panel-2)] text-[var(--text-secondary)] hover:bg-[var(--panel-3)]'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+            ]}
+            activeFilter={filter}
+            onChange={setFilter}
+            className="mb-6"
+          />
 
           {/* Add Deadline Form */}
           {showForm && (
