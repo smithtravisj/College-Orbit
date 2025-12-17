@@ -37,7 +37,6 @@ export default function ToolsPage() {
   const [gpaResult, setGpaResult] = useState<number | null>(null);
 
   const gradePoints: { [key: string]: number } = {
-    'A+': 4.0,
     'A': 4.0,
     'A-': 3.7,
     'B+': 3.3,
