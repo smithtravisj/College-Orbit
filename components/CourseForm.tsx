@@ -46,7 +46,14 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
       name: form.name,
       term: form.term,
       meetingTimes: form.meetingTimes.filter((mt) => mt.location),
-      links: form.links.filter((l) => l.label && l.url),
+      links: form.links
+        .filter((l) => l.label && l.url)
+        .map((l) => ({
+          ...l,
+          url: l.url.startsWith('http://') || l.url.startsWith('https://')
+            ? l.url
+            : `https://${l.url}`,
+        })),
       colorTag: form.colorTag,
     };
 
@@ -195,7 +202,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
                   newLinks[idx].url = e.target.value;
                   setForm({ ...form, links: newLinks });
                 }}
-                placeholder="https://..."
+                placeholder="example.com or https://..."
                 className="flex-1"
               />
               <button
