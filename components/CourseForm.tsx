@@ -200,7 +200,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
               />
               <Input
                 label={idx === 0 ? 'URL' : ''}
-                type="url"
+                type="text"
                 value={link.url}
                 onChange={(e) => {
                   const newLinks = [...form.links];
