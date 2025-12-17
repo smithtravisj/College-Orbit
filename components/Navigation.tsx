@@ -17,8 +17,8 @@ import {
 const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/tasks', label: 'Tasks', icon: CheckSquare },
-  { href: '/courses', label: 'Courses', icon: BookOpen },
   { href: '/deadlines', label: 'Deadlines', icon: Calendar },
+  { href: '/courses', label: 'Courses', icon: BookOpen },
   { href: '/tools', label: 'Tools', icon: Wrench },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
