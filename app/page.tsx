@@ -125,7 +125,7 @@ export default function Dashboard() {
                     const course = courses.find((c) => c.id === d.courseId);
                     const isOverd = isOverdue(d.dueAt);
                     return (
-                      <div key={d.id} className={`py-4 ${idx < dueSoon.length - 1 ? 'border-b border-[var(--border)]' : ''}`}>
+                      <div key={d.id} className={`py-6 ${idx < dueSoon.length - 1 ? 'border-b border-[var(--border)]' : ''}`}>
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0 space-y-3">
                             {isOverd && <Badge variant="danger">Overdue</Badge>}
@@ -148,21 +148,21 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
             <Card title="Overview" className="h-full flex flex-col">
               <div className="space-y-0">
-                <div className="flex items-center justify-between py-3 border-b border-[var(--border)] first:pt-0">
+                <div className="flex items-center justify-between py-5 border-b border-[var(--border)] first:pt-0">
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Classes remaining</div>
                   <div className="text-base font-semibold tabular-nums text-[var(--accent)]">{classesLeft}</div>
                 </div>
-                <div className="flex items-center justify-between py-3 border-b border-[var(--border)]">
+                <div className="flex items-center justify-between py-5 border-b border-[var(--border)]">
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Due soon</div>
                   <div className="text-base font-semibold tabular-nums text-[var(--text)]">{dueSoon.length}</div>
                 </div>
-                <div className="flex items-center justify-between py-3 border-b border-[var(--border)]">
+                <div className="flex items-center justify-between py-5 border-b border-[var(--border)]">
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Overdue</div>
                   <div className={`text-base font-semibold tabular-nums ${overdueCount > 0 ? 'text-[var(--danger)]' : 'text-[var(--text)]'}`}>
                     {overdueCount}
                   </div>
                 </div>
-                <div className="flex items-center justify-between py-3 last:pb-0">
+                <div className="flex items-center justify-between py-5 last:pb-0">
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Tasks today</div>
                   <div className="text-base font-semibold tabular-nums text-[var(--text)]">{todayTasks.length}</div>
                 </div>
@@ -196,7 +196,7 @@ export default function Dashboard() {
                     {todayTasks.slice(0, 5).map((t, idx) => (
                       <div
                         key={t.id}
-                        className={`py-3 flex items-start gap-3 ${
+                        className={`py-5 flex items-start gap-4 ${
                           idx < Math.min(5, todayTasks.length) - 1 ? 'border-b border-[var(--border)]' : ''
                         }`}
                       >
@@ -247,7 +247,7 @@ export default function Dashboard() {
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-between px-3 py-2 rounded-[var(--radius-control)] hover:bg-white/5 transition-colors group text-sm"
+                      className="flex items-center justify-between px-4 py-4 rounded-[var(--radius-control)] hover:bg-white/5 transition-colors group text-sm"
                     >
                       <span className="text-[var(--muted)] group-hover:text-[var(--text)] truncate">{link.label}</span>
                       <ExternalLink size={16} className="text-[var(--muted)] group-hover:text-[var(--accent)] flex-shrink-0 ml-2" />

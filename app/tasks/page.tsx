@@ -87,7 +87,7 @@ export default function TasksPage() {
                   <button
                     key={f.value}
                     onClick={() => setFilter(f.value)}
-                    className={`w-full text-left px-3 py-2 rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
+                    className={`w-full text-left px-6 py-4 rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
                       filter === f.value
                         ? 'bg-[var(--accent-2)] text-[var(--text)]'
                         : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
@@ -153,7 +153,7 @@ export default function TasksPage() {
                 {filtered.map((t) => {
                   const course = courses.find((c) => c.id === t.courseId);
                   return (
-                    <div key={t.id} className="py-5 first:pt-0 last:pb-0 flex items-start gap-4 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors">
+                    <div key={t.id} className="py-7 first:pt-0 last:pb-0 flex items-start gap-5 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors">
                       <input
                         type="checkbox"
                         checked={t.status === 'done'}
@@ -168,7 +168,7 @@ export default function TasksPage() {
                         >
                           {t.title}
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-3 mt-3">
                           {t.dueAt && (
                             <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
                               {formatDate(t.dueAt)}

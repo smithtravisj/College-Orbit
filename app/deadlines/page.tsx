@@ -88,7 +88,7 @@ export default function DeadlinesPage() {
                   <button
                     key={f.value}
                     onClick={() => setFilter(f.value)}
-                    className={`w-full text-left px-3 py-2 rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
+                    className={`w-full text-left px-6 py-4 rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
                       filter === f.value
                         ? 'bg-[var(--accent-2)] text-[var(--text)]'
                         : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
@@ -163,9 +163,9 @@ export default function DeadlinesPage() {
                   const course = courses.find((c) => c.id === d.courseId);
                   const isOverd = isOverdue(d.dueAt);
                   return (
-                    <div key={d.id} className="py-5 first:pt-0 last:pb-0 flex items-start justify-between group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors">
+                    <div key={d.id} className="py-7 first:pt-0 last:pb-0 flex items-start justify-between group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-3 mb-3">
                           {isOverd && <Badge variant="danger">Overdue</Badge>}
                           <div className="text-sm font-medium text-[var(--text)]">{d.title}</div>
                         </div>
