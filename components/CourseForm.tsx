@@ -59,7 +59,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <Input
           label="Course Code"
@@ -223,7 +223,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
         </Button>
       </div>
 
-      <div className="flex gap-3" style={{ paddingTop: '16px' }}>
+      <div className="flex gap-3" style={{ paddingTop: '12px' }}>
         <Button variant="primary" size="md" type="submit">
           {courseId ? 'Update' : 'Add'} Course
         </Button>
