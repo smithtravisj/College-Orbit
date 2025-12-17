@@ -235,7 +235,9 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
             color: 'white',
             borderWidth: '1px',
             borderStyle: 'solid',
-            borderColor: 'var(--border)'
+            borderColor: 'var(--border)',
+            paddingLeft: '24px',
+            paddingRight: '24px'
           }}
         >
           {courseId ? 'Update' : 'Add'} Course

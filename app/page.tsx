@@ -388,7 +388,9 @@ export default function Dashboard() {
                           color: 'white',
                           borderWidth: '1px',
                           borderStyle: 'solid',
-                          borderColor: 'var(--border)'
+                          borderColor: 'var(--border)',
+                          paddingLeft: '24px',
+                          paddingRight: '24px'
                         }}
                       >
                         {editingDeadlineId ? 'Save Changes' : 'Add Deadline'}
@@ -602,7 +604,9 @@ export default function Dashboard() {
                         color: 'white',
                         borderWidth: '1px',
                         borderStyle: 'solid',
-                        borderColor: 'var(--border)'
+                        borderColor: 'var(--border)',
+                        paddingLeft: '24px',
+                        paddingRight: '24px'
                       }}
                     >
                       {editingTaskId ? 'Save Changes' : 'Add Task'}

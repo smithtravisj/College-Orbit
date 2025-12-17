@@ -273,7 +273,9 @@ export default function DeadlinesPage() {
                       color: 'white',
                       borderWidth: '1px',
                       borderStyle: 'solid',
-                      borderColor: 'var(--border)'
+                      borderColor: 'var(--border)',
+                      paddingLeft: '24px',
+                      paddingRight: '24px'
                     }}
                   >
                     {editingId ? 'Save Changes' : 'Add Deadline'}
