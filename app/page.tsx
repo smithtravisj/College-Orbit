@@ -178,7 +178,7 @@ export default function Dashboard() {
                     className="mt-1"
                   />
                   <div className="flex-1">
-                    <div className="text-sm font-bold">📌 {pinnedTask.title}</div>
+                    <div className="text-sm font-bold">{pinnedTask.title}</div>
                   </div>
                 </div>
               </li>
@@ -251,7 +251,6 @@ export default function Dashboard() {
           </div>
         </div>
       </Card>
-      </div>
       </div>
     </div>
   );
