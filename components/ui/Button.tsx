@@ -21,7 +21,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const variantStyles = {
       primary: 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] active:bg-[var(--accent-muted)]',
       secondary: 'bg-transparent border border-[var(--border)] text-[var(--text)] hover:bg-[var(--panel-2)] hover:border-[var(--border-hover)] active:bg-[var(--panel-3)]',
-      danger: 'bg-[var(--danger)] text-white hover:bg-[#d64941] active:bg-[#c63d37]',
+      danger: 'bg-[var(--danger)] text-white hover:bg-[var(--danger)] active:bg-[var(--danger)] opacity-90 hover:opacity-100',
       ghost: 'bg-transparent text-[var(--text)] hover:bg-[var(--panel-2)] active:bg-[var(--panel-3)]',
     };
 

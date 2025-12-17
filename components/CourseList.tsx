@@ -39,9 +39,9 @@ export default function CourseList({ onEdit }: CourseListProps) {
                       key={idx}
                       className="flex items-center gap-2 text-xs text-[var(--text-muted)]"
                     >
-                      <Clock size={14} />
+                      <Clock size={16} />
                       <span>{mt.day} {mt.start}–{mt.end}</span>
-                      <MapPin size={14} className="ml-2" />
+                      <MapPin size={16} className="ml-2" />
                       <span>{mt.location}</span>
                     </div>
                   ))}
@@ -58,7 +58,7 @@ export default function CourseList({ onEdit }: CourseListProps) {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors"
                     >
-                      <LinkIcon size={14} />
+                      <LinkIcon size={16} />
                       {link.label}
                     </a>
                   ))}

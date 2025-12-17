@@ -102,10 +102,10 @@ export default function Dashboard() {
                     href={`https://maps.google.com/?q=${encodeURIComponent(nextClass.location || '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 h-9 px-3 rounded-[10px] bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
+                    className="inline-flex items-center gap-2 h-10 px-3 rounded-[10px] bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
                   >
                     Directions
-                    <ExternalLink size={14} />
+                    <ExternalLink size={16} />
                   </a>
                 </div>
               ) : (
@@ -242,10 +242,10 @@ export default function Dashboard() {
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-between p-2 rounded-md hover:bg-[var(--panel-2)] transition-colors group"
+                      className="flex items-center justify-between p-2 rounded-[10px] hover:bg-[var(--panel-2)] transition-colors group"
                     >
                       <span className="text-sm text-[var(--text-secondary)] group-hover:text-[var(--text)] truncate">{link.label}</span>
-                      <ExternalLink size={14} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] flex-shrink-0 ml-2" />
+                      <ExternalLink size={16} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] flex-shrink-0 ml-2" />
                     </a>
                   ))}
                 </div>

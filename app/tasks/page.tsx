@@ -168,7 +168,7 @@ export default function TasksPage() {
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                         <button
                           onClick={() => toggleTaskPin(t.id)}
-                          className={`p-1.5 rounded-md transition-colors ${
+                          className={`p-1.5 rounded-[10px] transition-colors ${
                             t.pinned ? 'text-[var(--accent)] bg-[var(--accent-bg)]' : 'text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--panel-2)]'
                           }`}
                           title={t.pinned ? 'Unpin task' : 'Pin task'}
@@ -181,7 +181,7 @@ export default function TasksPage() {
                               deleteTask(t.id);
                             }
                           }}
-                          className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors"
+                          className="p-1.5 rounded-[10px] text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors"
                           title="Delete task"
                         >
                           <Trash2 size={18} />
