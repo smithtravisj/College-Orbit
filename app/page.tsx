@@ -76,11 +76,20 @@ export default function Dashboard() {
   const startEditTask = (task: any) => {
     setEditingTaskId(task.id);
     const dueDate = task.dueAt ? new Date(task.dueAt) : null;
+    let dateStr = '';
+    let timeStr = '';
+    if (dueDate) {
+      const year = dueDate.getFullYear();
+      const month = String(dueDate.getMonth() + 1).padStart(2, '0');
+      const date = String(dueDate.getDate()).padStart(2, '0');
+      dateStr = `${year}-${month}-${date}`;
+      timeStr = `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}`;
+    }
     setTaskFormData({
       title: task.title,
       courseId: task.courseId || '',
-      dueDate: dueDate ? dueDate.toISOString().split('T')[0] : '',
-      dueTime: dueDate ? `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}` : '',
+      dueDate: dateStr,
+      dueTime: timeStr,
       notes: task.notes,
     });
     setShowTaskForm(true);
@@ -127,7 +136,7 @@ export default function Dashboard() {
 
   // Get today's tasks and overdue tasks
   const todayTasks = tasks
-    .filter((t) => t.dueAt && (isToday(t.dueAt) || isOverdue(t.dueAt)) && t.status === 'open')
+    .filter((t) => t.dueAt && (isToday(t.dueAt) || isOverdue(t.dueAt)) && (t.status === 'open' || hidingTasks.has(t.id)))
     .sort((a, b) => {
       // Sort by due time if both have times
       if (a.dueAt && b.dueAt) {
@@ -241,8 +250,9 @@ export default function Dashboard() {
           </div>
 
           {/* Second row - Tasks and Quick Links */}
-          <div className="col-span-12 lg:col-span-8 h-full min-h-[240px]">
-            <Card title="Today's Tasks" className="h-full flex flex-col">
+          <div className="col-span-12 lg:flex lg:gap-[var(--grid-gap)]">
+            <div className="col-span-12 lg:col-span-8 lg:flex">
+              <Card title="Today's Tasks" className="h-full flex flex-col w-full">
               {/* Task Form */}
               {showTaskForm && (
                 <div style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid var(--border)' }}>
@@ -294,7 +304,7 @@ export default function Dashboard() {
 
               {todayTasks.length > 0 || showTaskForm ? (
                 <div className="space-y-4 divide-y divide-[var(--border)]">
-                  {todayTasks.filter(t => !hidingTasks.has(t.id)).slice(0, 5).map((t) => {
+                  {todayTasks.slice(0, 5).map((t) => {
                     const dueHours = t.dueAt ? new Date(t.dueAt).getHours() : null;
                     const dueMinutes = t.dueAt ? new Date(t.dueAt).getMinutes() : null;
                     const dueTime = t.dueAt ? new Date(t.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
@@ -307,10 +317,10 @@ export default function Dashboard() {
                           type="checkbox"
                           checked={t.status === 'done'}
                           onChange={() => {
-                            setHidingTasks(prev => new Set(prev).add(t.id));
+                            toggleTaskDone(t.id);
                             setTimeout(() => {
-                              toggleTaskDone(t.id);
-                            }, 2000);
+                              setHidingTasks(prev => new Set(prev).add(t.id));
+                            }, 50);
                           }}
                           style={{
                             appearance: 'none',
@@ -397,12 +407,12 @@ export default function Dashboard() {
               ) : (
                 <EmptyState title="No tasks today" description="Add a task to get started" action={{ label: 'Add Task', onClick: () => setShowTaskForm(true) }} />
               )}
-            </Card>
-          </div>
+              </Card>
+            </div>
 
-          {/* Quick Links */}
-          <div className="col-span-12 lg:col-span-4 min-h-[240px]" style={{ height: 'fit-content' }}>
-            <Card title="Quick Links" className="flex flex-col">
+            {/* Quick Links */}
+            <div className="col-span-12 lg:col-span-4 lg:flex">
+              <Card title="Quick Links" className="h-full flex flex-col w-full">
               {quickLinks.length > 0 ? (
                 <div className="space-y-3">
                   {quickLinks.map((link, idx) => (
@@ -425,7 +435,8 @@ export default function Dashboard() {
                   action={{ label: 'Go to Courses', onClick: () => (window.location.href = '/courses') }}
                 />
               )}
-            </Card>
+              </Card>
+            </div>
           </div>
 
           {/* Upcoming This Week */}

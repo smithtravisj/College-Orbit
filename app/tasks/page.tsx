@@ -76,11 +76,20 @@ export default function TasksPage() {
   const startEdit = (task: any) => {
     setEditingId(task.id);
     const dueDate = task.dueAt ? new Date(task.dueAt) : null;
+    let dateStr = '';
+    let timeStr = '';
+    if (dueDate) {
+      const year = dueDate.getFullYear();
+      const month = String(dueDate.getMonth() + 1).padStart(2, '0');
+      const date = String(dueDate.getDate()).padStart(2, '0');
+      dateStr = `${year}-${month}-${date}`;
+      timeStr = `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}`;
+    }
     setFormData({
       title: task.title,
       courseId: task.courseId || '',
-      dueDate: dueDate ? dueDate.toISOString().split('T')[0] : '',
-      dueTime: dueDate ? `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}` : '',
+      dueDate: dateStr,
+      dueTime: timeStr,
       notes: task.notes,
     });
     setShowForm(true);
@@ -94,7 +103,6 @@ export default function TasksPage() {
 
   const filtered = tasks
     .filter((t) => {
-      if (hidingTasks.has(t.id)) return false;
       if (filter === 'today') return t.dueAt && isToday(t.dueAt) && t.status === 'open';
       if (filter === 'done') return t.status === 'done';
       if (filter === 'overdue') {
@@ -231,10 +239,10 @@ export default function TasksPage() {
                         type="checkbox"
                         checked={t.status === 'done'}
                         onChange={() => {
-                          setHidingTasks(prev => new Set(prev).add(t.id));
+                          toggleTaskDone(t.id);
                           setTimeout(() => {
-                            toggleTaskDone(t.id);
-                          }, 2000);
+                            setHidingTasks(prev => new Set(prev).add(t.id));
+                          }, 50);
                         }}
                         style={{
                           appearance: 'none',
