@@ -87,15 +87,17 @@ export function LoginForm() {
               />
             </div>
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Button>
+            <div className="pt-2 pb-2">
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                disabled={loading}
+                className="w-full"
+              >
+                {loading ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </div>
           </form>
 
           <div className="mt-6 text-center">
