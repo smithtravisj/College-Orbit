@@ -28,7 +28,7 @@ export default function Navigation() {
       {/* Desktop Sidebar */}
       <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)]" style={{ padding: '20px 16px' }}>
         <div style={{ marginBottom: '16px' }}>
-          <h1 className="font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px', fontSize: '22px' }}>BYU Survival Tool</h1>
+          <h1 className="font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px', fontSize: '26px' }}>BYU Survival Tool</h1>
         </div>
         <div className="space-y-3 flex-1">
           {NAV_ITEMS.map((item) => {

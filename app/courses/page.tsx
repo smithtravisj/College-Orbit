@@ -43,7 +43,7 @@ export default function CoursesPage() {
           )
         }
       />
-      <div className="mx-auto w-full max-w-[1400px] px-[var(--content-padding-desktop)] py-12 space-y-[var(--grid-gap)]">
+      <div className="mx-auto w-full max-w-[1400px] space-y-[var(--grid-gap)]" style={{ padding: '24px' }}>
           {isAdding && (
             <Card title="Add Course">
               <div className="mt-2">

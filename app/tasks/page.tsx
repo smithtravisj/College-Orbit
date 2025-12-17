@@ -72,11 +72,11 @@ export default function TasksPage() {
           </Button>
         }
       />
-      <div className="mx-auto w-full max-w-[1400px] px-[var(--content-padding-desktop)] py-12">
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: '24px' }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]">
           {/* Filters sidebar - 3 columns */}
           <div className="col-span-12 lg:col-span-3">
-            <Card>
+            <Card className="h-full">
               <h3 className="text-sm font-semibold text-[var(--text)] mb-3">Filters</h3>
               <div className="space-y-2">
                 {[
@@ -149,7 +149,7 @@ export default function TasksPage() {
 
           {/* Task List */}
           {filtered.length > 0 ? (
-            <Card>
+            <Card className="h-full">
               <div className="space-y-0 divide-y divide-[var(--border)]">
                 {filtered.map((t) => {
                   const course = courses.find((c) => c.id === t.courseId);
