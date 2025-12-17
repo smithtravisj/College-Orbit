@@ -145,20 +145,25 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
                 placeholder="e.g., Room 101"
                 className="flex-1"
               />
-              <button
-                type="button"
-                onClick={() => {
-                  setForm({
-                    ...form,
-                    meetingTimes: form.meetingTimes.filter((_, i) => i !== idx),
-                  });
-                }}
-                className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                style={{ padding: '8px', marginBottom: 0 }}
-                title="Remove meeting time"
-              >
-                <Trash2 size={18} />
-              </button>
+              <div>
+                {idx === 0 && (
+                  <label className="block text-sm font-medium text-[var(--text)] mb-2" style={{ height: '20px' }}></label>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm({
+                      ...form,
+                      meetingTimes: form.meetingTimes.filter((_, i) => i !== idx),
+                    });
+                  }}
+                  className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                  style={{ padding: '8px' }}
+                  title="Remove meeting time"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -205,20 +210,25 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
                 placeholder="example.com or https://..."
                 className="flex-1"
               />
-              <button
-                type="button"
-                onClick={() => {
-                  setForm({
-                    ...form,
-                    links: form.links.filter((_, i) => i !== idx),
-                  });
-                }}
-                className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                style={{ padding: '8px', marginBottom: 0 }}
-                title="Remove link"
-              >
-                <Trash2 size={18} />
-              </button>
+              <div>
+                {idx === 0 && (
+                  <label className="block text-sm font-medium text-[var(--text)] mb-2" style={{ height: '20px' }}></label>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm({
+                      ...form,
+                      links: form.links.filter((_, i) => i !== idx),
+                    });
+                  }}
+                  className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                  style={{ padding: '8px' }}
+                  title="Remove link"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
