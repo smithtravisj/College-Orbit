@@ -39,6 +39,7 @@ export default function Navigation() {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? 'page' : undefined}
                 className={`relative flex items-center gap-3 px-3 py-3 rounded-[12px] font-medium text-sm transition-all duration-150 group ${
                   isActive
                     ? 'text-[var(--accent)] bg-[var(--panel-2)]'
@@ -66,6 +67,7 @@ export default function Navigation() {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? 'page' : undefined}
                 className={`flex flex-1 flex-col items-center justify-center py-3 text-xs font-medium transition-colors duration-150 ${
                   isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
                 }`}

@@ -1,6 +1,13 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import Navigation from '@/components/Navigation';
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'BYU Survival Tool',
@@ -18,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" style={{ backgroundColor: 'var(--bg)' }}>
+    <html lang="en" className={inter.className} style={{ backgroundColor: 'var(--bg)' }}>
       <body style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
         <div className="flex min-h-screen flex-col md:flex-row bg-[var(--bg)]">
           <Navigation />
