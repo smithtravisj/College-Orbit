@@ -15,6 +15,7 @@ export default function TasksPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [hidingTasks, setHidingTasks] = useState<Set<string>>(new Set());
+  const [toggledTasks, setToggledTasks] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
     title: '',
     courseId: '',
@@ -103,6 +104,11 @@ export default function TasksPage() {
 
   const filtered = tasks
     .filter((t) => {
+      // Always include toggled tasks (keep them visible after status change)
+      if (toggledTasks.has(t.id)) {
+        return true;
+      }
+
       if (filter === 'today') return t.dueAt && isToday(t.dueAt) && t.status === 'open';
       if (filter === 'done') return t.status === 'done';
       if (filter === 'overdue') {
@@ -239,6 +245,7 @@ export default function TasksPage() {
                         type="checkbox"
                         checked={t.status === 'done'}
                         onChange={() => {
+                          setToggledTasks(prev => new Set(prev).add(t.id));
                           toggleTaskDone(t.id);
                           setTimeout(() => {
                             setHidingTasks(prev => new Set(prev).add(t.id));
