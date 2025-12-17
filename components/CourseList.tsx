@@ -10,6 +10,14 @@ interface CourseListProps {
   onEdit: (courseId: string) => void;
 }
 
+const formatTime12Hour = (time24: string): string => {
+  const [hours, minutes] = time24.split(':').map(Number);
+  const isPM = hours >= 12;
+  const hours12 = hours % 12 || 12;
+  const ampm = isPM ? 'PM' : 'AM';
+  return `${hours12}:${String(minutes).padStart(2, '0')} ${ampm}`;
+};
+
 export default function CourseList({ courses, onEdit }: CourseListProps) {
   const { deleteCourse } = useAppStore();
 
@@ -44,7 +52,7 @@ export default function CourseList({ courses, onEdit }: CourseListProps) {
                 {course.meetingTimes && course.meetingTimes.length > 0 && (
                   <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
                     {course.meetingTimes.map((mt, idx) => (
-                      <span key={idx}>{mt.days.join(', ')} {mt.start}–{mt.end}</span>
+                      <span key={idx}>{mt.days.join(', ')} {formatTime12Hour(mt.start)}–{formatTime12Hour(mt.end)}</span>
                     ))}
                   </div>
                 )}
