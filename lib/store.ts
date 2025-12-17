@@ -15,37 +15,38 @@ interface AppStore {
   deadlines: Deadline[];
   tasks: Task[];
   settings: Settings;
+  loading: boolean;
 
   // Initialization
-  initializeStore: () => void;
+  initializeStore: () => Promise<void>;
+  loadFromDatabase: () => Promise<void>;
   loadFromStorage: () => void;
 
   // Courses
-  addCourse: (course: Omit<Course, 'id'>) => void;
-  updateCourse: (id: string, course: Partial<Course>) => void;
-  deleteCourse: (id: string) => void;
+  addCourse: (course: Omit<Course, 'id'>) => Promise<void>;
+  updateCourse: (id: string, course: Partial<Course>) => Promise<void>;
+  deleteCourse: (id: string) => Promise<void>;
 
   // Deadlines
-  addDeadline: (deadline: Omit<Deadline, 'id' | 'createdAt'>) => void;
-  updateDeadline: (id: string, deadline: Partial<Deadline>) => void;
-  deleteDeadline: (id: string) => void;
+  addDeadline: (deadline: Omit<Deadline, 'id' | 'createdAt'>) => Promise<void>;
+  updateDeadline: (id: string, deadline: Partial<Deadline>) => Promise<void>;
+  deleteDeadline: (id: string) => Promise<void>;
 
   // Tasks
-  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
-  updateTask: (id: string, task: Partial<Task>) => void;
-  deleteTask: (id: string) => void;
-  toggleTaskDone: (id: string) => void;
-  toggleTaskPin: (id: string) => void;
-  toggleChecklistItem: (taskId: string, itemId: string) => void;
+  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<void>;
+  updateTask: (id: string, task: Partial<Task>) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
+  toggleTaskDone: (id: string) => Promise<void>;
+  toggleTaskPin: (id: string) => Promise<void>;
+  toggleChecklistItem: (taskId: string, itemId: string) => Promise<void>;
 
   // Settings
-  updateSettings: (settings: Partial<Settings>) => void;
+  updateSettings: (settings: Partial<Settings>) => Promise<void>;
 
   // Import/Export
   exportData: () => AppData;
-  importData: (data: AppData) => void;
+  importData: (data: AppData) => Promise<void>;
   deleteAllData: () => void;
-  saveToStorage: (state: any) => void;
 }
 
 const useAppStore = create<AppStore>((set, get) => ({
@@ -53,9 +54,53 @@ const useAppStore = create<AppStore>((set, get) => ({
   deadlines: [],
   tasks: [],
   settings: DEFAULT_SETTINGS,
+  loading: false,
 
-  initializeStore: () => {
-    get().loadFromStorage();
+  initializeStore: async () => {
+    set({ loading: true });
+    try {
+      // Check if user is authenticated by fetching session
+      const sessionRes = await fetch('/api/auth/session');
+      const session = await sessionRes.json();
+
+      if (session?.user) {
+        // User is authenticated, load from database
+        await get().loadFromDatabase();
+      } else {
+        // User is not authenticated, try loading from localStorage
+        get().loadFromStorage();
+      }
+    } catch (error) {
+      console.error('Failed to initialize store:', error);
+      get().loadFromStorage();
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  loadFromDatabase: async () => {
+    try {
+      const [coursesRes, deadlinesRes, tasksRes, settingsRes] = await Promise.all([
+        fetch('/api/courses'),
+        fetch('/api/deadlines'),
+        fetch('/api/tasks'),
+        fetch('/api/settings'),
+      ]);
+
+      const coursesData = await coursesRes.json();
+      const deadlinesData = await deadlinesRes.json();
+      const tasksData = await tasksRes.json();
+      const settingsData = await settingsRes.json();
+
+      set({
+        courses: coursesData.courses || [],
+        deadlines: deadlinesData.deadlines || [],
+        tasks: tasksData.tasks || [],
+        settings: settingsData.settings || DEFAULT_SETTINGS,
+      });
+    } catch (error) {
+      console.error('Failed to load from database:', error);
+    }
   },
 
   loadFromStorage: () => {
@@ -77,138 +122,321 @@ const useAppStore = create<AppStore>((set, get) => ({
     }
   },
 
-  addCourse: (course) => {
-    const id = uuidv4();
-    set((state) => {
-      const newCourses = [...state.courses, { ...course, id }];
-      const newState = {
-        ...state,
-        courses: newCourses,
-      };
-      get().saveToStorage(newState);
-      return newState;
-    });
-  },
+  addCourse: async (course) => {
+    // Optimistic update
+    const tempId = uuidv4();
+    set((state) => ({
+      courses: [...state.courses, { ...course, id: tempId } as Course],
+    }));
 
-  updateCourse: (id, course) => {
-    set((state) => {
-      const newCourses = state.courses.map((c) =>
-        c.id === id ? { ...c, ...course } : c
-      );
-      const newState = { ...state, courses: newCourses };
-      get().saveToStorage(newState);
-      return newState;
-    });
-  },
+    try {
+      // API call
+      const response = await fetch('/api/courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(course),
+      });
 
-  deleteCourse: (id) => {
-    set((state) => {
-      const newCourses = state.courses.filter((c) => c.id !== id);
-      const newState = { ...state, courses: newCourses };
-      get().saveToStorage(newState);
-      return newState;
-    });
-  },
+      if (!response.ok) throw new Error('Failed to create course');
 
-  addDeadline: (deadline) => {
-    const id = uuidv4();
-    const createdAt = new Date().toISOString();
-    set((state) => {
-      const newDeadlines = [...state.deadlines, { ...deadline, id, createdAt }];
-      const newState = {
-        ...state,
-        deadlines: newDeadlines,
-      };
-      get().saveToStorage(newState);
-      return newState;
-    });
-  },
+      const { course: newCourse } = await response.json();
 
-  updateDeadline: (id, deadline) => {
-    set((state) => {
-      const newDeadlines = state.deadlines.map((d) =>
-        d.id === id ? { ...d, ...deadline } : d
-      );
-      const newState = { ...state, deadlines: newDeadlines };
-      get().saveToStorage(newState);
-      return newState;
-    });
-  },
-
-  deleteDeadline: (id) => {
-    set((state) => {
-      const newDeadlines = state.deadlines.filter((d) => d.id !== id);
-      const newState = { ...state, deadlines: newDeadlines };
-      get().saveToStorage(newState);
-      return newState;
-    });
-  },
-
-  addTask: (task) => {
-    const id = uuidv4();
-    const createdAt = new Date().toISOString();
-    set((state) => {
-      const newTasks = [...state.tasks, { ...task, id, createdAt }];
-      const newState = {
-        ...state,
-        tasks: newTasks,
-      };
-      get().saveToStorage(newState);
-      return newState;
-    });
-  },
-
-  updateTask: (id, task) => {
-    set((state) => {
-      const newTasks = state.tasks.map((t) =>
-        t.id === id ? { ...t, ...task } : t
-      );
-      const newState = { ...state, tasks: newTasks };
-      get().saveToStorage(newState);
-      return newState;
-    });
-  },
-
-  deleteTask: (id) => {
-    set((state) => {
-      const newTasks = state.tasks.filter((t) => t.id !== id);
-      const newState = { ...state, tasks: newTasks };
-      get().saveToStorage(newState);
-      return newState;
-    });
-  },
-
-  toggleTaskDone: (id) => {
-    const task = get().tasks.find((t) => t.id === id);
-    if (task) {
-      get().updateTask(id, { status: task.status === 'done' ? 'open' : 'done' });
+      // Replace optimistic with real data
+      set((state) => ({
+        courses: state.courses.map((c) => (c.id === tempId ? newCourse : c)),
+      }));
+    } catch (error) {
+      // Rollback on error
+      set((state) => ({
+        courses: state.courses.filter((c) => c.id !== tempId),
+      }));
+      console.error('Error creating course:', error);
+      throw error;
     }
   },
 
-  toggleTaskPin: (id) => {
-    const task = get().tasks.find((t) => t.id === id);
-    if (task) {
-      get().updateTask(id, { pinned: !task.pinned });
+  updateCourse: async (id, course) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        courses: state.courses.map((c) => (c.id === id ? { ...c, ...course } : c)),
+      }));
+
+      // API call
+      const response = await fetch(`/api/courses/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(course),
+      });
+
+      if (!response.ok) throw new Error('Failed to update course');
+
+      const { course: updatedCourse } = await response.json();
+
+      // Update with server response
+      set((state) => ({
+        courses: state.courses.map((c) => (c.id === id ? updatedCourse : c)),
+      }));
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error updating course:', error);
+      throw error;
     }
   },
 
-  toggleChecklistItem: (taskId, itemId) => {
+  deleteCourse: async (id) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        courses: state.courses.filter((c) => c.id !== id),
+      }));
+
+      // API call
+      const response = await fetch(`/api/courses/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete course');
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error deleting course:', error);
+      throw error;
+    }
+  },
+
+  addDeadline: async (deadline) => {
+    // Optimistic update
+    const tempId = uuidv4();
+    const createdAt = new Date().toISOString();
+    set((state) => ({
+      deadlines: [
+        ...state.deadlines,
+        { ...deadline, id: tempId, createdAt } as Deadline,
+      ],
+    }));
+
+    try {
+      // API call
+      const response = await fetch('/api/deadlines', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(deadline),
+      });
+
+      if (!response.ok) throw new Error('Failed to create deadline');
+
+      const { deadline: newDeadline } = await response.json();
+
+      // Replace optimistic with real data
+      set((state) => ({
+        deadlines: state.deadlines.map((d) =>
+          d.id === tempId ? newDeadline : d
+        ),
+      }));
+    } catch (error) {
+      // Rollback on error
+      set((state) => ({
+        deadlines: state.deadlines.filter((d) => d.id !== tempId),
+      }));
+      console.error('Error creating deadline:', error);
+      throw error;
+    }
+  },
+
+  updateDeadline: async (id, deadline) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        deadlines: state.deadlines.map((d) =>
+          d.id === id ? { ...d, ...deadline } : d
+        ),
+      }));
+
+      // API call
+      const response = await fetch(`/api/deadlines/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(deadline),
+      });
+
+      if (!response.ok) throw new Error('Failed to update deadline');
+
+      const { deadline: updatedDeadline } = await response.json();
+
+      // Update with server response
+      set((state) => ({
+        deadlines: state.deadlines.map((d) =>
+          d.id === id ? updatedDeadline : d
+        ),
+      }));
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error updating deadline:', error);
+      throw error;
+    }
+  },
+
+  deleteDeadline: async (id) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        deadlines: state.deadlines.filter((d) => d.id !== id),
+      }));
+
+      // API call
+      const response = await fetch(`/api/deadlines/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete deadline');
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error deleting deadline:', error);
+      throw error;
+    }
+  },
+
+  addTask: async (task) => {
+    // Optimistic update
+    const tempId = uuidv4();
+    const createdAt = new Date().toISOString();
+    set((state) => ({
+      tasks: [...state.tasks, { ...task, id: tempId, createdAt } as Task],
+    }));
+
+    try {
+      // API call
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task),
+      });
+
+      if (!response.ok) throw new Error('Failed to create task');
+
+      const { task: newTask } = await response.json();
+
+      // Replace optimistic with real data
+      set((state) => ({
+        tasks: state.tasks.map((t) => (t.id === tempId ? newTask : t)),
+      }));
+    } catch (error) {
+      // Rollback on error
+      set((state) => ({
+        tasks: state.tasks.filter((t) => t.id !== tempId),
+      }));
+      console.error('Error creating task:', error);
+      throw error;
+    }
+  },
+
+  updateTask: async (id, task) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        tasks: state.tasks.map((t) => (t.id === id ? { ...t, ...task } : t)),
+      }));
+
+      // API call
+      const response = await fetch(`/api/tasks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task),
+      });
+
+      if (!response.ok) throw new Error('Failed to update task');
+
+      const { task: updatedTask } = await response.json();
+
+      // Update with server response
+      set((state) => ({
+        tasks: state.tasks.map((t) => (t.id === id ? updatedTask : t)),
+      }));
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error updating task:', error);
+      throw error;
+    }
+  },
+
+  deleteTask: async (id) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        tasks: state.tasks.filter((t) => t.id !== id),
+      }));
+
+      // API call
+      const response = await fetch(`/api/tasks/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete task');
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error deleting task:', error);
+      throw error;
+    }
+  },
+
+  toggleTaskDone: async (id) => {
+    const task = get().tasks.find((t) => t.id === id);
+    if (task) {
+      await get().updateTask(id, {
+        status: task.status === 'done' ? 'open' : 'done',
+      });
+    }
+  },
+
+  toggleTaskPin: async (id) => {
+    const task = get().tasks.find((t) => t.id === id);
+    if (task) {
+      await get().updateTask(id, { pinned: !task.pinned });
+    }
+  },
+
+  toggleChecklistItem: async (taskId, itemId) => {
     const task = get().tasks.find((t) => t.id === taskId);
     if (task) {
       const newChecklist = task.checklist.map((item) =>
         item.id === itemId ? { ...item, done: !item.done } : item
       );
-      get().updateTask(taskId, { checklist: newChecklist });
+      await get().updateTask(taskId, { checklist: newChecklist });
     }
   },
 
-  updateSettings: (settings) => {
-    set((state) => {
-      const newSettings = { ...state.settings, ...settings };
-      const newState = { ...state, settings: newSettings };
-      get().saveToStorage(newState);
-      return newState;
-    });
+  updateSettings: async (settings) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        settings: { ...state.settings, ...settings },
+      }));
+
+      // API call
+      const response = await fetch('/api/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+
+      if (!response.ok) throw new Error('Failed to update settings');
+
+      const { settings: updatedSettings } = await response.json();
+
+      // Update with server response
+      set({ settings: updatedSettings });
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error updating settings:', error);
+      throw error;
+    }
   },
 
   exportData: () => {
@@ -221,17 +449,14 @@ const useAppStore = create<AppStore>((set, get) => ({
     };
   },
 
-  importData: (data: AppData) => {
-    set((state) => {
-      const newState = {
-        ...state,
-        courses: data.courses || [],
-        deadlines: data.deadlines || [],
-        tasks: data.tasks || [],
-        settings: data.settings || DEFAULT_SETTINGS,
-      };
-      get().saveToStorage(newState);
-      return newState;
+  importData: async (data: AppData) => {
+    // For now, just load it into the store
+    // User can manually export/import via settings
+    set({
+      courses: data.courses || [],
+      deadlines: data.deadlines || [],
+      tasks: data.tasks || [],
+      settings: data.settings || DEFAULT_SETTINGS,
     });
   },
 
@@ -244,23 +469,6 @@ const useAppStore = create<AppStore>((set, get) => ({
     });
     if (typeof window !== 'undefined') {
       localStorage.removeItem('byu-survival-tool-data');
-    }
-  },
-
-  saveToStorage: (state: any) => {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(
-        'byu-survival-tool-data',
-        JSON.stringify({
-          courses: state.courses,
-          deadlines: state.deadlines,
-          tasks: state.tasks,
-          settings: state.settings,
-        })
-      );
-    } catch (error) {
-      console.error('Failed to save to storage:', error);
     }
   },
 }));

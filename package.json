@@ -14,8 +14,12 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@prisma/client": "^6.19.1",
+    "bcryptjs": "^3.0.3",
     "lucide-react": "^0.561.0",
     "next": "^16.0.10",
+    "next-auth": "^4.24.13",
+    "prisma": "^6.19.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "uuid": "^13.0.0",
@@ -23,6 +27,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^25.0.3",
     "@types/react": "^19.2.7",
     "autoprefixer": "^10.4.23",

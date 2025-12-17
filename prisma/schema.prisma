@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  courses       Course[]
+  deadlines     Deadline[]
+  tasks         Task[]
+  settings      Settings?
+
+  @@index([email])
+}
+
+model Course {
+  id            String    @id @default(cuid())
+  userId        String
+  code          String
+  name          String
+  term          String
+  meetingTimes  Json      @default("[]")
+  links         Json      @default("[]")
+  colorTag      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deadlines     Deadline[]
+  tasks         Task[]
+
+  @@index([userId])
+}
+
+model Deadline {
+  id            String    @id @default(cuid())
+  userId        String
+  title         String
+  courseId      String?
+  dueAt         DateTime
+  notes         String    @default("")
+  link          String?
+  status        String    @default("open")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([status])
+}
+
+model Task {
+  id            String    @id @default(cuid())
+  userId        String
+  title         String
+  courseId      String?
+  dueAt         DateTime?
+  pinned        Boolean   @default(false)
+  checklist     Json      @default("[]")
+  notes         String    @default("")
+  status        String    @default("open")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([status])
+  @@index([pinned])
+}
+
+model Settings {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  dueSoonWindowDays   Int      @default(7)
+  weekStartsOn        String   @default("Sun")
+  theme               String   @default("system")
+  enableNotifications Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
