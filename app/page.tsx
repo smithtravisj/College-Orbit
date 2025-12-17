@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [hidingTasks, setHidingTasks] = useState<Set<string>>(new Set());
+  const [toggledTasks, setToggledTasks] = useState<Set<string>>(new Set());
   const [taskFormData, setTaskFormData] = useState({
     title: '',
     courseId: '',
@@ -136,7 +137,13 @@ export default function Dashboard() {
 
   // Get today's tasks and overdue tasks
   const todayTasks = tasks
-    .filter((t) => t.dueAt && (isToday(t.dueAt) || isOverdue(t.dueAt)) && (t.status === 'open' || hidingTasks.has(t.id)))
+    .filter((t) => {
+      // Keep toggled tasks visible regardless of status
+      if (toggledTasks.has(t.id)) {
+        return t.dueAt && (isToday(t.dueAt) || isOverdue(t.dueAt));
+      }
+      return t.dueAt && (isToday(t.dueAt) || isOverdue(t.dueAt)) && t.status === 'open';
+    })
     .sort((a, b) => {
       // Sort by due time if both have times
       if (a.dueAt && b.dueAt) {
@@ -316,6 +323,7 @@ export default function Dashboard() {
                         type="checkbox"
                         checked={t.status === 'done'}
                         onChange={() => {
+                          setToggledTasks(prev => new Set(prev).add(t.id));
                           toggleTaskDone(t.id);
                           setTimeout(() => {
                             setHidingTasks(prev => new Set(prev).add(t.id));
