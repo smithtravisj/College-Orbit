@@ -206,7 +206,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
             </div>
 
             {/* AM/PM Toggle */}
-            <div className="flex gap-2 justify-center mt-4 border-t border-[var(--border)] pt-4">
+            <div className="flex gap-2 justify-center mt-8 border-t border-[var(--border)] pt-6">
               <button
                 type="button"
                 onClick={() => {
