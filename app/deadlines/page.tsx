@@ -225,18 +225,22 @@ export default function DeadlinesPage() {
                   placeholder="What needs to be done?"
                   required
                 />
-                <Select
-                  label="Course (optional)"
-                  value={formData.courseId}
-                  onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                  options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
-                />
-                <Textarea
-                  label="Notes (optional)"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Add details..."
-                />
+                <div style={{ paddingTop: '12px' }}>
+                  <Select
+                    label="Course (optional)"
+                    value={formData.courseId}
+                    onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
+                    options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                  />
+                </div>
+                <div style={{ paddingTop: '12px' }}>
+                  <Textarea
+                    label="Notes (optional)"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    placeholder="Add details..."
+                  />
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <Input
                     label="Due date (optional)"
@@ -251,15 +255,27 @@ export default function DeadlinesPage() {
                     onChange={(e) => setFormData({ ...formData, dueTime: e.target.value })}
                   />
                 </div>
-                <Input
-                  label="Link (optional)"
-                  type="text"
-                  value={formData.link}
-                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                  placeholder="example.com or https://..."
-                />
+                <div style={{ paddingTop: '12px' }}>
+                  <Input
+                    label="Link (optional)"
+                    type="text"
+                    value={formData.link}
+                    onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                    placeholder="example.com or https://..."
+                  />
+                </div>
                 <div className="flex gap-3" style={{ paddingTop: '12px' }}>
-                  <Button variant="primary" type="submit">
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    style={{
+                      backgroundColor: '#132343',
+                      color: 'white',
+                      borderWidth: '1px',
+                      borderStyle: 'solid',
+                      borderColor: 'var(--border)'
+                    }}
+                  >
                     {editingId ? 'Save Changes' : 'Add Deadline'}
                   </Button>
                   <Button variant="secondary" type="button" onClick={cancelEdit}>
