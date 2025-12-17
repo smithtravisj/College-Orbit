@@ -32,7 +32,7 @@ const Card: React.FC<CardProps> = ({
       {title && (
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h3 className="text-base font-semibold text-[var(--text)]">{title}</h3>
+            <h3 className="section-title">{title}</h3>
             {subtitle && <p className="text-sm text-[var(--text-muted)] mt-1">{subtitle}</p>}
           </div>
           {action && <div>{action}</div>}
