@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import useAppStore from '@/lib/store';
+import Input, { Select } from '@/components/ui/Input';
+import Button from '@/components/ui/Button';
+import { Plus, Trash2 } from 'lucide-react';
 
 interface CourseFormProps {
   courseId?: string;
@@ -58,155 +61,173 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <input
+        <Input
+          label="Course Code"
           type="text"
           value={form.code}
           onChange={(e) => setForm({ ...form, code: e.target.value })}
-          placeholder="Course Code (e.g., CHEM 101)"
-          className="rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+          placeholder="e.g., CHEM 101"
           required
         />
-        <input
+        <Input
+          label="Course Name"
           type="text"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
-          placeholder="Course Name"
-          className="rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+          placeholder="e.g., Chemistry I"
           required
         />
       </div>
 
-      <input
+      <Input
+        label="Term"
         type="text"
         value={form.term}
         onChange={(e) => setForm({ ...form, term: e.target.value })}
-        placeholder="Term (e.g., Winter 2026)"
-        className="w-full rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+        placeholder="e.g., Winter 2026"
       />
 
       <div>
-        <label className="block text-sm font-medium">Meeting Times</label>
-        {form.meetingTimes.map((mt, idx) => (
-          <div key={idx} className="mt-2 flex gap-2">
-            <select
-              value={mt.day}
-              onChange={(e) => {
-                const newMeetingTimes = [...form.meetingTimes];
-                newMeetingTimes[idx].day = e.target.value;
-                setForm({ ...form, meetingTimes: newMeetingTimes });
-              }}
-              className="rounded border border-gray-300 px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            >
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
-            <input
-              type="time"
-              value={mt.start}
-              onChange={(e) => {
-                const newMeetingTimes = [...form.meetingTimes];
-                newMeetingTimes[idx].start = e.target.value;
-                setForm({ ...form, meetingTimes: newMeetingTimes });
-              }}
-              className="rounded border border-gray-300 px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            />
-            <input
-              type="time"
-              value={mt.end}
-              onChange={(e) => {
-                const newMeetingTimes = [...form.meetingTimes];
-                newMeetingTimes[idx].end = e.target.value;
-                setForm({ ...form, meetingTimes: newMeetingTimes });
-              }}
-              className="rounded border border-gray-300 px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            />
-            <input
-              type="text"
-              value={mt.location}
-              onChange={(e) => {
-                const newMeetingTimes = [...form.meetingTimes];
-                newMeetingTimes[idx].location = e.target.value;
-                setForm({ ...form, meetingTimes: newMeetingTimes });
-              }}
-              placeholder="Location"
-              className="flex-1 rounded border border-gray-300 px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            />
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={() => {
-            setForm({
-              ...form,
-              meetingTimes: [
-                ...form.meetingTimes,
-                { day: 'Mon', start: '10:00', end: '10:50', location: '' },
-              ],
-            });
-          }}
-          className="mt-2 text-xs text-blue-600 dark:text-blue-400"
-        >
-          + Add Time
-        </button>
+        <label className="block text-sm font-medium text-[var(--text)] mb-2">Meeting Times</label>
+        <div className="space-y-3">
+          {form.meetingTimes.map((mt, idx) => (
+            <div key={idx} className="flex gap-3 items-end">
+              <Select
+                label={idx === 0 ? 'Day' : ''}
+                value={mt.day}
+                onChange={(e) => {
+                  const newMeetingTimes = [...form.meetingTimes];
+                  newMeetingTimes[idx].day = e.target.value;
+                  setForm({ ...form, meetingTimes: newMeetingTimes });
+                }}
+                options={['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => ({ value: d, label: d }))}
+                className="w-24"
+              />
+              <Input
+                label={idx === 0 ? 'Start' : ''}
+                type="time"
+                value={mt.start}
+                onChange={(e) => {
+                  const newMeetingTimes = [...form.meetingTimes];
+                  newMeetingTimes[idx].start = e.target.value;
+                  setForm({ ...form, meetingTimes: newMeetingTimes });
+                }}
+              />
+              <Input
+                label={idx === 0 ? 'End' : ''}
+                type="time"
+                value={mt.end}
+                onChange={(e) => {
+                  const newMeetingTimes = [...form.meetingTimes];
+                  newMeetingTimes[idx].end = e.target.value;
+                  setForm({ ...form, meetingTimes: newMeetingTimes });
+                }}
+              />
+              <Input
+                label={idx === 0 ? 'Location' : ''}
+                type="text"
+                value={mt.location}
+                onChange={(e) => {
+                  const newMeetingTimes = [...form.meetingTimes];
+                  newMeetingTimes[idx].location = e.target.value;
+                  setForm({ ...form, meetingTimes: newMeetingTimes });
+                }}
+                placeholder="e.g., Room 101"
+                className="flex-1"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setForm({
+                    ...form,
+                    meetingTimes: form.meetingTimes.filter((_, i) => i !== idx),
+                  });
+                }}
+                className="p-2 rounded-md text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors mb-0"
+                title="Remove meeting time"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          ))}
+        </div>
+        <Button variant="secondary" type="button" onClick={() => {
+          setForm({
+            ...form,
+            meetingTimes: [
+              ...form.meetingTimes,
+              { day: 'Mon', start: '10:00', end: '10:50', location: '' },
+            ],
+          });
+        }} className="mt-3">
+          <Plus size={18} />
+          Add Time
+        </Button>
       </div>
 
       <div>
-        <label className="block text-sm font-medium">Links</label>
-        {form.links.map((link, idx) => (
-          <div key={idx} className="mt-2 flex gap-2">
-            <input
-              type="text"
-              value={link.label}
-              onChange={(e) => {
-                const newLinks = [...form.links];
-                newLinks[idx].label = e.target.value;
-                setForm({ ...form, links: newLinks });
-              }}
-              placeholder="Label (e.g., Canvas)"
-              className="w-1/3 rounded border border-gray-300 px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            />
-            <input
-              type="url"
-              value={link.url}
-              onChange={(e) => {
-                const newLinks = [...form.links];
-                newLinks[idx].url = e.target.value;
-                setForm({ ...form, links: newLinks });
-              }}
-              placeholder="URL"
-              className="flex-1 rounded border border-gray-300 px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            />
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={() => {
-            setForm({
-              ...form,
-              links: [...form.links, { label: '', url: '' }],
-            });
-          }}
-          className="mt-2 text-xs text-blue-600 dark:text-blue-400"
-        >
-          + Add Link
-        </button>
+        <label className="block text-sm font-medium text-[var(--text)] mb-2">Links</label>
+        <div className="space-y-3">
+          {form.links.map((link, idx) => (
+            <div key={idx} className="flex gap-3 items-end">
+              <Input
+                label={idx === 0 ? 'Label' : ''}
+                type="text"
+                value={link.label}
+                onChange={(e) => {
+                  const newLinks = [...form.links];
+                  newLinks[idx].label = e.target.value;
+                  setForm({ ...form, links: newLinks });
+                }}
+                placeholder="e.g., Canvas"
+                className="w-32"
+              />
+              <Input
+                label={idx === 0 ? 'URL' : ''}
+                type="url"
+                value={link.url}
+                onChange={(e) => {
+                  const newLinks = [...form.links];
+                  newLinks[idx].url = e.target.value;
+                  setForm({ ...form, links: newLinks });
+                }}
+                placeholder="https://..."
+                className="flex-1"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setForm({
+                    ...form,
+                    links: form.links.filter((_, i) => i !== idx),
+                  });
+                }}
+                className="p-2 rounded-md text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--panel-2)] transition-colors mb-0"
+                title="Remove link"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          ))}
+        </div>
+        <Button variant="secondary" type="button" onClick={() => {
+          setForm({
+            ...form,
+            links: [...form.links, { label: '', url: '' }],
+          });
+        }} className="mt-3">
+          <Plus size={18} />
+          Add Link
+        </Button>
       </div>
 
-      <div className="flex gap-2 pt-4">
-        <button
-          type="submit"
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
+      <div className="flex gap-3 pt-4">
+        <Button variant="primary" type="submit">
           {courseId ? 'Update' : 'Add'} Course
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-        >
+        </Button>
+        <Button variant="secondary" type="button" onClick={onClose}>
           Cancel
-        </button>
+        </Button>
       </div>
     </form>
   );

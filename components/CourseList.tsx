@@ -1,6 +1,9 @@
 'use client';
 
 import useAppStore from '@/lib/store';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import { Edit2, Trash2, MapPin, Clock, Link as LinkIcon } from 'lucide-react';
 
 interface CourseListProps {
   onEdit: (courseId: string) => void;
@@ -9,48 +12,53 @@ interface CourseListProps {
 export default function CourseList({ onEdit }: CourseListProps) {
   const { courses, deleteCourse } = useAppStore();
 
+  if (courses.length === 0) {
+    return null;
+  }
+
   return (
     <div className="space-y-3">
       {courses.map((course) => (
-        <div
-          key={course.id}
-          className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-950"
-        >
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h3 className="font-semibold">{course.code}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+        <Card key={course.id} padding="lg" hoverable>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-[var(--text)]">{course.code}</h3>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">
                 {course.name}
               </p>
               {course.term && (
-                <p className="text-xs text-gray-500 dark:text-gray-500">
+                <p className="text-xs text-[var(--text-muted)] mt-1">
                   {course.term}
                 </p>
               )}
 
               {course.meetingTimes && course.meetingTimes.length > 0 && (
-                <div className="mt-2 space-y-1">
+                <div className="mt-3 space-y-2">
                   {course.meetingTimes.map((mt, idx) => (
                     <div
                       key={idx}
-                      className="text-xs text-gray-600 dark:text-gray-400"
+                      className="flex items-center gap-2 text-xs text-[var(--text-muted)]"
                     >
-                      {mt.day} {mt.start}-{mt.end} @ {mt.location}
+                      <Clock size={14} />
+                      <span>{mt.day} {mt.start}–{mt.end}</span>
+                      <MapPin size={14} className="ml-2" />
+                      <span>{mt.location}</span>
                     </div>
                   ))}
                 </div>
               )}
 
               {course.links && course.links.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-3 flex flex-wrap gap-2">
                   {course.links.map((link, idx) => (
                     <a
                       key={idx}
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-blue-600 underline dark:text-blue-400"
+                      className="inline-flex items-center gap-1.5 text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors"
                     >
+                      <LinkIcon size={14} />
                       {link.label}
                     </a>
                   ))}
@@ -58,14 +66,18 @@ export default function CourseList({ onEdit }: CourseListProps) {
               )}
             </div>
 
-            <div className="flex gap-2">
-              <button
+            <div className="flex gap-2 opacity-0 hover:opacity-100 transition-opacity flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => onEdit(course.id)}
-                className="rounded px-3 py-1 text-xs text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950"
+                title="Edit course"
               >
-                Edit
-              </button>
-              <button
+                <Edit2 size={16} />
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={() => {
                   if (
                     confirm(
@@ -75,13 +87,13 @@ export default function CourseList({ onEdit }: CourseListProps) {
                     deleteCourse(course.id);
                   }
                 }}
-                className="rounded px-3 py-1 text-xs text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+                title="Delete course"
               >
-                Delete
-              </button>
+                <Trash2 size={16} />
+              </Button>
             </div>
           </div>
-        </div>
+        </Card>
       ))}
     </div>
   );
