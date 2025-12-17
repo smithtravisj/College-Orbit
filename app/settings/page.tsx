@@ -151,7 +151,7 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
-                  This app stores all data locally on your device. No information is sent to external servers. You have complete control over your data.
+                  Your data is stored securely on our servers and associated with your account. We do not share your personal information with third parties or use it for marketing purposes. All data is private to your account.
                 </p>
               </div>
               <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
