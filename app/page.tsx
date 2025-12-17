@@ -81,8 +81,8 @@ export default function Dashboard() {
   return (
     <>
       <PageHeader title="Dashboard" subtitle="Welcome back. Here's your schedule and tasks for today." />
-      <div className="mx-auto max-w-[1400px] 2xl:max-w-[1600px] px-10 py-10 min-h-[calc(100vh-var(--header-h))] flex flex-col">
-        <div className="grid grid-cols-12 gap-8 flex-1 auto-rows-fr">
+      <div className="mx-auto w-full max-w-[1400px] px-[var(--content-padding-desktop)] py-12 min-h-[calc(100vh-var(--header-h))] flex flex-col">
+        <div className="grid grid-cols-12 gap-[var(--grid-gap)] flex-1 auto-rows-fr">
           {/* Top row - 3 cards */}
           <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
             <Card title="Next Class" className="h-full flex flex-col">
