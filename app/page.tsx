@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
-import { isToday, formatTime, isOverdue } from '@/lib/utils';
+import { isToday, formatTime, formatDate, isOverdue } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -383,6 +383,11 @@ export default function Dashboard() {
                           </div>
                         )}
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          {isOverdueTask && t.dueAt && (
+                            <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                              {formatDate(t.dueAt)}
+                            </span>
+                          )}
                           {shouldShowTime && (
                             <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
                               {dueTime}
