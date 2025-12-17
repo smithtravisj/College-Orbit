@@ -74,7 +74,7 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader title="Settings" subtitle="Customize your experience" />
-      <div className="mx-auto max-w-[768px] px-8 py-8 space-y-7">
+      <div className="mx-auto max-w-[768px] px-12 py-12 space-y-7">
           {/* Due Soon Window */}
           <Card title="Appearance" padding="lg">
             <div className="space-y-5">

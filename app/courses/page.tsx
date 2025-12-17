@@ -43,7 +43,7 @@ export default function CoursesPage() {
           )
         }
       />
-      <div className="mx-auto max-w-[var(--container)] px-8 py-8 space-y-7">
+      <div className="mx-auto max-w-[var(--container)] px-12 py-12 space-y-7">
           {isAdding && (
             <Card title="Add Course" padding="lg">
               <div className="mt-2">

@@ -73,7 +73,7 @@ export default function DeadlinesPage() {
           </Button>
         }
       />
-      <div className="mx-auto max-w-[var(--container)] px-8 py-8">
+      <div className="mx-auto max-w-[var(--container)] px-12 py-12">
         <div className="grid grid-cols-12 gap-7">
           {/* Filters sidebar - 3 columns */}
           <div className="col-span-12 lg:col-span-3">

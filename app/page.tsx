@@ -81,7 +81,7 @@ export default function Dashboard() {
   return (
     <>
       <PageHeader title="Dashboard" subtitle="Welcome back. Here's your schedule and tasks for today." />
-      <div className="mx-auto max-w-[var(--container)] px-8 py-8">
+      <div className="mx-auto max-w-[var(--container)] px-12 py-12">
         <div className="grid grid-cols-12 gap-7">
           {/* Top row - 3 cards */}
           <div className="col-span-12 lg:col-span-4 h-full">
