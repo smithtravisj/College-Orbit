@@ -130,8 +130,8 @@ export default function TasksPage() {
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: '24px' }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]">
           {/* Filters sidebar - 3 columns */}
-          <div className="col-span-12 lg:col-span-3">
-            <Card className="h-full">
+          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content' }}>
+            <Card>
               <h3 className="text-sm font-semibold text-[var(--text)]" style={{ marginBottom: '16px' }}>Filters</h3>
               <div className="space-y-2">
                 {[
@@ -198,7 +198,7 @@ export default function TasksPage() {
                     onChange={(e) => setFormData({ ...formData, dueTime: e.target.value })}
                   />
                 </div>
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-3" style={{ paddingTop: '12px' }}>
                   <Button variant="primary" type="submit">
                     {editingId ? 'Save Changes' : 'Add Task'}
                   </Button>
@@ -223,7 +223,7 @@ export default function TasksPage() {
                   const isOverdueTask = t.dueAt && isOverdue(t.dueAt) && t.status === 'open';
                   const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
                   return (
-                    <div key={t.id} style={{ paddingTop: '16px', paddingBottom: '20px', opacity: t.status === 'done' ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors border-b border-[var(--border)] last:border-b-0">
+                    <div key={t.id} style={{ paddingTop: '10px', paddingBottom: '10px', opacity: t.status === 'done' ? 0.5 : 1, transition: 'opacity 0.3s ease 2s' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors border-b border-[var(--border)] last:border-b-0">
                       <input
                         type="checkbox"
                         checked={t.status === 'done'}
@@ -246,7 +246,7 @@ export default function TasksPage() {
                         title={t.status === 'done' ? 'Mark as incomplete' : 'Mark as complete'}
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                           <div
                             className={`text-sm font-medium ${
                               t.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'
@@ -254,7 +254,7 @@ export default function TasksPage() {
                           >
                             {t.title}
                           </div>
-                          {isOverdueTask && <span style={{ display: 'inline-block', width: '6px', height: '6px', backgroundColor: 'var(--danger)', borderRadius: '50%', marginLeft: '4px' }} title="Overdue"></span>}
+                          {isOverdueTask && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                         </div>
                         {t.notes && (
                           <div className="text-xs text-[var(--text-muted)] mt-1">

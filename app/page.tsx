@@ -279,7 +279,7 @@ export default function Dashboard() {
                         onChange={(e) => setTaskFormData({ ...taskFormData, dueTime: e.target.value })}
                       />
                     </div>
-                    <div className="flex gap-3 pt-4">
+                    <div className="flex gap-3" style={{ paddingTop: '8px' }}>
                       <Button variant="primary" type="submit" size="sm">
                         {editingTaskId ? 'Save Changes' : 'Add Task'}
                       </Button>
@@ -297,10 +297,11 @@ export default function Dashboard() {
                     const dueHours = t.dueAt ? new Date(t.dueAt).getHours() : null;
                     const dueMinutes = t.dueAt ? new Date(t.dueAt).getMinutes() : null;
                     const dueTime = t.dueAt ? new Date(t.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+                    const isOverdueTask = t.dueAt && isOverdue(t.dueAt) && t.status === 'open';
                     const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
                     const course = courses.find((c) => c.id === t.courseId);
                     return (
-                      <div key={t.id} style={{ paddingTop: '14px', paddingBottom: '18px', opacity: t.status === 'done' ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group border-b border-[var(--border)] last:border-b-0">
+                      <div key={t.id} style={{ paddingTop: '10px', paddingBottom: '10px', opacity: t.status === 'done' ? 0.5 : 1, transition: 'opacity 0.3s ease 2s' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group border-b border-[var(--border)] last:border-b-0">
                         <input
                           type="checkbox"
                           checked={t.status === 'done'}
@@ -322,7 +323,7 @@ export default function Dashboard() {
                           }}
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-2">
                             <div
                               className={`text-sm font-medium ${
                                 t.status === 'done'
@@ -332,6 +333,7 @@ export default function Dashboard() {
                             >
                               {t.title}
                             </div>
+                            {isOverdueTask && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                           </div>
                           {t.notes && (
                             <div className="text-xs text-[var(--text-muted)] mt-1">
@@ -393,8 +395,8 @@ export default function Dashboard() {
           </div>
 
           {/* Quick Links */}
-          <div className="col-span-12 lg:col-span-4 h-full min-h-[240px]">
-            <Card title="Quick Links" className="h-full flex flex-col">
+          <div className="col-span-12 lg:col-span-4 min-h-[240px]" style={{ height: 'fit-content' }}>
+            <Card title="Quick Links" className="flex flex-col">
               {quickLinks.length > 0 ? (
                 <div className="space-y-3">
                   {quickLinks.map((link, idx) => (
