@@ -85,14 +85,14 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   };
 
   const incrementMinutes = () => {
-    const newMinutes = (parseInt(minutes) + 15) % 60;
+    const newMinutes = (parseInt(minutes) + 5) % 60;
     const formattedMinutes = String(newMinutes).padStart(2, '0');
     setMinutes(formattedMinutes);
     handleTimeChange(hours, formattedMinutes);
   };
 
   const decrementMinutes = () => {
-    const newMinutes = (parseInt(minutes) - 15 + 60) % 60;
+    const newMinutes = (parseInt(minutes) - 5 + 60) % 60;
     const formattedMinutes = String(newMinutes).padStart(2, '0');
     setMinutes(formattedMinutes);
     handleTimeChange(hours, formattedMinutes);
