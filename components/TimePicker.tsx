@@ -1,0 +1,176 @@
+'use client';
+
+import { useRef, useEffect, useState } from 'react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
+
+interface TimePickerProps {
+  value: string;
+  onChange: (time: string) => void;
+  label?: string;
+}
+
+export default function TimePicker({ value, onChange, label }: TimePickerProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [hours, setHours] = useState<string>('10');
+  const [minutes, setMinutes] = useState<string>('00');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Parse the initial value
+  useEffect(() => {
+    if (value) {
+      const [h, m] = value.split(':');
+      setHours(h);
+      setMinutes(m);
+    }
+  }, [value]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleTimeChange = () => {
+    const formattedHours = String(parseInt(hours) || 0).padStart(2, '0');
+    const formattedMinutes = String(parseInt(minutes) || 0).padStart(2, '0');
+    const timeValue = `${formattedHours}:${formattedMinutes}`;
+    onChange(timeValue);
+  };
+
+  const incrementHours = () => {
+    const newHours = (parseInt(hours) + 1) % 24;
+    setHours(String(newHours).padStart(2, '0'));
+  };
+
+  const decrementHours = () => {
+    const newHours = (parseInt(hours) - 1 + 24) % 24;
+    setHours(String(newHours).padStart(2, '0'));
+  };
+
+  const incrementMinutes = () => {
+    const newMinutes = (parseInt(minutes) + 15) % 60;
+    setMinutes(String(newMinutes).padStart(2, '0'));
+  };
+
+  const decrementMinutes = () => {
+    const newMinutes = (parseInt(minutes) - 15 + 60) % 60;
+    setMinutes(String(newMinutes).padStart(2, '0'));
+  };
+
+  const handleHourInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.length > 2) val = val.slice(0, 2);
+    const numVal = parseInt(val) || 0;
+    if (numVal > 23) val = '23';
+    setHours(val.padStart(2, '0'));
+  };
+
+  const handleMinuteInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.length > 2) val = val.slice(0, 2);
+    const numVal = parseInt(val) || 0;
+    if (numVal > 59) val = '59';
+    setMinutes(val.padStart(2, '0'));
+  };
+
+  useEffect(() => {
+    handleTimeChange();
+  }, [hours, minutes]);
+
+  return (
+    <div ref={dropdownRef} className="relative w-full" style={{ minWidth: '120px' }}>
+      {label && (
+        <label className="block text-sm font-medium text-[var(--text)] mb-2">
+          {label}
+        </label>
+      )}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)] flex items-center justify-between"
+        style={{ padding: '10px 12px' }}
+      >
+        <span className="text-sm font-medium">{hours}:{minutes}</span>
+        <ChevronUp
+          size={18}
+          className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          style={{ opacity: 0.7 }}
+        />
+      </button>
+
+      {isOpen && (
+        <div
+          className="absolute top-full left-0 right-0 mt-1 bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg z-10"
+          style={{ minWidth: '180px' }}
+        >
+          <div style={{ padding: '16px' }}>
+            <div className="flex items-center gap-4 justify-center">
+              {/* Hours */}
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  type="button"
+                  onClick={incrementHours}
+                  className="p-1 rounded text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                >
+                  <ChevronUp size={18} />
+                </button>
+                <input
+                  type="text"
+                  value={hours}
+                  onChange={handleHourInput}
+                  className="w-12 text-center bg-[var(--panel)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] text-sm font-semibold"
+                  style={{ padding: '6px' }}
+                  maxLength={2}
+                />
+                <button
+                  type="button"
+                  onClick={decrementHours}
+                  className="p-1 rounded text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                >
+                  <ChevronDown size={18} />
+                </button>
+                <span className="text-xs text-[var(--text-muted)] mt-1">hours</span>
+              </div>
+
+              {/* Separator */}
+              <div className="text-[var(--text)] text-lg font-semibold">:</div>
+
+              {/* Minutes */}
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  type="button"
+                  onClick={incrementMinutes}
+                  className="p-1 rounded text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                >
+                  <ChevronUp size={18} />
+                </button>
+                <input
+                  type="text"
+                  value={minutes}
+                  onChange={handleMinuteInput}
+                  className="w-12 text-center bg-[var(--panel)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] text-sm font-semibold"
+                  style={{ padding: '6px' }}
+                  maxLength={2}
+                />
+                <button
+                  type="button"
+                  onClick={decrementMinutes}
+                  className="p-1 rounded text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                >
+                  <ChevronDown size={18} />
+                </button>
+                <span className="text-xs text-[var(--text-muted)] mt-1">minutes</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

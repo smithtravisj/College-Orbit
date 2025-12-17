@@ -5,6 +5,7 @@ import useAppStore from '@/lib/store';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import DaysDropdown from '@/components/DaysDropdown';
+import TimePicker from '@/components/TimePicker';
 import { Plus, Trash2 } from 'lucide-react';
 
 interface CourseFormProps {
@@ -111,27 +112,23 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
                   setForm({ ...form, meetingTimes: newMeetingTimes });
                 }}
               />
-              <Input
+              <TimePicker
                 label={idx === 0 ? 'Start' : ''}
-                type="time"
                 value={mt.start}
-                onChange={(e) => {
+                onChange={(time) => {
                   const newMeetingTimes = [...form.meetingTimes];
-                  newMeetingTimes[idx].start = e.target.value;
+                  newMeetingTimes[idx].start = time;
                   setForm({ ...form, meetingTimes: newMeetingTimes });
                 }}
-                className="w-32"
               />
-              <Input
+              <TimePicker
                 label={idx === 0 ? 'End' : ''}
-                type="time"
                 value={mt.end}
-                onChange={(e) => {
+                onChange={(time) => {
                   const newMeetingTimes = [...form.meetingTimes];
-                  newMeetingTimes[idx].end = e.target.value;
+                  newMeetingTimes[idx].end = time;
                   setForm({ ...form, meetingTimes: newMeetingTimes });
                 }}
-                className="w-32"
               />
               <Input
                 label={idx === 0 ? 'Location' : ''}
