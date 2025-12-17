@@ -91,8 +91,8 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-[var(--text)] mb-2">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-semibold text-[var(--text)] mb-3">
             BYU Survival Tool
           </h1>
           <p className="text-[var(--text-muted)]">Create your account</p>
@@ -108,7 +108,7 @@ export default function SignupPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
                 <p className="text-sm text-red-500">{error}</p>
@@ -157,18 +157,20 @@ export default function SignupPage() {
               </p>
             </div>
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? 'Creating account...' : 'Create Account'}
-            </Button>
+            <div className="pt-2 pb-2">
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                disabled={loading}
+                className="w-full"
+              >
+                {loading ? 'Creating account...' : 'Create Account'}
+              </Button>
+            </div>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-8 text-center">
             <p className="text-sm text-[var(--text-muted)]">
               Already have an account?{' '}
               <Link
