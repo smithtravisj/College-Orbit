@@ -169,8 +169,18 @@ export function getEventsForDate(
   const courseEvents = getCourseEventsForDate(date, courses);
   const taskDeadlineEvents = getTaskDeadlineEventsForDate(date, tasks, deadlines);
 
-  // Sort by time (courses by start time, tasks/deadlines by time)
+  // Sort by type priority (courses > deadlines > tasks), then by time
   return [...courseEvents, ...taskDeadlineEvents].sort((a, b) => {
+    // Priority order: course, deadline, task
+    const typePriority: Record<string, number> = { course: 0, deadline: 1, task: 2 };
+    const priorityA = typePriority[a.type];
+    const priorityB = typePriority[b.type];
+
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    // Within same type, sort by time
     const timeA = a.time || '';
     const timeB = b.time || '';
     return timeA.localeCompare(timeB);
