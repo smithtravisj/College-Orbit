@@ -105,13 +105,13 @@ export default function CalendarMonthView({
               {/* Date number */}
               <div
                 style={{
-                  fontSize: '0.95rem',
+                  fontSize: '0.80rem',
                   fontWeight: 600,
-                  marginBottom: '8px',
-                  paddingLeft: '6px',
-                  paddingRight: '6px',
-                  paddingTop: '4px',
-                  paddingBottom: '4px',
+                  marginBottom: '6px',
+                  paddingLeft: '4px',
+                  paddingRight: '4px',
+                  paddingTop: '2px',
+                  paddingBottom: '2px',
                   color: isTodayDate ? 'var(--accent)' : 'var(--text)',
                   lineHeight: 1,
                 }}
