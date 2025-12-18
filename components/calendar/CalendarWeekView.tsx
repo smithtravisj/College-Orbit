@@ -108,7 +108,7 @@ export default function CalendarWeekView({
                     alignItems: 'flex-start',
                     justifyContent: 'flex-end',
                     paddingTop: '0px',
-                    borderBottom: '1px solid var(--border)',
+                    borderTop: '1px solid var(--border)',
                   }}
                 >
                   {displayHour} {ampm}
