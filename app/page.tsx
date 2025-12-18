@@ -904,7 +904,7 @@ export default function Dashboard() {
                       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                       return (
                         <div key={dateKey} style={{ paddingBottom: '32px' }}>
-                          <div className="text-base font-semibold text-[var(--text)] uppercase tracking-wide mb-4">
+                          <div className="text-base font-semibold text-[var(--text)] uppercase tracking-wide mb-5">
                             {dayName}, {dateStr}
                           </div>
                           {classes.length > 0 ? (
