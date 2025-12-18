@@ -116,7 +116,8 @@ export default function SettingsPage() {
                   <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>days</span>
                 </div>
                 <Button size="lg" onClick={() => {
-                  const val = typeof dueSoonDays === 'string' ? parseInt(dueSoonDays) : dueSoonDays;
+                  const inputValue = dueSoonInputRef.current?.value || '';
+                  const val = parseInt(inputValue);
                   if (!isNaN(val) && val >= 1 && val <= 30) {
                     updateSettings({ dueSoonWindowDays: val });
                   }
