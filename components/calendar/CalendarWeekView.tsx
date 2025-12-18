@@ -88,7 +88,7 @@ export default function CalendarWeekView({
       </div>
 
       {/* Time grid */}
-      <div style={{ flex: 1, overflow: 'auto', overscrollBehavior: 'contain' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)' }}>
           {/* Time column */}
           <div style={{ borderRight: '1px solid var(--border)', paddingTop: '8px', backgroundColor: 'var(--panel-2)', flexShrink: 0 }}>
