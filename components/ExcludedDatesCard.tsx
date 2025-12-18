@@ -40,7 +40,48 @@ export default function ExcludedDatesCard() {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
-  const sortedDates = [...excludedDates].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const groupedDates = (() => {
+    const sorted = [...excludedDates].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const groups: Array<{ dates: typeof excludedDates; startDate: string; endDate: string; courseId: string | null; description: string }> = [];
+
+    for (const date of sorted) {
+      // Check if this date should be grouped with the last group
+      if (groups.length > 0) {
+        const lastGroup = groups[groups.length - 1];
+        const lastDate = lastGroup.dates[lastGroup.dates.length - 1];
+
+        // Parse dates to check if consecutive
+        const [lastYear, lastMonth, lastDay] = lastDate.date.split('-').map(Number);
+        const [currentYear, currentMonth, currentDay] = date.date.split('-').map(Number);
+        const lastDateObj = new Date(lastYear, lastMonth - 1, lastDay);
+        const currentDateObj = new Date(currentYear, currentMonth - 1, currentDay);
+
+        // Check if consecutive and same courseId/description
+        const dayDiff = (currentDateObj.getTime() - lastDateObj.getTime()) / (1000 * 60 * 60 * 24);
+        if (
+          dayDiff === 1 &&
+          date.courseId === lastGroup.courseId &&
+          date.description === lastGroup.description
+        ) {
+          // Add to existing group
+          lastGroup.dates.push(date);
+          lastGroup.endDate = date.date;
+          continue;
+        }
+      }
+
+      // Start a new group
+      groups.push({
+        dates: [date],
+        startDate: date.date,
+        endDate: date.date,
+        courseId: date.courseId,
+        description: date.description,
+      });
+    }
+
+    return groups;
+  })();
 
   return (
     <Card>
@@ -76,67 +117,83 @@ export default function ExcludedDatesCard() {
         </div>
       )}
 
-      {sortedDates.length === 0 ? (
+      {groupedDates.length === 0 ? (
         <EmptyState
           title="No excluded dates"
           description="Add holidays or days with no classes to keep your calendar organized"
         />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {sortedDates.map((excludedDate) => (
-            <div
-              key={excludedDate.id}
-              style={{
-                padding: '12px 16px',
-                backgroundColor: 'var(--background-secondary)',
-                borderRadius: '8px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <div>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '13px', color: 'var(--text)' }}>
-                    {getCourseName(excludedDate.courseId)}
-                  </span>
-                  <span style={{ fontSize: '12px', backgroundColor: 'var(--border)', padding: '2px 8px', borderRadius: '4px', color: 'var(--text)' }}>
-                    {formatDate(excludedDate.date)}
-                  </span>
-                </div>
-                <p style={{ fontSize: '14px', fontWeight: '500', margin: 0, color: 'var(--text)' }}>
-                  {excludedDate.description}
-                </p>
-              </div>
-              <button
-                onClick={() => handleDelete(excludedDate.id)}
-                disabled={isDeleting.has(excludedDate.id)}
+          {groupedDates.map((group) => {
+            const isRange = group.dates.length > 1;
+            const dateDisplay = isRange
+              ? `${formatDate(group.startDate)} - ${formatDate(group.endDate)}`
+              : formatDate(group.startDate);
+            const anyDeleting = group.dates.some(d => isDeleting.has(d.id));
+
+            return (
+              <div
+                key={group.dates[0].id}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: isDeleting.has(excludedDate.id) ? 'not-allowed' : 'pointer',
-                  padding: '8px',
-                  color: 'var(--text-muted)',
-                  opacity: isDeleting.has(excludedDate.id) ? 0.5 : 1,
-                  transition: 'color 0.2s',
+                  padding: '12px 16px',
+                  backgroundColor: 'var(--background-secondary)',
+                  borderRadius: '8px',
                   display: 'flex',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
                 }}
-                onMouseEnter={(e) => {
-                  if (!isDeleting.has(excludedDate.id)) {
-                    (e.target as HTMLElement).style.color = '#ef4444';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isDeleting.has(excludedDate.id)) {
-                    (e.target as HTMLElement).style.color = 'var(--text-muted)';
-                  }
-                }}
               >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          ))}
+                <div>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--text)' }}>
+                      {getCourseName(group.courseId)}
+                    </span>
+                    <span style={{ fontSize: '12px', backgroundColor: 'var(--border)', padding: '2px 8px', borderRadius: '4px', color: 'var(--text)' }}>
+                      {dateDisplay}
+                    </span>
+                    {isRange && (
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                        ({group.dates.length} days)
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: '14px', fontWeight: '500', margin: 0, color: 'var(--text)' }}>
+                    {group.description}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    // Delete all dates in the group
+                    group.dates.forEach(date => handleDelete(date.id));
+                  }}
+                  disabled={anyDeleting}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: anyDeleting ? 'not-allowed' : 'pointer',
+                    padding: '8px',
+                    color: 'var(--text-muted)',
+                    opacity: anyDeleting ? 0.5 : 1,
+                    transition: 'color 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!anyDeleting) {
+                      (e.target as HTMLElement).style.color = '#ef4444';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!anyDeleting) {
+                      (e.target as HTMLElement).style.color = 'var(--text-muted)';
+                    }
+                  }}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </Card>
