@@ -271,18 +271,7 @@ export default function EventDetailModal({
     }
   };
 
-  const handleDoneAndClose = async () => {
-    if (event.type === 'task' && 'id' in fullData) {
-      const task = fullData as Task;
-      await updateTask(task.id, {
-        status: 'done',
-      });
-    } else if (event.type === 'deadline' && 'id' in fullData) {
-      const deadline = fullData as Deadline;
-      await updateDeadline(deadline.id, {
-        status: 'done',
-      });
-    }
+  const handleDoneAndClose = () => {
     onClose();
   };
 
