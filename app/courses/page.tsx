@@ -53,7 +53,15 @@ export default function CoursesPage() {
   if (termFilter === 'all' && !showEnded) {
     filteredCourses = filteredCourses.filter((course) => {
       if (!course.endDate) return true; // Show courses with no end date
-      return new Date(course.endDate) > new Date(); // Show courses that haven't ended
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endDate = new Date(course.endDate);
+      endDate.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      return endDate >= tomorrow; // Show courses that haven't ended (endDate is not before tomorrow)
     });
   }
 

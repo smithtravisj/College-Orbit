@@ -221,9 +221,23 @@ export default function Dashboard() {
 
   // Helper function to check if a course is currently active
   const isCourseCurrent = (course: any) => {
-    const now = new Date();
-    if (course.startDate && new Date(course.startDate) > now) return false; // Course hasn't started
-    if (course.endDate && new Date(course.endDate) < now) return false; // Course has ended
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to midnight for date-only comparison
+
+    if (course.startDate) {
+      const startDate = new Date(course.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      if (startDate > today) return false; // Course hasn't started
+    }
+
+    if (course.endDate) {
+      const endDate = new Date(course.endDate);
+      endDate.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      if (endDate < tomorrow) return false; // Course has ended (endDate is before tomorrow)
+    }
+
     return true;
   };
 
