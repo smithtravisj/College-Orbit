@@ -11,6 +11,7 @@ export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
   const [dueSoonDays, setDueSoonDays] = useState<number | string>(7);
   const [exportMessage, setExportMessage] = useState('');
+  const [saveMessage, setSaveMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
@@ -115,15 +116,33 @@ export default function SettingsPage() {
                   />
                   <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>days</span>
                 </div>
-                <Button size="lg" onClick={() => {
+                <Button size="lg" onClick={async () => {
                   const inputValue = dueSoonInputRef.current?.value || '';
                   const val = parseInt(inputValue);
+                  if (!inputValue) {
+                    setSaveMessage('Please enter a value');
+                    setTimeout(() => setSaveMessage(''), 3000);
+                    return;
+                  }
                   if (!isNaN(val) && val >= 1 && val <= 30) {
-                    updateSettings({ dueSoonWindowDays: val });
+                    try {
+                      await updateSettings({ dueSoonWindowDays: val });
+                      setSaveMessage('Saved successfully!');
+                      setTimeout(() => setSaveMessage(''), 3000);
+                    } catch (error) {
+                      setSaveMessage('Error saving: ' + (error instanceof Error ? error.message : 'Unknown error'));
+                      setTimeout(() => setSaveMessage(''), 3000);
+                    }
+                  } else {
+                    setSaveMessage('Please enter a number between 1 and 30');
+                    setTimeout(() => setSaveMessage(''), 3000);
                   }
                 }} style={{ marginTop: '16px', paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#132343', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                   Save
                 </Button>
+                {saveMessage && (
+                  <p style={{ marginTop: '8px', fontSize: '14px', color: saveMessage.includes('Error') ? 'var(--danger)' : 'var(--success)' }}>{saveMessage}</p>
+                )}
               </div>
             </div>
           </Card>
