@@ -10,6 +10,8 @@ import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 import Link from 'next/link';
 import { MapPin, ExternalLink, Edit2, Trash2, Plus } from 'lucide-react';
+import CalendarPicker from '@/components/CalendarPicker';
+import TimePicker from '@/components/TimePicker';
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
@@ -356,17 +358,15 @@ export default function Dashboard() {
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <Input
+                      <CalendarPicker
                         label="Due date (optional)"
-                        type="date"
                         value={deadlineFormData.dueDate}
-                        onChange={(e) => setDeadlineFormData({ ...deadlineFormData, dueDate: e.target.value })}
+                        onChange={(date) => setDeadlineFormData({ ...deadlineFormData, dueDate: date })}
                       />
-                      <Input
+                      <TimePicker
                         label="Due time (optional)"
-                        type="time"
                         value={deadlineFormData.dueTime}
-                        onChange={(e) => setDeadlineFormData({ ...deadlineFormData, dueTime: e.target.value })}
+                        onChange={(time) => setDeadlineFormData({ ...deadlineFormData, dueTime: time })}
                       />
                     </div>
                     <div style={{ paddingTop: '12px' }}>
@@ -572,17 +572,15 @@ export default function Dashboard() {
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <Input
+                    <CalendarPicker
                       label="Due date (optional)"
-                      type="date"
                       value={taskFormData.dueDate}
-                      onChange={(e) => setTaskFormData({ ...taskFormData, dueDate: e.target.value })}
+                      onChange={(date) => setTaskFormData({ ...taskFormData, dueDate: date })}
                     />
-                    <Input
+                    <TimePicker
                       label="Due time (optional)"
-                      type="time"
                       value={taskFormData.dueTime}
-                      onChange={(e) => setTaskFormData({ ...taskFormData, dueTime: e.target.value })}
+                      onChange={(time) => setTaskFormData({ ...taskFormData, dueTime: time })}
                     />
                   </div>
                   <div style={{ paddingTop: '12px' }}>

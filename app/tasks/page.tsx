@@ -9,6 +9,8 @@ import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 import { Plus, Trash2, Edit2 } from 'lucide-react';
+import CalendarPicker from '@/components/CalendarPicker';
+import TimePicker from '@/components/TimePicker';
 
 export default function TasksPage() {
   const [mounted, setMounted] = useState(false);
@@ -231,17 +233,15 @@ export default function TasksPage() {
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <Input
+                  <CalendarPicker
                     label="Due date (optional)"
-                    type="date"
                     value={formData.dueDate}
-                    onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                    onChange={(date) => setFormData({ ...formData, dueDate: date })}
                   />
-                  <Input
+                  <TimePicker
                     label="Due time (optional)"
-                    type="time"
                     value={formData.dueTime}
-                    onChange={(e) => setFormData({ ...formData, dueTime: e.target.value })}
+                    onChange={(time) => setFormData({ ...formData, dueTime: time })}
                   />
                 </div>
                 <div style={{ paddingTop: '12px' }}>
