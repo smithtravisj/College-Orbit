@@ -669,7 +669,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       if (data.courses && data.courses.length > 0) {
         console.log('Importing courses:', data.courses.length);
         for (const course of data.courses) {
-          const { id, createdAt, updatedAt, ...courseData } = course as any;
+          const { id, createdAt, updatedAt, userId, ...courseData } = course as any;
           await store.addCourse(courseData);
         }
       }
@@ -678,7 +678,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       if (data.deadlines && data.deadlines.length > 0) {
         console.log('Importing deadlines:', data.deadlines.length);
         for (const deadline of data.deadlines) {
-          const { id, createdAt, updatedAt, ...deadlineData } = deadline as any;
+          const { id, createdAt, updatedAt, userId, ...deadlineData } = deadline as any;
           await store.addDeadline(deadlineData);
         }
       }
@@ -687,7 +687,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       if (data.tasks && data.tasks.length > 0) {
         console.log('Importing tasks:', data.tasks.length);
         for (const task of data.tasks) {
-          const { id, createdAt, updatedAt, ...taskData } = task as any;
+          const { id, createdAt, updatedAt, userId, ...taskData } = task as any;
           await store.addTask(taskData);
         }
       }
@@ -696,7 +696,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       if (data.excludedDates && data.excludedDates.length > 0) {
         console.log('Importing excluded dates:', data.excludedDates.length);
         for (const excludedDate of data.excludedDates) {
-          const { id, createdAt, updatedAt, ...excludedDateData } = excludedDate as any;
+          const { id, createdAt, updatedAt, userId, ...excludedDateData } = excludedDate as any;
           console.log('Adding excluded date:', excludedDateData);
           await store.addExcludedDate(excludedDateData);
         }
@@ -708,7 +708,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       if (data.gpaEntries && data.gpaEntries.length > 0) {
         console.log('Importing GPA entries:', data.gpaEntries.length);
         for (const gpaEntry of data.gpaEntries) {
-          const { id, createdAt, updatedAt, ...gpaEntryData } = gpaEntry as any;
+          const { id, createdAt, updatedAt, userId, ...gpaEntryData } = gpaEntry as any;
           console.log('Adding GPA entry:', gpaEntryData);
           await store.addGpaEntry(gpaEntryData);
         }
