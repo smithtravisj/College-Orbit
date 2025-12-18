@@ -113,6 +113,9 @@ export default function SettingsPage() {
                   />
                   <span className="text-sm text-[var(--text-secondary)]">days</span>
                 </div>
+                <Button size="lg" onClick={() => updateSettings({ dueSoonWindowDays: dueSoonDays })} style={{ marginTop: '16px', paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#132343', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                  Save
+                </Button>
               </div>
             </div>
           </Card>
