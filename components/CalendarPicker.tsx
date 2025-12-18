@@ -160,7 +160,10 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
             }}
           >
             <button
-              onClick={handlePrevMonth}
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePrevMonth();
+              }}
               style={{
                 background: 'none',
                 border: 'none',
@@ -178,7 +181,10 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
               {monthName}
             </div>
             <button
-              onClick={handleNextMonth}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNextMonth();
+              }}
               style={{
                 background: 'none',
                 border: 'none',
