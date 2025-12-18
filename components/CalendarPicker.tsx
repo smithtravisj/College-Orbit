@@ -70,9 +70,9 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
     : '';
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+    <div ref={containerRef} style={{ position: 'relative', display: 'block', width: '100%' }}>
       {label && (
-        <div style={{ marginBottom: '4px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+        <div style={{ marginBottom: '4px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>
           {label}
         </div>
       )}
@@ -112,9 +112,10 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
             border: '1px solid var(--border)',
             borderRadius: 'var(--radius-control)',
             padding: '12px',
-            zIndex: 1000,
+            zIndex: 50,
             minWidth: '260px',
             boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+            pointerEvents: 'auto',
           }}
         >
           {/* Month Header */}
