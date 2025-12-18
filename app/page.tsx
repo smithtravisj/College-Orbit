@@ -903,14 +903,14 @@ export default function Dashboard() {
                       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                       return (
-                        <div key={dateKey} style={{ paddingBottom: '40px' }}>
-                          <div className="text-base font-semibold text-[var(--text)] uppercase tracking-wide" style={{ marginBottom: '20px' }}>
+                        <div key={dateKey} style={{ paddingBottom: '28px' }}>
+                          <div className="text-base font-semibold text-[var(--text)] uppercase tracking-wide" style={{ marginBottom: '12px' }}>
                             {dayName}, {dateStr}
                           </div>
                           {classes.length > 0 ? (
-                            <div style={{ paddingLeft: '12px' }}>
+                            <div style={{ paddingLeft: '8px' }}>
                               {classes.map((cls, idx) => (
-                                <div key={idx} style={{ marginBottom: idx !== classes.length - 1 ? '24px' : '0px' }}>
+                                <div key={idx} style={{ marginBottom: idx !== classes.length - 1 ? '16px' : '0px' }}>
                                   <div className="text-sm font-medium text-[var(--text)]">
                                     {cls.courseCode}{cls.courseName ? ` - ${cls.courseName}` : ''}
                                   </div>
