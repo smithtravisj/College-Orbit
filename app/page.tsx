@@ -903,21 +903,21 @@ export default function Dashboard() {
                       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                       return (
-                        <div key={dateKey} style={{ paddingBottom: '32px' }}>
-                          <div className="text-base font-semibold text-[var(--text)] uppercase tracking-wide mb-5">
+                        <div key={dateKey} style={{ paddingBottom: '40px' }}>
+                          <div className="text-base font-semibold text-[var(--text)] uppercase tracking-wide" style={{ marginBottom: '20px' }}>
                             {dayName}, {dateStr}
                           </div>
                           {classes.length > 0 ? (
-                            <div className="space-y-6 pl-3">
+                            <div style={{ paddingLeft: '12px' }}>
                               {classes.map((cls, idx) => (
-                                <div key={idx}>
+                                <div key={idx} style={{ marginBottom: idx !== classes.length - 1 ? '24px' : '0px' }}>
                                   <div className="text-sm font-medium text-[var(--text)]">
                                     {cls.courseCode}{cls.courseName ? ` - ${cls.courseName}` : ''}
                                   </div>
-                                  <div className="text-sm text-[var(--text-secondary)] mt-1">
+                                  <div className="text-sm text-[var(--text-secondary)]" style={{ marginTop: '8px' }}>
                                     {formatTime12Hour(cls.start)} – {formatTime12Hour(cls.end)}
                                   </div>
-                                  <div className="text-sm text-[var(--text-secondary)] mt-0.5">
+                                  <div className="text-sm text-[var(--text-secondary)]" style={{ marginTop: '4px' }}>
                                     {cls.location}
                                   </div>
                                 </div>
