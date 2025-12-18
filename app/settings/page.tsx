@@ -15,6 +15,7 @@ export default function SettingsPage() {
   const [exportMessage, setExportMessage] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
   const [importMessage, setImportMessage] = useState('');
+  const [deleteMessage, setDeleteMessage] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
@@ -86,11 +87,11 @@ export default function SettingsPage() {
     try {
       await deleteAllData();
       setShowDeleteConfirm(false);
-      setImportMessage('✓ All data deleted successfully');
-      setTimeout(() => setImportMessage(''), 3000);
+      setDeleteMessage('✓ All data deleted successfully');
+      setTimeout(() => setDeleteMessage(''), 3000);
     } catch (error) {
-      setImportMessage('✗ Failed to delete data');
-      setTimeout(() => setImportMessage(''), 3000);
+      setDeleteMessage('✗ Failed to delete data');
+      setTimeout(() => setDeleteMessage(''), 3000);
     }
   };
 
@@ -237,6 +238,9 @@ export default function SettingsPage() {
                   <Trash2 size={18} />
                   Delete All Data
                 </Button>
+                {deleteMessage && (
+                  <p style={{ marginTop: '8px', fontSize: '14px', color: deleteMessage.includes('✓') ? 'var(--success)' : 'var(--danger)' }}>{deleteMessage}</p>
+                )}
               </div>
             </div>
           </Card>
