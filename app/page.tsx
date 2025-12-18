@@ -234,10 +234,19 @@ export default function Dashboard() {
 
   const overdueTasks = tasks.filter((d) => d.dueAt && isOverdue(d.dueAt) && d.status === 'open');
 
-  // Get quick links
-  const quickLinks = courses
-    .flatMap((c) => c.links.map((l) => ({ ...l, courseId: c.id, courseName: c.name })))
-    .slice(0, 6);
+  // Get quick links - use hardcoded BYU resources
+  const quickLinks = [
+    { label: 'Home', url: 'https://www.byu.edu/' },
+    { label: '2026 Calendar', url: 'https://academiccalendar.byu.edu/?y=2026' },
+    { label: 'MyBYU', url: 'https://my.byu.edu/' },
+    { label: 'Record Summary', url: 'https://y.byu.edu/ry/ae/prod/records/cgi/stdCourseWork.cgi' },
+    { label: 'MyMap W2026', url: 'https://commtech.byu.edu/auth/mymap/?yearTerm=20261&proxyId=509241872#/' },
+    { label: 'Financial Center', url: 'https://sa.byu.edu/psc/ps/EMPLOYEE/SA/c/Y_MY_FINANCIAL_CENTER.Y_MFC_HOME_V2_FL.GBL?Page=Y_MFC_HOME_V2_FL&EMPLID=247348708&OPRID=ins0417&' },
+    { label: 'BYU Outlook', url: 'https://outlook.office.com/mail/' },
+    { label: 'BYU Library', url: 'https://lib.byu.edu/' },
+    { label: 'Residence Life', url: 'https://reslife.byu.edu/' },
+    { label: 'Endorsement', url: 'https://endorse.byu.edu/' },
+  ];
 
   // Status summary
   const classesLeft = todayClasses.filter((c) => c.start > nowTime).length;
@@ -809,29 +818,21 @@ export default function Dashboard() {
 
           {/* Quick Links */}
           <div className="col-span-12 lg:col-span-6 lg:flex">
-            <Card title="Quick Links" className="h-full flex flex-col w-full">
-            {quickLinks.length > 0 ? (
-              <div className="space-y-3">
-                {quickLinks.map((link, idx) => (
-                  <a
-                    key={idx}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between px-4 py-4 rounded-[var(--radius-control)] hover:bg-white/5 transition-colors group text-sm"
-                  >
-                    <span className="text-[var(--muted)] group-hover:text-[var(--text)] truncate">{link.label}</span>
-                    <ExternalLink size={16} className="text-[var(--muted)] group-hover:text-[var(--accent)] flex-shrink-0 ml-2" />
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="No quick links"
-                description="Add links in your courses"
-                action={{ label: 'Go to Courses', onClick: () => (window.location.href = '/courses') }}
-              />
-            )}
+            <Card title="Quick Links" subtitle="Useful BYU resources" className="h-full flex flex-col w-full">
+            <div className="grid grid-cols-2 gap-3">
+              {quickLinks.map((link) => (
+                <a
+                  key={link.url}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-[12px] text-center text-sm font-medium text-white transition-colors hover:opacity-80"
+                  style={{ display: 'block', padding: '12px', backgroundColor: '#132343', border: '1px solid var(--border)' }}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
             </Card>
           </div>
 
