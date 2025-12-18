@@ -226,14 +226,6 @@ export default function CalendarDayView({
               const eventWidth = 100 / layout.totalColumns;
               const eventLeft = layout.column * eventWidth;
 
-              const formatTime = (time: string) => {
-                const [hours, minutes] = time.split(':');
-                const hour = parseInt(hours);
-                const ampm = hour >= 12 ? 'PM' : 'AM';
-                const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-                return `${displayHour}:${minutes} ${ampm}`;
-              };
-
               return (
                 <div
                   key={event.id}
@@ -242,14 +234,13 @@ export default function CalendarDayView({
                     left: `calc(${eventLeft}% + 8px)`,
                     width: `calc(${eventWidth}% - 16px)`,
                     borderRadius: 'var(--radius-control)',
-                    padding: '8px',
+                    padding: '10px',
                     overflow: 'hidden',
                     cursor: 'pointer',
                     transition: 'opacity 0.2s',
                     top: `${top}px`,
                     height: `${height}px`,
                     backgroundColor: `${color}30`,
-                    borderLeft: `2px solid ${color}`,
                     zIndex: 9,
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
@@ -258,9 +249,6 @@ export default function CalendarDayView({
                 >
                   <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {event.title}
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {formatTime(event.time)}
                   </div>
                 </div>
               );
