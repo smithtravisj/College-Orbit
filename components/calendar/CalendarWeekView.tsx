@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import { Course, Task, Deadline } from '@/types';
 import {
   getWeekRange,
@@ -28,6 +28,16 @@ export default function CalendarWeekView({
   tasks,
   deadlines,
 }: CalendarWeekViewProps) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Scroll to 8 AM on mount
+    if (scrollContainerRef.current) {
+      const scrollPosition = 8 * HOUR_HEIGHT; // 8 AM
+      scrollContainerRef.current.scrollTop = scrollPosition;
+    }
+  }, []);
+
   const { start: weekStart } = getWeekRange(date);
 
   const weekDays = useMemo(() => {
@@ -89,7 +99,7 @@ export default function CalendarWeekView({
       </div>
 
       {/* Time grid */}
-      <div style={{ flex: 1, overflow: 'auto' }}>
+      <div ref={scrollContainerRef} style={{ flex: 1, overflow: 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)' }}>
           {/* Time column */}
           <div style={{ borderRight: '1px solid var(--border)', paddingTop: '8px', backgroundColor: 'var(--panel-2)', flexShrink: 0 }}>

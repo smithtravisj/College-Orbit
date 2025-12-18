@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import { Course, Task, Deadline } from '@/types';
 import {
   getEventsForDate,
@@ -27,6 +27,16 @@ export default function CalendarDayView({
   tasks,
   deadlines,
 }: CalendarDayViewProps) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Scroll to 8 AM on mount
+    if (scrollContainerRef.current) {
+      const scrollPosition = 8 * HOUR_HEIGHT; // 8 AM
+      scrollContainerRef.current.scrollTop = scrollPosition;
+    }
+  }, []);
+
   const events = useMemo(
     () => getEventsForDate(date, courses, tasks, deadlines),
     [date, courses, tasks, deadlines]
@@ -88,7 +98,7 @@ export default function CalendarDayView({
       )}
 
       {/* Time grid */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'auto' }}>
+      <div ref={scrollContainerRef} style={{ display: 'flex', flex: 1, overflow: 'auto' }}>
         {/* Time column */}
         <div style={{ width: '80px', borderRight: '1px solid var(--border)', paddingTop: '8px', paddingLeft: '8px', flexShrink: 0 }}>
           {hours.map((hour) => {
