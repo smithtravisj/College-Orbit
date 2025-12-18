@@ -10,7 +10,6 @@ import {
   calculateEventLayout,
   separateTaskDeadlineEvents,
 } from '@/lib/calendarUtils';
-import { isToday } from '@/lib/utils';
 
 interface CalendarDayViewProps {
   date: Date;
