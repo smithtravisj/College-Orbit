@@ -478,23 +478,21 @@ export default function EventDetailModal({
               >
                 Edit
               </Button>
-              {event.type !== 'course' && (
-                <Button
-                  variant="primary"
-                  size="md"
-                  onClick={handleDoneAndClose}
-                  style={{
-                    backgroundColor: '#132343',
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: '#202d48',
-                    paddingLeft: '16px',
-                    paddingRight: '16px',
-                  }}
-                >
-                  Done
-                </Button>
-              )}
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleDoneAndClose}
+                style={{
+                  backgroundColor: '#132343',
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: '#202d48',
+                  paddingLeft: '16px',
+                  paddingRight: '16px',
+                }}
+              >
+                Done
+              </Button>
             </>
           )}
         </div>
