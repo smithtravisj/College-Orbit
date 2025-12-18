@@ -38,18 +38,26 @@ export async function POST(req: NextRequest) {
 
     const data = await req.json();
 
+    const courseData: any = {
+      userId: session.user.id,
+      code: data.code,
+      name: data.name,
+      term: data.term,
+      meetingTimes: data.meetingTimes || [],
+      links: data.links || [],
+      colorTag: data.colorTag,
+    };
+
+    // Only add dates if they are provided
+    if (data.startDate) {
+      courseData.startDate = new Date(data.startDate);
+    }
+    if (data.endDate) {
+      courseData.endDate = new Date(data.endDate);
+    }
+
     const course = await prisma.course.create({
-      data: {
-        userId: session.user.id,
-        code: data.code,
-        name: data.name,
-        term: data.term,
-        startDate: data.startDate ? new Date(data.startDate) : null,
-        endDate: data.endDate ? new Date(data.endDate) : null,
-        meetingTimes: data.meetingTimes || [],
-        links: data.links || [],
-        colorTag: data.colorTag,
-      },
+      data: courseData,
     });
 
     return NextResponse.json({ course }, { status: 201 });
