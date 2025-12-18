@@ -43,18 +43,9 @@ export default function CoursesPage() {
     );
   }
 
-  // Filter out courses that have ended
-  const isCourseCurrent = (course: any) => {
-    if (!course.endDate) return true;
-    const endDate = new Date(course.endDate);
-    endDate.setHours(23, 59, 59, 999);
-    return endDate >= new Date();
-  };
-
-  // Get unique terms for filter (based on showEnded setting)
-  const coursesToShow = showEnded ? courses : courses.filter(isCourseCurrent);
-  const uniqueTerms = Array.from(new Set(coursesToShow.map((c) => c.term).filter(Boolean)));
-  const filteredCourses = (termFilter === 'all' ? coursesToShow : coursesToShow.filter((c) => c.term === termFilter));
+  // Get unique terms for filter
+  const uniqueTerms = Array.from(new Set(courses.map((c) => c.term).filter(Boolean)));
+  const filteredCourses = termFilter === 'all' ? courses : courses.filter((c) => c.term === termFilter);
 
   return (
     <>
