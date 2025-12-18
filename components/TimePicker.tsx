@@ -143,7 +143,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
         style={{ padding: '10px 12px' }}
       >
         <span className="text-sm font-medium">{hours.padStart(2, '0')}:{minutes.padStart(2, '0')} {isPM ? 'PM' : 'AM'}</span>
-        <ChevronUp
+        <ChevronDown
           size={18}
           className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
           style={{ opacity: 0.7 }}
