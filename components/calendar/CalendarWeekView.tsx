@@ -103,17 +103,6 @@ export default function CalendarWeekView({
           const isTodayDate = isToday(day);
           const dayName = getDayOfWeek(day);
           const isLastDay = index === weekDays.length - 1;
-          const exclusionType = getExclusionType(day, excludedDates);
-
-          // Get course code for cancelled classes
-          let courseCode = '';
-          if (exclusionType === 'class-cancelled') {
-            const exclusion = excludedDates.find((ex) => ex.date === dateStr && ex.courseId);
-            if (exclusion) {
-              const course = courses.find(c => c.id === exclusion.courseId);
-              courseCode = course?.code || '';
-            }
-          }
 
           return (
             <div
@@ -130,34 +119,12 @@ export default function CalendarWeekView({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '0px',
-                position: 'relative',
               }}
             >
               <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>{dayName}</div>
               <div style={{ fontSize: '1.125rem', fontWeight: 600, color: isTodayDate ? 'var(--accent)' : 'var(--text)' }}>
                 {day.getDate()}
               </div>
-              {exclusionType && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: '2px',
-                    left: '4px',
-                    right: '4px',
-                    fontSize: '0.65rem',
-                    backgroundColor: '#122343',
-                    color: 'white',
-                    padding: '2px 4px',
-                    borderRadius: '3px',
-                    fontWeight: 500,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {exclusionType === 'holiday' ? 'Holiday' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
-                </div>
-              )}
             </div>
           );
         })}
@@ -177,6 +144,20 @@ export default function CalendarWeekView({
           const { allDay: allDayEvents } = separateTaskDeadlineEvents(dayEvents);
           const isLastDay = index === weekDays.length - 1;
           const isTodayDate = isToday(day);
+          const exclusionType = getExclusionType(day, excludedDates);
+
+          // Get course code for cancelled classes
+          let courseCode = '';
+          if (exclusionType === 'class-cancelled') {
+            const exclusion = excludedDates.find((ex) => {
+              const exDateOnly = ex.date.includes('T') ? ex.date.split('T')[0] : ex.date;
+              return exDateOnly === dateStr && ex.courseId;
+            });
+            if (exclusion) {
+              const course = courses.find(c => c.id === exclusion.courseId);
+              courseCode = course?.code || '';
+            }
+          }
 
           return (
             <div
@@ -190,10 +171,32 @@ export default function CalendarWeekView({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '2px',
-                minHeight: allDayEvents.length > 0 ? '32px' : '24px',
+                minHeight: allDayEvents.length > 0 || exclusionType ? '32px' : '24px',
                 backgroundColor: isTodayDate ? 'rgba(83, 155, 245, 0.05)' : undefined,
               }}
             >
+              {exclusionType && (
+                <div
+                  style={{
+                    fontSize: '0.7rem',
+                    paddingLeft: '6px',
+                    paddingRight: '6px',
+                    paddingTop: '4px',
+                    paddingBottom: '4px',
+                    marginRight: '4px',
+                    borderRadius: '2px',
+                    backgroundColor: '#122343',
+                    color: 'white',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    lineHeight: 1,
+                    fontWeight: 500,
+                  }}
+                >
+                  {exclusionType === 'holiday' ? 'Holiday' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
+                </div>
+              )}
               {allDayEvents.map((event) => {
                 const color = getEventColor(event);
                 return (
