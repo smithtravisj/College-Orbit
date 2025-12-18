@@ -867,7 +867,6 @@ export default function Dashboard() {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                const fullDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
                 for (let i = 0; i < 7; i++) {
                   const date = new Date(today);
