@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Course, Task, Deadline } from '@/types';
+import { Course, Task, Deadline, ExcludedDate } from '@/types';
 import {
   getDatesInMonth,
   getEventsForDate,
@@ -20,6 +20,7 @@ interface CalendarMonthViewProps {
   deadlines: Deadline[];
   allTasks?: Task[];
   allDeadlines?: Deadline[];
+  excludedDates?: ExcludedDate[];
   onSelectDate: (date: Date) => void;
 }
 
@@ -31,6 +32,7 @@ export default function CalendarMonthView({
   deadlines,
   allTasks = [],
   allDeadlines = [],
+  excludedDates = [],
   onSelectDate,
 }: CalendarMonthViewProps) {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -41,13 +43,13 @@ export default function CalendarMonthView({
     const map = new Map<string, ReturnType<typeof getEventsForDate>>();
     dates.forEach((date) => {
       const dateStr = date.toISOString().split('T')[0];
-      const events = getEventsForDate(date, courses, tasks, deadlines);
+      const events = getEventsForDate(date, courses, tasks, deadlines, excludedDates);
       if (events.length > 0) {
         map.set(dateStr, events);
       }
     });
     return map;
-  }, [dates, courses, tasks, deadlines]);
+  }, [dates, courses, tasks, deadlines, excludedDates]);
 
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 

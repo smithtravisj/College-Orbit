@@ -59,9 +59,18 @@ export interface Settings {
   enableNotifications: boolean;
 }
 
+export interface ExcludedDate {
+  id: string;
+  courseId: string | null; // null = global holiday
+  date: string; // ISO date string (YYYY-MM-DD)
+  description: string;
+  createdAt: string; // ISO datetime
+}
+
 export interface AppData {
   courses: Course[];
   deadlines: Deadline[];
   tasks: Task[];
   settings: Settings;
+  excludedDates: ExcludedDate[];
 }

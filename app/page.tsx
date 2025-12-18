@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { isToday, formatDate, isOverdue } from '@/lib/utils';
+import { isDateExcluded } from '@/lib/calendarUtils';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -39,7 +40,7 @@ export default function Dashboard() {
     notes: '',
     links: [{ label: '', url: '' }],
   });
-  const { courses, deadlines, tasks, settings, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone, updateDeadline, deleteDeadline } = useAppStore();
+  const { courses, deadlines, tasks, settings, excludedDates, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone, updateDeadline, deleteDeadline } = useAppStore();
 
   useEffect(() => {
     initializeStore();
@@ -232,6 +233,11 @@ export default function Dashboard() {
     if (course.endDate) {
       const endStr = course.endDate.split('T')[0]; // Handle both timestamp and date string formats
       if (endStr < dateStr) return false; // Course has ended (endDate is before this date)
+    }
+
+    // Check if date is excluded
+    if (isDateExcluded(dateToCheck, course.id, excludedDates)) {
+      return false;
     }
 
     return true;

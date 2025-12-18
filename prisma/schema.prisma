@@ -24,6 +24,7 @@ model User {
   tasks         Task[]
   gpaEntries    GpaEntry[]
   settings      Settings?
+  excludedDates ExcludedDate[]
 
   @@index([email])
 }
@@ -46,6 +47,7 @@ model Course {
   deadlines     Deadline[]
   tasks         Task[]
   gpaEntries    GpaEntry[]
+  excludedDates ExcludedDate[]
 
   @@index([userId])
 }
@@ -122,4 +124,21 @@ model Settings {
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model ExcludedDate {
+  id          String    @id @default(cuid())
+  userId      String
+  courseId    String?
+  date        DateTime
+  description String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course?   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([date])
 }

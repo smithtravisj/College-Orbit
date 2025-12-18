@@ -1,4 +1,4 @@
-import { Course, Task, Deadline } from '@/types';
+import { Course, Task, Deadline, ExcludedDate } from '@/types';
 import { getDayOfWeek } from './utils';
 
 export interface CalendarEvent {
@@ -61,8 +61,41 @@ export function getDatesInMonth(year: number, month: number): Date[] {
   return dates;
 }
 
+// Check if a date is excluded (globally or for a specific course)
+export function isDateExcluded(
+  date: Date,
+  courseId: string | undefined,
+  excludedDates: ExcludedDate[]
+): boolean {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const dateStr = `${year}-${month}-${day}`;
+
+  return excludedDates.some((excluded) => {
+    const excludedYear = excluded.date.substring(0, 4);
+    const excludedMonth = excluded.date.substring(5, 7);
+    const excludedDay = excluded.date.substring(8, 10);
+    const excludedDateStr = `${excludedYear}-${excludedMonth}-${excludedDay}`;
+
+    if (excludedDateStr !== dateStr) return false;
+
+    // Global holiday (applies to all courses)
+    if (excluded.courseId === null) return true;
+
+    // Course-specific exclusion
+    if (courseId && excluded.courseId === courseId) return true;
+
+    return false;
+  });
+}
+
 // Check if a course meets on a specific date
-export function courseOccursOnDate(course: Course, date: Date): boolean {
+export function courseOccursOnDate(
+  course: Course,
+  date: Date,
+  excludedDates?: ExcludedDate[]
+): boolean {
   if (!course.meetingTimes || course.meetingTimes.length === 0) return false;
 
   const year = date.getFullYear();
@@ -74,6 +107,11 @@ export function courseOccursOnDate(course: Course, date: Date): boolean {
   if (course.startDate && course.startDate > dateStr) return false;
   if (course.endDate && course.endDate < dateStr) return false;
 
+  // Check if date is excluded
+  if (excludedDates && isDateExcluded(date, course.id, excludedDates)) {
+    return false;
+  }
+
   const dayName = getDayOfWeek(date);
 
   // Check if any meeting time matches this day of week
@@ -83,10 +121,11 @@ export function courseOccursOnDate(course: Course, date: Date): boolean {
 // Get all course events for a specific date
 export function getCourseEventsForDate(
   date: Date,
-  courses: Course[]
+  courses: Course[],
+  excludedDates?: ExcludedDate[]
 ): CalendarEvent[] {
   return courses
-    .filter((course) => courseOccursOnDate(course, date))
+    .filter((course) => courseOccursOnDate(course, date, excludedDates))
     .flatMap((course) =>
       course.meetingTimes
         .filter((mt) => mt.days.includes(getDayOfWeek(date)))
@@ -174,9 +213,10 @@ export function getEventsForDate(
   date: Date,
   courses: Course[],
   tasks: Task[],
-  deadlines: Deadline[]
+  deadlines: Deadline[],
+  excludedDates?: ExcludedDate[]
 ): CalendarEvent[] {
-  const courseEvents = getCourseEventsForDate(date, courses);
+  const courseEvents = getCourseEventsForDate(date, courses, excludedDates);
   const taskDeadlineEvents = getTaskDeadlineEventsForDate(date, tasks, deadlines);
 
   // Sort by type priority (courses > deadlines > tasks), then by time
@@ -203,7 +243,8 @@ export function getEventsForRange(
   endDate: Date,
   courses: Course[],
   tasks: Task[],
-  deadlines: Deadline[]
+  deadlines: Deadline[],
+  excludedDates?: ExcludedDate[]
 ): Map<string, CalendarEvent[]> {
   const eventsByDate = new Map<string, CalendarEvent[]>();
 
@@ -212,7 +253,7 @@ export function getEventsForRange(
 
   while (current <= endDate) {
     const dateStr = current.toISOString().split('T')[0];
-    const events = getEventsForDate(current, courses, tasks, deadlines);
+    const events = getEventsForDate(current, courses, tasks, deadlines, excludedDates);
     if (events.length > 0) {
       eventsByDate.set(dateStr, events);
     }
@@ -447,4 +488,63 @@ export function calculateEventLayout(events: CalendarEvent[]): EventLayout[] {
     column,
     totalColumns,
   }));
+}
+
+// Get description for an excluded date (prioritize global over course-specific)
+export function getExcludedDateDescription(
+  date: Date,
+  excludedDates: ExcludedDate[]
+): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const dateStr = `${year}-${month}-${day}`;
+
+  // Look for global holiday first
+  const globalExcluded = excludedDates.find((ex) => {
+    const exYear = ex.date.substring(0, 4);
+    const exMonth = ex.date.substring(5, 7);
+    const exDay = ex.date.substring(8, 10);
+    const exDateStr = `${exYear}-${exMonth}-${exDay}`;
+    return exDateStr === dateStr && ex.courseId === null;
+  });
+
+  if (globalExcluded) {
+    return globalExcluded.description;
+  }
+
+  // Then look for any course-specific exclusion
+  const courseExcluded = excludedDates.find((ex) => {
+    const exYear = ex.date.substring(0, 4);
+    const exMonth = ex.date.substring(5, 7);
+    const exDay = ex.date.substring(8, 10);
+    const exDateStr = `${exYear}-${exMonth}-${exDay}`;
+    return exDateStr === dateStr && ex.courseId !== null;
+  });
+
+  return courseExcluded?.description || '';
+}
+
+// Generate array of dates between start and end (inclusive)
+export function getDateRange(startDate: string, endDate: string): string[] {
+  const dates: string[] = [];
+  const current = new Date(startDate);
+  const end = new Date(endDate);
+
+  while (current <= end) {
+    dates.push(current.toISOString().split('T')[0]);
+    current.setDate(current.getDate() + 1);
+  }
+
+  return dates;
+}
+
+// Get all excluded dates for a course (including global holidays)
+export function getExcludedDatesForCourse(
+  courseId: string | null,
+  excludedDates: ExcludedDate[]
+): ExcludedDate[] {
+  return excludedDates.filter((ex) =>
+    ex.courseId === null || ex.courseId === courseId
+  );
 }

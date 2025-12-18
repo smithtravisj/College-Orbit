@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useEffect, useRef, useState } from 'react';
-import { Course, Task, Deadline } from '@/types';
+import { Course, Task, Deadline, ExcludedDate } from '@/types';
 import {
   getWeekRange,
   getEventsForDate,
@@ -22,6 +22,7 @@ interface CalendarWeekViewProps {
   deadlines: Deadline[];
   allTasks?: Task[];
   allDeadlines?: Deadline[];
+  excludedDates?: ExcludedDate[];
 }
 
 const HOUR_HEIGHT = 60; // pixels
@@ -35,6 +36,7 @@ export default function CalendarWeekView({
   deadlines,
   allTasks = [],
   allDeadlines = [],
+  excludedDates = [],
 }: CalendarWeekViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -62,11 +64,11 @@ export default function CalendarWeekView({
   const eventsByDay = useMemo(() => {
     const map = new Map<string, ReturnType<typeof getEventsForDate>>();
     weekDays.forEach((day) => {
-      const events = getEventsForDate(day, courses, tasks, deadlines);
+      const events = getEventsForDate(day, courses, tasks, deadlines, excludedDates);
       map.set(day.toISOString().split('T')[0], events);
     });
     return map;
-  }, [weekDays, courses, tasks, deadlines]);
+  }, [weekDays, courses, tasks, deadlines, excludedDates]);
 
   const eventLayoutsByDay = useMemo(() => {
     const map = new Map<string, ReturnType<typeof calculateEventLayout>>();

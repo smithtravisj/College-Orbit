@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useEffect, useRef, useState } from 'react';
-import { Course, Task, Deadline } from '@/types';
+import { Course, Task, Deadline, ExcludedDate } from '@/types';
 import {
   getEventsForDate,
   getTimeSlotPosition,
@@ -20,6 +20,7 @@ interface CalendarDayViewProps {
   deadlines: Deadline[];
   allTasks?: Task[];
   allDeadlines?: Deadline[];
+  excludedDates?: ExcludedDate[];
 }
 
 const HOUR_HEIGHT = 60; // pixels
@@ -33,6 +34,7 @@ export default function CalendarDayView({
   deadlines,
   allTasks = [],
   allDeadlines = [],
+  excludedDates = [],
 }: CalendarDayViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -46,8 +48,8 @@ export default function CalendarDayView({
   }, []);
 
   const events = useMemo(
-    () => getEventsForDate(date, courses, tasks, deadlines),
-    [date, courses, tasks, deadlines]
+    () => getEventsForDate(date, courses, tasks, deadlines, excludedDates),
+    [date, courses, tasks, deadlines, excludedDates]
   );
 
   const courseEvents = useMemo(() => events.filter((e) => e.type === 'course'), [events]);

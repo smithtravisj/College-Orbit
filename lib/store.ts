@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Course, Deadline, Task, Settings, AppData } from '@/types';
+import { Course, Deadline, Task, Settings, AppData, ExcludedDate } from '@/types';
 
 const DEFAULT_SETTINGS: Settings = {
   dueSoonWindowDays: 7,
@@ -15,6 +15,7 @@ interface AppStore {
   deadlines: Deadline[];
   tasks: Task[];
   settings: Settings;
+  excludedDates: ExcludedDate[];
   loading: boolean;
 
   // Initialization
@@ -39,6 +40,12 @@ interface AppStore {
   toggleTaskDone: (id: string) => Promise<void>;
   toggleChecklistItem: (taskId: string, itemId: string) => Promise<void>;
 
+  // Excluded Dates
+  addExcludedDate: (excludedDate: Omit<ExcludedDate, 'id' | 'createdAt'>) => Promise<void>;
+  addExcludedDateRange: (dates: Array<Omit<ExcludedDate, 'id' | 'createdAt'>>) => Promise<void>;
+  updateExcludedDate: (id: string, excludedDate: Partial<ExcludedDate>) => Promise<void>;
+  deleteExcludedDate: (id: string) => Promise<void>;
+
   // Settings
   updateSettings: (settings: Partial<Settings>) => Promise<void>;
 
@@ -53,6 +60,7 @@ const useAppStore = create<AppStore>((set, get) => ({
   deadlines: [],
   tasks: [],
   settings: DEFAULT_SETTINGS,
+  excludedDates: [],
   loading: false,
 
   initializeStore: async () => {
@@ -79,23 +87,26 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   loadFromDatabase: async () => {
     try {
-      const [coursesRes, deadlinesRes, tasksRes, settingsRes] = await Promise.all([
+      const [coursesRes, deadlinesRes, tasksRes, settingsRes, excludedDatesRes] = await Promise.all([
         fetch('/api/courses'),
         fetch('/api/deadlines'),
         fetch('/api/tasks'),
         fetch('/api/settings'),
+        fetch('/api/excluded-dates'),
       ]);
 
       const coursesData = await coursesRes.json();
       const deadlinesData = await deadlinesRes.json();
       const tasksData = await tasksRes.json();
       const settingsData = await settingsRes.json();
+      const excludedDatesData = await excludedDatesRes.json();
 
       set({
         courses: coursesData.courses || [],
         deadlines: deadlinesData.deadlines || [],
         tasks: tasksData.tasks || [],
         settings: settingsData.settings || DEFAULT_SETTINGS,
+        excludedDates: excludedDatesData.excludedDates || [],
       });
     } catch (error) {
       console.error('Failed to load from database:', error);
@@ -114,6 +125,7 @@ const useAppStore = create<AppStore>((set, get) => ({
           deadlines: data.deadlines || [],
           tasks: data.tasks || [],
           settings: data.settings || DEFAULT_SETTINGS,
+          excludedDates: data.excludedDates || [],
         });
       }
     } catch (error) {
@@ -426,6 +438,141 @@ const useAppStore = create<AppStore>((set, get) => ({
     }
   },
 
+  addExcludedDate: async (excludedDate) => {
+    // Optimistic update
+    const tempId = uuidv4();
+    const createdAt = new Date().toISOString();
+    set((state) => ({
+      excludedDates: [
+        ...state.excludedDates,
+        { ...excludedDate, id: tempId, createdAt } as ExcludedDate,
+      ],
+    }));
+
+    try {
+      // API call
+      const response = await fetch('/api/excluded-dates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...excludedDate, date: excludedDate.date }),
+      });
+
+      if (!response.ok) throw new Error('Failed to create excluded date');
+
+      const { excludedDates: updatedDates } = await response.json();
+
+      // Replace with server data
+      set({
+        excludedDates: updatedDates,
+      });
+    } catch (error) {
+      // Rollback on error
+      set((state) => ({
+        excludedDates: state.excludedDates.filter((ed) => ed.id !== tempId),
+      }));
+      console.error('Error creating excluded date:', error);
+      throw error;
+    }
+  },
+
+  addExcludedDateRange: async (dates) => {
+    // Optimistic update
+    const tempIds = dates.map(() => uuidv4());
+    const createdAt = new Date().toISOString();
+    set((state) => ({
+      excludedDates: [
+        ...state.excludedDates,
+        ...dates.map((d, idx) => ({ ...d, id: tempIds[idx], createdAt }) as ExcludedDate),
+      ],
+    }));
+
+    try {
+      // Prepare dates array for API
+      if (dates.length > 0) {
+        const response = await fetch('/api/excluded-dates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dates: dates.map((d) => d.date),
+            description: dates[0].description,
+            courseId: dates[0].courseId || null,
+          }),
+        });
+
+        if (!response.ok) throw new Error('Failed to create excluded dates');
+
+        const { excludedDates: updatedDates } = await response.json();
+
+        // Replace with server data
+        set({
+          excludedDates: updatedDates,
+        });
+      }
+    } catch (error) {
+      // Rollback on error
+      set((state) => ({
+        excludedDates: state.excludedDates.filter((ed) => !tempIds.includes(ed.id)),
+      }));
+      console.error('Error creating excluded date range:', error);
+      throw error;
+    }
+  },
+
+  updateExcludedDate: async (id, excludedDate) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        excludedDates: state.excludedDates.map((ed) =>
+          ed.id === id ? { ...ed, ...excludedDate } : ed
+        ),
+      }));
+
+      // API call
+      const response = await fetch(`/api/excluded-dates/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(excludedDate),
+      });
+
+      if (!response.ok) throw new Error('Failed to update excluded date');
+
+      const { excludedDate: updatedExcludedDate } = await response.json();
+
+      // Update with server response
+      set((state) => ({
+        excludedDates: state.excludedDates.map((ed) =>
+          ed.id === id ? updatedExcludedDate : ed
+        ),
+      }));
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error updating excluded date:', error);
+      throw error;
+    }
+  },
+
+  deleteExcludedDate: async (id) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        excludedDates: state.excludedDates.filter((ed) => ed.id !== id),
+      }));
+
+      // API call
+      const response = await fetch(`/api/excluded-dates/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete excluded date');
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error deleting excluded date:', error);
+      throw error;
+    }
+  },
+
   updateSettings: async (settings) => {
     try {
       // Optimistic update
@@ -461,6 +608,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       deadlines: state.deadlines,
       tasks: state.tasks,
       settings: state.settings,
+      excludedDates: state.excludedDates,
     };
   },
 
@@ -492,6 +640,14 @@ const useAppStore = create<AppStore>((set, get) => ({
         }
       }
 
+      // Import excluded dates
+      if (data.excludedDates && data.excludedDates.length > 0) {
+        for (const excludedDate of data.excludedDates) {
+          const { id, createdAt, updatedAt, ...excludedDateData } = excludedDate as any;
+          await store.addExcludedDate(excludedDateData);
+        }
+      }
+
       // Import settings
       if (data.settings) {
         await store.updateSettings(data.settings);
@@ -520,6 +676,7 @@ const useAppStore = create<AppStore>((set, get) => ({
         deadlines: [],
         tasks: [],
         settings: DEFAULT_SETTINGS,
+        excludedDates: [],
       });
 
       // Clear localStorage

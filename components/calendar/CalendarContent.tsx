@@ -8,6 +8,7 @@ import CalendarMonthView from './CalendarMonthView';
 import CalendarDayView from './CalendarDayView';
 import CalendarWeekView from './CalendarWeekView';
 import CalendarLegend from './CalendarLegend';
+import ExcludedDatesCard from '@/components/ExcludedDatesCard';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 type ViewType = 'month' | 'week' | 'day';
@@ -23,7 +24,7 @@ export default function CalendarContent() {
   const [filteredDeadlines, setFilteredDeadlines] = useState<any[]>([]);
   const hasFilteredRef = useRef(false);
 
-  const { courses, tasks, deadlines, initializeStore } = useAppStore();
+  const { courses, tasks, deadlines, excludedDates, initializeStore } = useAppStore();
 
   // Filter out completed tasks and deadlines on mount and when data loads
   useEffect(() => {
@@ -281,6 +282,7 @@ export default function CalendarContent() {
                 deadlines={filteredDeadlines}
                 allTasks={tasks}
                 allDeadlines={deadlines}
+                excludedDates={excludedDates}
                 onSelectDate={handleSelectDate}
               />
             )}
@@ -292,6 +294,7 @@ export default function CalendarContent() {
                 deadlines={filteredDeadlines}
                 allTasks={tasks}
                 allDeadlines={deadlines}
+                excludedDates={excludedDates}
               />
             )}
             {view === 'day' && (
@@ -302,10 +305,15 @@ export default function CalendarContent() {
                 deadlines={filteredDeadlines}
                 allTasks={tasks}
                 allDeadlines={deadlines}
+                excludedDates={excludedDates}
               />
             )}
           </div>
           <CalendarLegend />
+        </div>
+
+        <div style={{ marginTop: '24px' }}>
+          <ExcludedDatesCard />
         </div>
       </div>
     </>
