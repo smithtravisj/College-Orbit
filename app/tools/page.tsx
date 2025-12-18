@@ -358,6 +358,7 @@ export default function ToolsPage() {
                 { label: 'Financial Center', url: 'https://sa.byu.edu/psc/ps/EMPLOYEE/SA/c/Y_MY_FINANCIAL_CENTER.Y_MFC_HOME_V2_FL.GBL?Page=Y_MFC_HOME_V2_FL&EMPLID=247348708&OPRID=ins0417&' },
                 { label: 'BYU Outlook', url: 'https://outlook.office.com/mail/' },
                 { label: 'BYU Library', url: 'https://lib.byu.edu/' },
+                { label: 'Residence Life', url: 'https://reslife.byu.edu/' },
               ].map((link) => (
                 <a
                   key={link.url}
