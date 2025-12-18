@@ -161,11 +161,11 @@ export default function CalendarWeekView({
                   <div
                     key={event.id}
                     style={{
-                      fontSize: '0.65rem',
-                      paddingLeft: '2px',
-                      paddingRight: '2px',
-                      paddingTop: '1px',
-                      paddingBottom: '1px',
+                      fontSize: '0.7rem',
+                      paddingLeft: '3px',
+                      paddingRight: '3px',
+                      paddingTop: '2px',
+                      paddingBottom: '2px',
                       borderRadius: '2px',
                       backgroundColor: `${color}20`,
                       color: color,
@@ -326,14 +326,6 @@ export default function CalendarWeekView({
                     const eventWidth = 100 / eventLayout.totalColumns;
                     const eventLeft = eventLayout.column * eventWidth;
 
-                    const formatTime = (time: string) => {
-                      const [hours, minutes] = time.split(':');
-                      const hour = parseInt(hours);
-                      const ampm = hour >= 12 ? 'PM' : 'AM';
-                      const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-                      return `${displayHour}:${minutes} ${ampm}`;
-                    };
-
                     return (
                       <div
                         key={event.id}
@@ -343,7 +335,7 @@ export default function CalendarWeekView({
                           width: `calc(${eventWidth}% - 8px)`,
                           borderRadius: 'var(--radius-control)',
                           fontSize: '0.7rem',
-                          padding: '4px',
+                          padding: '6px',
                           overflow: 'hidden',
                           cursor: 'pointer',
                           transition: 'opacity 0.2s',
@@ -351,7 +343,6 @@ export default function CalendarWeekView({
                           top: `${top}px`,
                           height: `${height}px`,
                           backgroundColor: `${color}30`,
-                          borderLeft: `2px solid ${color}`,
                         }}
                         onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                         onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
@@ -359,9 +350,6 @@ export default function CalendarWeekView({
                       >
                         <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
                           {event.title.substring(0, 20)}
-                        </div>
-                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.65rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1 }}>
-                          {formatTime(event.time)}
                         </div>
                       </div>
                     );
