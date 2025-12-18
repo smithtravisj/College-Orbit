@@ -119,47 +119,44 @@ export default function CalendarMonthView({
                 {date.getDate()}
               </div>
 
-              {/* Event indicators */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', flex: 1, minHeight: 0 }}>
-                {dayEvents.slice(0, 3).map((event) => {
-                  const bgColor = getEventColor(event);
-                  const displayText = event.type === 'course'
-                    ? `${event.courseCode}: ${event.title.substring(0, 12)}`
-                    : event.title.substring(0, 20);
+              {/* Event indicators - colored dots */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', flex: 1, alignContent: 'flex-start', minHeight: 0 }}>
+                {dayEvents.slice(0, 8).map((event) => {
+                  const color = getEventColor(event);
 
                   return (
                     <div
                       key={event.id}
                       style={{
-                        fontSize: '0.7rem',
-                        paddingLeft: '2px',
-                        paddingRight: '2px',
-                        paddingTop: '2px',
-                        paddingBottom: '2px',
-                        borderRadius: '2px',
-                        backgroundColor: `${bgColor}20`,
-                        color: bgColor,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        lineHeight: 1,
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        backgroundColor: color,
+                        flexShrink: 0,
+                        cursor: 'pointer',
+                        transition: 'transform 0.2s',
                       }}
-                      title={event.title}
-                    >
-                      {displayText}
-                    </div>
+                      title={event.type === 'course' ? `${event.courseCode}: ${event.title}` : event.title}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.5)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                    />
                   );
                 })}
 
                 {/* +X more indicator */}
-                {dayEvents.length > 3 && (
+                {dayEvents.length > 8 && (
                   <div style={{
-                    fontSize: '0.65rem',
+                    fontSize: '0.6rem',
                     color: 'var(--text-muted)',
-                    paddingLeft: '2px',
+                    fontWeight: 500,
                     lineHeight: 1,
+                    paddingTop: '0.5px',
                   }}>
-                    +{dayEvents.length - 3}
+                    +{dayEvents.length - 8}
                   </div>
                 )}
               </div>
