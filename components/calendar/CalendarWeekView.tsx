@@ -8,6 +8,7 @@ import {
   getTimeSlotPosition,
   getEventHeight,
   getEventColor,
+  calculateEventLayout,
 } from '@/lib/calendarUtils';
 import { getDayOfWeek, isToday } from '@/lib/utils';
 
@@ -58,6 +59,20 @@ export default function CalendarWeekView({
     });
     return map;
   }, [weekDays, courses, tasks, deadlines]);
+
+  const eventLayoutsByDay = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof calculateEventLayout>>();
+    weekDays.forEach((day) => {
+      const dateStr = day.toISOString().split('T')[0];
+      const dayEvents = eventsByDay.get(dateStr) || [];
+      const courseEvents = dayEvents.filter((e) => e.type === 'course');
+      const layout = calculateEventLayout(courseEvents);
+      if (layout.length > 0) {
+        map.set(dateStr, layout);
+      }
+    });
+    return map;
+  }, [weekDays, eventsByDay]);
 
   const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 
@@ -163,10 +178,18 @@ export default function CalendarWeekView({
                 {courseEvents.map((event) => {
                   if (!event.time || !event.endTime) return null;
 
+                  // Get layout information for this event
+                  const layout = eventLayoutsByDay.get(dateStr)?.find(l => l.event.id === event.id);
+                  if (!layout) return null;
+
                   const { top: baseTop } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
                   const top = baseTop + 8; // Offset to align with grid lines
                   const height = getEventHeight(event.time, event.endTime);
                   const color = getEventColor(event);
+
+                  // Calculate width and left position based on column
+                  const eventWidth = 100 / layout.totalColumns;
+                  const eventLeft = layout.column * eventWidth;
 
                   // Convert 24-hour time to 12-hour format
                   const formatTime = (time: string) => {
@@ -182,8 +205,8 @@ export default function CalendarWeekView({
                       key={event.id}
                       style={{
                         position: 'absolute',
-                        left: '4px',
-                        right: '4px',
+                        left: `calc(${eventLeft}% + 4px)`,
+                        width: `calc(${eventWidth}% - 8px)`,
                         borderRadius: 'var(--radius-control)',
                         fontSize: '0.75rem',
                         padding: '4px',

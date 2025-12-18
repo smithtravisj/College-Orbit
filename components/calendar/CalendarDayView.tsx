@@ -7,6 +7,7 @@ import {
   getTimeSlotPosition,
   getEventHeight,
   getEventColor,
+  calculateEventLayout,
 } from '@/lib/calendarUtils';
 import { isToday } from '@/lib/utils';
 
@@ -42,10 +43,12 @@ export default function CalendarDayView({
     [date, courses, tasks, deadlines]
   );
 
-  const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
+  const courseEvents = useMemo(() => events.filter((e) => e.type === 'course'), [events]);
+  const taskDeadlineEvents = useMemo(() => events.filter((e) => e.type !== 'course'), [events]);
 
-  const courseEvents = events.filter((e) => e.type === 'course');
-  const taskDeadlineEvents = events.filter((e) => e.type !== 'course');
+  const eventLayout = useMemo(() => calculateEventLayout(courseEvents), [courseEvents]);
+
+  const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 
   const dateStr = date.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -144,17 +147,34 @@ export default function CalendarDayView({
           {courseEvents.map((event) => {
             if (!event.time || !event.endTime) return null;
 
+            // Get layout information for this event
+            const layout = eventLayout.find(l => l.event.id === event.id);
+            if (!layout) return null;
+
             const { top } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
             const height = getEventHeight(event.time, event.endTime);
             const color = getEventColor(event);
+
+            // Calculate width and left position based on column
+            const eventWidth = 100 / layout.totalColumns;
+            const eventLeft = layout.column * eventWidth;
+
+            // Convert 24-hour time to 12-hour format
+            const formatTime = (time: string) => {
+              const [hours, minutes] = time.split(':');
+              const hour = parseInt(hours);
+              const ampm = hour >= 12 ? 'PM' : 'AM';
+              const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+              return `${displayHour}:${minutes} ${ampm}`;
+            };
 
             return (
               <div
                 key={event.id}
                 style={{
                   position: 'absolute',
-                  left: '8px',
-                  right: '8px',
+                  left: `calc(${eventLeft}% + 8px)`,
+                  width: `calc(${eventWidth}% - 16px)`,
                   borderRadius: 'var(--radius-control)',
                   padding: '8px',
                   overflow: 'hidden',
@@ -163,7 +183,6 @@ export default function CalendarDayView({
                   top: `${top}px`,
                   height: `${height}px`,
                   backgroundColor: `${color}30`,
-                  borderLeft: `4px solid ${color}`,
                   zIndex: 10,
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
@@ -174,7 +193,7 @@ export default function CalendarDayView({
                   {event.courseCode}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {event.time} - {event.endTime}
+                  {formatTime(event.time)} - {formatTime(event.endTime)}
                 </div>
                 {event.location && (
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

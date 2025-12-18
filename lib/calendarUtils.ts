@@ -330,3 +330,70 @@ export function parseColor(colorTag?: string): string {
 
   return colorMap[colorTag] || colorTag;
 }
+
+// Event layout interface for handling overlaps
+export interface EventLayout {
+  event: CalendarEvent;
+  column: number;
+  totalColumns: number;
+}
+
+// Calculate column layout for overlapping events
+// Uses an interval scheduling algorithm to assign events to non-overlapping columns
+export function calculateEventLayout(events: CalendarEvent[]): EventLayout[] {
+  if (events.length === 0) return [];
+
+  const timeToMinutes = (time: string): number => {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  // Filter events with times and sort by start time, then end time
+  const eventsWithTime = events
+    .filter(e => e.time && e.endTime)
+    .map(e => ({
+      event: e,
+      start: timeToMinutes(e.time!),
+      end: timeToMinutes(e.endTime!),
+    }))
+    .sort((a, b) => a.start - b.start || a.end - b.end);
+
+  if (eventsWithTime.length === 0) return [];
+
+  // Assign events to columns using greedy interval scheduling
+  const openColumns: number[] = []; // Track the end time of the last event in each column
+  const eventLayout: Array<{ event: CalendarEvent; column: number }> = [];
+
+  for (const { event, start, end } of eventsWithTime) {
+    // Find first column where the last event ends before this event starts
+    let targetColumn = -1;
+    for (let i = 0; i < openColumns.length; i++) {
+      if (openColumns[i] <= start) {
+        targetColumn = i;
+        break;
+      }
+    }
+
+    if (targetColumn === -1) {
+      // No available column, create a new one
+      targetColumn = openColumns.length;
+      openColumns.push(end);
+    } else {
+      // Reuse column and update its end time
+      openColumns[targetColumn] = Math.max(openColumns[targetColumn], end);
+    }
+
+    eventLayout.push({
+      event,
+      column: targetColumn,
+    });
+  }
+
+  // Return layout with total column count
+  const totalColumns = openColumns.length;
+  return eventLayout.map(({ event, column }) => ({
+    event,
+    column,
+    totalColumns,
+  }));
+}
