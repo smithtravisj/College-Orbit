@@ -364,8 +364,8 @@ export default function ToolsPage() {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-[12px] bg-[var(--panel-2)] hover:bg-[var(--panel-3)] text-center text-sm font-medium text-[var(--text)] transition-colors"
-                  style={{ display: 'block', padding: '12px' }}
+                  className="rounded-[12px] text-center text-sm font-medium text-white transition-colors hover:opacity-80"
+                  style={{ display: 'block', padding: '12px', backgroundColor: '#132343', border: '1px solid var(--border)' }}
                 >
                   {link.label}
                 </a>
