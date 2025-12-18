@@ -861,9 +861,81 @@ export default function Dashboard() {
           {/* Upcoming This Week - Full Width */}
           <div className="col-span-12 lg:flex">
             <Card title="Upcoming This Week" subtitle="Your schedule for the next 7 days" className="h-full flex flex-col w-full">
-              <div className="text-sm text-[var(--muted)]">
-                <p>No upcoming events</p>
-              </div>
+              {(() => {
+                // Get classes for the next 7 days grouped by day
+                const upcomingDays: { [key: string]: Array<any> } = {};
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                for (let i = 0; i < 7; i++) {
+                  const date = new Date(today);
+                  date.setDate(date.getDate() + i);
+                  const dateKey = date.toISOString().split('T')[0];
+                  const dayIndex = date.getDay();
+                  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+                  const classesOnDay = courses
+                    .flatMap((course) =>
+                      (course.meetingTimes || [])
+                        .filter((mt) => mt.days?.includes(dayNames[dayIndex].slice(0, 3)))
+                        .map((mt) => ({
+                          ...mt,
+                          courseCode: course.code,
+                          courseName: course.name,
+                          courseLinks: course.links,
+                          date: dateKey,
+                        }))
+                    )
+                    .sort((a, b) => a.start.localeCompare(b.start));
+
+                  if (classesOnDay.length > 0) {
+                    upcomingDays[dateKey] = classesOnDay;
+                  }
+                }
+
+                const upcomingDaysList = Object.entries(upcomingDays).map(([dateKey, classes]) => ({
+                  dateKey,
+                  date: new Date(dateKey),
+                  classes,
+                }));
+
+                return upcomingDaysList.length > 0 ? (
+                  <div className="space-y-6">
+                    {upcomingDaysList.map(({ dateKey, date, classes }) => {
+                      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                      const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      return (
+                        <div key={dateKey}>
+                          <div className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-3">
+                            {dayName}, {dateStr}
+                          </div>
+                          <div className="space-y-3">
+                            {classes.map((cls, idx) => (
+                              <div
+                                key={idx}
+                                className="border-l-2 pl-3"
+                                style={{ borderColor: 'var(--accent)' }}
+                              >
+                                <div className="text-sm font-medium text-[var(--text)]">
+                                  {cls.courseCode}{cls.courseName ? ` - ${cls.courseName}` : ''}
+                                </div>
+                                <div className="text-sm text-[var(--text-secondary)] mt-1">
+                                  {formatTime12Hour(cls.start)} – {formatTime12Hour(cls.end)}
+                                </div>
+                                <div className="text-sm text-[var(--text-secondary)] mt-0.5">
+                                  {cls.location}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <EmptyState title="No classes this week" description="You have a free week ahead!" />
+                );
+              })()}
             </Card>
           </div>
         </div>
