@@ -92,7 +92,7 @@ export default function CalendarWeekView({
       <div style={{ flex: 1, overflow: 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)' }}>
           {/* Time column */}
-          <div style={{ borderRight: '1px solid var(--border)', paddingTop: '8px', paddingLeft: '8px', backgroundColor: 'var(--panel-2)', flexShrink: 0 }}>
+          <div style={{ borderRight: '1px solid var(--border)', paddingTop: '8px', backgroundColor: 'var(--panel-2)', flexShrink: 0 }}>
             {hours.map((hour) => {
               const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
               const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -143,7 +143,7 @@ export default function CalendarWeekView({
                       position: 'absolute',
                       width: '100%',
                       borderTop: '1px solid var(--border)',
-                      top: `${(hour - START_HOUR) * HOUR_HEIGHT}px`,
+                      top: `${(hour - START_HOUR) * HOUR_HEIGHT - 2}px`,
                       height: '0',
                     }}
                   />
