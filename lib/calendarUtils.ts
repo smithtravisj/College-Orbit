@@ -291,7 +291,7 @@ export function isInMonth(date: Date, year: number, month: number): boolean {
 // Standard color palette
 export const COLOR_PALETTE = {
   blue: '#3b82f6',
-  green: '#10b981',
+  green: '#34d399',
   purple: '#a855f7',
   orange: '#fbbf24',
   red: '#ef4444',
