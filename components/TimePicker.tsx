@@ -118,7 +118,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   };
 
   return (
-    <div ref={dropdownRef} className="relative w-full" style={{ minWidth: '120px' }}>
+    <div ref={dropdownRef} className="relative w-full" style={{ minWidth: '120px', overflow: 'visible' }}>
       {label && (
         <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
           {label}
