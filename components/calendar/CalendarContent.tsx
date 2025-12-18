@@ -22,6 +22,10 @@ export default function CalendarContent() {
 
   const { courses, tasks, deadlines, initializeStore } = useAppStore();
 
+  // Filter out completed tasks and deadlines
+  const incompleteTasks = tasks.filter(task => task.status !== 'done');
+  const incompleteDeadlines = deadlines.filter(deadline => deadline.status !== 'done');
+
   useEffect(() => {
     // Read view and date from URL or localStorage
     const viewParam = searchParams.get('view') as ViewType;
@@ -264,8 +268,8 @@ export default function CalendarContent() {
                 year={currentDate.getFullYear()}
                 month={currentDate.getMonth()}
                 courses={courses}
-                tasks={tasks}
-                deadlines={deadlines}
+                tasks={incompleteTasks}
+                deadlines={incompleteDeadlines}
                 onSelectDate={handleSelectDate}
               />
             )}
@@ -273,16 +277,16 @@ export default function CalendarContent() {
               <CalendarWeekView
                 date={currentDate}
                 courses={courses}
-                tasks={tasks}
-                deadlines={deadlines}
+                tasks={incompleteTasks}
+                deadlines={incompleteDeadlines}
               />
             )}
             {view === 'day' && (
               <CalendarDayView
                 date={currentDate}
                 courses={courses}
-                tasks={tasks}
-                deadlines={deadlines}
+                tasks={incompleteTasks}
+                deadlines={incompleteDeadlines}
               />
             )}
           </div>
