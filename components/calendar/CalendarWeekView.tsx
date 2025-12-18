@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import { Course, Task, Deadline } from '@/types';
 import {
   getWeekRange,
@@ -10,8 +10,10 @@ import {
   getEventColor,
   calculateEventLayout,
   separateTaskDeadlineEvents,
+  CalendarEvent,
 } from '@/lib/calendarUtils';
 import { getDayOfWeek, isToday } from '@/lib/utils';
+import EventDetailModal from '@/components/EventDetailModal';
 
 interface CalendarWeekViewProps {
   date: Date;
@@ -31,6 +33,7 @@ export default function CalendarWeekView({
   deadlines,
 }: CalendarWeekViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
   useEffect(() => {
     // Scroll to 8 AM on mount
@@ -173,8 +176,10 @@ export default function CalendarWeekView({
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       lineHeight: 1,
+                      cursor: 'pointer',
                     }}
                     title={event.title}
+                    onClick={() => setSelectedEvent(event)}
                   >
                     {event.title.substring(0, 16)}
                   </div>
@@ -293,6 +298,7 @@ export default function CalendarWeekView({
                       onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                       onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                       title={event.title}
+                      onClick={() => setSelectedEvent(event)}
                     >
                       <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: layout.totalColumns > 1 ? 'clip' : 'ellipsis', whiteSpace: layout.totalColumns > 1 ? 'normal' : 'nowrap', lineHeight: 1.2, wordBreak: 'break-word' }}>
                         {event.courseCode}
@@ -351,6 +357,7 @@ export default function CalendarWeekView({
                         onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                         onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                         title={event.title}
+                        onClick={() => setSelectedEvent(event)}
                       >
                         <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2, textAlign: 'center' }}>
                           {event.title.substring(0, 20)}
@@ -364,6 +371,15 @@ export default function CalendarWeekView({
           })}
         </div>
       </div>
+
+      <EventDetailModal
+        isOpen={selectedEvent !== null}
+        event={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+        courses={courses}
+        tasks={tasks}
+        deadlines={deadlines}
+      />
     </div>
   );
 }

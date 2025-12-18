@@ -1,14 +1,16 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Course, Task, Deadline } from '@/types';
 import {
   getDatesInMonth,
   getEventsForDate,
   isInMonth,
   getMonthViewColor,
+  CalendarEvent,
 } from '@/lib/calendarUtils';
 import { isToday } from '@/lib/utils';
+import EventDetailModal from '@/components/EventDetailModal';
 
 interface CalendarMonthViewProps {
   year: number;
@@ -27,6 +29,8 @@ export default function CalendarMonthView({
   deadlines,
   onSelectDate,
 }: CalendarMonthViewProps) {
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+
   const dates = useMemo(() => getDatesInMonth(year, month), [year, month]);
 
   const eventsByDate = useMemo(() => {
@@ -137,6 +141,10 @@ export default function CalendarMonthView({
                         transition: 'transform 0.2s',
                       }}
                       title={event.type === 'course' ? `${event.courseCode}: ${event.title}` : event.title}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEvent(event);
+                      }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.transform = 'scale(1.5)';
                       }}
@@ -164,6 +172,15 @@ export default function CalendarMonthView({
           );
         })}
       </div>
+
+      <EventDetailModal
+        isOpen={selectedEvent !== null}
+        event={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+        courses={courses}
+        tasks={tasks}
+        deadlines={deadlines}
+      />
     </div>
   );
 }
