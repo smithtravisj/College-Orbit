@@ -222,7 +222,7 @@ export default function CalendarWeekView({
                       onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                       title={event.title}
                     >
-                      <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: layout.totalColumns > 1 ? 'clip' : 'ellipsis', whiteSpace: layout.totalColumns > 1 ? 'normal' : 'nowrap', lineHeight: 1.2, wordBreak: 'break-word' }}>
                         {event.courseCode}
                       </div>
                       {layout.totalColumns === 1 && (
