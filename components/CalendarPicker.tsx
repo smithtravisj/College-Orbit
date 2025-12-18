@@ -25,14 +25,20 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
   useEffect(() => {
     if (!isOpen) return;
 
+    console.log('[CalendarPicker] Dropdown opened');
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        console.log('[CalendarPicker] Escape key pressed, closing dropdown');
         setIsOpen(false);
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      console.log('[CalendarPicker] Cleaning up Escape listener');
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen]);
 
   const getDaysInMonth = (date: Date) => {
@@ -58,6 +64,13 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
     setIsOpen(false);
   };
 
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('[CalendarPicker] Button clicked, isOpen before toggle:', isOpen);
+    setIsOpen(!isOpen);
+  };
+
   const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   const daysInMonth = getDaysInMonth(currentMonth);
   const firstDay = getFirstDayOfMonth(currentMonth);
@@ -76,7 +89,8 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
         </div>
       )}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        type="button"
+        onClick={handleButtonClick}
         style={{
           width: '100%',
           height: 'var(--input-height)',
@@ -102,8 +116,14 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
 
       {isOpen && (
         <div
-          onClick={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            console.log('[CalendarPicker] Click inside dropdown, stopping propagation');
+            e.stopPropagation();
+          }}
+          onMouseDown={(e) => {
+            console.log('[CalendarPicker] MouseDown inside dropdown, stopping propagation');
+            e.stopPropagation();
+          }}
           style={{
             position: 'absolute',
             top: '100%',
