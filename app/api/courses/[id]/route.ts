@@ -65,26 +65,18 @@ export async function PATCH(
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
-    const updateData: any = {
-      code: data.code ?? existingCourse.code,
-      name: data.name ?? existingCourse.name,
-      term: data.term ?? existingCourse.term,
-      meetingTimes: data.meetingTimes ?? existingCourse.meetingTimes,
-      links: data.links ?? existingCourse.links,
-      colorTag: data.colorTag ?? existingCourse.colorTag,
-    };
-
-    // Handle dates - only update if explicitly provided
-    if (data.startDate !== undefined) {
-      updateData.startDate = data.startDate ? new Date(data.startDate) : null;
-    }
-    if (data.endDate !== undefined) {
-      updateData.endDate = data.endDate ? new Date(data.endDate) : null;
-    }
-
     const course = await prisma.course.update({
       where: { id },
-      data: updateData,
+      data: {
+        code: data.code ?? existingCourse.code,
+        name: data.name ?? existingCourse.name,
+        term: data.term ?? existingCourse.term,
+        startDate: data.startDate !== undefined ? (data.startDate ? new Date(data.startDate) : null) : existingCourse.startDate,
+        endDate: data.endDate !== undefined ? (data.endDate ? new Date(data.endDate) : null) : existingCourse.endDate,
+        meetingTimes: data.meetingTimes ?? existingCourse.meetingTimes,
+        links: data.links ?? existingCourse.links,
+        colorTag: data.colorTag ?? existingCourse.colorTag,
+      },
     });
 
     return NextResponse.json({ course });

@@ -39,7 +39,25 @@ export default function Dashboard() {
     notes: '',
     links: [{ label: '', url: '' }],
   });
-  const { courses, deadlines, tasks, settings, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone, updateDeadline, deleteDeadline } = useAppStore();
+  const { courses: allCourses, deadlines, tasks, settings, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone, updateDeadline, deleteDeadline } = useAppStore();
+  const [showEnded, setShowEnded] = useState(false);
+
+  // Load showEnded preference from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('showEndedCourses');
+      if (saved !== null) {
+        setShowEnded(JSON.parse(saved));
+      }
+    }
+  }, []);
+
+  // Filter courses based on end date
+  const courses = allCourses.filter((course) => {
+    if (showEnded) return true; // Show all courses if toggle is on
+    if (!course.endDate) return true; // Show courses with no end date
+    return new Date(course.endDate) > new Date(); // Show courses that haven't ended
+  });
 
   useEffect(() => {
     initializeStore();
@@ -262,9 +280,42 @@ export default function Dashboard() {
   const classesLeft = todayClasses.filter((c) => c.start > nowTime).length;
   const overdueCount = overdueTasks.length + deadlines.filter((d) => d.dueAt && isOverdue(d.dueAt) && d.status === 'open').length;
 
+  const handleShowEndedToggle = () => {
+    const newValue = !showEnded;
+    setShowEnded(newValue);
+    localStorage.setItem('showEndedCourses', JSON.stringify(newValue));
+  };
+
   return (
     <>
-      <PageHeader title="Dashboard" subtitle="Welcome back. Here's your schedule and tasks for today." />
+      <PageHeader
+        title="Dashboard"
+        subtitle="Welcome back. Here's your schedule and tasks for today."
+        actions={
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showEnded}
+              onChange={handleShowEndedToggle}
+              style={{
+                appearance: 'none',
+                width: '16px',
+                height: '16px',
+                border: '2px solid var(--border)',
+                borderRadius: '3px',
+                backgroundColor: showEnded ? '#132343' : 'transparent',
+                cursor: 'pointer',
+                backgroundImage: showEnded ? 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22white%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z%22 clip-rule=%22evenodd%22 /%3E%3C/svg%3E")' : 'none',
+                backgroundSize: '100%',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                transition: 'all 0.3s ease',
+              }}
+            />
+            <span className="text-sm font-medium text-[var(--text)]">Show Finished Courses</span>
+          </label>
+        }
+      />
       <div className="mx-auto w-full max-w-[1400px] min-h-[calc(100vh-var(--header-h))] flex flex-col" style={{ padding: '24px' }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)] flex-1">
           {/* Top row - 3 cards */}

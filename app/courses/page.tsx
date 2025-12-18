@@ -45,7 +45,17 @@ export default function CoursesPage() {
 
   // Get unique terms for filter
   const uniqueTerms = Array.from(new Set(courses.map((c) => c.term).filter(Boolean)));
-  const filteredCourses = termFilter === 'all' ? courses : courses.filter((c) => c.term === termFilter);
+
+  // Filter by term and end date
+  let filteredCourses = termFilter === 'all' ? courses : courses.filter((c) => c.term === termFilter);
+
+  // Apply end date filter
+  if (!showEnded) {
+    filteredCourses = filteredCourses.filter((course) => {
+      if (!course.endDate) return true; // Show courses with no end date
+      return new Date(course.endDate) > new Date(); // Show courses that haven't ended
+    });
+  }
 
   return (
     <>
