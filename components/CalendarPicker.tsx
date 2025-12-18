@@ -17,7 +17,9 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
     }
     return new Date();
   });
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const selectedDate = value ? new Date(value + 'T00:00:00') : null;
 
@@ -77,7 +79,17 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
         </div>
       )}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        ref={buttonRef}
+        onClick={() => {
+          if (!isOpen && buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            setDropdownPos({
+              top: rect.bottom + 8,
+              left: rect.left,
+            });
+          }
+          setIsOpen(!isOpen);
+        }}
         style={{
           width: '100%',
           height: 'var(--input-height)',
@@ -104,10 +116,9 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
       {isOpen && (
         <div
           style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            marginTop: '8px',
+            position: 'fixed',
+            top: `${dropdownPos.top}px`,
+            left: `${dropdownPos.left}px`,
             backgroundColor: 'var(--panel-2)',
             border: '1px solid var(--border)',
             borderRadius: 'var(--radius-control)',

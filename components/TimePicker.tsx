@@ -14,7 +14,9 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   const [hours, setHours] = useState<string>('10');
   const [minutes, setMinutes] = useState<string>('0');
   const [isPM, setIsPM] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const isUpdatingFromParent = useRef(false);
 
   // Convert 24-hour to 12-hour format for display
@@ -125,8 +127,18 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
         </label>
       )}
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          if (!isOpen && buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            setDropdownPos({
+              top: rect.bottom + 4,
+              left: rect.left,
+            });
+          }
+          setIsOpen(!isOpen);
+        }}
         className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)] flex items-center justify-between"
         style={{ padding: '10px 12px' }}
       >
@@ -140,8 +152,8 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
 
       {isOpen && (
         <div
-          className="absolute top-full left-0 right-0 bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg"
-          style={{ minWidth: '180px', marginTop: '4px', zIndex: 9999 }}
+          className="bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg"
+          style={{ position: 'fixed', top: `${dropdownPos.top}px`, left: `${dropdownPos.left}px`, minWidth: '180px', zIndex: 9999 }}
         >
           <div style={{ padding: '16px' }}>
             <div className="flex items-center gap-4 justify-center">
