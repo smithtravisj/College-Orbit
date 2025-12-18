@@ -77,7 +77,7 @@ export default function CalendarMonthView({
               onClick={() => onSelectDate(date)}
               style={{
                 position: 'relative',
-                padding: '4px',
+                padding: '8px',
                 border: `1px solid ${isCurrentMonth ? 'var(--border)' : 'var(--border)'}`,
                 borderRadius: 'var(--radius-control)',
                 cursor: 'pointer',
@@ -120,7 +120,7 @@ export default function CalendarMonthView({
               </div>
 
               {/* Event indicators - colored dots */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', flex: 1, alignContent: 'flex-start', minHeight: 0 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', flex: 1, alignContent: 'flex-start', minHeight: 0 }}>
                 {dayEvents.slice(0, 8).map((event) => {
                   const color = getEventColor(event);
 
@@ -128,8 +128,8 @@ export default function CalendarMonthView({
                     <div
                       key={event.id}
                       style={{
-                        width: '6px',
-                        height: '6px',
+                        width: '10px',
+                        height: '10px',
                         borderRadius: '50%',
                         backgroundColor: color,
                         flexShrink: 0,
