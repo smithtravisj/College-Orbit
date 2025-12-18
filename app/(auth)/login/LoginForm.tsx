@@ -45,7 +45,7 @@ export function LoginForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] p-4">
-      <div className="w-full max-w-md">
+      <div style={{ width: '100%', maxWidth: '600px' }}>
         <div className="text-center" style={{ marginBottom: '28px' }}>
           <h1 className="text-3xl font-semibold text-[var(--text)]" style={{ marginBottom: '12px' }}>
             BYU Survival Tool
