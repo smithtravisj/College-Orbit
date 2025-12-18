@@ -298,6 +298,7 @@ export default function CalendarWeekView({
                         top: `${top}px`,
                         height: `${height}px`,
                         backgroundColor: `${color}40`,
+                        boxSizing: 'border-box',
                       }}
                       onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                       onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
@@ -357,6 +358,7 @@ export default function CalendarWeekView({
                           flexDirection: 'column',
                           justifyContent: 'center',
                           alignItems: 'center',
+                          boxSizing: 'border-box',
                         }}
                         onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                         onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}

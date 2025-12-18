@@ -198,6 +198,7 @@ export default function CalendarDayView({
                   height: `${height}px`,
                   backgroundColor: `${color}30`,
                   zIndex: 10,
+                  boxSizing: 'border-box',
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                 onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
@@ -258,6 +259,7 @@ export default function CalendarDayView({
                     justifyContent: 'center',
                     alignItems: 'flex-start',
                     minHeight: 0,
+                    boxSizing: 'border-box',
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                   onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
