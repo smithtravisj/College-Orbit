@@ -908,7 +908,7 @@ export default function Dashboard() {
                             {dayName}, {dateStr}
                           </div>
                           {classes.length > 0 ? (
-                            <div className="space-y-4 pl-3">
+                            <div className="space-y-6 pl-3">
                               {classes.map((cls, idx) => (
                                 <div key={idx}>
                                   <div className="text-sm font-medium text-[var(--text)]">
