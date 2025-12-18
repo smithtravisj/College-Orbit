@@ -217,7 +217,7 @@ export default function CalendarWeekView({
                     });
                   }}
                 >
-                  {exclusionType === 'holiday' ? 'Holiday' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
+                  {exclusionType === 'holiday' ? 'No School' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
                 </div>
               )}
               {visibleEvents.map((event) => {
@@ -529,7 +529,7 @@ export default function CalendarWeekView({
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)' }}>
-                    {exclusionType === 'holiday' ? 'Holiday' : 'Class Cancelled'}
+                    {exclusionType === 'holiday' ? 'No School' : 'Class Cancelled'}
                   </div>
                   {courseName && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>

@@ -118,7 +118,7 @@ export default function CalendarDayView({
                     fontWeight: 500,
                   }}
                 >
-                  {exclusionType === 'holiday' ? 'Holiday' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
+                  {exclusionType === 'holiday' ? 'No School' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
                 </div>
               )}
               {allDayEvents.map((event) => {
