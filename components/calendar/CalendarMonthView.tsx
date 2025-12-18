@@ -83,6 +83,20 @@ export default function CalendarMonthView({
           const dayEvents = eventsByDate.get(dateStr) || [];
           const exclusionType = getExclusionType(date, excludedDates);
 
+          // Get course code for cancelled classes
+          let courseCode = '';
+          if (exclusionType === 'class-cancelled') {
+            const dateYear = date.getFullYear();
+            const dateMonth = String(date.getMonth() + 1).padStart(2, '0');
+            const dateDay = String(date.getDate()).padStart(2, '0');
+            const dateKey = `${dateYear}-${dateMonth}-${dateDay}`;
+            const exclusion = excludedDates.find((ex) => ex.date === dateKey && ex.courseId);
+            if (exclusion) {
+              const course = courses.find(c => c.id === exclusion.courseId);
+              courseCode = course?.code || '';
+            }
+          }
+
           return (
             <div
               key={dateStr}
@@ -147,7 +161,7 @@ export default function CalendarMonthView({
                     fontWeight: 500,
                   }}
                 >
-                  {exclusionType === 'holiday' ? 'Holiday' : 'Class Cancelled'}
+                  {exclusionType === 'holiday' ? 'Holiday' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
                 </div>
               )}
 

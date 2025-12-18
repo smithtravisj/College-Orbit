@@ -105,6 +105,16 @@ export default function CalendarWeekView({
           const isLastDay = index === weekDays.length - 1;
           const exclusionType = getExclusionType(day, excludedDates);
 
+          // Get course code for cancelled classes
+          let courseCode = '';
+          if (exclusionType === 'class-cancelled') {
+            const exclusion = excludedDates.find((ex) => ex.date === dateStr && ex.courseId);
+            if (exclusion) {
+              const course = courses.find(c => c.id === exclusion.courseId);
+              courseCode = course?.code || '';
+            }
+          }
+
           return (
             <div
               key={dateStr}
@@ -140,7 +150,7 @@ export default function CalendarWeekView({
                     textOverflow: 'ellipsis',
                   }}
                 >
-                  {exclusionType === 'holiday' ? 'Holiday' : 'Class Cancelled'}
+                  {exclusionType === 'holiday' ? 'Holiday' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
                 </div>
               )}
             </div>

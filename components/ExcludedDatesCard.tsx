@@ -36,11 +36,13 @@ export default function ExcludedDatesCard() {
 
   const formatDate = (dateStr: string) => {
     try {
-      const [year, month, day] = dateStr.split('-').map(Number);
+      // Extract just the date part if it's an ISO datetime string
+      const dateOnly = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+      const [year, month, day] = dateOnly.split('-').map(Number);
       if (!year || !month || !day) return dateStr;
       const date = new Date(year, month - 1, day);
       const formatted = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-      return formatted === 'Invalid Date' ? dateStr : formatted;
+      return formatted === 'Invalid Date' ? dateOnly : formatted;
     } catch {
       return dateStr;
     }
@@ -164,7 +166,7 @@ export default function ExcludedDatesCard() {
                       </span>
                     )}
                   </div>
-                  <p style={{ fontSize: '14px', fontWeight: '500', margin: 0, color: 'var(--text)' }}>
+                  <p style={{ fontSize: '14px', fontWeight: '500', margin: 0, color: '#e6edf6' }}>
                     {group.description}
                   </p>
                 </div>
