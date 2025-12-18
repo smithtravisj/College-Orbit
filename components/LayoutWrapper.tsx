@@ -11,7 +11,6 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
 
   const isAuthPage = pathname === '/login' || pathname === '/signup';
   const isUnauthenticated = !session;
-  const showSidebar = !(isAuthPage && isUnauthenticated);
 
   if (isAuthPage && isUnauthenticated) {
     // Full-width centered layout for login/signup
