@@ -153,7 +153,7 @@ export default function CalendarMonthView({
 
               {/* Event indicators - colored dots */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', flex: 1, alignContent: 'flex-start', minHeight: 0, overflow: 'hidden', maxHeight: exclusionType === 'holiday' ? '14px' : 'none' }}>
-                {dayEvents.slice(0, exclusionType === 'holiday' ? 5 : 16).map((event) => {
+                {dayEvents.slice(0, exclusionType === 'holiday' ? 5 : 100).map((event) => {
                   const color = getMonthViewColor(event);
 
                   return (
@@ -184,7 +184,7 @@ export default function CalendarMonthView({
                 })}
 
                 {/* +X more indicator */}
-                {dayEvents.length > 16 && (
+                {dayEvents.length > (exclusionType === 'holiday' ? 5 : 100) && (
                   <div style={{
                     fontSize: '0.6rem',
                     color: 'var(--text-muted)',
@@ -192,7 +192,7 @@ export default function CalendarMonthView({
                     lineHeight: 1,
                     paddingTop: '0.5px',
                   }}>
-                    +{dayEvents.length - 16}
+                    +{dayEvents.length - (exclusionType === 'holiday' ? 5 : 100)}
                   </div>
                 )}
               </div>
