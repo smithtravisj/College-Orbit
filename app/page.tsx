@@ -190,29 +190,6 @@ export default function Dashboard() {
     setShowDeadlineForm(false);
   };
 
-  const startEditDeadline = (deadline: any) => {
-    setEditingDeadlineId(deadline.id);
-    const dueDate = deadline.dueAt ? new Date(deadline.dueAt) : null;
-    let dateStr = '';
-    let timeStr = '';
-    if (dueDate) {
-      const year = dueDate.getFullYear();
-      const month = String(dueDate.getMonth() + 1).padStart(2, '0');
-      const date = String(dueDate.getDate()).padStart(2, '0');
-      dateStr = `${year}-${month}-${date}`;
-      timeStr = `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}`;
-    }
-    setDeadlineFormData({
-      title: deadline.title,
-      courseId: deadline.courseId || '',
-      dueDate: dateStr,
-      dueTime: timeStr,
-      notes: deadline.notes,
-      link: deadline.link || '',
-    });
-    setShowDeadlineForm(true);
-  };
-
   const cancelEditDeadline = () => {
     setEditingDeadlineId(null);
     setDeadlineFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', link: '' });
@@ -490,13 +467,6 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
-                          <button
-                            onClick={() => startEditDeadline(d)}
-                            className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
-                            title="Edit deadline"
-                          >
-                            <Edit2 size={14} />
-                          </button>
                           <button
                             onClick={() => deleteDeadline(d.id)}
                             className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
