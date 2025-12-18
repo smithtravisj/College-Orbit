@@ -39,29 +39,69 @@ export async function PATCH(req: NextRequest) {
     const session = await getServerSession(authConfig);
 
     if (!session?.user?.id) {
-      console.log('No user ID in session');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const data = await req.json();
+    const userId = session.user.id;
 
-    const settings = await prisma.settings.upsert({
-      where: { userId: session.user.id },
-      update: {
-        ...(data.dueSoonWindowDays !== undefined && { dueSoonWindowDays: data.dueSoonWindowDays }),
-        ...(data.weekStartsOn !== undefined && { weekStartsOn: data.weekStartsOn }),
-        ...(data.theme !== undefined && { theme: data.theme }),
-        ...(data.enableNotifications !== undefined && { enableNotifications: data.enableNotifications }),
-      },
-      create: {
-        userId: session.user.id,
-        dueSoonWindowDays: data.dueSoonWindowDays ?? 7,
-        weekStartsOn: data.weekStartsOn ?? 'Sun',
-        theme: data.theme ?? 'system',
-        enableNotifications: data.enableNotifications ?? false,
-      },
-    });
+    // Use raw SQL to bypass Prisma issues
+    const updateFields: string[] = [];
+    const updateValues: any[] = [];
+    let paramCount = 1;
 
+    if (data.dueSoonWindowDays !== undefined) {
+      updateFields.push(`"dueSoonWindowDays" = $${paramCount}`);
+      updateValues.push(data.dueSoonWindowDays);
+      paramCount++;
+    }
+    if (data.weekStartsOn !== undefined) {
+      updateFields.push(`"weekStartsOn" = $${paramCount}`);
+      updateValues.push(data.weekStartsOn);
+      paramCount++;
+    }
+    if (data.theme !== undefined) {
+      updateFields.push(`"theme" = $${paramCount}`);
+      updateValues.push(data.theme);
+      paramCount++;
+    }
+    if (data.enableNotifications !== undefined) {
+      updateFields.push(`"enableNotifications" = $${paramCount}`);
+      updateValues.push(data.enableNotifications);
+      paramCount++;
+    }
+
+    updateValues.push(userId);
+    const updateSetClause = updateFields.length > 0 ? updateFields.join(', ') : '"updatedAt" = NOW()';
+
+    const updateQuery = `
+      UPDATE "Settings"
+      SET ${updateSetClause}, "updatedAt" = NOW()
+      WHERE "userId" = $${paramCount}
+      RETURNING *;
+    `;
+
+    let result = await prisma.$queryRawUnsafe(updateQuery, ...updateValues);
+
+    // If no rows were updated, try inserting
+    if (!Array.isArray(result) || result.length === 0) {
+      const insertQuery = `
+        INSERT INTO "Settings" ("id", "userId", "dueSoonWindowDays", "weekStartsOn", "theme", "enableNotifications", "createdAt", "updatedAt")
+        VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, NOW(), NOW())
+        RETURNING *;
+      `;
+
+      result = await prisma.$queryRawUnsafe(
+        insertQuery,
+        userId,
+        data.dueSoonWindowDays ?? 7,
+        data.weekStartsOn ?? 'Sun',
+        data.theme ?? 'system',
+        data.enableNotifications ?? false
+      );
+    }
+
+    const settings = Array.isArray(result) ? result[0] : result;
     return NextResponse.json({ settings });
   } catch (error) {
     console.error('Error updating settings:', error);
