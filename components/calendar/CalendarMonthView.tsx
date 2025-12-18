@@ -44,13 +44,19 @@ export default function CalendarMonthView({
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="flex flex-col h-full">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Day headers */}
-      <div className="grid grid-cols-7 gap-px mb-4 px-4">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', marginBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
         {dayNames.map((day) => (
           <div
             key={day}
-            className="text-center text-sm font-medium text-[var(--text-muted)] py-2"
+            style={{
+              textAlign: 'center',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              color: 'var(--text-muted)',
+              padding: '8px 0',
+            }}
           >
             {day}
           </div>
@@ -58,7 +64,7 @@ export default function CalendarMonthView({
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-px px-4 flex-1 overflow-hidden">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', paddingLeft: '16px', paddingRight: '16px', flex: 1, overflow: 'hidden' }}>
         {dates.map((date) => {
           const dateStr = date.toISOString().split('T')[0];
           const isCurrentMonth = isInMonth(date, year, month);
@@ -69,29 +75,45 @@ export default function CalendarMonthView({
             <div
               key={dateStr}
               onClick={() => onSelectDate(date)}
-              className={`
-                relative p-2 min-h-24 border rounded-[var(--radius-control)] cursor-pointer
-                transition-colors duration-200
-                ${
-                  isCurrentMonth
-                    ? 'bg-[var(--panel)] border-[var(--border)] hover:bg-[var(--panel-2)] hover:border-[var(--border-hover)]'
-                    : 'bg-[var(--bg)] border-[var(--border)] opacity-50'
+              style={{
+                position: 'relative',
+                padding: '8px',
+                minHeight: '96px',
+                border: `1px solid ${isCurrentMonth ? 'var(--border)' : 'var(--border)'}`,
+                borderRadius: 'var(--radius-control)',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                backgroundColor: isCurrentMonth ? 'var(--panel)' : 'var(--bg)',
+                opacity: isCurrentMonth ? 1 : 0.5,
+                boxShadow: isTodayDate ? '0 0 0 1px var(--accent)' : 'none',
+              }}
+              onMouseEnter={(e) => {
+                if (isCurrentMonth) {
+                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                  e.currentTarget.style.borderColor = 'var(--border-hover)';
                 }
-                ${isTodayDate ? 'ring-1 ring-[var(--accent)]' : ''}
-              `}
+              }}
+              onMouseLeave={(e) => {
+                if (isCurrentMonth) {
+                  e.currentTarget.style.backgroundColor = 'var(--panel)';
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                }
+              }}
             >
               {/* Date number */}
               <div
-                className={`
-                  text-sm font-semibold mb-1
-                  ${isTodayDate ? 'text-[var(--accent)]' : 'text-[var(--text)]'}
-                `}
+                style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  marginBottom: '4px',
+                  color: isTodayDate ? 'var(--accent)' : 'var(--text)',
+                }}
               >
                 {date.getDate()}
               </div>
 
               {/* Event indicators */}
-              <div className="space-y-0.5">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 {dayEvents.slice(0, 3).map((event) => {
                   const bgColor = getEventColor(event);
                   const label =
@@ -104,10 +126,18 @@ export default function CalendarMonthView({
                   return (
                     <div
                       key={event.id}
-                      className="text-xs px-1.5 py-0.5 rounded bg-opacity-20 overflow-hidden text-ellipsis whitespace-nowrap"
                       style={{
+                        fontSize: '0.75rem',
+                        paddingLeft: '6px',
+                        paddingRight: '6px',
+                        paddingTop: '2px',
+                        paddingBottom: '2px',
+                        borderRadius: 'var(--radius-control)',
                         backgroundColor: `${bgColor}20`,
                         color: bgColor,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
                       }}
                       title={event.title}
                     >
@@ -118,7 +148,11 @@ export default function CalendarMonthView({
 
                 {/* +X more indicator */}
                 {dayEvents.length > 3 && (
-                  <div className="text-xs text-[var(--text-muted)] px-1.5">
+                  <div style={{
+                    fontSize: '0.75rem',
+                    color: 'var(--text-muted)',
+                    paddingLeft: '6px',
+                  }}>
                     +{dayEvents.length - 3} more
                   </div>
                 )}

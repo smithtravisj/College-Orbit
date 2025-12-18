@@ -44,34 +44,42 @@ export default function CalendarDayView({
   });
 
   return (
-    <div className="flex flex-col h-full bg-[var(--panel)]">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--panel)' }}>
       {/* Header */}
-      <div className="px-4 py-3 border-b border-[var(--border)]">
-        <h2 className="text-lg font-semibold text-[var(--text)]">{dateStr}</h2>
+      <div style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text)' }}>{dateStr}</h2>
         {isToday(date) && (
-          <p className="text-sm text-[var(--accent)]">Today</p>
+          <p style={{ fontSize: '0.875rem', color: 'var(--accent)' }}>Today</p>
         )}
       </div>
 
       {/* All-day events section */}
       {taskDeadlineEvents.length > 0 && (
-        <div className="px-4 py-3 border-b border-[var(--border)] bg-[var(--panel-2)]">
-          <p className="text-xs font-semibold text-[var(--text-muted)] mb-2">All Day</p>
-          <div className="space-y-1">
+        <div style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--panel-2)' }}>
+          <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>All Day</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {taskDeadlineEvents.map((event) => {
               const color = getEventColor(event);
               return (
                 <div
                   key={event.id}
-                  className="px-2 py-1 rounded text-sm bg-opacity-10 overflow-hidden text-ellipsis whitespace-nowrap"
                   style={{
+                    paddingLeft: '8px',
+                    paddingRight: '8px',
+                    paddingTop: '4px',
+                    paddingBottom: '4px',
+                    borderRadius: 'var(--radius-control)',
+                    fontSize: '0.875rem',
                     backgroundColor: `${color}20`,
                     color: color,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
                   }}
                   title={event.title}
                 >
                   {event.type === 'task' ? '📝' : '⏰'} {event.title}
-                  {event.time && <span className="text-xs opacity-75"> ({event.time})</span>}
+                  {event.time && <span style={{ fontSize: '0.75rem', opacity: 0.75 }}> ({event.time})</span>}
                 </div>
               );
             })}
@@ -80,16 +88,25 @@ export default function CalendarDayView({
       )}
 
       {/* Time grid */}
-      <div className="flex flex-1 overflow-auto">
+      <div style={{ display: 'flex', flex: 1, overflow: 'auto' }}>
         {/* Time column */}
-        <div className="w-20 border-r border-[var(--border)] py-2 flex-shrink-0">
+        <div style={{ width: '80px', borderRight: '1px solid var(--border)', paddingTop: '8px', flexShrink: 0 }}>
           {hours.map((hour) => {
             const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
             const ampm = hour >= 12 ? 'PM' : 'AM';
             return (
               <div
                 key={hour}
-                className="h-[60px] pr-2 text-right text-xs text-[var(--text-muted)] flex items-start justify-end pt-1"
+                style={{
+                  height: `${HOUR_HEIGHT}px`,
+                  paddingRight: '8px',
+                  fontSize: '0.75rem',
+                  color: 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'flex-end',
+                  paddingTop: '4px',
+                }}
               >
                 {displayHour} {ampm}
               </div>
@@ -98,14 +115,17 @@ export default function CalendarDayView({
         </div>
 
         {/* Events column */}
-        <div className="flex-1 relative py-2">
+        <div style={{ flex: 1, position: 'relative', paddingTop: '8px' }}>
           {/* Hour grid lines */}
           {hours.map((hour) => (
             <div
               key={`line-${hour}`}
-              className="absolute w-full border-t border-[var(--border)]"
               style={{
+                position: 'absolute',
+                width: '100%',
+                borderTop: '1px solid var(--border)',
                 top: `${(hour - START_HOUR) * HOUR_HEIGHT}px`,
+                height: `${HOUR_HEIGHT}px`,
               }}
             />
           ))}
@@ -121,24 +141,33 @@ export default function CalendarDayView({
             return (
               <div
                 key={event.id}
-                className="absolute left-2 right-2 rounded-[var(--radius-control)] p-2 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
                 style={{
+                  position: 'absolute',
+                  left: '8px',
+                  right: '8px',
+                  borderRadius: 'var(--radius-control)',
+                  padding: '8px',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s',
                   top: `${top}px`,
                   height: `${height}px`,
                   backgroundColor: `${color}30`,
                   borderLeft: `4px solid ${color}`,
                   zIndex: 10,
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                 title={event.title}
               >
-                <div className="text-xs font-semibold text-[var(--text)] truncate">
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {event.courseCode}
                 </div>
-                <div className="text-xs text-[var(--text-secondary)] truncate">
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {event.time} - {event.endTime}
                 </div>
                 {event.location && (
-                  <div className="text-xs text-[var(--text-muted)] truncate">
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {event.location}
                   </div>
                 )}

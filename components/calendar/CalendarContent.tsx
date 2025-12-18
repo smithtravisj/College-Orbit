@@ -111,43 +111,93 @@ export default function CalendarContent() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <>
       <PageHeader
         title="Calendar"
         subtitle={getDateRangeDisplay()}
         actions={
-          <div className="flex gap-2 items-center">
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button
               onClick={handleToday}
-              className="px-3 py-2 rounded-[var(--radius-control)] text-sm font-medium text-[var(--text)] hover:bg-white/10 transition-colors"
+              style={{
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-control)',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: 'var(--text)',
+                backgroundColor: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               Today
             </button>
             <button
               onClick={handlePreviousDate}
-              className="p-2 rounded-[var(--radius-control)] text-[var(--text)] hover:bg-white/10 transition-colors"
+              style={{
+                padding: '8px',
+                borderRadius: 'var(--radius-control)',
+                color: 'var(--text)',
+                backgroundColor: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               title="Previous"
             >
               <ChevronLeft size={20} />
             </button>
             <button
               onClick={handleNextDate}
-              className="p-2 rounded-[var(--radius-control)] text-[var(--text)] hover:bg-white/10 transition-colors"
+              style={{
+                padding: '8px',
+                borderRadius: 'var(--radius-control)',
+                color: 'var(--text)',
+                backgroundColor: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               title="Next"
             >
               <ChevronRight size={20} />
             </button>
-            <div className="w-1 h-8 bg-[var(--border)] mx-2" />
-            <div className="flex gap-2">
+            <div style={{ width: '1px', height: '32px', backgroundColor: 'var(--border)', margin: '0 16px' }} />
+            <div style={{ display: 'flex', gap: '8px' }}>
               {(['month', 'week', 'day'] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => handleViewChange(v)}
-                  className={`rounded-[var(--radius-control)] text-sm font-medium transition-colors px-3 py-2 ${
-                    view === v
-                      ? 'bg-[var(--accent-2)] text-[var(--text)]'
-                      : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
-                  }`}
+                  style={{
+                    borderRadius: 'var(--radius-control)',
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    transition: 'all 0.2s',
+                    padding: '8px 12px',
+                    backgroundColor: view === v ? 'var(--accent-2)' : 'transparent',
+                    color: view === v ? 'var(--text)' : 'var(--muted)',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (view !== v) {
+                      e.currentTarget.style.color = 'var(--text)';
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (view !== v) {
+                      e.currentTarget.style.color = 'var(--muted)';
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
                 >
                   {v.charAt(0).toUpperCase() + v.slice(1)}
                 </button>
@@ -156,34 +206,47 @@ export default function CalendarContent() {
           </div>
         }
       />
-      <div className="flex-1 overflow-hidden">
-        {view === 'month' && (
-          <CalendarMonthView
-            year={currentDate.getFullYear()}
-            month={currentDate.getMonth()}
-            courses={courses}
-            tasks={tasks}
-            deadlines={deadlines}
-            onSelectDate={handleSelectDate}
-          />
-        )}
-        {view === 'week' && (
-          <CalendarWeekView
-            date={currentDate}
-            courses={courses}
-            tasks={tasks}
-            deadlines={deadlines}
-          />
-        )}
-        {view === 'day' && (
-          <CalendarDayView
-            date={currentDate}
-            courses={courses}
-            tasks={tasks}
-            deadlines={deadlines}
-          />
-        )}
+      <div style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
+        <div style={{
+          borderRadius: '16px',
+          border: '1px solid var(--border)',
+          backgroundColor: 'var(--panel)',
+          boxShadow: 'var(--shadow-sm)',
+          display: 'flex',
+          flexDirection: 'column',
+          height: 'calc(100vh - 180px)',
+          overflow: 'hidden',
+        }}>
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            {view === 'month' && (
+              <CalendarMonthView
+                year={currentDate.getFullYear()}
+                month={currentDate.getMonth()}
+                courses={courses}
+                tasks={tasks}
+                deadlines={deadlines}
+                onSelectDate={handleSelectDate}
+              />
+            )}
+            {view === 'week' && (
+              <CalendarWeekView
+                date={currentDate}
+                courses={courses}
+                tasks={tasks}
+                deadlines={deadlines}
+              />
+            )}
+            {view === 'day' && (
+              <CalendarDayView
+                date={currentDate}
+                courses={courses}
+                tasks={tasks}
+                deadlines={deadlines}
+              />
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

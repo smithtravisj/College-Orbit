@@ -52,11 +52,11 @@ export default function CalendarWeekView({
   const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 
   return (
-    <div className="flex flex-col h-full bg-[var(--panel)]">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--panel)' }}>
       {/* Day headers */}
-      <div className="grid" style={{ gridTemplateColumns: '80px repeat(7, 1fr)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)' }}>
         {/* Empty corner */}
-        <div className="border-b border-r border-[var(--border)]" />
+        <div style={{ borderBottom: '1px solid var(--border)', borderRight: '1px solid var(--border)' }} />
 
         {/* Day headers */}
         {weekDays.map((day) => {
@@ -67,13 +67,19 @@ export default function CalendarWeekView({
           return (
             <div
               key={dateStr}
-              className={`
-                border-b border-r border-[var(--border)] px-2 py-3 text-center
-                ${isTodayDate ? 'bg-[var(--accent-2)]' : 'bg-[var(--panel-2)]'}
-              `}
+              style={{
+                borderBottom: '1px solid var(--border)',
+                borderRight: '1px solid var(--border)',
+                paddingLeft: '8px',
+                paddingRight: '8px',
+                paddingTop: '12px',
+                paddingBottom: '12px',
+                textAlign: 'center',
+                backgroundColor: isTodayDate ? 'var(--accent-2)' : 'var(--panel-2)',
+              }}
             >
-              <div className="text-sm font-medium text-[var(--text)]">{dayName}</div>
-              <div className={`text-lg font-semibold ${isTodayDate ? 'text-[var(--accent)]' : 'text-[var(--text)]'}`}>
+              <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>{dayName}</div>
+              <div style={{ fontSize: '1.125rem', fontWeight: 600, color: isTodayDate ? 'var(--accent)' : 'var(--text)' }}>
                 {day.getDate()}
               </div>
             </div>
@@ -82,17 +88,27 @@ export default function CalendarWeekView({
       </div>
 
       {/* Time grid */}
-      <div className="flex-1 overflow-auto">
-        <div className="grid" style={{ gridTemplateColumns: '80px repeat(7, 1fr)' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)' }}>
           {/* Time column */}
-          <div className="border-r border-[var(--border)] py-2 bg-[var(--panel-2)] flex-shrink-0">
+          <div style={{ borderRight: '1px solid var(--border)', paddingTop: '8px', backgroundColor: 'var(--panel-2)', flexShrink: 0 }}>
             {hours.map((hour) => {
               const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
               const ampm = hour >= 12 ? 'PM' : 'AM';
               return (
                 <div
                   key={hour}
-                  className="h-[60px] pr-2 text-right text-xs text-[var(--text-muted)] flex items-start justify-end pt-1 border-b border-[var(--border)]"
+                  style={{
+                    height: `${HOUR_HEIGHT}px`,
+                    paddingRight: '8px',
+                    fontSize: '0.75rem',
+                    color: 'var(--text-muted)',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'flex-end',
+                    paddingTop: '4px',
+                    borderBottom: '1px solid var(--border)',
+                  }}
                 >
                   {displayHour} {ampm}
                 </div>
@@ -110,20 +126,20 @@ export default function CalendarWeekView({
             return (
               <div
                 key={dateStr}
-                className={`
-                  relative border-r border-[var(--border)]
-                  ${isTodayDate ? 'bg-[var(--accent)]' : 'bg-[var(--panel)]'}
-                `}
                 style={{
-                  backgroundColor: isTodayDate ? 'rgba(83, 155, 245, 0.05)' : undefined,
+                  position: 'relative',
+                  borderRight: '1px solid var(--border)',
+                  backgroundColor: isTodayDate ? 'rgba(83, 155, 245, 0.05)' : 'var(--panel)',
                 }}
               >
                 {/* Hour grid lines */}
                 {hours.map((hour) => (
                   <div
                     key={`line-${hour}`}
-                    className="absolute w-full border-b border-[var(--border)]"
                     style={{
+                      position: 'absolute',
+                      width: '100%',
+                      borderBottom: '1px solid var(--border)',
                       top: `${(hour - START_HOUR) * HOUR_HEIGHT}px`,
                       height: `${HOUR_HEIGHT}px`,
                     }}
@@ -141,19 +157,30 @@ export default function CalendarWeekView({
                   return (
                     <div
                       key={event.id}
-                      className="absolute left-1 right-1 rounded text-xs p-1 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity z-10"
                       style={{
+                        position: 'absolute',
+                        left: '4px',
+                        right: '4px',
+                        borderRadius: 'var(--radius-control)',
+                        fontSize: '0.75rem',
+                        padding: '4px',
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        transition: 'opacity 0.2s',
+                        zIndex: 10,
                         top: `${top}px`,
                         height: `${height}px`,
                         backgroundColor: `${color}40`,
                         borderLeft: `3px solid ${color}`,
                       }}
+                      onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                      onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                       title={event.title}
                     >
-                      <div className="font-semibold text-[var(--text)] truncate leading-tight">
+                      <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
                         {event.courseCode}
                       </div>
-                      <div className="text-[var(--text-secondary)] truncate leading-tight">
+                      <div style={{ color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
                         {event.time} - {event.endTime}
                       </div>
                     </div>
