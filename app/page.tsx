@@ -222,18 +222,16 @@ export default function Dashboard() {
   // Helper function to check if a course is active on a specific date
   const isCourseCurrent = (course: any, checkDate?: Date) => {
     const dateToCheck = checkDate ? new Date(checkDate) : new Date();
-    dateToCheck.setHours(0, 0, 0, 0); // Set to midnight for date-only comparison
+    const dateStr = dateToCheck.toISOString().split('T')[0]; // YYYY-MM-DD format
 
     if (course.startDate) {
-      const startDate = new Date(course.startDate);
-      startDate.setHours(0, 0, 0, 0);
-      if (startDate > dateToCheck) return false; // Course hasn't started
+      const startStr = course.startDate.split('T')[0]; // Handle both timestamp and date string formats
+      if (startStr > dateStr) return false; // Course hasn't started
     }
 
     if (course.endDate) {
-      const endDate = new Date(course.endDate);
-      endDate.setHours(0, 0, 0, 0);
-      if (endDate < dateToCheck) return false; // Course has ended (endDate is before this date)
+      const endStr = course.endDate.split('T')[0]; // Handle both timestamp and date string formats
+      if (endStr < dateStr) return false; // Course has ended (endDate is before this date)
     }
 
     return true;
