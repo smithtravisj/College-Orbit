@@ -104,7 +104,10 @@ export async function PATCH(
         courseId: 'courseId' in data ? data.courseId : existingDeadline.courseId,
         dueAt: 'dueAt' in data ? updateDueAt : existingDeadline.dueAt,
         notes: 'notes' in data ? data.notes : existingDeadline.notes,
-        links: 'links' in data ? (data.links || []).filter((l: any) => l.label && l.url) : existingDeadline.links,
+        links: 'links' in data ? (data.links || []).filter((l: any) => l.url).map((l: any) => ({
+          label: l.label || new URL(l.url).hostname,
+          url: l.url,
+        })) : existingDeadline.links,
         status: 'status' in data ? data.status : existingDeadline.status,
       },
     });

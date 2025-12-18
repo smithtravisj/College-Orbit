@@ -69,7 +69,7 @@ export default function TasksPage() {
 
     // Handle links - normalize and add https:// if needed
     const links = formData.links
-      .filter((l) => l.label && l.url)
+      .filter((l) => l.url && l.url.trim())
       .map((l) => ({
         label: l.label,
         url: l.url.startsWith('http://') || l.url.startsWith('https://')
