@@ -46,6 +46,20 @@ export async function PATCH(req: NextRequest) {
     const data = await req.json();
     console.log('Updating settings for user:', session.user.id, 'with data:', data);
 
+    // First verify the user exists
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+    });
+
+    if (!user) {
+      console.error('User not found:', session.user.id);
+      return NextResponse.json(
+        { error: 'User not found in database' },
+        { status: 404 }
+      );
+    }
+    console.log('User verified:', user.email);
+
     // Build update object with only provided fields
     const updateData: any = {};
     if (data.dueSoonWindowDays !== undefined) updateData.dueSoonWindowDays = data.dueSoonWindowDays;
