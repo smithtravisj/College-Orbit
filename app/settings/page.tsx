@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import useAppStore from '@/lib/store';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
@@ -110,8 +110,8 @@ export default function SettingsPage() {
         throw new Error('Failed to delete account');
       }
 
-      // Redirect to logout/login after successful deletion
-      window.location.href = '/';
+      // Sign out and redirect
+      await signOut({ callbackUrl: '/' });
     } catch (error) {
       setDeleteMessage('✗ Failed to delete account');
       setTimeout(() => setDeleteMessage(''), 3000);
