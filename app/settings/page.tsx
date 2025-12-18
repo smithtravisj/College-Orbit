@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import useAppStore from '@/lib/store';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
@@ -8,6 +9,7 @@ import Button from '@/components/ui/Button';
 import { Download, Upload, Trash2 } from 'lucide-react';
 
 export default function SettingsPage() {
+  const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
   const [dueSoonDays, setDueSoonDays] = useState<number | string>(7);
   const [exportMessage, setExportMessage] = useState('');
@@ -76,6 +78,11 @@ export default function SettingsPage() {
     <>
       <PageHeader title="Settings" subtitle="Customize your experience" />
       <div className="mx-auto w-full max-w-[768px]" style={{ padding: '24px' }}>
+        {!session && (
+          <div style={{ backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '6px', padding: '12px', marginBottom: '24px', color: '#856404', fontSize: '14px' }}>
+            ⚠️ You are not logged in. Settings will be saved to your browser only.
+          </div>
+        )}
         <div className="w-full grid grid-cols-1 gap-[var(--grid-gap)]">
           {/* Due Soon Window */}
           <Card title="Appearance">
