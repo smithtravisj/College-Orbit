@@ -81,28 +81,45 @@ export async function PATCH(req: NextRequest) {
       RETURNING *;
     `;
 
+    console.log('Update query:', updateQuery);
+    console.log('Update values:', updateValues);
+
     let result = await prisma.$queryRawUnsafe(updateQuery, ...updateValues);
+    console.log('Update result:', result);
 
     // If no rows were updated, try inserting
     if (!Array.isArray(result) || result.length === 0) {
+      console.log('No rows updated, attempting insert...');
+
+      // Use a simpler UUID method
+      const crypto = require('crypto');
+      const newId = crypto.randomUUID();
+
       const insertQuery = `
         INSERT INTO "Settings" ("id", "userId", "dueSoonWindowDays", "weekStartsOn", "theme", "enableNotifications", "createdAt", "updatedAt")
-        VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, NOW(), NOW())
+        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
         RETURNING *;
       `;
 
-      result = await prisma.$queryRawUnsafe(
-        insertQuery,
+      const insertValues = [
+        newId,
         userId,
         data.dueSoonWindowDays ?? 7,
         data.weekStartsOn ?? 'Sun',
         data.theme ?? 'system',
         data.enableNotifications ?? false
-      );
+      ];
+
+      console.log('Insert query:', insertQuery);
+      console.log('Insert values:', insertValues);
+
+      result = await prisma.$queryRawUnsafe(insertQuery, ...insertValues);
+      console.log('Insert result:', result);
     }
 
     const settings = Array.isArray(result) ? result[0] : result;
-    return NextResponse.json({ settings });
+    console.log('Final settings to return:', settings);
+    return NextResponse.json({ settings, debug: { updateQuery, result } });
   } catch (error) {
     console.error('Error updating settings:', error);
     return NextResponse.json(
