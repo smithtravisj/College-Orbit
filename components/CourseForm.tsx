@@ -142,7 +142,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
         <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Meeting Times</label>
         <div className="space-y-2">
           {form.meetingTimes.map((mt, idx) => (
-            <div key={idx} className="flex gap-2 items-center" style={{ overflowX: 'auto', paddingBottom: '4px' }}>
+            <div key={idx} className="flex items-center" style={{ gap: '4px', overflowX: 'auto', paddingBottom: '4px' }}>
               <DaysDropdown
                 label={idx === 0 ? 'Days' : ''}
                 value={mt.days}
@@ -180,7 +180,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
                   setForm({ ...form, meetingTimes: newMeetingTimes });
                 }}
                 placeholder="e.g., Room 101"
-                className="flex-1"
+                style={{ minWidth: '100px', maxWidth: '150px' }}
               />
               <div>
                 {idx === 0 && (
