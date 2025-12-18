@@ -18,6 +18,8 @@ interface CalendarMonthViewProps {
   courses: Course[];
   tasks: Task[];
   deadlines: Deadline[];
+  allTasks?: Task[];
+  allDeadlines?: Deadline[];
   onSelectDate: (date: Date) => void;
 }
 
@@ -27,6 +29,8 @@ export default function CalendarMonthView({
   courses,
   tasks,
   deadlines,
+  allTasks = [],
+  allDeadlines = [],
   onSelectDate,
 }: CalendarMonthViewProps) {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -178,8 +182,8 @@ export default function CalendarMonthView({
         event={selectedEvent}
         onClose={() => setSelectedEvent(null)}
         courses={courses}
-        tasks={tasks}
-        deadlines={deadlines}
+        tasks={allTasks.length > 0 ? allTasks : tasks}
+        deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
       />
     </div>
   );

@@ -279,6 +279,8 @@ export default function CalendarContent() {
                 courses={courses}
                 tasks={filteredTasks}
                 deadlines={filteredDeadlines}
+                allTasks={tasks}
+                allDeadlines={deadlines}
                 onSelectDate={handleSelectDate}
               />
             )}
@@ -288,6 +290,8 @@ export default function CalendarContent() {
                 courses={courses}
                 tasks={filteredTasks}
                 deadlines={filteredDeadlines}
+                allTasks={tasks}
+                allDeadlines={deadlines}
               />
             )}
             {view === 'day' && (
@@ -296,6 +300,8 @@ export default function CalendarContent() {
                 courses={courses}
                 tasks={filteredTasks}
                 deadlines={filteredDeadlines}
+                allTasks={tasks}
+                allDeadlines={deadlines}
               />
             )}
           </div>
