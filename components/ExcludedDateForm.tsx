@@ -209,8 +209,9 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
           type="submit"
           disabled={isSubmitting}
           style={{
-            backgroundColor: 'var(--accent)',
-            color: 'var(--accent-foreground)',
+            backgroundColor: '#122343',
+            color: '#ffffff',
+            border: '1px solid #202d48',
           }}
         >
           {isSubmitting ? 'Creating...' : 'Create'}
