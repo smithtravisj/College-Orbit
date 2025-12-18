@@ -31,6 +31,12 @@ export default function Navigation() {
     await signOut({ callbackUrl: '/login' });
   };
 
+  // Hide navigation on auth pages when not signed in
+  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  if (isAuthPage && !session) {
+    return null;
+  }
+
   return (
     <>
       {/* Desktop Sidebar */}
