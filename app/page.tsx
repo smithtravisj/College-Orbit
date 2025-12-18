@@ -910,11 +910,7 @@ export default function Dashboard() {
                           {classes.length > 0 ? (
                             <div className="space-y-4 pl-3">
                               {classes.map((cls, idx) => (
-                                <div
-                                  key={idx}
-                                  className="border-l-2 pl-4"
-                                  style={{ borderColor: '#132343' }}
-                                >
+                                <div key={idx}>
                                   <div className="text-sm font-medium text-[var(--text)]">
                                     {cls.courseCode}{cls.courseName ? ` - ${cls.courseName}` : ''}
                                   </div>
