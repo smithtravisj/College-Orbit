@@ -18,6 +18,8 @@ interface CalendarDayViewProps {
   courses: Course[];
   tasks: Task[];
   deadlines: Deadline[];
+  allTasks?: Task[];
+  allDeadlines?: Deadline[];
 }
 
 const HOUR_HEIGHT = 60; // pixels
@@ -29,6 +31,8 @@ export default function CalendarDayView({
   courses,
   tasks,
   deadlines,
+  allTasks = [],
+  allDeadlines = [],
 }: CalendarDayViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -275,8 +279,8 @@ export default function CalendarDayView({
         event={selectedEvent}
         onClose={() => setSelectedEvent(null)}
         courses={courses}
-        tasks={tasks}
-        deadlines={deadlines}
+        tasks={allTasks.length > 0 ? allTasks : tasks}
+        deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
       />
     </div>
   );

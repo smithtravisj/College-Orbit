@@ -20,6 +20,8 @@ interface CalendarWeekViewProps {
   courses: Course[];
   tasks: Task[];
   deadlines: Deadline[];
+  allTasks?: Task[];
+  allDeadlines?: Deadline[];
 }
 
 const HOUR_HEIGHT = 60; // pixels
@@ -31,6 +33,8 @@ export default function CalendarWeekView({
   courses,
   tasks,
   deadlines,
+  allTasks = [],
+  allDeadlines = [],
 }: CalendarWeekViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -377,8 +381,8 @@ export default function CalendarWeekView({
         event={selectedEvent}
         onClose={() => setSelectedEvent(null)}
         courses={courses}
-        tasks={tasks}
-        deadlines={deadlines}
+        tasks={allTasks.length > 0 ? allTasks : tasks}
+        deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
       />
     </div>
   );
