@@ -10,7 +10,7 @@ import {
   getEventColor,
   calculateEventLayout,
   separateTaskDeadlineEvents,
-  getExcludedDateDescription,
+  getExclusionType,
   CalendarEvent,
 } from '@/lib/calendarUtils';
 import { getDayOfWeek, isToday } from '@/lib/utils';
@@ -103,7 +103,7 @@ export default function CalendarWeekView({
           const isTodayDate = isToday(day);
           const dayName = getDayOfWeek(day);
           const isLastDay = index === weekDays.length - 1;
-          const excludedDateDesc = getExcludedDateDescription(day, excludedDates);
+          const exclusionType = getExclusionType(day, excludedDates);
 
           return (
             <div
@@ -126,7 +126,7 @@ export default function CalendarWeekView({
               <div style={{ fontSize: '1.125rem', fontWeight: 600, color: isTodayDate ? 'var(--accent)' : 'var(--text)' }}>
                 {day.getDate()}
               </div>
-              {excludedDateDesc && (
+              {exclusionType && (
                 <div
                   style={{
                     fontSize: '0.65rem',
@@ -139,9 +139,8 @@ export default function CalendarWeekView({
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                   }}
-                  title={excludedDateDesc}
                 >
-                  Holiday
+                  {exclusionType === 'holiday' ? 'Holiday' : 'Class Cancelled'}
                 </div>
               )}
             </div>

@@ -531,6 +531,41 @@ export function getExcludedDateDescription(
   return courseExcluded?.description || '';
 }
 
+// Get the type of exclusion (holiday or class cancelled) for display
+export function getExclusionType(
+  date: Date,
+  excludedDates: ExcludedDate[]
+): 'holiday' | 'class-cancelled' | null {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const dateStr = `${year}-${month}-${day}`;
+
+  // Look for global holiday first
+  const globalExcluded = excludedDates.find((ex) => {
+    const exYear = ex.date.substring(0, 4);
+    const exMonth = ex.date.substring(5, 7);
+    const exDay = ex.date.substring(8, 10);
+    const exDateStr = `${exYear}-${exMonth}-${exDay}`;
+    return exDateStr === dateStr && ex.courseId === null;
+  });
+
+  if (globalExcluded) {
+    return 'holiday';
+  }
+
+  // Then look for any course-specific exclusion
+  const courseExcluded = excludedDates.find((ex) => {
+    const exYear = ex.date.substring(0, 4);
+    const exMonth = ex.date.substring(5, 7);
+    const exDay = ex.date.substring(8, 10);
+    const exDateStr = `${exYear}-${exMonth}-${exDay}`;
+    return exDateStr === dateStr && ex.courseId !== null;
+  });
+
+  return courseExcluded ? 'class-cancelled' : null;
+}
+
 // Generate array of dates between start and end (inclusive)
 export function getDateRange(startDate: string, endDate: string): string[] {
   const dates: string[] = [];

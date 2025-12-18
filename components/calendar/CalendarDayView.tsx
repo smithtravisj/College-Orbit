@@ -9,6 +9,7 @@ import {
   getEventColor,
   calculateEventLayout,
   separateTaskDeadlineEvents,
+  getExclusionType,
   getExcludedDateDescription,
   CalendarEvent,
 } from '@/lib/calendarUtils';
@@ -69,6 +70,7 @@ export default function CalendarDayView({
     day: 'numeric',
   });
 
+  const exclusionType = getExclusionType(date, excludedDates);
   const excludedDateDesc = getExcludedDateDescription(date, excludedDates);
 
   return (
@@ -77,7 +79,7 @@ export default function CalendarDayView({
       <div style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
           <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text)', margin: 0 }}>{dateStr}</h2>
-          {excludedDateDesc && (
+          {exclusionType && (
             <div
               style={{
                 fontSize: '0.75rem',
@@ -89,7 +91,7 @@ export default function CalendarDayView({
               }}
               title={excludedDateDesc}
             >
-              Holiday: {excludedDateDesc}
+              {exclusionType === 'holiday' ? 'Holiday' : 'Class Cancelled'}{excludedDateDesc ? ': ' + excludedDateDesc : ''}
             </div>
           )}
         </div>

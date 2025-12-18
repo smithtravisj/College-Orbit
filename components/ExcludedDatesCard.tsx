@@ -35,9 +35,15 @@ export default function ExcludedDatesCard() {
   };
 
   const formatDate = (dateStr: string) => {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const date = new Date(year, month - 1, day);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    try {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      if (!year || !month || !day) return dateStr;
+      const date = new Date(year, month - 1, day);
+      const formatted = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      return formatted === 'Invalid Date' ? dateStr : formatted;
+    } catch {
+      return dateStr;
+    }
   };
 
   const groupedDates = (() => {
