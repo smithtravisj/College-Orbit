@@ -22,6 +22,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const portalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -31,22 +32,25 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
 
   // Close popup when clicking outside
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleClickOutside = (event: MouseEvent) => {
-      // Close if clicking outside the button and not on the dropdown
-      if (buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
-        const target = event.target as HTMLElement;
-        // Check if click is outside the entire component
-        if (containerRef.current && !containerRef.current.contains(target)) {
-          setIsOpen(false);
-        }
+      const target = event.target as HTMLElement;
+      // Close if clicking outside button, container, and portal
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(target) &&
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        portalRef.current &&
+        !portalRef.current.contains(target)
+      ) {
+        setIsOpen(false);
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-    return undefined;
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
   const getDaysInMonth = (date: Date) => {
@@ -126,6 +130,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
 
       {isMounted && isOpen && createPortal(
         <div
+          ref={portalRef}
           style={{
             position: 'fixed',
             top: `${dropdownPos.top}px`,
