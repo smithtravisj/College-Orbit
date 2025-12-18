@@ -17,6 +17,7 @@ export default function SettingsPage() {
   const [importMessage, setImportMessage] = useState('');
   const [deleteMessage, setDeleteMessage] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
@@ -92,6 +93,29 @@ export default function SettingsPage() {
     } catch (error) {
       setDeleteMessage('✗ Failed to delete data');
       setTimeout(() => setDeleteMessage(''), 3000);
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    setShowDeleteAccountConfirm(true);
+  };
+
+  const confirmDeleteAccount = async () => {
+    try {
+      const response = await fetch('/api/user/account', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete account');
+      }
+
+      // Redirect to logout/login after successful deletion
+      window.location.href = '/';
+    } catch (error) {
+      setDeleteMessage('✗ Failed to delete account');
+      setTimeout(() => setDeleteMessage(''), 3000);
+      setShowDeleteAccountConfirm(false);
     }
   };
 
@@ -234,10 +258,16 @@ export default function SettingsPage() {
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Permanently delete all your data. This action cannot be undone.
                 </p>
-                <Button size="lg" onClick={handleDeleteAllData} style={{ paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
-                  <Trash2 size={18} />
-                  Delete All Data
-                </Button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <Button size="lg" onClick={handleDeleteAllData} style={{ paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                    <Trash2 size={18} />
+                    Delete All Data
+                  </Button>
+                  <Button size="lg" onClick={handleDeleteAccount} style={{ paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                    <Trash2 size={18} />
+                    Delete Account
+                  </Button>
+                </div>
                 {deleteMessage && (
                   <p style={{ marginTop: '8px', fontSize: '14px', color: deleteMessage.includes('✓') ? 'var(--success)' : 'var(--danger)' }}>{deleteMessage}</p>
                 )}
@@ -321,6 +351,70 @@ export default function SettingsPage() {
                 }}
               >
                 Delete All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete account confirmation modal */}
+      {showDeleteAccountConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'var(--panel)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '24px',
+            maxWidth: '400px',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <h3 style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
+              Delete Account?
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
+              This will permanently delete your account and all associated data. This action cannot be undone. You will be logged out immediately.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowDeleteAccountConfirm(false)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteAccount}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#660000',
+                  color: 'white',
+                  border: '1px solid #660000',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Delete Account
               </button>
             </div>
           </div>
