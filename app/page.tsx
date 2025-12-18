@@ -415,7 +415,7 @@ export default function Dashboard() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <div className={`text-sm font-medium ${d.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'}`}>{d.title}</div>
-                            {isOverdueDeadline && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
+                            {isOverdueDeadline && <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                           </div>
                           <div className="flex items-center gap-2 mt-2 flex-wrap">
                             <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
@@ -631,7 +631,7 @@ export default function Dashboard() {
                           >
                             {t.title}
                           </div>
-                          {isOverdueTask && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
+                          {isOverdueTask && <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                         </div>
                         {t.notes && (
                           <div className="text-xs text-[var(--text-muted)] mt-1">
