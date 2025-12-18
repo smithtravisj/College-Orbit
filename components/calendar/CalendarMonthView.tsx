@@ -77,7 +77,7 @@ export default function CalendarMonthView({
               onClick={() => onSelectDate(date)}
               style={{
                 position: 'relative',
-                padding: '8px',
+                padding: '12px',
                 border: `1px solid ${isCurrentMonth ? 'var(--border)' : 'var(--border)'}`,
                 borderRadius: 'var(--radius-control)',
                 cursor: 'pointer',
@@ -105,13 +105,13 @@ export default function CalendarMonthView({
               {/* Date number */}
               <div
                 style={{
-                  fontSize: '0.75rem',
+                  fontSize: '0.95rem',
                   fontWeight: 600,
-                  marginBottom: '6px',
-                  paddingLeft: '4px',
-                  paddingRight: '4px',
-                  paddingTop: '2px',
-                  paddingBottom: '2px',
+                  marginBottom: '8px',
+                  paddingLeft: '6px',
+                  paddingRight: '6px',
+                  paddingTop: '4px',
+                  paddingBottom: '4px',
                   color: isTodayDate ? 'var(--accent)' : 'var(--text)',
                   lineHeight: 1,
                 }}
@@ -128,8 +128,8 @@ export default function CalendarMonthView({
                     <div
                       key={event.id}
                       style={{
-                        width: '10px',
-                        height: '10px',
+                        width: '8px',
+                        height: '8px',
                         borderRadius: '50%',
                         backgroundColor: color,
                         flexShrink: 0,
