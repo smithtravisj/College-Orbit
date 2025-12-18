@@ -862,72 +862,75 @@ export default function Dashboard() {
           <div className="col-span-12 lg:flex">
             <Card title="Upcoming This Week" subtitle="Your schedule for the next 7 days" className="h-full flex flex-col w-full">
               {(() => {
-                // Get classes for the next 7 days grouped by day
-                const upcomingDays: { [key: string]: Array<any> } = {};
+                // Get classes for the next 7 days, including days with no classes
+                const daysList: Array<{ dateKey: string; date: Date; classes: Array<any> }> = [];
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const fullDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
                 for (let i = 0; i < 7; i++) {
                   const date = new Date(today);
                   date.setDate(date.getDate() + i);
                   const dateKey = date.toISOString().split('T')[0];
                   const dayIndex = date.getDay();
-                  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                  const dayAbbrev = dayNames[dayIndex];
 
                   const classesOnDay = courses
                     .flatMap((course) =>
                       (course.meetingTimes || [])
-                        .filter((mt) => mt.days?.includes(dayNames[dayIndex].slice(0, 3)))
+                        .filter((mt) => mt.days?.includes(dayAbbrev))
                         .map((mt) => ({
                           ...mt,
                           courseCode: course.code,
                           courseName: course.name,
                           courseLinks: course.links,
-                          date: dateKey,
                         }))
                     )
                     .sort((a, b) => a.start.localeCompare(b.start));
 
-                  if (classesOnDay.length > 0) {
-                    upcomingDays[dateKey] = classesOnDay;
-                  }
+                  daysList.push({
+                    dateKey,
+                    date,
+                    classes: classesOnDay,
+                  });
                 }
 
-                const upcomingDaysList = Object.entries(upcomingDays).map(([dateKey, classes]) => ({
-                  dateKey,
-                  date: new Date(dateKey),
-                  classes,
-                }));
+                const hasAnyClasses = daysList.some((day) => day.classes.length > 0);
 
-                return upcomingDaysList.length > 0 ? (
-                  <div className="space-y-6">
-                    {upcomingDaysList.map(({ dateKey, date, classes }) => {
+                return hasAnyClasses ? (
+                  <div style={{ padding: '0 -24px' }}>
+                    {daysList.map(({ dateKey, date, classes }) => {
                       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                       return (
-                        <div key={dateKey}>
-                          <div className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-3">
+                        <div key={dateKey} style={{ paddingBottom: '32px' }}>
+                          <div className="text-base font-semibold text-[var(--text)] uppercase tracking-wide mb-4">
                             {dayName}, {dateStr}
                           </div>
-                          <div className="space-y-3">
-                            {classes.map((cls, idx) => (
-                              <div
-                                key={idx}
-                                className="border-l-2 pl-3"
-                                style={{ borderColor: 'var(--accent)' }}
-                              >
-                                <div className="text-sm font-medium text-[var(--text)]">
-                                  {cls.courseCode}{cls.courseName ? ` - ${cls.courseName}` : ''}
+                          {classes.length > 0 ? (
+                            <div className="space-y-4 pl-3">
+                              {classes.map((cls, idx) => (
+                                <div
+                                  key={idx}
+                                  className="border-l-2 pl-4"
+                                  style={{ borderColor: '#132343' }}
+                                >
+                                  <div className="text-sm font-medium text-[var(--text)]">
+                                    {cls.courseCode}{cls.courseName ? ` - ${cls.courseName}` : ''}
+                                  </div>
+                                  <div className="text-sm text-[var(--text-secondary)] mt-1">
+                                    {formatTime12Hour(cls.start)} – {formatTime12Hour(cls.end)}
+                                  </div>
+                                  <div className="text-sm text-[var(--text-secondary)] mt-0.5">
+                                    {cls.location}
+                                  </div>
                                 </div>
-                                <div className="text-sm text-[var(--text-secondary)] mt-1">
-                                  {formatTime12Hour(cls.start)} – {formatTime12Hour(cls.end)}
-                                </div>
-                                <div className="text-sm text-[var(--text-secondary)] mt-0.5">
-                                  {cls.location}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-[var(--text-muted)]">No classes</div>
+                          )}
                         </div>
                       );
                     })}
