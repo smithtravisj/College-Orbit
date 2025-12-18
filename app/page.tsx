@@ -242,7 +242,7 @@ export default function Dashboard() {
   // Get next class
   const today = new Date();
   const todayClasses = courses
-    .filter(isCourseCurrent)
+    .filter((course) => isCourseCurrent(course))
     .flatMap((course) =>
       (course.meetingTimes || [])
         .filter((mt) => {
