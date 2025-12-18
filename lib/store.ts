@@ -136,7 +136,11 @@ const useAppStore = create<AppStore>((set, get) => ({
         body: JSON.stringify(course),
       });
 
-      if (!response.ok) throw new Error('Failed to create course');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('API error response:', errorData);
+        throw new Error(`Failed to create course: ${errorData.error} - ${errorData.details}`);
+      }
 
       const { course: newCourse } = await response.json();
 
