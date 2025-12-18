@@ -446,7 +446,7 @@ export default function EventDetailModal({
                   backgroundColor: '#132343',
                   borderWidth: '1px',
                   borderStyle: 'solid',
-                  borderColor: '#132343',
+                  borderColor: '#0a1218',
                   paddingLeft: '16px',
                   paddingRight: '16px',
                 }}
@@ -471,7 +471,7 @@ export default function EventDetailModal({
                   backgroundColor: '#132343',
                   borderWidth: '1px',
                   borderStyle: 'solid',
-                  borderColor: '#132343',
+                  borderColor: '#0a1218',
                   paddingLeft: '16px',
                   paddingRight: '16px',
                 }}
@@ -487,7 +487,7 @@ export default function EventDetailModal({
                     backgroundColor: '#132343',
                     borderWidth: '1px',
                     borderStyle: 'solid',
-                    borderColor: '#132343',
+                    borderColor: '#0a1218',
                     paddingLeft: '16px',
                     paddingRight: '16px',
                   }}
