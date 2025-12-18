@@ -139,6 +139,7 @@ export default function CalendarWeekView({
           const dayEvents = eventsByDay.get(dateStr) || [];
           const { allDay: allDayEvents } = separateTaskDeadlineEvents(dayEvents);
           const isLastDay = index === weekDays.length - 1;
+          const isTodayDate = isToday(day);
 
           return (
             <div
@@ -153,6 +154,7 @@ export default function CalendarWeekView({
                 flexDirection: 'column',
                 gap: '2px',
                 minHeight: allDayEvents.length > 0 ? '32px' : '24px',
+                backgroundColor: isTodayDate ? 'rgba(83, 155, 245, 0.05)' : undefined,
               }}
             >
               {allDayEvents.map((event) => {
