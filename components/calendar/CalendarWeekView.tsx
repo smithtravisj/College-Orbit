@@ -107,7 +107,7 @@ export default function CalendarWeekView({
                     display: 'flex',
                     alignItems: 'flex-start',
                     justifyContent: 'flex-end',
-                    paddingTop: '4px',
+                    paddingTop: '0px',
                     borderBottom: '1px solid var(--border)',
                   }}
                 >
