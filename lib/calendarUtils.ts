@@ -338,6 +338,36 @@ export interface EventLayout {
   totalColumns: number;
 }
 
+// Check if a time is the default end-of-day time (11:59 PM)
+export function isDefaultEndOfDayTime(dueAt: string | null | undefined): boolean {
+  if (!dueAt) return false;
+  const date = new Date(dueAt);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  return hours === 23 && minutes === 59;
+}
+
+// Separate tasks/deadlines into all-day (default 11:59pm) and timed events
+export function separateTaskDeadlineEvents(events: CalendarEvent[]): {
+  allDay: CalendarEvent[];
+  timed: CalendarEvent[];
+} {
+  const allDay: CalendarEvent[] = [];
+  const timed: CalendarEvent[] = [];
+
+  events.forEach((event) => {
+    if (event.type !== 'course') {
+      if (isDefaultEndOfDayTime(event.dueAt)) {
+        allDay.push(event);
+      } else {
+        timed.push(event);
+      }
+    }
+  });
+
+  return { allDay, timed };
+}
+
 // Calculate column layout for overlapping events
 // Uses an interval scheduling algorithm to assign events to non-overlapping columns
 export function calculateEventLayout(events: CalendarEvent[]): EventLayout[] {

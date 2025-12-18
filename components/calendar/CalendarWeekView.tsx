@@ -9,6 +9,7 @@ import {
   getEventHeight,
   getEventColor,
   calculateEventLayout,
+  separateTaskDeadlineEvents,
 } from '@/lib/calendarUtils';
 import { getDayOfWeek, isToday } from '@/lib/utils';
 
@@ -74,6 +75,20 @@ export default function CalendarWeekView({
     return map;
   }, [weekDays, eventsByDay]);
 
+  const timedEventLayoutsByDay = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof calculateEventLayout>>();
+    weekDays.forEach((day) => {
+      const dateStr = day.toISOString().split('T')[0];
+      const dayEvents = eventsByDay.get(dateStr) || [];
+      const { timed: timedEvents } = separateTaskDeadlineEvents(dayEvents);
+      const layout = calculateEventLayout(timedEvents);
+      if (layout.length > 0) {
+        map.set(dateStr, layout);
+      }
+    });
+    return map;
+  }, [weekDays, eventsByDay]);
+
   const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 
   return (
@@ -124,7 +139,7 @@ export default function CalendarWeekView({
         {weekDays.map((day, index) => {
           const dateStr = day.toISOString().split('T')[0];
           const dayEvents = eventsByDay.get(dateStr) || [];
-          const taskDeadlineEvents = dayEvents.filter((e) => e.type !== 'course');
+          const { allDay: allDayEvents } = separateTaskDeadlineEvents(dayEvents);
           const isLastDay = index === weekDays.length - 1;
 
           return (
@@ -139,10 +154,10 @@ export default function CalendarWeekView({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '2px',
-                minHeight: taskDeadlineEvents.length > 0 ? '32px' : '24px',
+                minHeight: allDayEvents.length > 0 ? '32px' : '24px',
               }}
             >
-              {taskDeadlineEvents.map((event) => {
+              {allDayEvents.map((event) => {
                 const color = getEventColor(event);
                 return (
                   <div
@@ -163,7 +178,7 @@ export default function CalendarWeekView({
                     }}
                     title={event.title}
                   >
-                    {event.type === 'task' ? '📝' : '⏰'} {event.title.substring(0, 16)}
+                    {event.title.substring(0, 16)}
                   </div>
                 );
               })}
@@ -292,6 +307,68 @@ export default function CalendarWeekView({
                     </div>
                   );
                 })}
+
+                {/* Timed task/deadline events */}
+                {(() => {
+                  const dayEvents = eventsByDay.get(dateStr) || [];
+                  const { timed: timedEvents } = separateTaskDeadlineEvents(dayEvents);
+                  const layout = timedEventLayoutsByDay.get(dateStr) || [];
+
+                  return timedEvents.map((event) => {
+                    if (!event.time) return null;
+
+                    const eventLayout = layout.find(l => l.event.id === event.id);
+                    if (!eventLayout) return null;
+
+                    const { top: baseTop } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
+                    const top = baseTop + 8;
+                    const height = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
+                    const color = getEventColor(event);
+
+                    const eventWidth = 100 / eventLayout.totalColumns;
+                    const eventLeft = eventLayout.column * eventWidth;
+
+                    const formatTime = (time: string) => {
+                      const [hours, minutes] = time.split(':');
+                      const hour = parseInt(hours);
+                      const ampm = hour >= 12 ? 'PM' : 'AM';
+                      const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+                      return `${displayHour}:${minutes} ${ampm}`;
+                    };
+
+                    return (
+                      <div
+                        key={event.id}
+                        style={{
+                          position: 'absolute',
+                          left: `calc(${eventLeft}% + 4px)`,
+                          width: `calc(${eventWidth}% - 8px)`,
+                          borderRadius: 'var(--radius-control)',
+                          fontSize: '0.7rem',
+                          padding: '4px',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          transition: 'opacity 0.2s',
+                          zIndex: 9,
+                          top: `${top}px`,
+                          height: `${height}px`,
+                          backgroundColor: `${color}30`,
+                          borderLeft: `2px solid ${color}`,
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                        onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                        title={event.title}
+                      >
+                        <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+                          {event.title.substring(0, 20)}
+                        </div>
+                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.65rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1 }}>
+                          {formatTime(event.time)}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             );
           })}
