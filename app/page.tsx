@@ -914,10 +914,10 @@ export default function Dashboard() {
                                   <div className="text-sm font-medium text-[var(--text)]">
                                     {cls.courseCode}{cls.courseName ? ` - ${cls.courseName}` : ''}
                                   </div>
-                                  <div className="text-sm text-[var(--text-secondary)]" style={{ marginTop: '8px' }}>
+                                  <div className="text-sm text-[var(--text-secondary)]" style={{ marginTop: '3px' }}>
                                     {formatTime12Hour(cls.start)} – {formatTime12Hour(cls.end)}
                                   </div>
-                                  <div className="text-sm text-[var(--text-secondary)]" style={{ marginTop: '4px' }}>
+                                  <div className="text-sm text-[var(--text-secondary)]" style={{ marginTop: '2px' }}>
                                     {cls.location}
                                   </div>
                                 </div>
