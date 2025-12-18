@@ -302,15 +302,7 @@ export default function Dashboard() {
                         options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
                       />
                     </div>
-                    <div style={{ paddingTop: '12px' }}>
-                      <Textarea
-                        label="Notes (optional)"
-                        value={deadlineFormData.notes}
-                        onChange={(e) => setDeadlineFormData({ ...deadlineFormData, notes: e.target.value })}
-                        placeholder="Add details..."
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4" style={{ paddingTop: '12px' }}>
                       <CalendarPicker
                         label="Due date (optional)"
                         value={deadlineFormData.dueDate}
@@ -383,6 +375,14 @@ export default function Dashboard() {
                           + Add link
                         </button>
                       )}
+                    </div>
+                    <div style={{ paddingTop: '12px' }}>
+                      <Textarea
+                        label="Notes (optional)"
+                        value={deadlineFormData.notes}
+                        onChange={(e) => setDeadlineFormData({ ...deadlineFormData, notes: e.target.value })}
+                        placeholder="Add details..."
+                      />
                     </div>
                     <div className="flex gap-3" style={{ paddingTop: '8px' }}>
                       <Button
@@ -483,18 +483,22 @@ export default function Dashboard() {
                                 {course.code}
                               </span>
                             )}
-                            {d.links && d.links.length > 0 && d.links.map((link: any) => (
-                              <a
-                                key={link.url}
-                                href={link.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
-                              >
-                                {link.label}
-                              </a>
-                            ))}
                           </div>
+                          {d.links && d.links.length > 0 && (
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              {d.links.map((link: any) => (
+                                <a
+                                  key={link.url}
+                                  href={link.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
+                                >
+                                  {link.label}
+                                </a>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
                           <button
@@ -563,15 +567,7 @@ export default function Dashboard() {
                       options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
                     />
                   </div>
-                  <div style={{ paddingTop: '12px' }}>
-                    <Textarea
-                      label="Notes (optional)"
-                      value={taskFormData.notes}
-                      onChange={(e) => setTaskFormData({ ...taskFormData, notes: e.target.value })}
-                      placeholder="Add any additional notes..."
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4" style={{ paddingTop: '12px' }}>
                     <CalendarPicker
                       label="Due date (optional)"
                       value={taskFormData.dueDate}
@@ -760,18 +756,22 @@ export default function Dashboard() {
                               {course.code}
                             </span>
                           )}
-                          {t.links && t.links.length > 0 && t.links.map((link: any) => (
-                            <a
-                              key={link.url}
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
-                            >
-                              {link.label}
-                            </a>
-                          ))}
                         </div>
+                        {t.links && t.links.length > 0 && (
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            {t.links.map((link: any) => (
+                              <a
+                                key={link.url}
+                                href={link.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
+                              >
+                                {link.label}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
                         <button

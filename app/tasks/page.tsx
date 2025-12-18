@@ -419,18 +419,22 @@ export default function TasksPage() {
                               {course.code}
                             </span>
                           )}
-                          {t.links && t.links.length > 0 && t.links.map((link: any) => (
-                            <a
-                              key={link.url}
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
-                            >
-                              {link.label}
-                            </a>
-                          ))}
                         </div>
+                        {t.links && t.links.length > 0 && (
+                          <div className="flex items-center gap-3 mt-2 flex-wrap">
+                            {t.links.map((link: any) => (
+                              <a
+                                key={link.url}
+                                href={link.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
+                              >
+                                {link.label}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
                         <button

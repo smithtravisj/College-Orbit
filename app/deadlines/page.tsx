@@ -440,18 +440,22 @@ export default function DeadlinesPage() {
                               {course.code}
                             </span>
                           )}
-                          {d.links && d.links.length > 0 && d.links.map((link: any) => (
-                            <a
-                              key={link.url}
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
-                            >
-                              {link.label}
-                            </a>
-                          ))}
                         </div>
+                        {d.links && d.links.length > 0 && (
+                          <div className="flex items-center gap-3 mt-2 flex-wrap">
+                            {d.links.map((link: any) => (
+                              <a
+                                key={link.url}
+                                href={link.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
+                              >
+                                {link.label}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
                         <button
