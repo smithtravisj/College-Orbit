@@ -715,7 +715,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       if (data.excludedDates && data.excludedDates.length > 0) {
         console.log('Importing excluded dates:', data.excludedDates.length);
         for (const excludedDate of data.excludedDates) {
-          const { id, createdAt, updatedAt, userId, ...excludedDateData } = excludedDate as any;
+          const { id, createdAt, updatedAt, userId, courseId, ...excludedDateData } = excludedDate as any;
           console.log('Adding excluded date:', excludedDateData);
           await store.addExcludedDate(excludedDateData);
         }
@@ -727,7 +727,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       if (data.gpaEntries && data.gpaEntries.length > 0) {
         console.log('Importing GPA entries:', data.gpaEntries.length);
         for (const gpaEntry of data.gpaEntries) {
-          const { id, createdAt, updatedAt, userId, ...gpaEntryData } = gpaEntry as any;
+          const { id, createdAt, updatedAt, userId, courseId, ...gpaEntryData } = gpaEntry as any;
           console.log('Adding GPA entry:', gpaEntryData);
           await store.addGpaEntry(gpaEntryData);
         }
