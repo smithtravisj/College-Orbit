@@ -241,40 +241,39 @@ export function isInMonth(date: Date, year: number, month: number): boolean {
   return date.getFullYear() === year && date.getMonth() === month;
 }
 
-// Colorblind-friendly color palette
-export const COLORBLIND_PALETTE = {
-  blue: '#0173B2',
-  orange: '#DE8F05',
-  green: '#029E73',
-  yellow: '#ECA307',
-  red: '#D55E00',
-  purple: '#CC79A7',
-  grey: '#999999',
+// Standard color palette
+export const COLOR_PALETTE = {
+  blue: '#3b82f6',
+  green: '#10b981',
+  purple: '#a855f7',
+  orange: '#f59e0b',
+  red: '#ef4444',
+  pink: '#ec4899',
+  indigo: '#6366f1',
+  cyan: '#06b6d4',
 };
 
 // Get the color for an event
 export function getEventColor(event: CalendarEvent): string {
   if (event.type === 'course') {
-    // Use blue for all courses
-    return COLORBLIND_PALETTE.blue;
+    // Use course color tag if available, otherwise blue
+    if (event.colorTag) {
+      return parseColor(event.colorTag);
+    }
+    return COLOR_PALETTE.blue;
   }
 
   if (event.type === 'task') {
-    // Use yellow for tasks
-    return COLORBLIND_PALETTE.yellow;
+    // Use green for tasks
+    return COLOR_PALETTE.green;
   }
 
   if (event.type === 'deadline') {
-    // Orange for upcoming, red for overdue
-    if (event.dueAt) {
-      const dueDate = new Date(event.dueAt);
-      const now = new Date();
-      return dueDate < now ? COLORBLIND_PALETTE.red : COLORBLIND_PALETTE.orange;
-    }
-    return COLORBLIND_PALETTE.orange;
+    // Use orange for deadlines
+    return COLOR_PALETTE.orange;
   }
 
-  return COLORBLIND_PALETTE.blue;
+  return COLOR_PALETTE.blue;
 }
 
 // Parse color tag to RGB values for opacity variations

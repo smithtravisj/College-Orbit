@@ -1,13 +1,12 @@
 'use client';
 
-import { COLORBLIND_PALETTE } from '@/lib/calendarUtils';
+import { COLOR_PALETTE } from '@/lib/calendarUtils';
 
 export default function CalendarLegend() {
   const legendItems = [
-    { color: COLORBLIND_PALETTE.blue, label: 'Course' },
-    { color: COLORBLIND_PALETTE.yellow, label: 'Task' },
-    { color: COLORBLIND_PALETTE.orange, label: 'Deadline (upcoming)' },
-    { color: COLORBLIND_PALETTE.red, label: 'Deadline (overdue)' },
+    { color: COLOR_PALETTE.blue, label: 'Course' },
+    { color: COLOR_PALETTE.green, label: 'Task' },
+    { color: COLOR_PALETTE.orange, label: 'Deadline' },
   ];
 
   return (
