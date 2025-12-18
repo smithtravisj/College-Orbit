@@ -114,7 +114,7 @@ const useAppStore = create<AppStore>((set, get) => ({
         tasks: tasksData.tasks || [],
         settings: settingsData.settings || DEFAULT_SETTINGS,
         excludedDates: excludedDatesData.excludedDates || [],
-        gpaEntries: gpaData.gpaEntries || [],
+        gpaEntries: gpaData.entries || [],
       });
     } catch (error) {
       console.error('Failed to load from database:', error);
@@ -603,11 +603,13 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       if (!response.ok) throw new Error('Failed to create GPA entry');
 
-      const { gpaEntries: updatedEntries } = await response.json();
+      // Reload all GPA entries from database to ensure consistency
+      const entriesRes = await fetch('/api/gpa-entries');
+      if (!entriesRes.ok) throw new Error('Failed to fetch GPA entries');
 
-      // Replace with server data
+      const { entries: allEntries } = await entriesRes.json();
       set({
-        gpaEntries: updatedEntries,
+        gpaEntries: allEntries,
       });
     } catch (error) {
       // Rollback on error
