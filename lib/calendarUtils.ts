@@ -216,8 +216,8 @@ export function getEventsForRange(
 // Returns top position (in pixels/units) and height for the event
 export function getTimeSlotPosition(
   time: string,
-  startHour: number = 6,
-  endHour: number = 22
+  startHour: number = 0,
+  endHour: number = 24
 ): { top: number; height: number } {
   const [hours, minutes] = time.split(':').map(Number);
 

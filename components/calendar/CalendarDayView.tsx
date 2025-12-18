@@ -18,8 +18,8 @@ interface CalendarDayViewProps {
 }
 
 const HOUR_HEIGHT = 60; // pixels
-const START_HOUR = 6;
-const END_HOUR = 22;
+const START_HOUR = 0;
+const END_HOUR = 24;
 
 export default function CalendarDayView({
   date,
