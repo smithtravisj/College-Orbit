@@ -7,7 +7,6 @@ import {
   getEventsForDate,
   isInMonth,
   getMonthViewColor,
-  getExclusionType,
   CalendarEvent,
 } from '@/lib/calendarUtils';
 import { isToday } from '@/lib/utils';
@@ -81,25 +80,6 @@ export default function CalendarMonthView({
           const isCurrentMonth = isInMonth(date, year, month);
           const isTodayDate = isToday(date);
           const dayEvents = eventsByDate.get(dateStr) || [];
-          const exclusionType = getExclusionType(date, excludedDates);
-
-          // Get course code for cancelled classes
-          let courseCode = '';
-          if (exclusionType === 'class-cancelled') {
-            const dateYear = date.getFullYear();
-            const dateMonth = String(date.getMonth() + 1).padStart(2, '0');
-            const dateDay = String(date.getDate()).padStart(2, '0');
-            const dateKey = `${dateYear}-${dateMonth}-${dateDay}`;
-            const exclusion = excludedDates.find((ex) => {
-              // Check if date matches (handle both YYYY-MM-DD and ISO datetime formats)
-              const exDateOnly = ex.date.includes('T') ? ex.date.split('T')[0] : ex.date;
-              return exDateOnly === dateKey && ex.courseId;
-            });
-            if (exclusion) {
-              const course = courses.find(c => c.id === exclusion.courseId);
-              courseCode = course?.code || '';
-            }
-          }
 
           return (
             <div
@@ -148,26 +128,6 @@ export default function CalendarMonthView({
               >
                 {date.getDate()}
               </div>
-
-              {/* Excluded date indicator */}
-              {exclusionType && (
-                <div
-                  style={{
-                    fontSize: '0.65rem',
-                    backgroundColor: '#122343',
-                    color: 'white',
-                    padding: '2px 4px',
-                    borderRadius: '3px',
-                    marginBottom: '6px',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    fontWeight: 500,
-                  }}
-                >
-                  {exclusionType === 'holiday' ? 'No School' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
-                </div>
-              )}
 
               {/* Event indicators - colored dots */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', flex: 1, alignContent: 'flex-start', minHeight: 0 }}>
