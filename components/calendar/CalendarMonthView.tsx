@@ -7,6 +7,7 @@ import {
   getEventsForDate,
   isInMonth,
   getMonthViewColor,
+  getExclusionType,
   CalendarEvent,
 } from '@/lib/calendarUtils';
 import { isToday } from '@/lib/utils';
@@ -80,6 +81,7 @@ export default function CalendarMonthView({
           const isCurrentMonth = isInMonth(date, year, month);
           const isTodayDate = isToday(date);
           const dayEvents = eventsByDate.get(dateStr) || [];
+          const exclusionType = getExclusionType(date, excludedDates);
 
           return (
             <div
@@ -128,6 +130,26 @@ export default function CalendarMonthView({
               >
                 {date.getDate()}
               </div>
+
+              {/* No School indicator */}
+              {exclusionType === 'holiday' && (
+                <div
+                  style={{
+                    fontSize: '0.65rem',
+                    backgroundColor: '#122343',
+                    color: 'white',
+                    padding: '2px 4px',
+                    borderRadius: '3px',
+                    marginBottom: '6px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    fontWeight: 500,
+                  }}
+                >
+                  No School
+                </div>
+              )}
 
               {/* Event indicators - colored dots */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', flex: 1, alignContent: 'flex-start', minHeight: 0 }}>
