@@ -121,7 +121,7 @@ export default function CalendarMonthView({
 
               {/* Event indicators */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', flex: 1, minHeight: 0 }}>
-                {dayEvents.slice(0, 2).map((event) => {
+                {dayEvents.slice(0, 3).map((event) => {
                   const bgColor = getEventColor(event);
                   const label =
                     event.type === 'course'
@@ -134,11 +134,11 @@ export default function CalendarMonthView({
                     <div
                       key={event.id}
                       style={{
-                        fontSize: '0.6rem',
+                        fontSize: '0.7rem',
                         paddingLeft: '2px',
                         paddingRight: '2px',
-                        paddingTop: '1px',
-                        paddingBottom: '1px',
+                        paddingTop: '2px',
+                        paddingBottom: '2px',
                         borderRadius: '2px',
                         backgroundColor: `${bgColor}20`,
                         color: bgColor,
@@ -155,14 +155,14 @@ export default function CalendarMonthView({
                 })}
 
                 {/* +X more indicator */}
-                {dayEvents.length > 2 && (
+                {dayEvents.length > 3 && (
                   <div style={{
-                    fontSize: '0.6rem',
+                    fontSize: '0.65rem',
                     color: 'var(--text-muted)',
                     paddingLeft: '2px',
                     lineHeight: 1,
                   }}>
-                    +{dayEvents.length - 2}
+                    +{dayEvents.length - 3}
                   </div>
                 )}
               </div>
