@@ -160,9 +160,15 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
             }}
           >
             <button
+              type="button"
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 handlePrevMonth();
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
               }}
               style={{
                 background: 'none',
@@ -181,9 +187,15 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
               {monthName}
             </div>
             <button
+              type="button"
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 handleNextMonth();
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
               }}
               style={{
                 background: 'none',
