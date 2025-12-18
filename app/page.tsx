@@ -9,7 +9,7 @@ import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 import Link from 'next/link';
-import { MapPin, Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 
@@ -271,7 +271,7 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
             <Card title="Next Class" className="h-full flex flex-col">
               {nextClass ? (
-                <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-4">
                   {/* Course Code & Name */}
                   <div>
                     <div className="text-sm font-medium text-[var(--text)]">
@@ -280,55 +280,31 @@ export default function Dashboard() {
                   </div>
 
                   {/* Time */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Time</span>
-                    <span className="text-sm font-medium text-[var(--text)]">
-                      {formatTime12Hour(nextClass.start)} – {formatTime12Hour(nextClass.end)}
-                    </span>
+                  <div className="text-sm text-[var(--text-secondary)]">
+                    {formatTime12Hour(nextClass.start)} – {formatTime12Hour(nextClass.end)}
                   </div>
 
                   {/* Location */}
-                  <div className="flex items-start gap-3">
-                    <MapPin size={16} className="flex-shrink-0 mt-0.5 text-[var(--text-muted)]" />
-                    <div className="flex-1 min-w-0">
-                      <span className="text-sm text-[var(--text)]">{nextClass.location}</span>
-                    </div>
+                  <div className="text-sm text-[var(--text-secondary)]">
+                    {nextClass.location}
                   </div>
 
                   {/* Course Links */}
                   {nextClass.courseLinks && nextClass.courseLinks.length > 0 && (
-                    <div className="space-y-2 border-t border-[var(--border)] pt-4">
-                      <div className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Links</div>
-                      <div className="flex flex-wrap gap-2">
-                        {nextClass.courseLinks.map((link) => (
-                          <a
-                            key={link.url}
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors bg-[var(--panel-2)] px-3 py-1.5 rounded-[var(--radius-control)]"
-                          >
-                            {link.label}
-                          </a>
-                        ))}
-                      </div>
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {nextClass.courseLinks.map((link) => (
+                        <a
+                          key={link.url}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors bg-[var(--panel-2)] px-3 py-1.5 rounded-[var(--radius-control)]"
+                        >
+                          {link.label}
+                        </a>
+                      ))}
                     </div>
                   )}
-
-                  {/* Action Button */}
-                  <div className="pt-2">
-                    <a
-                      href={`https://maps.google.com/?q=${encodeURIComponent(nextClass.location || '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex"
-                    >
-                      <Button variant="primary" size="sm" style={{ width: '100%', justifyContent: 'center', gap: '8px' }}>
-                        <MapPin size={14} />
-                        Get Directions
-                      </Button>
-                    </a>
-                  </div>
                 </div>
               ) : (
                 <EmptyState title="No classes today" description="You're free for the rest of the day!" />
