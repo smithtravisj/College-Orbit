@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const [dueSoonDays, setDueSoonDays] = useState<number | string>(7);
   const [exportMessage, setExportMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
   const { settings, updateSettings, exportData, importData, deleteAllData, initializeStore } = useAppStore();
 
@@ -87,12 +88,14 @@ export default function SettingsPage() {
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <input
+                    ref={dueSoonInputRef}
                     type="text"
                     inputMode="numeric"
-                    value={dueSoonDays}
-                    onChange={(e) => {
-                      setDueSoonDays(e.target.value);
-                      const val = parseInt(e.target.value);
+                    defaultValue={dueSoonDays}
+                    onKeyUp={(e) => {
+                      const inputValue = e.currentTarget.value;
+                      setDueSoonDays(inputValue);
+                      const val = parseInt(inputValue);
                       if (!isNaN(val) && val >= 1 && val <= 30) {
                         updateSettings({ dueSoonWindowDays: val });
                       }
