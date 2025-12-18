@@ -293,7 +293,7 @@ export const COLOR_PALETTE = {
   blue: '#3b82f6',
   green: '#22c55e',
   purple: '#a855f7',
-  orange: '#ff8c42',
+  orange: '#ff6b35',
   red: '#ef4444',
   pink: '#ec4899',
   indigo: '#6366f1',

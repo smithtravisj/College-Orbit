@@ -87,7 +87,7 @@ export default function CalendarDayView({
                       paddingBottom: '4px',
                       borderRadius: 'var(--radius-control)',
                       fontSize: '0.875rem',
-                      backgroundColor: `${color}20`,
+                      backgroundColor: `${color}30`,
                       color: 'white',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',

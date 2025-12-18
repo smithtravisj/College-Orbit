@@ -167,7 +167,7 @@ export default function CalendarWeekView({
                       paddingTop: '4px',
                       paddingBottom: '4px',
                       borderRadius: '2px',
-                      backgroundColor: `${color}20`,
+                      backgroundColor: `${color}30`,
                       color: 'white',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
