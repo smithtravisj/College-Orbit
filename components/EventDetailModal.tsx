@@ -148,6 +148,21 @@ export default function EventDetailModal({
     }
   };
 
+  const handleDoneAndClose = async () => {
+    if (event.type === 'task' && 'id' in fullData) {
+      const task = fullData as Task;
+      await updateTask(task.id, {
+        status: 'done',
+      });
+    } else if (event.type === 'deadline' && 'id' in fullData) {
+      const deadline = fullData as Deadline;
+      await updateDeadline(deadline.id, {
+        status: 'done',
+      });
+    }
+    onClose();
+  };
+
   const handleChecklistToggle = async (itemId: string) => {
     if (event.type === 'task' && 'id' in fullData) {
       const task = fullData as Task;
@@ -334,6 +349,21 @@ export default function EventDetailModal({
           >
             Edit
           </Button>
+          {event.type !== 'course' && (
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleDoneAndClose}
+              style={{
+                backgroundColor: '#132343',
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                borderColor: '#132343',
+              }}
+            >
+              Done
+            </Button>
+          )}
         </div>
       </div>
     </div>
