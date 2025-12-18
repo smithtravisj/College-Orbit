@@ -6,7 +6,7 @@ import {
   getDatesInMonth,
   getEventsForDate,
   isInMonth,
-  getEventColor,
+  getMonthViewColor,
 } from '@/lib/calendarUtils';
 import { isToday } from '@/lib/utils';
 
@@ -122,7 +122,7 @@ export default function CalendarMonthView({
               {/* Event indicators - colored dots */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', flex: 1, alignContent: 'flex-start', minHeight: 0 }}>
                 {dayEvents.slice(0, 8).map((event) => {
-                  const color = getEventColor(event);
+                  const color = getMonthViewColor(event);
 
                   return (
                     <div

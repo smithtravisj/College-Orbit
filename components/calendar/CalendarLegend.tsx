@@ -1,12 +1,12 @@
 'use client';
 
-import { COLOR_PALETTE } from '@/lib/calendarUtils';
+import { getMonthViewColor } from '@/lib/calendarUtils';
 
 export default function CalendarLegend() {
   const legendItems = [
-    { color: COLOR_PALETTE.blue, label: 'Course' },
-    { color: COLOR_PALETTE.green, label: 'Task' },
-    { color: COLOR_PALETTE.orange, label: 'Deadline' },
+    { color: getMonthViewColor({ type: 'course' } as any), label: 'Course' },
+    { color: getMonthViewColor({ type: 'task' } as any), label: 'Task' },
+    { color: getMonthViewColor({ type: 'deadline' } as any), label: 'Deadline' },
   ];
 
   return (
