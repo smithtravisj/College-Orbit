@@ -44,6 +44,8 @@ export async function POST(req: NextRequest) {
         code: data.code,
         name: data.name,
         term: data.term,
+        startDate: data.startDate ? new Date(data.startDate) : null,
+        endDate: data.endDate ? new Date(data.endDate) : null,
         meetingTimes: data.meetingTimes || [],
         links: data.links || [],
         colorTag: data.colorTag,
