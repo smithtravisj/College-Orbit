@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import useAppStore from '@/lib/store';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -12,11 +12,23 @@ import { Plus, Trash2 } from 'lucide-react';
 interface CourseFormProps {
   courseId?: string;
   onClose: () => void;
+  hideSubmitButton?: boolean;
+  onSave?: (data: any) => void;
 }
 
-export default function CourseForm({ courseId, onClose }: CourseFormProps) {
+const CourseFormComponent = forwardRef(function CourseForm(
+  { courseId, onClose, hideSubmitButton = false, onSave }: CourseFormProps,
+  ref: React.ForwardedRef<{ submit: () => void }>
+) {
   const { courses, addCourse, updateCourse } = useAppStore();
   const course = courses.find((c) => c.id === courseId);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    submit: () => {
+      formRef.current?.requestSubmit();
+    },
+  }));
 
   const [form, setForm] = useState({
     code: '',
@@ -70,17 +82,20 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
       courseData.endDate = form.endDate;
     }
 
-    if (courseId) {
-      updateCourse(courseId, courseData);
+    if (onSave) {
+      onSave(courseData);
     } else {
-      addCourse(courseData);
+      if (courseId) {
+        updateCourse(courseId, courseData);
+      } else {
+        addCourse(courseData);
+      }
+      onClose();
     }
-
-    onClose();
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <Input
           label="Course Code"
@@ -127,7 +142,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
         <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Meeting Times</label>
         <div className="space-y-2">
           {form.meetingTimes.map((mt, idx) => (
-            <div key={idx} className="flex gap-3 items-center">
+            <div key={idx} className="flex gap-2 items-center" style={{ overflowX: 'auto', paddingBottom: '4px' }}>
               <DaysDropdown
                 label={idx === 0 ? 'Days' : ''}
                 value={mt.days}
@@ -265,27 +280,31 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
         </Button>
       </div>
 
-      <div className="flex gap-3" style={{ paddingTop: '20px' }}>
-        <Button
-          variant="primary"
-          size="md"
-          type="submit"
-          style={{
-            backgroundColor: '#132343',
-            color: 'white',
-            borderWidth: '1px',
-            borderStyle: 'solid',
-            borderColor: 'var(--border)',
-            paddingLeft: '16px',
-            paddingRight: '16px'
-          }}
-        >
-          {courseId ? 'Update' : 'Add'} Course
-        </Button>
-        <Button variant="secondary" size="md" type="button" onClick={onClose}>
-          Cancel
-        </Button>
-      </div>
+      {!hideSubmitButton && (
+        <div className="flex gap-3" style={{ paddingTop: '20px' }}>
+          <Button
+            variant="primary"
+            size="md"
+            type="submit"
+            style={{
+              backgroundColor: '#132343',
+              color: 'white',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: 'var(--border)',
+              paddingLeft: '16px',
+              paddingRight: '16px'
+            }}
+          >
+            {courseId ? 'Update' : 'Add'} Course
+          </Button>
+          <Button variant="secondary" size="md" type="button" onClick={onClose}>
+            Cancel
+          </Button>
+        </div>
+      )}
     </form>
   );
-}
+});
+
+export default CourseFormComponent;

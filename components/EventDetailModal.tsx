@@ -68,7 +68,8 @@ export default function EventDetailModal({
   deadlines,
 }: EventDetailModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
-  const { updateTask, updateDeadline } = useAppStore();
+  const courseFormRef = useRef<{ submit: () => void }>(null);
+  const { updateTask, updateDeadline, updateCourse } = useAppStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState<any>(null);
 
@@ -275,6 +276,26 @@ export default function EventDetailModal({
     onClose();
   };
 
+  const handleSaveEditCourse = async (courseData: any) => {
+    if (!fullData || event.type !== 'course') return;
+    const course = fullData as Course;
+    try {
+      await updateCourse(course.id, courseData);
+      setIsEditing(false);
+      setEditFormData(null);
+    } catch (error) {
+      console.error('Error saving course:', error);
+    }
+  };
+
+  const handleSaveClick = () => {
+    if (event?.type === 'course') {
+      courseFormRef.current?.submit();
+    } else {
+      handleSaveEdit();
+    }
+  };
+
   return (
     <div
       style={{
@@ -405,7 +426,13 @@ export default function EventDetailModal({
         <div style={{ padding: '24px' }}>
           {isEditing ? (
             event.type === 'course' ? (
-              <CourseForm courseId={(fullData as Course).id} onClose={() => setIsEditing(false)} />
+              <CourseForm
+                ref={courseFormRef}
+                courseId={(fullData as Course).id}
+                onClose={() => setIsEditing(false)}
+                hideSubmitButton={true}
+                onSave={handleSaveEditCourse}
+              />
             ) : (
               <TaskDeadlineForm
                 type={event.type as 'task' | 'deadline'}
@@ -441,7 +468,7 @@ export default function EventDetailModal({
               <Button
                 variant="primary"
                 size="md"
-                onClick={handleSaveEdit}
+                onClick={handleSaveClick}
                 style={{
                   backgroundColor: '#132343',
                   borderWidth: '1px',
