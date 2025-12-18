@@ -667,6 +667,7 @@ const useAppStore = create<AppStore>((set, get) => ({
     try {
       // Import courses
       if (data.courses && data.courses.length > 0) {
+        console.log('Importing courses:', data.courses.length);
         for (const course of data.courses) {
           const { id, createdAt, updatedAt, ...courseData } = course as any;
           await store.addCourse(courseData);
@@ -675,6 +676,7 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       // Import deadlines
       if (data.deadlines && data.deadlines.length > 0) {
+        console.log('Importing deadlines:', data.deadlines.length);
         for (const deadline of data.deadlines) {
           const { id, createdAt, updatedAt, ...deadlineData } = deadline as any;
           await store.addDeadline(deadlineData);
@@ -683,6 +685,7 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       // Import tasks
       if (data.tasks && data.tasks.length > 0) {
+        console.log('Importing tasks:', data.tasks.length);
         for (const task of data.tasks) {
           const { id, createdAt, updatedAt, ...taskData } = task as any;
           await store.addTask(taskData);
@@ -691,18 +694,26 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       // Import excluded dates
       if (data.excludedDates && data.excludedDates.length > 0) {
+        console.log('Importing excluded dates:', data.excludedDates.length);
         for (const excludedDate of data.excludedDates) {
           const { id, createdAt, updatedAt, ...excludedDateData } = excludedDate as any;
+          console.log('Adding excluded date:', excludedDateData);
           await store.addExcludedDate(excludedDateData);
         }
+      } else {
+        console.log('No excluded dates to import');
       }
 
       // Import GPA entries
       if (data.gpaEntries && data.gpaEntries.length > 0) {
+        console.log('Importing GPA entries:', data.gpaEntries.length);
         for (const gpaEntry of data.gpaEntries) {
           const { id, createdAt, updatedAt, ...gpaEntryData } = gpaEntry as any;
+          console.log('Adding GPA entry:', gpaEntryData);
           await store.addGpaEntry(gpaEntryData);
         }
+      } else {
+        console.log('No GPA entries to import');
       }
 
       // Import settings
