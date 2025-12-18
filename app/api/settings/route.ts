@@ -69,7 +69,18 @@ export async function PATCH(req: NextRequest) {
     });
 
     console.log('Settings saved:', settings);
-    return NextResponse.json({ settings });
+
+    // Verify the save by reading back
+    const verify = await prisma.settings.findUnique({
+      where: { userId: session.user.id },
+    });
+    console.log('Verification read:', verify);
+
+    if (!verify) {
+      throw new Error('Settings save failed - verification read returned null');
+    }
+
+    return NextResponse.json({ settings: verify });
   } catch (error) {
     console.error('Error updating settings:', error);
     return NextResponse.json(
