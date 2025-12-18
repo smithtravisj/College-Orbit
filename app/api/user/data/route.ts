@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { authConfig } from '@/auth.config';
 
 // DELETE all user data
-export async function DELETE(req: NextRequest) {
+export async function DELETE(_req: NextRequest) {
   try {
     const session = await getServerSession(authConfig);
 
