@@ -15,6 +15,7 @@ export default function SettingsPage() {
   const [exportMessage, setExportMessage] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
   const [importMessage, setImportMessage] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
@@ -78,10 +79,12 @@ export default function SettingsPage() {
   };
 
   const handleDeleteAllData = () => {
-    if (confirm('Are you sure? This will delete ALL data (courses, tasks, deadlines). This cannot be undone.')) {
-      deleteAllData();
-      alert('All data deleted');
-    }
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    deleteAllData();
+    setShowDeleteConfirm(false);
   };
 
   return (
@@ -248,6 +251,70 @@ export default function SettingsPage() {
           </Card>
         </div>
       </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'var(--panel)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '24px',
+            maxWidth: '400px',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <h3 style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
+              Delete All Data?
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
+              This will permanently delete all your data including courses, tasks, and deadlines. This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#660000',
+                  color: 'white',
+                  border: '1px solid #660000',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Delete All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
