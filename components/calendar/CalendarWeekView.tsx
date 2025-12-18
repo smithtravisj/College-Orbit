@@ -10,6 +10,7 @@ import {
   getEventColor,
   calculateEventLayout,
   separateTaskDeadlineEvents,
+  getExcludedDateDescription,
   CalendarEvent,
 } from '@/lib/calendarUtils';
 import { getDayOfWeek, isToday } from '@/lib/utils';
@@ -102,6 +103,7 @@ export default function CalendarWeekView({
           const isTodayDate = isToday(day);
           const dayName = getDayOfWeek(day);
           const isLastDay = index === weekDays.length - 1;
+          const excludedDateDesc = getExcludedDateDescription(dateStr, excludedDates);
 
           return (
             <div
@@ -115,12 +117,33 @@ export default function CalendarWeekView({
                 paddingBottom: '12px',
                 textAlign: 'center',
                 backgroundColor: isTodayDate ? 'var(--accent-2)' : 'var(--panel-2)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
               }}
             >
               <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>{dayName}</div>
               <div style={{ fontSize: '1.125rem', fontWeight: 600, color: isTodayDate ? 'var(--accent)' : 'var(--text)' }}>
                 {day.getDate()}
               </div>
+              {excludedDateDesc && (
+                <div
+                  style={{
+                    fontSize: '0.65rem',
+                    backgroundColor: '#122343',
+                    color: 'white',
+                    padding: '2px 4px',
+                    borderRadius: '3px',
+                    fontWeight: 500,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                  title={excludedDateDesc}
+                >
+                  Holiday
+                </div>
+              )}
             </div>
           );
         })}

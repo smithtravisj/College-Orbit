@@ -9,6 +9,7 @@ import {
   getEventColor,
   calculateEventLayout,
   separateTaskDeadlineEvents,
+  getExcludedDateDescription,
   CalendarEvent,
 } from '@/lib/calendarUtils';
 import EventDetailModal from '@/components/EventDetailModal';
@@ -68,11 +69,31 @@ export default function CalendarDayView({
     day: 'numeric',
   });
 
+  const dateISOStr = date.toISOString().split('T')[0];
+  const excludedDateDesc = getExcludedDateDescription(dateISOStr, excludedDates);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--panel)', overflow: 'auto' }}>
       {/* Header */}
       <div style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text)' }}>{dateStr}</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text)', margin: 0 }}>{dateStr}</h2>
+          {excludedDateDesc && (
+            <div
+              style={{
+                fontSize: '0.75rem',
+                backgroundColor: '#122343',
+                color: 'white',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontWeight: 500,
+              }}
+              title={excludedDateDesc}
+            >
+              Holiday: {excludedDateDesc}
+            </div>
+          )}
+        </div>
       </div>
 
       {(() => {
