@@ -39,7 +39,10 @@ export default function CalendarContent() {
     }
     setView(viewToUse);
 
-    if (dateParam) {
+    // If in day view, always go to today. Otherwise use dateParam if available
+    if (viewToUse === 'day') {
+      setCurrentDate(new Date());
+    } else if (dateParam) {
       const date = new Date(dateParam);
       if (!isNaN(date.getTime())) {
         setCurrentDate(date);

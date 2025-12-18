@@ -62,9 +62,6 @@ export default function CalendarDayView({
       {/* Header */}
       <div style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
         <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text)' }}>{dateStr}</h2>
-        {isToday(date) && (
-          <p style={{ fontSize: '0.875rem', color: 'var(--accent)' }}>Today</p>
-        )}
       </div>
 
       {(() => {
