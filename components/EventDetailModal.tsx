@@ -148,15 +148,6 @@ export default function EventDetailModal({
     }
   };
 
-  const handleTaskStatusToggle = async () => {
-    if (event.type === 'task' && 'id' in fullData) {
-      const task = fullData as Task;
-      await updateTask(task.id, {
-        status: task.status === 'done' ? 'open' : 'done',
-      });
-    }
-  };
-
   const handleChecklistToggle = async (itemId: string) => {
     if (event.type === 'task' && 'id' in fullData) {
       const task = fullData as Task;
@@ -185,7 +176,7 @@ export default function EventDetailModal({
           border: '1px solid var(--border)',
           borderRadius: 'var(--radius-card)',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          maxWidth: '600px',
+          maxWidth: '450px',
           width: '100%',
           maxHeight: '90vh',
           overflow: 'auto',
@@ -300,7 +291,6 @@ export default function EventDetailModal({
               task={fullData}
               relatedCourse={relatedCourse}
               onChecklistToggle={handleChecklistToggle}
-              onStatusToggle={handleTaskStatusToggle}
             />
           ) : event.type === 'deadline' ? (
             <DeadlineContent
@@ -437,50 +427,15 @@ interface TaskContentProps {
   task: Task;
   relatedCourse: Course | null;
   onChecklistToggle: (itemId: string) => void;
-  onStatusToggle: () => void;
 }
 
 function TaskContent({
   task,
   relatedCourse,
   onChecklistToggle,
-  onStatusToggle,
 }: TaskContentProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Task Status Checkbox */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          padding: '12px',
-          backgroundColor: 'var(--panel-2)',
-          borderRadius: '8px',
-        }}
-      >
-        <input
-          type="checkbox"
-          checked={task.status === 'done'}
-          onChange={onStatusToggle}
-          style={{
-            width: '20px',
-            height: '20px',
-            cursor: 'pointer',
-          }}
-          aria-label="Mark task as done"
-        />
-        <span
-          style={{
-            fontSize: '0.875rem',
-            color: 'var(--text-muted)',
-            fontWeight: 500,
-          }}
-        >
-          {task.status === 'done' ? 'Marked Done' : 'Mark As Done'}
-        </span>
-      </div>
-
       {/* Related Course */}
       {relatedCourse && (
         <div>
