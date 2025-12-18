@@ -219,21 +219,31 @@ export default function Dashboard() {
       return a.title.localeCompare(b.title);
     });
 
+  // Helper function to check if a course is currently active
+  const isCourseCurrent = (course: any) => {
+    const now = new Date();
+    if (course.startDate && new Date(course.startDate) > now) return false; // Course hasn't started
+    if (course.endDate && new Date(course.endDate) < now) return false; // Course has ended
+    return true;
+  };
+
   // Get next class
   const today = new Date();
-  const todayClasses = courses.flatMap((course) =>
-    (course.meetingTimes || [])
-      .filter((mt) => {
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        return mt.days?.includes(days[today.getDay()]) || false;
-      })
-      .map((mt) => ({
-        ...mt,
-        courseCode: course.code,
-        courseName: course.name,
-        courseLinks: course.links,
-      }))
-  );
+  const todayClasses = courses
+    .filter(isCourseCurrent)
+    .flatMap((course) =>
+      (course.meetingTimes || [])
+        .filter((mt) => {
+          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          return mt.days?.includes(days[today.getDay()]) || false;
+        })
+        .map((mt) => ({
+          ...mt,
+          courseCode: course.code,
+          courseName: course.name,
+          courseLinks: course.links,
+        }))
+    );
 
   const now = new Date();
   const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -876,6 +886,7 @@ export default function Dashboard() {
                   const dayAbbrev = dayNames[dayIndex];
 
                   const classesOnDay = courses
+                    .filter(isCourseCurrent)
                     .flatMap((course) =>
                       (course.meetingTimes || [])
                         .filter((mt) => mt.days?.includes(dayAbbrev))
