@@ -350,7 +350,7 @@ export default function CalendarWeekView({
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'center',
-                          alignItems: 'center',
+                          alignItems: 'flex-start',
                           boxSizing: 'border-box',
                         }}
                         onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
@@ -358,8 +358,8 @@ export default function CalendarWeekView({
                         title={event.title}
                         onClick={() => setSelectedEvent(event)}
                       >
-                        <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2, textAlign: 'center' }}>
-                          {event.title.substring(0, 20)}
+                        <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2, minWidth: 0 }}>
+                          {event.title}
                         </div>
                       </div>
                     );
