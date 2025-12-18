@@ -37,7 +37,7 @@ export default function DaysDropdown({ value, onChange, label }: DaysDropdownPro
   return (
     <div ref={dropdownRef} className="relative w-full" style={{ minWidth: '140px' }}>
       {label && (
-        <label className="block text-sm font-medium text-[var(--text)] mb-3">
+        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
           {label}
         </label>
       )}
