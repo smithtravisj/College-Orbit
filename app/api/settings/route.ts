@@ -39,33 +39,41 @@ export async function PATCH(req: NextRequest) {
     const session = await getServerSession(authConfig);
 
     if (!session?.user?.id) {
+      console.log('No user ID in session');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const data = await req.json();
+    console.log('Updating settings for user:', session.user.id, 'with data:', data);
+
+    // Build update object with only provided fields
+    const updateData: any = {};
+    if (data.dueSoonWindowDays !== undefined) updateData.dueSoonWindowDays = data.dueSoonWindowDays;
+    if (data.weekStartsOn !== undefined) updateData.weekStartsOn = data.weekStartsOn;
+    if (data.theme !== undefined) updateData.theme = data.theme;
+    if (data.enableNotifications !== undefined) updateData.enableNotifications = data.enableNotifications;
+
+    // Build create object with all fields (using defaults if not provided)
+    const createData = {
+      userId: session.user.id,
+      dueSoonWindowDays: data.dueSoonWindowDays ?? 7,
+      weekStartsOn: data.weekStartsOn ?? 'Sun',
+      theme: data.theme ?? 'system',
+      enableNotifications: data.enableNotifications ?? false,
+    };
 
     const settings = await prisma.settings.upsert({
       where: { userId: session.user.id },
-      update: {
-        dueSoonWindowDays: data.dueSoonWindowDays,
-        weekStartsOn: data.weekStartsOn,
-        theme: data.theme,
-        enableNotifications: data.enableNotifications,
-      },
-      create: {
-        userId: session.user.id,
-        dueSoonWindowDays: data.dueSoonWindowDays,
-        weekStartsOn: data.weekStartsOn,
-        theme: data.theme,
-        enableNotifications: data.enableNotifications,
-      },
+      update: updateData,
+      create: createData,
     });
 
+    console.log('Settings saved:', settings);
     return NextResponse.json({ settings });
   } catch (error) {
     console.error('Error updating settings:', error);
     return NextResponse.json(
-      { error: 'Failed to update settings' },
+      { error: 'Failed to update settings', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
