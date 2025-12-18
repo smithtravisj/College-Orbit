@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Course, Task, Deadline } from '@/types';
 import { CalendarEvent } from '@/lib/calendarUtils';
 import useAppStore from '@/lib/store';
@@ -67,6 +68,7 @@ export default function EventDetailModal({
   tasks,
   deadlines,
 }: EventDetailModalProps) {
+  const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
   const courseFormRef = useRef<{ submit: () => void }>(null);
   const { updateTask, updateDeadline, updateCourse } = useAppStore();
@@ -139,8 +141,14 @@ export default function EventDetailModal({
       setIsEditing(false);
       setEditFormData(null);
     } else {
-      setIsEditing(true);
-      if (event.type === 'task' && 'checklist' in fullData) {
+      if (event.type === 'course') {
+        // Navigate to courses page with courseId for editing
+        const course = fullData as Course;
+        router.push(`/courses?edit=${course.id}`);
+        onClose();
+      } else {
+        setIsEditing(true);
+        if (event.type === 'task' && 'checklist' in fullData) {
         const task = fullData as Task;
         const dueDate = task.dueAt ? new Date(task.dueAt) : null;
         let dateStr = '';
@@ -180,6 +188,7 @@ export default function EventDetailModal({
           notes: deadline.notes,
           links: deadline.links && deadline.links.length > 0 ? deadline.links : [{ label: '', url: '' }],
         });
+      }
       }
     }
   };
@@ -490,23 +499,21 @@ export default function EventDetailModal({
                     : 'Mark Complete'}
                 </Button>
               )}
-              {event.type !== 'course' && (
-                <Button
-                  variant="primary"
-                  size="md"
-                  onClick={handleEditToggle}
-                  style={{
-                    backgroundColor: '#132343',
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: '#202d48',
-                    paddingLeft: '16px',
-                    paddingRight: '16px',
-                  }}
-                >
-                  Edit
-                </Button>
-              )}
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleEditToggle}
+                style={{
+                  backgroundColor: '#132343',
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: '#202d48',
+                  paddingLeft: '16px',
+                  paddingRight: '16px',
+                }}
+              >
+                Edit
+              </Button>
               <Button
                 variant="primary"
                 size="md"
