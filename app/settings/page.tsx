@@ -82,9 +82,14 @@ export default function SettingsPage() {
     setShowDeleteConfirm(true);
   };
 
-  const confirmDelete = () => {
-    deleteAllData();
-    setShowDeleteConfirm(false);
+  const confirmDelete = async () => {
+    try {
+      await deleteAllData();
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      setImportMessage('✗ Failed to delete data');
+      setTimeout(() => setImportMessage(''), 3000);
+    }
   };
 
   return (

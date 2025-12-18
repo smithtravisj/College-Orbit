@@ -498,15 +498,33 @@ const useAppStore = create<AppStore>((set, get) => ({
     }
   },
 
-  deleteAllData: () => {
-    set({
-      courses: [],
-      deadlines: [],
-      tasks: [],
-      settings: DEFAULT_SETTINGS,
-    });
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('byu-survival-tool-data');
+  deleteAllData: async () => {
+    try {
+      // Delete from database via API
+      const response = await fetch('/api/user/data', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete data from database');
+      }
+
+      // Clear store
+      set({
+        courses: [],
+        deadlines: [],
+        tasks: [],
+        settings: DEFAULT_SETTINGS,
+      });
+
+      // Clear localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('byu-survival-tool-data');
+      }
+    } catch (error) {
+      console.error('Error deleting all data:', error);
+      throw error;
     }
   },
 }));
