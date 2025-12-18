@@ -88,7 +88,7 @@ export default function CalendarDayView({
       )}
 
       {/* Time grid */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'auto' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'auto', overscrollBehavior: 'contain' }}>
         {/* Time column */}
         <div style={{ width: '80px', borderRight: '1px solid var(--border)', paddingTop: '8px', flexShrink: 0 }}>
           {hours.map((hour) => {
