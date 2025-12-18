@@ -359,6 +359,7 @@ export default function ToolsPage() {
                 { label: 'BYU Outlook', url: 'https://outlook.office.com/mail/' },
                 { label: 'BYU Library', url: 'https://lib.byu.edu/' },
                 { label: 'Residence Life', url: 'https://reslife.byu.edu/' },
+                { label: 'Endorsement', url: 'https://endorse.byu.edu/' },
               ].map((link) => (
                 <a
                   key={link.url}
