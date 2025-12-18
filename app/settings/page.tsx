@@ -14,6 +14,7 @@ export default function SettingsPage() {
   const [dueSoonDays, setDueSoonDays] = useState<number | string>(7);
   const [exportMessage, setExportMessage] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
+  const [importMessage, setImportMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
@@ -66,9 +67,11 @@ export default function SettingsPage() {
       try {
         const data = JSON.parse(e.target?.result as string);
         importData(data);
-        alert('Data imported successfully!');
+        setImportMessage('✓ Data imported successfully!');
+        setTimeout(() => setImportMessage(''), 3000);
       } catch (error) {
-        alert('Failed to import data. Invalid file format.');
+        setImportMessage('✗ Failed to import data. Invalid file format.');
+        setTimeout(() => setImportMessage(''), 3000);
       }
     };
     reader.readAsText(file);
@@ -198,6 +201,9 @@ export default function SettingsPage() {
                   <Upload size={18} />
                   Import Data
                 </Button>
+                {importMessage && (
+                  <p style={{ marginTop: '8px', fontSize: '14px', color: importMessage.includes('✓') ? 'var(--success)' : 'var(--danger)' }}>{importMessage}</p>
+                )}
               </div>
             </div>
           </Card>
