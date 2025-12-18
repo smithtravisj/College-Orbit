@@ -44,9 +44,16 @@ export async function PATCH(req: NextRequest) {
 
     const data = await req.json();
 
-    const settings = await prisma.settings.update({
+    const settings = await prisma.settings.upsert({
       where: { userId: session.user.id },
-      data: {
+      update: {
+        dueSoonWindowDays: data.dueSoonWindowDays,
+        weekStartsOn: data.weekStartsOn,
+        theme: data.theme,
+        enableNotifications: data.enableNotifications,
+      },
+      create: {
+        userId: session.user.id,
         dueSoonWindowDays: data.dueSoonWindowDays,
         weekStartsOn: data.weekStartsOn,
         theme: data.theme,
