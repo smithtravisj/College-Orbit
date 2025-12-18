@@ -314,6 +314,7 @@ export default function CalendarWeekView({
                 {(() => {
                   const dayEvents = eventsByDay.get(dateStr) || [];
                   const { timed: timedEvents } = separateTaskDeadlineEvents(dayEvents);
+                  const courseEvents = dayEvents.filter((e) => e.type === 'course');
                   const layout = eventLayoutsByDay.get(dateStr) || [];
 
                   return timedEvents.map((event) => {
@@ -327,11 +328,14 @@ export default function CalendarWeekView({
                     const height = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
                     const color = getEventColor(event);
 
-                    // Check if this is the only timed event (including courses) in the layout
-                    const isAlone = eventLayout.totalColumns === 1;
+                    // Check if this is the only task/deadline AND there are no courses
+                    const otherTasksDeadlines = timedEvents.filter(e => e.id !== event.id);
+                    const isAloneTaskDeadline = otherTasksDeadlines.length === 0;
+                    const noCourses = courseEvents.length === 0;
+                    const shouldExpand = isAloneTaskDeadline && noCourses;
 
-                    const eventWidth = isAlone ? 100 : 100 / eventLayout.totalColumns;
-                    const eventLeft = isAlone ? 0 : eventLayout.column * (100 / eventLayout.totalColumns);
+                    const eventWidth = shouldExpand ? 100 : 100 / eventLayout.totalColumns;
+                    const eventLeft = shouldExpand ? 0 : eventLayout.column * (100 / eventLayout.totalColumns);
 
                     return (
                       <div
