@@ -20,6 +20,7 @@ export async function DELETE(_req: NextRequest) {
       prisma.deadline.deleteMany({ where: { userId } }),
       prisma.task.deleteMany({ where: { userId } }),
       prisma.gpaEntry.deleteMany({ where: { userId } }),
+      prisma.excludedDate.deleteMany({ where: { userId } }),
       prisma.settings.deleteMany({ where: { userId } }),
     ]);
 
