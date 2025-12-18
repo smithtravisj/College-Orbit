@@ -358,7 +358,7 @@ export default function CalendarWeekView({
                         title={event.title}
                         onClick={() => setSelectedEvent(event)}
                       >
-                        <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2, width: '100%', minWidth: 0 }}>
                           {event.title}
                         </div>
                       </div>
