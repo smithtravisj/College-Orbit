@@ -45,6 +45,7 @@ export default function CalendarWeekView({
     type: 'exclusion' | 'more';
     dateStr: string;
     position: { top: number; left: number };
+    hasExclusion?: boolean;
   } | null>(null);
 
   useEffect(() => {
@@ -255,7 +256,8 @@ export default function CalendarWeekView({
                     color: 'var(--text-muted)',
                     fontWeight: 500,
                     lineHeight: 1,
-                    paddingTop: '2px',
+                    paddingTop: '4px',
+                    paddingLeft: '2px',
                     cursor: 'pointer',
                   }}
                   onClick={(e) => {
@@ -264,6 +266,7 @@ export default function CalendarWeekView({
                       type: 'more',
                       dateStr,
                       position: { top: rect.bottom + 4, left: rect.left },
+                      hasExclusion,
                     });
                   }}
                 >
@@ -523,23 +526,17 @@ export default function CalendarWeekView({
                 courseName = course?.code || course?.name || '';
               }
 
-              const dateObj = new Date(exclusion.date);
-              const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)' }}>
                     {exclusionType === 'holiday' ? 'Holiday' : 'Class Cancelled'}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                    {dateStr}
                   </div>
                   {courseName && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                       {courseName}
                     </div>
                   )}
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                     {exclusion.description}
                   </div>
                 </div>
@@ -550,7 +547,7 @@ export default function CalendarWeekView({
               const dateStr = popupState.dateStr;
               const dayEvents = eventsByDay.get(dateStr) || [];
               const { allDay: allDayEvents } = separateTaskDeadlineEvents(dayEvents);
-              const maxVisibleEvents = getExclusionType(new Date(dateStr), excludedDates) ? 2 : 3;
+              const maxVisibleEvents = popupState.hasExclusion ? 2 : 3;
               const hiddenEvents = allDayEvents.slice(maxVisibleEvents);
 
               return (
