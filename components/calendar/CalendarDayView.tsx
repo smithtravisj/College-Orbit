@@ -73,6 +73,20 @@ export default function CalendarDayView({
   const exclusionType = getExclusionType(date, excludedDates);
   const excludedDateDesc = getExcludedDateDescription(date, excludedDates);
 
+  // Get course code for cancelled classes
+  let courseCode = '';
+  if (exclusionType === 'class-cancelled') {
+    const dateYear = date.getFullYear();
+    const dateMonth = String(date.getMonth() + 1).padStart(2, '0');
+    const dateDay = String(date.getDate()).padStart(2, '0');
+    const dateKey = `${dateYear}-${dateMonth}-${dateDay}`;
+    const exclusion = excludedDates.find((ex) => ex.date === dateKey && ex.courseId);
+    if (exclusion) {
+      const course = courses.find(c => c.id === exclusion.courseId);
+      courseCode = course?.code || '';
+    }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--panel)', overflow: 'auto' }}>
       {/* Header */}
@@ -91,7 +105,7 @@ export default function CalendarDayView({
               }}
               title={excludedDateDesc}
             >
-              {exclusionType === 'holiday' ? 'Holiday' : 'Class Cancelled'}{excludedDateDesc ? ': ' + excludedDateDesc : ''}
+              {exclusionType === 'holiday' ? 'Holiday' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}{excludedDateDesc && exclusionType === 'holiday' ? ': ' + excludedDateDesc : ''}
             </div>
           )}
         </div>
