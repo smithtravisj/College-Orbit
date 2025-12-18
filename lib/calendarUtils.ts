@@ -119,6 +119,9 @@ export function getTaskDeadlineEventsForDate(
 
   return allItems
     .filter((item) => {
+      // Exclude completed tasks and deadlines
+      if (item.status === 'done') return false;
+
       if (!item.dueAt) return false;
 
       const dueDate = new Date(item.dueAt);
