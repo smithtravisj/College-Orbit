@@ -112,7 +112,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
             border: '1px solid var(--border)',
             borderRadius: 'var(--radius-control)',
             padding: '12px',
-            zIndex: 50,
+            zIndex: 9999,
             minWidth: '260px',
             boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
             pointerEvents: 'auto',

@@ -140,8 +140,8 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
 
       {isOpen && (
         <div
-          className="absolute top-full left-0 right-0 bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg z-10"
-          style={{ minWidth: '180px', marginTop: '4px' }}
+          className="absolute top-full left-0 right-0 bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg"
+          style={{ minWidth: '180px', marginTop: '4px', zIndex: 9999 }}
         >
           <div style={{ padding: '16px' }}>
             <div className="flex items-center gap-4 justify-center">
