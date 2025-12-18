@@ -103,7 +103,7 @@ export default function CalendarWeekView({
           const isTodayDate = isToday(day);
           const dayName = getDayOfWeek(day);
           const isLastDay = index === weekDays.length - 1;
-          const excludedDateDesc = getExcludedDateDescription(dateStr, excludedDates);
+          const excludedDateDesc = getExcludedDateDescription(day, excludedDates);
 
           return (
             <div

@@ -69,8 +69,7 @@ export default function CalendarDayView({
     day: 'numeric',
   });
 
-  const dateISOStr = date.toISOString().split('T')[0];
-  const excludedDateDesc = getExcludedDateDescription(dateISOStr, excludedDates);
+  const excludedDateDesc = getExcludedDateDescription(date, excludedDates);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--panel)', overflow: 'auto' }}>

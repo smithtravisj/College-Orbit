@@ -81,7 +81,7 @@ export default function CalendarMonthView({
           const isCurrentMonth = isInMonth(date, year, month);
           const isTodayDate = isToday(date);
           const dayEvents = eventsByDate.get(dateStr) || [];
-          const excludedDateDesc = getExcludedDateDescription(dateStr, excludedDates);
+          const excludedDateDesc = getExcludedDateDescription(date, excludedDates);
 
           return (
             <div
