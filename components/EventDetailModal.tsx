@@ -255,6 +255,22 @@ export default function EventDetailModal({
     }
   };
 
+  const handleMarkDoneClick = async () => {
+    if (event.type === 'task' && 'status' in fullData) {
+      const task = fullData as Task;
+      const newStatus = task.status === 'done' ? 'open' : 'done';
+      await updateTask(task.id, {
+        status: newStatus,
+      });
+    } else if (event.type === 'deadline' && 'status' in fullData) {
+      const deadline = fullData as Deadline;
+      const newStatus = deadline.status === 'done' ? 'open' : 'done';
+      await updateDeadline(deadline.id, {
+        status: newStatus,
+      });
+    }
+  };
+
   const handleDoneAndClose = async () => {
     if (event.type === 'task' && 'id' in fullData) {
       const task = fullData as Task;
@@ -442,6 +458,8 @@ export default function EventDetailModal({
                   borderWidth: '1px',
                   borderStyle: 'solid',
                   borderColor: '#132343',
+                  paddingLeft: '16px',
+                  paddingRight: '16px',
                 }}
               >
                 Save
@@ -450,10 +468,10 @@ export default function EventDetailModal({
           ) : (
             <>
               {event.type !== 'course' && (
-                <Button variant="secondary" size="md" onClick={handleDoneAndClose}>
+                <Button variant="secondary" size="md" onClick={handleMarkDoneClick}>
                   {fullData && 'status' in fullData && (fullData as Task | Deadline).status === 'done'
-                    ? 'Mark Open'
-                    : 'Done'}
+                    ? 'Mark Incomplete'
+                    : 'Mark Complete'}
                 </Button>
               )}
               <Button
@@ -465,10 +483,29 @@ export default function EventDetailModal({
                   borderWidth: '1px',
                   borderStyle: 'solid',
                   borderColor: '#132343',
+                  paddingLeft: '16px',
+                  paddingRight: '16px',
                 }}
               >
                 Edit
               </Button>
+              {event.type !== 'course' && (
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={handleDoneAndClose}
+                  style={{
+                    backgroundColor: '#132343',
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: '#132343',
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
+                  }}
+                >
+                  Done
+                </Button>
+              )}
             </>
           )}
         </div>
