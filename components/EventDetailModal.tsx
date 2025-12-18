@@ -549,31 +549,37 @@ function TaskDeadlineForm({ formData, setFormData, courses }: TaskDeadlineFormPr
       />
 
       <div>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text)', margin: '0 0 8px 0' }}>
           Links
         </p>
         {formData.links.map((link: any, index: number) => (
-          <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-            <Input
-              placeholder="Label"
-              value={link.label}
-              onChange={(e) => {
-                const newLinks = [...formData.links];
-                newLinks[index].label = e.target.value;
-                setFormData({ ...formData, links: newLinks });
-              }}
-              style={{ flex: 1 }}
-            />
-            <Input
-              placeholder="URL"
-              value={link.url}
-              onChange={(e) => {
-                const newLinks = [...formData.links];
-                newLinks[index].url = e.target.value;
-                setFormData({ ...formData, links: newLinks });
-              }}
-              style={{ flex: 1 }}
-            />
+          <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+            <div>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0 0 4px 8px' }}>
+                Label
+              </p>
+              <Input
+                value={link.label}
+                onChange={(e) => {
+                  const newLinks = [...formData.links];
+                  newLinks[index].label = e.target.value;
+                  setFormData({ ...formData, links: newLinks });
+                }}
+              />
+            </div>
+            <div>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0 0 4px 8px' }}>
+                URL
+              </p>
+              <Input
+                value={link.url}
+                onChange={(e) => {
+                  const newLinks = [...formData.links];
+                  newLinks[index].url = e.target.value;
+                  setFormData({ ...formData, links: newLinks });
+                }}
+              />
+            </div>
             <Button
               variant="secondary"
               size="md"
