@@ -344,7 +344,7 @@ export default function Dashboard() {
                         label="Course (optional)"
                         value={deadlineFormData.courseId}
                         onChange={(e) => setDeadlineFormData({ ...deadlineFormData, courseId: e.target.value })}
-                        options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                        options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
                       />
                     </div>
                     <div style={{ paddingTop: '12px' }}>
