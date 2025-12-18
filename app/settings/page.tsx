@@ -25,6 +25,13 @@ export default function SettingsPage() {
     setMounted(true);
   }, [settings, initializeStore]);
 
+  // Update input value when state changes
+  useEffect(() => {
+    if (dueSoonInputRef.current) {
+      dueSoonInputRef.current.value = String(dueSoonDays);
+    }
+  }, [dueSoonDays]);
+
   if (!mounted) {
     return (
       <div className="flex items-center justify-center h-screen">
