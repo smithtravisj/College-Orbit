@@ -44,7 +44,7 @@ export function LoginForm() {
   };
 
   return (
-    <div style={{ width: '100%', maxWidth: '900px', padding: '16px' }}>
+    <div>
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>
             BYU Survival Tool
