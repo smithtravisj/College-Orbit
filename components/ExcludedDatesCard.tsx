@@ -47,42 +47,43 @@ export default function ExcludedDatesCard() {
   };
 
   const groupedDates = (() => {
-    const sorted = [...excludedDates].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const sorted = [...excludedDates].sort((a, b) => a.date.localeCompare(b.date));
     const groups: Array<{ dates: typeof excludedDates; startDate: string; endDate: string; courseId: string | null; description: string }> = [];
 
-    for (const date of sorted) {
+    for (const excludedDate of sorted) {
       // Check if this date should be grouped with the last group
       if (groups.length > 0) {
         const lastGroup = groups[groups.length - 1];
         const lastDate = lastGroup.dates[lastGroup.dates.length - 1];
 
-        // Parse dates to check if consecutive
-        const [lastYear, lastMonth, lastDay] = lastDate.date.split('-').map(Number);
-        const [currentYear, currentMonth, currentDay] = date.date.split('-').map(Number);
-        const lastDateObj = new Date(lastYear, lastMonth - 1, lastDay);
-        const currentDateObj = new Date(currentYear, currentMonth - 1, currentDay);
+        // Check if consecutive by comparing dates
+        const lastDateParts = lastDate.date.split('-').map(Number);
+        const currentDateParts = excludedDate.date.split('-').map(Number);
 
-        // Check if consecutive and same courseId/description
-        const dayDiff = (currentDateObj.getTime() - lastDateObj.getTime()) / (1000 * 60 * 60 * 24);
+        const lastDateObj = new Date(lastDateParts[0], lastDateParts[1] - 1, lastDateParts[2]);
+        const currentDateObj = new Date(currentDateParts[0], currentDateParts[1] - 1, currentDateParts[2]);
+
+        const daysDiff = Math.round((currentDateObj.getTime() - lastDateObj.getTime()) / (1000 * 60 * 60 * 24));
+
         if (
-          dayDiff === 1 &&
-          date.courseId === lastGroup.courseId &&
-          date.description === lastGroup.description
+          daysDiff === 1 &&
+          excludedDate.courseId === lastGroup.courseId &&
+          excludedDate.description === lastGroup.description
         ) {
           // Add to existing group
-          lastGroup.dates.push(date);
-          lastGroup.endDate = date.date;
+          lastGroup.dates.push(excludedDate);
+          lastGroup.endDate = excludedDate.date;
           continue;
         }
       }
 
       // Start a new group
       groups.push({
-        dates: [date],
-        startDate: date.date,
-        endDate: date.date,
-        courseId: date.courseId,
-        description: date.description,
+        dates: [excludedDate],
+        startDate: excludedDate.date,
+        endDate: excludedDate.date,
+        courseId: excludedDate.courseId,
+        description: excludedDate.description,
       });
     }
 
