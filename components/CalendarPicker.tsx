@@ -21,18 +21,18 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
 
   const selectedDate = value ? new Date(value + 'T00:00:00') : null;
 
-  // Close popup when clicking outside
+  // Close popup on Escape key
   useEffect(() => {
     if (!isOpen) return;
 
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
 
   const getDaysInMonth = (date: Date) => {

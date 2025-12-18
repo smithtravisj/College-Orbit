@@ -49,18 +49,18 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
     }
   }, [value]);
 
-  // Close dropdown when clicking outside
+  // Close dropdown on Escape key
   useEffect(() => {
     if (!isOpen) return;
 
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
 
   const handleTimeChange = (h: string, m: string, pm: boolean = isPM) => {
