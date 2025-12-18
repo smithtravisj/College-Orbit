@@ -421,7 +421,7 @@ export default function TasksPage() {
                           )}
                         </div>
                         {t.links && t.links.length > 0 && (
-                          <div className="flex flex-col mt-2" style={{ gap: '2px' }}>
+                          <div className="flex flex-col mt-2" style={{ gap: '0px' }}>
                             {t.links.map((link: any) => (
                               <a
                                 key={link.url}
