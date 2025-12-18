@@ -134,18 +134,21 @@ export default function CalendarDayView({
         {/* Events column */}
         <div style={{ flex: 1, position: 'relative', paddingTop: '8px', paddingRight: '8px' }}>
           {/* Hour grid lines */}
-          {hours.map((hour) => (
-            <div
-              key={`line-${hour}`}
-              style={{
-                position: 'absolute',
-                width: '100%',
-                borderTop: '1px solid var(--border)',
-                top: `${(hour - START_HOUR) * HOUR_HEIGHT}px`,
-                height: `${HOUR_HEIGHT}px`,
-              }}
-            />
-          ))}
+          {hours.map((hour) => {
+            if (hour === START_HOUR) return null; // Skip first hour line
+            return (
+              <div
+                key={`line-${hour}`}
+                style={{
+                  position: 'absolute',
+                  width: '100%',
+                  borderTop: '1px solid var(--border)',
+                  top: `${(hour - START_HOUR) * HOUR_HEIGHT}px`,
+                  height: `${HOUR_HEIGHT}px`,
+                }}
+              />
+            );
+          })}
 
           {/* Course events as blocks */}
           {courseEvents.map((event) => {
