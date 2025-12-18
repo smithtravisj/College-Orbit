@@ -344,9 +344,9 @@ export function parseColor(colorTag?: string): string {
 // Get color for month view dots and legend
 export function getMonthViewColor(event: CalendarEvent): string {
   const monthViewColors: Record<string, string> = {
-    course: '#1a335b',
-    task: '#173932',
-    deadline: '#3d2b25',
+    course: '#3d5fa5',
+    task: '#3d7855',
+    deadline: '#7d5c52',
   };
   return monthViewColors[event.type] || monthViewColors.course;
 }
