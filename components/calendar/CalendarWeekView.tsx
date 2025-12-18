@@ -209,7 +209,7 @@ export default function CalendarWeekView({
                         width: `calc(${eventWidth}% - 8px)`,
                         borderRadius: 'var(--radius-control)',
                         fontSize: '0.75rem',
-                        padding: '4px',
+                        padding: '6px',
                         overflow: 'hidden',
                         cursor: 'pointer',
                         transition: 'opacity 0.2s',
