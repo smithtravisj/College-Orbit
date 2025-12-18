@@ -321,7 +321,17 @@ export default function EventDetailModal({
                 : 'Mark Done'}
             </Button>
           )}
-          <Button variant="primary" size="md" onClick={handleEditClick}>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleEditClick}
+            style={{
+              backgroundColor: '#132343',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: '#132343',
+            }}
+          >
             Edit
           </Button>
         </div>
