@@ -91,7 +91,7 @@ export async function PATCH(
         pinned: 'pinned' in data ? data.pinned : existingTask.pinned,
         checklist: 'checklist' in data ? data.checklist : existingTask.checklist,
         notes: 'notes' in data ? data.notes : existingTask.notes,
-        link: 'link' in data ? data.link : existingTask.link,
+        links: 'links' in data ? (data.links || []).filter((l: any) => l.label && l.url) : existingTask.links,
         status: 'status' in data ? data.status : existingTask.status,
       },
     });

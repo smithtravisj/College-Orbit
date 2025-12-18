@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
         pinned: data.pinned || false,
         checklist: data.checklist || [],
         notes: data.notes || '',
-        link: data.link || null,
+        links: (data.links || []).filter((l: any) => l.label && l.url),
         status: data.status || 'open',
       },
     });

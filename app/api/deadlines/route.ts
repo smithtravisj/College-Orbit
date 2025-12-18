@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
         courseId: data.courseId || null,
         dueAt: dueAt,
         notes: data.notes || '',
-        link: data.link || null,
+        links: (data.links || []).filter((l: any) => l.label && l.url),
         status: data.status || 'open',
       },
     });

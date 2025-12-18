@@ -55,7 +55,7 @@ model Deadline {
   courseId      String?
   dueAt         DateTime?
   notes         String    @default("")
-  link          String?
+  links         Json      @default("[]")
   status        String    @default("open")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -77,7 +77,7 @@ model Task {
   pinned        Boolean   @default(false)
   checklist     Json      @default("[]")
   notes         String    @default("")
-  link          String?
+  links         Json      @default("[]")
   status        String    @default("open")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
