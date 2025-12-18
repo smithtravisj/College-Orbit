@@ -490,21 +490,23 @@ export default function EventDetailModal({
                     : 'Mark Complete'}
                 </Button>
               )}
-              <Button
-                variant="primary"
-                size="md"
-                onClick={handleEditToggle}
-                style={{
-                  backgroundColor: '#132343',
-                  borderWidth: '1px',
-                  borderStyle: 'solid',
-                  borderColor: '#202d48',
-                  paddingLeft: '16px',
-                  paddingRight: '16px',
-                }}
-              >
-                Edit
-              </Button>
+              {event.type !== 'course' && (
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={handleEditToggle}
+                  style={{
+                    backgroundColor: '#132343',
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: '#202d48',
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
+                  }}
+                >
+                  Edit
+                </Button>
+              )}
               <Button
                 variant="primary"
                 size="md"
