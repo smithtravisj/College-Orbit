@@ -9,23 +9,31 @@ export async function GET(_request: NextRequest) {
     const session = await getServerSession(authConfig);
 
     if (!session?.user?.id) {
+      console.log('[GET /api/settings] No user ID in session');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    console.log('[GET /api/settings] Fetching for user:', session.user.id);
 
     const settings = await prisma.settings.findUnique({
       where: { userId: session.user.id },
     });
 
-    return NextResponse.json({
+    console.log('[GET /api/settings] Found settings:', settings);
+
+    const response = {
       settings: settings || {
         dueSoonWindowDays: 7,
         weekStartsOn: 'Sun',
         theme: 'system',
         enableNotifications: false,
       },
-    });
+    };
+
+    console.log('[GET /api/settings] Returning:', response);
+    return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching settings:', error);
+    console.error('[GET /api/settings] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch settings' },
       { status: 500 }
