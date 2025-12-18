@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import PageHeader from '@/components/PageHeader';
@@ -19,8 +19,21 @@ export default function CalendarContent() {
 
   const [view, setView] = useState<ViewType>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [filteredTasks, setFilteredTasks] = useState<any[]>([]);
+  const [filteredDeadlines, setFilteredDeadlines] = useState<any[]>([]);
+  const hasFilteredRef = useRef(false);
 
   const { courses, tasks, deadlines, initializeStore } = useAppStore();
+
+  // Filter out completed tasks and deadlines on mount and when data loads
+  useEffect(() => {
+    // Only filter if we haven't filtered yet OR if the arrays were empty and now have data
+    if (!hasFilteredRef.current || (filteredTasks.length === 0 && tasks.length > 0)) {
+      setFilteredTasks(tasks.filter(task => task.status !== 'done'));
+      setFilteredDeadlines(deadlines.filter(deadline => deadline.status !== 'done'));
+      hasFilteredRef.current = true;
+    }
+  }, [tasks.length, deadlines.length]); // Only depend on length, not the arrays themselves
 
   useEffect(() => {
     // Read view and date from URL or localStorage
@@ -264,8 +277,8 @@ export default function CalendarContent() {
                 year={currentDate.getFullYear()}
                 month={currentDate.getMonth()}
                 courses={courses}
-                tasks={tasks}
-                deadlines={deadlines}
+                tasks={filteredTasks}
+                deadlines={filteredDeadlines}
                 onSelectDate={handleSelectDate}
               />
             )}
@@ -273,16 +286,16 @@ export default function CalendarContent() {
               <CalendarWeekView
                 date={currentDate}
                 courses={courses}
-                tasks={tasks}
-                deadlines={deadlines}
+                tasks={filteredTasks}
+                deadlines={filteredDeadlines}
               />
             )}
             {view === 'day' && (
               <CalendarDayView
                 date={currentDate}
                 courses={courses}
-                tasks={tasks}
-                deadlines={deadlines}
+                tasks={filteredTasks}
+                deadlines={filteredDeadlines}
               />
             )}
           </div>
