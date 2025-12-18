@@ -327,9 +327,9 @@ export default function CalendarWeekView({
                     const height = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
                     const color = getEventColor(event);
 
-                    // Check if this is the only task/deadline in the layout (courses don't prevent expansion)
+                    // Check if this is the only task/deadline AND the only event at this time
                     const tasksDeadlinesInLayout = layout.filter(l => l.event.type === 'task' || l.event.type === 'deadline');
-                    const shouldExpand = tasksDeadlinesInLayout.length === 1;
+                    const shouldExpand = tasksDeadlinesInLayout.length === 1 && eventLayout.totalColumns === 1;
 
                     const eventWidth = shouldExpand ? 100 : 100 / eventLayout.totalColumns;
                     const eventLeft = shouldExpand ? 0 : eventLayout.column * (100 / eventLayout.totalColumns);
