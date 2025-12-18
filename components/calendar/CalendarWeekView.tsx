@@ -337,7 +337,7 @@ export default function CalendarWeekView({
                       : eventStart + 60;
 
                     const overlappingEvents = layout.filter(l => {
-                      if (l.event.id === event.id) return false;
+                      if (l.event.id === event.id || !l.event.time) return false;
                       const otherStart = parseInt(l.event.time.split(':')[0]) * 60 + parseInt(l.event.time.split(':')[1]);
                       const otherEnd = l.event.endTime
                         ? parseInt(l.event.endTime.split(':')[0]) * 60 + parseInt(l.event.endTime.split(':')[1])
