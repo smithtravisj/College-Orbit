@@ -14,7 +14,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   const [hours, setHours] = useState<string>('10');
   const [minutes, setMinutes] = useState<string>('0');
   const [isPM, setIsPM] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const isUpdatingFromParent = useRef(false);
 
   // Convert 24-hour to 12-hour format for display
@@ -49,7 +49,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
     }
   }, [value]);
 
-  // Close dropdown on Escape key
+  // Close dropdown on Escape key or click outside
   useEffect(() => {
     if (!isOpen) return;
 
@@ -59,8 +59,18 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
       }
     };
 
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, [isOpen]);
 
   const handleTimeChange = (h: string, m: string, pm: boolean = isPM) => {
@@ -120,7 +130,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   };
 
   return (
-    <div ref={dropdownRef} className="relative w-full" style={{ minWidth: '120px', overflow: 'visible' }}>
+    <div ref={containerRef} className="relative w-full" style={{ minWidth: '120px', overflow: 'visible' }}>
       {label && (
         <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px', paddingTop: '4px', paddingBottom: '3px' }}>
           {label}
@@ -142,7 +152,6 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
 
       {isOpen && (
         <div
-          ref={dropdownRef}
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
           className="absolute top-full left-0 bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg"

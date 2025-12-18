@@ -21,7 +21,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
 
   const selectedDate = value ? new Date(value + 'T00:00:00') : null;
 
-  // Close popup on Escape key
+  // Close popup on Escape key or click outside
   useEffect(() => {
     if (!isOpen) return;
 
@@ -34,10 +34,19 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
       }
     };
 
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        console.log('[CalendarPicker] Click outside, closing dropdown');
+        setIsOpen(false);
+      }
+    };
+
     document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      console.log('[CalendarPicker] Cleaning up Escape listener');
+      console.log('[CalendarPicker] Cleaning up listeners');
       document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
 
