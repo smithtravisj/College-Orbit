@@ -162,10 +162,10 @@ export default function CalendarWeekView({
                     key={event.id}
                     style={{
                       fontSize: '0.7rem',
-                      paddingLeft: '3px',
-                      paddingRight: '3px',
-                      paddingTop: '2px',
-                      paddingBottom: '2px',
+                      paddingLeft: '6px',
+                      paddingRight: '6px',
+                      paddingTop: '4px',
+                      paddingBottom: '4px',
                       borderRadius: '2px',
                       backgroundColor: `${color}20`,
                       color: 'white',
