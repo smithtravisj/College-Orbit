@@ -44,25 +44,25 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] p-4">
-      <div style={{ width: '100%', maxWidth: '800px' }}>
-        <div className="text-center" style={{ marginBottom: '28px' }}>
-          <h1 className="text-3xl font-semibold text-[var(--text)]" style={{ marginBottom: '12px' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg)', padding: '16px' }}>
+      <div style={{ width: '100%', maxWidth: '900px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+          <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>
             BYU Survival Tool
           </h1>
-          <p className="text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>Sign in to your account</p>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '8px' }}>Sign in to your account</p>
         </div>
 
         <Card>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                <p className="text-sm text-red-500">{error}</p>
+              <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '8px', padding: '12px' }}>
+                <p style={{ fontSize: '14px', color: 'rgb(239, 68, 68)' }}>{error}</p>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
                 Email
               </label>
               <Input
@@ -75,7 +75,7 @@ export function LoginForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
                 Password
               </label>
               <Input
@@ -93,19 +93,19 @@ export function LoginForm() {
                 variant="primary"
                 size="lg"
                 disabled={loading}
-                className="w-full"
+                style={{ width: '100%' }}
               >
                 {loading ? 'Signing in...' : 'Sign In'}
               </Button>
             </div>
           </form>
 
-          <div className="text-center" style={{ marginTop: '20px' }}>
-            <p className="text-sm text-[var(--text-muted)]">
+          <div style={{ textAlign: 'center', marginTop: '20px' }}>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
               Don't have an account?{' '}
               <Link
                 href="/signup"
-                className="text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium"
+                style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}
               >
                 Sign up
               </Link>
