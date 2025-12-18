@@ -163,9 +163,19 @@ export default function CalendarWeekView({
                 {courseEvents.map((event) => {
                   if (!event.time || !event.endTime) return null;
 
-                  const { top } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
+                  const { top: baseTop } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
+                  const top = baseTop + 8; // Offset to align with grid lines
                   const height = getEventHeight(event.time, event.endTime);
                   const color = getEventColor(event);
+
+                  // Convert 24-hour time to 12-hour format
+                  const formatTime = (time: string) => {
+                    const [hours, minutes] = time.split(':');
+                    const hour = parseInt(hours);
+                    const ampm = hour >= 12 ? 'PM' : 'AM';
+                    const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+                    return `${displayHour}:${minutes} ${ampm}`;
+                  };
 
                   return (
                     <div
@@ -184,7 +194,6 @@ export default function CalendarWeekView({
                         top: `${top}px`,
                         height: `${height}px`,
                         backgroundColor: `${color}40`,
-                        borderLeft: `3px solid ${color}`,
                       }}
                       onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                       onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
@@ -194,7 +203,7 @@ export default function CalendarWeekView({
                         {event.courseCode}
                       </div>
                       <div style={{ color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
-                        {event.time} - {event.endTime}
+                        {formatTime(event.time)} - {formatTime(event.endTime)}
                       </div>
                     </div>
                   );
