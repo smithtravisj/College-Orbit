@@ -76,11 +76,24 @@ export async function PATCH(req: NextRequest) {
       enableNotifications: data.enableNotifications ?? false,
     };
 
-    const settings = await prisma.settings.upsert({
+    // Try using raw SQL to test if database is accepting writes
+    const existingSettings = await prisma.settings.findUnique({
       where: { userId: session.user.id },
-      update: updateData,
-      create: createData,
     });
+
+    let settings;
+    if (existingSettings) {
+      console.log('Updating existing settings record');
+      settings = await prisma.settings.update({
+        where: { userId: session.user.id },
+        data: updateData,
+      });
+    } else {
+      console.log('Creating new settings record');
+      settings = await prisma.settings.create({
+        data: createData,
+      });
+    }
 
     console.log('Settings saved:', settings);
 
@@ -92,6 +105,10 @@ export async function PATCH(req: NextRequest) {
 
     if (!verify) {
       throw new Error('Settings save failed - verification read returned null');
+    }
+
+    if (verify.dueSoonWindowDays !== (data.dueSoonWindowDays ?? settings.dueSoonWindowDays)) {
+      throw new Error(`Settings mismatch - expected ${data.dueSoonWindowDays}, got ${verify.dueSoonWindowDays}`);
     }
 
     return NextResponse.json({ settings: verify });
