@@ -7,6 +7,7 @@ import PageHeader from '@/components/PageHeader';
 import CalendarMonthView from './CalendarMonthView';
 import CalendarDayView from './CalendarDayView';
 import CalendarWeekView from './CalendarWeekView';
+import CalendarLegend from './CalendarLegend';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 type ViewType = 'month' | 'week' | 'day';
@@ -270,6 +271,7 @@ export default function CalendarContent() {
               />
             )}
           </div>
+          <CalendarLegend />
         </div>
       </div>
     </>
