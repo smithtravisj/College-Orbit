@@ -212,7 +212,7 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
             backgroundColor: '#122343',
             color: '#ffffff',
             border: '1px solid #202d48',
-            padding: '10px 32px',
+            padding: '8px 20px',
           }}
         >
           {isSubmitting ? 'Creating...' : 'Create'}
