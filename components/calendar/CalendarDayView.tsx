@@ -234,8 +234,7 @@ export default function CalendarDayView({
                     left: `calc(${eventLeft}% + 8px)`,
                     width: `calc(${eventWidth}% - 16px)`,
                     borderRadius: 'var(--radius-control)',
-                    padding: '10px',
-                    overflow: 'hidden',
+                    padding: '8px',
                     cursor: 'pointer',
                     transition: 'opacity 0.2s',
                     top: `${top}px`,
@@ -246,12 +245,13 @@ export default function CalendarDayView({
                     flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center',
+                    minHeight: 0,
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                   onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                   title={event.title}
                 >
-                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'center', width: '100%', lineHeight: 1.3 }}>
                     {event.title}
                   </div>
                 </div>
