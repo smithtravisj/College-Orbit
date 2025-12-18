@@ -219,23 +219,21 @@ export default function Dashboard() {
       return a.title.localeCompare(b.title);
     });
 
-  // Helper function to check if a course is currently active
-  const isCourseCurrent = (course: any) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to midnight for date-only comparison
+  // Helper function to check if a course is active on a specific date
+  const isCourseCurrent = (course: any, checkDate?: Date) => {
+    const dateToCheck = checkDate ? new Date(checkDate) : new Date();
+    dateToCheck.setHours(0, 0, 0, 0); // Set to midnight for date-only comparison
 
     if (course.startDate) {
       const startDate = new Date(course.startDate);
       startDate.setHours(0, 0, 0, 0);
-      if (startDate > today) return false; // Course hasn't started
+      if (startDate > dateToCheck) return false; // Course hasn't started
     }
 
     if (course.endDate) {
       const endDate = new Date(course.endDate);
       endDate.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      if (endDate < tomorrow) return false; // Course has ended (endDate is before tomorrow)
+      if (endDate < dateToCheck) return false; // Course has ended (endDate is before this date)
     }
 
     return true;
@@ -900,7 +898,7 @@ export default function Dashboard() {
                   const dayAbbrev = dayNames[dayIndex];
 
                   const classesOnDay = courses
-                    .filter(isCourseCurrent)
+                    .filter((course) => isCourseCurrent(course, date))
                     .flatMap((course) =>
                       (course.meetingTimes || [])
                         .filter((mt) => mt.days?.includes(dayAbbrev))
