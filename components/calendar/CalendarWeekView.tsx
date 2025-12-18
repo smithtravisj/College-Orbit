@@ -41,6 +41,11 @@ export default function CalendarWeekView({
 }: CalendarWeekViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [popupState, setPopupState] = useState<{
+    type: 'exclusion' | 'more';
+    dateStr: string;
+    position: { top: number; left: number };
+  } | null>(null);
 
   useEffect(() => {
     // Scroll to 8 AM on mount
@@ -200,6 +205,15 @@ export default function CalendarWeekView({
                     lineHeight: 1,
                     fontWeight: 500,
                     flexShrink: 0,
+                    cursor: 'pointer',
+                  }}
+                  onClick={(e) => {
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    setPopupState({
+                      type: 'exclusion',
+                      dateStr,
+                      position: { top: rect.bottom + 4, left: rect.left },
+                    });
                   }}
                 >
                   {exclusionType === 'holiday' ? 'Holiday' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
@@ -242,6 +256,15 @@ export default function CalendarWeekView({
                     fontWeight: 500,
                     lineHeight: 1,
                     paddingTop: '2px',
+                    cursor: 'pointer',
+                  }}
+                  onClick={(e) => {
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    setPopupState({
+                      type: 'more',
+                      dateStr,
+                      position: { top: rect.bottom + 4, left: rect.left },
+                    });
                   }}
                 >
                   +{hiddenCount} more
@@ -452,6 +475,120 @@ export default function CalendarWeekView({
           })}
         </div>
       </div>
+
+      {/* Popup for exclusion details or more events */}
+      {popupState && (
+        <>
+          {/* Backdrop */}
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 999,
+            }}
+            onClick={() => setPopupState(null)}
+          />
+          {/* Popup */}
+          <div
+            style={{
+              position: 'fixed',
+              top: `${popupState.position.top}px`,
+              left: `${popupState.position.left}px`,
+              backgroundColor: 'var(--panel)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-control)',
+              padding: '12px',
+              minWidth: '200px',
+              maxWidth: '300px',
+              zIndex: 1000,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {popupState.type === 'exclusion' && (() => {
+              const exclusion = excludedDates.find((ex) => {
+                const exDateOnly = ex.date.includes('T') ? ex.date.split('T')[0] : ex.date;
+                return exDateOnly === popupState.dateStr;
+              });
+
+              if (!exclusion) return null;
+
+              const exclusionType = exclusion.courseId ? 'class-cancelled' : 'holiday';
+              let courseName = '';
+              if (exclusionType === 'class-cancelled' && exclusion.courseId) {
+                const course = courses.find(c => c.id === exclusion.courseId);
+                courseName = course?.code || course?.name || '';
+              }
+
+              const dateObj = new Date(exclusion.date);
+              const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)' }}>
+                    {exclusionType === 'holiday' ? 'Holiday' : 'Class Cancelled'}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                    {dateStr}
+                  </div>
+                  {courseName && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                      {courseName}
+                    </div>
+                  )}
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    {exclusion.description}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {popupState.type === 'more' && (() => {
+              const dateStr = popupState.dateStr;
+              const dayEvents = eventsByDay.get(dateStr) || [];
+              const { allDay: allDayEvents } = separateTaskDeadlineEvents(dayEvents);
+              const maxVisibleEvents = getExclusionType(new Date(dateStr), excludedDates) ? 2 : 3;
+              const hiddenEvents = allDayEvents.slice(maxVisibleEvents);
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', marginBottom: '4px' }}>
+                    All-day events
+                  </div>
+                  {hiddenEvents.map((event) => {
+                    const color = getEventColor(event);
+                    return (
+                      <div
+                        key={event.id}
+                        style={{
+                          fontSize: '0.7rem',
+                          paddingLeft: '6px',
+                          paddingRight: '6px',
+                          paddingTop: '4px',
+                          paddingBottom: '4px',
+                          borderRadius: '2px',
+                          backgroundColor: `${color}30`,
+                          color: 'white',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => {
+                          setSelectedEvent(event);
+                          setPopupState(null);
+                        }}
+                      >
+                        {event.title}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+        </>
+      )}
 
       <EventDetailModal
         isOpen={selectedEvent !== null}
