@@ -9,7 +9,7 @@ import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 import Link from 'next/link';
-import { MapPin, ExternalLink, Edit2, Trash2, Plus } from 'lucide-react';
+import { MapPin, ExternalLink, Trash2, Plus } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 
@@ -109,29 +109,6 @@ export default function Dashboard() {
 
     setTaskFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', link: '' });
     setShowTaskForm(false);
-  };
-
-  const startEditTask = (task: any) => {
-    setEditingTaskId(task.id);
-    const dueDate = task.dueAt ? new Date(task.dueAt) : null;
-    let dateStr = '';
-    let timeStr = '';
-    if (dueDate) {
-      const year = dueDate.getFullYear();
-      const month = String(dueDate.getMonth() + 1).padStart(2, '0');
-      const date = String(dueDate.getDate()).padStart(2, '0');
-      dateStr = `${year}-${month}-${date}`;
-      timeStr = `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}`;
-    }
-    setTaskFormData({
-      title: task.title,
-      courseId: task.courseId || '',
-      dueDate: dateStr,
-      dueTime: timeStr,
-      notes: task.notes,
-      link: task.link || '',
-    });
-    setShowTaskForm(true);
   };
 
   const cancelEditTask = () => {
@@ -690,13 +667,6 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
-                        <button
-                          onClick={() => startEditTask(t)}
-                          className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
-                          title="Edit task"
-                        >
-                          <Edit2 size={16} />
-                        </button>
                         <button
                           onClick={() => deleteTask(t.id)}
                           className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
