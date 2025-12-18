@@ -460,15 +460,25 @@ const useAppStore = create<AppStore>((set, get) => ({
 
     try {
       // API call
+      const requestBody = { ...excludedDate, date: excludedDate.date };
+      console.log('[addExcludedDate] Sending request:', JSON.stringify(requestBody));
+
       const response = await fetch('/api/excluded-dates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...excludedDate, date: excludedDate.date }),
+        body: JSON.stringify(requestBody),
       });
 
-      if (!response.ok) throw new Error('Failed to create excluded date');
+      console.log('[addExcludedDate] Response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('[addExcludedDate] Error response:', errorData);
+        throw new Error(`Failed to create excluded date: ${errorData.error || response.statusText}`);
+      }
 
       const { excludedDates: updatedDates } = await response.json();
+      console.log('[addExcludedDate] Updated dates:', updatedDates.length);
 
       // Replace with server data
       set({
@@ -595,19 +605,28 @@ const useAppStore = create<AppStore>((set, get) => ({
 
     try {
       // API call
+      console.log('[addGpaEntry] Sending request:', JSON.stringify(gpaEntry));
+
       const response = await fetch('/api/gpa-entries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(gpaEntry),
       });
 
-      if (!response.ok) throw new Error('Failed to create GPA entry');
+      console.log('[addGpaEntry] Response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('[addGpaEntry] Error response:', errorData);
+        throw new Error(`Failed to create GPA entry: ${errorData.error || response.statusText}`);
+      }
 
       // Reload all GPA entries from database to ensure consistency
       const entriesRes = await fetch('/api/gpa-entries');
       if (!entriesRes.ok) throw new Error('Failed to fetch GPA entries');
 
       const { entries: allEntries } = await entriesRes.json();
+      console.log('[addGpaEntry] Updated entries:', allEntries.length);
       set({
         gpaEntries: allEntries,
       });
