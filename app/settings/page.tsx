@@ -88,14 +88,26 @@ export default function SettingsPage() {
                 </p>
                 <div className="flex items-center gap-3">
                   <Input
-                    type="number"
-                    min="1"
-                    max="30"
+                    type="text"
+                    inputMode="numeric"
                     value={dueSoonDays}
                     onChange={(e) => {
-                      const val = parseInt(e.target.value);
-                      setDueSoonDays(val);
-                      updateSettings({ dueSoonWindowDays: val });
+                      const inputValue = e.target.value;
+                      if (inputValue === '') {
+                        setDueSoonDays('');
+                      } else {
+                        const val = parseInt(inputValue);
+                        if (!isNaN(val) && val >= 1 && val <= 30) {
+                          setDueSoonDays(val);
+                          updateSettings({ dueSoonWindowDays: val });
+                        }
+                      }
+                    }}
+                    onBlur={() => {
+                      if (dueSoonDays === '' || isNaN(dueSoonDays as any)) {
+                        setDueSoonDays(7);
+                        updateSettings({ dueSoonWindowDays: 7 });
+                      }
                     }}
                     className="w-24"
                   />

@@ -8,7 +8,6 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, helperText, className = '', ...props }, ref) => {
-    const isNumberInput = props.type === 'number';
     return (
       <div className="w-full">
         {label && (
@@ -19,8 +18,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
         <input
           ref={ref}
-          className={`w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] rounded-[var(--radius-control)] transition-colors focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)] disabled:bg-[var(--panel)] disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed ${error ? 'border-[var(--danger)]' : ''} ${isNumberInput ? '[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0' : ''} ${className}`}
-          style={{ padding: '10px 12px', ...(isNumberInput ? { MozAppearance: 'textfield' } : {}) }}
+          className={`w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] rounded-[var(--radius-control)] transition-colors focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)] disabled:bg-[var(--panel)] disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed ${error ? 'border-[var(--danger)]' : ''} ${className}`}
+          style={{ padding: '10px 12px' }}
           {...props}
         />
         {error && <p className="text-xs text-[var(--danger)] mt-1">{error}</p>}
