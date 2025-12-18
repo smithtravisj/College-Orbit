@@ -8,6 +8,7 @@ import {
   getEventHeight,
   getEventColor,
   calculateEventLayout,
+  separateTaskDeadlineEvents,
 } from '@/lib/calendarUtils';
 import { isToday } from '@/lib/utils';
 
@@ -66,39 +67,42 @@ export default function CalendarDayView({
         )}
       </div>
 
-      {/* All-day events section */}
-      {taskDeadlineEvents.length > 0 && (
-        <div style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--panel-2)', flexShrink: 0 }}>
-          <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>All Day</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {taskDeadlineEvents.map((event) => {
-              const color = getEventColor(event);
-              return (
-                <div
-                  key={event.id}
-                  style={{
-                    paddingLeft: '8px',
-                    paddingRight: '8px',
-                    paddingTop: '4px',
-                    paddingBottom: '4px',
-                    borderRadius: 'var(--radius-control)',
-                    fontSize: '0.875rem',
-                    backgroundColor: `${color}20`,
-                    color: color,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                  title={event.title}
-                >
-                  {event.type === 'task' ? '📝' : '⏰'} {event.title}
-                  {event.time && <span style={{ fontSize: '0.75rem', opacity: 0.75 }}> ({event.time})</span>}
-                </div>
-              );
-            })}
+      {(() => {
+        const { allDay: allDayEvents } = separateTaskDeadlineEvents(taskDeadlineEvents);
+        if (allDayEvents.length === 0) return null;
+
+        return (
+          <div style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--panel-2)', flexShrink: 0 }}>
+            <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>All Day</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {allDayEvents.map((event) => {
+                const color = getEventColor(event);
+                return (
+                  <div
+                    key={event.id}
+                    style={{
+                      paddingLeft: '8px',
+                      paddingRight: '8px',
+                      paddingTop: '4px',
+                      paddingBottom: '4px',
+                      borderRadius: 'var(--radius-control)',
+                      fontSize: '0.875rem',
+                      backgroundColor: `${color}20`,
+                      color: color,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                    title={event.title}
+                  >
+                    {event.title}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Time grid */}
       <div ref={scrollContainerRef} style={{ display: 'flex', flex: 1, overflow: 'auto' }}>
@@ -203,6 +207,65 @@ export default function CalendarDayView({
               </div>
             );
           })}
+
+          {/* Timed task/deadline events */}
+          {(() => {
+            const { timed: timedEvents } = separateTaskDeadlineEvents(taskDeadlineEvents);
+            const timedLayout = useMemo(() => calculateEventLayout(timedEvents), [timedEvents]);
+
+            return timedEvents.map((event) => {
+              if (!event.time) return null;
+
+              const layout = timedLayout.find(l => l.event.id === event.id);
+              if (!layout) return null;
+
+              const { top } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
+              const height = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
+              const color = getEventColor(event);
+
+              const eventWidth = 100 / layout.totalColumns;
+              const eventLeft = layout.column * eventWidth;
+
+              const formatTime = (time: string) => {
+                const [hours, minutes] = time.split(':');
+                const hour = parseInt(hours);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+                return `${displayHour}:${minutes} ${ampm}`;
+              };
+
+              return (
+                <div
+                  key={event.id}
+                  style={{
+                    position: 'absolute',
+                    left: `calc(${eventLeft}% + 8px)`,
+                    width: `calc(${eventWidth}% - 16px)`,
+                    borderRadius: 'var(--radius-control)',
+                    padding: '8px',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    transition: 'opacity 0.2s',
+                    top: `${top}px`,
+                    height: `${height}px`,
+                    backgroundColor: `${color}30`,
+                    borderLeft: `2px solid ${color}`,
+                    zIndex: 9,
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                  title={event.title}
+                >
+                  <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {event.title}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {formatTime(event.time)}
+                  </div>
+                </div>
+              );
+            });
+          })()}
         </div>
       </div>
     </div>
