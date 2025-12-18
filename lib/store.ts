@@ -714,10 +714,27 @@ const useAppStore = create<AppStore>((set, get) => ({
       // Import excluded dates
       if (data.excludedDates && data.excludedDates.length > 0) {
         console.log('Importing excluded dates:', data.excludedDates.length);
+        // Build a map of course names to IDs for matching
+        const courseMap = new Map(store.courses.map(c => [c.name, c.id]));
+
         for (const excludedDate of data.excludedDates) {
-          const { id, createdAt, updatedAt, userId, courseId, ...excludedDateData } = excludedDate as any;
-          console.log('Adding excluded date:', excludedDateData);
-          await store.addExcludedDate(excludedDateData);
+          const { id, createdAt, updatedAt, userId, courseId: originalCourseId, ...excludedDateData } = excludedDate as any;
+
+          // Try to find a matching course in the new account by name
+          let newCourseId = undefined;
+          if (originalCourseId) {
+            // Find the course name from the original data
+            const originalCourse = data.courses?.find(c => c.id === originalCourseId);
+            if (originalCourse && courseMap.has(originalCourse.name)) {
+              newCourseId = courseMap.get(originalCourse.name);
+              console.log('Matched course for excluded date:', originalCourse.name, '(new ID:', newCourseId, ')');
+            }
+          }
+
+          // Add courseId if we found a match, otherwise leave it out for global holidays
+          const excludedDateToAdd = newCourseId ? { ...excludedDateData, courseId: newCourseId } : excludedDateData;
+          console.log('Adding excluded date:', excludedDateToAdd);
+          await store.addExcludedDate(excludedDateToAdd);
         }
       } else {
         console.log('No excluded dates to import');
