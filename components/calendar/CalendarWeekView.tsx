@@ -225,9 +225,11 @@ export default function CalendarWeekView({
                       <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
                         {event.courseCode}
                       </div>
-                      <div style={{ color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
-                        {formatTime(event.time)} - {formatTime(event.endTime)}
-                      </div>
+                      {layout.totalColumns === 1 && (
+                        <div style={{ color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+                          {formatTime(event.time)} - {formatTime(event.endTime)}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
