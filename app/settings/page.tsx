@@ -86,6 +86,8 @@ export default function SettingsPage() {
     try {
       await deleteAllData();
       setShowDeleteConfirm(false);
+      setImportMessage('✓ All data deleted successfully');
+      setTimeout(() => setImportMessage(''), 3000);
     } catch (error) {
       setImportMessage('✗ Failed to delete data');
       setTimeout(() => setImportMessage(''), 3000);
