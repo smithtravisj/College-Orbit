@@ -255,7 +255,7 @@ export default function CalendarWeekView({
                   if (!layout) return null;
 
                   const { top: baseTop } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
-                  const top = baseTop + 8; // Offset to align with grid lines
+                  const top = baseTop + 9; // Offset to align with grid lines + 1px spacing
                   const height = getEventHeight(event.time, event.endTime);
                   const color = getEventColor(event);
 
@@ -319,7 +319,7 @@ export default function CalendarWeekView({
                     if (!eventLayout) return null;
 
                     const { top: baseTop } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
-                    const top = baseTop + 8;
+                    const top = baseTop + 9;
                     const height = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
                     const color = getEventColor(event);
 

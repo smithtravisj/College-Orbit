@@ -155,7 +155,8 @@ export default function CalendarDayView({
             const layout = eventLayout.find(l => l.event.id === event.id);
             if (!layout) return null;
 
-            const { top } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
+            const { top: baseTop } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
+            const top = baseTop + 1;
             const height = getEventHeight(event.time, event.endTime);
             const color = getEventColor(event);
 
@@ -219,7 +220,8 @@ export default function CalendarDayView({
               const layout = timedLayout.find(l => l.event.id === event.id);
               if (!layout) return null;
 
-              const { top } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
+              const { top: baseTop } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
+              const top = baseTop + 1;
               const height = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
               const color = getEventColor(event);
 
