@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CalendarPickerProps {
@@ -12,21 +11,13 @@ interface CalendarPickerProps {
 
 export default function CalendarPicker({ value, onChange, label }: CalendarPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<Date>(() => {
     if (value) {
       return new Date(value + 'T00:00:00');
     }
     return new Date();
   });
-  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const portalRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const selectedDate = value ? new Date(value + 'T00:00:00') : null;
 
@@ -35,16 +26,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
     if (!isOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      // Close if clicking outside button, container, and portal
-      if (
-        buttonRef.current &&
-        !buttonRef.current.contains(target) &&
-        containerRef.current &&
-        !containerRef.current.contains(target) &&
-        portalRef.current &&
-        !portalRef.current.contains(target)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -94,17 +76,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
         </div>
       )}
       <button
-        ref={buttonRef}
-        onClick={() => {
-          if (!isOpen && buttonRef.current) {
-            const rect = buttonRef.current.getBoundingClientRect();
-            setDropdownPos({
-              top: rect.bottom + 8,
-              left: rect.left,
-            });
-          }
-          setIsOpen(!isOpen);
-        }}
+        onClick={() => setIsOpen(!isOpen)}
         style={{
           width: '100%',
           height: 'var(--input-height)',
@@ -128,13 +100,13 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
         {displayValue || 'Select date...'}
       </button>
 
-      {isMounted && isOpen && createPortal(
+      {isOpen && (
         <div
-          ref={portalRef}
           style={{
-            position: 'fixed',
-            top: `${dropdownPos.top}px`,
-            left: `${dropdownPos.left}px`,
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            marginTop: '8px',
             backgroundColor: 'var(--panel-2)',
             border: '1px solid var(--border)',
             borderRadius: 'var(--radius-control)',
@@ -268,8 +240,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
               );
             })}
           </div>
-        </div>,
-        document.body
+        </div>
       )}
     </div>
   );
