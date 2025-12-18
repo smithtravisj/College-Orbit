@@ -152,8 +152,8 @@ export default function CalendarMonthView({
               )}
 
               {/* Event indicators - colored dots */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', flex: 1, alignContent: 'flex-start', minHeight: 0, overflow: 'hidden' }}>
-                {dayEvents.map((event) => {
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', flex: 1, alignContent: 'flex-start', minHeight: 0, overflow: 'hidden', maxHeight: '44px' }}>
+                {dayEvents.slice(0, 16).map((event) => {
                   const color = getMonthViewColor(event);
 
                   return (
@@ -182,6 +182,19 @@ export default function CalendarMonthView({
                     />
                   );
                 })}
+
+                {/* +X more indicator */}
+                {dayEvents.length > 16 && (
+                  <div style={{
+                    fontSize: '0.6rem',
+                    color: 'var(--text-muted)',
+                    fontWeight: 500,
+                    lineHeight: 1,
+                    paddingTop: '0.5px',
+                  }}>
+                    +{dayEvents.length - 16}
+                  </div>
+                )}
               </div>
             </div>
           );
