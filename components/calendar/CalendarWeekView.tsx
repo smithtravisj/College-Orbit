@@ -159,6 +159,12 @@ export default function CalendarWeekView({
             }
           }
 
+          // Calculate how many items we can show (max 3 total, including exclusion badge)
+          const hasExclusion = !!exclusionType;
+          const maxVisibleEvents = hasExclusion ? 2 : 3;
+          const visibleEvents = allDayEvents.slice(0, maxVisibleEvents);
+          const hiddenCount = allDayEvents.length - visibleEvents.length;
+
           return (
             <div
               key={`allday-${dateStr}`}
@@ -173,6 +179,7 @@ export default function CalendarWeekView({
                 gap: '2px',
                 minHeight: allDayEvents.length > 0 || exclusionType ? '32px' : '24px',
                 backgroundColor: isTodayDate ? 'rgba(83, 155, 245, 0.05)' : undefined,
+                overflow: 'hidden',
               }}
             >
               {exclusionType && (
@@ -192,12 +199,13 @@ export default function CalendarWeekView({
                     whiteSpace: 'nowrap',
                     lineHeight: 1,
                     fontWeight: 500,
+                    flexShrink: 0,
                   }}
                 >
                   {exclusionType === 'holiday' ? 'Holiday' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
                 </div>
               )}
-              {allDayEvents.map((event) => {
+              {visibleEvents.map((event) => {
                 const color = getEventColor(event);
                 return (
                   <div
@@ -217,6 +225,7 @@ export default function CalendarWeekView({
                       whiteSpace: 'nowrap',
                       lineHeight: 1,
                       cursor: 'pointer',
+                      flexShrink: 0,
                     }}
                     title={event.title}
                     onClick={() => setSelectedEvent(event)}
@@ -225,6 +234,19 @@ export default function CalendarWeekView({
                   </div>
                 );
               })}
+              {hiddenCount > 0 && (
+                <div
+                  style={{
+                    fontSize: '0.65rem',
+                    color: 'var(--text-muted)',
+                    fontWeight: 500,
+                    lineHeight: 1,
+                    paddingTop: '2px',
+                  }}
+                >
+                  +{hiddenCount} more
+                </div>
+              )}
             </div>
           );
         })}
