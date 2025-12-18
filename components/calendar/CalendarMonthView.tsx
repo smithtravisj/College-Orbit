@@ -44,18 +44,18 @@ export default function CalendarMonthView({
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Day headers */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', marginBottom: '16px', paddingLeft: '16px', paddingRight: '16px', flexShrink: 0 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', marginBottom: '8px', paddingLeft: '12px', paddingRight: '12px', paddingTop: '8px', flexShrink: 0 }}>
         {dayNames.map((day) => (
           <div
             key={day}
             style={{
               textAlign: 'center',
-              fontSize: '0.875rem',
+              fontSize: '0.75rem',
               fontWeight: 500,
               color: 'var(--text-muted)',
-              padding: '8px 0',
+              padding: '4px 0',
             }}
           >
             {day}
@@ -64,7 +64,7 @@ export default function CalendarMonthView({
       </div>
 
       {/* Calendar grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', paddingLeft: '16px', paddingRight: '16px', paddingBottom: '16px', flex: 1, overflow: 'auto' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', paddingLeft: '12px', paddingRight: '12px', paddingBottom: '8px', flex: 1, overflow: 'hidden', gridAutoRows: 'minmax(0, 1fr)' }}>
         {dates.map((date) => {
           const dateStr = date.toISOString().split('T')[0];
           const isCurrentMonth = isInMonth(date, year, month);
@@ -77,8 +77,7 @@ export default function CalendarMonthView({
               onClick={() => onSelectDate(date)}
               style={{
                 position: 'relative',
-                padding: '8px',
-                minHeight: '96px',
+                padding: '4px',
                 border: `1px solid ${isCurrentMonth ? 'var(--border)' : 'var(--border)'}`,
                 borderRadius: 'var(--radius-control)',
                 cursor: 'pointer',
@@ -86,6 +85,9 @@ export default function CalendarMonthView({
                 backgroundColor: isCurrentMonth ? 'var(--panel)' : 'var(--bg)',
                 opacity: isCurrentMonth ? 1 : 0.5,
                 boxShadow: isTodayDate ? '0 0 0 1px var(--accent)' : 'none',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
               }}
               onMouseEnter={(e) => {
                 if (isCurrentMonth) {
@@ -103,57 +105,60 @@ export default function CalendarMonthView({
               {/* Date number */}
               <div
                 style={{
-                  fontSize: '0.875rem',
+                  fontSize: '0.7rem',
                   fontWeight: 600,
-                  marginBottom: '4px',
+                  marginBottom: '2px',
                   color: isTodayDate ? 'var(--accent)' : 'var(--text)',
+                  lineHeight: 1,
                 }}
               >
                 {date.getDate()}
               </div>
 
               {/* Event indicators */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                {dayEvents.slice(0, 3).map((event) => {
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', flex: 1, minHeight: 0 }}>
+                {dayEvents.slice(0, 2).map((event) => {
                   const bgColor = getEventColor(event);
                   const label =
                     event.type === 'course'
                       ? event.courseCode
                       : event.type === 'task'
-                        ? 'Task'
-                        : 'Due';
+                        ? 'T'
+                        : 'D';
 
                   return (
                     <div
                       key={event.id}
                       style={{
-                        fontSize: '0.75rem',
-                        paddingLeft: '6px',
-                        paddingRight: '6px',
-                        paddingTop: '2px',
-                        paddingBottom: '2px',
-                        borderRadius: 'var(--radius-control)',
+                        fontSize: '0.6rem',
+                        paddingLeft: '2px',
+                        paddingRight: '2px',
+                        paddingTop: '1px',
+                        paddingBottom: '1px',
+                        borderRadius: '2px',
                         backgroundColor: `${bgColor}20`,
                         color: bgColor,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
+                        lineHeight: 1,
                       }}
                       title={event.title}
                     >
-                      {label}: {event.title.substring(0, 15)}
+                      {label}: {event.title.substring(0, 12)}
                     </div>
                   );
                 })}
 
                 {/* +X more indicator */}
-                {dayEvents.length > 3 && (
+                {dayEvents.length > 2 && (
                   <div style={{
-                    fontSize: '0.75rem',
+                    fontSize: '0.6rem',
                     color: 'var(--text-muted)',
-                    paddingLeft: '6px',
+                    paddingLeft: '2px',
+                    lineHeight: 1,
                   }}>
-                    +{dayEvents.length - 3} more
+                    +{dayEvents.length - 2}
                   </div>
                 )}
               </div>
