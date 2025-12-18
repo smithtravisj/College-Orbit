@@ -282,8 +282,8 @@ export default function CalendarWeekView({
                       key={event.id}
                       style={{
                         position: 'absolute',
-                        left: `calc(${eventLeft}% + 4px)`,
-                        width: `calc(${eventWidth}% - 8px)`,
+                        left: `calc(${eventLeft}% + 3px)`,
+                        width: `calc(${eventWidth}% - 6px)`,
                         borderRadius: 'var(--radius-control)',
                         fontSize: '0.75rem',
                         padding: '6px',
@@ -355,8 +355,8 @@ export default function CalendarWeekView({
                         key={event.id}
                         style={{
                           position: 'absolute',
-                          left: `calc(${eventLeft}% + 4px)`,
-                          width: `calc(${eventWidth}% - 8px)`,
+                          left: `calc(${eventLeft}% + 3px)`,
+                          width: `calc(${eventWidth}% - 6px)`,
                           borderRadius: 'var(--radius-control)',
                           fontSize: '0.75rem',
                           padding: '6px',
