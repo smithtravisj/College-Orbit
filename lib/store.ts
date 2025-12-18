@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Course, Deadline, Task, Settings, AppData, ExcludedDate } from '@/types';
+import { Course, Deadline, Task, Settings, AppData, ExcludedDate, GpaEntry } from '@/types';
 
 const DEFAULT_SETTINGS: Settings = {
   dueSoonWindowDays: 7,
@@ -16,6 +16,7 @@ interface AppStore {
   tasks: Task[];
   settings: Settings;
   excludedDates: ExcludedDate[];
+  gpaEntries: GpaEntry[];
   loading: boolean;
 
   // Initialization
@@ -46,6 +47,9 @@ interface AppStore {
   updateExcludedDate: (id: string, excludedDate: Partial<ExcludedDate>) => Promise<void>;
   deleteExcludedDate: (id: string) => Promise<void>;
 
+  // GPA Entries
+  addGpaEntry: (gpaEntry: Omit<GpaEntry, 'id' | 'createdAt'>) => Promise<void>;
+
   // Settings
   updateSettings: (settings: Partial<Settings>) => Promise<void>;
 
@@ -61,6 +65,7 @@ const useAppStore = create<AppStore>((set, get) => ({
   tasks: [],
   settings: DEFAULT_SETTINGS,
   excludedDates: [],
+  gpaEntries: [],
   loading: false,
 
   initializeStore: async () => {
@@ -87,12 +92,13 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   loadFromDatabase: async () => {
     try {
-      const [coursesRes, deadlinesRes, tasksRes, settingsRes, excludedDatesRes] = await Promise.all([
+      const [coursesRes, deadlinesRes, tasksRes, settingsRes, excludedDatesRes, gpaRes] = await Promise.all([
         fetch('/api/courses'),
         fetch('/api/deadlines'),
         fetch('/api/tasks'),
         fetch('/api/settings'),
         fetch('/api/excluded-dates'),
+        fetch('/api/gpa-entries'),
       ]);
 
       const coursesData = await coursesRes.json();
@@ -100,6 +106,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const tasksData = await tasksRes.json();
       const settingsData = await settingsRes.json();
       const excludedDatesData = await excludedDatesRes.json();
+      const gpaData = await gpaRes.json();
 
       set({
         courses: coursesData.courses || [],
@@ -107,6 +114,7 @@ const useAppStore = create<AppStore>((set, get) => ({
         tasks: tasksData.tasks || [],
         settings: settingsData.settings || DEFAULT_SETTINGS,
         excludedDates: excludedDatesData.excludedDates || [],
+        gpaEntries: gpaData.gpaEntries || [],
       });
     } catch (error) {
       console.error('Failed to load from database:', error);
@@ -126,6 +134,7 @@ const useAppStore = create<AppStore>((set, get) => ({
           tasks: data.tasks || [],
           settings: data.settings || DEFAULT_SETTINGS,
           excludedDates: data.excludedDates || [],
+          gpaEntries: data.gpaEntries || [],
         });
       }
     } catch (error) {
@@ -573,6 +582,43 @@ const useAppStore = create<AppStore>((set, get) => ({
     }
   },
 
+  addGpaEntry: async (gpaEntry) => {
+    // Optimistic update
+    const tempId = uuidv4();
+    const createdAt = new Date().toISOString();
+    set((state) => ({
+      gpaEntries: [
+        ...state.gpaEntries,
+        { ...gpaEntry, id: tempId, createdAt } as GpaEntry,
+      ],
+    }));
+
+    try {
+      // API call
+      const response = await fetch('/api/gpa-entries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gpaEntry),
+      });
+
+      if (!response.ok) throw new Error('Failed to create GPA entry');
+
+      const { gpaEntries: updatedEntries } = await response.json();
+
+      // Replace with server data
+      set({
+        gpaEntries: updatedEntries,
+      });
+    } catch (error) {
+      // Rollback on error
+      set((state) => ({
+        gpaEntries: state.gpaEntries.filter((ge) => ge.id !== tempId),
+      }));
+      console.error('Error creating GPA entry:', error);
+      throw error;
+    }
+  },
+
   updateSettings: async (settings) => {
     try {
       // Optimistic update
@@ -609,6 +655,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       tasks: state.tasks,
       settings: state.settings,
       excludedDates: state.excludedDates,
+      gpaEntries: state.gpaEntries,
     };
   },
 
@@ -648,6 +695,14 @@ const useAppStore = create<AppStore>((set, get) => ({
         }
       }
 
+      // Import GPA entries
+      if (data.gpaEntries && data.gpaEntries.length > 0) {
+        for (const gpaEntry of data.gpaEntries) {
+          const { id, createdAt, updatedAt, ...gpaEntryData } = gpaEntry as any;
+          await store.addGpaEntry(gpaEntryData);
+        }
+      }
+
       // Import settings
       if (data.settings) {
         await store.updateSettings(data.settings);
@@ -677,6 +732,7 @@ const useAppStore = create<AppStore>((set, get) => ({
         tasks: [],
         settings: DEFAULT_SETTINGS,
         excludedDates: [],
+        gpaEntries: [],
       });
 
       // Clear localStorage

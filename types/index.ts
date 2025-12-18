@@ -67,10 +67,20 @@ export interface ExcludedDate {
   createdAt: string; // ISO datetime
 }
 
+export interface GpaEntry {
+  id: string;
+  courseName: string;
+  grade: string;
+  credits: number;
+  courseId?: string | null;
+  createdAt: string; // ISO datetime
+}
+
 export interface AppData {
   courses: Course[];
   deadlines: Deadline[];
   tasks: Task[];
   settings: Settings;
   excludedDates: ExcludedDate[];
+  gpaEntries?: GpaEntry[];
 }
