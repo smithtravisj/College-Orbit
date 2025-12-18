@@ -19,7 +19,13 @@ export async function GET(request: NextRequest) {
       orderBy: { date: 'asc' },
     });
 
-    return NextResponse.json({ excludedDates });
+    // Format dates as YYYY-MM-DD strings for consistency
+    const formattedDates = excludedDates.map(d => ({
+      ...d,
+      date: d.date.toISOString().split('T')[0],
+    }));
+
+    return NextResponse.json({ excludedDates: formattedDates });
   } catch (error) {
     console.error('Error fetching excluded dates:', error);
     return NextResponse.json(
@@ -113,7 +119,13 @@ export async function POST(req: NextRequest) {
       orderBy: { date: 'asc' },
     });
 
-    return NextResponse.json({ excludedDates }, { status: 201 });
+    // Format dates as YYYY-MM-DD strings for consistency
+    const formattedDates = excludedDates.map(d => ({
+      ...d,
+      date: d.date.toISOString().split('T')[0],
+    }));
+
+    return NextResponse.json({ excludedDates: formattedDates }, { status: 201 });
   } catch (error) {
     console.error('[POST /api/excluded-dates] Error creating excluded dates:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

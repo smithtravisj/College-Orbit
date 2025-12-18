@@ -78,7 +78,14 @@ export async function PATCH(
     });
 
     console.log('[PATCH /api/excluded-dates/:id] Excluded date updated successfully:', excludedDate.id);
-    return NextResponse.json({ excludedDate });
+
+    // Format date as YYYY-MM-DD string for consistency
+    const formattedDate = {
+      ...excludedDate,
+      date: excludedDate.date.toISOString().split('T')[0],
+    };
+
+    return NextResponse.json({ excludedDate: formattedDate });
   } catch (error) {
     console.error('[PATCH /api/excluded-dates/:id] Error updating excluded date:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
