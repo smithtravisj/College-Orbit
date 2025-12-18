@@ -442,7 +442,7 @@ export default function DeadlinesPage() {
                           )}
                         </div>
                         {d.links && d.links.length > 0 && (
-                          <div className="flex flex-col gap-2 mt-2">
+                          <div className="flex flex-col gap-1 mt-2">
                             {d.links.map((link: any) => (
                               <a
                                 key={link.url}
