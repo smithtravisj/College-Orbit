@@ -147,13 +147,23 @@ export function getTaskDeadlineEventsForDate(
     .map((item) => {
       const isTask = 'pinned' in item;
       const type: 'task' | 'deadline' = isTask ? 'task' : 'deadline';
+
+      // Get time in 24-hour format (HH:MM) if dueAt exists
+      let time: string | undefined;
+      if (item.dueAt) {
+        const date = new Date(item.dueAt);
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        time = `${hours}:${minutes}`;
+      }
+
       return {
         id: item.id,
         type,
         title: item.title,
         courseId: item.courseId,
         dueAt: item.dueAt,
-        time: item.dueAt ? new Date(item.dueAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : undefined,
+        time,
         status: item.status,
       };
     });
@@ -338,15 +348,12 @@ export interface EventLayout {
   totalColumns: number;
 }
 
-// Check if a time is the default end-of-day time (11:59 PM or 23:59:00)
+// Check if a time is the default end-of-day time (11:59 PM)
 export function isDefaultEndOfDayTime(dueAt: string | null | undefined): boolean {
   if (!dueAt) return false;
-  // Check the ISO string directly to avoid timezone issues
-  // Format is like "2024-01-15T23:59:00.000Z" or "2024-01-15T23:59:00"
-  const timeMatch = dueAt.match(/T(\d{2}):(\d{2}):/);
-  if (!timeMatch) return false;
-  const hours = parseInt(timeMatch[1]);
-  const minutes = parseInt(timeMatch[2]);
+  const date = new Date(dueAt);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
   return hours === 23 && minutes === 59;
 }
 
