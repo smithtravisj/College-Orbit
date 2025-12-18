@@ -74,22 +74,13 @@ export default function CalendarWeekView({
       const dateStr = day.toISOString().split('T')[0];
       const dayEvents = eventsByDay.get(dateStr) || [];
       const courseEvents = dayEvents.filter((e) => e.type === 'course');
-      const layout = calculateEventLayout(courseEvents);
+      const { timed: timedEvents } = separateTaskDeadlineEvents(dayEvents);
+      // Combine all timed events (courses + timed tasks/deadlines) for unified layout
+      const allTimedEvents = [...courseEvents, ...timedEvents];
+      const layout = calculateEventLayout(allTimedEvents);
       if (layout.length > 0) {
         map.set(dateStr, layout);
       }
-    });
-    return map;
-  }, [weekDays, eventsByDay]);
-
-  const timedEventLayoutsByDay = useMemo(() => {
-    const map = new Map<string, ReturnType<typeof calculateEventLayout>>();
-    weekDays.forEach((day) => {
-      const dateStr = day.toISOString().split('T')[0];
-      const dayEvents = eventsByDay.get(dateStr) || [];
-      const { timed: timedEvents } = separateTaskDeadlineEvents(dayEvents);
-      const layout = calculateEventLayout(timedEvents);
-      map.set(dateStr, layout);
     });
     return map;
   }, [weekDays, eventsByDay]);
@@ -321,7 +312,7 @@ export default function CalendarWeekView({
                 {(() => {
                   const dayEvents = eventsByDay.get(dateStr) || [];
                   const { timed: timedEvents } = separateTaskDeadlineEvents(dayEvents);
-                  const layout = timedEventLayoutsByDay.get(dateStr) || [];
+                  const layout = eventLayoutsByDay.get(dateStr) || [];
 
                   return timedEvents.map((event) => {
                     if (!event.time) return null;

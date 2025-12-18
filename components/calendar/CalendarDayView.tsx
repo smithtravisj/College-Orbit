@@ -52,8 +52,11 @@ export default function CalendarDayView({
 
   const courseEvents = useMemo(() => events.filter((e) => e.type === 'course'), [events]);
   const taskDeadlineEvents = useMemo(() => events.filter((e) => e.type !== 'course'), [events]);
+  const { timed: timedTaskDeadlineEvents } = useMemo(() => separateTaskDeadlineEvents(taskDeadlineEvents), [taskDeadlineEvents]);
 
-  const eventLayout = useMemo(() => calculateEventLayout(courseEvents), [courseEvents]);
+  // Combine all timed events (courses + timed tasks/deadlines) for unified layout
+  const allTimedEvents = useMemo(() => [...courseEvents, ...timedTaskDeadlineEvents], [courseEvents, timedTaskDeadlineEvents]);
+  const eventLayout = useMemo(() => calculateEventLayout(allTimedEvents), [allTimedEvents]);
 
   const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 
@@ -223,12 +226,11 @@ export default function CalendarDayView({
           {/* Timed task/deadline events */}
           {(() => {
             const { timed: timedEvents } = separateTaskDeadlineEvents(taskDeadlineEvents);
-            const timedLayout = useMemo(() => calculateEventLayout(timedEvents), [timedEvents]);
 
             return timedEvents.map((event) => {
               if (!event.time) return null;
 
-              const layout = timedLayout.find(l => l.event.id === event.id);
+              const layout = eventLayout.find(l => l.event.id === event.id);
               if (!layout) return null;
 
               const { top: baseTop } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
