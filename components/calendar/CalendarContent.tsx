@@ -19,12 +19,17 @@ export default function CalendarContent() {
 
   const [view, setView] = useState<ViewType>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [incompleteTasks, setIncompleteTasks] = useState<any[]>([]);
+  const [incompleteDeadlines, setIncompleteDeadlines] = useState<any[]>([]);
 
   const { courses, tasks, deadlines, initializeStore } = useAppStore();
 
-  // Filter out completed tasks and deadlines
-  const incompleteTasks = tasks.filter(task => task.status !== 'done');
-  const incompleteDeadlines = deadlines.filter(deadline => deadline.status !== 'done');
+  useEffect(() => {
+    // Only filter on initial load - don't re-filter when tasks/deadlines change
+    // This allows completed items to stay visible until refresh
+    setIncompleteTasks(tasks.filter(task => task.status !== 'done'));
+    setIncompleteDeadlines(deadlines.filter(deadline => deadline.status !== 'done'));
+  }, []);
 
   useEffect(() => {
     // Read view and date from URL or localStorage
