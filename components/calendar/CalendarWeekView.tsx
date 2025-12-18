@@ -330,8 +330,22 @@ export default function CalendarWeekView({
                     const height = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
                     const color = getEventColor(event);
 
-                    // Check if this is the only event at this specific time (no overlaps)
-                    const shouldExpand = eventLayout.totalColumns === 1;
+                    // Check if there are any other events overlapping this one in time
+                    const eventStart = parseInt(event.time.split(':')[0]) * 60 + parseInt(event.time.split(':')[1]);
+                    const eventEnd = event.endTime
+                      ? parseInt(event.endTime.split(':')[0]) * 60 + parseInt(event.endTime.split(':')[1])
+                      : eventStart + 60;
+
+                    const overlappingEvents = layout.filter(l => {
+                      if (l.event.id === event.id) return false;
+                      const otherStart = parseInt(l.event.time.split(':')[0]) * 60 + parseInt(l.event.time.split(':')[1]);
+                      const otherEnd = l.event.endTime
+                        ? parseInt(l.event.endTime.split(':')[0]) * 60 + parseInt(l.event.endTime.split(':')[1])
+                        : otherStart + 60;
+                      return !(eventEnd <= otherStart || eventStart >= otherEnd);
+                    });
+
+                    const shouldExpand = overlappingEvents.length === 0;
 
                     const eventWidth = shouldExpand ? 100 : 100 / eventLayout.totalColumns;
                     const eventLeft = shouldExpand ? 0 : eventLayout.column * (100 / eventLayout.totalColumns);
