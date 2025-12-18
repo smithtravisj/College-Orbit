@@ -123,12 +123,9 @@ export default function CalendarMonthView({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', flex: 1, minHeight: 0 }}>
                 {dayEvents.slice(0, 3).map((event) => {
                   const bgColor = getEventColor(event);
-                  const label =
-                    event.type === 'course'
-                      ? event.courseCode
-                      : event.type === 'task'
-                        ? 'T'
-                        : 'D';
+                  const displayText = event.type === 'course'
+                    ? `${event.courseCode}: ${event.title.substring(0, 12)}`
+                    : event.title.substring(0, 20);
 
                   return (
                     <div
@@ -149,7 +146,7 @@ export default function CalendarMonthView({
                       }}
                       title={event.title}
                     >
-                      {label}: {event.title.substring(0, 12)}
+                      {displayText}
                     </div>
                   );
                 })}
