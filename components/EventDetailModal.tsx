@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { Course, Task, Deadline } from '@/types';
 import { CalendarEvent } from '@/lib/calendarUtils';
 import useAppStore from '@/lib/store';
 import Button from '@/components/ui/Button';
+import Input, { Textarea, Select } from '@/components/ui/Input';
+import CalendarPicker from '@/components/CalendarPicker';
+import TimePicker from '@/components/TimePicker';
+import CourseForm from '@/components/CourseForm';
 
 interface EventDetailModalProps {
   isOpen: boolean;
@@ -37,7 +40,6 @@ function formatDateTimeWithTime(dateStr?: string | null): string {
       year: 'numeric',
     });
 
-    // Check if time is meaningful (not 11:59 PM which is default)
     const hours = date.getHours();
     const minutes = date.getMinutes();
     const isDefaultTime = hours === 23 && minutes === 59;
@@ -65,34 +67,44 @@ export default function EventDetailModal({
   tasks,
   deadlines,
 }: EventDetailModalProps) {
-  const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
-  const { updateTask, updateDeadline, toggleChecklistItem } = useAppStore();
+  const { updateTask, updateDeadline } = useAppStore();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState<any>(null);
 
-  // Handle ESC key
+  useEffect(() => {
+    if (!isOpen) {
+      setIsEditing(false);
+      setEditFormData(null);
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        if (isEditing) {
+          setIsEditing(false);
+          setEditFormData(null);
+        } else {
+          onClose();
+        }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, isEditing, onClose]);
 
-  // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && !isEditing) {
       onClose();
     }
   };
 
   if (!isOpen || !event) return null;
 
-  // Find the full data for the event
   let fullData: Course | Task | Deadline | null = null;
   let relatedCourse: Course | null = null;
 
@@ -121,30 +133,125 @@ export default function EventDetailModal({
     return '#666';
   };
 
-  const handleEditClick = () => {
-    if (event.type === 'task') {
-      router.push('/tasks');
-      onClose();
-    } else if (event.type === 'deadline') {
-      router.push('/deadlines');
-      onClose();
-    } else if (event.type === 'course') {
-      router.push('/courses');
-      onClose();
+  const handleEditToggle = () => {
+    if (isEditing) {
+      setIsEditing(false);
+      setEditFormData(null);
+    } else {
+      setIsEditing(true);
+      if (event.type === 'task' && 'checklist' in fullData) {
+        const task = fullData as Task;
+        const dueDate = task.dueAt ? new Date(task.dueAt) : null;
+        let dateStr = '';
+        let timeStr = '';
+        if (dueDate) {
+          const year = dueDate.getFullYear();
+          const month = String(dueDate.getMonth() + 1).padStart(2, '0');
+          const date = String(dueDate.getDate()).padStart(2, '0');
+          dateStr = `${year}-${month}-${date}`;
+          timeStr = `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}`;
+        }
+        setEditFormData({
+          title: task.title,
+          courseId: task.courseId || '',
+          dueDate: dateStr,
+          dueTime: timeStr,
+          notes: task.notes,
+          links: task.links && task.links.length > 0 ? task.links : [{ label: '', url: '' }],
+        });
+      } else if (event.type === 'deadline') {
+        const deadline = fullData as Deadline;
+        const dueDate = deadline.dueAt ? new Date(deadline.dueAt) : null;
+        let dateStr = '';
+        let timeStr = '';
+        if (dueDate) {
+          const year = dueDate.getFullYear();
+          const month = String(dueDate.getMonth() + 1).padStart(2, '0');
+          const date = String(dueDate.getDate()).padStart(2, '0');
+          dateStr = `${year}-${month}-${date}`;
+          timeStr = `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}`;
+        }
+        setEditFormData({
+          title: deadline.title,
+          courseId: deadline.courseId || '',
+          dueDate: dateStr,
+          dueTime: timeStr,
+          notes: deadline.notes,
+          links: deadline.links && deadline.links.length > 0 ? deadline.links : [{ label: '', url: '' }],
+        });
+      }
     }
   };
 
-  const handleMarkDoneClick = async () => {
-    if (event.type === 'task' && 'id' in fullData) {
-      const task = fullData as Task;
-      await updateTask(task.id, {
-        status: task.status === 'done' ? 'open' : 'done',
-      });
-    } else if (event.type === 'deadline' && 'id' in fullData) {
-      const deadline = fullData as Deadline;
-      await updateDeadline(deadline.id, {
-        status: deadline.status === 'done' ? 'open' : 'done',
-      });
+  const handleSaveEdit = async () => {
+    if (!editFormData || !fullData) return;
+
+    try {
+      if (event.type === 'task') {
+        const task = fullData as Task;
+        let dueAt: string | null = null;
+        if (editFormData.dueDate && editFormData.dueDate.trim()) {
+          const dateTimeString = editFormData.dueTime
+            ? `${editFormData.dueDate}T${editFormData.dueTime}`
+            : `${editFormData.dueDate}T23:59`;
+          const dateObj = new Date(dateTimeString);
+          if (dateObj.getTime() > 0) {
+            dueAt = dateObj.toISOString();
+          }
+        }
+
+        const links = editFormData.links
+          .filter((l: any) => l.url && l.url.trim())
+          .map((l: any) => ({
+            label: l.label,
+            url: l.url.startsWith('http://') || l.url.startsWith('https://')
+              ? l.url
+              : `https://${l.url}`,
+          }));
+
+        await updateTask(task.id, {
+          title: editFormData.title,
+          courseId: editFormData.courseId || null,
+          dueAt,
+          notes: editFormData.notes,
+          links,
+        });
+        setIsEditing(false);
+        setEditFormData(null);
+      } else if (event.type === 'deadline') {
+        const deadline = fullData as Deadline;
+        let dueAt: string | null = null;
+        if (editFormData.dueDate && editFormData.dueDate.trim()) {
+          const dateTimeString = editFormData.dueTime
+            ? `${editFormData.dueDate}T${editFormData.dueTime}`
+            : `${editFormData.dueDate}T23:59`;
+          const dateObj = new Date(dateTimeString);
+          if (dateObj.getTime() > 0) {
+            dueAt = dateObj.toISOString();
+          }
+        }
+
+        const links = editFormData.links
+          .filter((l: any) => l.url && l.url.trim())
+          .map((l: any) => ({
+            label: l.label,
+            url: l.url.startsWith('http://') || l.url.startsWith('https://')
+              ? l.url
+              : `https://${l.url}`,
+          }));
+
+        await updateDeadline(deadline.id, {
+          title: editFormData.title,
+          courseId: editFormData.courseId || null,
+          dueAt,
+          notes: editFormData.notes,
+          links,
+        });
+        setIsEditing(false);
+        setEditFormData(null);
+      }
+    } catch (error) {
+      console.error('Error saving changes:', error);
     }
   };
 
@@ -161,13 +268,6 @@ export default function EventDetailModal({
       });
     }
     onClose();
-  };
-
-  const handleChecklistToggle = async (itemId: string) => {
-    if (event.type === 'task' && 'id' in fullData) {
-      const task = fullData as Task;
-      await toggleChecklistItem(task.id, itemId);
-    }
   };
 
   return (
@@ -273,7 +373,6 @@ export default function EventDetailModal({
             </div>
           </div>
 
-          {/* Close button */}
           <button
             onClick={onClose}
             style={{
@@ -299,23 +398,27 @@ export default function EventDetailModal({
 
         {/* Content */}
         <div style={{ padding: '24px' }}>
-          {event.type === 'course' && 'meetingTimes' in fullData ? (
+          {isEditing ? (
+            event.type === 'course' ? (
+              <CourseForm courseId={(fullData as Course).id} onClose={() => setIsEditing(false)} />
+            ) : (
+              <TaskDeadlineForm
+                type={event.type as 'task' | 'deadline'}
+                formData={editFormData}
+                setFormData={setEditFormData}
+                courses={courses}
+              />
+            )
+          ) : event.type === 'course' && 'meetingTimes' in fullData ? (
             <CourseContent event={event} course={fullData} />
           ) : event.type === 'task' && 'checklist' in fullData ? (
-            <TaskContent
-              task={fullData}
-              relatedCourse={relatedCourse}
-              onChecklistToggle={handleChecklistToggle}
-            />
+            <TaskContent task={fullData} relatedCourse={relatedCourse} />
           ) : event.type === 'deadline' ? (
-            <DeadlineContent
-              deadline={fullData as Deadline}
-              relatedCourse={relatedCourse}
-            />
+            <DeadlineContent deadline={fullData as Deadline} relatedCourse={relatedCourse} />
           ) : null}
         </div>
 
-        {/* Footer with action buttons */}
+        {/* Footer */}
         <div
           style={{
             display: 'flex',
@@ -325,44 +428,48 @@ export default function EventDetailModal({
             borderTop: '1px solid var(--border)',
           }}
         >
-          {event.type !== 'course' && (
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={handleMarkDoneClick}
-            >
-              {fullData && 'status' in fullData && (fullData as Task | Deadline).status === 'done'
-                ? 'Mark Open'
-                : 'Mark Done'}
-            </Button>
-          )}
-          <Button
-            variant="primary"
-            size="md"
-            onClick={handleEditClick}
-            style={{
-              backgroundColor: '#132343',
-              borderWidth: '1px',
-              borderStyle: 'solid',
-              borderColor: '#132343',
-            }}
-          >
-            Edit
-          </Button>
-          {event.type !== 'course' && (
-            <Button
-              variant="primary"
-              size="md"
-              onClick={handleDoneAndClose}
-              style={{
-                backgroundColor: '#132343',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: '#132343',
-              }}
-            >
-              Done
-            </Button>
+          {isEditing ? (
+            <>
+              <Button variant="secondary" size="md" onClick={handleEditToggle}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleSaveEdit}
+                style={{
+                  backgroundColor: '#132343',
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: '#132343',
+                }}
+              >
+                Save
+              </Button>
+            </>
+          ) : (
+            <>
+              {event.type !== 'course' && (
+                <Button variant="secondary" size="md" onClick={handleDoneAndClose}>
+                  {fullData && 'status' in fullData && (fullData as Task | Deadline).status === 'done'
+                    ? 'Mark Open'
+                    : 'Done'}
+                </Button>
+              )}
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleEditToggle}
+                style={{
+                  backgroundColor: '#132343',
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: '#132343',
+                }}
+              >
+                Edit
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -370,6 +477,106 @@ export default function EventDetailModal({
   );
 }
 
+// Task/Deadline inline form component
+interface TaskDeadlineFormProps {
+  type: 'task' | 'deadline';
+  formData: any;
+  setFormData: (data: any) => void;
+  courses: Course[];
+}
+
+function TaskDeadlineForm({ formData, setFormData, courses }: TaskDeadlineFormProps) {
+  if (!formData) return null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <Input
+        label="Title"
+        value={formData.title}
+        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+      />
+
+      <Select
+        label="Course (Optional)"
+        value={formData.courseId}
+        onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
+        options={[
+          { value: '', label: 'None' },
+          ...courses.map((c) => ({ value: c.id, label: `${c.code}: ${c.name}` })),
+        ]}
+      />
+
+      <CalendarPicker
+        label="Due Date"
+        value={formData.dueDate}
+        onChange={(date) => setFormData({ ...formData, dueDate: date })}
+      />
+
+      <TimePicker
+        label="Due Time (Optional)"
+        value={formData.dueTime}
+        onChange={(time) => setFormData({ ...formData, dueTime: time })}
+      />
+
+      <Textarea
+        label="Notes"
+        value={formData.notes}
+        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+      />
+
+      <div>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+          Links
+        </p>
+        {formData.links.map((link: any, index: number) => (
+          <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+            <Input
+              placeholder="Label"
+              value={link.label}
+              onChange={(e) => {
+                const newLinks = [...formData.links];
+                newLinks[index].label = e.target.value;
+                setFormData({ ...formData, links: newLinks });
+              }}
+              style={{ flex: 1 }}
+            />
+            <Input
+              placeholder="URL"
+              value={link.url}
+              onChange={(e) => {
+                const newLinks = [...formData.links];
+                newLinks[index].url = e.target.value;
+                setFormData({ ...formData, links: newLinks });
+              }}
+              style={{ flex: 1 }}
+            />
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => {
+                const newLinks = formData.links.filter((_: any, i: number) => i !== index);
+                setFormData({ ...formData, links: newLinks });
+              }}
+            >
+              Remove
+            </Button>
+          </div>
+        ))}
+        <Button
+          variant="secondary"
+          size="md"
+          onClick={() => {
+            setFormData({ ...formData, links: [...formData.links, { label: '', url: '' }] });
+          }}
+        >
+          Add Link
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// Display components (unchanged from original)
 interface CourseContentProps {
   event: CalendarEvent;
   course: Course;
@@ -382,7 +589,6 @@ function CourseContent({ event, course }: CourseContentProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Course Name */}
       <div>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
           Course Name
@@ -392,7 +598,6 @@ function CourseContent({ event, course }: CourseContentProps) {
         </p>
       </div>
 
-      {/* Term */}
       <div>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
           Term
@@ -402,7 +607,6 @@ function CourseContent({ event, course }: CourseContentProps) {
         </p>
       </div>
 
-      {/* Meeting Time */}
       {meetingTime && (
         <div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
@@ -415,7 +619,6 @@ function CourseContent({ event, course }: CourseContentProps) {
         </div>
       )}
 
-      {/* Location */}
       {meetingTime?.location && (
         <div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
@@ -427,7 +630,6 @@ function CourseContent({ event, course }: CourseContentProps) {
         </div>
       )}
 
-      {/* Links */}
       {course.links && course.links.length > 0 && (
         <div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
@@ -466,17 +668,11 @@ function CourseContent({ event, course }: CourseContentProps) {
 interface TaskContentProps {
   task: Task;
   relatedCourse: Course | null;
-  onChecklistToggle: (itemId: string) => void;
 }
 
-function TaskContent({
-  task,
-  relatedCourse,
-  onChecklistToggle,
-}: TaskContentProps) {
+function TaskContent({ task, relatedCourse }: TaskContentProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Related Course */}
       {relatedCourse && (
         <div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
@@ -488,7 +684,6 @@ function TaskContent({
         </div>
       )}
 
-      {/* Due Date */}
       {task.dueAt && (
         <div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
@@ -500,7 +695,6 @@ function TaskContent({
         </div>
       )}
 
-      {/* Notes */}
       {task.notes && (
         <div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
@@ -520,7 +714,6 @@ function TaskContent({
         </div>
       )}
 
-      {/* Checklist */}
       {task.checklist && task.checklist.length > 0 && (
         <div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
@@ -548,7 +741,7 @@ function TaskContent({
                 <input
                   type="checkbox"
                   checked={item.done}
-                  onChange={() => onChecklistToggle(item.id)}
+                  readOnly
                   style={{
                     width: '16px',
                     height: '16px',
@@ -571,7 +764,6 @@ function TaskContent({
         </div>
       )}
 
-      {/* Links */}
       {task.links && task.links.length > 0 && (
         <div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
@@ -615,7 +807,6 @@ interface DeadlineContentProps {
 function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Related Course */}
       {relatedCourse && (
         <div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
@@ -627,7 +818,6 @@ function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
         </div>
       )}
 
-      {/* Due Date */}
       {deadline.dueAt && (
         <div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
@@ -639,7 +829,6 @@ function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
         </div>
       )}
 
-      {/* Notes */}
       {deadline.notes && (
         <div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
@@ -659,7 +848,6 @@ function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
         </div>
       )}
 
-      {/* Links */}
       {deadline.links && deadline.links.length > 0 && (
         <div>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
