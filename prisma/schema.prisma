@@ -34,6 +34,8 @@ model Course {
   code          String
   name          String
   term          String
+  startDate     DateTime?
+  endDate       DateTime?
   meetingTimes  Json      @default("[]")
   links         Json      @default("[]")
   colorTag      String?

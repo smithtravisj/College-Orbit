@@ -6,6 +6,7 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import DaysDropdown from '@/components/DaysDropdown';
 import TimePicker from '@/components/TimePicker';
+import CalendarPicker from '@/components/CalendarPicker';
 import { Plus, Trash2 } from 'lucide-react';
 
 interface CourseFormProps {
@@ -21,6 +22,8 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
     code: '',
     name: '',
     term: '',
+    startDate: '',
+    endDate: '',
     meetingTimes: [{ days: ['Mon'], start: '10:00', end: '10:50', location: '' }],
     links: [{ label: '', url: '' }],
     colorTag: '',
@@ -32,6 +35,8 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
         code: course.code,
         name: course.name,
         term: course.term,
+        startDate: course.startDate ? course.startDate.split('T')[0] : '',
+        endDate: course.endDate ? course.endDate.split('T')[0] : '',
         meetingTimes: course.meetingTimes || [{ days: ['Mon'], start: '10:00', end: '10:50', location: '' }],
         links: course.links || [{ label: '', url: '' }],
         colorTag: course.colorTag || '',
@@ -42,7 +47,7 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const courseData = {
+    const courseData: any = {
       code: form.code,
       name: form.name,
       term: form.term,
@@ -57,6 +62,13 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
         })),
       colorTag: form.colorTag,
     };
+
+    if (form.startDate) {
+      courseData.startDate = form.startDate;
+    }
+    if (form.endDate) {
+      courseData.endDate = form.endDate;
+    }
 
     if (courseId) {
       updateCourse(courseId, courseData);
@@ -95,6 +107,19 @@ export default function CourseForm({ courseId, onClose }: CourseFormProps) {
           value={form.term}
           onChange={(e) => setForm({ ...form, term: e.target.value })}
           placeholder="e.g., Winter 2026"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4" style={{ paddingTop: '12px' }}>
+        <CalendarPicker
+          label="Start Date (optional)"
+          value={form.startDate}
+          onChange={(date) => setForm({ ...form, startDate: date })}
+        />
+        <CalendarPicker
+          label="End Date (optional)"
+          value={form.endDate}
+          onChange={(date) => setForm({ ...form, endDate: date })}
         />
       </div>
 

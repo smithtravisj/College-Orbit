@@ -3,6 +3,8 @@ export interface Course {
   code: string;
   name: string;
   term: string;
+  startDate?: string | null; // ISO date or null
+  endDate?: string | null; // ISO date or null
   meetingTimes: Array<{
     days: string[];
     start: string;
