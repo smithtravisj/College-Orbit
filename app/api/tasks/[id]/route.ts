@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+
 
 // GET single task
 export async function GET(
@@ -9,9 +9,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authConfig);
+    const token = await getToken({ req: _request, secret: process.env.NEXTAUTH_SECRET });
 
-    if (!session?.user?.id) {
+    if (!token?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -20,7 +20,7 @@ export async function GET(
     const task = await prisma.task.findFirst({
       where: {
         id,
-        userId: session.user.id,
+        userId: token.id,
       },
     });
 
@@ -44,9 +44,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authConfig);
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-    if (!session?.user?.id) {
+    if (!token?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -57,7 +57,7 @@ export async function PATCH(
     const existingTask = await prisma.task.findFirst({
       where: {
         id,
-        userId: session.user.id,
+        userId: token.id,
       },
     });
 
@@ -112,9 +112,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authConfig);
+    const token = await getToken({ req: _request, secret: process.env.NEXTAUTH_SECRET });
 
-    if (!session?.user?.id) {
+    if (!token?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -124,7 +124,7 @@ export async function DELETE(
     const existingTask = await prisma.task.findFirst({
       where: {
         id,
-        userId: session.user.id,
+        userId: token.id,
       },
     });
 

@@ -1,19 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
 
 // GET all deadlines for authenticated user
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+    console.log('[GET /api/deadlines] Token:', token ? { userId: token.id, email: token.email } : 'null');
 
-    if (!session?.user?.id) {
+    if (!token?.id) {
+      console.log('[GET /api/deadlines] No user ID in token, returning 401');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    console.log('[GET /api/deadlines] Authorized user:', token.id);
 
     const deadlines = await prisma.deadline.findMany({
-      where: { userId: session.user.id },
+      where: { userId: token.id },
       orderBy: { dueAt: 'asc' },
     });
 
@@ -30,9 +35,12 @@ export async function GET(_request: NextRequest) {
 // POST create new deadline
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const token = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
 
-    if (!session?.user?.id) {
+    if (!token?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -72,7 +80,7 @@ export async function POST(req: NextRequest) {
 
     const deadline = await prisma.deadline.create({
       data: {
-        userId: session.user.id,
+        userId: token.id,
         title: data.title.trim(),
         courseId: data.courseId || null,
         dueAt: dueAt,
