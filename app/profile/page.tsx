@@ -77,7 +77,7 @@ export default function ProfilePage() {
   return (
     <>
       <PageHeader title="Profile" subtitle="Manage your account information" />
-      <div className="mx-auto w-full max-w-[768px]" style={{ padding: '24px' }}>
+      <div className="mx-auto w-full max-w-[768px]" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
         <div className="w-full grid grid-cols-1 gap-[var(--grid-gap)]">
           <Card title="Account Information">
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

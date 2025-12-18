@@ -268,6 +268,10 @@ select {
 }
 
 @media (max-width: 640px) {
+  :root {
+    --grid-gap: 12px;
+  }
+
   .content-container {
     padding-left: var(--content-padding-mobile);
     padding-right: var(--content-padding-mobile);

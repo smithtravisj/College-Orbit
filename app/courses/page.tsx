@@ -71,7 +71,7 @@ export default function CoursesPage() {
           )
         }
       />
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: '24px' }}>
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]">
           {/* Filters sidebar - 3 columns */}
           <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content' }}>

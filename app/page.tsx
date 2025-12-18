@@ -265,7 +265,7 @@ export default function Dashboard() {
   return (
     <>
       <PageHeader title="Dashboard" subtitle="Welcome back. Here's your schedule and tasks for today." />
-      <div className="mx-auto w-full max-w-[1400px] min-h-[calc(100vh-var(--header-h))] flex flex-col" style={{ padding: '24px' }}>
+      <div className="mx-auto w-full max-w-[1400px] min-h-[calc(100vh-var(--header-h))] flex flex-col" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)] flex-1">
           {/* Top row - 3 cards */}
           <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">

@@ -122,7 +122,7 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader title="Settings" subtitle="Customize your experience" />
-      <div className="mx-auto w-full max-w-[768px]" style={{ padding: '24px' }}>
+      <div className="mx-auto w-full max-w-[768px]" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
         {!session && (
           <div style={{ backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '6px', padding: '12px', marginBottom: '24px', color: '#856404', fontSize: '14px' }}>
             ⚠️ You are not logged in. Settings will be saved to your browser only.

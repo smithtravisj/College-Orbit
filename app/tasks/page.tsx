@@ -174,7 +174,7 @@ export default function TasksPage() {
           </Button>
         }
       />
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: '24px', overflow: 'visible' }}>
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ overflow: 'visible' }}>
           {/* Filters sidebar - 3 columns */}
           <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content' }}>
