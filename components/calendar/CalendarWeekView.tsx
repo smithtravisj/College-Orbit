@@ -327,12 +327,10 @@ export default function CalendarWeekView({
                     const height = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
                     const color = getEventColor(event);
 
-                    // Check if this is the only task/deadline AND there are no overlapping courses in the layout
+                    // Check if this is the only task/deadline AND the only event in the layout
                     const otherTasksDeadlines = timedEvents.filter(e => e.id !== event.id);
                     const isAloneTaskDeadline = otherTasksDeadlines.length === 0;
-                    const courseEventsInLayout = layout.filter(l => l.event.type === 'course');
-                    const noOverlappingCourses = courseEventsInLayout.length === 0;
-                    const shouldExpand = isAloneTaskDeadline && noOverlappingCourses;
+                    const shouldExpand = isAloneTaskDeadline && eventLayout.totalColumns === 1;
 
                     const eventWidth = shouldExpand ? 100 : 100 / eventLayout.totalColumns;
                     const eventLeft = shouldExpand ? 0 : eventLayout.column * (100 / eventLayout.totalColumns);
