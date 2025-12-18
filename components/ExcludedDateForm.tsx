@@ -113,7 +113,7 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
             cursor: 'pointer',
           }}
         >
-          <option value="">All Courses (Global Holiday)</option>
+          <option value="">All Courses (School Holiday)</option>
           {courses.map((course) => (
             <option key={course.id} value={course.id}>
               {course.code} - {course.name}
@@ -126,25 +126,65 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
         <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
           Date Type
         </label>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-            <input
-              type="radio"
-              value="single"
-              checked={dateMode === 'single'}
-              onChange={() => setDateMode('single')}
-            />
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            type="button"
+            onClick={() => setDateMode('single')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '10px',
+              border: 'none',
+              backgroundColor: dateMode === 'single' ? 'var(--accent)' : 'var(--panel-2)',
+              color: dateMode === 'single' ? 'white' : 'var(--text-secondary)',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s, color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              if (dateMode !== 'single') {
+                e.currentTarget.style.backgroundColor = 'var(--panel-3)';
+                e.currentTarget.style.color = 'var(--text)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (dateMode !== 'single') {
+                e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }
+            }}
+          >
             Single Date
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-            <input
-              type="radio"
-              value="range"
-              checked={dateMode === 'range'}
-              onChange={() => setDateMode('range')}
-            />
+          </button>
+          <button
+            type="button"
+            onClick={() => setDateMode('range')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '10px',
+              border: 'none',
+              backgroundColor: dateMode === 'range' ? 'var(--accent)' : 'var(--panel-2)',
+              color: dateMode === 'range' ? 'white' : 'var(--text-secondary)',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s, color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              if (dateMode !== 'range') {
+                e.currentTarget.style.backgroundColor = 'var(--panel-3)';
+                e.currentTarget.style.color = 'var(--text)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (dateMode !== 'range') {
+                e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }
+            }}
+          >
             Date Range
-          </label>
+          </button>
         </div>
       </div>
 
