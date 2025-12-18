@@ -136,8 +136,16 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
               style={{
                 width: '18px',
                 height: '18px',
-                accentColor: 'var(--accent)',
                 cursor: 'pointer',
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                MozAppearance: 'none',
+                background: dateMode === 'single' ? 'var(--accent)' : 'var(--panel-2)',
+                border: '1.5px solid var(--border)',
+                borderRadius: '4px',
+                outline: 'none',
+                transition: 'all 150ms ease',
+                flexShrink: 0,
               }}
             />
             <span style={{ fontSize: '14px', color: 'var(--text)' }}>Single Date</span>
@@ -151,8 +159,16 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
               style={{
                 width: '18px',
                 height: '18px',
-                accentColor: 'var(--accent)',
                 cursor: 'pointer',
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                MozAppearance: 'none',
+                background: dateMode === 'range' ? 'var(--accent)' : 'var(--panel-2)',
+                border: '1.5px solid var(--border)',
+                borderRadius: '4px',
+                outline: 'none',
+                transition: 'all 150ms ease',
+                flexShrink: 0,
               }}
             />
             <span style={{ fontSize: '14px', color: 'var(--text)' }}>Date Range</span>
