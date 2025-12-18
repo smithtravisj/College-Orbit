@@ -314,7 +314,6 @@ export default function CalendarWeekView({
                 {(() => {
                   const dayEvents = eventsByDay.get(dateStr) || [];
                   const { timed: timedEvents } = separateTaskDeadlineEvents(dayEvents);
-                  const courseEvents = dayEvents.filter((e) => e.type === 'course');
                   const layout = eventLayoutsByDay.get(dateStr) || [];
 
                   return timedEvents.map((event) => {
