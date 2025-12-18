@@ -19,6 +19,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const portalRef = useRef<HTMLDivElement>(null);
   const isUpdatingFromParent = useRef(false);
 
   useEffect(() => {
@@ -59,15 +60,26 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
 
   // Close dropdown when clicking outside
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as HTMLElement;
+      // Close if clicking outside button, dropdownRef, and portal
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target) &&
+        portalRef.current &&
+        !portalRef.current.contains(target)
+      ) {
         setIsOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isOpen]);
 
   const handleTimeChange = (h: string, m: string, pm: boolean = isPM) => {
     const formattedMinutes = String(parseInt(m) || 0).padStart(2, '0');
@@ -158,6 +170,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
 
       {isMounted && isOpen && createPortal(
         <div
+          ref={portalRef}
           className="bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg"
           style={{ position: 'fixed', top: `${dropdownPos.top}px`, left: `${dropdownPos.left}px`, minWidth: '180px', zIndex: 9999 }}
         >
