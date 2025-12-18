@@ -256,12 +256,12 @@ export default function DeadlinesPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4" style={{ overflow: 'visible' }}>
                   <CalendarPicker
-                    label="Due date (optional)"
+                    label="Due Date (optional)"
                     value={formData.dueDate}
                     onChange={(date) => setFormData({ ...formData, dueDate: date })}
                   />
                   <TimePicker
-                    label="Due time (optional)"
+                    label="Due Time (optional)"
                     value={formData.dueTime}
                     onChange={(time) => setFormData({ ...formData, dueTime: time })}
                   />

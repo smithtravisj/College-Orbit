@@ -304,12 +304,12 @@ export default function Dashboard() {
                     </div>
                     <div className="grid grid-cols-2 gap-4" style={{ paddingTop: '12px' }}>
                       <CalendarPicker
-                        label="Due date (optional)"
+                        label="Due Date (optional)"
                         value={deadlineFormData.dueDate}
                         onChange={(date) => setDeadlineFormData({ ...deadlineFormData, dueDate: date })}
                       />
                       <TimePicker
-                        label="Due time (optional)"
+                        label="Due Time (optional)"
                         value={deadlineFormData.dueTime}
                         onChange={(time) => setDeadlineFormData({ ...deadlineFormData, dueTime: time })}
                       />
@@ -569,12 +569,12 @@ export default function Dashboard() {
                   </div>
                   <div className="grid grid-cols-2 gap-4" style={{ paddingTop: '12px' }}>
                     <CalendarPicker
-                      label="Due date (optional)"
+                      label="Due Date (optional)"
                       value={taskFormData.dueDate}
                       onChange={(date) => setTaskFormData({ ...taskFormData, dueDate: date })}
                     />
                     <TimePicker
-                      label="Due time (optional)"
+                      label="Due Time (optional)"
                       value={taskFormData.dueTime}
                       onChange={(time) => setTaskFormData({ ...taskFormData, dueTime: time })}
                     />
