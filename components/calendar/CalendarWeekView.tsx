@@ -168,6 +168,7 @@ export default function CalendarWeekView({
                       paddingRight: '6px',
                       paddingTop: '4px',
                       paddingBottom: '4px',
+                      marginRight: '4px',
                       borderRadius: '2px',
                       backgroundColor: `${color}30`,
                       color: 'white',
