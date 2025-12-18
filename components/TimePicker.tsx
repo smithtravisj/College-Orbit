@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 
 interface TimePickerProps {
@@ -11,6 +12,7 @@ interface TimePickerProps {
 
 export default function TimePicker({ value, onChange, label }: TimePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [hours, setHours] = useState<string>('10');
   const [minutes, setMinutes] = useState<string>('0');
   const [isPM, setIsPM] = useState(false);
@@ -18,6 +20,10 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const isUpdatingFromParent = useRef(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Convert 24-hour to 12-hour format for display
   const convert24To12 = (h: string): { hours12: string; isPM: boolean } => {
@@ -150,7 +156,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
         />
       </button>
 
-      {isOpen && (
+      {isMounted && isOpen && createPortal(
         <div
           className="bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg"
           style={{ position: 'fixed', top: `${dropdownPos.top}px`, left: `${dropdownPos.left}px`, minWidth: '180px', zIndex: 9999 }}
@@ -249,7 +255,8 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

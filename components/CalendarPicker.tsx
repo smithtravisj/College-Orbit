@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CalendarPickerProps {
@@ -11,6 +12,7 @@ interface CalendarPickerProps {
 
 export default function CalendarPicker({ value, onChange, label }: CalendarPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<Date>(() => {
     if (value) {
       return new Date(value + 'T00:00:00');
@@ -21,13 +23,22 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const selectedDate = value ? new Date(value + 'T00:00:00') : null;
 
   // Close popup when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+      // Close if clicking outside the button and not on the dropdown
+      if (buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
+        const target = event.target as HTMLElement;
+        // Check if click is outside the entire component
+        if (containerRef.current && !containerRef.current.contains(target)) {
+          setIsOpen(false);
+        }
       }
     };
 
@@ -113,7 +124,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
         {displayValue || 'Select date...'}
       </button>
 
-      {isOpen && (
+      {isMounted && isOpen && createPortal(
         <div
           style={{
             position: 'fixed',
@@ -252,7 +263,8 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
               );
             })}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
