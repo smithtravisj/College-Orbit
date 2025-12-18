@@ -107,7 +107,7 @@ export default function CalendarDayView({
       {/* Time grid */}
       <div ref={scrollContainerRef} style={{ display: 'flex', flex: 1, overflow: 'auto' }}>
         {/* Time column */}
-        <div style={{ width: '80px', borderRight: '1px solid var(--border)', paddingTop: '8px', paddingLeft: '8px', flexShrink: 0 }}>
+        <div style={{ width: '80px', paddingTop: '8px', paddingLeft: '8px', flexShrink: 0 }}>
           {hours.map((hour) => {
             const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
             const ampm = hour >= 12 ? 'PM' : 'AM';
