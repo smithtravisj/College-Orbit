@@ -10,7 +10,7 @@ import { Download, Upload, Trash2 } from 'lucide-react';
 
 export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
-  const [dueSoonDays, setDueSoonDays] = useState(7);
+  const [dueSoonDays, setDueSoonDays] = useState<number | string>(7);
   const [exportMessage, setExportMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -113,7 +113,12 @@ export default function SettingsPage() {
                   />
                   <span className="text-sm text-[var(--text-secondary)]">days</span>
                 </div>
-                <Button size="lg" onClick={() => updateSettings({ dueSoonWindowDays: dueSoonDays })} style={{ marginTop: '16px', paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#132343', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                <Button size="lg" onClick={() => {
+                  const val = typeof dueSoonDays === 'string' ? parseInt(dueSoonDays) : dueSoonDays;
+                  if (!isNaN(val) && val >= 1 && val <= 30) {
+                    updateSettings({ dueSoonWindowDays: val });
+                  }
+                }} style={{ marginTop: '16px', paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#132343', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                   Save
                 </Button>
               </div>
