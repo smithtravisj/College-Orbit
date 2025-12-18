@@ -181,29 +181,6 @@ export default function Dashboard() {
     return `${hours12}:${String(minutes).padStart(2, '0')} ${ampm}`;
   };
 
-  // Get next class
-  const today = new Date();
-  const todayClasses = courses.flatMap((course) =>
-    (course.meetingTimes || [])
-      .filter((mt) => {
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        return mt.days?.includes(days[today.getDay()]) || false;
-      })
-      .map((mt) => ({
-        ...mt,
-        courseCode: course.code,
-        courseName: course.name,
-        courseLinks: course.links,
-      }))
-  );
-
-  const now = new Date();
-  const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-  const nextClass = todayClasses
-    .filter((c) => c.start > nowTime)
-    .sort((a, b) => a.start.localeCompare(b.start))[0] || null;
-
   // Get due soon items
   const dueSoon = deadlines
     .filter((d) => {
@@ -241,6 +218,39 @@ export default function Dashboard() {
       // Otherwise sort alphabetically
       return a.title.localeCompare(b.title);
     });
+
+  // Filter out courses that have ended
+  const isCourseCurrent = (course: typeof courses[0]) => {
+    if (!course.endDate) return true;
+    const endDate = new Date(course.endDate);
+    endDate.setHours(23, 59, 59, 999);
+    return endDate >= new Date();
+  };
+
+  const currentCourses = courses.filter(isCourseCurrent);
+
+  // Get next class
+  const today = new Date();
+  const todayClasses = currentCourses.flatMap((course) =>
+    (course.meetingTimes || [])
+      .filter((mt) => {
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        return mt.days?.includes(days[today.getDay()]) || false;
+      })
+      .map((mt) => ({
+        ...mt,
+        courseCode: course.code,
+        courseName: course.name,
+        courseLinks: course.links,
+      }))
+  );
+
+  const now = new Date();
+  const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  const nextClass = todayClasses
+    .filter((c) => c.start > nowTime)
+    .sort((a, b) => a.start.localeCompare(b.start))[0] || null;
 
   const overdueTasks = tasks.filter((d) => d.dueAt && isOverdue(d.dueAt) && d.status === 'open');
 
@@ -875,7 +885,7 @@ export default function Dashboard() {
                   const dayIndex = date.getDay();
                   const dayAbbrev = dayNames[dayIndex];
 
-                  const classesOnDay = courses
+                  const classesOnDay = currentCourses
                     .flatMap((course) =>
                       (course.meetingTimes || [])
                         .filter((mt) => mt.days?.includes(dayAbbrev))

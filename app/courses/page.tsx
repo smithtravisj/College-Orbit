@@ -15,12 +15,25 @@ export default function CoursesPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [termFilter, setTermFilter] = useState('all');
+  const [showEnded, setShowEnded] = useState(false);
   const { courses, initializeStore } = useAppStore();
 
   useEffect(() => {
     initializeStore();
+    // Load showEnded from localStorage
+    const saved = localStorage.getItem('showEndedCourses');
+    if (saved) {
+      setShowEnded(JSON.parse(saved));
+    }
     setMounted(true);
   }, [initializeStore]);
+
+  // Save showEnded to localStorage when it changes
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem('showEndedCourses', JSON.stringify(showEnded));
+    }
+  }, [showEnded, mounted]);
 
   if (!mounted) {
     return (
@@ -30,9 +43,18 @@ export default function CoursesPage() {
     );
   }
 
-  // Get unique terms for filter
-  const uniqueTerms = Array.from(new Set(courses.map((c) => c.term).filter(Boolean)));
-  const filteredCourses = termFilter === 'all' ? courses : courses.filter((c) => c.term === termFilter);
+  // Filter out courses that have ended
+  const isCourseCurrent = (course: any) => {
+    if (!course.endDate) return true;
+    const endDate = new Date(course.endDate);
+    endDate.setHours(23, 59, 59, 999);
+    return endDate >= new Date();
+  };
+
+  // Get unique terms for filter (based on showEnded setting)
+  const coursesToShow = showEnded ? courses : courses.filter(isCourseCurrent);
+  const uniqueTerms = Array.from(new Set(coursesToShow.map((c) => c.term).filter(Boolean)));
+  const filteredCourses = (termFilter === 'all' ? coursesToShow : coursesToShow.filter((c) => c.term === termFilter));
 
   return (
     <>
