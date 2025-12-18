@@ -714,8 +714,15 @@ const useAppStore = create<AppStore>((set, get) => ({
       // Import excluded dates
       if (data.excludedDates && data.excludedDates.length > 0) {
         console.log('Importing excluded dates:', data.excludedDates.length);
+
+        // Reload courses from database to ensure we have all newly imported courses
+        const coursesRes = await fetch('/api/courses');
+        const coursesData = await coursesRes.json();
+        const currentCourses = coursesData.courses || [];
+
         // Build a map of course names to IDs for matching
-        const courseMap = new Map(store.courses.map(c => [c.name, c.id]));
+        const courseMap = new Map(currentCourses.map((c: Course) => [c.name, c.id]));
+        console.log('Available courses for matching:', Array.from(courseMap.keys()));
 
         for (const excludedDate of data.excludedDates) {
           const { id, createdAt, updatedAt, userId, courseId: originalCourseId, ...excludedDateData } = excludedDate as any;
@@ -725,9 +732,14 @@ const useAppStore = create<AppStore>((set, get) => ({
           if (originalCourseId) {
             // Find the course name from the original data
             const originalCourse = data.courses?.find(c => c.id === originalCourseId);
-            if (originalCourse && courseMap.has(originalCourse.name)) {
-              newCourseId = courseMap.get(originalCourse.name);
-              console.log('Matched course for excluded date:', originalCourse.name, '(new ID:', newCourseId, ')');
+            if (originalCourse) {
+              console.log('Original course for excluded date:', originalCourse.name);
+              if (courseMap.has(originalCourse.name)) {
+                newCourseId = courseMap.get(originalCourse.name);
+                console.log('Matched course for excluded date:', originalCourse.name, '(new ID:', newCourseId, ')');
+              } else {
+                console.log('No matching course found for:', originalCourse.name);
+              }
             }
           }
 
