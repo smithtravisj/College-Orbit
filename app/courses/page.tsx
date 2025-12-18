@@ -96,8 +96,8 @@ export default function CoursesPage() {
                 ))}
               </div>
 
-              <div style={{ paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
-                <label className="flex items-center gap-2 cursor-pointer" style={{ padding: '12px 16px' }}>
+              <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
+                <label className="flex items-center gap-2 cursor-pointer" style={{ padding: '8px 16px' }}>
                   <input
                     type="checkbox"
                     checked={showEnded}
@@ -117,7 +117,7 @@ export default function CoursesPage() {
                       transition: 'all 0.3s ease',
                     }}
                   />
-                  <span className="text-sm font-medium text-[var(--text)]">Show ended courses</span>
+                  <span className="text-sm font-medium text-[var(--text)]">Show Finished Courses</span>
                 </label>
               </div>
             </Card>
