@@ -96,10 +96,10 @@ export default function ExcludedDatesCard() {
             >
               <div>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--text)' }}>
                     {getCourseName(excludedDate.courseId)}
                   </span>
-                  <span style={{ fontSize: '12px', backgroundColor: 'var(--border)', padding: '2px 8px', borderRadius: '4px', color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: '12px', backgroundColor: 'var(--border)', padding: '2px 8px', borderRadius: '4px', color: 'var(--text)' }}>
                     {formatDate(excludedDate.date)}
                   </span>
                 </div>
