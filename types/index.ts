@@ -22,7 +22,10 @@ export interface Deadline {
   courseId: string | null;
   dueAt: string | null; // ISO datetime
   notes: string;
-  link: string | null;
+  links: Array<{
+    label: string;
+    url: string;
+  }>;
   status: 'open' | 'done';
   createdAt: string; // ISO datetime
 }
@@ -39,7 +42,10 @@ export interface Task {
     done: boolean;
   }>;
   notes: string;
-  link: string | null;
+  links: Array<{
+    label: string;
+    url: string;
+  }>;
   status: 'open' | 'done';
   createdAt: string; // ISO datetime
 }

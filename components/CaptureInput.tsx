@@ -49,7 +49,7 @@ export default function CaptureInput() {
           0
         ).toISOString(),
         notes: '',
-        link: null,
+        links: [],
         status: 'open',
       });
     } else if (title) {
@@ -60,7 +60,7 @@ export default function CaptureInput() {
         pinned: false,
         checklist: [],
         notes: '',
-        link: null,
+        links: [],
         status: 'open',
       });
     }

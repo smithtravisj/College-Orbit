@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
-import { isToday, formatDate, isOverdue, extractDomain } from '@/lib/utils';
+import { isToday, formatDate, isOverdue } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -24,7 +24,7 @@ export default function TasksPage() {
     dueDate: '',
     dueTime: '',
     notes: '',
-    link: '',
+    links: [{ label: '', url: '' }],
   });
   const [filter, setFilter] = useState('all');
 
@@ -67,12 +67,15 @@ export default function TasksPage() {
       formData.dueTime = '';
     }
 
-    // Handle link - normalize empty string to null
-    const link = formData.link?.trim() ? (
-      formData.link.startsWith('http://') || formData.link.startsWith('https://')
-        ? formData.link
-        : `https://${formData.link}`
-    ) : null;
+    // Handle links - normalize and add https:// if needed
+    const links = formData.links
+      .filter((l) => l.label && l.url)
+      .map((l) => ({
+        label: l.label,
+        url: l.url.startsWith('http://') || l.url.startsWith('https://')
+          ? l.url
+          : `https://${l.url}`
+      }));
 
     if (editingId) {
       await updateTask(editingId, {
@@ -80,7 +83,7 @@ export default function TasksPage() {
         courseId: formData.courseId || null,
         dueAt,
         notes: formData.notes,
-        link,
+        links,
       });
       setEditingId(null);
     } else {
@@ -91,12 +94,12 @@ export default function TasksPage() {
         pinned: false,
         checklist: [],
         notes: formData.notes,
-        link,
+        links,
         status: 'open',
       });
     }
 
-    setFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', link: '' });
+    setFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', links: [{ label: '', url: '' }] });
     setShowForm(false);
   };
 
@@ -118,14 +121,14 @@ export default function TasksPage() {
       dueDate: dateStr,
       dueTime: timeStr,
       notes: task.notes,
-      link: task.link || '',
+      links: task.links && task.links.length > 0 ? task.links : [{ label: '', url: '' }],
     });
     setShowForm(true);
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', link: '' });
+    setFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', links: [{ label: '', url: '' }] });
     setShowForm(false);
   };
 
@@ -244,14 +247,66 @@ export default function TasksPage() {
                     onChange={(time) => setFormData({ ...formData, dueTime: time })}
                   />
                 </div>
-                <div style={{ paddingTop: '12px' }}>
-                  <Input
-                    label="Link (optional)"
-                    type="text"
-                    value={formData.link}
-                    onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                    placeholder="example.com or https://..."
-                  />
+                <div style={{ paddingTop: '20px' }}>
+                  <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links (optional)</label>
+                  <div className="space-y-3">
+                    {formData.links.map((link, idx) => (
+                      <div key={idx} className="flex gap-3 items-center">
+                        <Input
+                          label={idx === 0 ? 'Label' : ''}
+                          type="text"
+                          value={link.label}
+                          onChange={(e) => {
+                            const newLinks = [...formData.links];
+                            newLinks[idx].label = e.target.value;
+                            setFormData({ ...formData, links: newLinks });
+                          }}
+                          placeholder="e.g., Canvas"
+                          className="w-32"
+                        />
+                        <Input
+                          label={idx === 0 ? 'URL' : ''}
+                          type="text"
+                          value={link.url}
+                          onChange={(e) => {
+                            const newLinks = [...formData.links];
+                            newLinks[idx].url = e.target.value;
+                            setFormData({ ...formData, links: newLinks });
+                          }}
+                          placeholder="example.com or https://..."
+                          className="flex-1"
+                        />
+                        <div>
+                          {idx === 0 && (
+                            <label className="block text-sm font-medium text-[var(--text)] mb-2" style={{ height: '20px' }}></label>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                links: formData.links.filter((_, i) => i !== idx),
+                              });
+                            }}
+                            className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                            style={{ padding: '8px' }}
+                            title="Remove link"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Button variant="secondary" size="sm" type="button" onClick={() => {
+                    setFormData({
+                      ...formData,
+                      links: [...formData.links, { label: '', url: '' }],
+                    });
+                  }} style={{ marginTop: '12px', paddingLeft: '16px', paddingRight: '16px' }}>
+                    <Plus size={16} />
+                    Add Link
+                  </Button>
                 </div>
                 <div className="flex gap-3" style={{ paddingTop: '12px' }}>
                   <Button
@@ -364,16 +419,17 @@ export default function TasksPage() {
                               {course.code}
                             </span>
                           )}
-                          {t.link && (
+                          {t.links && t.links.length > 0 && t.links.map((link: any) => (
                             <a
-                              href={t.link}
+                              key={link.url}
+                              href={link.url}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
                             >
-                              {extractDomain(t.link)}
+                              {link.label}
                             </a>
-                          )}
+                          ))}
                         </div>
                       </div>
                       <div className="flex items-center gap-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
