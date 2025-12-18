@@ -23,13 +23,22 @@ export default function CalendarContent() {
   const { courses, tasks, deadlines, initializeStore } = useAppStore();
 
   useEffect(() => {
-    // Read view and date from URL on mount
+    // Read view and date from URL or localStorage
     const viewParam = searchParams.get('view') as ViewType;
     const dateParam = searchParams.get('date');
 
+    // First try URL param, then localStorage, then default to 'month'
+    let viewToUse: ViewType = 'month';
     if (viewParam && ['month', 'week', 'day'].includes(viewParam)) {
-      setView(viewParam);
+      viewToUse = viewParam;
+    } else if (typeof window !== 'undefined') {
+      const savedView = localStorage.getItem('calendarView') as ViewType;
+      if (savedView && ['month', 'week', 'day'].includes(savedView)) {
+        viewToUse = savedView;
+      }
     }
+    setView(viewToUse);
+
     if (dateParam) {
       const date = new Date(dateParam);
       if (!isNaN(date.getTime())) {
@@ -51,6 +60,9 @@ export default function CalendarContent() {
 
   const handleViewChange = (newView: ViewType) => {
     setView(newView);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('calendarView', newView);
+    }
     const dateStr = currentDate.toISOString().split('T')[0];
     router.push(`/calendar?view=${newView}&date=${dateStr}`);
   };
