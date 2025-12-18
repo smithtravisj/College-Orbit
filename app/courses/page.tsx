@@ -55,13 +55,10 @@ export default function CoursesPage() {
       if (!course.endDate) return true; // Show courses with no end date
 
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const endDate = new Date(course.endDate);
-      endDate.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const endStr = course.endDate.split('T')[0]; // Handle both timestamp and date string formats
 
-      return endDate >= tomorrow; // Show courses that haven't ended (endDate is not before tomorrow)
+      return endStr >= dateStr; // Show courses that haven't ended (endDate is today or later)
     });
   }
 
