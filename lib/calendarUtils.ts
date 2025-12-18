@@ -104,8 +104,14 @@ export function courseOccursOnDate(
   const dateStr = `${year}-${month}-${day}`;
 
   // Check if course is active on this date
-  if (course.startDate && course.startDate > dateStr) return false;
-  if (course.endDate && course.endDate < dateStr) return false;
+  if (course.startDate) {
+    const startStr = course.startDate.split('T')[0];
+    if (startStr > dateStr) return false;
+  }
+  if (course.endDate) {
+    const endStr = course.endDate.split('T')[0];
+    if (endStr < dateStr) return false;
+  }
 
   // Check if date is excluded
   if (excludedDates && isDateExcluded(date, course.id, excludedDates)) {
