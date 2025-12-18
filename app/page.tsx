@@ -291,7 +291,7 @@ export default function Dashboard() {
 
                   {/* Course Links */}
                   {nextClass.courseLinks && nextClass.courseLinks.length > 0 && (
-                    <div className="flex flex-col gap-1 pt-2">
+                    <div className="flex flex-col pt-2" style={{ gap: '2px' }}>
                       {nextClass.courseLinks.map((link) => (
                         <a
                           key={link.url}
@@ -516,7 +516,7 @@ export default function Dashboard() {
                             )}
                           </div>
                           {d.links && d.links.length > 0 && (
-                            <div className="flex flex-col gap-1 mt-2">
+                            <div className="flex flex-col mt-2" style={{ gap: '2px' }}>
                               {d.links.map((link: any) => (
                                 <a
                                   key={link.url}
@@ -789,7 +789,7 @@ export default function Dashboard() {
                           )}
                         </div>
                         {t.links && t.links.length > 0 && (
-                          <div className="flex flex-col gap-1 mt-2">
+                          <div className="flex flex-col mt-2" style={{ gap: '2px' }}>
                             {t.links.map((link: any) => (
                               <a
                                 key={link.url}
