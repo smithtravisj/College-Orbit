@@ -84,7 +84,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
   return (
     <div ref={containerRef} style={{ position: 'relative', display: 'block', width: '100%', overflow: 'visible' }}>
       {label && (
-        <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>
+        <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>
           {label}
         </label>
       )}
@@ -103,6 +103,8 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
           cursor: 'pointer',
           textAlign: 'left',
           transition: 'border-color 0.2s',
+          display: 'flex',
+          alignItems: 'center',
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.borderColor = 'var(--border-hover)';
