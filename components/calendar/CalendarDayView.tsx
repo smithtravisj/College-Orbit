@@ -88,9 +88,9 @@ export default function CalendarDayView({
       )}
 
       {/* Time grid */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'auto', padding: '12px' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'auto' }}>
         {/* Time column */}
-        <div style={{ width: '80px', borderRight: '1px solid var(--border)', paddingTop: '8px', flexShrink: 0 }}>
+        <div style={{ width: '80px', borderRight: '1px solid var(--border)', paddingTop: '8px', paddingLeft: '8px', flexShrink: 0 }}>
           {hours.map((hour) => {
             const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
             const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -115,7 +115,7 @@ export default function CalendarDayView({
         </div>
 
         {/* Events column */}
-        <div style={{ flex: 1, position: 'relative', paddingTop: '8px' }}>
+        <div style={{ flex: 1, position: 'relative', paddingTop: '8px', paddingRight: '8px' }}>
           {/* Hour grid lines */}
           {hours.map((hour) => (
             <div

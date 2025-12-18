@@ -56,13 +56,14 @@ export default function CalendarWeekView({
       {/* Day headers */}
       <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)', flexShrink: 0 }}>
         {/* Empty corner */}
-        <div style={{ borderBottom: '1px solid var(--border)', borderRight: '1px solid var(--border)' }} />
+        <div style={{ borderBottom: '1px solid var(--border)', borderRight: '1px solid var(--border)', paddingLeft: '8px' }} />
 
         {/* Day headers */}
-        {weekDays.map((day) => {
+        {weekDays.map((day, index) => {
           const dateStr = day.toISOString().split('T')[0];
           const isTodayDate = isToday(day);
           const dayName = getDayOfWeek(day);
+          const isLastDay = index === weekDays.length - 1;
 
           return (
             <div
@@ -71,7 +72,7 @@ export default function CalendarWeekView({
                 borderBottom: '1px solid var(--border)',
                 borderRight: '1px solid var(--border)',
                 paddingLeft: '8px',
-                paddingRight: '8px',
+                paddingRight: isLastDay ? '16px' : '8px',
                 paddingTop: '12px',
                 paddingBottom: '12px',
                 textAlign: 'center',
@@ -88,10 +89,10 @@ export default function CalendarWeekView({
       </div>
 
       {/* Time grid */}
-      <div style={{ flex: 1, overflow: 'auto', padding: '12px' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)' }}>
           {/* Time column */}
-          <div style={{ borderRight: '1px solid var(--border)', paddingTop: '8px', backgroundColor: 'var(--panel-2)', flexShrink: 0 }}>
+          <div style={{ borderRight: '1px solid var(--border)', paddingTop: '8px', paddingLeft: '8px', backgroundColor: 'var(--panel-2)', flexShrink: 0 }}>
             {hours.map((hour) => {
               const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
               const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -123,6 +124,7 @@ export default function CalendarWeekView({
             const courseEvents = dayEvents.filter((e) => e.type === 'course');
             const isTodayDate = isToday(day);
 
+            const isLastDay = weekDays.length - 1 === weekDays.indexOf(day);
             return (
               <div
                 key={dateStr}
@@ -130,6 +132,7 @@ export default function CalendarWeekView({
                   position: 'relative',
                   borderRight: '1px solid var(--border)',
                   backgroundColor: isTodayDate ? 'rgba(83, 155, 245, 0.05)' : 'var(--panel)',
+                  paddingRight: isLastDay ? '8px' : undefined,
                 }}
               >
                 {/* Hour grid lines */}
