@@ -80,7 +80,7 @@ export default function Dashboard() {
 
     // Handle links - normalize and add https:// if needed
     const links = taskFormData.links
-      .filter((l) => l.label && l.url)
+      .filter((l) => l.url && l.url.trim())
       .map((l) => ({
         label: l.label,
         url: l.url.startsWith('http://') || l.url.startsWith('https://')
@@ -143,7 +143,7 @@ export default function Dashboard() {
 
     // Handle links - normalize and add https:// if needed
     const links = deadlineFormData.links
-      .filter((l) => l.label && l.url)
+      .filter((l) => l.url && l.url.trim())
       .map((l) => ({
         label: l.label,
         url: l.url.startsWith('http://') || l.url.startsWith('https://')
