@@ -334,7 +334,7 @@ export default function CalendarWeekView({
                           left: `calc(${eventLeft}% + 4px)`,
                           width: `calc(${eventWidth}% - 8px)`,
                           borderRadius: 'var(--radius-control)',
-                          fontSize: '0.7rem',
+                          fontSize: '0.75rem',
                           padding: '6px',
                           overflow: 'hidden',
                           cursor: 'pointer',
@@ -343,12 +343,16 @@ export default function CalendarWeekView({
                           top: `${top}px`,
                           height: `${height}px`,
                           backgroundColor: `${color}30`,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'center',
                         }}
                         onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                         onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                         title={event.title}
                       >
-                        <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+                        <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2, textAlign: 'center' }}>
                           {event.title.substring(0, 20)}
                         </div>
                       </div>
