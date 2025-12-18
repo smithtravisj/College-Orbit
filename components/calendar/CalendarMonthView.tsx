@@ -107,11 +107,13 @@ export default function CalendarMonthView({
                 style={{
                   fontSize: '0.75rem',
                   fontWeight: 600,
-                  marginBottom: '4px',
-                  paddingBottom: '4px',
+                  marginBottom: '6px',
+                  paddingLeft: '4px',
+                  paddingRight: '4px',
+                  paddingTop: '2px',
+                  paddingBottom: '2px',
                   color: isTodayDate ? 'var(--accent)' : 'var(--text)',
                   lineHeight: 1,
-                  borderBottom: '1px solid var(--border)',
                 }}
               >
                 {date.getDate()}
