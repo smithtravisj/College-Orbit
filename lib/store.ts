@@ -461,14 +461,41 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   importData: async (data: AppData) => {
-    // For now, just load it into the store
-    // User can manually export/import via settings
-    set({
-      courses: data.courses || [],
-      deadlines: data.deadlines || [],
-      tasks: data.tasks || [],
-      settings: data.settings || DEFAULT_SETTINGS,
-    });
+    const store = get();
+
+    try {
+      // Import courses
+      if (data.courses && data.courses.length > 0) {
+        for (const course of data.courses) {
+          const { id, createdAt, updatedAt, ...courseData } = course as any;
+          await store.addCourse(courseData);
+        }
+      }
+
+      // Import deadlines
+      if (data.deadlines && data.deadlines.length > 0) {
+        for (const deadline of data.deadlines) {
+          const { id, createdAt, updatedAt, ...deadlineData } = deadline as any;
+          await store.addDeadline(deadlineData);
+        }
+      }
+
+      // Import tasks
+      if (data.tasks && data.tasks.length > 0) {
+        for (const task of data.tasks) {
+          const { id, createdAt, updatedAt, ...taskData } = task as any;
+          await store.addTask(taskData);
+        }
+      }
+
+      // Import settings
+      if (data.settings) {
+        await store.updateSettings(data.settings);
+      }
+    } catch (error) {
+      console.error('Error importing data:', error);
+      throw error;
+    }
   },
 
   deleteAllData: () => {
