@@ -348,7 +348,7 @@ export default function ToolsPage() {
 
           {/* Quick Links */}
           <Card title="Quick Links" subtitle="Useful BYU resources">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               {[
                 { label: 'Home', url: 'https://www.byu.edu/' },
                 { label: '2026 Calendar', url: 'https://academiccalendar.byu.edu/?y=2026' },
