@@ -91,38 +91,23 @@ export default function SettingsPage() {
                     inputMode="numeric"
                     value={dueSoonDays}
                     onChange={(e) => {
-                      const inputValue = e.target.value;
-                      setDueSoonDays(inputValue);
-                      const val = parseInt(inputValue);
+                      setDueSoonDays(e.target.value);
+                      const val = parseInt(e.target.value);
                       if (!isNaN(val) && val >= 1 && val <= 30) {
                         updateSettings({ dueSoonWindowDays: val });
-                      }
-                    }}
-                    onBlur={() => {
-                      if (dueSoonDays === '' || isNaN(dueSoonDays as any)) {
-                        setDueSoonDays(7);
-                        updateSettings({ dueSoonWindowDays: 7 });
                       }
                     }}
                     style={{
                       width: '96px',
                       height: '40px',
-                      backgroundColor: 'var(--panel-2)',
-                      border: '1px solid var(--border)',
-                      color: 'var(--text)',
-                      borderRadius: '6px',
-                      padding: '10px 12px',
+                      padding: '8px 12px',
                       fontSize: '16px',
                       fontFamily: 'inherit',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = 'var(--border-active)';
-                      e.target.style.boxShadow = '0 0 0 2px var(--ring)';
-                    }}
-                    onBlurCapture={(e) => {
-                      e.target.style.borderColor = 'var(--border)';
-                      e.target.style.boxShadow = 'none';
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                      boxSizing: 'border-box'
                     }}
                   />
                   <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>days</span>
