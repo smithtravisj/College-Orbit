@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 
 interface TimePickerProps {
@@ -12,19 +11,11 @@ interface TimePickerProps {
 
 export default function TimePicker({ value, onChange, label }: TimePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const [hours, setHours] = useState<string>('10');
   const [minutes, setMinutes] = useState<string>('0');
   const [isPM, setIsPM] = useState(false);
-  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const portalRef = useRef<HTMLDivElement>(null);
   const isUpdatingFromParent = useRef(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // Convert 24-hour to 12-hour format for display
   const convert24To12 = (h: string): { hours12: string; isPM: boolean } => {
@@ -63,16 +54,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
     if (!isOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      // Close if clicking outside button, dropdownRef, and portal
-      if (
-        buttonRef.current &&
-        !buttonRef.current.contains(target) &&
-        dropdownRef.current &&
-        !dropdownRef.current.contains(target) &&
-        portalRef.current &&
-        !portalRef.current.contains(target)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -145,18 +127,8 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
         </label>
       )}
       <button
-        ref={buttonRef}
         type="button"
-        onClick={() => {
-          if (!isOpen && buttonRef.current) {
-            const rect = buttonRef.current.getBoundingClientRect();
-            setDropdownPos({
-              top: rect.bottom + 4,
-              left: rect.left,
-            });
-          }
-          setIsOpen(!isOpen);
-        }}
+        onClick={() => setIsOpen(!isOpen)}
         className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)] flex items-center justify-between"
         style={{ padding: '10px 12px' }}
       >
@@ -168,11 +140,13 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
         />
       </button>
 
-      {isMounted && isOpen && createPortal(
+      {isOpen && (
         <div
-          ref={portalRef}
-          className="bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg"
-          style={{ position: 'fixed', top: `${dropdownPos.top}px`, left: `${dropdownPos.left}px`, minWidth: '180px', zIndex: 9999 }}
+          ref={dropdownRef}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          className="absolute top-full left-0 bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg"
+          style={{ marginTop: '4px', minWidth: '180px', zIndex: 9999 }}
         >
           <div style={{ padding: '16px' }}>
             <div className="flex items-center gap-4 justify-center">
@@ -268,8 +242,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
               </button>
             </div>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
     </div>
   );

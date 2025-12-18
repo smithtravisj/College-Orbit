@@ -102,6 +102,8 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
 
       {isOpen && (
         <div
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
           style={{
             position: 'absolute',
             top: '100%',
