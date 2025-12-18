@@ -52,10 +52,10 @@ export default function CalendarMonthView({
             key={day}
             style={{
               textAlign: 'center',
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              color: 'var(--text-muted)',
-              padding: '4px 0',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: 'var(--text)',
+              padding: '6px 0',
             }}
           >
             {day}
