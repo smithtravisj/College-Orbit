@@ -397,20 +397,20 @@ export default function DeadlinesPage() {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <div className="flex items-center gap-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
                         <button
                           onClick={() => startEdit(d)}
-                          className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                          className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors -ml-2"
                           title="Edit deadline"
                         >
-                          <Edit2 size={18} />
+                          <Edit2 size={20} />
                         </button>
                         <button
                           onClick={() => deleteDeadline(d.id)}
                           className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
                           title="Delete deadline"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={20} />
                         </button>
                       </div>
                     </div>
