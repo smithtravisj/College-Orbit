@@ -44,8 +44,7 @@ export function LoginForm() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg)', padding: '16px' }}>
-      <div style={{ width: '100%', maxWidth: '900px' }}>
+    <div style={{ width: '100%', maxWidth: '900px', padding: '16px' }}>
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>
             BYU Survival Tool
@@ -112,7 +111,6 @@ export function LoginForm() {
             </p>
           </div>
         </Card>
-      </div>
     </div>
   );
 }
