@@ -113,6 +113,65 @@ export default function CalendarWeekView({
         })}
       </div>
 
+      {/* All-day events section */}
+      <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)', backgroundColor: 'var(--panel-2)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+        {/* All-day label */}
+        <div style={{ borderRight: '1px solid var(--border)', paddingLeft: '8px', paddingRight: '8px', paddingTop: '6px', paddingBottom: '6px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
+          All Day
+        </div>
+
+        {/* All-day events for each day */}
+        {weekDays.map((day, index) => {
+          const dateStr = day.toISOString().split('T')[0];
+          const dayEvents = eventsByDay.get(dateStr) || [];
+          const taskDeadlineEvents = dayEvents.filter((e) => e.type !== 'course');
+          const isLastDay = index === weekDays.length - 1;
+
+          return (
+            <div
+              key={`allday-${dateStr}`}
+              style={{
+                borderRight: '1px solid var(--border)',
+                paddingRight: isLastDay ? '8px' : undefined,
+                paddingLeft: '4px',
+                paddingTop: '4px',
+                paddingBottom: '4px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+                minHeight: taskDeadlineEvents.length > 0 ? '32px' : '24px',
+              }}
+            >
+              {taskDeadlineEvents.map((event) => {
+                const color = getEventColor(event);
+                return (
+                  <div
+                    key={event.id}
+                    style={{
+                      fontSize: '0.65rem',
+                      paddingLeft: '2px',
+                      paddingRight: '2px',
+                      paddingTop: '1px',
+                      paddingBottom: '1px',
+                      borderRadius: '2px',
+                      backgroundColor: `${color}20`,
+                      color: color,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      lineHeight: 1,
+                    }}
+                    title={event.title}
+                  >
+                    {event.type === 'task' ? '📝' : '⏰'} {event.title.substring(0, 16)}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+
       {/* Time grid */}
       <div ref={scrollContainerRef} style={{ flex: 1, overflow: 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)' }}>
