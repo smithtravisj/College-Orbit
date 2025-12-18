@@ -76,7 +76,7 @@ export default function CoursesPage() {
           <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content' }}>
             <Card>
               <h3 className="text-sm font-semibold text-[var(--text)]" style={{ marginBottom: '16px' }}>Filters</h3>
-              <div className="space-y-2">
+              <div className="space-y-2" style={{ marginBottom: '16px' }}>
                 {[
                   { value: 'all', label: 'All Courses' },
                   ...uniqueTerms.map((term) => ({ value: term, label: term })),
@@ -94,6 +94,31 @@ export default function CoursesPage() {
                     {f.label}
                   </button>
                 ))}
+              </div>
+
+              <div style={{ paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
+                <label className="flex items-center gap-2 cursor-pointer" style={{ padding: '12px 16px' }}>
+                  <input
+                    type="checkbox"
+                    checked={showEnded}
+                    onChange={(e) => setShowEnded(e.target.checked)}
+                    style={{
+                      appearance: 'none',
+                      width: '16px',
+                      height: '16px',
+                      border: '2px solid var(--border)',
+                      borderRadius: '3px',
+                      backgroundColor: showEnded ? '#132343' : 'transparent',
+                      cursor: 'pointer',
+                      backgroundImage: showEnded ? 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22white%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z%22 clip-rule=%22evenodd%22 /%3E%3C/svg%3E")' : 'none',
+                      backgroundSize: '100%',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'center',
+                      transition: 'all 0.3s ease',
+                    }}
+                  />
+                  <span className="text-sm font-medium text-[var(--text)]">Show ended courses</span>
+                </label>
               </div>
             </Card>
           </div>
