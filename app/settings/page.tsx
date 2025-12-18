@@ -25,9 +25,9 @@ export default function SettingsPage() {
     setMounted(true);
   }, [settings, initializeStore]);
 
-  // Update input value when state changes
+  // Update input value when state changes (but not if user is editing)
   useEffect(() => {
-    if (dueSoonInputRef.current) {
+    if (dueSoonInputRef.current && document.activeElement !== dueSoonInputRef.current) {
       dueSoonInputRef.current.value = String(dueSoonDays);
     }
   }, [dueSoonDays]);
