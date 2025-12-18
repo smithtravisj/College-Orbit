@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import { Course, Task, Deadline } from '@/types';
 import {
   getEventsForDate,
@@ -9,7 +9,9 @@ import {
   getEventColor,
   calculateEventLayout,
   separateTaskDeadlineEvents,
+  CalendarEvent,
 } from '@/lib/calendarUtils';
+import EventDetailModal from '@/components/EventDetailModal';
 
 interface CalendarDayViewProps {
   date: Date;
@@ -29,6 +31,7 @@ export default function CalendarDayView({
   deadlines,
 }: CalendarDayViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
   useEffect(() => {
     // Scroll to 8 AM on mount
@@ -89,8 +92,10 @@ export default function CalendarDayView({
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       flex: '0 0 auto',
+                      cursor: 'pointer',
                     }}
                     title={event.title}
+                    onClick={() => setSelectedEvent(event)}
                   >
                     {event.title}
                   </div>
@@ -193,6 +198,7 @@ export default function CalendarDayView({
                 onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                 onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                 title={event.title}
+                onClick={() => setSelectedEvent(event)}
               >
                 <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {event.courseCode}
@@ -252,6 +258,7 @@ export default function CalendarDayView({
                   onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                   onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                   title={event.title}
+                  onClick={() => setSelectedEvent(event)}
                 >
                   <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left', width: '100%', lineHeight: 1.3 }}>
                     {event.title}
@@ -262,6 +269,15 @@ export default function CalendarDayView({
           })()}
         </div>
       </div>
+
+      <EventDetailModal
+        isOpen={selectedEvent !== null}
+        event={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+        courses={courses}
+        tasks={tasks}
+        deadlines={deadlines}
+      />
     </div>
   );
 }
