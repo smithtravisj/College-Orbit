@@ -142,9 +142,9 @@ export default function CalendarWeekView({
                     style={{
                       position: 'absolute',
                       width: '100%',
-                      borderBottom: '1px solid var(--border)',
+                      borderTop: '1px solid var(--border)',
                       top: `${(hour - START_HOUR) * HOUR_HEIGHT}px`,
-                      height: `${HOUR_HEIGHT}px`,
+                      height: '0',
                     }}
                   />
                 ))}
