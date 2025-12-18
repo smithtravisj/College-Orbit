@@ -115,62 +115,96 @@ export default function CalendarContent() {
       <PageHeader
         title="Calendar"
         subtitle={getDateRangeDisplay()}
-        actions={
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      />
+      <div style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
+        <div style={{
+          borderRadius: '16px',
+          border: '1px solid var(--border)',
+          backgroundColor: 'var(--panel)',
+          boxShadow: 'var(--shadow-sm)',
+          display: 'flex',
+          flexDirection: 'column',
+          height: 'calc(100vh - 140px)',
+          overflow: 'hidden',
+        }}>
+          {/* Controls Bar */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
             <button
               onClick={handleToday}
               style={{
-                padding: '8px 12px',
+                padding: '6px 12px',
                 borderRadius: 'var(--radius-control)',
                 fontSize: '0.875rem',
                 fontWeight: 500,
                 color: 'var(--text)',
                 backgroundColor: 'transparent',
-                border: 'none',
+                border: '1px solid var(--border)',
                 cursor: 'pointer',
-                transition: 'background-color 0.2s',
+                transition: 'all 0.2s',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                e.currentTarget.style.borderColor = 'var(--border-hover)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'var(--border)';
+              }}
             >
               Today
             </button>
             <button
               onClick={handlePreviousDate}
               style={{
-                padding: '8px',
+                padding: '6px 8px',
                 borderRadius: 'var(--radius-control)',
                 color: 'var(--text)',
                 backgroundColor: 'transparent',
-                border: 'none',
+                border: '1px solid var(--border)',
                 cursor: 'pointer',
-                transition: 'background-color 0.2s',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                e.currentTarget.style.borderColor = 'var(--border-hover)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'var(--border)';
+              }}
               title="Previous"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={18} />
             </button>
             <button
               onClick={handleNextDate}
               style={{
-                padding: '8px',
+                padding: '6px 8px',
                 borderRadius: 'var(--radius-control)',
                 color: 'var(--text)',
                 backgroundColor: 'transparent',
-                border: 'none',
+                border: '1px solid var(--border)',
                 cursor: 'pointer',
-                transition: 'background-color 0.2s',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                e.currentTarget.style.borderColor = 'var(--border-hover)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = 'var(--border)';
+              }}
               title="Next"
             >
-              <ChevronRight size={20} />
+              <ChevronRight size={18} />
             </button>
-            <div style={{ width: '1px', height: '32px', backgroundColor: 'var(--border)', margin: '0 16px' }} />
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ flex: 1 }} />
+            <div style={{ display: 'flex', gap: '6px' }}>
               {(['month', 'week', 'day'] as const).map((v) => (
                 <button
                   key={v}
@@ -180,16 +214,16 @@ export default function CalendarContent() {
                     fontSize: '0.875rem',
                     fontWeight: 500,
                     transition: 'all 0.2s',
-                    padding: '8px 12px',
+                    padding: '6px 12px',
                     backgroundColor: view === v ? 'var(--accent-2)' : 'transparent',
                     color: view === v ? 'var(--text)' : 'var(--muted)',
-                    border: 'none',
+                    border: view === v ? 'none' : '1px solid var(--border)',
                     cursor: 'pointer',
                   }}
                   onMouseEnter={(e) => {
                     if (view !== v) {
                       e.currentTarget.style.color = 'var(--text)';
-                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                      e.currentTarget.style.backgroundColor = 'var(--panel-2)';
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -204,19 +238,7 @@ export default function CalendarContent() {
               ))}
             </div>
           </div>
-        }
-      />
-      <div style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
-        <div style={{
-          borderRadius: '16px',
-          border: '1px solid var(--border)',
-          backgroundColor: 'var(--panel)',
-          boxShadow: 'var(--shadow-sm)',
-          display: 'flex',
-          flexDirection: 'column',
-          height: 'calc(100vh - 220px)',
-          overflow: 'hidden',
-        }}>
+
           <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
             {view === 'month' && (
               <CalendarMonthView
