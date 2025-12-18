@@ -389,12 +389,13 @@ export function calculateEventLayout(events: CalendarEvent[]): EventLayout[] {
   };
 
   // Filter events with times and sort by start time, then end time
+  // For events without endTime (like tasks/deadlines), assume 1 hour duration
   const eventsWithTime = events
-    .filter(e => e.time && e.endTime)
+    .filter(e => e.time)
     .map(e => ({
       event: e,
       start: timeToMinutes(e.time!),
-      end: timeToMinutes(e.endTime!),
+      end: e.endTime ? timeToMinutes(e.endTime) : timeToMinutes(e.time!) + 60,
     }))
     .sort((a, b) => a.start - b.start || a.end - b.end);
 

@@ -82,9 +82,7 @@ export default function CalendarWeekView({
       const dayEvents = eventsByDay.get(dateStr) || [];
       const { timed: timedEvents } = separateTaskDeadlineEvents(dayEvents);
       const layout = calculateEventLayout(timedEvents);
-      if (layout.length > 0) {
-        map.set(dateStr, layout);
-      }
+      map.set(dateStr, layout);
     });
     return map;
   }, [weekDays, eventsByDay]);
