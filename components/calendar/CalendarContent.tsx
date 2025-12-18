@@ -89,7 +89,7 @@ export default function CalendarContent() {
     }
   };
 
-  const getDateRangeDisplay = () => {
+  const getDateDisplay = () => {
     const monthNames = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December',
@@ -114,7 +114,7 @@ export default function CalendarContent() {
     <>
       <PageHeader
         title="Calendar"
-        subtitle={getDateRangeDisplay()}
+        subtitle="View your courses, tasks, and deadlines"
       />
       <div style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
         <div style={{
@@ -203,6 +203,9 @@ export default function CalendarContent() {
             >
               <ChevronRight size={18} />
             </button>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text)', fontWeight: 500, marginLeft: '12px' }}>
+              {getDateDisplay()}
+            </div>
             <div style={{ flex: 1 }} />
             <div style={{ display: 'flex', gap: '6px' }}>
               {(['month', 'week', 'day'] as const).map((v) => (
