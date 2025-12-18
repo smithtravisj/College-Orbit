@@ -66,13 +66,14 @@ export default function SettingsPage() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = JSON.parse(e.target?.result as string);
-        importData(data);
+        await importData(data);
         setImportMessage('✓ Data imported successfully!');
         setTimeout(() => setImportMessage(''), 3000);
       } catch (error) {
+        console.error('Import error:', error);
         setImportMessage('✗ Failed to import data. Invalid file format.');
         setTimeout(() => setImportMessage(''), 3000);
       }
