@@ -5,7 +5,6 @@ import useAppStore from '@/lib/store';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
 import { Download, Upload, Trash2 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -86,21 +85,17 @@ export default function SettingsPage() {
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
                   Show deadlines within this many days
                 </p>
-                <div className="flex items-center gap-3">
-                  <Input
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <input
                     type="text"
                     inputMode="numeric"
                     value={dueSoonDays}
                     onChange={(e) => {
                       const inputValue = e.target.value;
-                      if (inputValue === '') {
-                        setDueSoonDays('');
-                      } else {
-                        const val = parseInt(inputValue);
-                        if (!isNaN(val) && val >= 1 && val <= 30) {
-                          setDueSoonDays(val);
-                          updateSettings({ dueSoonWindowDays: val });
-                        }
+                      setDueSoonDays(inputValue);
+                      const val = parseInt(inputValue);
+                      if (!isNaN(val) && val >= 1 && val <= 30) {
+                        updateSettings({ dueSoonWindowDays: val });
                       }
                     }}
                     onBlur={() => {
@@ -109,9 +104,28 @@ export default function SettingsPage() {
                         updateSettings({ dueSoonWindowDays: 7 });
                       }
                     }}
-                    className="w-24"
+                    style={{
+                      width: '96px',
+                      height: '40px',
+                      backgroundColor: 'var(--panel-2)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text)',
+                      borderRadius: '6px',
+                      padding: '10px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = 'var(--border-active)';
+                      e.target.style.boxShadow = '0 0 0 2px var(--ring)';
+                    }}
+                    onBlurCapture={(e) => {
+                      e.target.style.borderColor = 'var(--border)';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   />
-                  <span className="text-sm text-[var(--text-secondary)]">days</span>
+                  <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>days</span>
                 </div>
                 <Button size="lg" onClick={() => {
                   const val = typeof dueSoonDays === 'string' ? parseInt(dueSoonDays) : dueSoonDays;
