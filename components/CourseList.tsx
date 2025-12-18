@@ -68,7 +68,7 @@ export default function CourseList({ courses, onEdit, showSemester = false }: Co
                 )}
 
                 {course.links && course.links.length > 0 && (
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex flex-col gap-2">
                     {course.links.map((link, idx) => (
                       <a
                         key={idx}
