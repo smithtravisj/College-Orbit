@@ -44,9 +44,9 @@ export default function CalendarMonthView({
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'auto' }}>
       {/* Day headers */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', marginBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', marginBottom: '16px', paddingLeft: '16px', paddingRight: '16px', flexShrink: 0 }}>
         {dayNames.map((day) => (
           <div
             key={day}
@@ -64,7 +64,7 @@ export default function CalendarMonthView({
       </div>
 
       {/* Calendar grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', paddingLeft: '16px', paddingRight: '16px', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', paddingLeft: '16px', paddingRight: '16px', paddingBottom: '16px', flex: 1, overflow: 'auto' }}>
         {dates.map((date) => {
           const dateStr = date.toISOString().split('T')[0];
           const isCurrentMonth = isInMonth(date, year, month);

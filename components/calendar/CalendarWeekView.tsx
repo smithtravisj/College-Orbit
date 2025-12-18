@@ -52,9 +52,9 @@ export default function CalendarWeekView({
   const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--panel)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--panel)', overflow: 'hidden' }}>
       {/* Day headers */}
-      <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)', flexShrink: 0 }}>
         {/* Empty corner */}
         <div style={{ borderBottom: '1px solid var(--border)', borderRight: '1px solid var(--border)' }} />
 

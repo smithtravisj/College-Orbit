@@ -214,10 +214,10 @@ export default function CalendarContent() {
           boxShadow: 'var(--shadow-sm)',
           display: 'flex',
           flexDirection: 'column',
-          height: 'calc(100vh - 180px)',
+          height: 'calc(100vh - 220px)',
           overflow: 'hidden',
         }}>
-          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
             {view === 'month' && (
               <CalendarMonthView
                 year={currentDate.getFullYear()}
