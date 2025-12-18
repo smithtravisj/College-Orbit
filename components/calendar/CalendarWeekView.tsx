@@ -129,7 +129,8 @@ export default function CalendarWeekView({
                 backgroundColor: isTodayDate ? 'var(--accent-2)' : 'var(--panel-2)',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '6px',
+                gap: '0px',
+                position: 'relative',
               }}
             >
               <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>{dayName}</div>
@@ -139,6 +140,10 @@ export default function CalendarWeekView({
               {exclusionType && (
                 <div
                   style={{
+                    position: 'absolute',
+                    bottom: '2px',
+                    left: '4px',
+                    right: '4px',
                     fontSize: '0.65rem',
                     backgroundColor: '#122343',
                     color: 'white',
