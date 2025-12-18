@@ -89,100 +89,98 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center" style={{ marginBottom: '28px' }}>
-          <h1 className="text-3xl font-semibold text-[var(--text)]" style={{ marginBottom: '12px' }}>
-            BYU Survival Tool
-          </h1>
-          <p className="text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>Create your account</p>
-        </div>
+    <div>
+      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>
+          BYU Survival Tool
+        </h1>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '8px' }}>Create your account</p>
+      </div>
 
-        <Card>
-          {hasLocalData && (
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3" style={{ marginBottom: '16px' }}>
-              <p className="text-sm text-blue-400">
-                We detected existing data on this device. It will be automatically
-                migrated to your new account.
-              </p>
+      <Card>
+        {hasLocalData && (
+          <div style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '8px', padding: '12px', marginBottom: '16px' }}>
+            <p style={{ fontSize: '14px', color: 'rgb(96, 165, 250)' }}>
+              We detected existing data on this device. It will be automatically
+              migrated to your new account.
+            </p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {error && (
+            <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '8px', padding: '12px' }}>
+              <p style={{ fontSize: '14px', color: 'rgb(239, 68, 68)' }}>{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                <p className="text-sm text-red-500">{error}</p>
-              </div>
-            )}
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+              Name
+            </label>
+            <Input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your name"
+            />
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px' }}>
-                Name
-              </label>
-              <Input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
-              />
-            </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+              Email
+            </label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="you@example.com"
+            />
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px' }}>
-                Email
-              </label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px' }}>
-                Password
-              </label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                minLength={8}
-              />
-              <p className="text-xs text-[var(--text-muted)]" style={{ marginTop: '8px' }}>
-                At least 8 characters
-              </p>
-            </div>
-
-            <div style={{ paddingTop: '8px', paddingBottom: '8px' }}>
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                disabled={loading}
-                className="w-full"
-              >
-                {loading ? 'Creating account...' : 'Create Account'}
-              </Button>
-            </div>
-          </form>
-
-          <div className="text-center" style={{ marginTop: '20px' }}>
-            <p className="text-sm text-[var(--text-muted)]">
-              Already have an account?{' '}
-              <Link
-                href="/login"
-                className="text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium"
-              >
-                Sign in
-              </Link>
+          <div>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+              Password
+            </label>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="••••••••"
+              minLength={8}
+            />
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>
+              At least 8 characters
             </p>
           </div>
-        </Card>
-      </div>
+
+          <div style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              disabled={loading}
+              style={{ width: '100%' }}
+            >
+              {loading ? 'Creating account...' : 'Create Account'}
+            </Button>
+          </div>
+        </form>
+
+        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+            Already have an account?{' '}
+            <Link
+              href="/login"
+              style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}
+            >
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </Card>
     </div>
   );
 }
