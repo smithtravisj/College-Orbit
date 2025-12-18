@@ -120,8 +120,22 @@ export function getTaskDeadlineEventsForDate(
   return allItems
     .filter((item) => {
       if (!item.dueAt) return false;
-      const itemDateStr = item.dueAt.split('T')[0];
-      return itemDateStr === dateStr;
+      const [dueDateStr, timeStr] = item.dueAt.split('T');
+
+      // If the due date has time at midnight (00:00:00), it's stored as "end of day"
+      // so we need to check the previous day
+      if (timeStr && timeStr.startsWith('00:00:00')) {
+        const dueDate = new Date(item.dueAt);
+        const prevDay = new Date(dueDate);
+        prevDay.setDate(prevDay.getDate() - 1);
+        const prevYear = prevDay.getFullYear();
+        const prevMonth = String(prevDay.getMonth() + 1).padStart(2, '0');
+        const prevDayNum = String(prevDay.getDate()).padStart(2, '0');
+        const prevDateStr = `${prevYear}-${prevMonth}-${prevDayNum}`;
+        return prevDateStr === dateStr;
+      }
+
+      return dueDateStr === dateStr;
     })
     .map((item) => {
       const isTask = 'pinned' in item;
