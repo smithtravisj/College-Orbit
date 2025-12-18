@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Providers } from './providers';
 import './globals.css';
-import Navigation from '@/components/Navigation';
+import LayoutWrapper from '@/components/LayoutWrapper';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -29,12 +29,9 @@ export default function RootLayout({
     <html lang="en" className={inter.className} style={{ backgroundColor: 'var(--bg)' }}>
       <body style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
         <Providers>
-          <div className="min-h-screen bg-[var(--bg)] md:grid md:grid-cols-[264px_1fr]">
-            <Navigation />
-            <main className="min-w-0 pb-20 md:pb-0">
-              {children}
-            </main>
-          </div>
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
         </Providers>
       </body>
     </html>
