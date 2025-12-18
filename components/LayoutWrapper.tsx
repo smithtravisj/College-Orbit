@@ -15,7 +15,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   if (isAuthPage && isUnauthenticated) {
     // Full-width centered layout for login/signup
     return (
-      <div style={{ height: '100vh', backgroundColor: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+      <div style={{ height: '100vh', backgroundColor: 'var(--bg)', display: 'grid', placeItems: 'center', padding: '16px' }}>
         <div style={{ width: '100%', maxWidth: '550px' }}>
           {children}
         </div>
