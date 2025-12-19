@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
+import { getCollegeColorPalette } from '@/lib/collegeColors';
 
 const UNIVERSITIES = [
   'Brigham Young University',
@@ -17,6 +18,16 @@ const UNIVERSITIES = [
   'Utah Valley University',
 ];
 
+// College name abbreviations for display
+const COLLEGE_ABBREVIATIONS: Record<string, string> = {
+  'Brigham Young University': 'BYU',
+  'Brigham Young University Idaho': 'BYUI',
+  'Brigham Young University Hawaii': 'BYUH',
+  'UNC Chapel Hill': 'UNC',
+  'Utah State University': 'USU',
+  'Utah Valley University': 'UVU',
+};
+
 export default function SignupPage() {
   const router = useRouter();
   const [name, setName] = useState('');
@@ -26,6 +37,20 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [collegeRequestName, setCollegeRequestName] = useState('');
+  const [collegeButtonColor, setCollegeButtonColor] = useState('');
+
+  const handleUniversityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedUni = e.target.value;
+    setUniversity(selectedUni);
+
+    // Get the college-specific dark mode accent color
+    if (selectedUni) {
+      const palette = getCollegeColorPalette(selectedUni, 'dark');
+      setCollegeButtonColor(palette.accent);
+    } else {
+      setCollegeButtonColor('');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +121,7 @@ export default function SignupPage() {
     <div>
       <div style={{ textAlign: 'center', marginBottom: '28px' }}>
         <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>
-          College Survival Tool
+          {university ? `${COLLEGE_ABBREVIATIONS[university]} Survival Tool` : 'College Survival Tool'}
         </h1>
         <p style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px' }}>Create your account</p>
       </div>
@@ -157,7 +182,7 @@ export default function SignupPage() {
             </label>
             <select
               value={university}
-              onChange={(e) => setUniversity(e.target.value)}
+              onChange={handleUniversityChange}
               style={{
                 width: '100%',
                 padding: '12px 30px 12px 12px',
@@ -227,7 +252,10 @@ export default function SignupPage() {
               variant="primary"
               size="lg"
               disabled={loading}
-              style={{ width: '100%' }}
+              style={{
+                width: '100%',
+                ...(collegeButtonColor && { backgroundColor: collegeButtonColor }),
+              }}
             >
               {loading ? 'Creating account...' : 'Create Account'}
             </Button>
@@ -239,7 +267,12 @@ export default function SignupPage() {
             Already have an account?{' '}
             <Link
               href="/login"
-              style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, filter: 'brightness(1.6)' }}
+              style={{
+                color: collegeButtonColor || 'var(--accent)',
+                textDecoration: 'none',
+                fontWeight: 600,
+                filter: collegeButtonColor ? 'brightness(1.2)' : 'brightness(1.6)',
+              }}
             >
               Sign in
             </Link>
