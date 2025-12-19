@@ -248,7 +248,9 @@ export default function CalendarMonthView({
                 {/* +X more indicator */}
                 {(() => {
                   const limit = exclusionType === 'holiday' ? 5 : (maxVisibleDots.get(dateStr) ?? 100);
-                  return dayEvents.length > limit && (
+                  const shouldShow = dayEvents.length > limit;
+                  console.log(`[Dots-More] ${dateStr}: length=${dayEvents.length}, limit=${limit}, show=${shouldShow}`);
+                  return shouldShow && (
                     <div style={{
                       fontSize: '0.6rem',
                       color: 'var(--text-muted)',
