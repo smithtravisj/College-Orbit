@@ -70,7 +70,7 @@ const useAppStore = create<AppStore>((set, get) => ({
   loading: false,
 
   initializeStore: async () => {
-    // Skip if already initialized (prevents re-initialization on HMR/navigation)
+    // Skip if already initialized (prevents re-initialization on navigation)
     const currentState = get();
     if (currentState.courses.length > 0 || currentState.deadlines.length > 0 || currentState.tasks.length > 0 || currentState.settings.university !== null) {
       return;
@@ -137,7 +137,6 @@ const useAppStore = create<AppStore>((set, get) => ({
       const stored = localStorage.getItem('byu-survival-tool-data');
       if (stored) {
         const data: AppData = JSON.parse(stored);
-        console.log('[Store] Loading from localStorage. University value:', data.settings?.university);
         set({
           courses: data.courses || [],
           deadlines: data.deadlines || [],
@@ -146,12 +145,9 @@ const useAppStore = create<AppStore>((set, get) => ({
           excludedDates: data.excludedDates || [],
           gpaEntries: data.gpaEntries || [],
         });
-        console.log('[Store] After loadFromStorage, state university:', get().settings.university);
-      } else {
-        console.log('[Store] No data in localStorage, using DEFAULT_SETTINGS');
       }
     } catch (error) {
-      console.error('[Store] Failed to load from storage:', error);
+      console.error('[loadFromStorage] Failed:', error);
     }
   },
 
