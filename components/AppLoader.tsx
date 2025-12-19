@@ -8,7 +8,17 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const initialize = async () => {
+      const startTime = Date.now();
       await useAppStore.getState().initializeStore();
+
+      // Ensure loading screen displays for at least 800ms
+      const elapsedTime = Date.now() - startTime;
+      const minDisplayTime = 800;
+
+      if (elapsedTime < minDisplayTime) {
+        await new Promise(resolve => setTimeout(resolve, minDisplayTime - elapsedTime));
+      }
+
       setIsInitialized(true);
     };
     initialize();
