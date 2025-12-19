@@ -866,7 +866,7 @@ export default function Dashboard() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="rounded-[12px] text-center text-sm font-medium text-white transition-colors hover:opacity-80"
-                      style={{ display: 'block', padding: '12px', backgroundColor: '#2a2a2a', border: '2px solid var(--border)' }}
+                      style={{ display: 'block', padding: '12px', backgroundColor: '#1a1a1a', border: '2px solid var(--border)' }}
                     >
                       {link.label}
                     </a>
