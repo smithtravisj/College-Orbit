@@ -8,11 +8,21 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
 
+const UNIVERSITIES = [
+  'Brigham Young University',
+  'Brigham Young University Idaho',
+  'Brigham Young University Hawaii',
+  'UNC Chapel Hill',
+  'Utah State University',
+  'Utah Valley University',
+];
+
 export default function SignupPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [university, setUniversity] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [hasLocalData, setHasLocalData] = useState(false);
@@ -35,7 +45,7 @@ export default function SignupPage() {
       const signupRes = await fetch('/api/user/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, university }),
       });
 
       if (!signupRes.ok) {
@@ -92,9 +102,9 @@ export default function SignupPage() {
     <div>
       <div style={{ textAlign: 'center', marginBottom: '28px' }}>
         <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>
-          BYU Survival Tool
+          College Survival Tool
         </h1>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '8px' }}>Create your account</p>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '8px', fontSize: '18px' }}>Create your account</p>
       </div>
 
       <Card>
@@ -115,7 +125,7 @@ export default function SignupPage() {
           )}
 
           <div>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '15px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
               Name
             </label>
             <Input
@@ -127,7 +137,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '15px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
               Email
             </label>
             <Input
@@ -140,7 +150,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '15px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
               Password
             </label>
             <Input
@@ -154,6 +164,51 @@ export default function SignupPage() {
             <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>
               At least 8 characters
             </p>
+          </div>
+
+          <div style={{ position: 'relative' }}>
+            <label style={{ display: 'block', fontSize: '15px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+              University
+            </label>
+            <select
+              value={university}
+              onChange={(e) => setUniversity(e.target.value)}
+              required
+              style={{
+                width: '100%',
+                padding: '12px 30px 12px 12px',
+                backgroundColor: 'var(--panel-2)',
+                border: '1px solid var(--border)',
+                color: university ? 'var(--text)' : 'var(--text-muted)',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                MozAppearance: 'none',
+              }}
+            >
+              <option value="" disabled>
+                Select University
+              </option>
+              {UNIVERSITIES.map((uni) => (
+                <option key={uni} value={uni}>
+                  {uni}
+                </option>
+              ))}
+            </select>
+            <div
+              style={{
+                position: 'absolute',
+                right: '18px',
+                top: '52px',
+                pointerEvents: 'none',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--text-muted)">
+                <path d="M4 6l4 4 4-4" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </div>
           </div>
 
           <div style={{ paddingTop: '8px', paddingBottom: '8px' }}>

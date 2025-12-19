@@ -57,6 +57,7 @@ export interface Settings {
   weekStartsOn: 'Sun' | 'Mon';
   theme: 'light' | 'dark' | 'system';
   enableNotifications: boolean;
+  university?: string | null;
 }
 
 export interface ExcludedDate {
@@ -73,6 +74,7 @@ export interface GpaEntry {
   grade: string;
   credits: number;
   courseId?: string | null;
+  university?: string | null;
   createdAt: string; // ISO datetime
 }
 

@@ -27,6 +27,7 @@ export async function GET(_request: NextRequest) {
         weekStartsOn: 'Sun',
         theme: 'system',
         enableNotifications: false,
+        university: null,
       },
     };
 
@@ -78,6 +79,11 @@ export async function PATCH(req: NextRequest) {
       updateValues.push(data.enableNotifications);
       paramCount++;
     }
+    if (data.university !== undefined) {
+      updateFields.push(`"university" = $${paramCount}`);
+      updateValues.push(data.university);
+      paramCount++;
+    }
 
     updateValues.push(userId);
     const updateSetClause = updateFields.length > 0 ? updateFields.join(', ') : '"updatedAt" = NOW()';
@@ -104,8 +110,8 @@ export async function PATCH(req: NextRequest) {
       const newId = crypto.randomUUID();
 
       const insertQuery = `
-        INSERT INTO "Settings" ("id", "userId", "dueSoonWindowDays", "weekStartsOn", "theme", "enableNotifications", "createdAt", "updatedAt")
-        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+        INSERT INTO "Settings" ("id", "userId", "dueSoonWindowDays", "weekStartsOn", "theme", "enableNotifications", "university", "createdAt", "updatedAt")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
         RETURNING *;
       `;
 
@@ -115,7 +121,8 @@ export async function PATCH(req: NextRequest) {
         data.dueSoonWindowDays ?? 7,
         data.weekStartsOn ?? 'Sun',
         data.theme ?? 'system',
-        data.enableNotifications ?? false
+        data.enableNotifications ?? false,
+        data.university ?? null
       ];
 
       console.log('Insert query:', insertQuery);

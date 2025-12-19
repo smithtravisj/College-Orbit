@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, university } = await req.json();
 
     // Validation
     if (!email || !password) {
@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
             weekStartsOn: 'Sun',
             theme: 'system',
             enableNotifications: false,
+            university: university || 'Brigham Young University',
           },
         },
       },
