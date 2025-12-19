@@ -51,32 +51,46 @@ export default function CalendarMonthView({
         if (container && container.children.length > 0) {
           const containerHeight = container.clientHeight;
           const containerWidth = container.clientWidth;
-          const dotHeight = 6;
-          const dotWidth = 6;
-          const gap = 4;
 
-          // Estimate how many dots fit: (containerWidth + gap) / (dotWidth + gap) dots per row
-          const dotsPerRow = Math.floor((containerWidth + gap) / (dotWidth + gap));
+          console.log(`[Dots] ${dateStr}: width=${containerWidth}, height=${containerHeight}, children=${container.children.length}`);
 
-          // Estimate how many rows fit: containerHeight / (dotHeight + gap)
-          const rowsAvailable = Math.floor(containerHeight / (dotHeight + gap));
+          if (containerWidth > 0 && containerHeight > 0) {
+            const dotHeight = 6;
+            const dotWidth = 6;
+            const gap = 4;
 
-          // Approximate max dots that fit
-          const maxFit = Math.max(dotsPerRow, dotsPerRow * rowsAvailable - 1); // -1 to leave room for overflow indicator
+            // Estimate how many dots fit: (containerWidth + gap) / (dotWidth + gap) dots per row
+            const dotsPerRow = Math.floor((containerWidth + gap) / (dotWidth + gap));
 
-          newMaxDots.set(dateStr, Math.max(maxFit, 1));
+            // Estimate how many rows fit: containerHeight / (dotHeight + gap)
+            const rowsAvailable = Math.floor(containerHeight / (dotHeight + gap));
+
+            // Approximate max dots that fit
+            const maxFit = Math.max(dotsPerRow, dotsPerRow * rowsAvailable - 1); // -1 to leave room for overflow indicator
+
+            const result = Math.max(maxFit, 1);
+            console.log(`[Dots] ${dateStr}: dotsPerRow=${dotsPerRow}, rowsAvailable=${rowsAvailable}, maxFit=${result}`);
+            newMaxDots.set(dateStr, result);
+          }
         }
       });
 
       if (newMaxDots.size > 0) {
+        console.log('[Dots] Setting maxVisibleDots:', newMaxDots);
         setMaxVisibleDots(newMaxDots);
       }
     };
 
-    // Measure on mount and when window resizes
-    measureDots();
+    // Use setTimeout and requestAnimationFrame to ensure DOM is fully laid out
+    const timer = setTimeout(() => {
+      requestAnimationFrame(measureDots);
+    }, 100);
+
     window.addEventListener('resize', measureDots);
-    return () => window.removeEventListener('resize', measureDots);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', measureDots);
+    };
   }, []);
 
   const eventsByDate = useMemo(() => {
