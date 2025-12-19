@@ -24,11 +24,36 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
         bottom: 0,
         backgroundColor: 'var(--bg)',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 9999
       }}>
-        <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Loading...</div>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+          }
+          .loader-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 20px;
+          }
+        `}</style>
+        <div className="loader-spinner" />
+        <div style={{ color: 'var(--text)', fontSize: '16px', fontWeight: '500', letterSpacing: '0.05em' }}>
+          Loading
+          <span style={{ animation: 'pulse 1.5s ease-in-out infinite' }}>.</span>
+          <span style={{ animation: 'pulse 1.5s ease-in-out infinite 0.3s' }}>.</span>
+          <span style={{ animation: 'pulse 1.5s ease-in-out infinite 0.6s' }}>.</span>
+        </div>
       </div>
     );
   }
