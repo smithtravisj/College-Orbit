@@ -63,13 +63,13 @@ export interface ColorPalette {
 }
 
 /**
- * BYU Color Palette - The original/current colors
- * These are the colors that were already in globals.css
+ * BYU Color Palette - Dark grey backgrounds with BYU blue accents
+ * Uses dark greyish-blackish backgrounds with BYU blue buttons and highlights
  */
 export const byuColorPalette: ColorPalette = {
-  bg: "#0b0f14",
-  panel: "#101826",
-  panel2: "#0f1724",
+  bg: "#080a0a",
+  panel: "#141618",
+  panel2: "#0f1114",
 
   text: "#e6edf6",
   textSecondary: "#adbac7",
@@ -78,7 +78,7 @@ export const byuColorPalette: ColorPalette = {
   textDisabled: "#545d68",
 
   border: "rgba(255, 255, 255, 0.08)",
-  borderHover: "#444c56",
+  borderHover: "#2a3a3a",
   borderActive: "#539bf5",
   borderStrong: "rgba(255, 255, 255, 0.12)",
 
