@@ -185,7 +185,7 @@ export default function CalendarMonthView({
                 <div
                   style={{
                     fontSize: '0.65rem',
-                    backgroundColor: 'var(--calendar-no-school)',
+                    backgroundColor: '#6366f150',
                     color: 'white',
                     padding: '2px 4px',
                     borderRadius: '3px',

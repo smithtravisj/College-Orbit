@@ -152,8 +152,9 @@ export default function CalendarWeekView({
           const isTodayDate = isToday(day);
           const exclusionType = getExclusionType(day, excludedDates);
 
-          // Get course code for cancelled classes
+          // Get course code and color for cancelled classes
           let courseCode = '';
+          let exclusionCourseId = '';
           if (exclusionType === 'class-cancelled') {
             const exclusion = excludedDates.find((ex) => {
               const exDateOnly = ex.date.includes('T') ? ex.date.split('T')[0] : ex.date;
@@ -162,6 +163,7 @@ export default function CalendarWeekView({
             if (exclusion) {
               const course = courses.find(c => c.id === exclusion.courseId);
               courseCode = course?.code || '';
+              exclusionCourseId = exclusion.courseId;
             }
           }
 
@@ -188,38 +190,44 @@ export default function CalendarWeekView({
                 overflow: 'hidden',
               }}
             >
-              {exclusionType && (
-                <div
-                  style={{
-                    fontSize: '0.7rem',
-                    paddingLeft: '6px',
-                    paddingRight: '6px',
-                    paddingTop: '4px',
-                    paddingBottom: '4px',
-                    marginRight: '4px',
-                    borderRadius: '2px',
-                    backgroundColor: 'var(--calendar-no-school)',
-                    color: 'white',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    lineHeight: 1,
-                    fontWeight: 500,
-                    flexShrink: 0,
-                    cursor: 'pointer',
-                  }}
-                  onClick={(e) => {
-                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                    setPopupState({
-                      type: 'exclusion',
-                      dateStr,
-                      position: { top: rect.bottom + 4, left: rect.left },
-                    });
-                  }}
-                >
-                  {exclusionType === 'holiday' ? 'No School' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
-                </div>
-              )}
+              {exclusionType && (() => {
+                let markerColor = getEventColor({ courseId: exclusionCourseId } as any);
+                if (!exclusionCourseId) {
+                  markerColor = '#6366f1'; // Default indigo for holidays
+                }
+                return (
+                  <div
+                    style={{
+                      fontSize: '0.7rem',
+                      paddingLeft: '6px',
+                      paddingRight: '6px',
+                      paddingTop: '4px',
+                      paddingBottom: '4px',
+                      marginRight: '4px',
+                      borderRadius: '2px',
+                      backgroundColor: `${markerColor}50`,
+                      color: 'white',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      lineHeight: 1,
+                      fontWeight: 500,
+                      flexShrink: 0,
+                      cursor: 'pointer',
+                    }}
+                    onClick={(e) => {
+                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      setPopupState({
+                        type: 'exclusion',
+                        dateStr,
+                        position: { top: rect.bottom + 4, left: rect.left },
+                      });
+                    }}
+                  >
+                    {exclusionType === 'holiday' ? 'No School' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
+                  </div>
+                );
+              })()}
               {visibleEvents.map((event) => {
                 const color = getEventColor(event);
                 return (

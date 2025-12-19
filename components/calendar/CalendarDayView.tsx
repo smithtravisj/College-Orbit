@@ -71,8 +71,9 @@ export default function CalendarDayView({
 
   const exclusionType = getExclusionType(date, excludedDates);
 
-  // Get course code for cancelled classes
+  // Get course code and color for cancelled classes
   let courseCode = '';
+  let exclusionCourseId = '';
   if (exclusionType === 'class-cancelled') {
     const dateYear = date.getFullYear();
     const dateMonth = String(date.getMonth() + 1).padStart(2, '0');
@@ -82,6 +83,7 @@ export default function CalendarDayView({
     if (exclusion) {
       const course = courses.find(c => c.id === exclusion.courseId);
       courseCode = course?.code || '';
+      exclusionCourseId = exclusion.courseId;
     }
   }
 
@@ -100,27 +102,33 @@ export default function CalendarDayView({
           <div style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--panel-2)', flexShrink: 0 }}>
             <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>All Day</p>
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
-              {exclusionType && (
-                <div
-                  style={{
-                    paddingLeft: '8px',
-                    paddingRight: '8px',
-                    paddingTop: '4px',
-                    paddingBottom: '4px',
-                    borderRadius: 'var(--radius-control)',
-                    fontSize: '0.875rem',
-                    backgroundColor: 'var(--calendar-no-school)',
-                    color: 'white',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    flex: '0 0 auto',
-                    fontWeight: 500,
-                  }}
-                >
-                  {exclusionType === 'holiday' ? 'No School' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
-                </div>
-              )}
+              {exclusionType && (() => {
+                let markerColor = getEventColor({ courseId: exclusionCourseId } as any);
+                if (!exclusionCourseId) {
+                  markerColor = '#6366f1'; // Default indigo for holidays
+                }
+                return (
+                  <div
+                    style={{
+                      paddingLeft: '8px',
+                      paddingRight: '8px',
+                      paddingTop: '4px',
+                      paddingBottom: '4px',
+                      borderRadius: 'var(--radius-control)',
+                      fontSize: '0.875rem',
+                      backgroundColor: `${markerColor}50`,
+                      color: 'white',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      flex: '0 0 auto',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {exclusionType === 'holiday' ? 'No School' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
+                  </div>
+                );
+              })()}
               {allDayEvents.map((event) => {
                 const color = getEventColor(event);
                 return (
