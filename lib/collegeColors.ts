@@ -165,55 +165,55 @@ export const defaultColorPalette: ColorPalette = {
 };
 
 /**
- * BYU Hawaii Color Palette - Tropical dark theme
- * Using official BYUH brand colors
- * Primary: #ba0c2f (Crimson), Accent: #00b097 (Turquoise), Secondary: #c69214 (Gold)
+ * BYU Hawaii Color Palette - Dark tropical theme with muted dark tones
+ * Using official BYUH brand colors (dark palette)
+ * Primary: #006c5b (Forest Green), Secondary: #862633 (Maroon), Accent: #6a2a5b (Purple)
  */
 export const byuhColorPalette: ColorPalette = {
-  bg: "#0a0a0a",
-  panel: "#1a1a1a",
-  panel2: "#151515",
+  bg: "#080a0a",
+  panel: "#141618",
+  panel2: "#0f1114",
 
-  text: "#f5f5f5",
-  textSecondary: "#d0d0d0",
-  muted: "#909090",
-  textMuted: "#707070",
-  textDisabled: "#555555",
+  text: "#f0f0f0",
+  textSecondary: "#c8c8c8",
+  muted: "#808080",
+  textMuted: "#606060",
+  textDisabled: "#4a4a4a",
 
-  border: "rgba(255, 255, 255, 0.08)",
-  borderHover: "#404040",
-  borderActive: "#00b097",
-  borderStrong: "rgba(255, 255, 255, 0.12)",
+  border: "rgba(255, 255, 255, 0.06)",
+  borderHover: "#2a3a3a",
+  borderActive: "#006c5b",
+  borderStrong: "rgba(255, 255, 255, 0.10)",
 
-  accent: "#00b097",
-  accentHover: "#008877",
-  accent2: "rgba(0, 176, 151, 0.15)",
-  ring: "rgba(0, 176, 151, 0.35)",
+  accent: "#006c5b",
+  accentHover: "#004a45",
+  accent2: "rgba(0, 108, 91, 0.12)",
+  ring: "rgba(0, 108, 91, 0.30)",
 
-  buttonSecondary: "#862633",
+  buttonSecondary: "#5a2535",
 
-  navActive: "#862633",
+  navActive: "#5a2535",
 
-  link: "#00b097",
+  link: "#006c5b",
 
-  calendarNoSchool: "#ba0c2f",
-  calendarCancelled: "#ba0c2f",
+  calendarNoSchool: "#9e1b34",
+  calendarCancelled: "#9e1b34",
 
-  brandPrimary: "#d14124",
+  brandPrimary: "#6a2a5b",
 
-  success: "#57ab5a",
-  warning: "#c69214",
-  danger: "#e5534b",
-  dangerHover: "#d64941",
-  successBg: "rgba(87, 171, 90, 0.1)",
-  warningBg: "rgba(198, 144, 20, 0.1)",
-  dangerBg: "rgba(229, 83, 75, 0.1)",
+  success: "#4a8a4d",
+  warning: "#a67a1a",
+  danger: "#c53a3a",
+  dangerHover: "#b52f2f",
+  successBg: "rgba(74, 138, 77, 0.1)",
+  warningBg: "rgba(166, 122, 26, 0.1)",
+  dangerBg: "rgba(197, 58, 58, 0.1)",
 
-  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.3)",
-  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.4)",
-  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.4)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.5)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.6)",
 
-  focusRing: "0 0 0 3px rgba(0, 176, 151, 0.3)",
+  focusRing: "0 0 0 3px rgba(0, 108, 91, 0.25)",
 };
 
 /**
