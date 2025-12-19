@@ -40,7 +40,7 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
-  const { settings, updateSettings, exportData, importData, deleteAllData, initializeStore } = useAppStore();
+  const { updateSettings, exportData, importData, deleteAllData, initializeStore } = useAppStore();
 
   useEffect(() => {
     const initialize = async () => {
