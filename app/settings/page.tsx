@@ -39,21 +39,19 @@ export default function SettingsPage() {
   const [deleteRequestId, setDeleteRequestId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
+  const initializedRef = useRef(false);
 
   const { settings, updateSettings, exportData, importData, deleteAllData, initializeStore } = useAppStore();
 
   useEffect(() => {
     initializeStore();
-    setMounted(true);
-  }, [initializeStore]);
-
-  // Initialize university and dueSoonDays on first mount only
-  useEffect(() => {
-    if (mounted) {
+    if (!initializedRef.current) {
       setDueSoonDays(settings.dueSoonWindowDays);
       setUniversity(settings.university || null);
+      initializedRef.current = true;
     }
-  }, []);
+    setMounted(true);
+  }, [initializeStore, settings]);
 
   // Fetch college requests if user is admin
   useEffect(() => {
