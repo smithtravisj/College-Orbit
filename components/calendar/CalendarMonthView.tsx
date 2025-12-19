@@ -211,9 +211,9 @@ export default function CalendarMonthView({
                   let limit = maxVisibleDots.get(dateStr) ?? 100;
                   const shouldShowMore = dayEvents.length > limit;
 
-                  // Reserve space for "+X" indicator by reducing limit by 1
+                  // Reserve space for "+X" indicator by reducing limit by 2 (accounts for text width)
                   if (shouldShowMore && limit > 0) {
-                    limit = Math.max(1, limit - 1);
+                    limit = Math.max(1, limit - 2);
                   }
 
                   return dayEvents.slice(0, limit).map((event) => {
@@ -253,9 +253,9 @@ export default function CalendarMonthView({
                   let limit = maxLimit;
                   const shouldShow = dayEvents.length > limit;
 
-                  // Reserve space for "+X" indicator
+                  // Reserve space for "+X" indicator by reducing limit by 2
                   if (shouldShow && limit > 0) {
-                    limit = Math.max(1, limit - 1);
+                    limit = Math.max(1, limit - 2);
                   }
 
                   const moreCount = dayEvents.length - limit;
