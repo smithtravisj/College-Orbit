@@ -70,13 +70,15 @@ const useAppStore = create<AppStore>((set, get) => ({
   loading: false,
 
   initializeStore: async () => {
+    // Skip if already initialized (prevents re-initialization on HMR/navigation)
+    const currentState = get();
+    if (currentState.courses.length > 0 || currentState.deadlines.length > 0 || currentState.tasks.length > 0 || currentState.settings.university !== null) {
+      return;
+    }
+
     set({ loading: true });
     try {
-      // Check if user is authenticated by fetching session
-      const sessionRes = await fetch('/api/auth/session');
-      const session = await sessionRes.json();
-
-      // Load from localStorage for all users
+      // Load from localStorage
       get().loadFromStorage();
     } catch (error) {
       console.error('Failed to initialize store:', error);
