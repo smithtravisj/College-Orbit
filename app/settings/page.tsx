@@ -576,10 +576,10 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader title="Settings" subtitle="Customize your experience" />
-      <div className="mx-auto w-full max-w-[768px]" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
-        {/* Admin Requests Card (Admin Only) */}
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
+        {/* Admin Requests Card (Admin Only) - Full Width */}
         {isAdmin && (
-          <div style={{ marginBottom: '24px' }}>
+          <div style={{ marginBottom: '24px', gridColumn: '1 / -1' }}>
             <Card title="Admin Requests">
               {/* Tab Navigation */}
               <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
@@ -885,12 +885,12 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {!session && (
-          <div style={{ backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '6px', padding: '12px', marginBottom: '24px', color: '#856404', fontSize: '14px' }}>
-            ⚠️ You are not logged in. Settings will be saved to your browser only.
-          </div>
-        )}
-        <div className="w-full grid grid-cols-1 gap-[var(--grid-gap)]">
+        <div className="w-full" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--grid-gap)' }}>
+          {!session && (
+            <div style={{ gridColumn: '1 / -1', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '6px', padding: '12px', marginBottom: '0px', color: '#856404', fontSize: '14px' }}>
+              ⚠️ You are not logged in. Settings will be saved to your browser only.
+            </div>
+          )}
           {/* University & Due Soon Window */}
           <Card title="Appearance">
             <div className="space-y-5">
@@ -1546,8 +1546,6 @@ export default function SettingsPage() {
               </p>
             </div>
           </Card>
-
-          {/* Report an Issue & Request a Feature/Change */}
         </div>
       </div>
 
