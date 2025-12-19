@@ -17,7 +17,6 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [dropdownOffset, setDropdownOffset] = useState({ left: 0, top: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);

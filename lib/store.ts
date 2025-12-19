@@ -643,8 +643,6 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   updateSettings: async (settings) => {
     try {
-      const previousUniversity = get().settings.university;
-
       // Optimistic update
       set((state) => ({
         settings: { ...state.settings, ...settings },

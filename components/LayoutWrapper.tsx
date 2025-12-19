@@ -1,13 +1,11 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { ReactNode } from 'react';
 import Navigation from './Navigation';
 
 export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { data: session } = useSession();
 
   const isAuthPage = pathname === '/login' || pathname === '/signup';
 
