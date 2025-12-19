@@ -248,8 +248,8 @@ export default function CalendarContent() {
                     fontWeight: 500,
                     transition: 'all 0.2s',
                     padding: '6px 12px',
-                    backgroundColor: view === v ? 'var(--accent-2)' : 'transparent',
-                    color: view === v ? 'var(--text)' : 'var(--muted)',
+                    backgroundColor: view === v ? 'var(--accent)' : 'transparent',
+                    color: view === v ? 'white' : 'var(--muted)',
                     border: view === v ? 'none' : '1px solid var(--border)',
                     cursor: 'pointer',
                   }}
