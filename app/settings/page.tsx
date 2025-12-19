@@ -357,8 +357,8 @@ export default function SettingsPage() {
                   }}
                   style={{
                     width: '100%',
-                    height: '40px',
-                    padding: '8px 32px 8px 12px',
+                    height: '44px',
+                    padding: '10px 56px 10px 12px',
                     fontSize: '16px',
                     fontFamily: 'inherit',
                     backgroundColor: 'var(--panel-2)',
