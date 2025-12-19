@@ -233,7 +233,7 @@ export default function CalendarWeekView({
                       paddingBottom: '4px',
                       marginRight: '4px',
                       borderRadius: '2px',
-                      backgroundColor: `${color}30`,
+                      backgroundColor: `${color}50`,
                       color: 'white',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -381,7 +381,7 @@ export default function CalendarWeekView({
                         zIndex: 10,
                         top: `${top}px`,
                         height: `${height}px`,
-                        backgroundColor: `${color}40`,
+                        backgroundColor: `${color}60`,
                         boxSizing: 'border-box',
                       }}
                       onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
@@ -454,7 +454,7 @@ export default function CalendarWeekView({
                           zIndex: 9,
                           top: `${top}px`,
                           height: `${height}px`,
-                          backgroundColor: `${color}30`,
+                          backgroundColor: `${color}50`,
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'center',
@@ -567,7 +567,7 @@ export default function CalendarWeekView({
                           paddingTop: '4px',
                           paddingBottom: '4px',
                           borderRadius: '2px',
-                          backgroundColor: `${color}30`,
+                          backgroundColor: `${color}50`,
                           color: 'white',
                           cursor: 'pointer',
                         }}
