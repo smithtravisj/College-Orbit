@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import useAppStore from '@/lib/store';
-import { getAppTitle } from '@/lib/universityTitles';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
