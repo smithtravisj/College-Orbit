@@ -47,9 +47,9 @@ export function LoginForm() {
     <div>
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>
-            BYU Survival Tool
+            College Survival Tool
           </h1>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '8px' }}>Sign in to your account</p>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '8px', fontSize: '18px' }}>Sign in to your account</p>
         </div>
 
         <Card>
@@ -61,7 +61,7 @@ export function LoginForm() {
             )}
 
             <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '15px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
                 Email
               </label>
               <Input
@@ -74,7 +74,7 @@ export function LoginForm() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '15px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
                 Password
               </label>
               <Input

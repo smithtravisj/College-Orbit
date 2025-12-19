@@ -7,6 +7,7 @@ const DEFAULT_SETTINGS: Settings = {
   weekStartsOn: 'Sun',
   theme: 'system',
   enableNotifications: false,
+  university: null,
 };
 
 interface AppStore {
@@ -642,6 +643,8 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   updateSettings: async (settings) => {
     try {
+      const previousUniversity = get().settings.university;
+
       // Optimistic update
       set((state) => ({
         settings: { ...state.settings, ...settings },
@@ -658,8 +661,13 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       const { settings: updatedSettings } = await response.json();
 
-      // Update with server response
-      set({ settings: updatedSettings });
+      // Only update if server response differs from optimistic update
+      const currentState = get().settings;
+      const needsUpdate = JSON.stringify(currentState) !== JSON.stringify(updatedSettings);
+      if (needsUpdate) {
+        set({ settings: updatedSettings });
+      }
+
     } catch (error) {
       // Reload from database on error
       await get().loadFromDatabase();

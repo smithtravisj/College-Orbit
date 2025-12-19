@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import useAppStore from '@/lib/store';
+import { getQuickLinks } from '@/lib/quickLinks';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -30,6 +32,8 @@ interface FormCourse {
 }
 
 export default function ToolsPage() {
+  const { settings, initializeStore } = useAppStore();
+  const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [formCourses, setFormCourses] = useState<FormCourse[]>([
     { courseName: '', gradeType: 'letter', grade: 'A', credits: '3' },
@@ -54,6 +58,8 @@ export default function ToolsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        await initializeStore();
+
         const [coursesRes, entriesRes] = await Promise.all([
           fetch('/api/courses'),
           fetch('/api/gpa-entries'),
@@ -78,13 +84,16 @@ export default function ToolsPage() {
             setFormCourses(savedCourses);
           }
         }
+
+        setMounted(true);
       } catch (error) {
         console.error('Error fetching data:', error);
+        setMounted(true);
       }
     };
 
     fetchData();
-  }, []);
+  }, [initializeStore]);
 
   const getGradePoints = (grade: string, gradeType: 'letter' | 'percentage'): number => {
     if (gradeType === 'percentage') {
@@ -109,10 +118,15 @@ export default function ToolsPage() {
   const calculateGPA = async () => {
     // First, save/update all form courses to database
     const updatedCourses = [...formCourses];
+    console.log('[calculateGPA] Starting with courses:', updatedCourses);
 
     for (let i = 0; i < updatedCourses.length; i++) {
       const course = updatedCourses[i];
-      if (!course.courseName || !course.credits) continue;
+      console.log(`[calculateGPA] Processing course ${i}:`, course);
+      if (!course.courseName || !course.credits) {
+        console.log(`[calculateGPA] Skipping course ${i} - missing courseName or credits`);
+        continue;
+      }
 
       const selectedCourse = courses.find((c) => c.name === course.courseName);
 
@@ -156,6 +170,26 @@ export default function ToolsPage() {
     }
 
     setFormCourses(updatedCourses);
+
+    // Reload GPA entries from database to ensure they're persisted
+    try {
+      const entriesRes = await fetch('/api/gpa-entries');
+      if (entriesRes.ok) {
+        const { entries: fetchedEntries } = await entriesRes.json();
+        if (fetchedEntries.length > 0) {
+          const savedCourses = fetchedEntries.map((entry: GpaEntry) => ({
+            id: entry.id,
+            courseName: entry.courseName,
+            gradeType: entry.grade.includes('.') || !Object.keys({ 'A+': 4.0, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D+': 1.3, 'D': 1.0, 'F': 0.0 }).includes(entry.grade) ? 'percentage' : 'letter',
+            grade: entry.grade,
+            credits: entry.credits.toString(),
+          }));
+          setFormCourses(savedCourses);
+        }
+      }
+    } catch (error) {
+      console.error('Error reloading GPA entries:', error);
+    }
 
     // Calculate GPA
     let totalPoints = 0;
@@ -222,32 +256,27 @@ export default function ToolsPage() {
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: '24px' }}>
         <div className="grid grid-cols-1 gap-[var(--grid-gap)]">
           {/* Quick Links */}
-          <Card title="Quick Links" subtitle="Useful BYU resources">
-            <div className="grid grid-cols-4 gap-3">
-              {[
-                { label: 'Home', url: 'https://www.byu.edu/' },
-                { label: '2026 Calendar', url: 'https://academiccalendar.byu.edu/?y=2026' },
-                { label: 'MyBYU', url: 'https://my.byu.edu/' },
-                { label: 'Record Summary', url: 'https://y.byu.edu/ry/ae/prod/records/cgi/stdCourseWork.cgi' },
-                { label: 'MyMap W2026', url: 'https://commtech.byu.edu/auth/mymap/?yearTerm=20261&proxyId=509241872#/' },
-                { label: 'Financial Center', url: 'https://sa.byu.edu/psc/ps/EMPLOYEE/SA/c/Y_MY_FINANCIAL_CENTER.Y_MFC_HOME_V2_FL.GBL?Page=Y_MFC_HOME_V2_FL&EMPLID=247348708&OPRID=ins0417&' },
-                { label: 'BYU Outlook', url: 'https://outlook.office.com/mail/' },
-                { label: 'BYU Library', url: 'https://lib.byu.edu/' },
-                { label: 'Residence Life', url: 'https://reslife.byu.edu/' },
-                { label: 'Endorsement', url: 'https://endorse.byu.edu/' },
-              ].map((link) => (
-                <a
-                  key={link.url}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-[12px] text-center text-sm font-medium text-white transition-colors hover:opacity-80"
-                  style={{ display: 'block', padding: '12px', backgroundColor: '#141d2a', border: '2px solid var(--border)' }}
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
+          <Card title="Quick Links" subtitle={settings.university ? `Resources for ${settings.university}` : 'Select a college to view quick links'}>
+            {mounted && settings.university ? (
+              <div className="grid grid-cols-4 gap-3">
+                {getQuickLinks(settings.university).map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-[12px] text-center text-sm font-medium text-white transition-colors hover:opacity-80"
+                    style={{ display: 'block', padding: '12px', backgroundColor: '#141d2a', border: '2px solid var(--border)' }}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                <p>Select a college in settings to view quick links</p>
+              </div>
+            )}
           </Card>
 
           {/* GPA Calculator */}

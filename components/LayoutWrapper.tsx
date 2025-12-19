@@ -10,9 +10,8 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
 
   const isAuthPage = pathname === '/login' || pathname === '/signup';
-  const isUnauthenticated = !session;
 
-  if (isAuthPage && isUnauthenticated) {
+  if (isAuthPage) {
     // Full-width centered layout for login/signup
     return (
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px 16px', overflow: 'auto', zIndex: 50 }}>
