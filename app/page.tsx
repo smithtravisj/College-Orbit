@@ -314,7 +314,7 @@ export default function Dashboard() {
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors bg-[var(--panel-2)] px-3 py-1.5 rounded-[var(--radius-control)]"
+                          className="text-xs font-medium text-[var(--link)] hover:text-blue-400 transition-colors bg-[var(--panel-2)] px-3 py-1.5 rounded-[var(--radius-control)]"
                         >
                           {link.label}
                         </a>
@@ -417,7 +417,7 @@ export default function Dashboard() {
                               links: [...deadlineFormData.links, { label: '', url: '' }],
                             });
                           }}
-                          className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] mt-1"
+                          className="text-xs text-[var(--link)] hover:text-blue-400 mt-1"
                         >
                           + Add link
                         </button>
@@ -539,7 +539,7 @@ export default function Dashboard() {
                                   href={link.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
+                                  className="text-xs text-[var(--link)] hover:text-blue-400 bg-[var(--panel-2)] px-2 py-0.5 rounded"
                                 >
                                   {link.label}
                                 </a>
@@ -694,7 +694,7 @@ export default function Dashboard() {
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
+                                className="text-xs text-[var(--link)] hover:text-blue-400 bg-[var(--panel-2)] px-2 py-0.5 rounded"
                               >
                                 {link.label}
                               </a>
@@ -821,7 +821,7 @@ export default function Dashboard() {
                             links: [...taskFormData.links, { label: '', url: '' }],
                           });
                         }}
-                        className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] mt-1"
+                        className="text-xs text-[var(--link)] hover:text-blue-400 mt-1"
                       >
                         + Add link
                       </button>

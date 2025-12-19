@@ -75,7 +75,7 @@ export default function CourseList({ courses, onEdit, showSemester = false }: Co
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors"
+                        className="text-xs text-[var(--link)] hover:text-blue-400 transition-colors"
                       >
                         {link.label}
                       </a>

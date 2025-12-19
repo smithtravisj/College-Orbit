@@ -47,6 +47,9 @@
   /* Focus rings */
   --focus-ring: 0 0 0 3px rgba(83, 155, 245, 0.3);
 
+  /* Link color */
+  --link: #2563eb;
+
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);

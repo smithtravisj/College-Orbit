@@ -428,7 +428,7 @@ export default function TasksPage() {
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] bg-[var(--panel-2)] px-2 py-0.5 rounded"
+                                className="text-xs text-[var(--link)] hover:text-blue-400 bg-[var(--panel-2)] px-2 py-0.5 rounded"
                               >
                                 {link.label}
                               </a>
