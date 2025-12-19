@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { Providers } from './providers';
 import './globals.css';
@@ -10,10 +10,14 @@ const inter = Inter({
   display: 'swap',
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: 'BYU Survival Tool',
   description: 'A personal, privacy-first BYU dashboard',
-  viewport: 'width=device-width, initial-scale=1',
   icons: {
     icon: '/favicon.svg',
     apple: '/favicon.svg',
