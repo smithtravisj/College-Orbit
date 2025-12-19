@@ -255,7 +255,7 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
           style={{
             backgroundColor: 'var(--button-secondary)',
             color: '#ffffff',
-            border: '1px solid #202d48',
+            border: '1px solid var(--border)',
             padding: '8px 20px',
           }}
         >
