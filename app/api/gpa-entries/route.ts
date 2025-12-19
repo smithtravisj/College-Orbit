@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { authConfig } from '@/auth.config';
 
 // GET all GPA entries for authenticated user
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authConfig);
 
