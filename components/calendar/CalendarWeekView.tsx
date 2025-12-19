@@ -191,10 +191,11 @@ export default function CalendarWeekView({
               }}
             >
               {exclusionType && (() => {
-                let markerColor = getEventColor({ courseId: exclusionCourseId } as any);
-                if (!exclusionCourseId) {
-                  markerColor = '#6366f1'; // Default indigo for holidays
-                }
+                let markerColor = exclusionCourseId
+                  ? getEventColor({ courseId: exclusionCourseId } as any)
+                  : 'var(--calendar-no-school)';
+
+                const isVariableColor = markerColor.includes('--');
                 return (
                   <div
                     style={{
@@ -205,7 +206,7 @@ export default function CalendarWeekView({
                       paddingBottom: '4px',
                       marginRight: '4px',
                       borderRadius: '2px',
-                      backgroundColor: `${markerColor}50`,
+                      backgroundColor: isVariableColor ? markerColor : `${markerColor}50`,
                       color: 'white',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
