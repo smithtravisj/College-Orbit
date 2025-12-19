@@ -67,6 +67,9 @@ export interface ColorPalette {
 
   // Week view today date color
   weekViewTodayDateColor: string;
+
+  // Calendar current date color (matches college color, brighter in dark mode)
+  calendarCurrentDateColor: string;
 }
 
 /**
@@ -123,6 +126,8 @@ export const byuColorPalette: ColorPalette = {
   todayBg: "rgba(0, 46, 93, 0.12)",
 
   weekViewTodayDateColor: "#0ea5e9",
+
+  calendarCurrentDateColor: "#6ab2ff",
 };
 
 /**
@@ -179,6 +184,8 @@ export const defaultColorPalette: ColorPalette = {
   todayBg: "rgba(74, 74, 74, 0.12)",
 
   weekViewTodayDateColor: "#e8e8e8",
+
+  calendarCurrentDateColor: "#f0f1f3",
 };
 
 /**
@@ -236,6 +243,8 @@ export const byuhColorPalette: ColorPalette = {
   todayBg: "rgba(158, 27, 52, 0.2)",
 
   weekViewTodayDateColor: "#ff5577",
+
+  calendarCurrentDateColor: "#f5a6b4",
 };
 
 /**
@@ -293,6 +302,8 @@ export const byuidColorPalette: ColorPalette = {
   todayBg: "rgba(0, 99, 165, 0.2)",
 
   weekViewTodayDateColor: "#0ea5e9",
+
+  calendarCurrentDateColor: "#7bbaff",
 };
 
 /**
@@ -350,6 +361,8 @@ export const uvuColorPalette: ColorPalette = {
   todayBg: "rgba(39, 80, 56, 0.2)",
 
   weekViewTodayDateColor: "#52b788",
+
+  calendarCurrentDateColor: "#7cc49a",
 };
 
 /**
@@ -407,6 +420,8 @@ export const usuColorPalette: ColorPalette = {
   todayBg: "rgba(15, 36, 57, 0.2)",
 
   weekViewTodayDateColor: "#0ea5e9",
+
+  calendarCurrentDateColor: "#8ac8ff",
 };
 
 /**
@@ -464,6 +479,8 @@ export const uncColorPalette: ColorPalette = {
   todayBg: "rgba(0, 127, 174, 0.2)",
 
   weekViewTodayDateColor: "#0ea5e9",
+
+  calendarCurrentDateColor: "#82ccff",
 };
 
 /**
@@ -519,6 +536,7 @@ export const byuLightPalette: ColorPalette = {
   focusRing: "0 0 0 3px rgba(106, 178, 255, 0.3)",
   todayBg: "rgba(106, 178, 255, 0.2)",
   weekViewTodayDateColor: "#0ea5e9",
+  calendarCurrentDateColor: "#6ab2ff",
 };
 
 /**
@@ -570,6 +588,7 @@ export const defaultLightPalette: ColorPalette = {
   focusRing: "0 0 0 3px rgba(240, 241, 243, 0.3)",
   todayBg: "rgba(240, 241, 243, 0.12)",
   weekViewTodayDateColor: "#0ea5e9",
+  calendarCurrentDateColor: "#f0f1f3",
 };
 
 /**
@@ -621,6 +640,7 @@ export const byuhLightPalette: ColorPalette = {
   focusRing: "0 0 0 3px rgba(245, 166, 180, 0.3)",
   todayBg: "rgba(245, 166, 180, 0.2)",
   weekViewTodayDateColor: "#0ea5e9",
+  calendarCurrentDateColor: "#f5a6b4",
 };
 
 /**
@@ -672,6 +692,7 @@ export const byuidLightPalette: ColorPalette = {
   focusRing: "0 0 0 3px rgba(123, 186, 255, 0.3)",
   todayBg: "rgba(123, 186, 255, 0.2)",
   weekViewTodayDateColor: "#0ea5e9",
+  calendarCurrentDateColor: "#7bbaff",
 };
 
 /**
@@ -723,6 +744,7 @@ export const uvuLightPalette: ColorPalette = {
   focusRing: "0 0 0 3px rgba(124, 196, 154, 0.3)",
   todayBg: "rgba(124, 196, 154, 0.12)",
   weekViewTodayDateColor: "#0ea5e9",
+  calendarCurrentDateColor: "#7cc49a",
 };
 
 /**
@@ -774,6 +796,7 @@ export const usuLightPalette: ColorPalette = {
   focusRing: "0 0 0 3px rgba(138, 200, 255, 0.3)",
   todayBg: "rgba(138, 200, 255, 0.12)",
   weekViewTodayDateColor: "#0ea5e9",
+  calendarCurrentDateColor: "#8ac8ff",
 };
 
 /**
@@ -825,6 +848,7 @@ export const uncLightPalette: ColorPalette = {
   focusRing: "0 0 0 3px rgba(130, 204, 255, 0.3)",
   todayBg: "rgba(130, 204, 255, 0.2)",
   weekViewTodayDateColor: "#007FAE",
+  calendarCurrentDateColor: "#82ccff",
 };
 
 /**
@@ -922,6 +946,9 @@ export function applyColorPalette(palette: ColorPalette): void {
 
   // Week view today date color
   root.style.setProperty("--week-view-today-date-color", palette.weekViewTodayDateColor);
+
+  // Calendar current date color
+  root.style.setProperty("--calendar-current-date-color", palette.calendarCurrentDateColor);
 }
 
 /**

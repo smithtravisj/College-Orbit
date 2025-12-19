@@ -24,7 +24,7 @@ export default function CalendarContent() {
   const [filteredDeadlines, setFilteredDeadlines] = useState<any[]>([]);
   const hasFilteredRef = useRef(false);
 
-  const { courses, tasks, deadlines, excludedDates, settings, initializeStore } = useAppStore();
+  const { courses, tasks, deadlines, excludedDates, initializeStore } = useAppStore();
 
   // Filter out completed tasks and deadlines on mount and when data loads
   useEffect(() => {
@@ -284,7 +284,6 @@ export default function CalendarContent() {
                 allDeadlines={deadlines}
                 excludedDates={excludedDates}
                 onSelectDate={handleSelectDate}
-                theme={settings.theme}
               />
             )}
             {view === 'week' && (
@@ -296,7 +295,6 @@ export default function CalendarContent() {
                 allTasks={tasks}
                 allDeadlines={deadlines}
                 excludedDates={excludedDates}
-                theme={settings.theme}
               />
             )}
             {view === 'day' && (
