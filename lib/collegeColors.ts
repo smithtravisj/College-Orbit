@@ -114,13 +114,13 @@ export const byuColorPalette: ColorPalette = {
 };
 
 /**
- * Default/Neutral Color Palette - Black and grey theme
+ * Default/Neutral Color Palette - Dark greyish-blackish theme
  * Used when no college is selected
  */
 export const defaultColorPalette: ColorPalette = {
-  bg: "#0a0a0a",
-  panel: "#1a1a1a",
-  panel2: "#161616",
+  bg: "#080a0a",
+  panel: "#141618",
+  panel2: "#0f1114",
 
   text: "#e8e8e8",
   textSecondary: "#b8b8b8",
@@ -129,8 +129,8 @@ export const defaultColorPalette: ColorPalette = {
   textDisabled: "#555555",
 
   border: "rgba(255, 255, 255, 0.08)",
-  borderHover: "#404040",
-  borderActive: "#606060",
+  borderHover: "#2a3a3a",
+  borderActive: "#404040",
   borderStrong: "rgba(255, 255, 255, 0.12)",
 
   accent: "#4a4a4a",
