@@ -66,10 +66,10 @@ export default function Navigation() {
                 aria-current={isActive ? 'page' : undefined}
                 className={`relative flex items-center gap-3 h-12 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   isActive
-                    ? 'text-[var(--text)] bg-[var(--accent-2)]'
+                    ? 'text-[var(--text)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
-                style={{ padding: '0 12px' }}
+                style={{ padding: '0 12px', backgroundColor: isActive ? 'var(--nav-active)' : 'transparent' }}
               >
                 <Icon size={22} className="h-[22px] w-[22px] opacity-80 group-hover:opacity-100 flex-shrink-0" />
                 <span className="truncate">{item.label}</span>

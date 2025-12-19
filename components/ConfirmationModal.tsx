@@ -51,7 +51,7 @@ export default function ConfirmationModal({
               type="button"
               onClick={onConfirm}
               style={{
-                backgroundColor: isDangerous ? 'var(--danger)' : '#132343',
+                backgroundColor: isDangerous ? 'var(--danger)' : 'var(--button-secondary)',
                 color: 'white',
                 borderWidth: '1px',
                 borderStyle: 'solid',

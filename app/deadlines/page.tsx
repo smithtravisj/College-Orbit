@@ -211,10 +211,10 @@ export default function DeadlinesPage() {
                     onClick={() => setFilter(f.value)}
                     className={`w-full text-left rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
                       filter === f.value
-                        ? 'bg-[var(--accent-2)] text-[var(--text)]'
+                        ? 'text-[var(--text)]'
                         : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                     }`}
-                    style={{ padding: '12px 16px' }}
+                    style={{ padding: '12px 16px', backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent' }}
                   >
                     {f.label}
                   </button>
@@ -332,7 +332,7 @@ export default function DeadlinesPage() {
                     variant="primary"
                     type="submit"
                     style={{
-                      backgroundColor: '#132343',
+                      backgroundColor: 'var(--button-secondary)',
                       color: 'white',
                       borderWidth: '1px',
                       borderStyle: 'solid',
@@ -402,7 +402,7 @@ export default function DeadlinesPage() {
                           height: '20px',
                           border: d.status === 'done' ? 'none' : '2px solid var(--border)',
                           borderRadius: '4px',
-                          backgroundColor: d.status === 'done' ? '#132343' : 'transparent',
+                          backgroundColor: d.status === 'done' ? 'var(--button-secondary)' : 'transparent',
                           cursor: 'pointer',
                           flexShrink: 0,
                           backgroundImage: d.status === 'done' ? 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22white%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z%22 clip-rule=%22evenodd%22 /%3E%3C/svg%3E")' : 'none',

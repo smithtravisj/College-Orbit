@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { Course, Deadline, Task, Settings, AppData, ExcludedDate, GpaEntry } from '@/types';
+import { applyColorPalette, getCollegeColorPalette } from '@/lib/collegeColors';
 
 const DEFAULT_SETTINGS: Settings = {
   dueSoonWindowDays: 7,
@@ -138,6 +139,12 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       set(newData);
 
+      // Apply college colors based on loaded settings
+      if (typeof window !== 'undefined') {
+        const palette = getCollegeColorPalette(newData.settings?.university || null);
+        applyColorPalette(palette);
+      }
+
       // Save fresh data to localStorage with user-specific key
       if (typeof window !== 'undefined') {
         try {
@@ -160,14 +167,18 @@ const useAppStore = create<AppStore>((set, get) => ({
       const stored = localStorage.getItem(storageKey);
       if (stored) {
         const data: AppData = JSON.parse(stored);
+        const settings = data.settings || DEFAULT_SETTINGS;
         set({
           courses: data.courses || [],
           deadlines: data.deadlines || [],
           tasks: data.tasks || [],
-          settings: data.settings || DEFAULT_SETTINGS,
+          settings: settings,
           excludedDates: data.excludedDates || [],
           gpaEntries: data.gpaEntries || [],
         });
+        // Apply college colors based on loaded settings
+        const palette = getCollegeColorPalette(settings.university || null);
+        applyColorPalette(palette);
       }
     } catch (error) {
       console.error('[loadFromStorage] Failed:', error);
@@ -678,6 +689,12 @@ const useAppStore = create<AppStore>((set, get) => ({
       set((state) => ({
         settings: { ...state.settings, ...settings },
       }));
+
+      // Apply colors if college changed
+      if (settings.university !== undefined && typeof window !== 'undefined') {
+        const palette = getCollegeColorPalette(settings.university);
+        applyColorPalette(palette);
+      }
 
       // Update localStorage with new settings
       if (typeof window !== 'undefined') {

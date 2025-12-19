@@ -479,10 +479,10 @@ export default function EventDetailModal({
                 size="md"
                 onClick={handleSaveClick}
                 style={{
-                  backgroundColor: '#132343',
+                  backgroundColor: 'var(--button-secondary)',
                   borderWidth: '1px',
                   borderStyle: 'solid',
-                  borderColor: '#202d48',
+                  borderColor: 'var(--border)',
                   paddingLeft: '16px',
                   paddingRight: '16px',
                 }}
@@ -504,10 +504,10 @@ export default function EventDetailModal({
                 size="md"
                 onClick={handleEditToggle}
                 style={{
-                  backgroundColor: '#132343',
+                  backgroundColor: 'var(--button-secondary)',
                   borderWidth: '1px',
                   borderStyle: 'solid',
-                  borderColor: '#202d48',
+                  borderColor: 'var(--border)',
                   paddingLeft: '16px',
                   paddingRight: '16px',
                 }}
@@ -519,10 +519,10 @@ export default function EventDetailModal({
                 size="md"
                 onClick={handleDoneAndClose}
                 style={{
-                  backgroundColor: '#132343',
+                  backgroundColor: 'var(--button-secondary)',
                   borderWidth: '1px',
                   borderStyle: 'solid',
-                  borderColor: '#202d48',
+                  borderColor: 'var(--border)',
                   paddingLeft: '16px',
                   paddingRight: '16px',
                 }}

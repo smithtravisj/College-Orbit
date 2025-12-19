@@ -109,7 +109,7 @@ export default function CalendarDayView({
                     paddingBottom: '4px',
                     borderRadius: 'var(--radius-control)',
                     fontSize: '0.875rem',
-                    backgroundColor: '#122343',
+                    backgroundColor: 'var(--calendar-no-school)',
                     color: 'white',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',

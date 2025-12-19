@@ -163,7 +163,7 @@ export default function ProfilePage() {
                   disabled={loading}
                   className="w-full"
                   style={{
-                    backgroundColor: '#132343',
+                    backgroundColor: 'var(--button-secondary)',
                     color: 'white',
                     borderWidth: '1px',
                     borderStyle: 'solid',

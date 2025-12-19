@@ -931,7 +931,7 @@ export default function SettingsPage() {
                   style={{
                     paddingLeft: '16px',
                     paddingRight: '16px',
-                    backgroundColor: '#132343',
+                    backgroundColor: 'var(--button-secondary)',
                     color: 'white',
                     borderWidth: '1px',
                     borderStyle: 'solid',
@@ -1004,7 +1004,7 @@ export default function SettingsPage() {
                     setSaveMessage('Please enter a number between 1 and 30');
                     setTimeout(() => setSaveMessage(''), 3000);
                   }
-                }} style={{ marginTop: '16px', paddingLeft: '16px', paddingRight: '16px', backgroundColor: '#132343', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                }} style={{ marginTop: '16px', paddingLeft: '16px', paddingRight: '16px', backgroundColor: 'var(--button-secondary)', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                   Save
                 </Button>
                 {saveMessage && (
@@ -1056,7 +1056,7 @@ export default function SettingsPage() {
                   style={{
                     paddingLeft: '16px',
                     paddingRight: '16px',
-                    backgroundColor: '#132343',
+                    backgroundColor: 'var(--button-secondary)',
                     color: 'white',
                     borderWidth: '1px',
                     borderStyle: 'solid',
@@ -1114,7 +1114,7 @@ export default function SettingsPage() {
                   style={{
                     paddingLeft: '16px',
                     paddingRight: '16px',
-                    backgroundColor: '#132343',
+                    backgroundColor: 'var(--button-secondary)',
                     color: 'white',
                     borderWidth: '1px',
                     borderStyle: 'solid',
@@ -1141,7 +1141,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Download a backup of all your data as a JSON file
                 </p>
-                <Button size="lg" onClick={handleExport} style={{ marginBottom: '16px', paddingLeft: '16px', paddingRight: '16px', backgroundColor: '#132343', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                <Button size="lg" onClick={handleExport} style={{ marginBottom: '16px', paddingLeft: '16px', paddingRight: '16px', backgroundColor: 'var(--button-secondary)', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                   <Download size={18} />
                   Export Data
                 </Button>

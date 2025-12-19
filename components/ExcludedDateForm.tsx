@@ -147,7 +147,7 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
                 appearance: 'none',
                 WebkitAppearance: 'none',
                 MozAppearance: 'none',
-                background: dateMode === 'single' ? '#122343' : 'var(--panel-2)',
+                background: dateMode === 'single' ? 'var(--button-secondary)' : 'var(--panel-2)',
                 backgroundImage: dateMode === 'single' ? "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E\")" : 'none',
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center',
@@ -174,7 +174,7 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
                 appearance: 'none',
                 WebkitAppearance: 'none',
                 MozAppearance: 'none',
-                background: dateMode === 'range' ? '#122343' : 'var(--panel-2)',
+                background: dateMode === 'range' ? 'var(--button-secondary)' : 'var(--panel-2)',
                 backgroundImage: dateMode === 'range' ? "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E\")" : 'none',
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center',
@@ -253,7 +253,7 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
           type="submit"
           disabled={isSubmitting}
           style={{
-            backgroundColor: '#122343',
+            backgroundColor: 'var(--button-secondary)',
             color: '#ffffff',
             border: '1px solid #202d48',
             padding: '8px 20px',

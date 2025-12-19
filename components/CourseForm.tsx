@@ -287,7 +287,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
             size="md"
             type="submit"
             style={{
-              backgroundColor: '#132343',
+              backgroundColor: 'var(--button-secondary)',
               color: 'white',
               borderWidth: '1px',
               borderStyle: 'solid',

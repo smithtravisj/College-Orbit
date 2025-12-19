@@ -437,7 +437,7 @@ export default function Dashboard() {
                         type="submit"
                         size="sm"
                         style={{
-                          backgroundColor: '#132343',
+                          backgroundColor: 'var(--button-secondary)',
                           color: 'white',
                           borderWidth: '1px',
                           borderStyle: 'solid',
@@ -501,7 +501,7 @@ export default function Dashboard() {
                             height: '16px',
                             border: d.status === 'done' ? 'none' : '2px solid var(--border)',
                             borderRadius: '3px',
-                            backgroundColor: d.status === 'done' ? '#132343' : 'transparent',
+                            backgroundColor: d.status === 'done' ? 'var(--button-secondary)' : 'transparent',
                             cursor: 'pointer',
                             flexShrink: 0,
                             backgroundImage: d.status === 'done' ? 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22white%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z%22 clip-rule=%22evenodd%22 /%3E%3C/svg%3E")' : 'none',
@@ -641,7 +641,7 @@ export default function Dashboard() {
                           height: '16px',
                           border: t.status === 'done' ? 'none' : '2px solid var(--border)',
                           borderRadius: '3px',
-                          backgroundColor: t.status === 'done' ? '#132343' : 'transparent',
+                          backgroundColor: t.status === 'done' ? 'var(--button-secondary)' : 'transparent',
                           cursor: 'pointer',
                           flexShrink: 0,
                           backgroundImage: t.status === 'done' ? 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22white%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z%22 clip-rule=%22evenodd%22 /%3E%3C/svg%3E")' : 'none',
@@ -833,7 +833,7 @@ export default function Dashboard() {
                       type="submit"
                       size="sm"
                       style={{
-                        backgroundColor: '#132343',
+                        backgroundColor: 'var(--button-secondary)',
                         color: 'white',
                         borderWidth: '1px',
                         borderStyle: 'solid',
@@ -866,7 +866,7 @@ export default function Dashboard() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="rounded-[12px] text-center text-sm font-medium text-white transition-colors hover:opacity-80"
-                      style={{ display: 'block', padding: '12px', backgroundColor: '#141d2a', border: '2px solid var(--border)' }}
+                      style={{ display: 'block', padding: '12px', backgroundColor: 'var(--button-secondary)', border: '2px solid var(--border)' }}
                     >
                       {link.label}
                     </a>

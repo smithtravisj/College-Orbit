@@ -106,7 +106,7 @@ export default function ExcludedDatesCard() {
         <Button
           onClick={() => setShowForm(!showForm)}
           style={{
-            backgroundColor: '#122343',
+            backgroundColor: 'var(--button-secondary)',
             color: '#ffffff',
             border: '1px solid #202d48',
             padding: '8px 16px',
