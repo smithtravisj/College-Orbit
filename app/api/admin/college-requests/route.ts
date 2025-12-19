@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { authConfig } from '@/auth.config';
 
 // GET all college requests (admin only)
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authConfig);
 
