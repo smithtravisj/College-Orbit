@@ -186,7 +186,8 @@ export default function CalendarWeekView({
                 flexDirection: 'column',
                 gap: '2px',
                 minHeight: allDayEvents.length > 0 || exclusionType ? '32px' : '24px',
-                backgroundColor: isTodayDate ? 'var(--ring)' : undefined,
+                backgroundColor: isTodayDate ? 'var(--accent)' : undefined,
+                opacity: isTodayDate ? 0.08 : 1,
                 overflow: 'hidden',
               }}
             >
@@ -327,7 +328,8 @@ export default function CalendarWeekView({
                 style={{
                   position: 'relative',
                   borderRight: '1px solid var(--border)',
-                  backgroundColor: isTodayDate ? 'var(--ring)' : 'var(--panel)',
+                  backgroundColor: isTodayDate ? 'var(--accent)' : 'var(--panel)',
+                  opacity: isTodayDate ? 0.08 : 1,
                   paddingRight: isLastDay ? '8px' : undefined,
                 }}
               >
