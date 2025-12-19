@@ -44,10 +44,16 @@ export default function SettingsPage() {
 
   useEffect(() => {
     initializeStore();
-    setDueSoonDays(settings.dueSoonWindowDays);
-    setUniversity(settings.university || null);
     setMounted(true);
-  }, [settings, initializeStore]);
+  }, [initializeStore]);
+
+  // Initialize university and dueSoonDays on first mount only
+  useEffect(() => {
+    if (mounted) {
+      setDueSoonDays(settings.dueSoonWindowDays);
+      setUniversity(settings.university || null);
+    }
+  }, []);
 
   // Fetch college requests if user is admin
   useEffect(() => {
