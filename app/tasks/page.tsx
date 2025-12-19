@@ -410,12 +410,12 @@ export default function TasksPage() {
                         )}
                         <div className="flex items-center gap-3 mt-2 flex-wrap">
                           {t.dueAt && (
-                            <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                            <span className="text-xs text-[var(--text-muted)]">
                               {formatDate(t.dueAt)} {shouldShowTime && `at ${dueTime}`}
                             </span>
                           )}
                           {course && (
-                            <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                            <span className="text-xs text-[var(--text-muted)]">
                               {course.code}
                             </span>
                           )}
@@ -428,7 +428,7 @@ export default function TasksPage() {
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs text-[var(--link)] hover:text-blue-400 bg-[var(--panel-2)] px-2 py-0.5 rounded"
+                                className="text-xs text-[var(--link)] hover:text-blue-400"
                               >
                                 {link.label}
                               </a>

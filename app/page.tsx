@@ -314,7 +314,7 @@ export default function Dashboard() {
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs font-medium text-[var(--link)] hover:text-blue-400 transition-colors bg-[var(--panel-2)] px-3 py-1.5 rounded-[var(--radius-control)]"
+                          className="text-xs font-medium text-[var(--link)] hover:text-blue-400 transition-colors"
                         >
                           {link.label}
                         </a>
@@ -517,16 +517,16 @@ export default function Dashboard() {
                             {isOverdueDeadline && <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                           </div>
                           <div className="flex items-center gap-2 mt-2 flex-wrap">
-                            <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                            <span className="text-xs text-[var(--text-muted)]">
                               {formatDate(d.dueAt!)}
                             </span>
                             {shouldShowTime && (
-                              <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                              <span className="text-xs text-[var(--text-muted)]">
                                 {dueTime}
                               </span>
                             )}
                             {course && (
-                              <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                              <span className="text-xs text-[var(--text-muted)]">
                                 {course.code}
                               </span>
                             )}
@@ -539,7 +539,7 @@ export default function Dashboard() {
                                   href={link.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-xs text-[var(--link)] hover:text-blue-400 bg-[var(--panel-2)] px-2 py-0.5 rounded"
+                                  className="text-xs text-[var(--link)] hover:text-blue-400"
                                 >
                                   {link.label}
                                 </a>
@@ -671,17 +671,17 @@ export default function Dashboard() {
                         )}
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           {isOverdueTask && t.dueAt && (
-                            <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                            <span className="text-xs text-[var(--text-muted)]">
                               {formatDate(t.dueAt)}
                             </span>
                           )}
                           {shouldShowTime && (
-                            <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                            <span className="text-xs text-[var(--text-muted)]">
                               {dueTime}
                             </span>
                           )}
                           {course && (
-                            <span className="text-xs text-[var(--text-muted)] bg-[var(--panel-2)] px-2 py-0.5 rounded">
+                            <span className="text-xs text-[var(--text-muted)]">
                               {course.code}
                             </span>
                           )}
@@ -694,7 +694,7 @@ export default function Dashboard() {
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs text-[var(--link)] hover:text-blue-400 bg-[var(--panel-2)] px-2 py-0.5 rounded"
+                                className="text-xs text-[var(--link)] hover:text-blue-400"
                               >
                                 {link.label}
                               </a>
