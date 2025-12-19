@@ -58,6 +58,9 @@ export interface Settings {
   theme: 'light' | 'dark' | 'system';
   enableNotifications: boolean;
   university?: string | null;
+  visiblePages?: string[];
+  visibleDashboardCards?: string[];
+  visibleToolsCards?: string[];
 }
 
 export interface ExcludedDate {

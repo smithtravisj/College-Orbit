@@ -12,9 +12,9 @@ model User {
   email           String           @unique
   passwordHash    String
   name            String?
-  isAdmin         Boolean          @default(false)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+  isAdmin         Boolean          @default(false)
   collegeRequests CollegeRequest[]
   courses         Course[]
   deadlines       Deadline[]
@@ -110,16 +110,19 @@ model GpaEntry {
 }
 
 model Settings {
-  id                  String   @id @default(cuid())
-  userId              String   @unique
-  dueSoonWindowDays   Int      @default(7)
-  weekStartsOn        String   @default("Sun")
-  theme               String   @default("dark")
-  enableNotifications Boolean  @default(false)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  university          String?
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  dueSoonWindowDays     Int      @default(7)
+  weekStartsOn          String   @default("Sun")
+  theme                 String   @default("dark")
+  enableNotifications   Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  university            String?
+  visibleDashboardCards Json?    @default("[\"nextClass\", \"dueSoon\", \"overview\", \"todayTasks\", \"quickLinks\", \"upcomingWeek\"]")
+  visiblePages          Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Deadlines\", \"Courses\", \"Tools\", \"Settings\"]")
+  visibleToolsCards     Json?    @default("[\"quickLinks\", \"gpaCalculator\"]")
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -141,7 +144,7 @@ model CollegeRequest {
 model IssueReport {
   id            String         @id @default(cuid())
   userId        String
-  description   String         @db.Text
+  description   String
   status        String         @default("pending")
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -155,7 +158,7 @@ model IssueReport {
 model FeatureRequest {
   id            String         @id @default(cuid())
   userId        String
-  description   String         @db.Text
+  description   String
   status        String         @default("pending")
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -183,22 +186,21 @@ model ExcludedDate {
 }
 
 model Notification {
-  id                String         @id @default(cuid())
-  userId            String
-  title             String
-  message           String
-  type              String
-  read              Boolean        @default(false)
-  collegeRequestId  String?
-  issueReportId     String?
-  featureRequestId  String?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-
-  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  collegeRequest    CollegeRequest? @relation(fields: [collegeRequestId], references: [id], onDelete: Cascade)
-  issueReport       IssueReport?   @relation(fields: [issueReportId], references: [id], onDelete: Cascade)
-  featureRequest    FeatureRequest? @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
+  id               String          @id @default(cuid())
+  userId           String
+  title            String
+  message          String
+  type             String
+  read             Boolean         @default(false)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  collegeRequestId String?
+  featureRequestId String?
+  issueReportId    String?
+  collegeRequest   CollegeRequest? @relation(fields: [collegeRequestId], references: [id], onDelete: Cascade)
+  featureRequest   FeatureRequest? @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
+  issueReport      IssueReport?    @relation(fields: [issueReportId], references: [id], onDelete: Cascade)
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([read])

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { Course, Deadline, Task, Settings, AppData, ExcludedDate, GpaEntry } from '@/types';
 import { applyColorPalette, getCollegeColorPalette } from '@/lib/collegeColors';
+import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
 const DEFAULT_SETTINGS: Settings = {
   dueSoonWindowDays: 7,
@@ -9,6 +10,9 @@ const DEFAULT_SETTINGS: Settings = {
   theme: 'dark',
   enableNotifications: false,
   university: null,
+  visiblePages: DEFAULT_VISIBLE_PAGES,
+  visibleDashboardCards: DEFAULT_VISIBLE_DASHBOARD_CARDS,
+  visibleToolsCards: DEFAULT_VISIBLE_TOOLS_CARDS,
 };
 
 interface AppStore {
@@ -127,12 +131,28 @@ const useAppStore = create<AppStore>((set, get) => ({
       // Extract userId from settings response
       const userId = settingsData.userId;
 
+      const rawSettings = settingsData.settings || DEFAULT_SETTINGS;
+
+      // Parse JSON fields if they're strings
+      const parsedSettings = {
+        ...rawSettings,
+        visiblePages: typeof rawSettings?.visiblePages === 'string'
+          ? JSON.parse(rawSettings.visiblePages)
+          : rawSettings?.visiblePages || DEFAULT_VISIBLE_PAGES,
+        visibleDashboardCards: typeof rawSettings?.visibleDashboardCards === 'string'
+          ? JSON.parse(rawSettings.visibleDashboardCards)
+          : rawSettings?.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS,
+        visibleToolsCards: typeof rawSettings?.visibleToolsCards === 'string'
+          ? JSON.parse(rawSettings.visibleToolsCards)
+          : rawSettings?.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS,
+      };
+
       const newData = {
         userId: userId || null,
         courses: coursesData.courses || [],
         deadlines: deadlinesData.deadlines || [],
         tasks: tasksData.tasks || [],
-        settings: settingsData.settings || DEFAULT_SETTINGS,
+        settings: parsedSettings,
         excludedDates: excludedDatesData.excludedDates || [],
         gpaEntries: gpaData.entries || [],
       };

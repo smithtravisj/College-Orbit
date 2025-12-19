@@ -1,22 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getServerSession } from 'next-auth/next';
+import { authConfig } from '@/auth.config';
 import { prisma } from '@/lib/prisma';
 
 // GET all issue reports (admin only)
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const session = await getServerSession(authConfig);
 
-    if (!token?.id) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user is admin
     const user = await prisma.user.findUnique({
-      where: { id: token.id },
+      where: { id: session.user.id },
       select: { isAdmin: true },
     });
 
@@ -52,18 +50,15 @@ export async function GET(req: NextRequest) {
 // PATCH update issue report status (admin only)
 export async function PATCH(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const session = await getServerSession(authConfig);
 
-    if (!token?.id) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user is admin
     const user = await prisma.user.findUnique({
-      where: { id: token.id },
+      where: { id: session.user.id },
       select: { isAdmin: true },
     });
 
@@ -147,18 +142,15 @@ export async function PATCH(req: NextRequest) {
 // DELETE issue report (admin only)
 export async function DELETE(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const session = await getServerSession(authConfig);
 
-    if (!token?.id) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user is admin
     const user = await prisma.user.findUnique({
-      where: { id: token.id },
+      where: { id: session.user.id },
       select: { isAdmin: true },
     });
 

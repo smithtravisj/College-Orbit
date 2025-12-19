@@ -7,6 +7,7 @@ import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { Download, Upload, Trash2 } from 'lucide-react';
+import { DASHBOARD_CARDS, TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
 interface CollegeRequest {
   id: string;
@@ -80,6 +81,13 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
+  // Visibility customization state
+  const [activeCustomizationTab, setActiveCustomizationTab] = useState<'pages' | 'dashboard' | 'tools'>('pages');
+  const [visiblePages, setVisiblePages] = useState<string[]>(DEFAULT_VISIBLE_PAGES);
+  const [visibleDashboardCards, setVisibleDashboardCards] = useState<string[]>(DEFAULT_VISIBLE_DASHBOARD_CARDS);
+  const [visibleToolsCards, setVisibleToolsCards] = useState<string[]>(DEFAULT_VISIBLE_TOOLS_CARDS);
+  const [visibilityMessage, setVisibilityMessage] = useState('');
+
   const { settings, updateSettings, exportData, importData, deleteAllData } = useAppStore();
 
   useEffect(() => {
@@ -87,8 +95,11 @@ export default function SettingsPage() {
     setDueSoonDays(settings.dueSoonWindowDays);
     setUniversity(settings.university || null);
     setSelectedTheme(settings.theme || 'dark');
+    setVisiblePages(settings.visiblePages || DEFAULT_VISIBLE_PAGES);
+    setVisibleDashboardCards(settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS);
+    setVisibleToolsCards(settings.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS);
     setMounted(true);
-  }, [settings.dueSoonWindowDays, settings.university, settings.theme]);
+  }, [settings.dueSoonWindowDays, settings.university, settings.theme, settings.visiblePages, settings.visibleDashboardCards, settings.visibleToolsCards]);
 
   // Fetch college requests and issue reports if user is admin
   useEffect(() => {
@@ -96,12 +107,13 @@ export default function SettingsPage() {
 
     const fetchAdminData = async () => {
       try {
-        const collegeResponse = await fetch('/api/admin/college-requests');
-        const issuesResponse = await fetch('/api/admin/issue-reports');
-        const featuresResponse = await fetch('/api/admin/feature-requests');
+        const collegeResponse = await fetch('/api/admin/college-requests').catch(() => null);
+        const issuesResponse = await fetch('/api/admin/issue-reports').catch(() => null);
+        const featuresResponse = await fetch('/api/admin/feature-requests').catch(() => null);
 
         // If any endpoint returns 403, user is not admin
-        if (collegeResponse.status === 403 || issuesResponse.status === 403 || featuresResponse.status === 403) {
+        if (!collegeResponse || !issuesResponse || !featuresResponse ||
+            collegeResponse.status === 403 || issuesResponse.status === 403 || featuresResponse.status === 403) {
           setIsAdmin(false);
           return;
         }
@@ -1120,6 +1132,212 @@ export default function SettingsPage() {
             </div>
           </Card>
 
+          {/* Page & Card Visibility */}
+          <Card title="Page & Card Visibility">
+            {/* Tab selector for customization sections */}
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              padding: '4px',
+              backgroundColor: 'var(--panel-2)',
+              borderRadius: '8px',
+              border: '1px solid var(--border)',
+              marginBottom: '24px',
+            }}>
+              {[
+                { id: 'pages', label: 'Pages' },
+                { id: 'dashboard', label: 'Dashboard Cards' },
+                { id: 'tools', label: 'Tools Cards' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveCustomizationTab(tab.id as 'pages' | 'dashboard' | 'tools')}
+                  style={{
+                    flex: 1,
+                    padding: '8px 12px',
+                    backgroundColor: activeCustomizationTab === tab.id ? 'var(--accent)' : 'transparent',
+                    color: activeCustomizationTab === tab.id ? 'white' : 'var(--text)',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: activeCustomizationTab === tab.id ? '600' : '500',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Pages Customization */}
+            {activeCustomizationTab === 'pages' && (
+              <div>
+                <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px' }}>
+                  Choose which pages appear in the navigation menu
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {Object.values(PAGES).filter(page => page !== 'Settings').map((page) => (
+                    <label
+                      key={page}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '8px 12px',
+                        backgroundColor: 'var(--panel-2)',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={visiblePages.includes(page)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setVisiblePages([...visiblePages, page]);
+                          } else {
+                            setVisiblePages(visiblePages.filter((p) => p !== page));
+                          }
+                        }}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                      />
+                      <span style={{ color: 'var(--text)', fontSize: '14px' }}>
+                        {page}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Dashboard Cards Customization */}
+            {activeCustomizationTab === 'dashboard' && (
+              <div>
+                <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px' }}>
+                  Choose which cards appear on the Dashboard
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {Object.values(DASHBOARD_CARDS).map((cardId) => (
+                    <label
+                      key={cardId}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '8px 12px',
+                        backgroundColor: 'var(--panel-2)',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={visibleDashboardCards.includes(cardId)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setVisibleDashboardCards([...visibleDashboardCards, cardId]);
+                          } else {
+                            setVisibleDashboardCards(visibleDashboardCards.filter((c) => c !== cardId));
+                          }
+                        }}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                      />
+                      <span style={{ color: 'var(--text)', fontSize: '14px' }}>
+                        {CARD_LABELS[cardId] || cardId}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tools Cards Customization */}
+            {activeCustomizationTab === 'tools' && (
+              <div>
+                <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px' }}>
+                  Choose which cards appear on the Tools page
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {Object.values(TOOLS_CARDS).map((cardId) => (
+                    <label
+                      key={cardId}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '8px 12px',
+                        backgroundColor: 'var(--panel-2)',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={visibleToolsCards.includes(cardId)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setVisibleToolsCards([...visibleToolsCards, cardId]);
+                          } else {
+                            setVisibleToolsCards(visibleToolsCards.filter((c) => c !== cardId));
+                          }
+                        }}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                      />
+                      <span style={{ color: 'var(--text)', fontSize: '14px' }}>
+                        {CARD_LABELS[cardId] || cardId}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Save Button */}
+            <Button
+              onClick={async () => {
+                try {
+                  await updateSettings({
+                    visiblePages,
+                    visibleDashboardCards,
+                    visibleToolsCards,
+                  });
+                  setVisibilityMessage('Saved successfully!');
+                  setTimeout(() => setVisibilityMessage(''), 3000);
+                } catch (error) {
+                  setVisibilityMessage('Error saving: ' + (error instanceof Error ? error.message : 'Unknown error'));
+                  setTimeout(() => setVisibilityMessage(''), 3000);
+                }
+              }}
+              style={{
+                marginTop: '24px',
+                paddingLeft: '16px',
+                paddingRight: '16px',
+                backgroundColor: 'var(--button-secondary)',
+                color: settings.theme === 'light' ? '#000000' : 'white',
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                borderColor: 'var(--border)',
+              }}
+            >
+              Save Visibility Settings
+            </Button>
+            {visibilityMessage && (
+              <p
+                style={{
+                  marginTop: '8px',
+                  fontSize: '14px',
+                  color: visibilityMessage.includes('Error') ? 'var(--danger)' : 'var(--success)',
+                }}
+              >
+                {visibilityMessage}
+              </p>
+            )}
+          </Card>
+
           {/* Report an Issue & Request a Feature/Change */}
           <Card title="Feedback">
             <div className="space-y-4">
@@ -1328,6 +1546,8 @@ export default function SettingsPage() {
               </p>
             </div>
           </Card>
+
+          {/* Report an Issue & Request a Feature/Change */}
         </div>
       </div>
 

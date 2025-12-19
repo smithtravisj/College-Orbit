@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import useAppStore from '@/lib/store';
 import { getQuickLinks } from '@/lib/quickLinks';
+import { TOOLS_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -39,6 +40,7 @@ export default function ToolsPage() {
     { courseName: '', gradeType: 'letter', grade: 'A', credits: '3' },
   ]);
   const [gpaResult, setGpaResult] = useState<number | null>(null);
+  const visibleToolsCards = settings.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS;
 
   const gradePoints: { [key: string]: number } = {
     'A': 4.0,
@@ -254,6 +256,7 @@ export default function ToolsPage() {
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: '24px' }}>
         <div className="grid grid-cols-1 gap-[var(--grid-gap)]">
           {/* Quick Links */}
+          {visibleToolsCards.includes(TOOLS_CARDS.QUICK_LINKS) && (
           <Card title="Quick Links" subtitle={settings.university ? `Resources for ${settings.university}` : 'Select a college to view quick links'}>
             {mounted && settings.university ? (
               <div className="grid grid-cols-4 gap-3">
@@ -276,8 +279,10 @@ export default function ToolsPage() {
               </div>
             )}
           </Card>
+          )}
 
           {/* GPA Calculator */}
+          {visibleToolsCards.includes(TOOLS_CARDS.GPA_CALCULATOR) && (
           <Card title="GPA Calculator">
             <div className="space-y-5">
               {/* Form Fields */}
@@ -401,6 +406,7 @@ export default function ToolsPage() {
               )}
             </div>
           </Card>
+          )}
         </div>
       </div>
     </>

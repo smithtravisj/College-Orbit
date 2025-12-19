@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
 export async function POST(req: NextRequest) {
   try {
@@ -49,6 +50,9 @@ export async function POST(req: NextRequest) {
             theme: 'system',
             enableNotifications: false,
             university: university || null,
+            visiblePages: DEFAULT_VISIBLE_PAGES,
+            visibleDashboardCards: DEFAULT_VISIBLE_DASHBOARD_CARDS,
+            visibleToolsCards: DEFAULT_VISIBLE_TOOLS_CARDS,
           },
         },
       },

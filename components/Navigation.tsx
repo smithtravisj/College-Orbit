@@ -6,6 +6,7 @@ import { useSession, signOut } from 'next-auth/react';
 import useAppStore from '@/lib/store';
 import { getAppTitle } from '@/lib/universityTitles';
 import NotificationBell from '@/components/NotificationBell';
+import { DEFAULT_VISIBLE_PAGES } from '@/lib/customizationConstants';
 import {
   Home,
   CheckSquare,
@@ -18,7 +19,7 @@ import {
   LogOut,
 } from 'lucide-react';
 
-const NAV_ITEMS = [
+export const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/tasks', label: 'Tasks', icon: CheckSquare },
@@ -32,6 +33,7 @@ export default function Navigation() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const university = useAppStore((state) => state.settings.university);
+  const visiblePages = useAppStore((state) => state.settings.visiblePages || DEFAULT_VISIBLE_PAGES);
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/login' });
@@ -56,7 +58,7 @@ export default function Navigation() {
           )}
         </div>
         <div className="space-y-3 flex-1">
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
@@ -116,7 +118,7 @@ export default function Navigation() {
       {/* Mobile Bottom Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 border-t border-[var(--border)] bg-[var(--panel)] md:hidden z-40">
         <div className="flex justify-around">
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (

@@ -45,99 +45,73 @@ export async function GET(_request: NextRequest) {
 
 // PATCH update settings
 export async function PATCH(req: NextRequest) {
+  const session = await getServerSession(authConfig);
+
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const userId = session.user.id;
+  const data = await req.json();
+
   try {
-    const session = await getServerSession(authConfig);
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Build update data object dynamically
+    const updateData: any = {};
 
-    const data = await req.json();
-    const userId = session.user.id;
+    if (data.dueSoonWindowDays !== undefined) updateData.dueSoonWindowDays = data.dueSoonWindowDays;
+    if (data.weekStartsOn !== undefined) updateData.weekStartsOn = data.weekStartsOn;
+    if (data.theme !== undefined) updateData.theme = data.theme;
+    if (data.enableNotifications !== undefined) updateData.enableNotifications = data.enableNotifications;
+    if (data.university !== undefined) updateData.university = data.university;
+    if (data.visiblePages !== undefined) updateData.visiblePages = data.visiblePages;
+    if (data.visibleDashboardCards !== undefined) updateData.visibleDashboardCards = data.visibleDashboardCards;
+    if (data.visibleToolsCards !== undefined) updateData.visibleToolsCards = data.visibleToolsCards;
 
-    // Use raw SQL to bypass Prisma issues
-    const updateFields: string[] = [];
-    const updateValues: any[] = [];
-    let paramCount = 1;
+    console.log('[PATCH /api/settings] Updating with data:', updateData);
 
-    if (data.dueSoonWindowDays !== undefined) {
-      updateFields.push(`"dueSoonWindowDays" = $${paramCount}`);
-      updateValues.push(data.dueSoonWindowDays);
-      paramCount++;
-    }
-    if (data.weekStartsOn !== undefined) {
-      updateFields.push(`"weekStartsOn" = $${paramCount}`);
-      updateValues.push(data.weekStartsOn);
-      paramCount++;
-    }
-    if (data.theme !== undefined) {
-      updateFields.push(`"theme" = $${paramCount}`);
-      updateValues.push(data.theme);
-      paramCount++;
-    }
-    if (data.enableNotifications !== undefined) {
-      updateFields.push(`"enableNotifications" = $${paramCount}`);
-      updateValues.push(data.enableNotifications);
-      paramCount++;
-    }
-    if (data.university !== undefined) {
-      updateFields.push(`"university" = $${paramCount}`);
-      updateValues.push(data.university);
-      paramCount++;
-    }
+    // Try to update existing settings
+    let settings = await prisma.settings.update({
+      where: { userId },
+      data: updateData,
+    });
 
-    updateValues.push(userId);
-    const updateSetClause = updateFields.length > 0 ? updateFields.join(', ') : '"updatedAt" = NOW()';
-
-    const updateQuery = `
-      UPDATE "Settings"
-      SET ${updateSetClause}, "updatedAt" = NOW()
-      WHERE "userId" = $${paramCount}
-      RETURNING *;
-    `;
-
-    console.log('Update query:', updateQuery);
-    console.log('Update values:', updateValues);
-
-    let result = await prisma.$queryRawUnsafe(updateQuery, ...updateValues);
-    console.log('Update result:', result);
-
-    // If no rows were updated, try inserting
-    if (!Array.isArray(result) || result.length === 0) {
-      console.log('No rows updated, attempting insert...');
-
-      // Use a simpler UUID method
-      const crypto = require('crypto');
-      const newId = crypto.randomUUID();
-
-      const insertQuery = `
-        INSERT INTO "Settings" ("id", "userId", "dueSoonWindowDays", "weekStartsOn", "theme", "enableNotifications", "university", "createdAt", "updatedAt")
-        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-        RETURNING *;
-      `;
-
-      const insertValues = [
-        newId,
-        userId,
-        data.dueSoonWindowDays ?? 7,
-        data.weekStartsOn ?? 'Sun',
-        data.theme ?? 'system',
-        data.enableNotifications ?? false,
-        data.university ?? null
-      ];
-
-      console.log('Insert query:', insertQuery);
-      console.log('Insert values:', insertValues);
-
-      result = await prisma.$queryRawUnsafe(insertQuery, ...insertValues);
-      console.log('Insert result:', result);
-    }
-
-    const settings = Array.isArray(result) ? result[0] : result;
-    console.log('Final settings to return:', settings);
-    return NextResponse.json({ settings, debug: { updateQuery, result } });
+    console.log('[PATCH /api/settings] Updated settings:', settings);
+    return NextResponse.json({ settings });
   } catch (error) {
-    console.error('Error updating settings:', error);
+    console.error('[PATCH /api/settings] Error:', error);
+
+    // If settings don't exist, try to create them
+    if (error instanceof Error && error.message.includes('An operation failed because it depends on one or more records that were required but not found')) {
+      try {
+        console.log('[PATCH /api/settings] Settings not found, creating new ones...');
+
+        const crypto = require('crypto');
+        const newId = crypto.randomUUID();
+
+        const newSettings = await prisma.settings.create({
+          data: {
+            id: newId,
+            userId: userId,
+            dueSoonWindowDays: 7,
+            weekStartsOn: 'Sun',
+            theme: 'dark',
+            enableNotifications: false,
+            ...data,
+          },
+        });
+
+        console.log('[PATCH /api/settings] Created new settings:', newSettings);
+        return NextResponse.json({ settings: newSettings });
+      } catch (createError) {
+        console.error('[PATCH /api/settings] Failed to create settings:', createError);
+        return NextResponse.json(
+          { error: 'Failed to create settings', details: createError instanceof Error ? createError.message : String(createError) },
+          { status: 500 }
+        );
+      }
+    }
+
     return NextResponse.json(
       { error: 'Failed to update settings', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }

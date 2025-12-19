@@ -5,6 +5,8 @@ import useAppStore from '@/lib/store';
 import { isToday, formatDate, isOverdue } from '@/lib/utils';
 import { isDateExcluded } from '@/lib/calendarUtils';
 import { getQuickLinks } from '@/lib/quickLinks';
+import { getDashboardCardSpan } from '@/lib/dashboardLayout';
+import { DASHBOARD_CARDS, DEFAULT_VISIBLE_DASHBOARD_CARDS } from '@/lib/customizationConstants';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -42,6 +44,7 @@ export default function Dashboard() {
     links: [{ label: '', url: '' }],
   });
   const { courses, deadlines, tasks, settings, excludedDates, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone, updateDeadline, deleteDeadline } = useAppStore();
+  const visibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
 
   useEffect(() => {
     initializeStore();
@@ -284,7 +287,8 @@ export default function Dashboard() {
       <div className="mx-auto w-full max-w-[1400px] min-h-[calc(100vh-var(--header-h))] flex flex-col" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)] flex-1">
           {/* Top row - 3 cards */}
-          <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
+          {visibleDashboardCards.includes(DASHBOARD_CARDS.NEXT_CLASS) && (
+          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.NEXT_CLASS, visibleDashboardCards)} h-full min-h-[220px]`}>
             <Card title="Next Class" className="h-full flex flex-col">
               {nextClass ? (
                 <div className="flex flex-col gap-4">
@@ -327,9 +331,11 @@ export default function Dashboard() {
               )}
             </Card>
           </div>
+          )}
 
           {/* Due Soon */}
-          <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
+          {visibleDashboardCards.includes(DASHBOARD_CARDS.DUE_SOON) && (
+          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.DUE_SOON, visibleDashboardCards)} h-full min-h-[220px]`}>
             <Card title="Due Soon" className="h-full flex flex-col">
               {showDeadlineForm && (
                 <div style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid var(--border)' }}>
@@ -565,9 +571,11 @@ export default function Dashboard() {
               )}
             </Card>
           </div>
+          )}
 
           {/* Overview */}
-          <div className="col-span-12 lg:col-span-4 h-full min-h-[220px]">
+          {visibleDashboardCards.includes(DASHBOARD_CARDS.OVERVIEW) && (
+          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.OVERVIEW, visibleDashboardCards)} h-full min-h-[220px]`}>
             <Card title="Overview" className="h-full flex flex-col">
               <div className="space-y-0">
                 <div className="flex items-center justify-between border-b border-[var(--border)] first:pt-0" style={{ paddingTop: '12px', paddingBottom: '12px' }}>
@@ -591,9 +599,11 @@ export default function Dashboard() {
               </div>
             </Card>
           </div>
+          )}
 
           {/* Second row - Today's Tasks & Quick Links */}
-          <div className="col-span-12 lg:col-span-6 lg:flex">
+          {visibleDashboardCards.includes(DASHBOARD_CARDS.TODAY_TASKS) && (
+          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.TODAY_TASKS, visibleDashboardCards)} lg:flex`}>
             <Card title="Today's Tasks" className="h-full flex flex-col w-full">
             {todayTasks.length > 0 || showTaskForm ? (
               <div className="space-y-4 divide-y divide-[var(--border)]">
@@ -853,9 +863,11 @@ export default function Dashboard() {
             )}
             </Card>
           </div>
+          )}
 
           {/* Quick Links */}
-          <div className="col-span-12 lg:col-span-6 lg:flex">
+          {visibleDashboardCards.includes(DASHBOARD_CARDS.QUICK_LINKS) && (
+          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.QUICK_LINKS, visibleDashboardCards)} lg:flex`}>
             <Card title="Quick Links" subtitle={settings.university ? `Resources for ${settings.university}` : 'Select a college to view quick links'} className="h-full flex flex-col w-full">
               {settings.university ? (
                 <div className="grid grid-cols-2 gap-3">
@@ -879,9 +891,11 @@ export default function Dashboard() {
               )}
             </Card>
           </div>
+          )}
 
           {/* Upcoming This Week - Full Width */}
-          <div className="col-span-12 lg:flex">
+          {visibleDashboardCards.includes(DASHBOARD_CARDS.UPCOMING_WEEK) && (
+          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.UPCOMING_WEEK, visibleDashboardCards)} lg:flex`}>
             <Card title="Upcoming This Week" subtitle="Your schedule for the next 7 days" className="h-full flex flex-col w-full">
               {(() => {
                 // Get classes for the next 7 days, including days with no classes
@@ -959,6 +973,7 @@ export default function Dashboard() {
               })()}
             </Card>
           </div>
+          )}
         </div>
       </div>
     </>

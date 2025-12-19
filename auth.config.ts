@@ -72,7 +72,7 @@ export const authConfig: NextAuthOptions = {
         try {
           const freshUser = await prisma.user.findUnique({
             where: { id: token.id as string },
-            select: { name: true, email: true },
+            select: { name: true, email: true, isAdmin: true },
           });
 
           if (freshUser) {
@@ -80,6 +80,7 @@ export const authConfig: NextAuthOptions = {
             session.user.email = freshUser.email;
             token.name = freshUser.name;
             token.email = freshUser.email;
+            (session.user as any).isAdmin = freshUser.isAdmin;
           }
         } catch (error) {
           console.error('Error fetching fresh user data in session:', error);
