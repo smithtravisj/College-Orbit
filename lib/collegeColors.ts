@@ -79,19 +79,19 @@ export const byuColorPalette: ColorPalette = {
 
   border: "rgba(255, 255, 255, 0.08)",
   borderHover: "#2a3a3a",
-  borderActive: "#539bf5",
+  borderActive: "#0047BA",
   borderStrong: "rgba(255, 255, 255, 0.12)",
 
-  accent: "#2563eb",
-  accentHover: "#1d4ed8",
-  accent2: "rgba(37, 99, 235, 0.15)",
-  ring: "rgba(37, 99, 235, 0.35)",
+  accent: "#0047BA",
+  accentHover: "#003399",
+  accent2: "rgba(0, 71, 186, 0.15)",
+  ring: "rgba(0, 71, 186, 0.35)",
 
-  buttonSecondary: "#132343",
+  buttonSecondary: "#0047BA",
 
-  navActive: "#132343",
+  navActive: "#0047BA",
 
-  link: "#2563eb",
+  link: "#0047BA",
 
   calendarNoSchool: "#132343",
   calendarCancelled: "#132343",
@@ -110,7 +110,7 @@ export const byuColorPalette: ColorPalette = {
   shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.4)",
   shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
 
-  focusRing: "0 0 0 3px rgba(83, 155, 245, 0.3)",
+  focusRing: "0 0 0 3px rgba(0, 71, 186, 0.3)",
 };
 
 /**
