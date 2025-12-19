@@ -5,7 +5,7 @@ import useAppStore from '@/lib/store';
 
 export default function BrowserTitle() {
   const university = useAppStore((state) => state.settings.university);
-  const previousUniversityRef = useRef<string | null>(null);
+  const previousUniversityRef = useRef<string | null | undefined>(null);
 
   useEffect(() => {
     previousUniversityRef.current = university;

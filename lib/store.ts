@@ -19,11 +19,14 @@ interface AppStore {
   excludedDates: ExcludedDate[];
   gpaEntries: GpaEntry[];
   loading: boolean;
+  userId: string | null;
 
   // Initialization
   initializeStore: () => Promise<void>;
   loadFromDatabase: () => Promise<void>;
   loadFromStorage: () => void;
+  setUserId: (userId: string) => void;
+  getStorageKey: () => string;
 
   // Courses
   addCourse: (course: Omit<Course, 'id'>) => Promise<void>;
@@ -68,6 +71,19 @@ const useAppStore = create<AppStore>((set, get) => ({
   excludedDates: [],
   gpaEntries: [],
   loading: false,
+  userId: null,
+
+  setUserId: (userId: string) => {
+    set({ userId });
+  },
+
+  getStorageKey: () => {
+    const state = get();
+    if (state.userId) {
+      return `byu-survival-tool-data-${state.userId}`;
+    }
+    return 'byu-survival-tool-data'; // Fallback for when userId is not set
+  },
 
   initializeStore: async () => {
     // Skip if already initialized (prevents re-initialization on navigation)
@@ -78,6 +94,13 @@ const useAppStore = create<AppStore>((set, get) => ({
 
     set({ loading: true });
     try {
+      // First, fetch and set the user ID
+      const userRes = await fetch('/api/user');
+      if (userRes.ok) {
+        const { userId } = await userRes.json();
+        set({ userId });
+      }
+
       // Load from localStorage
       get().loadFromStorage();
     } catch (error) {
@@ -117,10 +140,11 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       set(newData);
 
-      // Save fresh data to localStorage
+      // Save fresh data to localStorage with user-specific key
       if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem('byu-survival-tool-data', JSON.stringify(newData));
+          const storageKey = get().getStorageKey();
+          localStorage.setItem(storageKey, JSON.stringify(newData));
         } catch (error) {
           console.warn('Failed to save to localStorage:', error);
         }
@@ -134,7 +158,8 @@ const useAppStore = create<AppStore>((set, get) => ({
     if (typeof window === 'undefined') return;
 
     try {
-      const stored = localStorage.getItem('byu-survival-tool-data');
+      const storageKey = get().getStorageKey();
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
         const data: AppData = JSON.parse(stored);
         set({
@@ -650,13 +675,11 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   updateSettings: async (settings) => {
-    console.log('[Store] updateSettings called with:', settings);
     try {
       // Optimistic update
       set((state) => ({
         settings: { ...state.settings, ...settings },
       }));
-      console.log('[Store] After optimistic update, state university:', get().settings.university);
 
       // Update localStorage with new settings
       if (typeof window !== 'undefined') {
@@ -670,8 +693,8 @@ const useAppStore = create<AppStore>((set, get) => ({
             excludedDates: appData.excludedDates,
             gpaEntries: appData.gpaEntries,
           };
-          console.log('[Store] Saving to localStorage with university:', newData.settings.university);
-          localStorage.setItem('byu-survival-tool-data', JSON.stringify(newData));
+          const storageKey = get().getStorageKey();
+          localStorage.setItem(storageKey, JSON.stringify(newData));
         } catch (error) {
           console.warn('Failed to save to localStorage:', error);
         }
@@ -697,7 +720,8 @@ const useAppStore = create<AppStore>((set, get) => ({
         if (typeof window !== 'undefined') {
           try {
             const appData = get();
-            localStorage.setItem('byu-survival-tool-data', JSON.stringify({
+            const storageKey = get().getStorageKey();
+            localStorage.setItem(storageKey, JSON.stringify({
               courses: appData.courses,
               deadlines: appData.deadlines,
               tasks: appData.tasks,
@@ -849,7 +873,8 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       // Clear localStorage
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('byu-survival-tool-data');
+        const storageKey = get().getStorageKey();
+        localStorage.removeItem(storageKey);
       }
     } catch (error) {
       console.error('Error deleting all data:', error);
