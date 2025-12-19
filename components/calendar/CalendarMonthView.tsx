@@ -64,8 +64,6 @@ export default function CalendarMonthView({
           const containerHeight = container.clientHeight;
           const containerWidth = container.clientWidth;
 
-          console.log(`[Dots] ${dateStr}: width=${containerWidth}, height=${containerHeight}, children=${container.children.length}`);
-
           if (containerWidth > 0 && containerHeight > 0) {
             const dotHeight = 6;
             const dotWidth = 6;
@@ -81,14 +79,12 @@ export default function CalendarMonthView({
             const maxFit = Math.max(dotsPerRow, dotsPerRow * rowsAvailable - 1); // -1 to leave room for overflow indicator
 
             const result = Math.max(maxFit, 1);
-            console.log(`[Dots] ${dateStr}: dotsPerRow=${dotsPerRow}, rowsAvailable=${rowsAvailable}, maxFit=${result}`);
             newMaxDots.set(dateStr, result);
           }
         }
       });
 
       if (newMaxDots.size > 0) {
-        console.log('[Dots] Setting maxVisibleDots:', newMaxDots);
         setMaxVisibleDots(newMaxDots);
       }
     };
@@ -212,8 +208,14 @@ export default function CalendarMonthView({
                 style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', flex: 1, alignContent: 'flex-start', minHeight: 0, overflow: 'hidden', maxHeight: exclusionType === 'holiday' ? '14px' : 'none' }}
               >
                 {(() => {
-                  const limit = exclusionType === 'holiday' ? 5 : (maxVisibleDots.get(dateStr) ?? 100);
-                  console.log(`[Dots-Render] ${dateStr}: showing ${limit} of ${dayEvents.length}`);
+                  let limit = exclusionType === 'holiday' ? 5 : (maxVisibleDots.get(dateStr) ?? 100);
+                  const shouldShowMore = dayEvents.length > limit;
+
+                  // Reserve space for "+X" indicator by reducing limit by 1
+                  if (shouldShowMore && limit > 0) {
+                    limit = Math.max(1, limit - 1);
+                  }
+
                   return dayEvents.slice(0, limit).map((event) => {
                     const color = getMonthViewColor(event);
 
@@ -247,9 +249,16 @@ export default function CalendarMonthView({
 
                 {/* +X more indicator */}
                 {(() => {
-                  const limit = exclusionType === 'holiday' ? 5 : (maxVisibleDots.get(dateStr) ?? 100);
+                  const maxLimit = exclusionType === 'holiday' ? 5 : (maxVisibleDots.get(dateStr) ?? 100);
+                  let limit = maxLimit;
                   const shouldShow = dayEvents.length > limit;
-                  console.log(`[Dots-More] ${dateStr}: length=${dayEvents.length}, limit=${limit}, show=${shouldShow}`);
+
+                  // Reserve space for "+X" indicator
+                  if (shouldShow && limit > 0) {
+                    limit = Math.max(1, limit - 1);
+                  }
+
+                  const moreCount = dayEvents.length - limit;
                   return shouldShow && (
                     <div style={{
                       fontSize: '0.6rem',
@@ -257,8 +266,10 @@ export default function CalendarMonthView({
                       fontWeight: 500,
                       lineHeight: 1,
                       paddingTop: '0.5px',
+                      flexShrink: 0,
+                      whiteSpace: 'nowrap',
                     }}>
-                      +{dayEvents.length - limit}
+                      +{moreCount}
                     </div>
                   );
                 })()}
