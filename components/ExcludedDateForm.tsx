@@ -244,6 +244,7 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
           style={{
             backgroundColor: 'var(--background-secondary)',
             color: 'var(--text)',
+            marginRight: '8px',
           }}
         >
           Cancel

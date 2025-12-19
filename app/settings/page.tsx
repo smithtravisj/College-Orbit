@@ -19,16 +19,51 @@ interface CollegeRequest {
   };
 }
 
+interface IssueReport {
+  id: string;
+  description: string;
+  status: string;
+  createdAt: string;
+  user: {
+    email: string;
+    name: string | null;
+  };
+}
+
+interface FeatureRequest {
+  id: string;
+  description: string;
+  status: string;
+  createdAt: string;
+  user: {
+    email: string;
+    name: string | null;
+  };
+}
+
 export default function SettingsPage() {
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [collegeRequests, setCollegeRequests] = useState<CollegeRequest[]>([]);
+  const [issueReports, setIssueReports] = useState<IssueReport[]>([]);
+  const [featureRequests, setFeatureRequests] = useState<FeatureRequest[]>([]);
+  const [adminTab, setAdminTab] = useState<'college' | 'issues' | 'features'>('college');
   const [dueSoonDays, setDueSoonDays] = useState<number | string>(7);
   const [university, setUniversity] = useState<string | null>(null);
   const [collegeRequestName, setCollegeRequestName] = useState('');
   const [collegeRequestMessage, setCollegeRequestMessage] = useState('');
   const [collegeRequestLoading, setCollegeRequestLoading] = useState(false);
+  const [issueDescription, setIssueDescription] = useState('');
+  const [issueReportMessage, setIssueReportMessage] = useState('');
+  const [issueReportLoading, setIssueReportLoading] = useState(false);
+  const [featureDescription, setFeatureDescription] = useState('');
+  const [featureRequestMessage, setFeatureRequestMessage] = useState('');
+  const [featureRequestLoading, setFeatureRequestLoading] = useState(false);
+  const [selectedFeature, setSelectedFeature] = useState<FeatureRequest | null>(null);
+  const [showFeatureModal, setShowFeatureModal] = useState(false);
+  const [deleteFeatureId, setDeleteFeatureId] = useState<string | null>(null);
+  const [showDeleteFeatureConfirm, setShowDeleteFeatureConfirm] = useState(false);
   const [exportMessage, setExportMessage] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
   const [importMessage, setImportMessage] = useState('');
@@ -37,6 +72,10 @@ export default function SettingsPage() {
   const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
   const [showDeleteRequestConfirm, setShowDeleteRequestConfirm] = useState(false);
   const [deleteRequestId, setDeleteRequestId] = useState<string | null>(null);
+  const [showDeleteIssueConfirm, setShowDeleteIssueConfirm] = useState(false);
+  const [deleteIssueId, setDeleteIssueId] = useState<string | null>(null);
+  const [selectedIssue, setSelectedIssue] = useState<IssueReport | null>(null);
+  const [showIssueModal, setShowIssueModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
@@ -49,22 +88,40 @@ export default function SettingsPage() {
     setMounted(true);
   }, [settings.dueSoonWindowDays, settings.university]);
 
-  // Fetch college requests if user is admin
+  // Fetch college requests and issue reports if user is admin
   useEffect(() => {
     if (!mounted || !session?.user?.id) return;
 
     const fetchAdminData = async () => {
       try {
-        const response = await fetch('/api/admin/college-requests');
-        if (response.ok) {
-          const data = await response.json();
-          setIsAdmin(true);
-          setCollegeRequests(data.requests);
-        } else if (response.status === 403) {
+        const collegeResponse = await fetch('/api/admin/college-requests');
+        const issuesResponse = await fetch('/api/admin/issue-reports');
+        const featuresResponse = await fetch('/api/admin/feature-requests');
+
+        // If any endpoint returns 403, user is not admin
+        if (collegeResponse.status === 403 || issuesResponse.status === 403 || featuresResponse.status === 403) {
           setIsAdmin(false);
+          return;
+        }
+
+        // If we get here, user is likely an admin - set it to true
+        setIsAdmin(true);
+
+        // Load each data type independently so one failure doesn't prevent the card from showing
+        if (collegeResponse.ok) {
+          const collegeData = await collegeResponse.json();
+          setCollegeRequests(collegeData.requests);
+        }
+        if (issuesResponse.ok) {
+          const issuesData = await issuesResponse.json();
+          setIssueReports(issuesData.reports);
+        }
+        if (featuresResponse.ok) {
+          const featuresData = await featuresResponse.json();
+          setFeatureRequests(featuresData.requests);
         }
       } catch (error) {
-        console.error('Failed to fetch college requests:', error);
+        console.error('Failed to fetch admin data:', error);
       }
     };
 
@@ -256,76 +313,522 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSubmitIssueReport = async () => {
+    if (!issueDescription.trim()) {
+      setIssueReportMessage('Please enter a description');
+      setTimeout(() => setIssueReportMessage(''), 3000);
+      return;
+    }
+
+    setIssueReportLoading(true);
+    setIssueReportMessage('');
+
+    try {
+      const response = await fetch('/api/issue-reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: issueDescription }),
+      });
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('Failed to parse API response:', parseError);
+        console.error('Response status:', response.status);
+        console.error('Response text:', await response.text());
+        setIssueReportMessage('✗ Server error - invalid response');
+        setIssueReportLoading(false);
+        setTimeout(() => setIssueReportMessage(''), 5000);
+        return;
+      }
+
+      if (!response.ok) {
+        const errorText = data.details ? `${data.error} - ${data.details}` : (data.error || 'Failed to submit report');
+        setIssueReportMessage(`✗ ${errorText}`);
+        setIssueReportLoading(false);
+        setTimeout(() => setIssueReportMessage(''), 5000);
+        console.error('Issue report error:', data);
+        return;
+      }
+
+      setIssueReportMessage('✓ ' + data.message);
+      setIssueDescription('');
+      setIssueReportLoading(false);
+      setTimeout(() => setIssueReportMessage(''), 3000);
+    } catch (error) {
+      console.error('Issue report submission error:', error);
+      setIssueReportMessage('✗ Failed to submit report');
+      setIssueReportLoading(false);
+      setTimeout(() => setIssueReportMessage(''), 3000);
+    }
+  };
+
+  const handleMarkIssueFixed = async (reportId: string) => {
+    try {
+      const response = await fetch('/api/admin/issue-reports', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportId, status: 'fixed' }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        console.error('Failed to mark as fixed:', data);
+        alert(`Failed to mark as fixed: ${data.error || 'Unknown error'}`);
+        return;
+      }
+
+      setIssueReports(issueReports.filter(report => report.id !== reportId));
+    } catch (error) {
+      console.error('Error marking as fixed:', error);
+      alert(`Error marking as fixed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const handleDeleteIssue = (reportId: string) => {
+    setDeleteIssueId(reportId);
+    setShowDeleteIssueConfirm(true);
+  };
+
+  const confirmDeleteIssue = async () => {
+    if (!deleteIssueId) return;
+
+    try {
+      const response = await fetch('/api/admin/issue-reports', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportId: deleteIssueId, status: 'rejected' }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        console.error('Failed to reject report:', data);
+        alert(`Failed to reject report: ${data.error || 'Unknown error'}`);
+        setShowDeleteIssueConfirm(false);
+        return;
+      }
+
+      setIssueReports(issueReports.filter(report => report.id !== deleteIssueId));
+      setShowDeleteIssueConfirm(false);
+      setDeleteIssueId(null);
+    } catch (error) {
+      console.error('Error rejecting report:', error);
+      alert(`Error rejecting report: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setShowDeleteIssueConfirm(false);
+    }
+  };
+
+  const handleSubmitFeatureRequest = async () => {
+    if (!featureDescription.trim()) {
+      setFeatureRequestMessage('Please enter a description');
+      setTimeout(() => setFeatureRequestMessage(''), 3000);
+      return;
+    }
+
+    setFeatureRequestLoading(true);
+    setFeatureRequestMessage('');
+
+    try {
+      const response = await fetch('/api/feature-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: featureDescription }),
+      });
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('Failed to parse API response:', parseError);
+        console.error('Response status:', response.status);
+        console.error('Response text:', await response.text());
+        setFeatureRequestMessage('✗ Server error - invalid response');
+        setFeatureRequestLoading(false);
+        setTimeout(() => setFeatureRequestMessage(''), 5000);
+        return;
+      }
+
+      if (!response.ok) {
+        const errorText = data.details ? `${data.error} - ${data.details}` : (data.error || 'Failed to submit request');
+        setFeatureRequestMessage(`✗ ${errorText}`);
+        setFeatureRequestLoading(false);
+        setTimeout(() => setFeatureRequestMessage(''), 5000);
+        console.error('Feature request error:', data);
+        return;
+      }
+
+      setFeatureRequestMessage('✓ ' + data.message);
+      setFeatureDescription('');
+      setFeatureRequestLoading(false);
+      setTimeout(() => setFeatureRequestMessage(''), 3000);
+    } catch (error) {
+      console.error('Feature request submission error:', error);
+      setFeatureRequestMessage('✗ Failed to submit request');
+      setFeatureRequestLoading(false);
+      setTimeout(() => setFeatureRequestMessage(''), 3000);
+    }
+  };
+
+  const handleMarkFeatureImplemented = async (requestId: string) => {
+    try {
+      const response = await fetch('/api/admin/feature-requests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId, status: 'implemented' }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        console.error('Failed to mark as implemented:', data);
+        alert(`Failed to mark as implemented: ${data.error || 'Unknown error'}`);
+        return;
+      }
+
+      setFeatureRequests(featureRequests.filter(request => request.id !== requestId));
+    } catch (error) {
+      console.error('Error marking as implemented:', error);
+      alert(`Error marking as implemented: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const handleDeleteFeature = (requestId: string) => {
+    setDeleteFeatureId(requestId);
+    setShowDeleteFeatureConfirm(true);
+  };
+
+  const confirmDeleteFeature = async () => {
+    if (!deleteFeatureId) return;
+
+    try {
+      const response = await fetch('/api/admin/feature-requests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId: deleteFeatureId, status: 'rejected' }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        console.error('Failed to reject request:', data);
+        alert(`Failed to reject request: ${data.error || 'Unknown error'}`);
+        setShowDeleteFeatureConfirm(false);
+        return;
+      }
+
+      setFeatureRequests(featureRequests.filter(request => request.id !== deleteFeatureId));
+      setShowDeleteFeatureConfirm(false);
+      setDeleteFeatureId(null);
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+      alert(`Error rejecting request: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setShowDeleteFeatureConfirm(false);
+    }
+  };
+
   return (
     <>
       <PageHeader title="Settings" subtitle="Customize your experience" />
       <div className="mx-auto w-full max-w-[768px]" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
-        {/* College Requests Card (Admin Only) */}
+        {/* Admin Requests Card (Admin Only) */}
         {isAdmin && (
           <div style={{ marginBottom: '24px' }}>
-            <Card title="College Requests">
-              {collegeRequests.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>No pending requests</p>
-              ) : (
-                <div className="space-y-3">
-                {collegeRequests.map((request) => (
-                  <div
-                    key={request.id}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '12px',
-                      backgroundColor: 'var(--panel-2)',
-                      borderRadius: '6px',
-                      border: '1px solid var(--border)',
-                    }}
-                  >
-                    <div>
-                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px' }}>
-                        {request.collegeName}
-                      </p>
-                      <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                        Requested by {request.user.name || request.user.email} • Status: {request.status}
-                      </p>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      {request.status !== 'added' && (
-                        <button
-                          onClick={() => handleMarkAsAdded(request.id)}
-                          style={{
-                            padding: '6px 12px',
-                            fontSize: '14px',
-                            backgroundColor: '#063d1d',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontWeight: '500',
-                          }}
-                        >
-                          Mark Added
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDeleteRequest(request.id)}
+            <Card title="Admin Requests">
+              {/* Tab Navigation */}
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+                <button
+                  onClick={() => setAdminTab('college')}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    fontWeight: adminTab === 'college' ? '600' : '400',
+                    color: adminTab === 'college' ? 'var(--text)' : 'var(--text-muted)',
+                    border: 'none',
+                    borderBottom: adminTab === 'college' ? '2px solid var(--text)' : 'none',
+                    backgroundColor: 'transparent',
+                    cursor: 'pointer',
+                    marginBottom: '-12px',
+                    paddingBottom: '20px',
+                  }}
+                >
+                  College Requests
+                </button>
+                <button
+                  onClick={() => setAdminTab('issues')}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    fontWeight: adminTab === 'issues' ? '600' : '400',
+                    color: adminTab === 'issues' ? 'var(--text)' : 'var(--text-muted)',
+                    border: 'none',
+                    borderBottom: adminTab === 'issues' ? '2px solid var(--text)' : 'none',
+                    backgroundColor: 'transparent',
+                    cursor: 'pointer',
+                    marginBottom: '-12px',
+                    paddingBottom: '20px',
+                  }}
+                >
+                  Issue Reports
+                </button>
+                <button
+                  onClick={() => setAdminTab('features')}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    fontWeight: adminTab === 'features' ? '600' : '400',
+                    color: adminTab === 'features' ? 'var(--text)' : 'var(--text-muted)',
+                    border: 'none',
+                    borderBottom: adminTab === 'features' ? '2px solid var(--text)' : 'none',
+                    backgroundColor: 'transparent',
+                    cursor: 'pointer',
+                    marginBottom: '-12px',
+                    paddingBottom: '20px',
+                  }}
+                >
+                  Feature Requests
+                </button>
+              </div>
+
+              {/* College Requests Tab */}
+              {adminTab === 'college' && (
+                <>
+                  {collegeRequests.length === 0 ? (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>No pending college requests</p>
+                  ) : (
+                    <div className="space-y-3">
+                    {collegeRequests.map((request) => (
+                      <div
+                        key={request.id}
                         style={{
-                          padding: '6px 12px',
-                          fontSize: '14px',
-                          backgroundColor: '#660000',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          fontWeight: '500',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '12px',
+                          backgroundColor: 'var(--panel-2)',
+                          borderRadius: '6px',
+                          border: '1px solid var(--border)',
                         }}
                       >
-                        Reject
-                      </button>
+                        <div>
+                          <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px' }}>
+                            {request.collegeName}
+                          </p>
+                          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            Requested by {request.user.name || request.user.email} • Status: {request.status}
+                          </p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          {request.status !== 'added' && (
+                            <button
+                              onClick={() => handleMarkAsAdded(request.id)}
+                              style={{
+                                padding: '6px 12px',
+                                fontSize: '14px',
+                                backgroundColor: '#063d1d',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontWeight: '500',
+                              }}
+                            >
+                              Mark Added
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteRequest(request.id)}
+                            style={{
+                              padding: '6px 12px',
+                              fontSize: '14px',
+                              backgroundColor: '#660000',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontWeight: '500',
+                            }}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                     </div>
-                  </div>
-                ))}
-                </div>
+                  )}
+                </>
+              )}
+
+              {/* Issue Reports Tab */}
+              {adminTab === 'issues' && (
+                <>
+                  {issueReports.length === 0 ? (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>No pending issue reports</p>
+                  ) : (
+                    <div className="space-y-3">
+                    {issueReports.map((report) => (
+                      <div
+                        key={report.id}
+                        onClick={() => {
+                          setSelectedIssue(report);
+                          setShowIssueModal(true);
+                        }}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '12px',
+                          backgroundColor: 'var(--panel-2)',
+                          borderRadius: '6px',
+                          border: '1px solid var(--border)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--panel-3)';
+                          e.currentTarget.style.borderColor = 'var(--text-muted)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                          e.currentTarget.style.borderColor = 'var(--border)';
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px', wordBreak: 'break-word' }}>
+                            {report.description.length > 80 ? report.description.substring(0, 80) + '...' : report.description}
+                          </p>
+                          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            Reported by {report.user.name || report.user.email} • Status: {report.status}
+                          </p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', marginLeft: '12px', flexShrink: 0 }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarkIssueFixed(report.id);
+                            }}
+                            style={{
+                              padding: '6px 12px',
+                              fontSize: '14px',
+                              backgroundColor: '#063d1d',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontWeight: '500',
+                            }}
+                          >
+                            Mark Fixed
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteIssue(report.id);
+                            }}
+                            style={{
+                              padding: '6px 12px',
+                              fontSize: '14px',
+                              backgroundColor: '#660000',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontWeight: '500',
+                            }}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Feature Requests Tab */}
+              {adminTab === 'features' && (
+                <>
+                  {featureRequests.length === 0 ? (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>No pending feature requests</p>
+                  ) : (
+                    <div className="space-y-3">
+                    {featureRequests.map((request) => (
+                      <div
+                        key={request.id}
+                        onClick={() => {
+                          setSelectedFeature(request);
+                          setShowFeatureModal(true);
+                        }}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '12px',
+                          backgroundColor: 'var(--panel-2)',
+                          borderRadius: '6px',
+                          border: '1px solid var(--border)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--panel-3)';
+                          e.currentTarget.style.borderColor = 'var(--text-muted)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                          e.currentTarget.style.borderColor = 'var(--border)';
+                        }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px', wordBreak: 'break-word' }}>
+                            {request.description.length > 80 ? request.description.substring(0, 80) + '...' : request.description}
+                          </p>
+                          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            Requested by {request.user.name || request.user.email} • Status: {request.status}
+                          </p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', marginLeft: '12px', flexShrink: 0 }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarkFeatureImplemented(request.id);
+                            }}
+                            style={{
+                              padding: '6px 12px',
+                              fontSize: '14px',
+                              backgroundColor: '#063d1d',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontWeight: '500',
+                            }}
+                          >
+                            Mark Implemented
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteFeature(request.id);
+                            }}
+                            style={{
+                              padding: '6px 12px',
+                              fontSize: '14px',
+                              backgroundColor: '#660000',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontWeight: '500',
+                            }}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    </div>
+                  )}
+                </>
               )}
             </Card>
           </div>
@@ -358,8 +861,9 @@ export default function SettingsPage() {
                   style={{
                     width: '100%',
                     height: '44px',
-                    padding: '10px 12px 10px 12px',
+                    padding: '8px 12px 8px 12px',
                     fontSize: '16px',
+                    lineHeight: '28px',
                     fontFamily: 'inherit',
                     backgroundColor: 'var(--panel-2)',
                     color: 'var(--text)',
@@ -386,13 +890,13 @@ export default function SettingsPage() {
                 </select>
               </div>
 
-              {/* Request a College */}
+              {/* Request a University */}
               <div style={{ paddingTop: '16px', paddingBottom: '16px' }}>
                 <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
-                  Request a College
+                  Request a University
                 </label>
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                  Don't see your college? Request it to be added
+                  Don't see your university? Request it to be added
                 </p>
                 <input
                   type="text"
@@ -403,7 +907,7 @@ export default function SettingsPage() {
                       handleSubmitCollegeRequest();
                     }
                   }}
-                  placeholder="Enter college name"
+                  placeholder="Enter university name"
                   maxLength={100}
                   style={{
                     width: '100%',
@@ -425,8 +929,8 @@ export default function SettingsPage() {
                   onClick={handleSubmitCollegeRequest}
                   disabled={collegeRequestLoading}
                   style={{
-                    paddingLeft: '24px',
-                    paddingRight: '24px',
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
                     backgroundColor: '#132343',
                     color: 'white',
                     borderWidth: '1px',
@@ -435,7 +939,7 @@ export default function SettingsPage() {
                     opacity: collegeRequestLoading ? 0.6 : 1
                   }}
                 >
-                  {collegeRequestLoading ? 'Submitting...' : 'Request College'}
+                  {collegeRequestLoading ? 'Submitting...' : 'Request University'}
                 </Button>
                 {collegeRequestMessage && (
                   <p style={{ marginTop: '8px', fontSize: '14px', color: collegeRequestMessage.includes('✗') ? 'var(--danger)' : 'var(--success)' }}>{collegeRequestMessage}</p>
@@ -500,11 +1004,128 @@ export default function SettingsPage() {
                     setSaveMessage('Please enter a number between 1 and 30');
                     setTimeout(() => setSaveMessage(''), 3000);
                   }
-                }} style={{ marginTop: '16px', paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#132343', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                }} style={{ marginTop: '16px', paddingLeft: '16px', paddingRight: '16px', backgroundColor: '#132343', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                   Save
                 </Button>
                 {saveMessage && (
                   <p style={{ marginTop: '8px', fontSize: '14px', color: saveMessage.includes('Error') ? 'var(--danger)' : 'var(--success)' }}>{saveMessage}</p>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          {/* Report an Issue & Request a Feature */}
+          <Card title="Feedback">
+            <div className="space-y-4">
+              {/* Request a Feature */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+                  Request a Feature
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                  Have an idea for a new feature? We'd love to hear it!
+                </p>
+                <textarea
+                  value={featureDescription}
+                  onChange={(e) => setFeatureDescription(e.target.value)}
+                  placeholder="Describe the feature you'd like to see..."
+                  maxLength={1000}
+                  style={{
+                    width: '100%',
+                    minHeight: '100px',
+                    padding: '8px 12px',
+                    fontSize: '16px',
+                    fontFamily: 'inherit',
+                    backgroundColor: 'var(--panel-2)',
+                    color: 'var(--text)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    boxSizing: 'border-box',
+                    marginBottom: '8px',
+                    resize: 'vertical',
+                  }}
+                  disabled={featureRequestLoading}
+                />
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                  {featureDescription.length} / 1000 characters
+                </p>
+                <Button
+                  size="lg"
+                  onClick={handleSubmitFeatureRequest}
+                  disabled={featureRequestLoading}
+                  style={{
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
+                    backgroundColor: '#132343',
+                    color: 'white',
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: 'var(--border)',
+                    opacity: featureRequestLoading ? 0.6 : 1,
+                    marginBottom: '20px'
+                  }}
+                >
+                  {featureRequestLoading ? 'Submitting...' : 'Request Feature'}
+                </Button>
+                {featureRequestMessage && (
+                  <p style={{ marginTop: '8px', marginBottom: '20px', fontSize: '14px', color: featureRequestMessage.includes('✗') ? 'var(--danger)' : 'var(--success)' }}>{featureRequestMessage}</p>
+                )}
+              </div>
+
+              {/* Divider */}
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}></div>
+
+              {/* Report an Issue */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+                  Report an Issue
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                  Found a bug or have a problem? Let us know
+                </p>
+                <textarea
+                  value={issueDescription}
+                  onChange={(e) => setIssueDescription(e.target.value)}
+                  placeholder="Describe the issue you encountered..."
+                  maxLength={1000}
+                  style={{
+                    width: '100%',
+                    minHeight: '100px',
+                    padding: '8px 12px',
+                    fontSize: '16px',
+                    fontFamily: 'inherit',
+                    backgroundColor: 'var(--panel-2)',
+                    color: 'var(--text)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    boxSizing: 'border-box',
+                    marginBottom: '8px',
+                    resize: 'vertical',
+                  }}
+                  disabled={issueReportLoading}
+                />
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                  {issueDescription.length} / 1000 characters
+                </p>
+                <Button
+                  size="lg"
+                  onClick={handleSubmitIssueReport}
+                  disabled={issueReportLoading}
+                  style={{
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
+                    backgroundColor: '#132343',
+                    color: 'white',
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: 'var(--border)',
+                    opacity: issueReportLoading ? 0.6 : 1
+                  }}
+                >
+                  {issueReportLoading ? 'Submitting...' : 'Report Issue'}
+                </Button>
+                {issueReportMessage && (
+                  <p style={{ marginTop: '8px', fontSize: '14px', color: issueReportMessage.includes('✗') ? 'var(--danger)' : 'var(--success)' }}>{issueReportMessage}</p>
                 )}
               </div>
             </div>
@@ -520,7 +1141,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Download a backup of all your data as a JSON file
                 </p>
-                <Button size="lg" onClick={handleExport} style={{ marginBottom: '16px', paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#132343', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                <Button size="lg" onClick={handleExport} style={{ marginBottom: '16px', paddingLeft: '16px', paddingRight: '16px', backgroundColor: '#132343', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                   <Download size={18} />
                   Export Data
                 </Button>
@@ -570,11 +1191,11 @@ export default function SettingsPage() {
                   Permanently delete all your data. This action cannot be undone.
                 </p>
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  <Button size="lg" onClick={handleDeleteAllData} style={{ paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                  <Button size="lg" onClick={handleDeleteAllData} style={{ paddingLeft: '16px', paddingRight: '16px', backgroundColor: '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                     <Trash2 size={18} />
                     Delete All Data
                   </Button>
-                  <Button size="lg" onClick={handleDeleteAccount} style={{ paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                  <Button size="lg" onClick={handleDeleteAccount} style={{ paddingLeft: '16px', paddingRight: '16px', backgroundColor: '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                     <Trash2 size={18} />
                     Delete Account
                   </Button>
@@ -793,6 +1414,352 @@ export default function SettingsPage() {
                 }}
               >
                 Reject Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete issue report confirmation modal */}
+      {showDeleteIssueConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'var(--panel)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '24px',
+            maxWidth: '400px',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <h3 style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
+              Reject Report?
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
+              This will mark the issue report as rejected. The user will be notified that their report was reviewed and closed.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowDeleteIssueConfirm(false);
+                  setDeleteIssueId(null);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteIssue}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#660000',
+                  color: 'white',
+                  border: '1px solid #660000',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Reject Report
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View issue report modal */}
+      {showIssueModal && selectedIssue && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'var(--panel)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '24px',
+            maxWidth: '600px',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <h3 style={{ color: 'var(--text)', marginBottom: '12px', fontSize: '18px', fontWeight: '600' }}>
+              Issue Report
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '12px' }}>
+              Reported by {selectedIssue.user.name || selectedIssue.user.email}
+            </p>
+            <div style={{
+              backgroundColor: 'var(--panel-2)',
+              border: '1px solid var(--border)',
+              borderRadius: '6px',
+              padding: '12px',
+              marginBottom: '20px',
+              minHeight: '100px',
+              maxHeight: '300px',
+              overflowY: 'auto',
+            }}>
+              <p style={{ color: 'var(--text)', fontSize: '14px', lineHeight: '1.5', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                {selectedIssue.description}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowIssueModal(false);
+                  setSelectedIssue(null);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  handleMarkIssueFixed(selectedIssue.id);
+                  setShowIssueModal(false);
+                  setSelectedIssue(null);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#063d1d',
+                  color: 'white',
+                  border: '1px solid #063d1d',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Mark Fixed
+              </button>
+              <button
+                onClick={() => {
+                  handleDeleteIssue(selectedIssue.id);
+                  setShowIssueModal(false);
+                  setSelectedIssue(null);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#660000',
+                  color: 'white',
+                  border: '1px solid #660000',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete feature request confirmation modal */}
+      {showDeleteFeatureConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'var(--panel)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '24px',
+            maxWidth: '400px',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <h3 style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
+              Reject Request?
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
+              This will mark the feature request as rejected. The user will be notified that their request was reviewed and closed.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowDeleteFeatureConfirm(false);
+                  setDeleteFeatureId(null);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteFeature}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#660000',
+                  color: 'white',
+                  border: '1px solid #660000',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Reject Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View feature request modal */}
+      {showFeatureModal && selectedFeature && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'var(--panel)',
+            border: '1px solid var(--border)',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '600px',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <h3 style={{ color: 'var(--text)', marginBottom: '12px', fontSize: '18px', fontWeight: '600' }}>
+              Feature Request
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '12px' }}>
+              Requested by {selectedFeature.user.name || selectedFeature.user.email}
+            </p>
+            <div style={{
+              backgroundColor: 'var(--panel-2)',
+              border: '1px solid var(--border)',
+              borderRadius: '6px',
+              padding: '12px',
+              marginBottom: '20px',
+              minHeight: '100px',
+              maxHeight: '300px',
+              overflowY: 'auto',
+            }}>
+              <p style={{ color: 'var(--text)', fontSize: '14px', lineHeight: '1.5', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                {selectedFeature.description}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowFeatureModal(false);
+                  setSelectedFeature(null);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  handleMarkFeatureImplemented(selectedFeature.id);
+                  setShowFeatureModal(false);
+                  setSelectedFeature(null);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#063d1d',
+                  color: 'white',
+                  border: '1px solid #063d1d',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Mark Implemented
+              </button>
+              <button
+                onClick={() => {
+                  handleDeleteFeature(selectedFeature.id);
+                  setShowFeatureModal(false);
+                  setSelectedFeature(null);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#660000',
+                  color: 'white',
+                  border: '1px solid #660000',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Reject
               </button>
             </div>
           </div>

@@ -386,7 +386,7 @@ export default function ToolsPage() {
                   Add Row
                 </Button>
 
-                <Button size="lg" onClick={calculateGPA} style={{ backgroundColor: '#132343', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', paddingLeft: '24px', paddingRight: '24px' }}>
+                <Button size="lg" onClick={calculateGPA} style={{ backgroundColor: '#132343', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', paddingLeft: '16px', paddingRight: '16px' }}>
                   Calculate GPA
                 </Button>
               </div>

@@ -39,7 +39,7 @@ export default function CourseList({ courses, onEdit, showSemester = false }: Co
 
   return (
     <>
-      <Card className="h-full">
+      <Card>
       <div className="space-y-4 divide-y divide-[var(--border)]">
         {courses.map((course) => (
           <div

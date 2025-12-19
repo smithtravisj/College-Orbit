@@ -205,11 +205,137 @@ export default function TasksPage() {
           </div>
 
           {/* Task list - 9 columns */}
-          <div className="col-span-12 lg:col-span-9 space-y-6" style={{ overflow: 'visible' }}>
+          <div className="col-span-12 lg:col-span-9 space-y-6" style={{ overflow: 'visible', height: 'fit-content' }}>
+
+            {/* Add Task Form */}
+            {showForm && (
+            <div style={{ marginBottom: '24px', overflow: 'visible' }}>
+              <Card>
+                <form onSubmit={handleSubmit} className="space-y-5" style={{ overflow: 'visible' }}>
+                <Input
+                  label="Task title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="What needs to be done?"
+                  required
+                />
+                <div style={{ paddingTop: '12px' }}>
+                  <Select
+                    label="Course (optional)"
+                    value={formData.courseId}
+                    onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
+                    options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
+                  />
+                </div>
+                <div style={{ paddingTop: '12px' }}>
+                  <Textarea
+                    label="Notes (optional)"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    placeholder="Add any additional notes..."
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4" style={{ overflow: 'visible' }}>
+                  <CalendarPicker
+                    label="Due Date (optional)"
+                    value={formData.dueDate}
+                    onChange={(date) => setFormData({ ...formData, dueDate: date })}
+                  />
+                  <TimePicker
+                    label="Due Time (optional)"
+                    value={formData.dueTime}
+                    onChange={(time) => setFormData({ ...formData, dueTime: time })}
+                  />
+                </div>
+                <div style={{ paddingTop: '20px' }}>
+                  <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links (optional)</label>
+                  <div className="space-y-3">
+                    {formData.links.map((link, idx) => (
+                      <div key={idx} className="flex gap-3 items-center">
+                        <Input
+                          label={idx === 0 ? 'Label' : ''}
+                          type="text"
+                          value={link.label}
+                          onChange={(e) => {
+                            const newLinks = [...formData.links];
+                            newLinks[idx].label = e.target.value;
+                            setFormData({ ...formData, links: newLinks });
+                          }}
+                          placeholder="e.g., Canvas"
+                          className="w-32"
+                        />
+                        <Input
+                          label={idx === 0 ? 'URL' : ''}
+                          type="text"
+                          value={link.url}
+                          onChange={(e) => {
+                            const newLinks = [...formData.links];
+                            newLinks[idx].url = e.target.value;
+                            setFormData({ ...formData, links: newLinks });
+                          }}
+                          placeholder="example.com or https://..."
+                          className="flex-1"
+                        />
+                        <div>
+                          {idx === 0 && (
+                            <label className="block text-sm font-medium text-[var(--text)] mb-2" style={{ height: '20px' }}></label>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                links: formData.links.filter((_, i) => i !== idx),
+                              });
+                            }}
+                            className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                            style={{ padding: '8px' }}
+                            title="Remove link"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Button variant="secondary" size="sm" type="button" onClick={() => {
+                    setFormData({
+                      ...formData,
+                      links: [...formData.links, { label: '', url: '' }],
+                    });
+                  }} style={{ marginTop: '12px', paddingLeft: '16px', paddingRight: '16px' }}>
+                    <Plus size={16} />
+                    Add Link
+                  </Button>
+                </div>
+                <div className="flex gap-3" style={{ paddingTop: '12px' }}>
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    style={{
+                      backgroundColor: '#132343',
+                      color: 'white',
+                      borderWidth: '1px',
+                      borderStyle: 'solid',
+                      borderColor: 'var(--border)',
+                      paddingLeft: '16px',
+                      paddingRight: '16px'
+                    }}
+                  >
+                    {editingId ? 'Save Changes' : 'Add Task'}
+                  </Button>
+                  <Button variant="secondary" type="button" onClick={cancelEdit}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+              </Card>
+            </div>
+          )}
 
           {/* Task List */}
           {filtered.length > 0 ? (
-            <Card className="h-full">
+            <Card>
               <div className="space-y-4 divide-y divide-[var(--border)]">
                 {filtered.map((t) => {
                   const course = courses.find((c) => c.id === t.courseId);
@@ -347,132 +473,6 @@ export default function TasksPage() {
                   : { label: 'Create a task', onClick: () => setShowForm(true) }
               }
             />
-          )}
-
-            {/* Add Task Form */}
-            {showForm && (
-            <div style={{ marginBottom: '24px', overflow: 'visible' }}>
-              <Card>
-                <form onSubmit={handleSubmit} className="space-y-5" style={{ overflow: 'visible' }}>
-                <Input
-                  label="Task title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="What needs to be done?"
-                  required
-                />
-                <div style={{ paddingTop: '12px' }}>
-                  <Select
-                    label="Course (optional)"
-                    value={formData.courseId}
-                    onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                    options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
-                  />
-                </div>
-                <div style={{ paddingTop: '12px' }}>
-                  <Textarea
-                    label="Notes (optional)"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="Add any additional notes..."
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4" style={{ overflow: 'visible' }}>
-                  <CalendarPicker
-                    label="Due Date (optional)"
-                    value={formData.dueDate}
-                    onChange={(date) => setFormData({ ...formData, dueDate: date })}
-                  />
-                  <TimePicker
-                    label="Due Time (optional)"
-                    value={formData.dueTime}
-                    onChange={(time) => setFormData({ ...formData, dueTime: time })}
-                  />
-                </div>
-                <div style={{ paddingTop: '20px' }}>
-                  <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links (optional)</label>
-                  <div className="space-y-3">
-                    {formData.links.map((link, idx) => (
-                      <div key={idx} className="flex gap-3 items-center">
-                        <Input
-                          label={idx === 0 ? 'Label' : ''}
-                          type="text"
-                          value={link.label}
-                          onChange={(e) => {
-                            const newLinks = [...formData.links];
-                            newLinks[idx].label = e.target.value;
-                            setFormData({ ...formData, links: newLinks });
-                          }}
-                          placeholder="e.g., Canvas"
-                          className="w-32"
-                        />
-                        <Input
-                          label={idx === 0 ? 'URL' : ''}
-                          type="text"
-                          value={link.url}
-                          onChange={(e) => {
-                            const newLinks = [...formData.links];
-                            newLinks[idx].url = e.target.value;
-                            setFormData({ ...formData, links: newLinks });
-                          }}
-                          placeholder="example.com or https://..."
-                          className="flex-1"
-                        />
-                        <div>
-                          {idx === 0 && (
-                            <label className="block text-sm font-medium text-[var(--text)] mb-2" style={{ height: '20px' }}></label>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                links: formData.links.filter((_, i) => i !== idx),
-                              });
-                            }}
-                            className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                            style={{ padding: '8px' }}
-                            title="Remove link"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <Button variant="secondary" size="sm" type="button" onClick={() => {
-                    setFormData({
-                      ...formData,
-                      links: [...formData.links, { label: '', url: '' }],
-                    });
-                  }} style={{ marginTop: '12px', paddingLeft: '16px', paddingRight: '16px' }}>
-                    <Plus size={16} />
-                    Add Link
-                  </Button>
-                </div>
-                <div className="flex gap-3" style={{ paddingTop: '12px' }}>
-                  <Button
-                    variant="primary"
-                    type="submit"
-                    style={{
-                      backgroundColor: '#132343',
-                      color: 'white',
-                      borderWidth: '1px',
-                      borderStyle: 'solid',
-                      borderColor: 'var(--border)',
-                      paddingLeft: '16px',
-                      paddingRight: '16px'
-                    }}
-                  >
-                    {editingId ? 'Save Changes' : 'Add Task'}
-                  </Button>
-                  <Button variant="secondary" type="button" onClick={cancelEdit}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-              </Card>
-            </div>
           )}
           </div>
         </div>

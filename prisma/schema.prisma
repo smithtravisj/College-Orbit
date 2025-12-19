@@ -19,7 +19,9 @@ model User {
   courses         Course[]
   deadlines       Deadline[]
   excludedDates   ExcludedDate[]
+  featureRequests FeatureRequest[]
   gpaEntries      GpaEntry[]
+  issueReports    IssueReport[]
   notifications   Notification[]
   settings        Settings?
   tasks           Task[]
@@ -136,6 +138,34 @@ model CollegeRequest {
   @@index([status])
 }
 
+model IssueReport {
+  id            String         @id @default(cuid())
+  userId        String
+  description   String         @db.Text
+  status        String         @default("pending")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model FeatureRequest {
+  id            String         @id @default(cuid())
+  userId        String
+  description   String         @db.Text
+  status        String         @default("pending")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@index([userId])
+  @@index([status])
+}
+
 model ExcludedDate {
   id          String   @id @default(cuid())
   userId      String
@@ -160,13 +190,19 @@ model Notification {
   type              String
   read              Boolean        @default(false)
   collegeRequestId  String?
+  issueReportId     String?
+  featureRequestId  String?
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
   user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   collegeRequest    CollegeRequest? @relation(fields: [collegeRequestId], references: [id], onDelete: Cascade)
+  issueReport       IssueReport?   @relation(fields: [issueReportId], references: [id], onDelete: Cascade)
+  featureRequest    FeatureRequest? @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([read])
   @@index([collegeRequestId])
+  @@index([issueReportId])
+  @@index([featureRequestId])
 }

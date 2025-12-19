@@ -224,7 +224,7 @@ export default function DeadlinesPage() {
           </div>
 
           {/* Deadlines list - 9 columns */}
-          <div className="col-span-12 lg:col-span-9 space-y-6" style={{ overflow: 'visible' }}>
+          <div className="col-span-12 lg:col-span-9 space-y-6" style={{ overflow: 'visible', height: 'fit-content' }}>
 
             {/* Add Deadline Form */}
             {showForm && (
@@ -354,7 +354,7 @@ export default function DeadlinesPage() {
 
           {/* Deadlines List */}
           {filtered.length > 0 ? (
-            <Card className="h-full">
+            <Card>
               <div className="space-y-4 divide-y divide-[var(--border)]">
                 {filtered.map((d) => {
                   const course = courses.find((c) => c.id === d.courseId);

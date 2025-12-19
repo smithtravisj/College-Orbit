@@ -103,7 +103,7 @@ export default function CoursesPage() {
               </div>
 
               <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
-                <label className="flex items-center gap-2 cursor-pointer" style={{ padding: '8px 16px' }}>
+                <label className="flex items-center gap-4 cursor-pointer" style={{ padding: '8px 16px' }}>
                   <input
                     type="checkbox"
                     checked={showEnded}
@@ -130,7 +130,7 @@ export default function CoursesPage() {
           </div>
 
           {/* Courses list - 9 columns */}
-          <div className="col-span-12 lg:col-span-9 space-y-6">
+          <div className="col-span-12 lg:col-span-9 space-y-6" style={{ height: 'fit-content' }}>
             {/* Add Course Form */}
             {isAdding && (
             <div style={{ marginBottom: '24px' }}>

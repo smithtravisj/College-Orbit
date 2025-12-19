@@ -157,10 +157,10 @@ export default function NotificationBell() {
   };
 
   const getNotificationIcon = (type: string) => {
-    if (type === 'college_request_approved') {
+    if (type === 'college_request_approved' || type === 'issue_report_resolved' || type === 'feature_request_implemented') {
       return <Check size={18} style={{ color: '#10b981' }} />;
     }
-    if (type === 'college_request_pending') {
+    if (type === 'college_request_pending' || type === 'issue_report_pending' || type === 'feature_request_pending' || type === 'feature_request' || type === 'issue_report') {
       return <Clock size={18} style={{ color: '#f59e0b' }} />;
     }
     return <X size={18} style={{ color: '#ef4444' }} />;
@@ -214,6 +214,11 @@ export default function NotificationBell() {
 
       {showDropdown && typeof window !== 'undefined' && createPortal(
         <>
+          <style>{`
+            .notification-dropdown::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
           {/* Close dropdown when clicking outside */}
           <div
             style={{
@@ -229,6 +234,7 @@ export default function NotificationBell() {
 
           {/* Dropdown */}
           <div
+            className="notification-dropdown"
             ref={dropdownRef}
             onClick={(e) => e.stopPropagation()}
             style={{
@@ -240,12 +246,14 @@ export default function NotificationBell() {
               maxWidth: '360px',
               backgroundColor: 'var(--panel)',
               border: '1px solid var(--border)',
-              borderRadius: '8px',
+              borderRadius: '20px',
               boxShadow: 'var(--shadow-lg)',
               maxHeight: '500px',
               overflow: 'auto',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
               zIndex: 2147483647,
-            }}
+            } as React.CSSProperties & { scrollbarWidth?: string; msOverflowStyle?: string }}
           >
             {/* Header */}
             <div
@@ -342,6 +350,11 @@ export default function NotificationBell() {
                                 fontSize: '14px',
                                 color: 'var(--text-muted)',
                                 lineHeight: '1.4',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
                               }}
                             >
                               {notification.message}
