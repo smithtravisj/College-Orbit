@@ -59,7 +59,7 @@ interface AppStore {
   updateSettings: (settings: Partial<Settings>) => Promise<void>;
 
   // Import/Export
-  exportData: () => AppData;
+  exportData: () => Promise<AppData>;
   importData: (data: AppData) => Promise<void>;
   deleteAllData: () => void;
 }
