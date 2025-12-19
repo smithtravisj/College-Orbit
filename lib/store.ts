@@ -94,17 +94,11 @@ const useAppStore = create<AppStore>((set, get) => ({
 
     set({ loading: true });
     try {
-      // First, fetch and set the user ID
-      const userRes = await fetch('/api/user');
-      if (userRes.ok) {
-        const { userId } = await userRes.json();
-        set({ userId });
-      }
-
-      // Load from localStorage
-      get().loadFromStorage();
+      // Load from database to get userId and all data
+      await get().loadFromDatabase();
     } catch (error) {
       console.error('Failed to initialize store:', error);
+      // Fallback to localStorage only
       get().loadFromStorage();
     } finally {
       set({ loading: false });
@@ -128,6 +122,12 @@ const useAppStore = create<AppStore>((set, get) => ({
       const settingsData = await settingsRes.json();
       const excludedDatesData = await excludedDatesRes.json();
       const gpaData = await gpaRes.json();
+
+      // Extract userId from settings response
+      const userId = settingsData.userId;
+      if (userId) {
+        set({ userId });
+      }
 
       const newData = {
         courses: coursesData.courses || [],

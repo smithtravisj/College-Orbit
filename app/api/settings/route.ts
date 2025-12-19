@@ -22,6 +22,7 @@ export async function GET(_request: NextRequest) {
     console.log('[GET /api/settings] Found settings:', settings);
 
     const response = {
+      userId: session.user.id,
       settings: settings || {
         dueSoonWindowDays: 7,
         weekStartsOn: 'Sun',
