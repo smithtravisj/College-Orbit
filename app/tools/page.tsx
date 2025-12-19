@@ -32,7 +32,7 @@ interface FormCourse {
 }
 
 export default function ToolsPage() {
-  const { settings, initializeStore } = useAppStore();
+  const { settings } = useAppStore();
   const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [formCourses, setFormCourses] = useState<FormCourse[]>([
@@ -58,8 +58,6 @@ export default function ToolsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await initializeStore();
-
         const [coursesRes, entriesRes] = await Promise.all([
           fetch('/api/courses'),
           fetch('/api/gpa-entries'),
@@ -93,7 +91,7 @@ export default function ToolsPage() {
     };
 
     fetchData();
-  }, [initializeStore]);
+  }, []);
 
   const getGradePoints = (grade: string, gradeType: 'letter' | 'percentage'): number => {
     if (gradeType === 'percentage') {
