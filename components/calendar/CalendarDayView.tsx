@@ -103,9 +103,7 @@ export default function CalendarDayView({
             <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>All Day</p>
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
               {exclusionType && (() => {
-                let markerColor = exclusionCourseId
-                  ? getEventColor({ courseId: exclusionCourseId } as any)
-                  : '#13234350';
+                let markerColor = getEventColor({ courseId: exclusionCourseId } as any);
 
                 return (
                   <div
@@ -116,7 +114,7 @@ export default function CalendarDayView({
                       paddingBottom: '4px',
                       borderRadius: 'var(--radius-control)',
                       fontSize: '0.875rem',
-                      backgroundColor: exclusionCourseId ? `${markerColor}50` : markerColor,
+                      backgroundColor: `${markerColor}50`,
                       color: 'white',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
