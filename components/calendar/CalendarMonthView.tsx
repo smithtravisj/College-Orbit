@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { Course, Task, Deadline, ExcludedDate } from '@/types';
 import {
   getDatesInMonth,
@@ -37,8 +37,47 @@ export default function CalendarMonthView({
   onSelectDate,
 }: CalendarMonthViewProps) {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [maxVisibleDots, setMaxVisibleDots] = useState<Map<string, number>>(new Map());
+  const dotsRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const dates = useMemo(() => getDatesInMonth(year, month), [year, month]);
+
+  // Measure dots containers to determine how many can fit
+  useEffect(() => {
+    const measureDots = () => {
+      const newMaxDots = new Map<string, number>();
+
+      dotsRefs.current.forEach((container, dateStr) => {
+        if (container && container.children.length > 0) {
+          const containerHeight = container.clientHeight;
+          const containerWidth = container.clientWidth;
+          const dotHeight = 6;
+          const dotWidth = 6;
+          const gap = 4;
+
+          // Estimate how many dots fit: (containerWidth + gap) / (dotWidth + gap) dots per row
+          const dotsPerRow = Math.floor((containerWidth + gap) / (dotWidth + gap));
+
+          // Estimate how many rows fit: containerHeight / (dotHeight + gap)
+          const rowsAvailable = Math.floor(containerHeight / (dotHeight + gap));
+
+          // Approximate max dots that fit
+          const maxFit = Math.max(dotsPerRow, dotsPerRow * rowsAvailable - 1); // -1 to leave room for overflow indicator
+
+          newMaxDots.set(dateStr, Math.max(maxFit, 1));
+        }
+      });
+
+      if (newMaxDots.size > 0) {
+        setMaxVisibleDots(newMaxDots);
+      }
+    };
+
+    // Measure on mount and when window resizes
+    measureDots();
+    window.addEventListener('resize', measureDots);
+    return () => window.removeEventListener('resize', measureDots);
+  }, []);
 
   const eventsByDate = useMemo(() => {
     const map = new Map<string, ReturnType<typeof getEventsForDate>>();
@@ -152,8 +191,13 @@ export default function CalendarMonthView({
               )}
 
               {/* Event indicators - colored dots */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', flex: 1, alignContent: 'flex-start', minHeight: 0, overflow: 'hidden', maxHeight: exclusionType === 'holiday' ? '14px' : 'none' }}>
-                {dayEvents.slice(0, exclusionType === 'holiday' ? 5 : 100).map((event) => {
+              <div
+                ref={(el) => {
+                  if (el) dotsRefs.current.set(dateStr, el);
+                }}
+                style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', flex: 1, alignContent: 'flex-start', minHeight: 0, overflow: 'hidden', maxHeight: exclusionType === 'holiday' ? '14px' : 'none' }}
+              >
+                {dayEvents.slice(0, exclusionType === 'holiday' ? 5 : (maxVisibleDots.get(dateStr) || 100)).map((event) => {
                   const color = getMonthViewColor(event);
 
                   return (
@@ -184,7 +228,7 @@ export default function CalendarMonthView({
                 })}
 
                 {/* +X more indicator */}
-                {dayEvents.length > (exclusionType === 'holiday' ? 5 : 100) && (
+                {dayEvents.length > (exclusionType === 'holiday' ? 5 : (maxVisibleDots.get(dateStr) || 100)) && (
                   <div style={{
                     fontSize: '0.6rem',
                     color: 'var(--text-muted)',
@@ -192,7 +236,7 @@ export default function CalendarMonthView({
                     lineHeight: 1,
                     paddingTop: '0.5px',
                   }}>
-                    +{dayEvents.length - (exclusionType === 'holiday' ? 5 : 100)}
+                    +{dayEvents.length - (exclusionType === 'holiday' ? 5 : (maxVisibleDots.get(dateStr) || 100))}
                   </div>
                 )}
               </div>
