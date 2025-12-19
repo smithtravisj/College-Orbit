@@ -192,12 +192,12 @@ export const byuhColorPalette: ColorPalette = {
 
   buttonSecondary: "#5a2535",
 
-  navActive: "#5a2535",
+  navActive: "#9e1b34",
 
   link: "#006c5b",
 
-  calendarNoSchool: "#9e1b34",
-  calendarCancelled: "#9e1b34",
+  calendarNoSchool: "#132343",
+  calendarCancelled: "#132343",
 
   brandPrimary: "#6a2a5b",
 
