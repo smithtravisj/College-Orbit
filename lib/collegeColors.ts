@@ -91,7 +91,7 @@ export const byuColorPalette: ColorPalette = {
 
   navActive: "#023182",
 
-  link: "#023182",
+  link: "#2563eb",
 
   calendarNoSchool: "#132343",
   calendarCancelled: "#132343",
