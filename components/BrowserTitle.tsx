@@ -8,14 +8,7 @@ export default function BrowserTitle() {
   const previousUniversityRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const allState = useAppStore.getState();
-    console.log('[BrowserTitle] Full store check - university:', university);
-    console.log('[BrowserTitle] Complete settings object:', allState.settings);
-
-    if (previousUniversityRef.current !== university) {
-      console.log('[BrowserTitle] CHANGE DETECTED: from', previousUniversityRef.current, '→', university);
-      previousUniversityRef.current = university;
-    }
+    previousUniversityRef.current = university;
 
     if (university) {
       const titles: Record<string, string> = {
@@ -27,13 +20,10 @@ export default function BrowserTitle() {
         'Utah Valley University': 'UVU Survival Tool',
       };
       const newTitle = titles[university] || 'College Survival Tool';
-      console.log('[BrowserTitle] Setting title to:', newTitle);
-      // Only update if title actually changed to avoid flashing
       if (document.title !== newTitle) {
         document.title = newTitle;
       }
     } else {
-      console.log('[BrowserTitle] No university, setting to College Survival Tool');
       if (document.title !== 'College Survival Tool') {
         document.title = 'College Survival Tool';
       }

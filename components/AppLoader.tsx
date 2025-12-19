@@ -8,17 +8,7 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const initialize = async () => {
-      const startTime = Date.now();
       await useAppStore.getState().initializeStore();
-
-      // Ensure loading screen displays for at least 800ms
-      const elapsedTime = Date.now() - startTime;
-      const minDisplayTime = 800;
-
-      if (elapsedTime < minDisplayTime) {
-        await new Promise(resolve => setTimeout(resolve, minDisplayTime - elapsedTime));
-      }
-
       setIsInitialized(true);
     };
     initialize();
@@ -40,29 +30,42 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
         zIndex: 9999
       }}>
         <style>{`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
+          @keyframes wave {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-16px); }
           }
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+          .dots-line {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
           }
-          .loader-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
+          .dot {
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 20px;
+            background-color: #152097;
+            animation: wave 1.2s ease-in-out infinite;
           }
+          .dot:nth-child(1) { animation-delay: 0s; }
+          .dot:nth-child(2) { animation-delay: 0.1s; }
+          .dot:nth-child(3) { animation-delay: 0.2s; }
+          .dot:nth-child(4) { animation-delay: 0.3s; }
+          .dot:nth-child(5) { animation-delay: 0.4s; }
+          .dot:nth-child(6) { animation-delay: 0.5s; }
+          .dot:nth-child(7) { animation-delay: 0.6s; }
         `}</style>
-        <div className="loader-spinner" />
-        <div style={{ color: 'var(--text)', fontSize: '16px', fontWeight: '500', letterSpacing: '0.05em' }}>
+        <div style={{
+          color: '#152097',
+          fontSize: '24px',
+          fontWeight: '600',
+          marginBottom: '48px'
+        }}>
           Loading
-          <span style={{ animation: 'pulse 1.5s ease-in-out infinite' }}>.</span>
-          <span style={{ animation: 'pulse 1.5s ease-in-out infinite 0.3s' }}>.</span>
-          <span style={{ animation: 'pulse 1.5s ease-in-out infinite 0.6s' }}>.</span>
+        </div>
+        <div className="dots-line">
+          {Array(7).fill(0).map((_, i) => (
+            <div key={i} className="dot" />
+          ))}
         </div>
       </div>
     );
