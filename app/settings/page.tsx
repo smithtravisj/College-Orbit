@@ -40,7 +40,7 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
-  const { updateSettings, exportData, importData, deleteAllData, initializeStore } = useAppStore();
+  const { updateSettings, exportData, importData, deleteAllData, initializeStore, loading } = useAppStore();
 
   useEffect(() => {
     const initialize = async () => {
@@ -52,6 +52,9 @@ export default function SettingsPage() {
     };
     initialize();
   }, [initializeStore]);
+
+  // Keep loading state visible until store is done loading
+  const isLoading = !mounted || loading;
 
   // Fetch college requests if user is admin
   useEffect(() => {
@@ -82,7 +85,7 @@ export default function SettingsPage() {
     }
   }, [dueSoonDays]);
 
-  if (!mounted) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-[var(--text-muted)]">Loading...</div>
