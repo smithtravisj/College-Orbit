@@ -181,24 +181,27 @@ export default function CalendarMonthView({
               </div>
 
               {/* No School indicator */}
-              {exclusionType === 'holiday' && (
-                <div
-                  style={{
-                    fontSize: '0.65rem',
-                    backgroundColor: '#13234350',
-                    color: 'white',
-                    padding: '2px 4px',
-                    borderRadius: '3px',
-                    marginBottom: '6px',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    fontWeight: 500,
-                  }}
-                >
-                  No School
-                </div>
-              )}
+              {exclusionType === 'holiday' && (() => {
+                const markerColor = getEventColor({ courseId: '' } as any);
+                return (
+                  <div
+                    style={{
+                      fontSize: '0.65rem',
+                      backgroundColor: `${markerColor}50`,
+                      color: 'white',
+                      padding: '2px 4px',
+                      borderRadius: '3px',
+                      marginBottom: '6px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      fontWeight: 500,
+                    }}
+                  >
+                    No School
+                  </div>
+                );
+              })()}
 
               {/* Event indicators - colored dots */}
               <div
