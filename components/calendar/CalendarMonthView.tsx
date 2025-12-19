@@ -24,6 +24,7 @@ interface CalendarMonthViewProps {
   allDeadlines?: Deadline[];
   excludedDates?: ExcludedDate[];
   onSelectDate: (date: Date) => void;
+  theme?: string;
 }
 
 export default function CalendarMonthView({
@@ -36,6 +37,7 @@ export default function CalendarMonthView({
   allDeadlines = [],
   excludedDates = [],
   onSelectDate,
+  theme = 'dark',
 }: CalendarMonthViewProps) {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [maxVisibleDots, setMaxVisibleDots] = useState<Map<string, number>>(new Map());
@@ -174,7 +176,7 @@ export default function CalendarMonthView({
                   paddingRight: '0px',
                   paddingTop: '0px',
                   paddingBottom: '0px',
-                  color: isTodayDate ? 'var(--accent)' : 'var(--text)',
+                  color: isTodayDate ? (theme === 'light' ? 'var(--accent)' : '#2563eb') : 'var(--text)',
                   lineHeight: 1,
                 }}
               >
