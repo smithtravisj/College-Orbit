@@ -263,8 +263,8 @@ export default function ToolsPage() {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-[12px] text-center text-sm font-medium text-white transition-colors hover:opacity-80"
-                    style={{ display: 'block', padding: '12px', backgroundColor: '#1a1a1a', border: '2px solid var(--border)' }}
+                    className="rounded-[12px] text-center text-sm font-medium transition-colors hover:opacity-80"
+                    style={{ display: 'block', padding: '12px', backgroundColor: settings.theme === 'light' ? 'var(--panel)' : 'var(--panel-2)', color: 'var(--text)', border: '2px solid var(--border)' }}
                   >
                     {link.label}
                   </a>
@@ -386,7 +386,7 @@ export default function ToolsPage() {
                   Add Row
                 </Button>
 
-                <Button size="lg" onClick={calculateGPA} style={{ backgroundColor: 'var(--button-secondary)', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', paddingLeft: '16px', paddingRight: '16px' }}>
+                <Button size="lg" onClick={calculateGPA} style={{ backgroundColor: 'var(--button-secondary)', color: settings.theme === 'light' ? '#000000' : 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', paddingLeft: '16px', paddingRight: '16px' }}>
                   Calculate GPA
                 </Button>
               </div>

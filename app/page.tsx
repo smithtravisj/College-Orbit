@@ -716,7 +716,7 @@ export default function Dashboard() {
                 })}
                 <div style={{ paddingTop: '16px', display: 'flex', gap: '8px' }}>
                   {!showTaskForm && (
-                    <Button variant="secondary" size="sm" onClick={() => setShowTaskForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '6px 12px' }}>
+                    <Button variant="secondary" size="sm" onClick={() => setShowTaskForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '6px 12px', color: settings.theme === 'light' ? '#000000 !important' : 'var(--text)' }}>
                       <Plus size={14} />
                       Add Task
                     </Button>
@@ -834,7 +834,7 @@ export default function Dashboard() {
                       size="sm"
                       style={{
                         backgroundColor: 'var(--button-secondary)',
-                        color: 'white',
+                        color: settings.theme === 'light' ? '#000000' : 'white',
                         borderWidth: '1px',
                         borderStyle: 'solid',
                         borderColor: 'var(--border)',
@@ -865,8 +865,8 @@ export default function Dashboard() {
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="rounded-[12px] text-center text-sm font-medium text-white transition-colors hover:opacity-80"
-                      style={{ display: 'block', padding: '12px', backgroundColor: '#1a1a1a', border: '2px solid var(--border)' }}
+                      className="rounded-[12px] text-center text-sm font-medium transition-colors hover:opacity-80"
+                      style={{ display: 'block', padding: '12px', backgroundColor: settings.theme === 'light' ? 'var(--panel)' : 'var(--panel-2)', color: 'var(--text)', border: '2px solid var(--border)' }}
                     >
                       {link.label}
                     </a>

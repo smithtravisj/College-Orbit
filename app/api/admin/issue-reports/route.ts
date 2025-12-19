@@ -25,6 +25,9 @@ export async function GET(req: NextRequest) {
     }
 
     const reports = await prisma.issueReport.findMany({
+      where: {
+        status: 'pending',
+      },
       include: {
         user: {
           select: {

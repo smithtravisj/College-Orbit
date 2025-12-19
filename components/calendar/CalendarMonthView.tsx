@@ -188,8 +188,8 @@ export default function CalendarMonthView({
                   <div
                     style={{
                       fontSize: '0.65rem',
-                      backgroundColor: `${markerColor}50`,
-                      color: 'white',
+                      backgroundColor: `${markerColor}80`,
+                      color: 'var(--calendar-event-text)',
                       padding: '2px 4px',
                       borderRadius: '3px',
                       marginBottom: '6px',

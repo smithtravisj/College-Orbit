@@ -47,6 +47,12 @@
   /* Focus rings */
   --focus-ring: 0 0 0 3px rgba(83, 155, 245, 0.3);
 
+  /* Today background highlight */
+  --today-bg: rgba(37, 99, 235, 0.12);
+
+  /* Week view today date color */
+  --week-view-today-date-color: #2563eb;
+
   /* Link color */
   --link: #2563eb;
 

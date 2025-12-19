@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import useAppStore from '@/lib/store';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -12,7 +12,7 @@ interface ExcludedDateFormProps {
 }
 
 export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
-  const { courses, addExcludedDate, addExcludedDateRange } = useAppStore();
+  const { courses, settings, addExcludedDate, addExcludedDateRange } = useAppStore();
   const [dateMode, setDateMode] = useState<'single' | 'range'>('single');
   const [form, setForm] = useState({
     courseId: '', // Empty string = global
@@ -23,6 +23,43 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  const selectStyle = useMemo(() => ({
+    width: '100%',
+    padding: '8px 32px 8px 12px',
+    borderRadius: '6px',
+    border: '1px solid var(--border)',
+    backgroundColor: settings.theme === 'light' ? 'var(--panel-2)' : 'var(--background)',
+    color: 'var(--text)',
+    fontSize: '14px',
+    cursor: 'pointer',
+    appearance: 'none' as const,
+    WebkitAppearance: 'none' as const,
+    MozAppearance: 'none' as const,
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${settings.theme === 'light' ? '%23000000' : '%23e6edf6'}' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat' as const,
+    backgroundPosition: 'right 16px center',
+    backgroundSize: '20px',
+  }), [settings.theme]);
+
+  const radioStyle = (isChecked: boolean) => ({
+    width: '18px',
+    height: '18px',
+    cursor: 'pointer',
+    appearance: 'none' as const,
+    WebkitAppearance: 'none' as const,
+    MozAppearance: 'none' as const,
+    backgroundColor: isChecked ? 'var(--button-secondary)' : 'var(--panel-2)',
+    backgroundImage: isChecked ? "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E\")" : 'none',
+    backgroundRepeat: 'no-repeat' as const,
+    backgroundPosition: 'center',
+    backgroundSize: '14px',
+    border: '1.5px solid var(--border)',
+    borderRadius: '4px',
+    outline: 'none' as const,
+    transition: 'all 150ms ease',
+    flexShrink: 0,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,23 +139,7 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
         <select
           value={form.courseId}
           onChange={(e) => setForm({ ...form, courseId: e.target.value })}
-          style={{
-            width: '100%',
-            padding: '8px 32px 8px 12px',
-            borderRadius: '6px',
-            border: '1px solid var(--border)',
-            backgroundColor: 'var(--background)',
-            color: 'var(--text)',
-            fontSize: '14px',
-            cursor: 'pointer',
-            appearance: 'none',
-            WebkitAppearance: 'none',
-            MozAppearance: 'none',
-            backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e6edf6' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")",
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'right 16px center',
-            backgroundSize: '20px',
-          }}
+          style={selectStyle}
         >
           <option value="">All Courses (School Holiday)</option>
           {courses.map((course) => (
@@ -140,24 +161,7 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
               value="single"
               checked={dateMode === 'single'}
               onChange={() => setDateMode('single')}
-              style={{
-                width: '18px',
-                height: '18px',
-                cursor: 'pointer',
-                appearance: 'none',
-                WebkitAppearance: 'none',
-                MozAppearance: 'none',
-                background: dateMode === 'single' ? 'var(--button-secondary)' : 'var(--panel-2)',
-                backgroundImage: dateMode === 'single' ? "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E\")" : 'none',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center',
-                backgroundSize: '14px',
-                border: '1.5px solid var(--border)',
-                borderRadius: '4px',
-                outline: 'none',
-                transition: 'all 150ms ease',
-                flexShrink: 0,
-              }}
+              style={radioStyle(dateMode === 'single')}
             />
             <span style={{ fontSize: '14px', color: 'var(--text)' }}>Single Date</span>
           </label>
@@ -167,24 +171,7 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
               value="range"
               checked={dateMode === 'range'}
               onChange={() => setDateMode('range')}
-              style={{
-                width: '18px',
-                height: '18px',
-                cursor: 'pointer',
-                appearance: 'none',
-                WebkitAppearance: 'none',
-                MozAppearance: 'none',
-                background: dateMode === 'range' ? 'var(--button-secondary)' : 'var(--panel-2)',
-                backgroundImage: dateMode === 'range' ? "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E\")" : 'none',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center',
-                backgroundSize: '14px',
-                border: '1.5px solid var(--border)',
-                borderRadius: '4px',
-                outline: 'none',
-                transition: 'all 150ms ease',
-                flexShrink: 0,
-              }}
+              style={radioStyle(dateMode === 'range')}
             />
             <span style={{ fontSize: '14px', color: 'var(--text)' }}>Date Range</span>
           </label>
@@ -254,7 +241,7 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
           disabled={isSubmitting}
           style={{
             backgroundColor: 'var(--button-secondary)',
-            color: '#ffffff',
+            color: settings.theme === 'light' ? '#000000' : '#ffffff',
             border: '1px solid var(--border)',
             padding: '8px 20px',
           }}

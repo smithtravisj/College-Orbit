@@ -40,6 +40,7 @@ export interface ColorPalette {
   // Calendar indicators (always fixed)
   calendarNoSchool: string;
   calendarCancelled: string;
+  calendarEventText: string;
 
   // Semantic colors
   success: string;
@@ -60,6 +61,12 @@ export interface ColorPalette {
 
   // Focus ring
   focusRing: string;
+
+  // Today background highlight (calendar views)
+  todayBg: string;
+
+  // Week view today date color
+  weekViewTodayDateColor: string;
 }
 
 /**
@@ -71,30 +78,31 @@ export const byuColorPalette: ColorPalette = {
   panel: "#141618",
   panel2: "#0f1114",
 
-  text: "#e6edf6",
-  textSecondary: "#adbac7",
-  muted: "#9aa7b7",
-  textMuted: "#768390",
-  textDisabled: "#545d68",
+  text: "#e8e8e8",
+  textSecondary: "#b8b8b8",
+  muted: "#8a8a8a",
+  textMuted: "#707070",
+  textDisabled: "#555555",
 
   border: "rgba(255, 255, 255, 0.08)",
   borderHover: "#2a3a3a",
-  borderActive: "#023182",
+  borderActive: "#002E5D",
   borderStrong: "rgba(255, 255, 255, 0.12)",
 
-  accent: "#023182",
-  accentHover: "#001a50",
-  accent2: "rgba(2, 49, 130, 0.15)",
-  ring: "rgba(2, 49, 130, 0.35)",
+  accent: "#002E5D",
+  accentHover: "#001f40",
+  accent2: "rgba(0, 46, 93, 0.15)",
+  ring: "rgba(0, 46, 93, 0.35)",
 
-  buttonSecondary: "#023182",
+  buttonSecondary: "#002E5D",
 
-  navActive: "#023182",
+  navActive: "#002E5D",
 
   link: "#2563eb",
 
-  calendarNoSchool: "#132343",
-  calendarCancelled: "#132343",
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "white",
 
   success: "#57ab5a",
   warning: "#c69026",
@@ -104,13 +112,17 @@ export const byuColorPalette: ColorPalette = {
   warningBg: "rgba(198, 144, 38, 0.1)",
   dangerBg: "rgba(229, 83, 75, 0.1)",
 
-  brandPrimary: "#1a2f8a",
+  brandPrimary: "#002E5D",
 
   shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.3)",
   shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.4)",
   shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
 
-  focusRing: "0 0 0 3px rgba(2, 49, 130, 0.3)",
+  focusRing: "0 0 0 3px rgba(0, 46, 93, 0.3)",
+
+  todayBg: "rgba(0, 46, 93, 0.12)",
+
+  weekViewTodayDateColor: "#0ea5e9",
 };
 
 /**
@@ -144,8 +156,9 @@ export const defaultColorPalette: ColorPalette = {
 
   link: "#2563eb",
 
-  calendarNoSchool: "#132343",
-  calendarCancelled: "#132343",
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "white",
 
   success: "#57ab5a",
   warning: "#c69026",
@@ -162,6 +175,10 @@ export const defaultColorPalette: ColorPalette = {
   shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
 
   focusRing: "0 0 0 3px rgba(74, 74, 74, 0.3)",
+
+  todayBg: "rgba(74, 74, 74, 0.12)",
+
+  weekViewTodayDateColor: "#e8e8e8",
 };
 
 /**
@@ -187,8 +204,8 @@ export const byuhColorPalette: ColorPalette = {
 
   accent: "#9e1b34",
   accentHover: "#7a1428",
-  accent2: "rgba(158, 27, 52, 0.12)",
-  ring: "rgba(158, 27, 52, 0.30)",
+  accent2: "rgba(158, 27, 52, 0.15)",
+  ring: "rgba(158, 27, 52, 0.35)",
 
   buttonSecondary: "#9e1b34",
 
@@ -196,10 +213,11 @@ export const byuhColorPalette: ColorPalette = {
 
   link: "#2563eb",
 
-  calendarNoSchool: "#132343",
-  calendarCancelled: "#132343",
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "white",
 
-  brandPrimary: "#6a2a5b",
+  brandPrimary: "#9e1b34",
 
   success: "#4a8a4d",
   warning: "#a67a1a",
@@ -213,7 +231,11 @@ export const byuhColorPalette: ColorPalette = {
   shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.5)",
   shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.6)",
 
-  focusRing: "0 0 0 3px rgba(37, 99, 235, 0.3)",
+  focusRing: "0 0 0 3px rgba(158, 27, 52, 0.3)",
+
+  todayBg: "rgba(158, 27, 52, 0.2)",
+
+  weekViewTodayDateColor: "#ff5577",
 };
 
 /**
@@ -234,24 +256,25 @@ export const byuidColorPalette: ColorPalette = {
 
   border: "rgba(255, 255, 255, 0.08)",
   borderHover: "#2a3a3a",
-  borderActive: "#214491",
+  borderActive: "#0063A5",
   borderStrong: "rgba(255, 255, 255, 0.12)",
 
-  accent: "#214491",
-  accentHover: "#1a3570",
-  accent2: "rgba(33, 68, 145, 0.15)",
-  ring: "rgba(33, 68, 145, 0.35)",
+  accent: "#0063A5",
+  accentHover: "#004A7A",
+  accent2: "rgba(0, 99, 165, 0.15)",
+  ring: "rgba(0, 99, 165, 0.35)",
 
-  buttonSecondary: "#214491",
+  buttonSecondary: "#0063A5",
 
-  navActive: "#214491",
+  navActive: "#0063A5",
 
   link: "#2563eb",
 
-  calendarNoSchool: "#132343",
-  calendarCancelled: "#132343",
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "white",
 
-  brandPrimary: "#214491",
+  brandPrimary: "#0063A5",
 
   success: "#57ab5a",
   warning: "#c69026",
@@ -265,7 +288,543 @@ export const byuidColorPalette: ColorPalette = {
   shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.4)",
   shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
 
-  focusRing: "0 0 0 3px rgba(33, 68, 145, 0.3)",
+  focusRing: "0 0 0 3px rgba(0, 99, 165, 0.3)",
+
+  todayBg: "rgba(0, 99, 165, 0.2)",
+
+  weekViewTodayDateColor: "#0ea5e9",
+};
+
+/**
+ * Utah Valley University Color Palette - Dark theme with UVU green accents
+ * Using official UVU brand color (dark palette)
+ * Primary: #275038 (UVU Green)
+ */
+export const uvuColorPalette: ColorPalette = {
+  bg: "#080a0a",
+  panel: "#141618",
+  panel2: "#0f1114",
+
+  text: "#e8e8e8",
+  textSecondary: "#b8b8b8",
+  muted: "#8a8a8a",
+  textMuted: "#707070",
+  textDisabled: "#555555",
+
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHover: "#2a3a3a",
+  borderActive: "#275038",
+  borderStrong: "rgba(255, 255, 255, 0.12)",
+
+  accent: "#275038",
+  accentHover: "#1d3827",
+  accent2: "rgba(39, 80, 56, 0.15)",
+  ring: "rgba(39, 80, 56, 0.35)",
+
+  buttonSecondary: "#275038",
+
+  navActive: "#275038",
+
+  link: "#2563eb",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "white",
+
+  success: "#57ab5a",
+  warning: "#c69026",
+  danger: "#e5534b",
+  dangerHover: "#d64941",
+  successBg: "rgba(87, 171, 90, 0.1)",
+  warningBg: "rgba(198, 144, 38, 0.1)",
+  dangerBg: "rgba(229, 83, 75, 0.1)",
+
+  brandPrimary: "#275038",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.3)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.4)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
+
+  focusRing: "0 0 0 3px rgba(39, 80, 56, 0.3)",
+
+  todayBg: "rgba(39, 80, 56, 0.2)",
+
+  weekViewTodayDateColor: "#52b788",
+};
+
+/**
+ * Utah State University Color Palette - Dark theme with USU navy accents
+ * Using official USU brand color (dark palette)
+ * Primary: #0F2439 (USU Navy)
+ */
+export const usuColorPalette: ColorPalette = {
+  bg: "#080a0a",
+  panel: "#141618",
+  panel2: "#0f1114",
+
+  text: "#e8e8e8",
+  textSecondary: "#b8b8b8",
+  muted: "#8a8a8a",
+  textMuted: "#707070",
+  textDisabled: "#555555",
+
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHover: "#2a3a3a",
+  borderActive: "#0F2439",
+  borderStrong: "rgba(255, 255, 255, 0.12)",
+
+  accent: "#0F2439",
+  accentHover: "#0A1827",
+  accent2: "rgba(15, 36, 57, 0.15)",
+  ring: "rgba(15, 36, 57, 0.35)",
+
+  buttonSecondary: "#0F2439",
+
+  navActive: "#0F2439",
+
+  link: "#2563eb",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "white",
+
+  success: "#57ab5a",
+  warning: "#c69026",
+  danger: "#e5534b",
+  dangerHover: "#d64941",
+  successBg: "rgba(87, 171, 90, 0.1)",
+  warningBg: "rgba(198, 144, 38, 0.1)",
+  dangerBg: "rgba(229, 83, 75, 0.1)",
+
+  brandPrimary: "#0F2439",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.3)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.4)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
+
+  focusRing: "0 0 0 3px rgba(15, 36, 57, 0.3)",
+
+  todayBg: "rgba(15, 36, 57, 0.2)",
+
+  weekViewTodayDateColor: "#0ea5e9",
+};
+
+/**
+ * UNC Chapel Hill Color Palette - Dark theme with UNC blue accents
+ * Using official UNC Chapel Hill brand color (dark palette)
+ * Primary: #007FAE (UNC Blue)
+ */
+export const uncColorPalette: ColorPalette = {
+  bg: "#080a0a",
+  panel: "#141618",
+  panel2: "#0f1114",
+
+  text: "#e8e8e8",
+  textSecondary: "#b8b8b8",
+  muted: "#8a8a8a",
+  textMuted: "#707070",
+  textDisabled: "#555555",
+
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHover: "#2a3a3a",
+  borderActive: "#007FAE",
+  borderStrong: "rgba(255, 255, 255, 0.12)",
+
+  accent: "#007FAE",
+  accentHover: "#006699",
+  accent2: "rgba(0, 127, 174, 0.15)",
+  ring: "rgba(0, 127, 174, 0.35)",
+
+  buttonSecondary: "#007FAE",
+
+  navActive: "#007FAE",
+
+  link: "#2563eb",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "white",
+
+  success: "#57ab5a",
+  warning: "#c69026",
+  danger: "#e5534b",
+  dangerHover: "#d64941",
+  successBg: "rgba(87, 171, 90, 0.1)",
+  warningBg: "rgba(198, 144, 38, 0.1)",
+  dangerBg: "rgba(229, 83, 75, 0.1)",
+
+  brandPrimary: "#007FAE",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.3)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.4)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
+
+  focusRing: "0 0 0 3px rgba(0, 127, 174, 0.3)",
+
+  todayBg: "rgba(0, 127, 174, 0.2)",
+
+  weekViewTodayDateColor: "#0ea5e9",
+};
+
+/**
+ * Light Mode Palettes - Inverted backgrounds and text with same accent colors
+ */
+
+/**
+ * BYU Light Color Palette
+ */
+export const byuLightPalette: ColorPalette = {
+  bg: "#f5f5f5",
+  panel: "#ffffff",
+  panel2: "#f0f1f3",
+
+  text: "#2a2a2a",
+  textSecondary: "#5a5a5a",
+  muted: "#5a5a5a",
+  textMuted: "#5a5a5a",
+  textDisabled: "#8a8a8a",
+
+  border: "rgba(0, 0, 0, 0.12)",
+  borderHover: "#d1d5db",
+  borderActive: "#6ab2ff",
+  borderStrong: "rgba(0, 0, 0, 0.16)",
+
+  accent: "#6ab2ff",
+  accentHover: "#5aa2ee",
+  accent2: "rgba(106, 178, 255, 0.15)",
+  ring: "rgba(106, 178, 255, 0.35)",
+
+  buttonSecondary: "#6ab2ff",
+  navActive: "#6ab2ff",
+  link: "#0ea5e9",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "#000000",
+
+  success: "#16a34a",
+  warning: "#d97706",
+  danger: "#dc2626",
+  dangerHover: "#b91c1c",
+  successBg: "rgba(22, 163, 74, 0.1)",
+  warningBg: "rgba(217, 119, 6, 0.1)",
+  dangerBg: "rgba(220, 38, 38, 0.1)",
+
+  brandPrimary: "#002E5D",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.1)",
+
+  focusRing: "0 0 0 3px rgba(106, 178, 255, 0.3)",
+  todayBg: "rgba(106, 178, 255, 0.2)",
+  weekViewTodayDateColor: "#0ea5e9",
+};
+
+/**
+ * Default/Neutral Light Color Palette
+ */
+export const defaultLightPalette: ColorPalette = {
+  bg: "#f5f5f5",
+  panel: "#ffffff",
+  panel2: "#f0f1f3",
+
+  text: "#2a2a2a",
+  textSecondary: "#5a5a5a",
+  muted: "#5a5a5a",
+  textMuted: "#5a5a5a",
+  textDisabled: "#8a8a8a",
+
+  border: "rgba(0, 0, 0, 0.12)",
+  borderHover: "#d1d5db",
+  borderActive: "#f0f1f3",
+  borderStrong: "rgba(0, 0, 0, 0.16)",
+
+  accent: "#f0f1f3",
+  accentHover: "#e0e1e3",
+  accent2: "rgba(240, 241, 243, 0.15)",
+  ring: "rgba(240, 241, 243, 0.35)",
+
+  buttonSecondary: "#f0f1f3",
+  navActive: "#f0f1f3",
+  link: "#0ea5e9",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "#000000",
+
+  success: "#16a34a",
+  warning: "#d97706",
+  danger: "#dc2626",
+  dangerHover: "#b91c1c",
+  successBg: "rgba(22, 163, 74, 0.1)",
+  warningBg: "rgba(217, 119, 6, 0.1)",
+  dangerBg: "rgba(220, 38, 38, 0.1)",
+
+  brandPrimary: "#404040",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.1)",
+
+  focusRing: "0 0 0 3px rgba(240, 241, 243, 0.3)",
+  todayBg: "rgba(240, 241, 243, 0.12)",
+  weekViewTodayDateColor: "#0ea5e9",
+};
+
+/**
+ * BYU Hawaii Light Color Palette
+ */
+export const byuhLightPalette: ColorPalette = {
+  bg: "#f5f5f5",
+  panel: "#ffffff",
+  panel2: "#f0f1f3",
+
+  text: "#2a2a2a",
+  textSecondary: "#5a5a5a",
+  muted: "#5a5a5a",
+  textMuted: "#5a5a5a",
+  textDisabled: "#8a8a8a",
+
+  border: "rgba(0, 0, 0, 0.12)",
+  borderHover: "#d1d5db",
+  borderActive: "#f5a6b4",
+  borderStrong: "rgba(0, 0, 0, 0.16)",
+
+  accent: "#f5a6b4",
+  accentHover: "#e596a4",
+  accent2: "rgba(245, 166, 180, 0.15)",
+  ring: "rgba(245, 166, 180, 0.35)",
+
+  buttonSecondary: "#f5a6b4",
+  navActive: "#f5a6b4",
+  link: "#0ea5e9",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "#000000",
+
+  success: "#16a34a",
+  warning: "#d97706",
+  danger: "#dc2626",
+  dangerHover: "#b91c1c",
+  successBg: "rgba(22, 163, 74, 0.1)",
+  warningBg: "rgba(217, 119, 6, 0.1)",
+  dangerBg: "rgba(220, 38, 38, 0.1)",
+
+  brandPrimary: "#f5a6b4",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.1)",
+
+  focusRing: "0 0 0 3px rgba(245, 166, 180, 0.3)",
+  todayBg: "rgba(245, 166, 180, 0.2)",
+  weekViewTodayDateColor: "#0ea5e9",
+};
+
+/**
+ * BYU Idaho Light Color Palette
+ */
+export const byuidLightPalette: ColorPalette = {
+  bg: "#f5f5f5",
+  panel: "#ffffff",
+  panel2: "#f0f1f3",
+
+  text: "#2a2a2a",
+  textSecondary: "#5a5a5a",
+  muted: "#5a5a5a",
+  textMuted: "#5a5a5a",
+  textDisabled: "#8a8a8a",
+
+  border: "rgba(0, 0, 0, 0.12)",
+  borderHover: "#d1d5db",
+  borderActive: "#7bbaff",
+  borderStrong: "rgba(0, 0, 0, 0.16)",
+
+  accent: "#7bbaff",
+  accentHover: "#6baaee",
+  accent2: "rgba(123, 186, 255, 0.15)",
+  ring: "rgba(123, 186, 255, 0.35)",
+
+  buttonSecondary: "#7bbaff",
+  navActive: "#7bbaff",
+  link: "#0ea5e9",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "#000000",
+
+  success: "#16a34a",
+  warning: "#d97706",
+  danger: "#dc2626",
+  dangerHover: "#b91c1c",
+  successBg: "rgba(22, 163, 74, 0.1)",
+  warningBg: "rgba(217, 119, 6, 0.1)",
+  dangerBg: "rgba(220, 38, 38, 0.1)",
+
+  brandPrimary: "#7bbaff",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.1)",
+
+  focusRing: "0 0 0 3px rgba(123, 186, 255, 0.3)",
+  todayBg: "rgba(123, 186, 255, 0.2)",
+  weekViewTodayDateColor: "#0ea5e9",
+};
+
+/**
+ * UVU Light Color Palette
+ */
+export const uvuLightPalette: ColorPalette = {
+  bg: "#f5f5f5",
+  panel: "#ffffff",
+  panel2: "#f0f1f3",
+
+  text: "#2a2a2a",
+  textSecondary: "#5a5a5a",
+  muted: "#5a5a5a",
+  textMuted: "#5a5a5a",
+  textDisabled: "#8a8a8a",
+
+  border: "rgba(0, 0, 0, 0.12)",
+  borderHover: "#d1d5db",
+  borderActive: "#7cc49a",
+  borderStrong: "rgba(0, 0, 0, 0.16)",
+
+  accent: "#7cc49a",
+  accentHover: "#92d0a8",
+  accent2: "rgba(124, 196, 154, 0.15)",
+  ring: "rgba(124, 196, 154, 0.35)",
+
+  buttonSecondary: "#7cc49a",
+  navActive: "#7cc49a",
+  link: "#0ea5e9",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "#000000",
+
+  success: "#16a34a",
+  warning: "#d97706",
+  danger: "#dc2626",
+  dangerHover: "#b91c1c",
+  successBg: "rgba(22, 163, 74, 0.1)",
+  warningBg: "rgba(217, 119, 6, 0.1)",
+  dangerBg: "rgba(220, 38, 38, 0.1)",
+
+  brandPrimary: "#7cc49a",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.1)",
+
+  focusRing: "0 0 0 3px rgba(124, 196, 154, 0.3)",
+  todayBg: "rgba(124, 196, 154, 0.12)",
+  weekViewTodayDateColor: "#0ea5e9",
+};
+
+/**
+ * USU Light Color Palette
+ */
+export const usuLightPalette: ColorPalette = {
+  bg: "#f5f5f5",
+  panel: "#ffffff",
+  panel2: "#f0f1f3",
+
+  text: "#2a2a2a",
+  textSecondary: "#5a5a5a",
+  muted: "#5a5a5a",
+  textMuted: "#5a5a5a",
+  textDisabled: "#8a8a8a",
+
+  border: "rgba(0, 0, 0, 0.12)",
+  borderHover: "#d1d5db",
+  borderActive: "#8ac8ff",
+  borderStrong: "rgba(0, 0, 0, 0.16)",
+
+  accent: "#8ac8ff",
+  accentHover: "#9ed4ff",
+  accent2: "rgba(138, 200, 255, 0.15)",
+  ring: "rgba(138, 200, 255, 0.35)",
+
+  buttonSecondary: "#8ac8ff",
+  navActive: "#8ac8ff",
+  link: "#0ea5e9",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "#000000",
+
+  success: "#16a34a",
+  warning: "#d97706",
+  danger: "#dc2626",
+  dangerHover: "#b91c1c",
+  successBg: "rgba(22, 163, 74, 0.1)",
+  warningBg: "rgba(217, 119, 6, 0.1)",
+  dangerBg: "rgba(220, 38, 38, 0.1)",
+
+  brandPrimary: "#8ac8ff",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.1)",
+
+  focusRing: "0 0 0 3px rgba(138, 200, 255, 0.3)",
+  todayBg: "rgba(138, 200, 255, 0.12)",
+  weekViewTodayDateColor: "#0ea5e9",
+};
+
+/**
+ * UNC Light Color Palette
+ */
+export const uncLightPalette: ColorPalette = {
+  bg: "#f5f5f5",
+  panel: "#ffffff",
+  panel2: "#f0f1f3",
+
+  text: "#2a2a2a",
+  textSecondary: "#5a5a5a",
+  muted: "#5a5a5a",
+  textMuted: "#5a5a5a",
+  textDisabled: "#8a8a8a",
+
+  border: "rgba(0, 0, 0, 0.12)",
+  borderHover: "#d1d5db",
+  borderActive: "#82ccff",
+  borderStrong: "rgba(0, 0, 0, 0.16)",
+
+  accent: "#82ccff",
+  accentHover: "#72bcee",
+  accent2: "rgba(130, 204, 255, 0.15)",
+  ring: "rgba(130, 204, 255, 0.35)",
+
+  buttonSecondary: "#82ccff",
+  navActive: "#82ccff",
+  link: "#0ea5e9",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "#000000",
+
+  success: "#16a34a",
+  warning: "#d97706",
+  danger: "#dc2626",
+  dangerHover: "#b91c1c",
+  successBg: "rgba(22, 163, 74, 0.1)",
+  warningBg: "rgba(217, 119, 6, 0.1)",
+  dangerBg: "rgba(220, 38, 38, 0.1)",
+
+  brandPrimary: "#82ccff",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.1)",
+
+  focusRing: "0 0 0 3px rgba(130, 204, 255, 0.3)",
+  todayBg: "rgba(130, 204, 255, 0.2)",
+  weekViewTodayDateColor: "#007FAE",
 };
 
 /**
@@ -276,9 +835,22 @@ export const collegeColorPalettes: Record<string, ColorPalette> = {
   "Brigham Young University": byuColorPalette,
   "Brigham Young University Hawaii": byuhColorPalette,
   "Brigham Young University Idaho": byuidColorPalette,
-  "UNC Chapel Hill": byuColorPalette,
-  "Utah State University": byuColorPalette,
-  "Utah Valley University": byuColorPalette,
+  "UNC Chapel Hill": uncColorPalette,
+  "Utah State University": usuColorPalette,
+  "Utah Valley University": uvuColorPalette,
+};
+
+/**
+ * Light mode college color palette map
+ * Maps university names to their light color palettes
+ */
+export const collegeColorPalettesLight: Record<string, ColorPalette> = {
+  "Brigham Young University": byuLightPalette,
+  "Brigham Young University Hawaii": byuhLightPalette,
+  "Brigham Young University Idaho": byuidLightPalette,
+  "UNC Chapel Hill": uncLightPalette,
+  "Utah State University": usuLightPalette,
+  "Utah Valley University": uvuLightPalette,
 };
 
 /**
@@ -344,18 +916,42 @@ export function applyColorPalette(palette: ColorPalette): void {
 
   // Focus ring
   root.style.setProperty("--focus-ring", palette.focusRing);
+
+  // Today background
+  root.style.setProperty("--today-bg", palette.todayBg);
+
+  // Week view today date color
+  root.style.setProperty("--week-view-today-date-color", palette.weekViewTodayDateColor);
 }
 
 /**
  * Get the color palette for a college
- * Returns default (neutral) palette if no college selected
+ * Returns appropriate palette based on college and theme
+ * Returns default palette if no college selected
  * Returns BYU palette as fallback if college not found
  */
 export function getCollegeColorPalette(
-  collegeName: string | null
+  collegeName: string | null,
+  theme: 'light' | 'dark' | 'system' = 'dark'
 ): ColorPalette {
-  if (!collegeName) {
-    return defaultColorPalette;
+  // Resolve system theme to actual preference
+  let actualTheme = theme;
+  if (theme === 'system' && typeof window !== 'undefined') {
+    actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
   }
-  return collegeColorPalettes[collegeName] || byuColorPalette;
+
+  const isLight = actualTheme === 'light';
+
+  // No college selected
+  if (!collegeName) {
+    return isLight ? defaultLightPalette : defaultColorPalette;
+  }
+
+  // Get appropriate palette based on theme
+  const darkPalette = collegeColorPalettes[collegeName] || byuColorPalette;
+  const lightPalette = collegeColorPalettesLight[collegeName] || byuLightPalette;
+
+  return isLight ? lightPalette : darkPalette;
 }

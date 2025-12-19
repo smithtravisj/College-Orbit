@@ -333,7 +333,7 @@ export default function DeadlinesPage() {
                     type="submit"
                     style={{
                       backgroundColor: 'var(--button-secondary)',
-                      color: 'white',
+                      color: settings.theme === 'light' ? '#000000' : 'white',
                       borderWidth: '1px',
                       borderStyle: 'solid',
                       borderColor: 'var(--border)',

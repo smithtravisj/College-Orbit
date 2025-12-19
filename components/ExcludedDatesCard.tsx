@@ -9,7 +9,7 @@ import ExcludedDateForm from '@/components/ExcludedDateForm';
 import { Plus, Trash2 } from 'lucide-react';
 
 export default function ExcludedDatesCard() {
-  const { excludedDates, courses, deleteExcludedDate } = useAppStore();
+  const { excludedDates, courses, settings, deleteExcludedDate } = useAppStore();
   const [showForm, setShowForm] = useState(false);
   const [isDeleting, setIsDeleting] = useState<Set<string>>(new Set());
 
@@ -107,7 +107,7 @@ export default function ExcludedDatesCard() {
           onClick={() => setShowForm(!showForm)}
           style={{
             backgroundColor: 'var(--button-secondary)',
-            color: '#ffffff',
+            color: settings.theme === 'light' ? '#000000' : '#ffffff',
             border: '1px solid var(--border)',
             padding: '8px 16px',
             display: 'flex',
@@ -166,7 +166,7 @@ export default function ExcludedDatesCard() {
                       </span>
                     )}
                   </div>
-                  <p style={{ fontSize: '14px', fontWeight: '500', margin: 0, color: '#e6edf6' }}>
+                  <p style={{ fontSize: '14px', fontWeight: '500', margin: 0, color: settings.theme === 'light' ? 'var(--text)' : '#e6edf6' }}>
                     {group.description}
                   </p>
                 </div>

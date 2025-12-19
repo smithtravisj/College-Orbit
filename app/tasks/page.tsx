@@ -28,7 +28,7 @@ export default function TasksPage() {
   });
   const [filter, setFilter] = useState('all');
 
-  const { courses, tasks, addTask, updateTask, deleteTask, toggleTaskDone, initializeStore } = useAppStore();
+  const { courses, tasks, settings, addTask, updateTask, deleteTask, toggleTaskDone, initializeStore } = useAppStore();
 
   useEffect(() => {
     initializeStore();
@@ -314,7 +314,7 @@ export default function TasksPage() {
                     type="submit"
                     style={{
                       backgroundColor: 'var(--button-secondary)',
-                      color: 'white',
+                      color: settings.theme === 'light' ? '#000000' : 'white',
                       borderWidth: '1px',
                       borderStyle: 'solid',
                       borderColor: 'var(--border)',

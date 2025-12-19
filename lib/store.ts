@@ -6,7 +6,7 @@ import { applyColorPalette, getCollegeColorPalette } from '@/lib/collegeColors';
 const DEFAULT_SETTINGS: Settings = {
   dueSoonWindowDays: 7,
   weekStartsOn: 'Sun',
-  theme: 'system',
+  theme: 'dark',
   enableNotifications: false,
   university: null,
 };
@@ -141,8 +141,14 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       // Apply college colors based on loaded settings
       if (typeof window !== 'undefined') {
-        const palette = getCollegeColorPalette(newData.settings?.university || null);
+        const theme = newData.settings?.theme || 'dark';
+        const palette = getCollegeColorPalette(
+          newData.settings?.university || null,
+          theme
+        );
         applyColorPalette(palette);
+        // Store theme in localStorage for loading screen
+        localStorage.setItem('app-theme', theme);
       }
 
       // Save fresh data to localStorage with user-specific key
@@ -177,8 +183,14 @@ const useAppStore = create<AppStore>((set, get) => ({
           gpaEntries: data.gpaEntries || [],
         });
         // Apply college colors based on loaded settings
-        const palette = getCollegeColorPalette(settings.university || null);
+        const theme = settings.theme || 'dark';
+        const palette = getCollegeColorPalette(
+          settings.university || null,
+          theme
+        );
         applyColorPalette(palette);
+        // Store theme in localStorage for loading screen
+        localStorage.setItem('app-theme', theme);
       }
     } catch (error) {
       console.error('[loadFromStorage] Failed:', error);
@@ -690,10 +702,17 @@ const useAppStore = create<AppStore>((set, get) => ({
         settings: { ...state.settings, ...settings },
       }));
 
-      // Apply colors if college changed
-      if (settings.university !== undefined && typeof window !== 'undefined') {
-        const palette = getCollegeColorPalette(settings.university);
+      // Apply colors if college or theme changed
+      if ((settings.university !== undefined || settings.theme !== undefined) && typeof window !== 'undefined') {
+        const currentState = get().settings;
+        const newTheme = settings.theme !== undefined ? settings.theme : (currentState.theme || 'dark');
+        const palette = getCollegeColorPalette(
+          settings.university !== undefined ? settings.university : (currentState.university || null),
+          newTheme
+        );
         applyColorPalette(palette);
+        // Store theme in localStorage for loading screen to access
+        localStorage.setItem('app-theme', newTheme);
       }
 
       // Update localStorage with new settings

@@ -121,7 +121,7 @@ export default function CalendarWeekView({
                 paddingTop: '12px',
                 paddingBottom: '12px',
                 textAlign: 'center',
-                backgroundColor: isTodayDate ? 'var(--accent-2)' : 'var(--panel-2)',
+                backgroundColor: isTodayDate ? 'var(--accent-2)' : 'var(--panel)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '0px',
@@ -137,7 +137,7 @@ export default function CalendarWeekView({
       </div>
 
       {/* All-day events section */}
-      <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)', backgroundColor: 'var(--panel-2)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)', backgroundColor: 'var(--panel)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
         {/* All-day label */}
         <div style={{ borderRight: '1px solid var(--border)', paddingLeft: '8px', paddingRight: '8px', paddingTop: '6px', paddingBottom: '6px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
           All Day
@@ -154,7 +154,7 @@ export default function CalendarWeekView({
 
           // Get course code and color for cancelled classes
           let courseCode = '';
-          let exclusionCourseId = '';
+          let exclusionCourseId: string | null = null;
           if (exclusionType === 'class-cancelled') {
             const exclusion = excludedDates.find((ex) => {
               const exDateOnly = ex.date.includes('T') ? ex.date.split('T')[0] : ex.date;
@@ -163,7 +163,7 @@ export default function CalendarWeekView({
             if (exclusion) {
               const course = courses.find(c => c.id === exclusion.courseId);
               courseCode = course?.code || '';
-              exclusionCourseId = exclusion.courseId;
+              exclusionCourseId = exclusion.courseId || null;
             }
           }
 
@@ -186,7 +186,7 @@ export default function CalendarWeekView({
                 flexDirection: 'column',
                 gap: '2px',
                 minHeight: allDayEvents.length > 0 || exclusionType ? '32px' : '24px',
-                backgroundColor: isTodayDate ? 'var(--accent2)' : undefined,
+                backgroundColor: isTodayDate ? 'var(--today-bg)' : undefined,
                 overflow: 'hidden',
               }}
             >
@@ -203,8 +203,8 @@ export default function CalendarWeekView({
                       paddingBottom: '4px',
                       marginRight: '4px',
                       borderRadius: '2px',
-                      backgroundColor: `${markerColor}50`,
-                      color: 'white',
+                      backgroundColor: `${markerColor}80`,
+                      color: 'var(--calendar-event-text)',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
@@ -239,8 +239,8 @@ export default function CalendarWeekView({
                       paddingBottom: '4px',
                       marginRight: '4px',
                       borderRadius: '2px',
-                      backgroundColor: `${color}50`,
-                      color: 'white',
+                      backgroundColor: `${color}80`,
+                      color: 'var(--calendar-event-text)',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
@@ -288,7 +288,7 @@ export default function CalendarWeekView({
       <div ref={scrollContainerRef} style={{ flex: 1, overflow: 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)' }}>
           {/* Time column */}
-          <div style={{ borderRight: '1px solid var(--border)', paddingTop: '8px', backgroundColor: 'var(--panel-2)', flexShrink: 0 }}>
+          <div style={{ borderRight: '1px solid var(--border)', paddingTop: '8px', backgroundColor: 'var(--panel)', flexShrink: 0 }}>
             {hours.map((hour) => {
               const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
               const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -327,7 +327,7 @@ export default function CalendarWeekView({
                 style={{
                   position: 'relative',
                   borderRight: '1px solid var(--border)',
-                  backgroundColor: isTodayDate ? 'var(--accent2)' : 'var(--panel)',
+                  backgroundColor: isTodayDate ? 'var(--today-bg)' : 'var(--panel)',
                   paddingRight: isLastDay ? '8px' : undefined,
                 }}
               >
@@ -387,7 +387,7 @@ export default function CalendarWeekView({
                         zIndex: 10,
                         top: `${top}px`,
                         height: `${height}px`,
-                        backgroundColor: `${color}60`,
+                        backgroundColor: `${color}80`,
                         boxSizing: 'border-box',
                       }}
                       onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
@@ -460,7 +460,7 @@ export default function CalendarWeekView({
                           zIndex: 9,
                           top: `${top}px`,
                           height: `${height}px`,
-                          backgroundColor: `${color}50`,
+                          backgroundColor: `${color}80`,
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'center',
@@ -573,8 +573,8 @@ export default function CalendarWeekView({
                           paddingTop: '4px',
                           paddingBottom: '4px',
                           borderRadius: '2px',
-                          backgroundColor: `${color}50`,
-                          color: 'white',
+                          backgroundColor: `${color}80`,
+                          color: 'var(--calendar-event-text)',
                           cursor: 'pointer',
                         }}
                         onClick={() => {

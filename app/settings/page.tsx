@@ -51,6 +51,7 @@ export default function SettingsPage() {
   const [adminTab, setAdminTab] = useState<'college' | 'issues' | 'features'>('college');
   const [dueSoonDays, setDueSoonDays] = useState<number | string>(7);
   const [university, setUniversity] = useState<string | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | 'system'>('dark');
   const [collegeRequestName, setCollegeRequestName] = useState('');
   const [collegeRequestMessage, setCollegeRequestMessage] = useState('');
   const [collegeRequestLoading, setCollegeRequestLoading] = useState(false);
@@ -85,8 +86,9 @@ export default function SettingsPage() {
     // Store is already initialized globally by AppLoader
     setDueSoonDays(settings.dueSoonWindowDays);
     setUniversity(settings.university || null);
+    setSelectedTheme(settings.theme || 'dark');
     setMounted(true);
-  }, [settings.dueSoonWindowDays, settings.university]);
+  }, [settings.dueSoonWindowDays, settings.university, settings.theme]);
 
   // Fetch college requests and issue reports if user is admin
   useEffect(() => {
@@ -352,7 +354,7 @@ export default function SettingsPage() {
         return;
       }
 
-      setIssueReportMessage('✓ ' + data.message);
+      setIssueReportMessage('✓ Issue report submitted successfully');
       setIssueDescription('');
       setIssueReportLoading(false);
       setTimeout(() => setIssueReportMessage(''), 3000);
@@ -458,7 +460,7 @@ export default function SettingsPage() {
         return;
       }
 
-      setFeatureRequestMessage('✓ ' + data.message);
+      setFeatureRequestMessage('✓ Feature request submitted successfully');
       setFeatureDescription('');
       setFeatureRequestLoading(false);
       setTimeout(() => setFeatureRequestMessage(''), 3000);
@@ -594,7 +596,7 @@ export default function SettingsPage() {
                   {collegeRequests.length === 0 ? (
                     <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>No pending college requests</p>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-6">
                     {collegeRequests.map((request) => (
                       <div
                         key={request.id}
@@ -606,6 +608,7 @@ export default function SettingsPage() {
                           backgroundColor: 'var(--panel-2)',
                           borderRadius: '6px',
                           border: '1px solid var(--border)',
+                          marginBottom: '12px',
                         }}
                       >
                         <div>
@@ -623,7 +626,7 @@ export default function SettingsPage() {
                               style={{
                                 padding: '6px 12px',
                                 fontSize: '14px',
-                                backgroundColor: '#063d1d',
+                                backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '8px',
@@ -639,7 +642,7 @@ export default function SettingsPage() {
                             style={{
                               padding: '6px 12px',
                               fontSize: '14px',
-                              backgroundColor: '#660000',
+                              backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                               color: 'white',
                               border: 'none',
                               borderRadius: '8px',
@@ -663,7 +666,7 @@ export default function SettingsPage() {
                   {issueReports.length === 0 ? (
                     <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>No pending issue reports</p>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-6">
                     {issueReports.map((report) => (
                       <div
                         key={report.id}
@@ -674,6 +677,7 @@ export default function SettingsPage() {
                         style={{
                           display: 'flex',
                           justifyContent: 'space-between',
+                          marginBottom: '12px',
                           alignItems: 'center',
                           padding: '12px',
                           backgroundColor: 'var(--panel-2)',
@@ -708,7 +712,7 @@ export default function SettingsPage() {
                             style={{
                               padding: '6px 12px',
                               fontSize: '14px',
-                              backgroundColor: '#063d1d',
+                              backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
                               color: 'white',
                               border: 'none',
                               borderRadius: '8px',
@@ -726,7 +730,7 @@ export default function SettingsPage() {
                             style={{
                               padding: '6px 12px',
                               fontSize: '14px',
-                              backgroundColor: '#660000',
+                              backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                               color: 'white',
                               border: 'none',
                               borderRadius: '8px',
@@ -750,7 +754,7 @@ export default function SettingsPage() {
                   {featureRequests.length === 0 ? (
                     <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>No pending feature requests</p>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-6">
                     {featureRequests.map((request) => (
                       <div
                         key={request.id}
@@ -768,6 +772,7 @@ export default function SettingsPage() {
                           border: '1px solid var(--border)',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
+                          marginBottom: '12px',
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.backgroundColor = 'var(--panel-3)';
@@ -795,7 +800,7 @@ export default function SettingsPage() {
                             style={{
                               padding: '6px 12px',
                               fontSize: '14px',
-                              backgroundColor: '#063d1d',
+                              backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
                               color: 'white',
                               border: 'none',
                               borderRadius: '8px',
@@ -813,7 +818,7 @@ export default function SettingsPage() {
                             style={{
                               padding: '6px 12px',
                               fontSize: '14px',
-                              backgroundColor: '#660000',
+                              backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                               color: 'white',
                               border: 'none',
                               borderRadius: '8px',
@@ -843,6 +848,73 @@ export default function SettingsPage() {
           {/* University & Due Soon Window */}
           <Card title="Appearance">
             <div className="space-y-5">
+              {/* Theme Selector */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text)]"
+                       style={{ marginBottom: '8px' }}>
+                  Theme
+                </label>
+                <p className="text-sm text-[var(--text-muted)]"
+                   style={{ marginBottom: '12px' }}>
+                  Choose your preferred color scheme
+                </p>
+                <div style={{
+                  display: 'flex',
+                  gap: '8px',
+                  padding: '4px',
+                  backgroundColor: 'var(--panel-2)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border)',
+                }}>
+                  {(['light', 'dark', 'system'] as const).map((themeOption) => (
+                    <button
+                      key={themeOption}
+                      onClick={() => {
+                        setSelectedTheme(themeOption);
+                        updateSettings({ theme: themeOption });
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '8px 16px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        color: selectedTheme === themeOption
+                          ? 'var(--text)'
+                          : 'var(--text-muted)',
+                        backgroundColor: selectedTheme === themeOption
+                          ? 'var(--panel)'
+                          : 'transparent',
+                        border: selectedTheme === themeOption
+                          ? '1px solid var(--border)'
+                          : '1px solid transparent',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedTheme !== themeOption) {
+                          e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedTheme !== themeOption) {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }
+                      }}
+                    >
+                      {themeOption.charAt(0).toUpperCase() + themeOption.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div style={{
+                borderTop: '1px solid var(--border)',
+                marginTop: '24px',
+                marginBottom: '24px'
+              }} />
+
               {/* University Picker */}
               <div>
                 <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
@@ -873,7 +945,7 @@ export default function SettingsPage() {
                     cursor: 'pointer',
                     transition: 'none',
                     appearance: 'none',
-                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${selectedTheme === 'light' ? '%23666666' : 'white'}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'right 16px center',
                     backgroundSize: '18px',
@@ -932,7 +1004,7 @@ export default function SettingsPage() {
                     paddingLeft: '16px',
                     paddingRight: '16px',
                     backgroundColor: 'var(--button-secondary)',
-                    color: 'white',
+                    color: settings.theme === 'light' ? '#000000' : 'white',
                     borderWidth: '1px',
                     borderStyle: 'solid',
                     borderColor: 'var(--border)',
@@ -1004,7 +1076,7 @@ export default function SettingsPage() {
                     setSaveMessage('Please enter a number between 1 and 30');
                     setTimeout(() => setSaveMessage(''), 3000);
                   }
-                }} style={{ marginTop: '16px', paddingLeft: '16px', paddingRight: '16px', backgroundColor: 'var(--button-secondary)', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                }} style={{ marginTop: '16px', paddingLeft: '16px', paddingRight: '16px', backgroundColor: 'var(--button-secondary)', color: settings.theme === 'light' ? '#000000' : 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                   Save
                 </Button>
                 {saveMessage && (
@@ -1014,21 +1086,21 @@ export default function SettingsPage() {
             </div>
           </Card>
 
-          {/* Report an Issue & Request a Feature */}
+          {/* Report an Issue & Request a Feature/Change */}
           <Card title="Feedback">
             <div className="space-y-4">
-              {/* Request a Feature */}
+              {/* Request a Feature/Change */}
               <div>
                 <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
-                  Request a Feature
+                  Request a Feature/Change
                 </label>
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                  Have an idea for a new feature? We'd love to hear it!
+                  Have an idea for a new feature or change? We'd love to hear it!
                 </p>
                 <textarea
                   value={featureDescription}
                   onChange={(e) => setFeatureDescription(e.target.value)}
-                  placeholder="Describe the feature you'd like to see..."
+                  placeholder="Describe the feature or change you'd like to see..."
                   maxLength={1000}
                   style={{
                     width: '100%',
@@ -1057,7 +1129,7 @@ export default function SettingsPage() {
                     paddingLeft: '16px',
                     paddingRight: '16px',
                     backgroundColor: 'var(--button-secondary)',
-                    color: 'white',
+                    color: settings.theme === 'light' ? '#000000' : 'white',
                     borderWidth: '1px',
                     borderStyle: 'solid',
                     borderColor: 'var(--border)',
@@ -1065,7 +1137,7 @@ export default function SettingsPage() {
                     marginBottom: '20px'
                   }}
                 >
-                  {featureRequestLoading ? 'Submitting...' : 'Request Feature'}
+                  {featureRequestLoading ? 'Submitting...' : 'Request Feature/Change'}
                 </Button>
                 {featureRequestMessage && (
                   <p style={{ marginTop: '8px', marginBottom: '20px', fontSize: '14px', color: featureRequestMessage.includes('✗') ? 'var(--danger)' : 'var(--success)' }}>{featureRequestMessage}</p>
@@ -1115,7 +1187,7 @@ export default function SettingsPage() {
                     paddingLeft: '16px',
                     paddingRight: '16px',
                     backgroundColor: 'var(--button-secondary)',
-                    color: 'white',
+                    color: settings.theme === 'light' ? '#000000' : 'white',
                     borderWidth: '1px',
                     borderStyle: 'solid',
                     borderColor: 'var(--border)',
@@ -1141,7 +1213,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Download a backup of all your data as a JSON file
                 </p>
-                <Button size="lg" onClick={handleExport} style={{ marginBottom: '16px', paddingLeft: '16px', paddingRight: '16px', backgroundColor: 'var(--button-secondary)', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                <Button size="lg" onClick={handleExport} style={{ marginBottom: '16px', paddingLeft: '16px', paddingRight: '16px', backgroundColor: 'var(--button-secondary)', color: settings.theme === 'light' ? '#000000' : 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                   <Download size={18} />
                   Export Data
                 </Button>
@@ -1191,11 +1263,11 @@ export default function SettingsPage() {
                   Permanently delete all your data. This action cannot be undone.
                 </p>
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  <Button size="lg" onClick={handleDeleteAllData} style={{ paddingLeft: '16px', paddingRight: '16px', backgroundColor: '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                  <Button size="lg" onClick={handleDeleteAllData} style={{ paddingLeft: '16px', paddingRight: '16px', backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                     <Trash2 size={18} />
                     Delete All Data
                   </Button>
-                  <Button size="lg" onClick={handleDeleteAccount} style={{ paddingLeft: '16px', paddingRight: '16px', backgroundColor: '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                  <Button size="lg" onClick={handleDeleteAccount} style={{ paddingLeft: '16px', paddingRight: '16px', backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                     <Trash2 size={18} />
                     Delete Account
                   </Button>
@@ -1558,9 +1630,9 @@ export default function SettingsPage() {
                 }}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#063d1d',
+                  backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
                   color: 'white',
-                  border: '1px solid #063d1d',
+                  border: `1px solid ${selectedTheme === 'light' ? 'var(--success)' : '#063d1d'}`,
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',
@@ -1577,9 +1649,9 @@ export default function SettingsPage() {
                 }}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#660000',
+                  backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                   color: 'white',
-                  border: '1px solid #660000',
+                  border: `1px solid ${selectedTheme === 'light' ? 'var(--danger)' : '#660000'}`,
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',
@@ -1731,9 +1803,9 @@ export default function SettingsPage() {
                 }}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#063d1d',
+                  backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
                   color: 'white',
-                  border: '1px solid #063d1d',
+                  border: `1px solid ${selectedTheme === 'light' ? 'var(--success)' : '#063d1d'}`,
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',
@@ -1750,9 +1822,9 @@ export default function SettingsPage() {
                 }}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#660000',
+                  backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                   color: 'white',
-                  border: '1px solid #660000',
+                  border: `1px solid ${selectedTheme === 'light' ? 'var(--danger)' : '#660000'}`,
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',

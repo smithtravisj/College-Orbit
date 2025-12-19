@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import useAppStore from '@/lib/store';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
@@ -11,6 +12,7 @@ import Button from '@/components/ui/Button';
 export default function ProfilePage() {
   const { data: session, update: updateSession } = useSession();
   const router = useRouter();
+  const { settings } = useAppStore();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -164,7 +166,7 @@ export default function ProfilePage() {
                   className="w-full"
                   style={{
                     backgroundColor: 'var(--button-secondary)',
-                    color: 'white',
+                    color: settings.theme === 'light' ? '#000000' : 'white',
                     borderWidth: '1px',
                     borderStyle: 'solid',
                     borderColor: 'var(--border)'

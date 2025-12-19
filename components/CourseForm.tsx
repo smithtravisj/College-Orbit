@@ -20,7 +20,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
   { courseId, onClose, hideSubmitButton = false, onSave }: CourseFormProps,
   ref: React.ForwardedRef<{ submit: () => void }>
 ) {
-  const { courses, addCourse, updateCourse } = useAppStore();
+  const { courses, settings, addCourse, updateCourse } = useAppStore();
   const course = courses.find((c) => c.id === courseId);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -288,7 +288,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
             type="submit"
             style={{
               backgroundColor: 'var(--button-secondary)',
-              color: 'white',
+              color: settings.theme === 'light' ? '#000000' : 'white',
               borderWidth: '1px',
               borderStyle: 'solid',
               borderColor: 'var(--border)',

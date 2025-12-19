@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import useAppStore from '@/lib/store';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -76,6 +77,19 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, error, helperText, options, className = '', ...props }, ref) => {
     const isMultiple = (props as any).multiple;
+    const { settings } = useAppStore();
+
+    const selectStyle = useMemo(() => ({
+      padding: '10px 12px',
+      backgroundColor: 'var(--panel-2)',
+      ...(isMultiple ? {} : {
+        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${settings.theme === 'light' ? '%23656666' : '%23adbac7'}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'right 0.75rem center',
+        backgroundSize: '16px 16px',
+        paddingRight: '2.5rem',
+      })
+    }), [settings.theme, isMultiple]);
 
     return (
       <div className="w-full">
@@ -87,17 +101,8 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         )}
         <select
           ref={ref}
-          className={`w-full ${isMultiple ? 'min-h-[150px]' : 'h-[var(--input-height)]'} bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)] disabled:bg-[var(--panel)] disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed ${!isMultiple ? 'appearance-none' : ''} cursor-pointer ${error ? 'border-[var(--danger)]' : ''} ${className}`}
-          style={{
-            padding: '10px 12px',
-            ...(isMultiple ? {} : {
-              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23adbac7' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 0.75rem center',
-              backgroundSize: '16px 16px',
-              paddingRight: '2.5rem',
-            })
-          }}
+          className={`w-full ${isMultiple ? 'min-h-[150px]' : 'h-[var(--input-height)]'} border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)] disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed ${!isMultiple ? 'appearance-none' : ''} cursor-pointer ${error ? 'border-[var(--danger)]' : ''} ${className}`}
+          style={selectStyle}
           {...props}
         >
           {options.map((option) => (
