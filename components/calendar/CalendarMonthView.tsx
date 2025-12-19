@@ -8,6 +8,7 @@ import {
   isInMonth,
   getMonthViewColor,
   getExclusionType,
+  getEventColor,
   CalendarEvent,
 } from '@/lib/calendarUtils';
 import { isToday } from '@/lib/utils';
