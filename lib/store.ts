@@ -70,31 +70,19 @@ const useAppStore = create<AppStore>((set, get) => ({
   loading: false,
 
   initializeStore: async () => {
-    console.log('[Store] initializeStore called');
     set({ loading: true });
     try {
       // Check if user is authenticated by fetching session
       const sessionRes = await fetch('/api/auth/session');
       const session = await sessionRes.json();
 
-      if (session?.user) {
-        // Load from localStorage immediately for faster load times
-        console.log('[Store] Loading from localStorage (authenticated user)');
-        get().loadFromStorage();
-        // Don't auto-fetch from database - let user changes persist
-        // Database is only fetched on explicit refresh/error
-      } else {
-        // User is not authenticated, try loading from localStorage
-        console.log('[Store] Loading from localStorage (unauthenticated user)');
-        get().loadFromStorage();
-      }
+      // Load from localStorage for all users
+      get().loadFromStorage();
     } catch (error) {
-      console.error('[Store] Failed to initialize store:', error);
+      console.error('Failed to initialize store:', error);
       get().loadFromStorage();
     } finally {
       set({ loading: false });
-      const currentSettings = get().settings;
-      console.log('[Store] Initialization complete. University setting:', currentSettings.university);
     }
   },
 
