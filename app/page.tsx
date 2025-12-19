@@ -746,7 +746,7 @@ export default function Dashboard() {
 
             {/* Task Form */}
             {showTaskForm && (
-              <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid var(--border)' }}>
+              <div style={{ marginTop: '12px' }}>
                 <form onSubmit={handleTaskSubmit} className="space-y-5">
                   <Input
                     label="Task title"
