@@ -45,13 +45,17 @@ export default function SettingsPage() {
 
   useEffect(() => {
     initializeStore();
-    if (!initializedRef.current) {
+    setMounted(true);
+  }, [initializeStore]);
+
+  // Sync local state with store when settings are loaded
+  useEffect(() => {
+    if (!initializedRef.current && (settings.dueSoonWindowDays || settings.university)) {
       setDueSoonDays(settings.dueSoonWindowDays);
       setUniversity(settings.university || null);
       initializedRef.current = true;
     }
-    setMounted(true);
-  }, [initializeStore, settings]);
+  }, [settings.dueSoonWindowDays, settings.university]);
 
   // Fetch college requests if user is admin
   useEffect(() => {
