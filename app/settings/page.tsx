@@ -381,7 +381,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Request a College */}
-              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
+              <div style={{ paddingTop: '16px', paddingBottom: '16px' }}>
                 <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
                   Request a College
                 </label>
