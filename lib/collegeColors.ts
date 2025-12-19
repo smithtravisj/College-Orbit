@@ -165,14 +165,66 @@ export const defaultColorPalette: ColorPalette = {
 };
 
 /**
+ * BYU Hawaii Color Palette - Tropical dark theme
+ * Using official BYUH brand colors
+ * Primary: #ba0c2f (Crimson), Accent: #00b097 (Turquoise), Secondary: #c69214 (Gold)
+ */
+export const byuhColorPalette: ColorPalette = {
+  bg: "#0a0a0a",
+  panel: "#1a1a1a",
+  panel2: "#151515",
+
+  text: "#f5f5f5",
+  textSecondary: "#d0d0d0",
+  muted: "#909090",
+  textMuted: "#707070",
+  textDisabled: "#555555",
+
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHover: "#404040",
+  borderActive: "#00b097",
+  borderStrong: "rgba(255, 255, 255, 0.12)",
+
+  accent: "#00b097",
+  accentHover: "#008877",
+  accent2: "rgba(0, 176, 151, 0.15)",
+  ring: "rgba(0, 176, 151, 0.35)",
+
+  buttonSecondary: "#862633",
+
+  navActive: "#862633",
+
+  link: "#00b097",
+
+  calendarNoSchool: "#ba0c2f",
+  calendarCancelled: "#ba0c2f",
+
+  brandPrimary: "#d14124",
+
+  success: "#57ab5a",
+  warning: "#c69214",
+  danger: "#e5534b",
+  dangerHover: "#d64941",
+  successBg: "rgba(87, 171, 90, 0.1)",
+  warningBg: "rgba(198, 144, 20, 0.1)",
+  dangerBg: "rgba(229, 83, 75, 0.1)",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.3)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.4)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
+
+  focusRing: "0 0 0 3px rgba(0, 176, 151, 0.3)",
+};
+
+/**
  * College color palette map
  * Maps university names to their color palettes
  */
 export const collegeColorPalettes: Record<string, ColorPalette> = {
   "Brigham Young University": byuColorPalette,
+  "Brigham Young University Hawaii": byuhColorPalette,
   // Placeholder palettes - to be customized
   "Brigham Young University Idaho": byuColorPalette,
-  "Brigham Young University Hawaii": byuColorPalette,
   "UNC Chapel Hill": byuColorPalette,
   "Utah State University": byuColorPalette,
   "Utah Valley University": byuColorPalette,
