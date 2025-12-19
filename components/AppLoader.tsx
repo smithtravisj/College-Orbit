@@ -5,26 +5,21 @@ import useAppStore from '@/lib/store';
 
 export default function AppLoader({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
+  const loading = useAppStore((state) => state.loading);
+  const pageLoading = useAppStore((state) => state.pageLoading);
 
   useEffect(() => {
     const initialize = async () => {
-      const startTime = Date.now();
       await useAppStore.getState().initializeStore();
-
-      // Ensure loading screen displays for at least 800ms
-      const elapsedTime = Date.now() - startTime;
-      const minDisplayTime = 800;
-
-      if (elapsedTime < minDisplayTime) {
-        await new Promise(resolve => setTimeout(resolve, minDisplayTime - elapsedTime));
-      }
-
       setIsInitialized(true);
     };
     initialize();
   }, []);
 
-  if (!isInitialized) {
+  // Show loading screen while store is initializing OR page is loading
+  const isLoading = !isInitialized || loading || pageLoading;
+
+  if (isLoading) {
     return (
       <div style={{
         position: 'fixed',

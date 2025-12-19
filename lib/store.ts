@@ -19,11 +19,13 @@ interface AppStore {
   excludedDates: ExcludedDate[];
   gpaEntries: GpaEntry[];
   loading: boolean;
+  pageLoading: boolean;
 
   // Initialization
   initializeStore: () => Promise<void>;
   loadFromDatabase: () => Promise<void>;
   loadFromStorage: () => void;
+  setPageLoading: (loading: boolean) => void;
 
   // Courses
   addCourse: (course: Omit<Course, 'id'>) => Promise<void>;
@@ -68,6 +70,11 @@ const useAppStore = create<AppStore>((set, get) => ({
   excludedDates: [],
   gpaEntries: [],
   loading: false,
+  pageLoading: false,
+
+  setPageLoading: (loading: boolean) => {
+    set({ pageLoading: loading });
+  },
 
   initializeStore: async () => {
     set({ loading: true });

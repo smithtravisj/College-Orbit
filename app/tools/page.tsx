@@ -32,7 +32,7 @@ interface FormCourse {
 }
 
 export default function ToolsPage() {
-  const { settings } = useAppStore();
+  const { settings, setPageLoading } = useAppStore();
   const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [formCourses, setFormCourses] = useState<FormCourse[]>([
@@ -57,6 +57,7 @@ export default function ToolsPage() {
   // Fetch courses and load saved GPA entries on mount
   useEffect(() => {
     const fetchData = async () => {
+      setPageLoading(true);
       try {
         const [coursesRes, entriesRes] = await Promise.all([
           fetch('/api/courses'),
@@ -87,11 +88,13 @@ export default function ToolsPage() {
       } catch (error) {
         console.error('Error fetching data:', error);
         setMounted(true);
+      } finally {
+        setPageLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [setPageLoading]);
 
   const getGradePoints = (grade: string, gradeType: 'letter' | 'percentage'): number => {
     if (gradeType === 'percentage') {
