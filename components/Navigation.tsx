@@ -31,7 +31,7 @@ const NAV_ITEMS = [
 export default function Navigation() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const { settings } = useAppStore();
+  const university = useAppStore((state) => state.settings.university);
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/login' });
@@ -48,7 +48,7 @@ export default function Navigation() {
       {/* Desktop Sidebar */}
       <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)]" style={{ padding: '20px 16px' }}>
         <div style={{ marginBottom: '16px' }}>
-          <h1 className="font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px', fontSize: settings.university === 'Brigham Young University Hawaii' ? '22px' : settings.university === 'Brigham Young University Idaho' ? '23px' : (settings.university === 'Brigham Young University' || settings.university === 'UNC Chapel Hill' || settings.university === 'Utah State University' || settings.university === 'Utah Valley University') ? '24px' : '21px' }}>{getAppTitle(settings.university)}</h1>
+          <h1 className="font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px', fontSize: university === 'Brigham Young University Hawaii' ? '22px' : university === 'Brigham Young University Idaho' ? '23px' : (university === 'Brigham Young University' || university === 'UNC Chapel Hill' || university === 'Utah State University' || university === 'Utah Valley University') ? '24px' : '21px' }}>{getAppTitle(university)}</h1>
           {session?.user && (
             <div className="mt-3 text-sm text-[var(--text-muted)] truncate" style={{ paddingLeft: '20px' }}>
               {session.user.name || session.user.email}
