@@ -5,18 +5,16 @@ import useAppStore from '@/lib/store';
 
 export default function AppLoader({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
-  const loading = useAppStore((state) => state.loading);
-  const initializeStore = useAppStore((state) => state.initializeStore);
 
   useEffect(() => {
     const initialize = async () => {
-      await initializeStore();
+      await useAppStore.getState().initializeStore();
       setIsInitialized(true);
     };
     initialize();
-  }, [initializeStore]);
+  }, []);
 
-  if (!isInitialized || loading) {
+  if (!isInitialized) {
     return (
       <div style={{
         position: 'fixed',
