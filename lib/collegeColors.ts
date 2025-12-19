@@ -194,7 +194,7 @@ export const byuhColorPalette: ColorPalette = {
 
   navActive: "#9e1b34",
 
-  link: "#006c5b",
+  link: "#2563eb",
 
   calendarNoSchool: "#132343",
   calendarCancelled: "#132343",
@@ -213,7 +213,7 @@ export const byuhColorPalette: ColorPalette = {
   shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.5)",
   shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.6)",
 
-  focusRing: "0 0 0 3px rgba(0, 108, 91, 0.25)",
+  focusRing: "0 0 0 3px rgba(37, 99, 235, 0.3)",
 };
 
 /**
