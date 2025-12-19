@@ -205,10 +205,10 @@ export default function CalendarMonthView({
                 ref={(el) => {
                   if (el) dotsRefs.current.set(dateStr, el);
                 }}
-                style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', flex: 1, alignContent: 'flex-start', minHeight: 0, overflow: 'hidden', maxHeight: exclusionType === 'holiday' ? '14px' : 'none' }}
+                style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', flex: 1, alignContent: 'flex-start', minHeight: 0, overflow: 'hidden' }}
               >
                 {(() => {
-                  let limit = exclusionType === 'holiday' ? 5 : (maxVisibleDots.get(dateStr) ?? 100);
+                  let limit = maxVisibleDots.get(dateStr) ?? 100;
                   const shouldShowMore = dayEvents.length > limit;
 
                   // Reserve space for "+X" indicator by reducing limit by 1
@@ -249,7 +249,7 @@ export default function CalendarMonthView({
 
                 {/* +X more indicator */}
                 {(() => {
-                  const maxLimit = exclusionType === 'holiday' ? 5 : (maxVisibleDots.get(dateStr) ?? 100);
+                  const maxLimit = maxVisibleDots.get(dateStr) ?? 100;
                   let limit = maxLimit;
                   const shouldShow = dayEvents.length > limit;
 
