@@ -39,23 +39,19 @@ export default function SettingsPage() {
   const [deleteRequestId, setDeleteRequestId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
-  const initializedRef = useRef(false);
 
   const { settings, updateSettings, exportData, importData, deleteAllData, initializeStore } = useAppStore();
 
   useEffect(() => {
-    initializeStore();
-    setMounted(true);
+    const initialize = async () => {
+      await initializeStore();
+      // Initialize local state from store settings
+      setDueSoonDays(useAppStore.getState().settings.dueSoonWindowDays);
+      setUniversity(useAppStore.getState().settings.university || null);
+      setMounted(true);
+    };
+    initialize();
   }, [initializeStore]);
-
-  // Sync local state with store when settings are loaded
-  useEffect(() => {
-    if (!initializedRef.current && (settings.dueSoonWindowDays || settings.university)) {
-      setDueSoonDays(settings.dueSoonWindowDays);
-      setUniversity(settings.university || null);
-      initializedRef.current = true;
-    }
-  }, [settings.dueSoonWindowDays, settings.university]);
 
   // Fetch college requests if user is admin
   useEffect(() => {
