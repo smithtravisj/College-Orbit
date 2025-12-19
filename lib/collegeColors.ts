@@ -190,7 +190,7 @@ export const byuhColorPalette: ColorPalette = {
   accent2: "rgba(0, 108, 91, 0.12)",
   ring: "rgba(0, 108, 91, 0.30)",
 
-  buttonSecondary: "#5a2535",
+  buttonSecondary: "#9e1b34",
 
   navActive: "#9e1b34",
 
