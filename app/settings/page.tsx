@@ -348,35 +348,28 @@ export default function SettingsPage() {
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
                   Select your university to customize the app
                 </p>
-                <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
-                  <select
-                    value={university || ''}
-                    onChange={(e) => {
-                      const newUniversity = e.target.value || null;
-                      setUniversity(newUniversity);
-                      updateSettings({ university: newUniversity });
-                    }}
-                    style={{
-                      width: '100%',
-                      height: '44px',
-                      padding: '10px 12px 10px 12px',
-                      fontSize: '16px',
-                      fontFamily: 'inherit',
-                      backgroundColor: 'var(--panel-2)',
-                      color: 'var(--text)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '6px',
-                      boxSizing: 'border-box',
-                      cursor: 'pointer',
-                      transition: 'none',
-                      appearance: 'none',
-                      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'left 10px center',
-                      backgroundSize: '16px',
-                      paddingLeft: '32px'
-                    }}
-                  >
+                <select
+                  value={university || ''}
+                  onChange={(e) => {
+                    const newUniversity = e.target.value || null;
+                    setUniversity(newUniversity);
+                    updateSettings({ university: newUniversity });
+                  }}
+                  style={{
+                    width: '100%',
+                    height: '44px',
+                    padding: '10px 12px 10px 12px',
+                    fontSize: '16px',
+                    fontFamily: 'inherit',
+                    backgroundColor: 'var(--panel-2)',
+                    color: 'var(--text)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer',
+                    transition: 'none'
+                  }}
+                >
                   <option value="">Select a College</option>
                   <option value="Brigham Young University">Brigham Young University</option>
                   <option value="Brigham Young University Hawaii">Brigham Young University Hawaii</option>
@@ -385,7 +378,6 @@ export default function SettingsPage() {
                   <option value="Utah State University">Utah State University</option>
                   <option value="Utah Valley University">Utah Valley University</option>
                 </select>
-                </div>
               </div>
 
               {/* Request a College */}
