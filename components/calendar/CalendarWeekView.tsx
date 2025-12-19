@@ -24,6 +24,7 @@ interface CalendarWeekViewProps {
   allTasks?: Task[];
   allDeadlines?: Deadline[];
   excludedDates?: ExcludedDate[];
+  theme?: string;
 }
 
 const HOUR_HEIGHT = 60; // pixels
@@ -38,6 +39,7 @@ export default function CalendarWeekView({
   allTasks = [],
   allDeadlines = [],
   excludedDates = [],
+  theme = 'dark',
 }: CalendarWeekViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -128,7 +130,7 @@ export default function CalendarWeekView({
               }}
             >
               <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>{dayName}</div>
-              <div style={{ fontSize: '1.125rem', fontWeight: 600, color: isTodayDate ? 'var(--accent)' : 'var(--text)' }}>
+              <div style={{ fontSize: '1.125rem', fontWeight: 600, color: isTodayDate ? (theme === 'light' ? 'var(--accent)' : '#5BA3FF') : 'var(--text)' }}>
                 {day.getDate()}
               </div>
             </div>
