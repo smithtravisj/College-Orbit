@@ -182,13 +182,13 @@ export const byuhColorPalette: ColorPalette = {
 
   border: "rgba(255, 255, 255, 0.06)",
   borderHover: "#2a3a3a",
-  borderActive: "#006c5b",
+  borderActive: "#9e1b34",
   borderStrong: "rgba(255, 255, 255, 0.10)",
 
-  accent: "#006c5b",
-  accentHover: "#004a45",
-  accent2: "rgba(0, 108, 91, 0.12)",
-  ring: "rgba(0, 108, 91, 0.30)",
+  accent: "#9e1b34",
+  accentHover: "#7a1428",
+  accent2: "rgba(158, 27, 52, 0.12)",
+  ring: "rgba(158, 27, 52, 0.30)",
 
   buttonSecondary: "#9e1b34",
 
