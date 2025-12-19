@@ -127,7 +127,23 @@ export default function SettingsPage() {
       }
     };
 
+    // Initial fetch
     fetchAdminData();
+
+    // Set up polling for real-time updates (every 5 seconds)
+    const interval = setInterval(fetchAdminData, 5000);
+
+    // Listen for notification refresh events to immediately update admin data
+    const handleRefresh = () => {
+      fetchAdminData();
+    };
+
+    window.addEventListener('notification-refresh', handleRefresh);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notification-refresh', handleRefresh);
+    };
   }, [mounted, session?.user?.id]);
 
   // Update input value when state changes (but not if user is editing)
@@ -145,21 +161,27 @@ export default function SettingsPage() {
     );
   }
 
-  const handleExport = () => {
-    const data = exportData();
-    const filename = `byu-survival-tool-backup-${new Date().toISOString().split('T')[0]}.json`;
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleExport = async () => {
+    try {
+      const data = await exportData();
+      const filename = `byu-survival-tool-backup-${new Date().toISOString().split('T')[0]}.json`;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
 
-    setExportMessage('Data exported successfully');
-    setTimeout(() => setExportMessage(''), 3000);
+      setExportMessage('Data exported successfully');
+      setTimeout(() => setExportMessage(''), 3000);
+    } catch (error) {
+      console.error('Export error:', error);
+      setExportMessage('✗ Failed to export data');
+      setTimeout(() => setExportMessage(''), 3000);
+    }
   };
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -252,6 +274,10 @@ export default function SettingsPage() {
       setCollegeRequestMessage('✓ ' + data.message);
       setCollegeRequestName('');
       setCollegeRequestLoading(false);
+
+      // Trigger notification refresh in the bell component
+      window.dispatchEvent(new Event('notification-refresh'));
+
       setTimeout(() => setCollegeRequestMessage(''), 3000);
     } catch (error) {
       setCollegeRequestMessage('✗ Failed to submit request');
@@ -357,6 +383,10 @@ export default function SettingsPage() {
       setIssueReportMessage('✓ Issue report submitted successfully');
       setIssueDescription('');
       setIssueReportLoading(false);
+
+      // Trigger notification refresh in the bell component
+      window.dispatchEvent(new Event('notification-refresh'));
+
       setTimeout(() => setIssueReportMessage(''), 3000);
     } catch (error) {
       console.error('Issue report submission error:', error);
@@ -463,6 +493,10 @@ export default function SettingsPage() {
       setFeatureRequestMessage('✓ Feature request submitted successfully');
       setFeatureDescription('');
       setFeatureRequestLoading(false);
+
+      // Trigger notification refresh in the bell component
+      window.dispatchEvent(new Event('notification-refresh'));
+
       setTimeout(() => setFeatureRequestMessage(''), 3000);
     } catch (error) {
       console.error('Feature request submission error:', error);

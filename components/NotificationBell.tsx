@@ -38,8 +38,18 @@ export default function NotificationBell() {
   // Initial fetch and polling
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // Poll every 30 seconds
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchNotifications, 5000); // Poll every 5 seconds for near real-time updates
+
+    // Listen for notification refresh events from other components
+    const handleRefresh = () => {
+      fetchNotifications();
+    };
+
+    window.addEventListener('notification-refresh', handleRefresh);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notification-refresh', handleRefresh);
+    };
   }, []);
 
   // Calculate dropdown position to prevent going off-screen
@@ -127,7 +137,8 @@ export default function NotificationBell() {
     }
   };
 
-  const handleDelete = async (notificationId: string) => {
+  const handleDelete = async (e: React.MouseEvent, notificationId: string) => {
+    e.stopPropagation();
     try {
       const response = await fetch(`/api/notifications?id=${notificationId}`, {
         method: 'DELETE',
@@ -160,7 +171,7 @@ export default function NotificationBell() {
     if (type === 'college_request_approved' || type === 'issue_report_resolved' || type === 'feature_request_implemented') {
       return <Check size={18} style={{ color: '#10b981' }} />;
     }
-    if (type === 'college_request_pending' || type === 'issue_report_pending' || type === 'feature_request_pending' || type === 'feature_request' || type === 'issue_report') {
+    if (type === 'college_request_pending' || type === 'issue_report_pending' || type === 'feature_request_pending' || type === 'feature_request' || type === 'issue_report' || type === 'college_request_submitted' || type === 'issue_report_submitted' || type === 'feature_request_submitted') {
       return <Clock size={18} style={{ color: '#f59e0b' }} />;
     }
     return <X size={18} style={{ color: '#ef4444' }} />;
@@ -366,7 +377,7 @@ export default function NotificationBell() {
                         </div>
                       </div>
                       <button
-                        onClick={() => handleDelete(notification.id)}
+                        onClick={(e) => handleDelete(e, notification.id)}
                         style={{
                           background: 'none',
                           border: 'none',

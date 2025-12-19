@@ -37,6 +37,17 @@ export async function POST(req: NextRequest) {
       select: { name: true },
     });
 
+    // Create notification for the user
+    await prisma.notification.create({
+      data: {
+        userId: token.id,
+        title: 'Request Submitted',
+        message: 'Your feature request has been submitted. We appreciate your feedback!',
+        type: 'feature_request_submitted',
+        featureRequestId: featureRequest.id,
+      },
+    });
+
     // Create notifications for all admins
     const admins = await prisma.user.findMany({
       where: { isAdmin: true },

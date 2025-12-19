@@ -49,7 +49,7 @@ export function LoginForm() {
           <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>
             College Survival Tool
           </h1>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '8px', fontSize: '18px' }}>Sign in to your account</p>
+          <p style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px' }}>Sign in to your account</p>
         </div>
 
         <Card>
@@ -100,11 +100,11 @@ export function LoginForm() {
           </form>
 
           <div style={{ textAlign: 'center', marginTop: '20px' }}>
-            <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+            <p style={{ fontSize: '14px', color: 'var(--text)' }}>
               Don't have an account?{' '}
               <Link
                 href="/signup"
-                style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}
+                style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, filter: 'brightness(1.6)' }}
               >
                 Sign up
               </Link>

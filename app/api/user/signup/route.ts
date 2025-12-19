@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
             weekStartsOn: 'Sun',
             theme: 'system',
             enableNotifications: false,
-            university: university || 'Brigham Young University',
+            university: university || null,
           },
         },
       },

@@ -25,15 +25,7 @@ export default function SignupPage() {
   const [university, setUniversity] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [hasLocalData, setHasLocalData] = useState(false);
-
-  useEffect(() => {
-    // Check if user has localStorage data
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('byu-survival-tool-data');
-      setHasLocalData(!!stored);
-    }
-  }, []);
+  const [collegeRequestName, setCollegeRequestName] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,28 +60,30 @@ export default function SignupPage() {
         return;
       }
 
-      // 3. Migrate localStorage data if exists
-      if (hasLocalData) {
-        const stored = localStorage.getItem('byu-survival-tool-data');
-        if (stored) {
-          try {
-            const data = JSON.parse(stored);
-            await fetch('/api/migrate', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data),
-            });
+      // 3. If there's a college request, submit it after authentication
+      if (collegeRequestName.trim()) {
+        try {
+          const collegeRes = await fetch('/api/college-requests', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ collegeName: collegeRequestName }),
+          });
 
-            // Clear localStorage after successful migration
-            localStorage.removeItem('byu-survival-tool-data');
-          } catch (migrateError) {
-            console.error('Migration failed:', migrateError);
-            // Don't block signup if migration fails
+          if (!collegeRes.ok) {
+            console.error('College request failed but continuing with signup');
           }
+        } catch (collegeError) {
+          console.error('College request error:', collegeError);
+          // Don't block signup if college request fails
         }
       }
 
-      // 4. Redirect to dashboard
+      // Clear any existing local data for a fresh start
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('byu-survival-tool-data');
+      }
+
+      // Redirect to dashboard
       router.push('/');
       router.refresh();
     } catch (error) {
@@ -104,19 +98,10 @@ export default function SignupPage() {
         <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>
           College Survival Tool
         </h1>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '8px', fontSize: '18px' }}>Create your account</p>
+        <p style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px' }}>Create your account</p>
       </div>
 
       <Card>
-        {hasLocalData && (
-          <div style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '8px', padding: '12px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '14px', color: 'rgb(96, 165, 250)' }}>
-              We detected existing data on this device. It will be automatically
-              migrated to your new account.
-            </p>
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {error && (
             <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '8px', padding: '12px' }}>
@@ -173,7 +158,6 @@ export default function SignupPage() {
             <select
               value={university}
               onChange={(e) => setUniversity(e.target.value)}
-              required
               style={{
                 width: '100%',
                 padding: '12px 30px 12px 12px',
@@ -188,9 +172,7 @@ export default function SignupPage() {
                 MozAppearance: 'none',
               }}
             >
-              <option value="" disabled>
-                Select University
-              </option>
+              <option value="">Select University</option>
               {UNIVERSITIES.map((uni) => (
                 <option key={uni} value={uni}>
                   {uni}
@@ -211,6 +193,34 @@ export default function SignupPage() {
             </div>
           </div>
 
+          {!university && (
+            <div>
+              <label style={{ display: 'block', fontSize: '15px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+                Don't see your university?
+              </label>
+              <input
+                type="text"
+                value={collegeRequestName}
+                onChange={(e) => setCollegeRequestName(e.target.value)}
+                placeholder="Request university"
+                maxLength={100}
+                style={{
+                  width: '100%',
+                  height: '44px',
+                  padding: '12px 12px',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                  backgroundColor: 'var(--panel-2)',
+                  color: 'var(--text)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  boxSizing: 'border-box'
+                }}
+                disabled={loading}
+              />
+            </div>
+          )}
+
           <div style={{ paddingTop: '8px', paddingBottom: '8px' }}>
             <Button
               type="submit"
@@ -225,11 +235,11 @@ export default function SignupPage() {
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '20px' }}>
-          <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '14px', color: 'var(--text)' }}>
             Already have an account?{' '}
             <Link
               href="/login"
-              style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}
+              style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, filter: 'brightness(1.6)' }}
             >
               Sign in
             </Link>

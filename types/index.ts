@@ -78,6 +78,15 @@ export interface GpaEntry {
   createdAt: string; // ISO datetime
 }
 
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  read: boolean;
+  createdAt: string; // ISO datetime
+}
+
 export interface AppData {
   courses: Course[];
   deadlines: Deadline[];
@@ -85,4 +94,5 @@ export interface AppData {
   settings: Settings;
   excludedDates: ExcludedDate[];
   gpaEntries?: GpaEntry[];
+  notifications?: Notification[];
 }

@@ -38,6 +38,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Create notification for the user
+    await prisma.notification.create({
+      data: {
+        userId: session.user.id,
+        title: 'Request Submitted',
+        message: `Your request to add ${trimmedName} has been submitted. We'll review it soon!`,
+        type: 'college_request_submitted',
+        collegeRequestId: collegeRequest.id,
+      },
+    });
+
     // Create notification for all admins
     const admins = await prisma.user.findMany({
       where: { isAdmin: true },

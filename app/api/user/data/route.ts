@@ -22,6 +22,7 @@ export async function DELETE(_req: NextRequest) {
       prisma.gpaEntry.deleteMany({ where: { userId } }),
       prisma.excludedDate.deleteMany({ where: { userId } }),
       prisma.settings.deleteMany({ where: { userId } }),
+      prisma.notification.deleteMany({ where: { userId } }),
     ]);
 
     return NextResponse.json({ success: true });
