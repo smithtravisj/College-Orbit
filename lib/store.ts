@@ -70,6 +70,7 @@ const useAppStore = create<AppStore>((set, get) => ({
   loading: false,
 
   initializeStore: async () => {
+    console.log('[Store] initializeStore called');
     set({ loading: true });
     try {
       // Check if user is authenticated by fetching session
@@ -77,17 +78,23 @@ const useAppStore = create<AppStore>((set, get) => ({
       const session = await sessionRes.json();
 
       if (session?.user) {
-        // User is authenticated, load from database
-        await get().loadFromDatabase();
+        // Load from localStorage immediately for faster load times
+        console.log('[Store] Loading from localStorage (authenticated user)');
+        get().loadFromStorage();
+        // Don't auto-fetch from database - let user changes persist
+        // Database is only fetched on explicit refresh/error
       } else {
         // User is not authenticated, try loading from localStorage
+        console.log('[Store] Loading from localStorage (unauthenticated user)');
         get().loadFromStorage();
       }
     } catch (error) {
-      console.error('Failed to initialize store:', error);
+      console.error('[Store] Failed to initialize store:', error);
       get().loadFromStorage();
     } finally {
       set({ loading: false });
+      const currentSettings = get().settings;
+      console.log('[Store] Initialization complete. University setting:', currentSettings.university);
     }
   },
 
@@ -109,14 +116,25 @@ const useAppStore = create<AppStore>((set, get) => ({
       const excludedDatesData = await excludedDatesRes.json();
       const gpaData = await gpaRes.json();
 
-      set({
+      const newData = {
         courses: coursesData.courses || [],
         deadlines: deadlinesData.deadlines || [],
         tasks: tasksData.tasks || [],
         settings: settingsData.settings || DEFAULT_SETTINGS,
         excludedDates: excludedDatesData.excludedDates || [],
         gpaEntries: gpaData.entries || [],
-      });
+      };
+
+      set(newData);
+
+      // Save fresh data to localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('byu-survival-tool-data', JSON.stringify(newData));
+        } catch (error) {
+          console.warn('Failed to save to localStorage:', error);
+        }
+      }
     } catch (error) {
       console.error('Failed to load from database:', error);
     }
@@ -129,6 +147,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const stored = localStorage.getItem('byu-survival-tool-data');
       if (stored) {
         const data: AppData = JSON.parse(stored);
+        console.log('[Store] Loading from localStorage. University value:', data.settings?.university);
         set({
           courses: data.courses || [],
           deadlines: data.deadlines || [],
@@ -137,9 +156,12 @@ const useAppStore = create<AppStore>((set, get) => ({
           excludedDates: data.excludedDates || [],
           gpaEntries: data.gpaEntries || [],
         });
+        console.log('[Store] After loadFromStorage, state university:', get().settings.university);
+      } else {
+        console.log('[Store] No data in localStorage, using DEFAULT_SETTINGS');
       }
     } catch (error) {
-      console.error('Failed to load from storage:', error);
+      console.error('[Store] Failed to load from storage:', error);
     }
   },
 
@@ -642,11 +664,32 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   updateSettings: async (settings) => {
+    console.log('[Store] updateSettings called with:', settings);
     try {
       // Optimistic update
       set((state) => ({
         settings: { ...state.settings, ...settings },
       }));
+      console.log('[Store] After optimistic update, state university:', get().settings.university);
+
+      // Update localStorage with new settings
+      if (typeof window !== 'undefined') {
+        try {
+          const appData = get();
+          const newData = {
+            courses: appData.courses,
+            deadlines: appData.deadlines,
+            tasks: appData.tasks,
+            settings: { ...appData.settings, ...settings },
+            excludedDates: appData.excludedDates,
+            gpaEntries: appData.gpaEntries,
+          };
+          console.log('[Store] Saving to localStorage with university:', newData.settings.university);
+          localStorage.setItem('byu-survival-tool-data', JSON.stringify(newData));
+        } catch (error) {
+          console.warn('Failed to save to localStorage:', error);
+        }
+      }
 
       // API call
       const response = await fetch('/api/settings', {
@@ -664,6 +707,22 @@ const useAppStore = create<AppStore>((set, get) => ({
       const needsUpdate = JSON.stringify(currentState) !== JSON.stringify(updatedSettings);
       if (needsUpdate) {
         set({ settings: updatedSettings });
+        // Update localStorage with server response
+        if (typeof window !== 'undefined') {
+          try {
+            const appData = get();
+            localStorage.setItem('byu-survival-tool-data', JSON.stringify({
+              courses: appData.courses,
+              deadlines: appData.deadlines,
+              tasks: appData.tasks,
+              settings: updatedSettings,
+              excludedDates: appData.excludedDates,
+              gpaEntries: appData.gpaEntries,
+            }));
+          } catch (error) {
+            console.warn('Failed to save to localStorage:', error);
+          }
+        }
       }
 
     } catch (error) {
