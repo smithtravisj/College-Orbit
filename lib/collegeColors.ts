@@ -89,14 +89,14 @@ export const byuColorPalette: ColorPalette = {
   borderActive: "#002E5D",
   borderStrong: "rgba(255, 255, 255, 0.12)",
 
-  accent: "#002E5D",
-  accentHover: "#001f40",
-  accent2: "rgba(0, 46, 93, 0.15)",
-  ring: "rgba(0, 46, 93, 0.35)",
+  accent: "#2b82d9",
+  accentHover: "#1a6fc0",
+  accent2: "rgba(43, 130, 217, 0.15)",
+  ring: "rgba(43, 130, 217, 0.35)",
 
-  buttonSecondary: "#002E5D",
+  buttonSecondary: "#2b82d9",
 
-  navActive: "#002E5D",
+  navActive: "#2b82d9",
 
   link: "#2563eb",
 
@@ -145,14 +145,14 @@ export const defaultColorPalette: ColorPalette = {
   borderActive: "#404040",
   borderStrong: "rgba(255, 255, 255, 0.12)",
 
-  accent: "#4a4a4a",
-  accentHover: "#3a3a3a",
-  accent2: "rgba(74, 74, 74, 0.15)",
-  ring: "rgba(74, 74, 74, 0.35)",
+  accent: "#8a8a8a",
+  accentHover: "#7a7a7a",
+  accent2: "rgba(138, 138, 138, 0.15)",
+  ring: "rgba(138, 138, 138, 0.35)",
 
-  buttonSecondary: "#2d2d2d",
+  buttonSecondary: "#6a6a6a",
 
-  navActive: "#2d2d2d",
+  navActive: "#6a6a6a",
 
   link: "#2563eb",
 
@@ -202,14 +202,14 @@ export const byuhColorPalette: ColorPalette = {
   borderActive: "#9e1b34",
   borderStrong: "rgba(255, 255, 255, 0.10)",
 
-  accent: "#9e1b34",
-  accentHover: "#7a1428",
-  accent2: "rgba(158, 27, 52, 0.15)",
-  ring: "rgba(158, 27, 52, 0.35)",
+  accent: "#ff6b8a",
+  accentHover: "#ff5577",
+  accent2: "rgba(255, 107, 138, 0.15)",
+  ring: "rgba(255, 107, 138, 0.35)",
 
-  buttonSecondary: "#9e1b34",
+  buttonSecondary: "#ff6b8a",
 
-  navActive: "#9e1b34",
+  navActive: "#ff6b8a",
 
   link: "#2563eb",
 
@@ -259,14 +259,14 @@ export const byuidColorPalette: ColorPalette = {
   borderActive: "#0063A5",
   borderStrong: "rgba(255, 255, 255, 0.12)",
 
-  accent: "#0063A5",
-  accentHover: "#004A7A",
-  accent2: "rgba(0, 99, 165, 0.15)",
-  ring: "rgba(0, 99, 165, 0.35)",
+  accent: "#3b9eff",
+  accentHover: "#2b8eef",
+  accent2: "rgba(59, 158, 255, 0.15)",
+  ring: "rgba(59, 158, 255, 0.35)",
 
-  buttonSecondary: "#0063A5",
+  buttonSecondary: "#3b9eff",
 
-  navActive: "#0063A5",
+  navActive: "#3b9eff",
 
   link: "#2563eb",
 
@@ -316,14 +316,14 @@ export const uvuColorPalette: ColorPalette = {
   borderActive: "#275038",
   borderStrong: "rgba(255, 255, 255, 0.12)",
 
-  accent: "#275038",
-  accentHover: "#1d3827",
-  accent2: "rgba(39, 80, 56, 0.15)",
-  ring: "rgba(39, 80, 56, 0.35)",
+  accent: "#52b788",
+  accentHover: "#40a473",
+  accent2: "rgba(82, 183, 136, 0.15)",
+  ring: "rgba(82, 183, 136, 0.35)",
 
-  buttonSecondary: "#275038",
+  buttonSecondary: "#52b788",
 
-  navActive: "#275038",
+  navActive: "#52b788",
 
   link: "#2563eb",
 
@@ -373,14 +373,14 @@ export const usuColorPalette: ColorPalette = {
   borderActive: "#0F2439",
   borderStrong: "rgba(255, 255, 255, 0.12)",
 
-  accent: "#0F2439",
-  accentHover: "#0A1827",
-  accent2: "rgba(15, 36, 57, 0.15)",
-  ring: "rgba(15, 36, 57, 0.35)",
+  accent: "#3b7bff",
+  accentHover: "#2b6bef",
+  accent2: "rgba(59, 123, 255, 0.15)",
+  ring: "rgba(59, 123, 255, 0.35)",
 
-  buttonSecondary: "#0F2439",
+  buttonSecondary: "#3b7bff",
 
-  navActive: "#0F2439",
+  navActive: "#3b7bff",
 
   link: "#2563eb",
 
@@ -430,14 +430,14 @@ export const uncColorPalette: ColorPalette = {
   borderActive: "#007FAE",
   borderStrong: "rgba(255, 255, 255, 0.12)",
 
-  accent: "#007FAE",
-  accentHover: "#006699",
-  accent2: "rgba(0, 127, 174, 0.15)",
-  ring: "rgba(0, 127, 174, 0.35)",
+  accent: "#3ba8d8",
+  accentHover: "#2b98c8",
+  accent2: "rgba(59, 168, 216, 0.15)",
+  ring: "rgba(59, 168, 216, 0.35)",
 
-  buttonSecondary: "#007FAE",
+  buttonSecondary: "#3ba8d8",
 
-  navActive: "#007FAE",
+  navActive: "#3ba8d8",
 
   link: "#2563eb",
 
