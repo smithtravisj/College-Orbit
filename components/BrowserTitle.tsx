@@ -1,33 +1,46 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import useAppStore from '@/lib/store';
 
 export default function BrowserTitle() {
   const university = useAppStore((state) => state.settings.university);
-  const previousUniversityRef = useRef<string | null | undefined>(null);
 
   useEffect(() => {
-    previousUniversityRef.current = university;
+    const titles: Record<string, string> = {
+      'Brigham Young University': 'BYU Survival Tool',
+      'Brigham Young University Idaho': 'BYUI Survival Tool',
+      'Brigham Young University Hawaii': 'BYUH Survival Tool',
+      'UNC Chapel Hill': 'UNC Survival Tool',
+      'Utah State University': 'USU Survival Tool',
+      'Utah Valley University': 'UVU Survival Tool',
+    };
 
-    if (university) {
-      const titles: Record<string, string> = {
-        'Brigham Young University': 'BYU Survival Tool',
-        'Brigham Young University Idaho': 'BYUI Survival Tool',
-        'Brigham Young University Hawaii': 'BYUH Survival Tool',
-        'UNC Chapel Hill': 'UNC Survival Tool',
-        'Utah State University': 'USU Survival Tool',
-        'Utah Valley University': 'UVU Survival Tool',
-      };
-      const newTitle = titles[university] || 'College Survival Tool';
-      if (document.title !== newTitle) {
-        document.title = newTitle;
+    const newTitle = university && titles[university] ? titles[university] : 'College Survival Tool';
+    document.title = newTitle;
+  }, [university]);
+
+  // Monitor document title changes to correct them immediately if Next.js resets them
+  useEffect(() => {
+    const titles: Record<string, string> = {
+      'Brigham Young University': 'BYU Survival Tool',
+      'Brigham Young University Idaho': 'BYUI Survival Tool',
+      'Brigham Young University Hawaii': 'BYUH Survival Tool',
+      'UNC Chapel Hill': 'UNC Survival Tool',
+      'Utah State University': 'USU Survival Tool',
+      'Utah Valley University': 'UVU Survival Tool',
+    };
+
+    const expectedTitle = university && titles[university] ? titles[university] : 'College Survival Tool';
+
+    // Check every 100ms if the title has been reset and correct it
+    const interval = setInterval(() => {
+      if (document.title !== expectedTitle && expectedTitle) {
+        document.title = expectedTitle;
       }
-    } else {
-      if (document.title !== 'College Survival Tool') {
-        document.title = 'College Survival Tool';
-      }
-    }
+    }, 100);
+
+    return () => clearInterval(interval);
   }, [university]);
 
   return null;

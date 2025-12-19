@@ -43,7 +43,7 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background-color: #152097;
+            background-color: #1a2f8a;
             animation: wave 1.2s ease-in-out infinite;
           }
           .dot:nth-child(1) { animation-delay: 0s; }
@@ -55,7 +55,7 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
           .dot:nth-child(7) { animation-delay: 0.6s; }
         `}</style>
         <div style={{
-          color: '#152097',
+          color: '#1a2f8a',
           fontSize: '24px',
           fontWeight: '600',
           marginBottom: '48px'

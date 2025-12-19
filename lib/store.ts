@@ -125,11 +125,9 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       // Extract userId from settings response
       const userId = settingsData.userId;
-      if (userId) {
-        set({ userId });
-      }
 
       const newData = {
+        userId: userId || null,
         courses: coursesData.courses || [],
         deadlines: deadlinesData.deadlines || [],
         tasks: tasksData.tasks || [],
