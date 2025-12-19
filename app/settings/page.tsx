@@ -40,21 +40,14 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
-  const { updateSettings, exportData, importData, deleteAllData, initializeStore, loading } = useAppStore();
+  const { settings, updateSettings, exportData, importData, deleteAllData } = useAppStore();
 
   useEffect(() => {
-    const initialize = async () => {
-      await initializeStore();
-      // Initialize local state from store settings
-      setDueSoonDays(useAppStore.getState().settings.dueSoonWindowDays);
-      setUniversity(useAppStore.getState().settings.university || null);
-      setMounted(true);
-    };
-    initialize();
-  }, [initializeStore]);
-
-  // Keep loading state visible until store is done loading
-  const isLoading = !mounted || loading;
+    // Store is already initialized globally by AppLoader
+    setDueSoonDays(settings.dueSoonWindowDays);
+    setUniversity(settings.university || null);
+    setMounted(true);
+  }, [settings.dueSoonWindowDays, settings.university]);
 
   // Fetch college requests if user is admin
   useEffect(() => {
@@ -85,7 +78,7 @@ export default function SettingsPage() {
     }
   }, [dueSoonDays]);
 
-  if (isLoading) {
+  if (!mounted) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-[var(--text-muted)]">Loading...</div>
