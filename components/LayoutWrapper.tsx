@@ -7,7 +7,8 @@ import Navigation from './Navigation';
 export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
-  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/privacy' || pathname === '/terms';
+  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  const isPublicPage = pathname === '/privacy' || pathname === '/terms';
 
   if (isAuthPage) {
     // Full-width centered layout for login/signup
@@ -16,6 +17,15 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
         <div style={{ width: '100%', maxWidth: '550px', flex: '0 1 auto' }}>
           {children}
         </div>
+      </div>
+    );
+  }
+
+  if (isPublicPage) {
+    // Full-width layout for public pages (privacy, terms)
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
+        {children}
       </div>
     );
   }

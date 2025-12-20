@@ -270,7 +270,7 @@ export default function SignupPage() {
                     color: collegeButtonColor || 'var(--accent)',
                     textDecoration: 'none',
                     fontWeight: 500,
-                    filter: collegeButtonColor ? 'brightness(1.8) saturate(1.1)' : 'none',
+                    filter: collegeButtonColor ? 'brightness(1.8) saturate(1.1)' : 'brightness(1.3)',
                   }}
                 >
                   Terms of Service
@@ -284,7 +284,7 @@ export default function SignupPage() {
                     color: collegeButtonColor || 'var(--accent)',
                     textDecoration: 'none',
                     fontWeight: 500,
-                    filter: collegeButtonColor ? 'brightness(1.8) saturate(1.1)' : 'none',
+                    filter: collegeButtonColor ? 'brightness(1.8) saturate(1.1)' : 'brightness(1.3)',
                   }}
                 >
                   Privacy Policy
@@ -318,7 +318,7 @@ export default function SignupPage() {
                 color: collegeButtonColor || 'var(--accent)',
                 textDecoration: 'none',
                 fontWeight: 600,
-                filter: collegeButtonColor ? 'brightness(1.8) saturate(1.1)' : 'none',
+                filter: collegeButtonColor ? 'brightness(1.8) saturate(1.1)' : 'brightness(1.3)',
               }}
             >
               Sign in
