@@ -3,9 +3,13 @@
 import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
 import Navigation from './Navigation';
+import { useAnalyticsPageView } from '@/lib/useAnalytics';
 
 export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+
+  // Track page views for analytics
+  useAnalyticsPageView();
 
   const isAuthPage = pathname === '/login' || pathname === '/signup';
   const isPublicPage = pathname === '/privacy' || pathname === '/terms';

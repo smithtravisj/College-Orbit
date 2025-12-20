@@ -224,3 +224,18 @@ model RateLimit {
   @@index([resetAt])
   @@unique([userId, endpoint])
 }
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  sessionId String
+  userId    String?
+  eventType String
+  eventName String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+}
