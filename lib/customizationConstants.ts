@@ -5,7 +5,6 @@ export const PAGES = {
   DEADLINES: 'Deadlines',
   COURSES: 'Courses',
   TOOLS: 'Tools',
-  ANALYTICS: 'Analytics',
   SETTINGS: 'Settings',
 } as const;
 
