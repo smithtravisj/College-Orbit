@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authConfig } from '@/auth.config';
+import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET all college requests (admin only)
-export async function GET() {
+export const GET = withRateLimit(async function() {
   try {
     const session = await getServerSession(authConfig);
 
@@ -46,10 +47,10 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH update request status
-export async function PATCH(req: NextRequest) {
+export const PATCH = withRateLimit(async function(req: NextRequest) {
   try {
     const session = await getServerSession(authConfig);
 
@@ -133,10 +134,10 @@ export async function PATCH(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE a college request
-export async function DELETE(req: NextRequest) {
+export const DELETE = withRateLimit(async function(req: NextRequest) {
   try {
     const session = await getServerSession(authConfig);
 
@@ -172,4 +173,4 @@ export async function DELETE(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

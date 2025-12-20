@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authConfig } from '@/auth.config';
+import { withRateLimit } from '@/lib/withRateLimit';
 
 // DELETE all user data
-export async function DELETE(_req: NextRequest) {
+export const DELETE = withRateLimit(async function(_req: NextRequest) {
   try {
     const session = await getServerSession(authConfig);
 
@@ -33,4 +34,4 @@ export async function DELETE(_req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

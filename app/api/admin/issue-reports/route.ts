@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authConfig } from '@/auth.config';
 import { prisma } from '@/lib/prisma';
+import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET all issue reports (admin only)
-export async function GET() {
+export const GET = withRateLimit(async function() {
   try {
     const session = await getServerSession(authConfig);
 
@@ -45,10 +46,10 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH update issue report status (admin only)
-export async function PATCH(req: NextRequest) {
+export const PATCH = withRateLimit(async function(req: NextRequest) {
   try {
     const session = await getServerSession(authConfig);
 
@@ -137,10 +138,10 @@ export async function PATCH(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE issue report (admin only)
-export async function DELETE(req: NextRequest) {
+export const DELETE = withRateLimit(async function(req: NextRequest) {
   try {
     const session = await getServerSession(authConfig);
 
@@ -177,4 +178,4 @@ export async function DELETE(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
+import { withRateLimit } from '@/lib/withRateLimit';
 
 // POST create new issue report
-export async function POST(req: NextRequest) {
+export const POST = withRateLimit(async function(req: NextRequest) {
   try {
     const token = await getToken({
       req,
@@ -78,4 +79,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

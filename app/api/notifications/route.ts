@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authConfig } from '@/auth.config';
+import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET user's notifications
-export async function GET(req: NextRequest) {
+export const GET = withRateLimit(async function(req: NextRequest) {
   try {
     const session = await getServerSession(authConfig);
 
@@ -48,10 +49,10 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH mark notification as read
-export async function PATCH(req: NextRequest) {
+export const PATCH = withRateLimit(async function(req: NextRequest) {
   try {
     const session = await getServerSession(authConfig);
 
@@ -93,10 +94,10 @@ export async function PATCH(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE notification
-export async function DELETE(req: NextRequest) {
+export const DELETE = withRateLimit(async function(req: NextRequest) {
   try {
     const session = await getServerSession(authConfig);
 
@@ -132,4 +133,4 @@ export async function DELETE(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

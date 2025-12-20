@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
+import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET all excluded dates for authenticated user
-export async function GET(request: NextRequest) {
+export const GET = withRateLimit(async function(request: NextRequest) {
   try {
     const token = await getToken({
       req: request,
@@ -33,10 +34,10 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // POST create new excluded date(s)
-export async function POST(req: NextRequest) {
+export const POST = withRateLimit(async function(req: NextRequest) {
   try {
     const token = await getToken({
       req,
@@ -134,4 +135,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

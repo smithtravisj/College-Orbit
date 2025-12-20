@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authConfig } from '@/auth.config';
+import { withRateLimit } from '@/lib/withRateLimit';
 
 // POST create a new college request
-export async function POST(req: NextRequest) {
+export const POST = withRateLimit(async function(req: NextRequest) {
   try {
     const session = await getServerSession(authConfig);
 
@@ -83,4 +84,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

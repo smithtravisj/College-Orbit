@@ -23,6 +23,7 @@ model User {
   gpaEntries      GpaEntry[]
   issueReports    IssueReport[]
   notifications   Notification[]
+  rateLimits      RateLimit[]
   settings        Settings?
   tasks           Task[]
 
@@ -208,4 +209,18 @@ model Notification {
   @@index([collegeRequestId])
   @@index([issueReportId])
   @@index([featureRequestId])
+}
+
+model RateLimit {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String
+  count     Int      @default(0)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([resetAt])
+  @@unique([userId, endpoint])
 }

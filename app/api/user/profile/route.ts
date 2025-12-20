@@ -3,9 +3,10 @@ import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authConfig } from '@/auth.config';
 import bcrypt from 'bcryptjs';
+import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET user profile
-export async function GET(_request: NextRequest) {
+export const GET = withRateLimit(async function(_request: NextRequest) {
   try {
     const session = await getServerSession(authConfig);
 
@@ -34,10 +35,10 @@ export async function GET(_request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // PATCH update user profile
-export async function PATCH(req: NextRequest) {
+export const PATCH = withRateLimit(async function(req: NextRequest) {
   try {
     const session = await getServerSession(authConfig);
 
@@ -104,4 +105,4 @@ export async function PATCH(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

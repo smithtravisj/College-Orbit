@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authConfig } from '@/auth.config';
+import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET all GPA entries for authenticated user
-export async function GET() {
+export const GET = withRateLimit(async function() {
   try {
     const session = await getServerSession(authConfig);
 
@@ -28,10 +29,10 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 // POST create new GPA entry
-export async function POST(req: NextRequest) {
+export const POST = withRateLimit(async function(req: NextRequest) {
   try {
     const session = await getServerSession(authConfig);
 
@@ -72,4 +73,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
