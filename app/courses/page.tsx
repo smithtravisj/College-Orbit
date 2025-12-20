@@ -5,6 +5,7 @@ import useAppStore from '@/lib/store';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 import CourseForm from '@/components/CourseForm';
 import CourseList from '@/components/CourseList';
@@ -16,6 +17,7 @@ export default function CoursesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [termFilter, setTermFilter] = useState('all');
   const [showEnded, setShowEnded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { courses, initializeStore } = useAppStore();
 
   useEffect(() => {
@@ -43,6 +45,87 @@ export default function CoursesPage() {
     );
   }
 
+  const getDateSearchStrings = (dateString: string | null | undefined): string[] => {
+    if (!dateString) return [];
+
+    const date = new Date(dateString);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+
+    const monthNames = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+    const monthShort = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+    return [
+      `${month}/${day}`,
+      `${month}/${day}/${year}`,
+      `${month}-${day}`,
+      `${month}-${day}-${year}`,
+      `${day}/${month}/${year}`,
+      monthNames[date.getMonth()],
+      monthShort[date.getMonth()],
+      `${monthNames[date.getMonth()]} ${day}`,
+      `${monthShort[date.getMonth()]} ${day}`,
+      `${day} ${monthNames[date.getMonth()]}`,
+      `${day} ${monthShort[date.getMonth()]}`,
+      String(date.getDate()),
+      String(year),
+    ];
+  };
+
+  const getTimeSearchStrings = (timeString: string): string[] => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const hours12 = hours % 12 || 12;
+    const ampm = hours >= 12 ? 'pm' : 'am';
+
+    return [
+      // 24-hour format with minutes
+      `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`,
+      `${hours}:${String(minutes).padStart(2, '0')}`,
+      // 12-hour format with minutes
+      `${hours12}:${String(minutes).padStart(2, '0')} ${ampm}`,
+      `${hours12}:${String(minutes).padStart(2, '0')}${ampm}`,
+      `${hours12}:${minutes} ${ampm}`,
+      `${hours12}:${minutes}${ampm}`,
+      // 12-hour format without minutes
+      `${hours12} ${ampm}`,
+      `${hours12}${ampm}`,
+      // Individual components
+      String(hours),
+      String(hours12),
+      String(minutes),
+    ];
+  };
+
+  const getDayVariations = (day: string): string[] => {
+    const dayLower = day.toLowerCase();
+    const dayAbbreviations: { [key: string]: string } = {
+      'monday': 'mon',
+      'tuesday': 'tue',
+      'wednesday': 'wed',
+      'thursday': 'thu',
+      'friday': 'fri',
+      'saturday': 'sat',
+      'sunday': 'sun',
+    };
+
+    const variations = [dayLower];
+
+    // Add abbreviation if full name is provided
+    if (dayAbbreviations[dayLower]) {
+      variations.push(dayAbbreviations[dayLower]);
+    }
+
+    // Add full name if abbreviation is provided
+    Object.entries(dayAbbreviations).forEach(([full, abbr]) => {
+      if (dayLower === abbr) {
+        variations.push(full);
+      }
+    });
+
+    return variations;
+  };
+
   // Get unique terms for filter
   const uniqueTerms = Array.from(new Set(courses.map((c) => c.term).filter(Boolean)));
 
@@ -59,6 +142,32 @@ export default function CoursesPage() {
       const endStr = course.endDate.split('T')[0]; // Handle both timestamp and date string formats
 
       return endStr >= dateStr; // Show courses that haven't ended (endDate is today or later)
+    });
+  }
+
+  // Apply search filter
+  if (searchQuery.trim()) {
+    const query = searchQuery.toLowerCase();
+    filteredCourses = filteredCourses.filter((course) => {
+      const startDateSearchStrings = getDateSearchStrings(course.startDate);
+      const endDateSearchStrings = getDateSearchStrings(course.endDate);
+      const meetingTimesSearchStrings = course.meetingTimes
+        .flatMap((mt) => [
+          ...mt.days.flatMap((day) => getDayVariations(day)),
+          ...getTimeSearchStrings(mt.start),
+          ...getTimeSearchStrings(mt.end),
+          ...(mt.location ? [mt.location.toLowerCase()] : []),
+        ]);
+
+      return (
+        course.code.toLowerCase().includes(query) ||
+        course.name.toLowerCase().includes(query) ||
+        course.term.toLowerCase().includes(query) ||
+        course.links.some((link) => link.label.toLowerCase().includes(query) || link.url.toLowerCase().includes(query)) ||
+        startDateSearchStrings.some((dateStr) => dateStr.includes(query)) ||
+        endDateSearchStrings.some((dateStr) => dateStr.includes(query)) ||
+        meetingTimesSearchStrings.some((str) => str.includes(query))
+      );
     });
   }
 
@@ -81,7 +190,15 @@ export default function CoursesPage() {
           {/* Filters sidebar - 3 columns */}
           <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content' }}>
             <Card>
-              <h3 className="text-sm font-semibold text-[var(--text)]" style={{ marginBottom: '16px' }}>Filters</h3>
+              <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: '16px' }}>Filters</h3>
+              <div style={{ marginBottom: '20px' }}>
+                <Input
+                  label="Search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search courses..."
+                />
+              </div>
               <div className="space-y-2" style={{ marginBottom: '16px' }}>
                 {[
                   { value: 'all', label: 'All Courses' },
