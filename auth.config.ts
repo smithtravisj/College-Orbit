@@ -36,6 +36,21 @@ export const authConfig: NextAuthOptions = {
             return null;
           }
 
+          // Log login event to analytics
+          try {
+            await prisma.analyticsEvent.create({
+              data: {
+                sessionId: 'server-login',
+                userId: user.id,
+                eventType: 'login',
+                eventName: 'user_login',
+              },
+            });
+          } catch (analyticsError) {
+            console.error('Failed to log login event:', analyticsError);
+            // Don't fail login if analytics fails
+          }
+
           return {
             id: user.id,
             email: user.email,

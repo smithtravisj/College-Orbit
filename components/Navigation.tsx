@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -17,6 +18,7 @@ import {
   Settings,
   User,
   LogOut,
+  BarChart3,
 } from 'lucide-react';
 
 export const NAV_ITEMS = [
@@ -29,11 +31,39 @@ export const NAV_ITEMS = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
+export const ADMIN_NAV_ITEMS = [
+  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+];
+
 export default function Navigation() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const university = useAppStore((state) => state.settings.university);
   const visiblePages = useAppStore((state) => state.settings.visiblePages || DEFAULT_VISIBLE_PAGES);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user is admin
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setIsAdmin(false);
+      return;
+    }
+
+    const checkAdmin = async () => {
+      try {
+        const response = await fetch('/api/analytics/data').catch(() => null);
+        if (response && response.status !== 403) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdmin();
+  }, [session?.user?.id]);
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/login' });
@@ -67,6 +97,26 @@ export default function Navigation() {
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
                 data-tour={item.label === 'Settings' ? 'settings-link' : item.label === 'Courses' ? 'courses-link' : undefined}
+                className={`relative flex items-center gap-3 h-12 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
+                  isActive
+                    ? 'text-[var(--text)]'
+                    : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
+                }`}
+                style={{ padding: '0 12px', backgroundColor: isActive ? 'var(--nav-active)' : 'transparent' }}
+              >
+                <Icon size={22} className="h-[22px] w-[22px] opacity-80 group-hover:opacity-100 flex-shrink-0" />
+                <span className="truncate">{item.label}</span>
+              </Link>
+            );
+          })}
+          {isAdmin && ADMIN_NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={isActive ? 'page' : undefined}
                 className={`relative flex items-center gap-3 h-12 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   isActive
                     ? 'text-[var(--text)]'
@@ -118,7 +168,7 @@ export default function Navigation() {
 
       {/* Mobile Bottom Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 border-t border-[var(--border)] bg-[var(--panel)] md:hidden z-40">
-        <div className="flex justify-around">
+        <div className="flex justify-around overflow-x-auto">
           {NAV_ITEMS.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -127,10 +177,28 @@ export default function Navigation() {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex flex-1 flex-col items-center justify-center text-xs font-medium transition-colors duration-150 ${
+                className={`flex flex-col items-center justify-center text-xs font-medium transition-colors duration-150 flex-shrink-0 ${
                   isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
                 }`}
-                style={{ padding: '12px 8px' }}
+                style={{ padding: '12px 8px', minWidth: 'auto' }}
+              >
+                <Icon size={24} className="mb-1" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+          {isAdmin && ADMIN_NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex flex-col items-center justify-center text-xs font-medium transition-colors duration-150 flex-shrink-0 ${
+                  isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
+                }`}
+                style={{ padding: '12px 8px', minWidth: 'auto' }}
               >
                 <Icon size={24} className="mb-1" />
                 <span>{item.label}</span>
