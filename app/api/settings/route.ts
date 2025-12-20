@@ -30,6 +30,7 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
         theme: 'system',
         enableNotifications: false,
         university: null,
+        hasCompletedOnboarding: false,
       },
     };
 

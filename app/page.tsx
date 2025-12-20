@@ -49,14 +49,21 @@ export default function Dashboard() {
   const visibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
 
   useEffect(() => {
-    initializeStore();
-    setMounted(true);
+    initializeStore().then(() => {
+      setMounted(true);
+    });
   }, [initializeStore]);
 
   // Check if user needs onboarding after mount
   useEffect(() => {
+    console.log('[Dashboard] Onboarding check:', {
+      mounted,
+      hasCompletedOnboarding: settings.hasCompletedOnboarding,
+      userId: useAppStore.getState().userId,
+    });
     if (mounted && !settings.hasCompletedOnboarding) {
       // Small delay to ensure DOM is fully rendered and IDs are available
+      console.log('[Dashboard] Showing onboarding tour');
       setTimeout(() => {
         setShowOnboarding(true);
       }, 800);
