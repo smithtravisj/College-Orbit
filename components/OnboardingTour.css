@@ -1,0 +1,106 @@
+/* Override driver.js styles to match app theme */
+.driver-popover {
+  background-color: var(--panel) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-card) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
+  color: var(--text) !important;
+}
+
+.driver-popover-title {
+  color: var(--text) !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+.driver-popover-description {
+  color: var(--text-secondary) !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+.driver-popover-progress-text {
+  color: var(--text-muted) !important;
+  font-size: 12px !important;
+}
+
+.driver-popover-next-btn,
+.driver-popover-prev-btn,
+.driver-popover-close-btn {
+  font-family: inherit !important;
+  letter-spacing: normal !important;
+  text-shadow: none !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  line-height: 1 !important;
+}
+
+.driver-popover-next-btn {
+  background-color: var(--accent) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: var(--radius-control) !important;
+  padding: 8px 16px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  text-align: center !important;
+  height: auto !important;
+  min-height: 36px !important;
+}
+
+.driver-popover-next-btn:hover {
+  filter: brightness(1.1) !important;
+}
+
+.driver-popover-prev-btn {
+  background-color: var(--panel-2) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-control) !important;
+  padding: 8px 16px !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  cursor: pointer !important;
+  text-align: center !important;
+  height: auto !important;
+  min-height: 36px !important;
+}
+
+.driver-popover-prev-btn:hover {
+  background-color: var(--panel) !important;
+  border-color: var(--accent) !important;
+}
+
+.driver-popover-close-btn {
+  background-color: transparent !important;
+  color: var(--text-muted) !important;
+  border: none !important;
+  padding: 8px 12px 0 0 !important;
+  font-size: 28px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  text-align: center !important;
+  height: auto !important;
+  width: auto !important;
+  transition: color 0.2s ease !important;
+  line-height: 1 !important;
+}
+
+.driver-popover-close-btn:hover {
+  color: var(--text) !important;
+}
+
+.driver-popover-arrow {
+  display: none !important;
+}
+
+.driver-popover {
+  margin-top: 40px !important;
+}
+
+.driver-popover-navigation-btns {
+  gap: 8px !important;
+}

@@ -67,6 +67,7 @@ export async function PATCH(req: NextRequest) {
     if (data.visiblePages !== undefined) updateData.visiblePages = data.visiblePages;
     if (data.visibleDashboardCards !== undefined) updateData.visibleDashboardCards = data.visibleDashboardCards;
     if (data.visibleToolsCards !== undefined) updateData.visibleToolsCards = data.visibleToolsCards;
+    if (data.hasCompletedOnboarding !== undefined) updateData.hasCompletedOnboarding = data.hasCompletedOnboarding;
 
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 

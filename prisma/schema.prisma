@@ -122,6 +122,7 @@ model Settings {
   visibleDashboardCards Json?    @default("[\"nextClass\", \"dueSoon\", \"overview\", \"todayTasks\", \"quickLinks\", \"upcomingWeek\"]")
   visiblePages          Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Deadlines\", \"Courses\", \"Tools\", \"Settings\"]")
   visibleToolsCards     Json?    @default("[\"quickLinks\", \"gpaCalculator\"]")
+  hasCompletedOnboarding Boolean @default(false)
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])

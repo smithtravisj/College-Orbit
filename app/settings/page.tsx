@@ -1160,7 +1160,7 @@ export default function SettingsPage() {
                     border: 'none',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    fontSize: '14px',
+                    fontSize: '13px',
                     fontWeight: activeCustomizationTab === tab.id ? '600' : '500',
                     transition: 'all 0.2s',
                   }}
@@ -1533,17 +1533,60 @@ export default function SettingsPage() {
 
           {/* About */}
           <Card title="About">
-            <div className="space-y-3 text-sm">
-              <div>
-                <p className="font-semibold text-[var(--text)]">College Survival Tool</p>
-                <p className="text-[var(--text-muted)]">v1.0</p>
+            <div className="space-y-4">
+              <div className="space-y-3 text-sm border-b border-[var(--border)]" style={{ paddingBottom: '18px' }}>
+                <div>
+                  <p className="font-semibold text-[var(--text)]">College Survival Tool</p>
+                  <p className="text-[var(--text-muted)]">v1.0</p>
+                </div>
+                <p className="text-[var(--text-secondary)]">
+                  A personal, privacy-first dashboard for students to manage courses, deadlines, and tasks.
+                </p>
+                <p className="text-[var(--text-muted)] text-xs">
+                  All data is stored locally. No tracking, no ads, no third-party analytics.
+                </p>
               </div>
-              <p className="text-[var(--text-secondary)]">
-                A personal, privacy-first dashboard for students to manage courses, deadlines, and tasks.
-              </p>
-              <p className="text-[var(--text-muted)] text-xs">
-                All data is stored locally. No tracking, no ads, no third-party analytics.
-              </p>
+              <div style={{ paddingTop: '22px' }}>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+                  Onboarding Tour
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                  Replay the interactive tutorial to learn about app features
+                </p>
+                <Button
+                  size="lg"
+                  onClick={async () => {
+                    try {
+                      // Update settings in database
+                      const response = await fetch('/api/settings', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ hasCompletedOnboarding: false }),
+                      });
+
+                      if (response.ok) {
+                        // Wait a moment for the update to persist, then redirect
+                        setTimeout(() => {
+                          window.location.href = '/';
+                        }, 200);
+                      }
+                    } catch (error) {
+                      console.error('Failed to restart tutorial:', error);
+                    }
+                  }}
+                  style={{
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
+                    backgroundColor: 'var(--button-secondary)',
+                    color: settings.theme === 'light' ? '#000000' : 'white',
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: 'var(--border)',
+                  }}
+                >
+                  Restart Tutorial
+                </Button>
+              </div>
             </div>
           </Card>
         </div>

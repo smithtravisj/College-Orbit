@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
+import OnboardingTour from '@/components/OnboardingTour';
 import { isToday, formatDate, isOverdue } from '@/lib/utils';
 import { isDateExcluded } from '@/lib/calendarUtils';
 import { getQuickLinks } from '@/lib/quickLinks';
@@ -19,6 +20,7 @@ import TimePicker from '@/components/TimePicker';
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [showDeadlineForm, setShowDeadlineForm] = useState(false);
@@ -50,6 +52,16 @@ export default function Dashboard() {
     initializeStore();
     setMounted(true);
   }, [initializeStore]);
+
+  // Check if user needs onboarding after mount
+  useEffect(() => {
+    if (mounted && !settings.hasCompletedOnboarding) {
+      // Small delay to ensure DOM is fully rendered and IDs are available
+      setTimeout(() => {
+        setShowOnboarding(true);
+      }, 800);
+    }
+  }, [mounted, settings.hasCompletedOnboarding]);
 
   if (!mounted) {
     return (
@@ -283,12 +295,17 @@ export default function Dashboard() {
 
   return (
     <>
+      <OnboardingTour
+        shouldRun={showOnboarding}
+        onComplete={() => setShowOnboarding(false)}
+      />
+
       <PageHeader title="Dashboard" subtitle="Welcome back. Here's your schedule and tasks for today." />
       <div className="mx-auto w-full max-w-[1400px] min-h-[calc(100vh-var(--header-h))] flex flex-col" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)] flex-1">
           {/* Top row - 3 cards */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.NEXT_CLASS) && (
-          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.NEXT_CLASS, visibleDashboardCards)} h-full min-h-[220px]`}>
+          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.NEXT_CLASS, visibleDashboardCards)} h-full min-h-[220px]`} data-tour="next-class">
             <Card title="Next Class" className="h-full flex flex-col">
               {nextClass ? (
                 <div className="flex flex-col gap-4">
@@ -335,7 +352,7 @@ export default function Dashboard() {
 
           {/* Due Soon */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.DUE_SOON) && (
-          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.DUE_SOON, visibleDashboardCards)} h-full min-h-[220px]`}>
+          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.DUE_SOON, visibleDashboardCards)} h-full min-h-[220px]`} data-tour="due-soon">
             <Card title="Due Soon" className="h-full flex flex-col">
               {showDeadlineForm && (
                 <div style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid var(--border)' }}>
@@ -575,7 +592,7 @@ export default function Dashboard() {
 
           {/* Overview */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.OVERVIEW) && (
-          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.OVERVIEW, visibleDashboardCards)} h-full min-h-[220px]`}>
+          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.OVERVIEW, visibleDashboardCards)} h-full min-h-[220px]`} data-tour="overview">
             <Card title="Overview" className="h-full flex flex-col">
               <div className="space-y-0">
                 <div className="flex items-center justify-between border-b border-[var(--border)] first:pt-0" style={{ paddingTop: '12px', paddingBottom: '12px' }}>
@@ -603,7 +620,7 @@ export default function Dashboard() {
 
           {/* Second row - Today's Tasks & Quick Links */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.TODAY_TASKS) && (
-          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.TODAY_TASKS, visibleDashboardCards)} lg:flex`}>
+          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.TODAY_TASKS, visibleDashboardCards)} lg:flex`} data-tour="today-tasks">
             <Card title="Today's Tasks" className="h-full flex flex-col w-full">
             {todayTasks.length > 0 || showTaskForm ? (
               <div className="space-y-4 divide-y divide-[var(--border)]">

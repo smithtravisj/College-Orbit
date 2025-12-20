@@ -48,7 +48,7 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)]" style={{ padding: '20px 16px' }}>
+      <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)]" style={{ padding: '20px 16px' }} data-tour="navigation">
         <div style={{ marginBottom: '16px' }}>
           <h1 className="font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px', fontSize: university === 'Brigham Young University Hawaii' ? '22px' : university === 'Brigham Young University Idaho' ? '23px' : (university === 'Brigham Young University' || university === 'UNC Chapel Hill' || university === 'Utah State University' || university === 'Utah Valley University') ? '24px' : '21px' }}>{getAppTitle(university)}</h1>
           {session?.user && (
@@ -66,6 +66,7 @@ export default function Navigation() {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
+                data-tour={item.label === 'Settings' ? 'settings-link' : item.label === 'Courses' ? 'courses-link' : undefined}
                 className={`relative flex items-center gap-3 h-12 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   isActive
                     ? 'text-[var(--text)]'

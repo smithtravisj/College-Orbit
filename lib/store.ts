@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS: Settings = {
   visiblePages: DEFAULT_VISIBLE_PAGES,
   visibleDashboardCards: DEFAULT_VISIBLE_DASHBOARD_CARDS,
   visibleToolsCards: DEFAULT_VISIBLE_TOOLS_CARDS,
+  hasCompletedOnboarding: false,
 };
 
 interface AppStore {

@@ -61,6 +61,7 @@ export interface Settings {
   visiblePages?: string[];
   visibleDashboardCards?: string[];
   visibleToolsCards?: string[];
+  hasCompletedOnboarding?: boolean;
 }
 
 export interface ExcludedDate {
