@@ -1177,7 +1177,7 @@ export default function SettingsPage() {
                   Choose which pages appear in the navigation menu
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {Object.values(PAGES).filter(page => page !== 'Settings').map((page) => (
+                  {Object.values(PAGES).filter(page => page !== 'Settings' && (page !== 'Analytics' || isAdmin)).map((page) => (
                     <label
                       key={page}
                       style={{
