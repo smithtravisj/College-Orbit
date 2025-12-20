@@ -1546,7 +1546,8 @@ export default function SettingsPage() {
                   All data is stored locally. No tracking, no ads, no third-party analytics.
                 </p>
               </div>
-              <div style={{ paddingTop: '22px' }}>
+              {/* Onboarding Tour */}
+              <div style={{ paddingTop: '16px', paddingBottom: '22px', borderTop: '1px solid var(--border)' }}>
                 <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
                   Onboarding Tour
                 </label>
@@ -1586,6 +1587,32 @@ export default function SettingsPage() {
                 >
                   Restart Tutorial
                 </Button>
+              </div>
+              {/* Legal Section */}
+              <div style={{ paddingTop: '22px', borderTop: '1px solid var(--border)' }}>
+                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
+                  Legal
+                </p>
+                <div className="flex flex-col gap-2">
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    Privacy Policy
+                  </a>
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    Terms of Service
+                  </a>
+                </div>
               </div>
             </div>
           </Card>

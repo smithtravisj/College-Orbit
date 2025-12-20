@@ -246,6 +246,53 @@ export default function SignupPage() {
             </div>
           )}
 
+          {/* Privacy Policy & Terms Consent */}
+          <div style={{ paddingTop: '12px', paddingBottom: '12px' }}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                required
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  cursor: 'pointer',
+                  marginTop: '2px',
+                  flexShrink: 0,
+                }}
+              />
+              <span style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                I agree to the{' '}
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: collegeButtonColor || 'var(--accent)',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                    filter: collegeButtonColor ? 'brightness(1.8) saturate(1.1)' : 'none',
+                  }}
+                >
+                  Terms of Service
+                </Link>
+                {' '}and{' '}
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: collegeButtonColor || 'var(--accent)',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                    filter: collegeButtonColor ? 'brightness(1.8) saturate(1.1)' : 'none',
+                  }}
+                >
+                  Privacy Policy
+                </Link>
+              </span>
+            </label>
+          </div>
+
           <div style={{ paddingTop: '8px', paddingBottom: '8px' }}>
             <Button
               type="submit"
@@ -271,7 +318,7 @@ export default function SignupPage() {
                 color: collegeButtonColor || 'var(--accent)',
                 textDecoration: 'none',
                 fontWeight: 600,
-                filter: collegeButtonColor ? 'brightness(1.2)' : 'brightness(1.6)',
+                filter: collegeButtonColor ? 'brightness(1.8) saturate(1.1)' : 'none',
               }}
             >
               Sign in
