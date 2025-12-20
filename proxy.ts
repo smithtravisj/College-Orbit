@@ -12,7 +12,9 @@ export async function proxy(request: NextRequest) {
 
   const isLoginSignupPage =
     request.nextUrl.pathname.startsWith('/login') ||
-    request.nextUrl.pathname.startsWith('/signup');
+    request.nextUrl.pathname.startsWith('/signup') ||
+    request.nextUrl.pathname.startsWith('/forgot-password') ||
+    request.nextUrl.pathname.startsWith('/reset-password');
 
   const isPublicPage =
     request.nextUrl.pathname.startsWith('/privacy') ||

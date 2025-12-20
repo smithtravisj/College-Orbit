@@ -74,9 +74,23 @@ export function LoginForm() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '15px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
-                Password
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text)' }}>
+                  Password
+                </label>
+                <Link
+                  href="/forgot-password"
+                  style={{
+                    fontSize: '13px',
+                    color: 'var(--accent)',
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                    filter: 'brightness(1.6)'
+                  }}
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 type="password"
                 value={password}

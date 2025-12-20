@@ -11,7 +11,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   // Track page views for analytics
   useAnalyticsPageView();
 
-  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password' || pathname === '/reset-password';
   const isPublicPage = pathname === '/privacy' || pathname === '/terms';
 
   if (isAuthPage) {
@@ -36,7 +36,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
 
   // Standard layout with sidebar for authenticated users
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', display: 'grid', gridTemplateColumns: '264px 1fr', gap: 0 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '264px 1fr', gap: 0, minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
       <Navigation />
       <main style={{ minWidth: 0, paddingBottom: '80px' }}>
         {children}

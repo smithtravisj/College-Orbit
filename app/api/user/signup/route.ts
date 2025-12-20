@@ -60,7 +60,10 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { user: { id: user.id, email: user.email, name: user.name } },
+      {
+        user: { id: user.id, email: user.email, name: user.name },
+        message: 'Account created successfully!',
+      },
       { status: 201 }
     );
   } catch (error) {

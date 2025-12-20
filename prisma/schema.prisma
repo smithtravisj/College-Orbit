@@ -8,13 +8,15 @@ datasource db {
 }
 
 model User {
-  id              String           @id @default(cuid())
-  email           String           @unique
-  passwordHash    String
-  name            String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  isAdmin         Boolean          @default(false)
+  id                    String           @id @default(cuid())
+  email                 String           @unique
+  passwordHash          String
+  name                  String?
+  resetPasswordToken     String?          @unique
+  resetPasswordTokenExpiry DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  isAdmin               Boolean          @default(false)
   collegeRequests CollegeRequest[]
   courses         Course[]
   deadlines       Deadline[]
