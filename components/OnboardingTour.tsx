@@ -93,7 +93,13 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
       ],
       onDestroyed: async () => {
         // Mark onboarding as complete when tour ends (completed or skipped)
-        await updateSettings({ hasCompletedOnboarding: true });
+        try {
+          console.log('[OnboardingTour] Marking onboarding as complete...');
+          await updateSettings({ hasCompletedOnboarding: true });
+          console.log('[OnboardingTour] Successfully marked onboarding as complete');
+        } catch (error) {
+          console.error('[OnboardingTour] Failed to mark onboarding as complete:', error);
+        }
         onComplete?.();
       },
     });

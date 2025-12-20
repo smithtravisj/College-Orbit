@@ -13,7 +13,7 @@ const DEFAULT_SETTINGS: Settings = {
   visiblePages: DEFAULT_VISIBLE_PAGES,
   visibleDashboardCards: DEFAULT_VISIBLE_DASHBOARD_CARDS,
   visibleToolsCards: DEFAULT_VISIBLE_TOOLS_CARDS,
-  hasCompletedOnboarding: false,
+  hasCompletedOnboarding: false, // Always show tour on first login
 };
 
 interface AppStore {
@@ -92,15 +92,9 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   initializeStore: async () => {
-    // Skip if already initialized (prevents re-initialization on navigation)
-    const currentState = get();
-    if (currentState.courses.length > 0 || currentState.deadlines.length > 0 || currentState.tasks.length > 0 || currentState.settings.university !== null) {
-      return;
-    }
-
     set({ loading: true });
     try {
-      // Load from database to get userId and all data
+      // Always load fresh settings from database to ensure we have the latest onboarding state
       await get().loadFromDatabase();
     } catch (error) {
       console.error('Failed to initialize store:', error);
@@ -133,6 +127,11 @@ const useAppStore = create<AppStore>((set, get) => ({
       const userId = settingsData.userId;
 
       const rawSettings = settingsData.settings || DEFAULT_SETTINGS;
+
+      console.log('[Store] Loaded settings from DB:', {
+        hasCompletedOnboarding: rawSettings?.hasCompletedOnboarding,
+        userId: rawSettings?.userId,
+      });
 
       // Parse JSON fields if they're strings
       const parsedSettings = {
