@@ -11,6 +11,7 @@ export const universityLinks: Record<string, Array<{ label: string; url: string 
     { label: 'BYU Library', url: 'https://lib.byu.edu/' },
     { label: 'Residence Life', url: 'https://reslife.byu.edu/' },
     { label: 'Endorsement', url: 'https://endorse.byu.edu/' },
+    { label: 'Textbooks', url: 'https://booklist.byu.edu/' },
   ],
   'Brigham Young University Idaho': [
     { label: 'Home', url: 'https://www.byui.edu/' },
