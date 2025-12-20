@@ -12,7 +12,9 @@ export async function proxy(request: NextRequest) {
 
   const isAuthPage =
     request.nextUrl.pathname.startsWith('/login') ||
-    request.nextUrl.pathname.startsWith('/signup');
+    request.nextUrl.pathname.startsWith('/signup') ||
+    request.nextUrl.pathname.startsWith('/privacy') ||
+    request.nextUrl.pathname.startsWith('/terms');
 
   // Redirect to login if accessing protected page without token
   if (!isAuthPage && !token) {

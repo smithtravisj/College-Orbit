@@ -7,7 +7,7 @@ import Navigation from './Navigation';
 export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
-  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/privacy' || pathname === '/terms';
 
   if (isAuthPage) {
     // Full-width centered layout for login/signup
