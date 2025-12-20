@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!token?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const data = await req.json();

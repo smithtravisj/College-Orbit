@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     if (!token?.id) {
       console.log('[GET /api/deadlines] No user ID in token, returning 401');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
     console.log('[GET /api/deadlines] Authorized user:', token.id);
 
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching deadlines:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch deadlines' },
+      { error: 'We couldn\'t load your deadlines. Please check your connection and try again.' },
       { status: 500 }
     );
   }
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!token?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const data = await req.json();

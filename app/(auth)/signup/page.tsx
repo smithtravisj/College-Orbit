@@ -67,7 +67,7 @@ export default function SignupPage() {
 
       if (!signupRes.ok) {
         const { error } = await signupRes.json();
-        setError(error || 'Failed to create account');
+        setError(error || 'We couldn\'t create your account. Please try again.');
         setLoading(false);
         return;
       }
@@ -112,7 +112,7 @@ export default function SignupPage() {
       router.push('/');
       router.refresh();
     } catch (error) {
-      setError('An error occurred. Please try again.');
+      setError('Something went wrong. Please check your connection and try again.');
       setLoading(false);
     }
   };

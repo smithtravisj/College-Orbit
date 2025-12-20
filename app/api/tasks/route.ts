@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     if (!token?.id) {
       console.log('[GET /api/tasks] No user ID in token, returning 401');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
     console.log('[GET /api/tasks] Authorized user:', token.id);
 
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching tasks:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch tasks' },
+      { error: 'We couldn\'t load your tasks. Please check your connection and try again.' },
       { status: 500 }
     );
   }
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!token?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const data = await req.json();

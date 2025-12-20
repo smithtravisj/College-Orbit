@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!token?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const excludedDates = await prisma.excludedDate.findMany({
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching excluded dates:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch excluded dates' },
+      { error: 'We couldn\'t load your excluded dates. Please check your connection and try again.' },
       { status: 500 }
     );
   }
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!token?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const data = await req.json();
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     } else {
       console.error('[POST /api/excluded-dates] Missing date or dates');
       return NextResponse.json(
-        { error: 'Date or dates array is required' },
+        { error: 'Please select a date range' },
         { status: 400 }
       );
     }

@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     const session = await getServerSession(authConfig);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('[GET /api/notifications] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch notifications' },
+      { error: 'We couldn\'t load your notifications. Please check your connection and try again.' },
       { status: 500 }
     );
   }
@@ -56,7 +56,7 @@ export async function PATCH(req: NextRequest) {
     const session = await getServerSession(authConfig);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const data = await req.json();

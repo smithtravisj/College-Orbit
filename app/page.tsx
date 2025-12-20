@@ -902,9 +902,14 @@ export default function Dashboard() {
                   ))}
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
-                  <p>Select a college in settings to view quick links</p>
-                </div>
+                <EmptyState
+                  title="Quick Links"
+                  description="Go to settings to select a university to add quick links."
+                  action={{
+                    label: "Go to Settings",
+                    onClick: () => window.location.href = '/settings'
+                  }}
+                />
               )}
             </Card>
           </div>

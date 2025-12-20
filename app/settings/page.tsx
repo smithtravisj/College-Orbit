@@ -187,11 +187,11 @@ export default function SettingsPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      setExportMessage('Data exported successfully');
+      setExportMessage('✓ Data exported successfully');
       setTimeout(() => setExportMessage(''), 3000);
     } catch (error) {
       console.error('Export error:', error);
-      setExportMessage('✗ Failed to export data');
+      setExportMessage('✗ We couldn\'t export your data. Please try again.');
       setTimeout(() => setExportMessage(''), 3000);
     }
   };
@@ -209,7 +209,7 @@ export default function SettingsPage() {
         setTimeout(() => setImportMessage(''), 3000);
       } catch (error) {
         console.error('Import error:', error);
-        setImportMessage('✗ Failed to import data. Invalid file format.');
+        setImportMessage('✗ The file format isn\'t valid. Please make sure you\'re uploading a backup file exported from this app.');
         setTimeout(() => setImportMessage(''), 3000);
       }
     };
@@ -227,7 +227,7 @@ export default function SettingsPage() {
       setDeleteMessage('✓ All data deleted successfully');
       setTimeout(() => setDeleteMessage(''), 3000);
     } catch (error) {
-      setDeleteMessage('✗ Failed to delete data');
+      setDeleteMessage('✗ We couldn\'t delete your data. Please try again.');
       setTimeout(() => setDeleteMessage(''), 3000);
     }
   };
@@ -249,7 +249,7 @@ export default function SettingsPage() {
       // Sign out and redirect
       await signOut({ callbackUrl: '/' });
     } catch (error) {
-      setDeleteMessage('✗ Failed to delete account');
+      setDeleteMessage('✗ We couldn\'t delete your account. Please try again.');
       setTimeout(() => setDeleteMessage(''), 3000);
       setShowDeleteAccountConfirm(false);
     }
@@ -275,7 +275,7 @@ export default function SettingsPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        const errorText = data.details ? `${data.error} - ${data.details}` : (data.error || 'Failed to submit request');
+        const errorText = data.error || 'We couldn\'t save your college request. Please try again.';
         setCollegeRequestMessage(`✗ ${errorText}`);
         setCollegeRequestLoading(false);
         setTimeout(() => setCollegeRequestMessage(''), 5000);
@@ -292,7 +292,7 @@ export default function SettingsPage() {
 
       setTimeout(() => setCollegeRequestMessage(''), 3000);
     } catch (error) {
-      setCollegeRequestMessage('✗ Failed to submit request');
+      setCollegeRequestMessage('✗ We couldn\'t save your college request. Please try again.');
       setCollegeRequestLoading(false);
       setTimeout(() => setCollegeRequestMessage(''), 3000);
     }
@@ -309,14 +309,14 @@ export default function SettingsPage() {
       if (!response.ok) {
         const data = await response.json();
         console.error('Failed to mark as added:', data);
-        alert(`Failed to mark as added: ${data.error || 'Unknown error'}`);
+        alert('We couldn\'t update this request. Please try again.');
         return;
       }
 
       setCollegeRequests(collegeRequests.filter(req => req.id !== requestId));
     } catch (error) {
       console.error('Error marking as added:', error);
-      alert(`Error marking as added: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert('We couldn\'t update this request. Please try again.');
     }
   };
 
@@ -338,7 +338,7 @@ export default function SettingsPage() {
       if (!response.ok) {
         const data = await response.json();
         console.error('Failed to reject request:', data);
-        alert(`Failed to reject request: ${data.error || 'Unknown error'}`);
+        alert('We couldn\'t update this request. Please try again.');
         setShowDeleteRequestConfirm(false);
         return;
       }
@@ -348,7 +348,7 @@ export default function SettingsPage() {
       setDeleteRequestId(null);
     } catch (error) {
       console.error('Error rejecting request:', error);
-      alert(`Error rejecting request: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert('We couldn\'t update this request. Please try again.');
       setShowDeleteRequestConfirm(false);
     }
   };
@@ -377,14 +377,14 @@ export default function SettingsPage() {
         console.error('Failed to parse API response:', parseError);
         console.error('Response status:', response.status);
         console.error('Response text:', await response.text());
-        setIssueReportMessage('✗ Server error - invalid response');
+        setIssueReportMessage('✗ We encountered a problem saving your report. Please try again.');
         setIssueReportLoading(false);
         setTimeout(() => setIssueReportMessage(''), 5000);
         return;
       }
 
       if (!response.ok) {
-        const errorText = data.details ? `${data.error} - ${data.details}` : (data.error || 'Failed to submit report');
+        const errorText = data.error || 'We couldn\'t save your report. Please try again.';
         setIssueReportMessage(`✗ ${errorText}`);
         setIssueReportLoading(false);
         setTimeout(() => setIssueReportMessage(''), 5000);
@@ -402,7 +402,7 @@ export default function SettingsPage() {
       setTimeout(() => setIssueReportMessage(''), 3000);
     } catch (error) {
       console.error('Issue report submission error:', error);
-      setIssueReportMessage('✗ Failed to submit report');
+      setIssueReportMessage('✗ We couldn\'t save your report. Please try again.');
       setIssueReportLoading(false);
       setTimeout(() => setIssueReportMessage(''), 3000);
     }
@@ -419,14 +419,14 @@ export default function SettingsPage() {
       if (!response.ok) {
         const data = await response.json();
         console.error('Failed to mark as fixed:', data);
-        alert(`Failed to mark as fixed: ${data.error || 'Unknown error'}`);
+        alert('We couldn\'t update this issue. Please try again.');
         return;
       }
 
       setIssueReports(issueReports.filter(report => report.id !== reportId));
     } catch (error) {
       console.error('Error marking as fixed:', error);
-      alert(`Error marking as fixed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert('We couldn\'t update this issue. Please try again.');
     }
   };
 
@@ -448,7 +448,7 @@ export default function SettingsPage() {
       if (!response.ok) {
         const data = await response.json();
         console.error('Failed to reject report:', data);
-        alert(`Failed to reject report: ${data.error || 'Unknown error'}`);
+        alert('We couldn\'t update this issue. Please try again.');
         setShowDeleteIssueConfirm(false);
         return;
       }
@@ -458,7 +458,7 @@ export default function SettingsPage() {
       setDeleteIssueId(null);
     } catch (error) {
       console.error('Error rejecting report:', error);
-      alert(`Error rejecting report: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert('We couldn\'t update this issue. Please try again.');
       setShowDeleteIssueConfirm(false);
     }
   };
@@ -487,14 +487,14 @@ export default function SettingsPage() {
         console.error('Failed to parse API response:', parseError);
         console.error('Response status:', response.status);
         console.error('Response text:', await response.text());
-        setFeatureRequestMessage('✗ Server error - invalid response');
+        setFeatureRequestMessage('✗ We encountered a problem saving your request. Please try again.');
         setFeatureRequestLoading(false);
         setTimeout(() => setFeatureRequestMessage(''), 5000);
         return;
       }
 
       if (!response.ok) {
-        const errorText = data.details ? `${data.error} - ${data.details}` : (data.error || 'Failed to submit request');
+        const errorText = data.error || 'We couldn\'t save your request. Please try again.';
         setFeatureRequestMessage(`✗ ${errorText}`);
         setFeatureRequestLoading(false);
         setTimeout(() => setFeatureRequestMessage(''), 5000);
@@ -512,7 +512,7 @@ export default function SettingsPage() {
       setTimeout(() => setFeatureRequestMessage(''), 3000);
     } catch (error) {
       console.error('Feature request submission error:', error);
-      setFeatureRequestMessage('✗ Failed to submit request');
+      setFeatureRequestMessage('✗ We couldn\'t save your request. Please try again.');
       setFeatureRequestLoading(false);
       setTimeout(() => setFeatureRequestMessage(''), 3000);
     }
@@ -529,14 +529,14 @@ export default function SettingsPage() {
       if (!response.ok) {
         const data = await response.json();
         console.error('Failed to mark as implemented:', data);
-        alert(`Failed to mark as implemented: ${data.error || 'Unknown error'}`);
+        alert('We couldn\'t update this feature request. Please try again.');
         return;
       }
 
       setFeatureRequests(featureRequests.filter(request => request.id !== requestId));
     } catch (error) {
       console.error('Error marking as implemented:', error);
-      alert(`Error marking as implemented: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert('We couldn\'t update this feature request. Please try again.');
     }
   };
 
@@ -558,7 +558,7 @@ export default function SettingsPage() {
       if (!response.ok) {
         const data = await response.json();
         console.error('Failed to reject request:', data);
-        alert(`Failed to reject request: ${data.error || 'Unknown error'}`);
+        alert('We couldn\'t update this feature request. Please try again.');
         setShowDeleteFeatureConfirm(false);
         return;
       }
@@ -568,7 +568,7 @@ export default function SettingsPage() {
       setDeleteFeatureId(null);
     } catch (error) {
       console.error('Error rejecting request:', error);
-      alert(`Error rejecting request: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert('We couldn\'t update this feature request. Please try again.');
       setShowDeleteFeatureConfirm(false);
     }
   };
@@ -998,7 +998,7 @@ export default function SettingsPage() {
                     paddingRight: '36px'
                   }}
                 >
-                  <option value="">Select a College</option>
+                  <option value="">Select a University</option>
                   <option value="Brigham Young University">Brigham Young University</option>
                   <option value="Brigham Young University Hawaii">Brigham Young University Hawaii</option>
                   <option value="Brigham Young University Idaho">Brigham Young University Idaho</option>

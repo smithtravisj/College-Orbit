@@ -9,7 +9,7 @@ export async function DELETE(_req: NextRequest) {
     const session = await getServerSession(authConfig);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const userId = session.user.id;
@@ -23,7 +23,7 @@ export async function DELETE(_req: NextRequest) {
   } catch (error) {
     console.error('Error deleting user account:', error);
     return NextResponse.json(
-      { error: 'Failed to delete account', details: error instanceof Error ? error.message : String(error) },
+      { error: 'We couldn\'t delete your account. Please try again.' },
       { status: 500 }
     );
   }

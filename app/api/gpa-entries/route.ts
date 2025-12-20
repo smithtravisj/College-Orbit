@@ -9,7 +9,7 @@ export async function GET() {
     const session = await getServerSession(authConfig);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     // Fetch all GPA entries for the user (no filtering by university)
@@ -24,7 +24,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching GPA entries:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch GPA entries' },
+      { error: 'We couldn\'t load your GPA entries. Please check your connection and try again.' },
       { status: 500 }
     );
   }
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     if (!session?.user?.id) {
       console.log('[POST /api/gpa-entries] Unauthorized');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const data = await req.json();

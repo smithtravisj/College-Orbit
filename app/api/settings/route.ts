@@ -10,7 +10,7 @@ export async function GET(_request: NextRequest) {
 
     if (!session?.user?.id) {
       console.log('[GET /api/settings] No user ID in session');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     console.log('[GET /api/settings] Fetching for user:', session.user.id);
@@ -37,7 +37,7 @@ export async function GET(_request: NextRequest) {
   } catch (error) {
     console.error('[GET /api/settings] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch settings' },
+      { error: 'We couldn\'t load your settings. Please check your connection and try again.' },
       { status: 500 }
     );
   }
@@ -48,7 +48,7 @@ export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authConfig);
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
   }
 
   const userId = session.user.id;

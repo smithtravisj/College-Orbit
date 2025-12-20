@@ -38,7 +38,7 @@ export function LoginForm() {
       router.push(callbackUrl);
       router.refresh();
     } catch (error) {
-      setError('An error occurred. Please try again.');
+      setError('Something went wrong. Please check your connection and try again.');
       setLoading(false);
     }
   };
