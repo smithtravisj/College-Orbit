@@ -119,23 +119,23 @@ export default function SignupPage() {
 
   return (
     <div>
-      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 600, color: 'var(--text)', marginBottom: '8px' }}>
           {university ? `${COLLEGE_ABBREVIATIONS[university]} Survival Tool` : 'College Survival Tool'}
         </h1>
-        <p style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px' }}>Create your account</p>
+        <p style={{ color: 'var(--text)', marginBottom: '6px', fontSize: '15px' }}>Create your account</p>
       </div>
 
       <Card>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {error && (
-            <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '8px', padding: '12px' }}>
-              <p style={{ fontSize: '14px', color: 'rgb(239, 68, 68)' }}>{error}</p>
+            <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '8px', padding: '10px' }}>
+              <p style={{ fontSize: '13px', color: 'rgb(239, 68, 68)' }}>{error}</p>
             </div>
           )}
 
           <div>
-            <label style={{ display: 'block', fontSize: '15px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text)', marginBottom: '4px' }}>
               Name
             </label>
             <Input
@@ -147,7 +147,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '15px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text)', marginBottom: '4px' }}>
               Email
             </label>
             <Input
@@ -160,7 +160,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '15px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text)', marginBottom: '4px' }}>
               Password
             </label>
             <Input
@@ -171,13 +171,13 @@ export default function SignupPage() {
               placeholder="••••••••"
               minLength={8}
             />
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
               At least 8 characters
             </p>
           </div>
 
           <div style={{ position: 'relative' }}>
-            <label style={{ display: 'block', fontSize: '15px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text)', marginBottom: '4px' }}>
               University
             </label>
             <select
@@ -220,7 +220,7 @@ export default function SignupPage() {
 
           {!university && (
             <div>
-              <label style={{ display: 'block', fontSize: '15px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text)', marginBottom: '4px' }}>
                 Don't see your university?
               </label>
               <input
@@ -247,20 +247,20 @@ export default function SignupPage() {
           )}
 
           {/* Privacy Policy & Terms Consent */}
-          <div style={{ paddingTop: '12px', paddingBottom: '12px' }}>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+          <div style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }}>
               <input
                 type="checkbox"
                 required
                 style={{
-                  width: '18px',
-                  height: '18px',
+                  width: '16px',
+                  height: '16px',
                   cursor: 'pointer',
                   marginTop: '2px',
                   flexShrink: 0,
                 }}
               />
-              <span style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
                 I agree to the{' '}
                 <Link
                   href="/terms"
@@ -293,7 +293,7 @@ export default function SignupPage() {
             </label>
           </div>
 
-          <div style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+          <div style={{ paddingTop: '4px', paddingBottom: '4px' }}>
             <Button
               type="submit"
               variant="primary"
@@ -309,8 +309,8 @@ export default function SignupPage() {
           </div>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '20px' }}>
-          <p style={{ fontSize: '14px', color: 'var(--text)' }}>
+        <div style={{ textAlign: 'center', marginTop: '14px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text)' }}>
             Already have an account?{' '}
             <Link
               href="/login"
