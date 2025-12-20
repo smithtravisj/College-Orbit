@@ -5,12 +5,12 @@ import Card from '@/components/ui/Card';
 
 export default function TermsPage() {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
+    <>
       <PageHeader
         title="Terms of Service"
         subtitle="Legal agreement for using the College Survival Tool"
       />
-      <div className="mx-auto w-full max-w-[900px] flex flex-col gap-6" style={{ padding: 'clamp(16px, 5%, 40px)', marginTop: '16px' }}>
+      <div className="mx-auto w-full max-w-[900px] flex flex-col gap-6" style={{ padding: 'clamp(16px, 5%, 40px)' }}>
         {/* Acceptance of Terms */}
         <Card title="Acceptance of Terms">
           <div className="space-y-4">
@@ -356,6 +356,6 @@ export default function TermsPage() {
         </Card>
 
       </div>
-    </div>
+    </>
   );
 }

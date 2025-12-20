@@ -5,12 +5,12 @@ import Card from '@/components/ui/Card';
 
 export default function PrivacyPage() {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
+    <>
       <PageHeader
         title="Privacy Policy"
         subtitle="How we collect, use, and protect your data"
       />
-      <div className="mx-auto w-full max-w-[900px] flex flex-col gap-6" style={{ padding: 'clamp(16px, 5%, 40px)', marginTop: '16px' }}>
+      <div className="mx-auto w-full max-w-[900px] flex flex-col gap-6" style={{ padding: 'clamp(16px, 5%, 40px)' }}>
         {/* Introduction */}
         <Card title="Privacy Policy">
           <div className="space-y-4">
@@ -262,6 +262,6 @@ export default function PrivacyPage() {
         </Card>
 
       </div>
-    </div>
+    </>
   );
 }
