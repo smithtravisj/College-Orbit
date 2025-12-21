@@ -11,8 +11,8 @@ interface TimePickerProps {
 
 export default function TimePicker({ value, onChange, label }: TimePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [hours, setHours] = useState<string>('10');
-  const [minutes, setMinutes] = useState<string>('0');
+  const [hours, setHours] = useState<string>('');
+  const [minutes, setMinutes] = useState<string>('');
   const [isPM, setIsPM] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const isUpdatingFromParent = useRef(false);
@@ -81,33 +81,50 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   };
 
   const incrementHours = () => {
-    let newHours = parseInt(hours) + 1;
+    const currentHours = parseInt(hours) || 0;
+    const currentMinutes = parseInt(minutes) || 0;
+    let newHours = currentHours + 1;
     if (newHours > 12) newHours = 1;
+    if (newHours === 0) newHours = 1;
     const formattedHours = String(newHours).padStart(2, '0');
+    const formattedMinutes = String(currentMinutes).padStart(2, '0');
     setHours(formattedHours);
-    handleTimeChange(formattedHours, minutes);
+    setMinutes(formattedMinutes);
+    handleTimeChange(formattedHours, formattedMinutes);
   };
 
   const decrementHours = () => {
-    let newHours = parseInt(hours) - 1;
+    const currentHours = parseInt(hours) || 0;
+    const currentMinutes = parseInt(minutes) || 0;
+    let newHours = currentHours - 1;
     if (newHours < 1) newHours = 12;
     const formattedHours = String(newHours).padStart(2, '0');
+    const formattedMinutes = String(currentMinutes).padStart(2, '0');
     setHours(formattedHours);
-    handleTimeChange(formattedHours, minutes);
+    setMinutes(formattedMinutes);
+    handleTimeChange(formattedHours, formattedMinutes);
   };
 
   const incrementMinutes = () => {
-    const newMinutes = (parseInt(minutes) + 5) % 60;
+    const currentHours = parseInt(hours) || 1;
+    const currentMinutes = parseInt(minutes) || 0;
+    const newMinutes = (currentMinutes + 5) % 60;
+    const formattedHours = String(currentHours).padStart(2, '0');
     const formattedMinutes = String(newMinutes).padStart(2, '0');
+    setHours(formattedHours);
     setMinutes(formattedMinutes);
-    handleTimeChange(hours, formattedMinutes);
+    handleTimeChange(formattedHours, formattedMinutes);
   };
 
   const decrementMinutes = () => {
-    const newMinutes = (parseInt(minutes) - 5 + 60) % 60;
+    const currentHours = parseInt(hours) || 1;
+    const currentMinutes = parseInt(minutes) || 0;
+    const newMinutes = (currentMinutes - 5 + 60) % 60;
+    const formattedHours = String(currentHours).padStart(2, '0');
     const formattedMinutes = String(newMinutes).padStart(2, '0');
+    setHours(formattedHours);
     setMinutes(formattedMinutes);
-    handleTimeChange(hours, formattedMinutes);
+    handleTimeChange(formattedHours, formattedMinutes);
   };
 
   const handleHourInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,15 +156,12 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none flex items-center justify-between"
+        className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none flex items-center"
         style={{ padding: '10px 12px' }}
       >
-        <span className="text-sm font-medium">{hours.padStart(2, '0')}:{minutes.padStart(2, '0')} {isPM ? 'PM' : 'AM'}</span>
-        <ChevronDown
-          size={18}
-          className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-          style={{ opacity: 0.7 }}
-        />
+        <span className="text-sm font-medium">
+          {hours && minutes ? `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')} ${isPM ? 'PM' : 'AM'}` : 'Select time...'}
+        </span>
       </button>
 
       {isOpen && (
