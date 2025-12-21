@@ -604,7 +604,7 @@ export default function Dashboard() {
               <div className="space-y-0">
                 <div className="flex items-center justify-between border-b border-[var(--border)] first:pt-0" style={{ paddingTop: '12px', paddingBottom: '12px' }}>
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Classes remaining</div>
-                  <div className="text-base font-semibold tabular-nums text-[var(--accent)]">{classesLeft}</div>
+                  <div className="text-base font-semibold tabular-nums text-[var(--accent)]" style={{ filter: 'brightness(1.3) saturate(1.1)' }}>{classesLeft}</div>
                 </div>
                 <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: '12px', paddingBottom: '12px' }}>
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Due soon</div>
