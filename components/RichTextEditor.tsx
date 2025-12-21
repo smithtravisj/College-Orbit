@@ -37,19 +37,13 @@ export default function RichTextEditor({
           levels: [1, 2, 3],
         },
         bulletList: {
-          HTMLAttributes: {
-            class: 'list-disc list-inside',
-          },
+          HTMLAttributes: {},
         },
         orderedList: {
-          HTMLAttributes: {
-            class: 'list-decimal list-inside',
-          },
+          HTMLAttributes: {},
         },
         codeBlock: {
-          HTMLAttributes: {
-            class: 'bg-[var(--panel-2)] p-2 rounded font-mono text-sm overflow-auto',
-          },
+          HTMLAttributes: {},
         },
       }),
       Link.configure({
