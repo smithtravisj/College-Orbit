@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, X, Check, Clock } from 'lucide-react';
+import { Bell, X, Check, Clock, AlertCircle } from 'lucide-react';
 
 interface Notification {
   id: string;
@@ -170,6 +170,9 @@ export default function NotificationBell() {
   const getNotificationIcon = (type: string) => {
     if (type === 'college_request_approved' || type === 'issue_report_resolved' || type === 'feature_request_implemented') {
       return <Check size={18} style={{ color: '#10b981' }} />;
+    }
+    if (type === 'exam_reminder') {
+      return <AlertCircle size={18} style={{ color: '#ef4444' }} />;
     }
     if (type === 'college_request_pending' || type === 'issue_report_pending' || type === 'feature_request_pending' || type === 'feature_request' || type === 'issue_report' || type === 'college_request_submitted' || type === 'issue_report_submitted' || type === 'feature_request_submitted') {
       return <Clock size={18} style={{ color: '#f59e0b' }} />;

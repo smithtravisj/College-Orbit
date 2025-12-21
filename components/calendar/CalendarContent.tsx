@@ -24,7 +24,7 @@ export default function CalendarContent() {
   const [filteredDeadlines, setFilteredDeadlines] = useState<any[]>([]);
   const hasFilteredRef = useRef(false);
 
-  const { courses, tasks, deadlines, excludedDates, initializeStore } = useAppStore();
+  const { courses, tasks, deadlines, exams, excludedDates, initializeStore } = useAppStore();
 
   // Filter out completed tasks and deadlines on mount and when data loads
   useEffect(() => {
@@ -144,7 +144,7 @@ export default function CalendarContent() {
     <>
       <PageHeader
         title="Calendar"
-        subtitle="View your courses, tasks, and deadlines"
+        subtitle="View your courses, tasks, deadlines, and exams"
       />
       <div style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
         <div style={{
@@ -280,6 +280,7 @@ export default function CalendarContent() {
                 courses={courses}
                 tasks={filteredTasks}
                 deadlines={filteredDeadlines}
+                exams={exams}
                 allTasks={tasks}
                 allDeadlines={deadlines}
                 excludedDates={excludedDates}
@@ -292,6 +293,7 @@ export default function CalendarContent() {
                 courses={courses}
                 tasks={filteredTasks}
                 deadlines={filteredDeadlines}
+                exams={exams}
                 allTasks={tasks}
                 allDeadlines={deadlines}
                 excludedDates={excludedDates}
@@ -303,6 +305,7 @@ export default function CalendarContent() {
                 courses={courses}
                 tasks={filteredTasks}
                 deadlines={filteredDeadlines}
+                exams={exams}
                 allTasks={tasks}
                 allDeadlines={deadlines}
                 excludedDates={excludedDates}

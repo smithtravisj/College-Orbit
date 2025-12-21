@@ -52,6 +52,21 @@ export interface Task {
   createdAt: string; // ISO datetime
 }
 
+export interface Exam {
+  id: string;
+  title: string;
+  courseId: string | null;
+  examAt: string; // ISO datetime (required)
+  location: string | null;
+  notes: string;
+  links: Array<{
+    label: string;
+    url: string;
+  }>;
+  status: 'scheduled' | 'completed' | 'cancelled';
+  createdAt: string; // ISO datetime
+}
+
 export interface Settings {
   dueSoonWindowDays: number;
   weekStartsOn: 'Sun' | 'Mon';
@@ -62,6 +77,7 @@ export interface Settings {
   visibleDashboardCards?: string[];
   visibleToolsCards?: string[];
   hasCompletedOnboarding?: boolean;
+  examReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
 }
 
 export interface ExcludedDate {
@@ -95,6 +111,7 @@ export interface AppData {
   courses: Course[];
   deadlines: Deadline[];
   tasks: Task[];
+  exams: Exam[];
   settings: Settings;
   excludedDates: ExcludedDate[];
   gpaEntries?: GpaEntry[];

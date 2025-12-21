@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useRef, useEffect } from 'react';
-import { Course, Task, Deadline, ExcludedDate } from '@/types';
+import { Course, Task, Deadline, Exam, ExcludedDate } from '@/types';
 import {
   getDatesInMonth,
   getEventsForDate,
@@ -20,6 +20,7 @@ interface CalendarMonthViewProps {
   courses: Course[];
   tasks: Task[];
   deadlines: Deadline[];
+  exams?: Exam[];
   allTasks?: Task[];
   allDeadlines?: Deadline[];
   excludedDates?: ExcludedDate[];
@@ -32,6 +33,7 @@ export default function CalendarMonthView({
   courses,
   tasks,
   deadlines,
+  exams = [],
   allTasks = [],
   allDeadlines = [],
   excludedDates = [],
@@ -47,13 +49,13 @@ export default function CalendarMonthView({
     const map = new Map<string, ReturnType<typeof getEventsForDate>>();
     dates.forEach((date) => {
       const dateStr = date.toISOString().split('T')[0];
-      const events = getEventsForDate(date, courses, tasks, deadlines, excludedDates);
+      const events = getEventsForDate(date, courses, tasks, deadlines, exams, excludedDates);
       if (events.length > 0) {
         map.set(dateStr, events);
       }
     });
     return map;
-  }, [dates, courses, tasks, deadlines, excludedDates]);
+  }, [dates, courses, tasks, deadlines, exams, excludedDates]);
 
   // Measure dots containers to determine how many can fit
   useEffect(() => {
@@ -290,6 +292,7 @@ export default function CalendarMonthView({
         courses={courses}
         tasks={allTasks.length > 0 ? allTasks : tasks}
         deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
+        exams={exams}
       />
     </div>
   );

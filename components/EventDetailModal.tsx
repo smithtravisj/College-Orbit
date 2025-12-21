@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Course, Task, Deadline } from '@/types';
+import { Course, Task, Deadline, Exam } from '@/types';
 import { CalendarEvent } from '@/lib/calendarUtils';
 import useAppStore from '@/lib/store';
 import Button from '@/components/ui/Button';
@@ -18,6 +18,7 @@ interface EventDetailModalProps {
   courses: Course[];
   tasks: Task[];
   deadlines: Deadline[];
+  exams?: Exam[];
 }
 
 function formatTime(time?: string): string {
@@ -67,6 +68,7 @@ export default function EventDetailModal({
   courses,
   tasks,
   deadlines,
+  exams = [],
 }: EventDetailModalProps) {
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -108,7 +110,7 @@ export default function EventDetailModal({
 
   if (!isOpen || !event) return null;
 
-  let fullData: Course | Task | Deadline | null = null;
+  let fullData: Course | Task | Deadline | Exam | null = null;
   let relatedCourse: Course | null = null;
 
   if (event.type === 'course') {
@@ -125,6 +127,12 @@ export default function EventDetailModal({
       const courseId = (fullData as Deadline).courseId;
       relatedCourse = courses.find((c) => c.id === courseId) || null;
     }
+  } else if (event.type === 'exam') {
+    fullData = (exams || []).find((e) => e.id === event.id) || null;
+    if (fullData && 'courseId' in fullData && fullData.courseId) {
+      const courseId = (fullData as Exam).courseId;
+      relatedCourse = courses.find((c) => c.id === courseId) || null;
+    }
   }
 
   if (!fullData) return null;
@@ -133,6 +141,7 @@ export default function EventDetailModal({
     if (event.type === 'course') return '#3d5fa5';
     if (event.type === 'task') return '#3d7855';
     if (event.type === 'deadline') return '#7d5c52';
+    if (event.type === 'exam') return '#c41e3a';
     return '#666';
   };
 
@@ -145,6 +154,11 @@ export default function EventDetailModal({
         // Navigate to courses page with courseId for editing
         const course = fullData as Course;
         router.push(`/courses?edit=${course.id}`);
+        onClose();
+      } else if (event.type === 'exam') {
+        // Navigate to exams page with examId for editing
+        const exam = fullData as Exam;
+        router.push(`/exams?edit=${exam.id}`);
         onClose();
       } else {
         setIsEditing(true);
@@ -391,7 +405,7 @@ export default function EventDetailModal({
                       fontWeight: 600,
                     }}
                   >
-                    {event.type === 'task' ? 'TASK' : 'DEADLINE'}
+                    {event.type === 'task' ? 'TASK' : event.type === 'deadline' ? 'DEADLINE' : 'EXAM'}
                   </div>
                   <h2
                     style={{
@@ -456,6 +470,8 @@ export default function EventDetailModal({
             <TaskContent task={fullData} relatedCourse={relatedCourse} />
           ) : event.type === 'deadline' ? (
             <DeadlineContent deadline={fullData as Deadline} relatedCourse={relatedCourse} />
+          ) : event.type === 'exam' ? (
+            <ExamContent exam={fullData as Exam} relatedCourse={relatedCourse} />
           ) : null}
         </div>
 
@@ -492,7 +508,7 @@ export default function EventDetailModal({
             </>
           ) : (
             <>
-              {event.type !== 'course' && (
+              {event.type !== 'course' && event.type !== 'exam' && (
                 <Button variant="secondary" size="md" onClick={handleMarkDoneClick}>
                   {fullData && 'status' in fullData && (fullData as Task | Deadline).status === 'done'
                     ? 'Mark Incomplete'
@@ -921,6 +937,101 @@ function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {deadline.links.map((link) => (
+              <a
+                key={link.label}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: 'var(--accent)',
+                  textDecoration: 'none',
+                  fontSize: '0.875rem',
+                  wordBreak: 'break-word',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.textDecoration = 'underline';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.textDecoration = 'none';
+                }}
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface ExamContentProps {
+  exam: Exam;
+  relatedCourse: Course | null;
+}
+
+function ExamContent({ exam, relatedCourse }: ExamContentProps) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {relatedCourse && (
+        <div>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+            Related Course
+          </p>
+          <p style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+            {relatedCourse.code}: {relatedCourse.name}
+          </p>
+        </div>
+      )}
+
+      {exam.examAt && (
+        <div>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+            Exam Date & Time
+          </p>
+          <p style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+            {formatDateTimeWithTime(exam.examAt)}
+          </p>
+        </div>
+      )}
+
+      {exam.location && (
+        <div>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+            Location
+          </p>
+          <p style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+            {exam.location}
+          </p>
+        </div>
+      )}
+
+      {exam.notes && (
+        <div>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+            Notes
+          </p>
+          <p
+            style={{
+              fontSize: '0.875rem',
+              color: 'var(--text)',
+              margin: 0,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+            }}
+          >
+            {exam.notes}
+          </p>
+        </div>
+      )}
+
+      {exam.links && exam.links.length > 0 && (
+        <div>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+            Links
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {exam.links.map((link) => (
               <a
                 key={link.label}
                 href={link.url}

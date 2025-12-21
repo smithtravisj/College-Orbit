@@ -20,6 +20,7 @@ model User {
   collegeRequests CollegeRequest[]
   courses         Course[]
   deadlines       Deadline[]
+  exams           Exam[]
   excludedDates   ExcludedDate[]
   featureRequests FeatureRequest[]
   gpaEntries      GpaEntry[]
@@ -47,6 +48,7 @@ model Course {
   endDate       DateTime?
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   deadlines     Deadline[]
+  exams         Exam[]
   excludedDates ExcludedDate[]
   gpaEntries    GpaEntry[]
   tasks         Task[]
@@ -95,6 +97,42 @@ model Task {
   @@index([pinned])
 }
 
+model Exam {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  courseId    String?
+  examAt      DateTime
+  location    String?
+  notes       String    @default("")
+  status      String    @default("scheduled")
+  links       Json      @default("[]")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course?   @relation(fields: [courseId], references: [id])
+  reminders   ExamReminder[]
+  notifications Notification[]
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([status])
+  @@index([examAt])
+}
+
+model ExamReminder {
+  id              String   @id @default(cuid())
+  examId          String
+  reminderType    String
+  sentAt          DateTime @default(now())
+  notificationId  String?
+  exam            Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, reminderType])
+  @@index([examId])
+  @@index([sentAt])
+}
+
 model GpaEntry {
   id         String   @id @default(cuid())
   userId     String
@@ -113,20 +151,21 @@ model GpaEntry {
 }
 
 model Settings {
-  id                    String   @id @default(cuid())
-  userId                String   @unique
-  dueSoonWindowDays     Int      @default(7)
-  weekStartsOn          String   @default("Sun")
-  theme                 String   @default("dark")
-  enableNotifications   Boolean  @default(false)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  university            String?
-  visibleDashboardCards Json?    @default("[\"nextClass\", \"dueSoon\", \"overview\", \"todayTasks\", \"quickLinks\", \"upcomingWeek\"]")
-  visiblePages          Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Deadlines\", \"Courses\", \"Tools\", \"Settings\"]")
-  visibleToolsCards     Json?    @default("[\"quickLinks\", \"gpaCalculator\"]")
-  hasCompletedOnboarding Boolean @default(false)
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                      String   @id @default(cuid())
+  userId                  String   @unique
+  dueSoonWindowDays       Int      @default(7)
+  weekStartsOn            String   @default("Sun")
+  theme                   String   @default("dark")
+  enableNotifications     Boolean  @default(false)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  university              String?
+  visibleDashboardCards   Json?    @default("[\"nextClass\", \"dueSoon\", \"overview\", \"todayTasks\", \"quickLinks\", \"upcomingWeek\"]")
+  visiblePages            Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Deadlines\", \"Exams\", \"Courses\", \"Tools\", \"Settings\"]")
+  visibleToolsCards       Json?    @default("[\"quickLinks\", \"gpaCalculator\"]")
+  hasCompletedOnboarding  Boolean  @default(false)
+  examReminders           Json?    @default("[{\"enabled\":true,\"value\":7,\"unit\":\"days\"},{\"enabled\":true,\"value\":1,\"unit\":\"days\"},{\"enabled\":true,\"value\":3,\"unit\":\"hours\"}]")
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -201,9 +240,11 @@ model Notification {
   collegeRequestId String?
   featureRequestId String?
   issueReportId    String?
+  examId           String?
   collegeRequest   CollegeRequest? @relation(fields: [collegeRequestId], references: [id], onDelete: Cascade)
   featureRequest   FeatureRequest? @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
   issueReport      IssueReport?    @relation(fields: [issueReportId], references: [id], onDelete: Cascade)
+  exam             Exam?           @relation(fields: [examId], references: [id], onDelete: Cascade)
   user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -211,6 +252,7 @@ model Notification {
   @@index([collegeRequestId])
   @@index([issueReportId])
   @@index([featureRequestId])
+  @@index([examId])
 }
 
 model RateLimit {

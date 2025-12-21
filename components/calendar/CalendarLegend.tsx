@@ -5,6 +5,7 @@ import { getMonthViewColor } from '@/lib/calendarUtils';
 export default function CalendarLegend() {
   const legendItems = [
     { color: getMonthViewColor({ type: 'course' } as any), label: 'Course' },
+    { color: getMonthViewColor({ type: 'exam' } as any), label: 'Exam' },
     { color: getMonthViewColor({ type: 'task' } as any), label: 'Task' },
     { color: getMonthViewColor({ type: 'deadline' } as any), label: 'Deadline' },
   ];

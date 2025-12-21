@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useEffect, useRef, useState } from 'react';
-import { Course, Task, Deadline, ExcludedDate } from '@/types';
+import { Course, Task, Deadline, Exam, ExcludedDate } from '@/types';
 import {
   getEventsForDate,
   getTimeSlotPosition,
@@ -19,6 +19,7 @@ interface CalendarDayViewProps {
   courses: Course[];
   tasks: Task[];
   deadlines: Deadline[];
+  exams?: Exam[];
   allTasks?: Task[];
   allDeadlines?: Deadline[];
   excludedDates?: ExcludedDate[];
@@ -33,6 +34,7 @@ export default function CalendarDayView({
   courses,
   tasks,
   deadlines,
+  exams = [],
   allTasks = [],
   allDeadlines = [],
   excludedDates = [],
@@ -49,8 +51,8 @@ export default function CalendarDayView({
   }, []);
 
   const events = useMemo(
-    () => getEventsForDate(date, courses, tasks, deadlines, excludedDates),
-    [date, courses, tasks, deadlines, excludedDates]
+    () => getEventsForDate(date, courses, tasks, deadlines, exams, excludedDates),
+    [date, courses, tasks, deadlines, exams, excludedDates]
   );
 
   const courseEvents = useMemo(() => events.filter((e) => e.type === 'course'), [events]);
@@ -331,6 +333,7 @@ export default function CalendarDayView({
         courses={courses}
         tasks={allTasks.length > 0 ? allTasks : tasks}
         deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
+        exams={exams}
       />
     </div>
   );

@@ -1,9 +1,9 @@
-import { Course, Task, Deadline, ExcludedDate } from '@/types';
+import { Course, Task, Deadline, Exam, ExcludedDate } from '@/types';
 import { getDayOfWeek } from './utils';
 
 export interface CalendarEvent {
   id: string;
-  type: 'course' | 'task' | 'deadline';
+  type: 'course' | 'task' | 'deadline' | 'exam';
   title: string;
   time?: string;
   endTime?: string;
@@ -11,8 +11,9 @@ export interface CalendarEvent {
   courseCode?: string;
   courseId?: string | null;
   colorTag?: string;
-  status?: 'open' | 'done';
+  status?: 'open' | 'done' | 'scheduled' | 'completed' | 'cancelled';
   dueAt?: string | null;
+  examAt?: string | null;
   meetingTimeData?: {
     days: string[];
     start: string;
@@ -214,21 +215,69 @@ export function getTaskDeadlineEventsForDate(
     });
 }
 
-// Get all events for a specific date (combined courses, tasks, deadlines)
+// Get all exam events for a specific date
+export function getExamEventsForDate(
+  date: Date,
+  exams: Exam[]
+): CalendarEvent[] {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const dateStr = `${year}-${month}-${day}`;
+
+  return exams
+    .filter((exam) => {
+      if (!exam.examAt) return false;
+
+      const examDate = new Date(exam.examAt);
+      const examYear = examDate.getFullYear();
+      const examMonth = String(examDate.getMonth() + 1).padStart(2, '0');
+      const examDay = String(examDate.getDate()).padStart(2, '0');
+      const examDateLocal = `${examYear}-${examMonth}-${examDay}`;
+
+      // Check if date matches
+      return examDateLocal === dateStr;
+    })
+    .map((exam) => {
+      // Get time in 24-hour format (HH:MM) if examAt exists
+      let time: string | undefined;
+      if (exam.examAt) {
+        const date = new Date(exam.examAt);
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        time = `${hours}:${minutes}`;
+      }
+
+      return {
+        id: exam.id,
+        type: 'exam' as const,
+        title: exam.title,
+        courseId: exam.courseId,
+        examAt: exam.examAt,
+        location: exam.location || undefined,
+        time,
+        status: exam.status,
+      };
+    });
+}
+
+// Get all events for a specific date (combined courses, tasks, deadlines, exams)
 export function getEventsForDate(
   date: Date,
   courses: Course[],
   tasks: Task[],
   deadlines: Deadline[],
+  exams?: Exam[],
   excludedDates?: ExcludedDate[]
 ): CalendarEvent[] {
   const courseEvents = getCourseEventsForDate(date, courses, excludedDates);
   const taskDeadlineEvents = getTaskDeadlineEventsForDate(date, tasks, deadlines);
+  const examEvents = exams ? getExamEventsForDate(date, exams) : [];
 
-  // Sort by type priority (courses > deadlines > tasks), then by time
-  return [...courseEvents, ...taskDeadlineEvents].sort((a, b) => {
-    // Priority order: course, deadline, task
-    const typePriority: Record<string, number> = { course: 0, deadline: 1, task: 2 };
+  // Sort by type priority (courses > exams > deadlines > tasks), then by time
+  return [...courseEvents, ...examEvents, ...taskDeadlineEvents].sort((a, b) => {
+    // Priority order: course, exam, deadline, task
+    const typePriority: Record<string, number> = { course: 0, exam: 1, deadline: 2, task: 3 };
     const priorityA = typePriority[a.type];
     const priorityB = typePriority[b.type];
 
@@ -250,6 +299,7 @@ export function getEventsForRange(
   courses: Course[],
   tasks: Task[],
   deadlines: Deadline[],
+  exams?: Exam[],
   excludedDates?: ExcludedDate[]
 ): Map<string, CalendarEvent[]> {
   const eventsByDate = new Map<string, CalendarEvent[]>();
@@ -259,7 +309,7 @@ export function getEventsForRange(
 
   while (current <= endDate) {
     const dateStr = current.toISOString().split('T')[0];
-    const events = getEventsForDate(current, courses, tasks, deadlines, excludedDates);
+    const events = getEventsForDate(current, courses, tasks, deadlines, exams, excludedDates);
     if (events.length > 0) {
       eventsByDate.set(dateStr, events);
     }
@@ -357,6 +407,11 @@ export function getEventColor(event: CalendarEvent): string {
     return COLOR_PALETTE.blue;
   }
 
+  if (event.type === 'exam') {
+    // Use red for exams
+    return COLOR_PALETTE.red;
+  }
+
   if (event.type === 'task') {
     // Use green for tasks
     return COLOR_PALETTE.green;
@@ -392,6 +447,7 @@ export function parseColor(colorTag?: string): string {
 export function getMonthViewColor(event: CalendarEvent): string {
   const monthViewColors: Record<string, string> = {
     course: '#3b82f6',
+    exam: '#ef4444',
     task: '#22c55e',
     deadline: '#ff7d00',
   };

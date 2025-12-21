@@ -53,6 +53,7 @@ export default function SettingsPage() {
   const [dueSoonDays, setDueSoonDays] = useState<number | string>(7);
   const [university, setUniversity] = useState<string | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | 'system'>('dark');
+  const [examReminders, setExamReminders] = useState<Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>>([]);
   const [collegeRequestName, setCollegeRequestName] = useState('');
   const [collegeRequestMessage, setCollegeRequestMessage] = useState('');
   const [collegeRequestLoading, setCollegeRequestLoading] = useState(false);
@@ -98,8 +99,41 @@ export default function SettingsPage() {
     setVisiblePages(settings.visiblePages || DEFAULT_VISIBLE_PAGES);
     setVisibleDashboardCards(settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS);
     setVisibleToolsCards(settings.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS);
+
+    // Load exam reminders from settings
+    if (settings.examReminders) {
+      try {
+        const parsed = typeof settings.examReminders === 'string'
+          ? JSON.parse(settings.examReminders)
+          : settings.examReminders;
+        // Convert old format (hours) to new format (value + unit) if needed
+        const converted = Array.isArray(parsed) ? parsed.map((r: any) => {
+          if ('value' in r && 'unit' in r) {
+            return r;
+          }
+          // Old format with hours field
+          const hours = r.hours || 0;
+          if (hours === 168) return { enabled: r.enabled, value: 7, unit: 'days' };
+          if (hours === 24) return { enabled: r.enabled, value: 1, unit: 'days' };
+          if (hours === 3) return { enabled: r.enabled, value: 3, unit: 'hours' };
+          // Convert arbitrary hours to days or hours
+          if (hours >= 24) return { enabled: r.enabled, value: Math.round(hours / 24), unit: 'days' };
+          return { enabled: r.enabled, value: hours, unit: 'hours' };
+        }) : [];
+        setExamReminders(converted);
+      } catch {
+        setExamReminders([]);
+      }
+    } else {
+      // Default reminders: 7 days, 1 day, 3 hours
+      setExamReminders([
+        { enabled: true, value: 7, unit: 'days' },   // 7 days
+        { enabled: true, value: 1, unit: 'days' },   // 1 day
+        { enabled: true, value: 3, unit: 'hours' }   // 3 hours
+      ]);
+    }
     setMounted(true);
-  }, [settings.dueSoonWindowDays, settings.university, settings.theme, settings.visiblePages, settings.visibleDashboardCards, settings.visibleToolsCards]);
+  }, [settings]);
 
   // Fetch college requests and issue reports if user is admin
   useEffect(() => {
@@ -575,6 +609,16 @@ export default function SettingsPage() {
 
   return (
     <>
+      <style>{`
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type="number"] {
+          -moz-appearance: textfield;
+        }
+      `}</style>
       <PageHeader title="Settings" subtitle="Customize your experience" />
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
         {/* Admin Requests Card (Admin Only) - Full Width */}
@@ -1128,6 +1172,141 @@ export default function SettingsPage() {
                 {saveMessage && (
                   <p style={{ marginTop: '8px', fontSize: '14px', color: saveMessage.includes('Error') ? 'var(--danger)' : 'var(--success)' }}>{saveMessage}</p>
                 )}
+              </div>
+
+              {/* Exam Reminders */}
+              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', marginTop: '16px' }}>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+                  Exam Reminders
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                  Set when you want to receive study reminders before exams
+                </p>
+                <div className="space-y-3" style={{ marginBottom: '16px' }}>
+                  {examReminders.map((reminder, idx) => {
+                    return (
+                      <div key={idx} style={{ display: 'grid', gridTemplateColumns: '24px 1fr auto', gap: '12px', alignItems: 'start', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '6px' }}>
+                        <input
+                          type="checkbox"
+                          checked={reminder.enabled}
+                          onChange={(e) => {
+                            const newReminders = [...examReminders];
+                            newReminders[idx].enabled = e.target.checked;
+                            setExamReminders(newReminders);
+                            updateSettings({ examReminders: newReminders });
+                          }}
+                          style={{
+                            width: '18px',
+                            height: '18px',
+                            cursor: 'pointer',
+                            marginTop: '2px',
+                          }}
+                        />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={reminder.value === 0 ? '' : reminder.value}
+                            onChange={(e) => {
+                              const newReminders = [...examReminders];
+                              const val = e.target.value.trim();
+                              if (val === '') {
+                                // If field is cleared, disable the reminder
+                                newReminders[idx].enabled = false;
+                                newReminders[idx].value = 1; // Reset to default
+                              } else {
+                                const num = parseInt(val);
+                                if (!isNaN(num) && num > 0) {
+                                  newReminders[idx].value = num;
+                                }
+                              }
+                              setExamReminders(newReminders);
+                              updateSettings({ examReminders: newReminders });
+                            }}
+                            style={{
+                              width: '60px',
+                              height: '32px',
+                              padding: '6px 8px',
+                              fontSize: '14px',
+                              backgroundColor: 'var(--panel)',
+                              color: 'var(--text)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '4px',
+                              boxSizing: 'border-box',
+                            }}
+                          />
+                          <select
+                            value={reminder.unit}
+                            onChange={(e) => {
+                              const newReminders = [...examReminders];
+                              newReminders[idx].unit = e.target.value as 'hours' | 'days';
+                              setExamReminders(newReminders);
+                              updateSettings({ examReminders: newReminders });
+                            }}
+                            style={{
+                              height: '32px',
+                              padding: '6px 8px',
+                              fontSize: '14px',
+                              backgroundColor: 'var(--panel)',
+                              color: 'var(--text)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '4px',
+                              boxSizing: 'border-box',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <option value="hours">hours</option>
+                            <option value="days">days</option>
+                          </select>
+                          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                            before
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const newReminders = examReminders.filter((_, i) => i !== idx);
+                            setExamReminders(newReminders);
+                            updateSettings({ examReminders: newReminders });
+                          }}
+                          style={{
+                            padding: '6px 12px',
+                            fontSize: '12px',
+                            backgroundColor: '#660000',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            height: '32px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const newReminders = [...examReminders, { enabled: true, value: 1, unit: 'days' as const }];
+                    setExamReminders(newReminders);
+                    updateSettings({ examReminders: newReminders });
+                  }}
+                  style={{
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
+                    backgroundColor: 'var(--button-secondary)',
+                    color: settings.theme === 'light' ? '#000000' : 'white',
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: 'var(--border)',
+                  }}
+                >
+                  + Add Reminder
+                </Button>
               </div>
             </div>
           </Card>

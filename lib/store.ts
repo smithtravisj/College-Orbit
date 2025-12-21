@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Course, Deadline, Task, Settings, AppData, ExcludedDate, GpaEntry } from '@/types';
+import { Course, Deadline, Task, Exam, Settings, AppData, ExcludedDate, GpaEntry } from '@/types';
 import { applyColorPalette, getCollegeColorPalette } from '@/lib/collegeColors';
 import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
@@ -14,6 +14,11 @@ const DEFAULT_SETTINGS: Settings = {
   visibleDashboardCards: DEFAULT_VISIBLE_DASHBOARD_CARDS,
   visibleToolsCards: DEFAULT_VISIBLE_TOOLS_CARDS,
   hasCompletedOnboarding: false, // Always show tour on first login
+  examReminders: [
+    { enabled: true, value: 7, unit: 'days' },
+    { enabled: true, value: 1, unit: 'days' },
+    { enabled: true, value: 3, unit: 'hours' }
+  ],
 };
 
 interface AppStore {
@@ -21,6 +26,7 @@ interface AppStore {
   courses: Course[];
   deadlines: Deadline[];
   tasks: Task[];
+  exams: Exam[];
   settings: Settings;
   excludedDates: ExcludedDate[];
   gpaEntries: GpaEntry[];
@@ -51,6 +57,11 @@ interface AppStore {
   toggleTaskDone: (id: string) => Promise<void>;
   toggleChecklistItem: (taskId: string, itemId: string) => Promise<void>;
 
+  // Exams
+  addExam: (exam: Omit<Exam, 'id' | 'createdAt'>) => Promise<void>;
+  updateExam: (id: string, exam: Partial<Exam>) => Promise<void>;
+  deleteExam: (id: string) => Promise<void>;
+
   // Excluded Dates
   addExcludedDate: (excludedDate: Omit<ExcludedDate, 'id' | 'createdAt'>) => Promise<void>;
   addExcludedDateRange: (dates: Array<Omit<ExcludedDate, 'id' | 'createdAt'>>) => Promise<void>;
@@ -73,6 +84,7 @@ const useAppStore = create<AppStore>((set, get) => ({
   courses: [],
   deadlines: [],
   tasks: [],
+  exams: [],
   settings: DEFAULT_SETTINGS,
   excludedDates: [],
   gpaEntries: [],
@@ -107,10 +119,11 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   loadFromDatabase: async () => {
     try {
-      const [coursesRes, deadlinesRes, tasksRes, settingsRes, excludedDatesRes, gpaRes] = await Promise.all([
+      const [coursesRes, deadlinesRes, tasksRes, examsRes, settingsRes, excludedDatesRes, gpaRes] = await Promise.all([
         fetch('/api/courses'),
         fetch('/api/deadlines'),
         fetch('/api/tasks'),
+        fetch('/api/exams'),
         fetch('/api/settings'),
         fetch('/api/excluded-dates'),
         fetch('/api/gpa-entries'),
@@ -119,6 +132,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const coursesData = await coursesRes.json();
       const deadlinesData = await deadlinesRes.json();
       const tasksData = await tasksRes.json();
+      const examsData = await examsRes.json();
       const settingsData = await settingsRes.json();
       const excludedDatesData = await excludedDatesRes.json();
       const gpaData = await gpaRes.json();
@@ -152,6 +166,7 @@ const useAppStore = create<AppStore>((set, get) => ({
         courses: coursesData.courses || [],
         deadlines: deadlinesData.deadlines || [],
         tasks: tasksData.tasks || [],
+        exams: examsData.exams || [],
         settings: parsedSettings,
         excludedDates: excludedDatesData.excludedDates || [],
         gpaEntries: gpaData.entries || [],
@@ -522,6 +537,91 @@ const useAppStore = create<AppStore>((set, get) => ({
     }
   },
 
+  addExam: async (exam) => {
+    // Optimistic update
+    const tempId = uuidv4();
+    const createdAt = new Date().toISOString();
+    set((state) => ({
+      exams: [...state.exams, { ...exam, id: tempId, createdAt } as Exam],
+    }));
+
+    try {
+      // API call
+      const response = await fetch('/api/exams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(exam),
+      });
+
+      if (!response.ok) throw new Error('Failed to create exam');
+
+      const { exam: newExam } = await response.json();
+
+      // Replace optimistic with real data
+      set((state) => ({
+        exams: state.exams.map((e) => (e.id === tempId ? newExam : e)),
+      }));
+    } catch (error) {
+      // Rollback on error
+      set((state) => ({
+        exams: state.exams.filter((e) => e.id !== tempId),
+      }));
+      console.error('Error creating exam:', error);
+      throw error;
+    }
+  },
+
+  updateExam: async (id, exam) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        exams: state.exams.map((e) => (e.id === id ? { ...e, ...exam } : e)),
+      }));
+
+      // API call
+      const response = await fetch(`/api/exams/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(exam),
+      });
+
+      if (!response.ok) throw new Error('Failed to update exam');
+
+      const { exam: updatedExam } = await response.json();
+
+      // Update with server response
+      set((state) => ({
+        exams: state.exams.map((e) => (e.id === id ? updatedExam : e)),
+      }));
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error updating exam:', error);
+      throw error;
+    }
+  },
+
+  deleteExam: async (id) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        exams: state.exams.filter((e) => e.id !== id),
+      }));
+
+      // API call
+      const response = await fetch(`/api/exams/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete exam');
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error deleting exam:', error);
+      throw error;
+    }
+  },
+
   addExcludedDate: async (excludedDate) => {
     // Optimistic update
     const tempId = uuidv4();
@@ -816,6 +916,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       courses: state.courses,
       deadlines: state.deadlines,
       tasks: state.tasks,
+      exams: state.exams,
       settings: state.settings,
       excludedDates: state.excludedDates,
       gpaEntries: state.gpaEntries,
@@ -851,6 +952,15 @@ const useAppStore = create<AppStore>((set, get) => ({
         for (const task of data.tasks) {
           const { id, createdAt, updatedAt, userId, ...taskData } = task as any;
           await store.addTask(taskData);
+        }
+      }
+
+      // Import exams
+      if (data.exams && data.exams.length > 0) {
+        console.log('Importing exams:', data.exams.length);
+        for (const exam of data.exams) {
+          const { id, createdAt, userId, ...examData } = exam as any;
+          await store.addExam(examData);
         }
       }
 

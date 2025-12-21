@@ -3,6 +3,7 @@ export const PAGES = {
   CALENDAR: 'Calendar',
   TASKS: 'Tasks',
   DEADLINES: 'Deadlines',
+  EXAMS: 'Exams',
   COURSES: 'Courses',
   TOOLS: 'Tools',
   SETTINGS: 'Settings',
