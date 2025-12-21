@@ -45,7 +45,7 @@ export default function Dashboard() {
     notes: '',
     links: [{ label: '', url: '' }],
   });
-  const { courses, deadlines, tasks, settings, excludedDates, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone, updateDeadline, deleteDeadline } = useAppStore();
+  const { courses, deadlines, tasks, exams, settings, excludedDates, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone, updateDeadline, deleteDeadline } = useAppStore();
   const visibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
 
   useEffect(() => {
@@ -927,8 +927,8 @@ export default function Dashboard() {
           <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.UPCOMING_WEEK, visibleDashboardCards)} lg:flex`}>
             <Card title="Upcoming This Week" subtitle="Your schedule for the next 7 days" className="h-full flex flex-col w-full">
               {(() => {
-                // Get classes for the next 7 days, including days with no classes
-                const daysList: Array<{ dateKey: string; date: Date; classes: Array<any> }> = [];
+                // Get classes and exams for the next 7 days
+                const daysList: Array<{ dateKey: string; date: Date; items: Array<any> }> = [];
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -940,64 +940,101 @@ export default function Dashboard() {
                   const dayIndex = date.getDay();
                   const dayAbbrev = dayNames[dayIndex];
 
+                  // Get classes for this day
                   const classesOnDay = courses
                     .filter((course) => isCourseCurrent(course, date))
                     .flatMap((course) =>
                       (course.meetingTimes || [])
                         .filter((mt) => mt.days?.includes(dayAbbrev))
                         .map((mt) => ({
+                          type: 'class',
                           ...mt,
                           courseCode: course.code,
                           courseName: course.name,
                           courseLinks: course.links,
+                          time: mt.start,
                         }))
-                    )
-                    .sort((a, b) => a.start.localeCompare(b.start));
+                    );
+
+                  // Get exams for this day
+                  const examsOnDay = exams
+                    .filter((exam) => {
+                      if (!exam.examAt) return false;
+                      const examDate = new Date(exam.examAt);
+                      examDate.setHours(0, 0, 0, 0);
+                      return examDate.getTime() === date.getTime();
+                    })
+                    .map((exam) => {
+                      const course = exam.courseId ? courses.find((c) => c.id === exam.courseId) : null;
+                      return {
+                        type: 'exam',
+                        title: exam.title,
+                        courseId: exam.courseId,
+                        courseCode: course?.code || '',
+                        courseName: course?.name || '',
+                        examAt: exam.examAt,
+                        location: exam.location,
+                        time: new Date(exam.examAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+                      };
+                    });
+
+                  // Combine and sort by time
+                  const allItems = [...classesOnDay, ...examsOnDay].sort((a, b) => {
+                    const aTime = a.type === 'class' ? (a as any).start : (a as any).time;
+                    const bTime = b.type === 'class' ? (b as any).start : (b as any).time;
+                    return aTime.localeCompare(bTime);
+                  });
 
                   daysList.push({
                     dateKey,
                     date,
-                    classes: classesOnDay,
+                    items: allItems,
                   });
                 }
 
-                const hasAnyClasses = daysList.some((day) => day.classes.length > 0);
+                const hasAnyItems = daysList.some((day) => day.items.length > 0);
 
-                return hasAnyClasses ? (
+                return hasAnyItems ? (
                   <div style={{ padding: '0 -24px' }}>
-                    {daysList.map(({ dateKey, date, classes }) => {
+                    {daysList.map(({ dateKey, date, items }) => {
                       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                       return (
                         <div key={dateKey} style={{ paddingBottom: '28px' }}>
-                          <div className="text-base font-semibold text-[var(--text)] uppercase tracking-wide" style={{ marginBottom: classes.length > 0 ? '12px' : '6px' }}>
+                          <div className="text-base font-semibold text-[var(--text)] uppercase tracking-wide" style={{ marginBottom: items.length > 0 ? '12px' : '6px' }}>
                             {dayName}, {dateStr}
                           </div>
-                          {classes.length > 0 ? (
+                          {items.length > 0 ? (
                             <div style={{ paddingLeft: '8px' }}>
-                              {classes.map((cls, idx) => (
-                                <div key={idx} style={{ marginBottom: idx !== classes.length - 1 ? '16px' : '0px' }}>
+                              {items.map((item, idx) => (
+                                <div key={idx} style={{ marginBottom: idx !== items.length - 1 ? '16px' : '0px' }}>
                                   <div className="text-sm font-medium text-[var(--text)]">
-                                    {cls.courseCode}{cls.courseName ? ` - ${cls.courseName}` : ''}
+                                    {item.type === 'class'
+                                      ? `${item.courseCode}${item.courseName ? ` - ${item.courseName}` : ''}`
+                                      : `${item.courseCode ? `${item.courseCode} - ` : ''}${item.title} (Exam)`}
                                   </div>
                                   <div className="text-sm text-[var(--text-secondary)]" style={{ marginTop: '3px' }}>
-                                    {formatTime12Hour(cls.start)} – {formatTime12Hour(cls.end)}
+                                    {item.type === 'class'
+                                      ? `${formatTime12Hour(item.start)} – ${formatTime12Hour(item.end)}`
+                                      : item.time}
                                   </div>
-                                  <div className="text-sm text-[var(--text-secondary)]" style={{ marginTop: '2px' }}>
-                                    {cls.location}
-                                  </div>
+                                  {item.location && (
+                                    <div className="text-sm text-[var(--text-secondary)]" style={{ marginTop: '2px' }}>
+                                      {item.location}
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
                           ) : (
-                            <div className="text-sm text-[var(--text-muted)]">No classes</div>
+                            <div className="text-sm text-[var(--text-muted)]">No classes or exams</div>
                           )}
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <EmptyState title="No classes this week" description="You have a free week ahead!" />
+                  <EmptyState title="No classes or exams this week" description="You have a free week ahead!" />
                 );
               })()}
             </Card>
