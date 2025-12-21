@@ -276,52 +276,6 @@ export default function NotesPage() {
                     />
                   </div>
 
-                  {/* Links */}
-                  <div style={{ marginTop: '16px' }}>
-                    <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>Links</label>
-                    {formData.links.map((link, idx) => (
-                      <div key={idx} className="flex gap-2" style={{ marginBottom: '8px' }}>
-                        <Input
-                          placeholder="Label"
-                          value={link.label}
-                          onChange={(e) => {
-                            const newLinks = [...formData.links];
-                            newLinks[idx].label = e.target.value;
-                            setFormData({ ...formData, links: newLinks });
-                          }}
-                          className="flex-1"
-                        />
-                        <Input
-                          placeholder="URL"
-                          value={link.url}
-                          onChange={(e) => {
-                            const newLinks = [...formData.links];
-                            newLinks[idx].url = e.target.value;
-                            setFormData({ ...formData, links: newLinks });
-                          }}
-                          className="flex-1"
-                        />
-                        <Button
-                          variant="secondary"
-                          type="button"
-                          onClick={() => setFormData({ ...formData, links: formData.links.filter((_, i) => i !== idx) })}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    ))}
-                    <div style={{ marginTop: '12px', marginBottom: '12px' }}>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        type="button"
-                        onClick={() => setFormData({ ...formData, links: [...formData.links, { label: '', url: '' }] })}
-                      >
-                        Add Link
-                      </Button>
-                    </div>
-                  </div>
-
                   <div className="flex gap-3">
                     <Button variant="primary" type="submit">
                       {editingId ? 'Save Changes' : 'Create Note'}
