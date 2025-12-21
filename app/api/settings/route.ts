@@ -71,6 +71,9 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.visibleToolsCards !== undefined) updateData.visibleToolsCards = data.visibleToolsCards;
     if (data.hasCompletedOnboarding !== undefined) updateData.hasCompletedOnboarding = data.hasCompletedOnboarding;
     if (data.examReminders !== undefined) updateData.examReminders = data.examReminders;
+    if (data.pomodoroWorkDuration !== undefined) updateData.pomodoroWorkDuration = data.pomodoroWorkDuration;
+    if (data.pomodoroBreakDuration !== undefined) updateData.pomodoroBreakDuration = data.pomodoroBreakDuration;
+    if (data.pomodoroIsMuted !== undefined) updateData.pomodoroIsMuted = data.pomodoroIsMuted;
 
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 

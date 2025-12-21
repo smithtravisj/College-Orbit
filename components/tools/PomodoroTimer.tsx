@@ -9,104 +9,58 @@ interface Props {
   theme?: string;
 }
 
-const STORAGE_KEY = 'pomodoro-timer-state';
-
-interface PomodoroState {
-  workDuration: number;
-  breakDuration: number;
-  timeLeft: number;
-  isRunning: boolean;
-  isWorkSession: boolean;
-  sessionsCompleted: number;
-  totalBreakTime: number;
-  totalWorkTime: number;
-  lastStateChangeTime: number;
+// Simple debounce utility
+function debounce<T extends (...args: any[]) => any>(
+  fn: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: NodeJS.Timeout | null = null;
+  return (...args: Parameters<T>) => {
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  };
 }
 
 export default function PomodoroTimer({ theme = 'dark' }: Props) {
-  const { settings } = useAppStore();
-  const [workDuration, setWorkDuration] = useState(25); // minutes
-  const [breakDuration, setBreakDuration] = useState(5); // minutes
-  const [timeLeft, setTimeLeft] = useState(25 * 60); // seconds
+  const { settings, updateSettings } = useAppStore();
+  const [workDuration, setWorkDuration] = useState(settings?.pomodoroWorkDuration || 25); // minutes
+  const [breakDuration, setBreakDuration] = useState(settings?.pomodoroBreakDuration || 5); // minutes
+  const [timeLeft, setTimeLeft] = useState((settings?.pomodoroWorkDuration || 25) * 60); // seconds
   const [isRunning, setIsRunning] = useState(false);
   const [isWorkSession, setIsWorkSession] = useState(true);
   const [sessionsCompleted, setSessionsCompleted] = useState(0);
   const [totalBreakTime, setTotalBreakTime] = useState(0);
   const [totalWorkTime, setTotalWorkTime] = useState(0);
   const [settingsMode, setSettingsMode] = useState(false);
-  const [tempWorkDuration, setTempWorkDuration] = useState<number | ''>(25);
-  const [tempBreakDuration, setTempBreakDuration] = useState<number | ''>(5);
+  const [tempWorkDuration, setTempWorkDuration] = useState<number | ''>(settings?.pomodoroWorkDuration || 25);
+  const [tempBreakDuration, setTempBreakDuration] = useState<number | ''>(settings?.pomodoroBreakDuration || 5);
+  const [isMuted, setIsMuted] = useState(settings?.pomodoroIsMuted || false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartTimeRef = useRef<number | null>(null);
-  const isInitializedRef = useRef(false);
   const lastMinuteCountedRef = useRef(0);
 
-  // Initialize state from localStorage on mount
+  // Sync durations and mute setting from store to local state
   useEffect(() => {
-    if (isInitializedRef.current) return;
-    isInitializedRef.current = true;
+    if (settings?.pomodoroWorkDuration) setWorkDuration(settings.pomodoroWorkDuration);
+    if (settings?.pomodoroBreakDuration) setBreakDuration(settings.pomodoroBreakDuration);
+    if (settings?.pomodoroIsMuted !== undefined) setIsMuted(settings.pomodoroIsMuted);
+  }, [settings?.pomodoroWorkDuration, settings?.pomodoroBreakDuration, settings?.pomodoroIsMuted]);
 
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const state: PomodoroState = JSON.parse(saved);
-
-        // Restore all state
-        setWorkDuration(state.workDuration);
-        setBreakDuration(state.breakDuration);
-        setIsWorkSession(state.isWorkSession);
-        setSessionsCompleted(state.sessionsCompleted);
-        setTotalBreakTime(state.totalBreakTime);
-        setTotalWorkTime(state.totalWorkTime);
-        setTempWorkDuration(state.workDuration);
-        setTempBreakDuration(state.breakDuration);
-
-        // If timer was running, calculate elapsed time and update timeLeft
-        if (state.isRunning) {
-          const elapsedMs = Date.now() - state.lastStateChangeTime;
-          const elapsedSeconds = Math.floor(elapsedMs / 1000);
-          const sessionDuration = state.isWorkSession ? state.workDuration * 60 : state.breakDuration * 60;
-          const newTimeLeft = Math.max(0, state.timeLeft - elapsedSeconds);
-
-          // Calculate total time spent in this session
-          const timeSpentInSession = sessionDuration - newTimeLeft;
-
-          setTimeLeft(newTimeLeft);
-          setIsRunning(true);
-          // Set sessionStartTimeRef so timer can correctly calculate elapsed time
-          sessionStartTimeRef.current = Date.now() - timeSpentInSession * 1000;
-          lastMinuteCountedRef.current = Math.floor(timeSpentInSession / 60);
-        } else {
-          setTimeLeft(state.timeLeft);
-          setIsRunning(false);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to restore Pomodoro state:', error);
-    }
-  }, []);
-
-  // Save state to localStorage whenever it changes
-  useEffect(() => {
-    if (!isInitializedRef.current) return;
-
-    try {
-      const state: PomodoroState = {
-        workDuration,
-        breakDuration,
-        timeLeft,
-        isRunning,
-        isWorkSession,
-        sessionsCompleted,
-        totalBreakTime,
-        totalWorkTime,
-        lastStateChangeTime: Date.now(),
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (error) {
-      console.error('Failed to save Pomodoro state:', error);
-    }
-  }, [workDuration, breakDuration, timeLeft, isRunning, isWorkSession, sessionsCompleted, totalBreakTime, totalWorkTime]);
+  // Debounced function to save timer settings to database
+  const savePomodoroSettings = useRef(
+    debounce(
+      (work: number, breakDuration: number, muted: boolean) => {
+        updateSettings({
+          pomodoroWorkDuration: work,
+          pomodoroBreakDuration: breakDuration,
+          pomodoroIsMuted: muted,
+        }).catch((error) => {
+          console.error('Error saving Pomodoro settings:', error);
+        });
+      },
+      1000
+    )
+  ).current;
 
   // Timer logic
   useEffect(() => {
@@ -167,22 +121,134 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
   }, [isRunning, workDuration, breakDuration, isWorkSession]);
 
   const playNotification = () => {
-    // Create a simple beep sound using Web Audio API
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+    // Five-layer micro-chime: slow exhale, stable pitch, peaceful acknowledgement
+    if (isMuted) return;
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const now = audioContext.currentTime;
 
-    oscillator.frequency.value = isWorkSession ? 800 : 600; // Higher pitch for work end, lower for break end
-    oscillator.type = 'sine';
+      // Base volume targeting -18 LUFS
+      const layer1Volume = 0.30;
+      const layer2Volume = layer1Volume * Math.pow(10, -12 / 20); // -12 dB relative to Layer 1
+      const layer3Volume = layer1Volume * Math.pow(10, -22 / 20); // -22 dB
+      const layer4Volume = layer1Volume * Math.pow(10, -30 / 20); // -30 dB
+      const layer5Volume = layer1Volume * Math.pow(10, -26 / 20); // -26 dB
 
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      // Note progression: D5 → E5 → A5 (peaceful, emotionally neutral)
+      const notes = [
+        { frequency: 587, duration: 0.30, dynamics: 0.58, gap: 0.08 }, // D5
+        { frequency: 659, duration: 0.30, dynamics: 0.60, gap: 0.08 }, // E5
+        { frequency: 880, duration: 0.60, dynamics: 0.62, gap: 0.00 }, // A5
+      ];
 
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.5);
+      let currentTime = now;
+
+      notes.forEach((note) => {
+        const noteStart = currentTime;
+        const noteDuration = note.duration;
+        const noteEnd = noteStart + noteDuration;
+        const velocity = note.dynamics;
+
+        // === LAYER 1: Core (pure sine) ===
+        const osc1 = audioContext.createOscillator();
+        const gain1 = audioContext.createGain();
+        osc1.connect(gain1);
+        gain1.connect(audioContext.destination);
+        osc1.frequency.value = note.frequency;
+        osc1.type = 'sine';
+
+        const attack1 = 0.012;
+        const release1 = 0.220;
+        const releaseStart1 = Math.max(noteStart + attack1, noteEnd - release1);
+        gain1.gain.setValueAtTime(0, noteStart);
+        gain1.gain.linearRampToValueAtTime(layer1Volume * velocity, noteStart + attack1);
+        gain1.gain.setValueAtTime(layer1Volume * velocity, releaseStart1);
+        gain1.gain.exponentialRampToValueAtTime(0.001, noteEnd);
+        osc1.start(noteStart);
+        osc1.stop(noteEnd);
+
+        // === LAYER 2: Soft body (sine one octave below) ===
+        const osc2 = audioContext.createOscillator();
+        const gain2 = audioContext.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioContext.destination);
+        osc2.frequency.value = note.frequency / 2;
+        osc2.type = 'sine';
+
+        const attack2 = 0.024;
+        const release2 = 0.360;
+        const sustain2 = 0.85;
+        const releaseStart2 = Math.max(noteStart + attack2, noteEnd - release2);
+        gain2.gain.setValueAtTime(0, noteStart);
+        gain2.gain.linearRampToValueAtTime(layer2Volume * velocity * sustain2, noteStart + attack2);
+        gain2.gain.setValueAtTime(layer2Volume * velocity * sustain2, releaseStart2);
+        gain2.gain.linearRampToValueAtTime(0.001, noteEnd);
+        osc2.start(noteStart);
+        osc2.stop(noteEnd);
+
+        // === LAYER 3: Deep floor (sine two octaves below) ===
+        const osc3 = audioContext.createOscillator();
+        const gain3 = audioContext.createGain();
+        osc3.connect(gain3);
+        gain3.connect(audioContext.destination);
+        osc3.frequency.value = note.frequency / 4;
+        osc3.type = 'sine';
+
+        const attack3 = 0.040;
+        const release3 = 0.520;
+        const sustain3 = 0.70;
+        const releaseStart3 = Math.max(noteStart + attack3, noteEnd - release3);
+        gain3.gain.setValueAtTime(0, noteStart);
+        gain3.gain.linearRampToValueAtTime(layer3Volume * velocity * sustain3, noteStart + attack3);
+        gain3.gain.setValueAtTime(layer3Volume * velocity * sustain3, releaseStart3);
+        gain3.gain.linearRampToValueAtTime(0.001, noteEnd);
+        osc3.start(noteStart);
+        osc3.stop(noteEnd);
+
+        // === LAYER 4: Air cushion (sine one octave above) ===
+        const osc4 = audioContext.createOscillator();
+        const gain4 = audioContext.createGain();
+        osc4.connect(gain4);
+        gain4.connect(audioContext.destination);
+        osc4.frequency.value = note.frequency * 2;
+        osc4.type = 'sine';
+
+        const attack4 = 0.032;
+        const release4 = 0.180;
+        const sustain4 = 0.40;
+        const releaseStart4 = Math.max(noteStart + attack4, noteEnd - release4);
+        gain4.gain.setValueAtTime(0, noteStart);
+        gain4.gain.linearRampToValueAtTime(layer4Volume * velocity * sustain4, noteStart + attack4);
+        gain4.gain.setValueAtTime(layer4Volume * velocity * sustain4, releaseStart4);
+        gain4.gain.linearRampToValueAtTime(0.001, noteEnd);
+        osc4.start(noteStart);
+        osc4.stop(noteEnd);
+
+        // === LAYER 5: Soft blur (triangle at Layer 1 pitch) ===
+        const osc5 = audioContext.createOscillator();
+        const gain5 = audioContext.createGain();
+        osc5.connect(gain5);
+        gain5.connect(audioContext.destination);
+        osc5.frequency.value = note.frequency;
+        osc5.type = 'triangle';
+
+        const attack5 = 0.060;
+        const release5 = 0.420;
+        const sustain5 = 0.50;
+        const releaseStart5 = Math.max(noteStart + attack5, noteEnd - release5);
+        gain5.gain.setValueAtTime(0, noteStart);
+        gain5.gain.linearRampToValueAtTime(layer5Volume * velocity * sustain5, noteStart + attack5);
+        gain5.gain.setValueAtTime(layer5Volume * velocity * sustain5, releaseStart5);
+        gain5.gain.linearRampToValueAtTime(0.001, noteEnd);
+        osc5.start(noteStart);
+        osc5.stop(noteEnd);
+
+        currentTime = noteEnd + note.gap;
+      });
+    } catch (error) {
+      console.error('Failed to play notification:', error);
+    }
   };
 
   const toggleTimer = () => {
@@ -225,6 +291,8 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
     setIsRunning(false);
     sessionStartTimeRef.current = null;
     lastMinuteCountedRef.current = 0;
+    // Save to database
+    savePomodoroSettings(workDur, breakDur, isMuted);
   };
 
   const formatTime = (seconds: number): string => {
@@ -374,6 +442,35 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
                 }
               `}</style>
             </div>
+          </div>
+
+          {/* Mute Toggle */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 500,
+              color: 'var(--text)',
+            }}>
+              <input
+                type="checkbox"
+                checked={isMuted}
+                onChange={(e) => {
+                  const newMuted = e.target.checked;
+                  setIsMuted(newMuted);
+                  savePomodoroSettings(workDuration, breakDuration, newMuted);
+                }}
+                style={{
+                  cursor: 'pointer',
+                  width: '16px',
+                  height: '16px',
+                }}
+              />
+              Mute notification sound
+            </label>
           </div>
 
           <div style={{ display: 'flex', gap: '12px' }}>
@@ -631,7 +728,7 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
             onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
             onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
-            Customize Durations
+            Timer Settings
           </button>
         </>
       )}
