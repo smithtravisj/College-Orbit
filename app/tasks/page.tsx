@@ -8,9 +8,50 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, Repeat } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
+import RecurrenceSelector from '@/components/RecurrenceSelector';
+import { RecurringTaskFormData } from '@/types';
+
+// Helper function to format recurring pattern as human-readable text
+function getRecurrenceText(pattern: any): string {
+  if (!pattern) return '';
+
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  let text = '';
+
+  switch (pattern.recurrenceType) {
+    case 'weekly': {
+      const days = (pattern.daysOfWeek as number[])
+        .sort((a, b) => a - b)
+        .map((d) => dayNames[d]);
+      text = `Every week on ${days.join(', ')}`;
+      break;
+    }
+    case 'monthly': {
+      const days = (pattern.daysOfMonth as number[])
+        .sort((a, b) => a - b)
+        .map((d) => `${d}${['st', 'nd', 'rd'][d % 10 - 1] || 'th'}`);
+      text = `Monthly on the ${days.join(', ')}`;
+      break;
+    }
+    case 'custom': {
+      const interval = pattern.intervalDays || 1;
+      text = `Every ${interval} day${interval > 1 ? 's' : ''}`;
+      break;
+    }
+  }
+
+  // Add end condition
+  if (pattern.endDate) {
+    text += ` until ${formatDate(pattern.endDate)}`;
+  } else if (pattern.occurrenceCount) {
+    text += ` for ${pattern.occurrenceCount} occurrences`;
+  }
+
+  return text;
+}
 
 export default function TasksPage() {
   const [mounted, setMounted] = useState(false);
@@ -25,11 +66,24 @@ export default function TasksPage() {
     dueTime: '',
     notes: '',
     links: [{ label: '', url: '' }],
+    isRecurring: false,
+    recurring: {
+      isRecurring: false,
+      recurrenceType: 'weekly' as const,
+      customIntervalDays: 7,
+      daysOfWeek: [1], // Default to Monday
+      daysOfMonth: [1], // Default to 1st of month
+      startDate: '',
+      endCondition: 'never' as const,
+      endDate: '',
+      occurrenceCount: 10,
+      dueTime: '23:59',
+    } as RecurringTaskFormData,
   });
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { courses, tasks, settings, addTask, updateTask, deleteTask, toggleTaskDone, initializeStore } = useAppStore();
+  const { courses, tasks, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, initializeStore } = useAppStore();
 
   useEffect(() => {
     initializeStore();
@@ -48,6 +102,78 @@ export default function TasksPage() {
     e.preventDefault();
     if (!formData.title.trim()) return;
 
+    // Handle links - normalize and add https:// if needed
+    const links = formData.links
+      .filter((l) => l.url && l.url.trim())
+      .map((l) => ({
+        label: l.label,
+        url: l.url.startsWith('http://') || l.url.startsWith('https://')
+          ? l.url
+          : `https://${l.url}`
+      }));
+
+    // Handle recurring task creation
+    if (formData.isRecurring && !editingId) {
+      // Validate recurring pattern
+      const recurring = formData.recurring;
+
+      // Ensure at least one day is selected for week-based recurrence
+      if (recurring.recurrenceType === 'weekly' && recurring.daysOfWeek.length === 0) {
+        alert('Please select at least one day of the week');
+        return;
+      }
+
+      // Ensure at least one day is selected for monthly recurrence
+      if (recurring.recurrenceType === 'monthly' && recurring.daysOfMonth.length === 0) {
+        alert('Please select at least one day of the month');
+        return;
+      }
+
+      // Ensure valid interval for custom recurrence
+      if (recurring.recurrenceType === 'custom' && (!recurring.customIntervalDays || recurring.customIntervalDays < 1)) {
+        alert('Please enter a valid interval (1 or more days)');
+        return;
+      }
+
+      try {
+        await addRecurringTask(
+          {
+            title: formData.title,
+            courseId: formData.courseId || null,
+            notes: formData.notes,
+            links,
+          },
+          formData.recurring
+        );
+      } catch (error) {
+        console.error('Error creating recurring task:', error);
+      }
+      setFormData({
+        title: '',
+        courseId: '',
+        dueDate: '',
+        dueTime: '',
+        notes: '',
+        links: [{ label: '', url: '' }],
+        isRecurring: false,
+        recurring: {
+          isRecurring: false,
+          recurrenceType: 'weekly',
+          customIntervalDays: 7,
+          daysOfWeek: [1],
+          daysOfMonth: [1],
+          startDate: '',
+          endCondition: 'never',
+          endDate: '',
+          occurrenceCount: 10,
+          dueTime: '23:59',
+        },
+      });
+      setShowForm(false);
+      return;
+    }
+
+    // Handle regular task creation
     let dueAt: string | null = null;
     // Only set dueAt if we have a valid date string (not empty, not null, not whitespace)
     if (formData.dueDate && formData.dueDate.trim()) {
@@ -68,24 +194,47 @@ export default function TasksPage() {
       formData.dueTime = '';
     }
 
-    // Handle links - normalize and add https:// if needed
-    const links = formData.links
-      .filter((l) => l.url && l.url.trim())
-      .map((l) => ({
-        label: l.label,
-        url: l.url.startsWith('http://') || l.url.startsWith('https://')
-          ? l.url
-          : `https://${l.url}`
-      }));
-
     if (editingId) {
-      await updateTask(editingId, {
-        title: formData.title,
-        courseId: formData.courseId || null,
-        dueAt,
-        notes: formData.notes,
-        links,
+      // Check if this is a recurring task being edited
+      const editingTask = tasks.find(t => t.id === editingId);
+
+      console.log('[handleSubmit] Editing task:', {
+        id: editingTask?.id,
+        isRecurring: editingTask?.isRecurring,
+        hasRecurringPattern: !!editingTask?.recurringPattern,
+        patternId: editingTask?.recurringPatternId,
       });
+
+      if (editingTask?.isRecurring && editingTask?.recurringPattern && editingTask?.recurringPatternId) {
+        // Update recurring pattern if settings changed
+        console.log('[handleSubmit] Calling updateRecurringPattern with data:', {
+          patternId: editingTask.recurringPatternId,
+          recurring: formData.recurring,
+        });
+        try {
+          await updateRecurringPattern(editingTask.recurringPatternId,
+            {
+              title: formData.title,
+              courseId: formData.courseId || null,
+              notes: formData.notes,
+              links,
+            },
+            formData.recurring
+          );
+        } catch (error) {
+          console.error('Error updating recurring pattern:', error);
+        }
+      } else {
+        // Update regular task
+        console.log('[handleSubmit] Updating as regular task');
+        await updateTask(editingId, {
+          title: formData.title,
+          courseId: formData.courseId || null,
+          dueAt,
+          notes: formData.notes,
+          links,
+        });
+      }
       setEditingId(null);
     } else {
       await addTask({
@@ -97,10 +246,33 @@ export default function TasksPage() {
         notes: formData.notes,
         links,
         status: 'open',
+        recurringPatternId: null,
+        instanceDate: null,
+        isRecurring: false,
       });
     }
 
-    setFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', links: [{ label: '', url: '' }] });
+    setFormData({
+      title: '',
+      courseId: '',
+      dueDate: '',
+      dueTime: '',
+      notes: '',
+      links: [{ label: '', url: '' }],
+      isRecurring: false,
+      recurring: {
+        isRecurring: false,
+        recurrenceType: 'weekly',
+        customIntervalDays: 7,
+        daysOfWeek: [1],
+        daysOfMonth: [1],
+        startDate: '',
+        endCondition: 'never',
+        endDate: '',
+        occurrenceCount: 10,
+        dueTime: '23:59',
+      },
+    });
     setShowForm(false);
   };
 
@@ -116,6 +288,37 @@ export default function TasksPage() {
       dateStr = `${year}-${month}-${date}`;
       timeStr = `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}`;
     }
+
+    // Load recurring pattern data if this is a recurring task
+    let recurringData: any = {
+      isRecurring: false,
+      recurrenceType: 'weekly',
+      customIntervalDays: 7,
+      daysOfWeek: [1],
+      daysOfMonth: [1],
+      startDate: '',
+      endCondition: 'never',
+      endDate: '',
+      occurrenceCount: 10,
+      dueTime: '23:59',
+    };
+
+    if (task.isRecurring && task.recurringPattern) {
+      const pattern = task.recurringPattern;
+      recurringData = {
+        isRecurring: true,
+        recurrenceType: pattern.recurrenceType,
+        customIntervalDays: pattern.intervalDays || 7,
+        daysOfWeek: pattern.daysOfWeek || [1],
+        daysOfMonth: pattern.daysOfMonth || [1],
+        startDate: pattern.startDate ? pattern.startDate.split('T')[0] : '',
+        endCondition: pattern.endDate ? 'date' : (pattern.occurrenceCount ? 'count' : 'never'),
+        endDate: pattern.endDate ? pattern.endDate.split('T')[0] : '',
+        occurrenceCount: pattern.occurrenceCount || 10,
+        dueTime: pattern.taskTemplate?.dueTime || '23:59',
+      };
+    }
+
     setFormData({
       title: task.title,
       courseId: task.courseId || '',
@@ -123,13 +326,35 @@ export default function TasksPage() {
       dueTime: timeStr,
       notes: task.notes,
       links: task.links && task.links.length > 0 ? task.links : [{ label: '', url: '' }],
+      isRecurring: task.isRecurring || false,
+      recurring: recurringData,
     });
     setShowForm(true);
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setFormData({ title: '', courseId: '', dueDate: '', dueTime: '', notes: '', links: [{ label: '', url: '' }] });
+    setFormData({
+      title: '',
+      courseId: '',
+      dueDate: '',
+      dueTime: '',
+      notes: '',
+      links: [{ label: '', url: '' }],
+      isRecurring: false,
+      recurring: {
+        isRecurring: false,
+        recurrenceType: 'weekly',
+        customIntervalDays: 7,
+        daysOfWeek: [1],
+        daysOfMonth: [1],
+        startDate: '',
+        endCondition: 'never',
+        endDate: '',
+        occurrenceCount: 10,
+        dueTime: '23:59',
+      },
+    });
     setShowForm(false);
   };
 
@@ -317,18 +542,69 @@ export default function TasksPage() {
                     placeholder="Add any additional notes..."
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4" style={{ overflow: 'visible' }}>
-                  <CalendarPicker
-                    label="Due Date"
-                    value={formData.dueDate}
-                    onChange={(date) => setFormData({ ...formData, dueDate: date })}
-                  />
-                  <TimePicker
-                    label="Due Time"
-                    value={formData.dueTime}
-                    onChange={(time) => setFormData({ ...formData, dueTime: time })}
-                  />
+
+                {/* Recurring toggle */}
+                <div style={{ paddingTop: '12px', paddingBottom: '12px' }}>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: 'var(--text)',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.isRecurring}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          isRecurring: e.target.checked,
+                          recurring: {
+                            ...formData.recurring,
+                            isRecurring: e.target.checked,
+                          },
+                        })
+                      }
+                      style={{
+                        width: '18px',
+                        height: '18px',
+                        cursor: 'pointer',
+                      }}
+                    />
+                    <Repeat size={16} />
+                    Recurring task
+                  </label>
                 </div>
+
+                {/* Recurrence selector */}
+                {formData.isRecurring && (
+                  <div style={{ paddingTop: '12px' }}>
+                    <RecurrenceSelector
+                      value={formData.recurring}
+                      onChange={(recurring) => setFormData({ ...formData, recurring: recurring as RecurringTaskFormData })}
+                    />
+                  </div>
+                )}
+
+                {/* Date/Time pickers - only show for non-recurring tasks */}
+                {!formData.isRecurring && (
+                  <div className="grid grid-cols-2 gap-4" style={{ overflow: 'visible' }}>
+                    <CalendarPicker
+                      label="Due Date"
+                      value={formData.dueDate}
+                      onChange={(date) => setFormData({ ...formData, dueDate: date })}
+                    />
+                    <TimePicker
+                      label="Due Time"
+                      value={formData.dueTime}
+                      onChange={(time) => setFormData({ ...formData, dueTime: time })}
+                    />
+                  </div>
+                )}
                 <div style={{ paddingTop: '20px' }}>
                   <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links</label>
                   <div className="space-y-3">
@@ -483,11 +759,23 @@ export default function TasksPage() {
                           >
                             {t.title}
                           </div>
+                          {t.isRecurring && (
+                            <Repeat
+                              size={14}
+                              style={{ color: 'var(--text-muted)', flexShrink: 0 }}
+                              aria-label="Recurring task"
+                            />
+                          )}
                           {isOverdueTask && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                         </div>
                         {t.notes && (
                           <div className="text-xs text-[var(--text-muted)] mt-1">
                             {t.notes}
+                          </div>
+                        )}
+                        {t.isRecurring && t.recurringPattern && (
+                          <div className="text-xs text-[var(--text-muted)] mt-1">
+                            {getRecurrenceText(t.recurringPattern)}
                           </div>
                         )}
                         <div className="flex items-center gap-3 mt-2 flex-wrap">

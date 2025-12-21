@@ -135,9 +135,28 @@ export async function DELETE(
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
-    await prisma.task.delete({
-      where: { id },
-    });
+    // If this is a recurring task, delete all instances of the pattern
+    if (existingTask.recurringPatternId) {
+      console.log(`[DELETE /api/tasks/${id}] Deleting all instances of recurring pattern ${existingTask.recurringPatternId}`);
+
+      // Delete all tasks for this pattern
+      await prisma.task.deleteMany({
+        where: {
+          recurringPatternId: existingTask.recurringPatternId,
+        },
+      });
+
+      // Mark the pattern as inactive instead of deleting it (preserve history)
+      await prisma.recurringPattern.update({
+        where: { id: existingTask.recurringPatternId },
+        data: { isActive: false },
+      });
+    } else {
+      // For non-recurring tasks, just delete the single task
+      await prisma.task.delete({
+        where: { id },
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

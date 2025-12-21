@@ -14,6 +14,7 @@ export interface CalendarEvent {
   status?: 'open' | 'done' | 'scheduled' | 'completed' | 'cancelled';
   dueAt?: string | null;
   examAt?: string | null;
+  instanceDate?: string | null; // For recurring task instances
   meetingTimeData?: {
     days: string[];
     start: string;
@@ -211,6 +212,7 @@ export function getTaskDeadlineEventsForDate(
         dueAt: item.dueAt,
         time,
         status: item.status,
+        instanceDate: (item as any).instanceDate || null,
       };
     });
 }
@@ -257,6 +259,7 @@ export function getExamEventsForDate(
         location: exam.location || undefined,
         time,
         status: exam.status,
+        instanceDate: (exam as any).instanceDate || null,
       };
     });
 }

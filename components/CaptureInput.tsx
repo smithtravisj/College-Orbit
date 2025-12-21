@@ -51,6 +51,9 @@ export default function CaptureInput() {
         notes: '',
         links: [],
         status: 'open',
+        recurringPatternId: null,
+        instanceDate: null,
+        isRecurring: false,
       });
     } else if (title) {
       addTask({
@@ -62,6 +65,9 @@ export default function CaptureInput() {
         notes: '',
         links: [],
         status: 'open',
+        recurringPatternId: null,
+        instanceDate: null,
+        isRecurring: false,
       });
     }
 
