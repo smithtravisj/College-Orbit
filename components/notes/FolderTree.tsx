@@ -2,19 +2,17 @@
 
 import { useState } from 'react';
 import { Folder, Edit2, Trash2 } from 'lucide-react';
-import { Folder as FolderType, Note } from '@/types/index';
+import { Folder as FolderType } from '@/types/index';
 import useAppStore from '@/lib/store';
 
 interface FolderTreeProps {
   folders: FolderType[];
-  notes: Note[];
   selectedFolderId: string | null;
   onSelectFolder: (folderId: string | null) => void;
 }
 
 export default function FolderTree({
   folders,
-  notes,
   selectedFolderId,
   onSelectFolder,
 }: FolderTreeProps) {
@@ -26,10 +24,6 @@ export default function FolderTree({
   const [editingName, setEditingName] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const getNotesInFolder = (folderId: string | null): number => {
-    return notes.filter((note) => note.folderId === folderId).length;
-  };
 
   const handleDeleteFolder = async (folderId: string) => {
     setDeleteConfirm(folderId);
@@ -102,7 +96,6 @@ export default function FolderTree({
   };
 
   const allRootFolders = folders.filter((f) => !f.parentId).sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
-  const allNotesCount = notes.length;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -136,16 +129,10 @@ export default function FolderTree({
       >
         <Folder size={16} style={{ flexShrink: 0 }} />
         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', fontWeight: '500' }}>All Notes</span>
-        {allNotesCount > 0 && (
-          <span style={{ fontSize: '12px', padding: '4px 8px', borderRadius: '4px', backgroundColor: 'rgba(255,255,255,0.1)', flexShrink: 0 }}>
-            {allNotesCount}
-          </span>
-        )}
       </div>
 
       {/* Folders */}
       {allRootFolders.map((folder) => {
-        const noteCount = getNotesInFolder(folder.id);
         const isSelected = selectedFolderId === folder.id;
         const isEditing = editingFolderId === folder.id;
 
@@ -216,11 +203,6 @@ export default function FolderTree({
             <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', fontWeight: '500' }}>
               {folder.name}
             </span>
-            {noteCount > 0 && (
-              <span style={{ fontSize: '12px', padding: '4px 8px', borderRadius: '4px', backgroundColor: 'rgba(255,255,255,0.1)', flexShrink: 0 }}>
-                {noteCount}
-              </span>
-            )}
           </div>
         );
       })}

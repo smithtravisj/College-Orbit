@@ -44,7 +44,7 @@ export default function DaysDropdown({ value, onChange, label }: DaysDropdownPro
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)] flex items-center justify-between"
+        className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none flex items-center justify-between"
         style={{ padding: '10px 12px' }}
       >
         <span className="text-sm font-medium">Days</span>

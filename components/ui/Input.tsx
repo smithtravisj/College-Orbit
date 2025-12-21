@@ -19,7 +19,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
         <input
           ref={ref}
-          className={`w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] rounded-[var(--radius-control)] transition-colors focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)] disabled:bg-[var(--panel)] disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed ${error ? 'border-[var(--danger)]' : ''} ${className}`}
+          className={`w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] rounded-[var(--radius-control)] transition-colors focus:outline-none disabled:bg-[var(--panel)] disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed ${error ? 'border-[var(--danger)]' : ''} ${className}`}
           style={{ padding: '10px 12px' }}
           {...props}
         />
@@ -53,7 +53,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         )}
         <textarea
           ref={ref}
-          className={`w-full min-h-24 bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] rounded-[var(--radius-control)] transition-colors focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)] disabled:bg-[var(--panel)] disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed resize-none ${error ? 'border-[var(--danger)]' : ''} ${className}`}
+          className={`w-full min-h-24 bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] rounded-[var(--radius-control)] transition-colors focus:outline-none disabled:bg-[var(--panel)] disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed resize-none ${error ? 'border-[var(--danger)]' : ''} ${className}`}
           style={{ padding: '10px 12px' }}
           {...props}
         />
@@ -101,7 +101,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         )}
         <select
           ref={ref}
-          className={`w-full ${isMultiple ? 'min-h-[150px]' : 'h-[var(--input-height)]'} border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors focus:outline-none focus:border-[var(--border-active)] focus:ring-2 focus:ring-[var(--ring)] disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed ${!isMultiple ? 'appearance-none' : ''} cursor-pointer ${error ? 'border-[var(--danger)]' : ''} ${className}`}
+          className={`w-full ${isMultiple ? 'min-h-[150px]' : 'h-[var(--input-height)]'} border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors focus:outline-none disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed ${!isMultiple ? 'appearance-none' : ''} cursor-pointer ${error ? 'border-[var(--danger)]' : ''} ${className}`}
           style={selectStyle}
           {...props}
         >

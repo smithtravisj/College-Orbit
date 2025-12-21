@@ -11,7 +11,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import RichTextEditor from '@/components/RichTextEditor';
 import FolderTree from '@/components/notes/FolderTree';
 import TagInput from '@/components/notes/TagInput';
-import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Tag, Link as LinkIcon } from 'lucide-react';
+import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown } from 'lucide-react';
 
 export default function NotesPage() {
   const [mounted, setMounted] = useState(false);
@@ -21,6 +21,9 @@ export default function NotesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [showFoldersDropdown, setShowFoldersDropdown] = useState(true);
+  const [showTagsDropdown, setShowTagsDropdown] = useState(false);
+  const [deleteConfirmNote, setDeleteConfirmNote] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     content: { type: 'doc', content: [] },
@@ -110,11 +113,15 @@ export default function NotesPage() {
   };
 
   const handleDeleteNote = async (id: string) => {
-    if (confirm('Are you sure you want to delete this note?')) {
-      await deleteNote(id);
-      setSelectedNoteId(null);
-      setShowForm(false);
-    }
+    setDeleteConfirmNote(id);
+  };
+
+  const confirmDeleteNote = async () => {
+    if (!deleteConfirmNote) return;
+    await deleteNote(deleteConfirmNote);
+    setSelectedNoteId(null);
+    setShowForm(false);
+    setDeleteConfirmNote(null);
   };
 
   // Get all unique tags
@@ -148,6 +155,8 @@ export default function NotesPage() {
     });
 
   const selectedNote = selectedNoteId ? notes.find((n) => n.id === selectedNoteId) : null;
+  const pinnedNotes = filtered.filter((n) => n.isPinned);
+  const unpinnedNotes = filtered.filter((n) => !n.isPinned);
 
   return (
     <>
@@ -183,43 +192,65 @@ export default function NotesPage() {
                 />
               </div>
 
-              {/* Folder filter with tree view */}
-              <div style={{ marginBottom: '0' }}>
-                <h4 className="text-sm font-semibold text-[var(--text)] mb-6">Folders</h4>
-                <FolderTree
-                  folders={folders}
-                  notes={notes}
-                  selectedFolderId={selectedFolder}
-                  onSelectFolder={setSelectedFolder}
-                />
+              {/* Folder filter dropdown */}
+              <div style={{ marginBottom: '0', position: 'relative' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowFoldersDropdown(!showFoldersDropdown)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', transition: 'color 150ms ease' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                >
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: 'white' }}>Folders</span>
+                  <ChevronDown size={16} style={{ transform: showFoldersDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms ease', color: 'white' }} />
+                </button>
+                {showFoldersDropdown && (
+                  <div style={{ marginTop: '0px' }}>
+                    <FolderTree
+                      folders={folders}
+                      selectedFolderId={selectedFolder}
+                      onSelectFolder={setSelectedFolder}
+                    />
+                  </div>
+                )}
               </div>
 
-              {/* Tag filter */}
+              {/* Tag filter dropdown */}
               {allTags.length > 0 && (
-                <div style={{ marginTop: '20px' }}>
-                  <h4 className="text-sm font-semibold text-[var(--text)] mb-3">Tags</h4>
-                  <div className="space-y-2">
-                    {allTags.map((tag) => (
-                      <label key={tag} className="flex items-center gap-2 text-sm cursor-pointer hover:text-[var(--text)] p-2 rounded hover:bg-white/5 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={selectedTags.has(tag)}
-                          onChange={(e) => {
-                            const newTags = new Set(selectedTags);
-                            if (e.target.checked) {
-                              newTags.add(tag);
-                            } else {
-                              newTags.delete(tag);
-                            }
-                            setSelectedTags(newTags);
-                          }}
-                          className="rounded"
-                        />
-                        <Tag size={12} />
-                        {tag}
-                      </label>
-                    ))}
-                  </div>
+                <div style={{ marginTop: '20px', position: 'relative' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowTagsDropdown(!showTagsDropdown)}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', transition: 'color 150ms ease' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                  >
+                    <span style={{ fontSize: '14px', fontWeight: '600', color: 'white' }}>Tags</span>
+                    <ChevronDown size={16} style={{ transform: showTagsDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms ease', color: 'white' }} />
+                  </button>
+                  {showTagsDropdown && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0px', marginTop: '0px' }}>
+                      {allTags.map((tag) => (
+                        <label key={tag} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer', padding: '8px', borderRadius: '6px', transition: 'background-color 150ms ease, color 150ms ease', color: 'var(--text-muted)', minWidth: 0 }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedTags.has(tag)}
+                            onChange={(e) => {
+                              const newTags = new Set(selectedTags);
+                              if (e.target.checked) {
+                                newTags.add(tag);
+                              } else {
+                                newTags.delete(tag);
+                              }
+                              setSelectedTags(newTags);
+                            }}
+                            style={{ borderRadius: '4px', flexShrink: 0 }}
+                          />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{tag}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </Card>
@@ -286,6 +317,8 @@ export default function NotesPage() {
                       onClick={() => {
                         resetForm();
                         setShowForm(false);
+                        setSelectedNoteId(null);
+                        setEditingId(null);
                       }}
                     >
                       Cancel
@@ -403,99 +436,210 @@ export default function NotesPage() {
                 </Card>
               </div>
             ) : filtered.length > 0 ? (
-              <div style={{ marginBottom: '24px' }}>
-                <Card>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid var(--border)' }}>
-                  {filtered.map((note) => {
-                    const course = courses.find((c) => c.id === note.courseId);
-                    const folder = folders.find((f) => f.id === note.folderId);
+              <>
+                {pinnedNotes.length > 0 && (
+                  <div style={{ marginBottom: '24px' }}>
+                    <h4 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px', marginTop: 0 }}>Pinned Notes</h4>
+                    <Card>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
+                        {pinnedNotes.map((note, index) => {
+                          const course = courses.find((c) => c.id === note.courseId);
+                          const folder = folders.find((f) => f.id === note.folderId);
 
-                    return (
-                      <div
-                        key={note.id}
-                        style={{ padding: '12px 0', borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'background-color 150ms ease' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--panel-2)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                        onClick={() => setSelectedNoteId(note.id)}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              {note.isPinned && <Pin size={14} style={{ color: 'var(--accent)' }} />}
-                              <h3 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>{note.title}</h3>
-                            </div>
-                            {note.plainText && (
-                              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                                {note.plainText}
-                              </p>
-                            )}
-                            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-                              {course && <span style={{ fontSize: '12px', backgroundColor: 'var(--nav-active)', padding: '4px 8px', borderRadius: '4px' }}>{course.code}</span>}
-                              {folder && (
-                                <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  <FolderIcon size={12} />
-                                  {folder.name}
-                                </span>
-                              )}
-                              {note.tags && note.tags.length > 0 && (
-                                <div style={{ display: 'flex', gap: '4px' }}>
-                                  {note.tags.slice(0, 2).map((tag) => (
-                                    <span key={tag} style={{ fontSize: '12px', color: 'var(--accent)' }}>
-                                      #{tag}
-                                    </span>
-                                  ))}
-                                  {note.tags.length > 2 && (
-                                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                                      +{note.tags.length - 2} more
-                                    </span>
+                          return (
+                            <div
+                              key={note.id}
+                              style={{ padding: '12px 0', borderBottom: index < pinnedNotes.length - 1 ? '1px solid var(--border)' : 'none', transition: 'background-color 150ms ease' }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                                const buttonsDiv = e.currentTarget.querySelector('[data-buttons-container]') as HTMLElement;
+                                if (buttonsDiv) buttonsDiv.style.opacity = '1';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                                const buttonsDiv = e.currentTarget.querySelector('[data-buttons-container]') as HTMLElement;
+                                if (buttonsDiv) buttonsDiv.style.opacity = '0';
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                                <div style={{ flex: 1 }}>
+                                  <h3 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>{note.title}</h3>
+                                  {note.plainText && (
+                                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                      {note.plainText}
+                                    </p>
                                   )}
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                                    {course && <span style={{ fontSize: '12px', backgroundColor: 'var(--nav-active)', padding: '4px 8px', borderRadius: '4px' }}>{course.code}</span>}
+                                    {folder && selectedFolder !== note.folderId && (
+                                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <FolderIcon size={12} />
+                                        {folder.name}
+                                      </span>
+                                    )}
+                                    {note.tags && note.tags.length > 0 && (
+                                      <div style={{ display: 'flex', gap: '4px' }}>
+                                        {note.tags.slice(0, 2).map((tag) => (
+                                          <span key={tag} style={{ fontSize: '12px', color: '#539bf5' }}>
+                                            #{tag}
+                                          </span>
+                                        ))}
+                                        {note.tags.length > 2 && (
+                                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                            +{note.tags.length - 2} more
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                              )}
+                                <div data-buttons-container style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: 0, transition: 'opacity 150ms ease' }}>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleNotePin(note.id);
+                                    }}
+                                    style={{ padding: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.color = '#539bf5'}
+                                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+                                    title="Unpin note"
+                                  >
+                                    <Pin size={20} style={{ fill: 'currentColor' }} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      startEdit(note);
+                                    }}
+                                    style={{ padding: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.color = '#539bf5'}
+                                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+                                  >
+                                    <Edit2 size={20} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteNote(note.id);
+                                    }}
+                                    style={{ padding: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.color = '#f85149'}
+                                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+                                  >
+                                    <Trash2 size={20} />
+                                  </button>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0, transition: 'opacity 150ms ease' }} onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleNotePin(note.id);
-                              }}
-                              style={{ padding: '6px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease' }}
-                              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'}
-                              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
-                              title={note.isPinned ? 'Unpin note' : 'Pin note'}
-                            >
-                              <Pin size={16} style={{ fill: note.isPinned ? 'currentColor' : 'none' }} />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                startEdit(note);
-                              }}
-                              style={{ padding: '6px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease' }}
-                              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'}
-                              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
-                            >
-                              <Edit2 size={16} />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteNote(note.id);
-                              }}
-                              style={{ padding: '6px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease' }}
-                              onMouseEnter={(e) => e.currentTarget.style.color = '#dc2626'}
-                              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-                </div>
-                </Card>
-              </div>
+                    </Card>
+                  </div>
+                )}
+                {unpinnedNotes.length > 0 && (
+                  <div style={{ marginBottom: '24px' }}>
+                    {pinnedNotes.length > 0 && (
+                      <h4 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px', marginTop: 0 }}>All Notes</h4>
+                    )}
+                    <Card>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
+                        {unpinnedNotes.map((note, index) => {
+                          const course = courses.find((c) => c.id === note.courseId);
+                          const folder = folders.find((f) => f.id === note.folderId);
+
+                          return (
+                            <div
+                              key={note.id}
+                              style={{ padding: '12px 0', borderBottom: index < unpinnedNotes.length - 1 ? '1px solid var(--border)' : 'none', transition: 'background-color 150ms ease' }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                                const buttonsDiv = e.currentTarget.querySelector('[data-buttons-container]') as HTMLElement;
+                                if (buttonsDiv) buttonsDiv.style.opacity = '1';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                                const buttonsDiv = e.currentTarget.querySelector('[data-buttons-container]') as HTMLElement;
+                                if (buttonsDiv) buttonsDiv.style.opacity = '0';
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                                <div style={{ flex: 1 }}>
+                                  <h3 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>{note.title}</h3>
+                                  {note.plainText && (
+                                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                      {note.plainText}
+                                    </p>
+                                  )}
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                                    {course && <span style={{ fontSize: '12px', backgroundColor: 'var(--nav-active)', padding: '4px 8px', borderRadius: '4px' }}>{course.code}</span>}
+                                    {folder && selectedFolder !== note.folderId && (
+                                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <FolderIcon size={12} />
+                                        {folder.name}
+                                      </span>
+                                    )}
+                                    {note.tags && note.tags.length > 0 && (
+                                      <div style={{ display: 'flex', gap: '4px' }}>
+                                        {note.tags.slice(0, 2).map((tag) => (
+                                          <span key={tag} style={{ fontSize: '12px', color: '#539bf5' }}>
+                                            #{tag}
+                                          </span>
+                                        ))}
+                                        {note.tags.length > 2 && (
+                                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                            +{note.tags.length - 2} more
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div data-buttons-container style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: 0, transition: 'opacity 150ms ease' }}>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleNotePin(note.id);
+                                    }}
+                                    style={{ padding: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.color = '#539bf5'}
+                                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+                                    title="Pin note"
+                                  >
+                                    <Pin size={20} style={{ fill: 'none' }} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      startEdit(note);
+                                    }}
+                                    style={{ padding: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.color = '#539bf5'}
+                                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+                                  >
+                                    <Edit2 size={20} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteNote(note.id);
+                                    }}
+                                    style={{ padding: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.color = '#f85149'}
+                                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+                                  >
+                                    <Trash2 size={20} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </Card>
+                  </div>
+                )}
+              </>
             ) : (
               <EmptyState
                 title="No notes"
@@ -510,6 +654,92 @@ export default function NotesPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmNote && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 50,
+            }}
+            onClick={() => setDeleteConfirmNote(null)}
+          >
+            <div
+              style={{
+                backgroundColor: 'var(--panel)',
+                borderRadius: '8px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                maxWidth: '400px',
+                width: '100%',
+                margin: '0 16px',
+                padding: '24px',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text)', margin: '0 0 12px 0' }}>
+                Delete note?
+              </h3>
+              <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '0 0 24px 0' }}>
+                This will permanently delete this note. This action cannot be undone.
+              </p>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setDeleteConfirmNote(null)}
+                  style={{
+                    flex: 1,
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontWeight: '500',
+                    fontSize: '14px',
+                    border: 'none',
+                    background: 'transparent',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    transition: 'background-color 150ms ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteNote}
+                  style={{
+                    flex: 1,
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontWeight: '500',
+                    fontSize: '14px',
+                    border: 'none',
+                    backgroundColor: '#660000',
+                    color: 'white',
+                    cursor: 'pointer',
+                    transition: 'opacity 150ms ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = '0.9';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = '1';
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
     </>
   );
