@@ -171,8 +171,9 @@ export default function RichTextEditor({
           <div
             style={{
               position: 'absolute',
-              top: '16px',
+              top: '50%',
               left: '16px',
+              transform: 'translateY(-50%)',
               color: 'var(--text-muted)',
               pointerEvents: 'none',
               fontSize: '1rem',
