@@ -140,9 +140,9 @@ const CourseFormComponent = forwardRef(function CourseForm(
 
       <div style={{ paddingTop: '20px' }}>
         <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Meeting Times</label>
-        <div className="space-y-2">
+        <div className="space-y-2" style={{ overflow: 'visible' }}>
           {form.meetingTimes.map((mt, idx) => (
-            <div key={idx} className="flex items-center" style={{ gap: '4px', overflowX: 'auto', paddingBottom: '4px' }}>
+            <div key={idx} className="flex items-center" style={{ gap: '4px', paddingBottom: '4px' }}>
               <DaysDropdown
                 label={idx === 0 ? 'Days' : ''}
                 value={mt.days}
