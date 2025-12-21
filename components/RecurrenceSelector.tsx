@@ -3,6 +3,7 @@
 import { RecurringTaskFormData, RecurringDeadlineFormData, RecurringExamFormData } from '@/types';
 import { Select } from '@/components/ui/Input';
 import CalendarPicker from './CalendarPicker';
+import useAppStore from '@/lib/store';
 
 type RecurringFormData = RecurringTaskFormData | RecurringDeadlineFormData | RecurringExamFormData;
 
@@ -13,9 +14,14 @@ interface RecurrenceSelectorProps {
 }
 
 export default function RecurrenceSelector({ value, onChange, disabled }: RecurrenceSelectorProps) {
+  const theme = useAppStore((state) => state.settings.theme);
+
   const handleChange = (updates: Partial<RecurringFormData>) => {
     onChange({ ...value, ...updates } as RecurringFormData);
   };
+
+  // In light mode, use dark text on accent background; in dark mode, use white
+  const selectedTextColor = theme === 'light' ? '#000000' : 'white';
 
   // Get the time field value (dueTime for tasks/deadlines, examTime for exams)
   const getTimeValue = (): string => {
@@ -143,7 +149,7 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
                   border: `1px solid ${value.daysOfWeek.includes(index) ? 'var(--accent)' : 'var(--border)'}`,
                   borderRadius: '6px',
                   transition: 'all 0.2s ease',
-                  color: value.daysOfWeek.includes(index) ? 'white' : 'var(--text)',
+                  color: value.daysOfWeek.includes(index) ? selectedTextColor : 'var(--text)',
                 }}
               >
                 <input
@@ -204,7 +210,7 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
                     : 'var(--panel)',
                   border: `1px solid ${value.daysOfMonth.includes(day) ? 'var(--accent)' : 'var(--border)'}`,
                   borderRadius: '6px',
-                  color: value.daysOfMonth.includes(day) ? 'white' : 'var(--text)',
+                  color: value.daysOfMonth.includes(day) ? selectedTextColor : 'var(--text)',
                   fontSize: '12px',
                   fontWeight: '500',
                   cursor: 'pointer',
