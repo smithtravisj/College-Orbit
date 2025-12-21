@@ -454,7 +454,7 @@ export default function NotesPage() {
                           return (
                             <div
                               key={note.id}
-                              style={{ padding: '12px 0', borderBottom: index < pinnedNotes.length - 1 ? '1px solid var(--border)' : 'none', transition: 'background-color 150ms ease' }}
+                              style={{ padding: '12px 32px', borderBottom: index < pinnedNotes.length - 1 ? '1px solid var(--border)' : 'none', transition: 'background-color 150ms ease' }}
                               onMouseEnter={(e) => {
                                 e.currentTarget.style.backgroundColor = 'var(--panel-2)';
                                 const buttonsDiv = e.currentTarget.querySelector('[data-buttons-container]') as HTMLElement;
@@ -563,7 +563,7 @@ export default function NotesPage() {
                           return (
                             <div
                               key={note.id}
-                              style={{ padding: '12px 0', borderBottom: index < unpinnedNotes.length - 1 ? '1px solid var(--border)' : 'none', transition: 'background-color 150ms ease' }}
+                              style={{ padding: '12px 32px', borderBottom: index < unpinnedNotes.length - 1 ? '1px solid var(--border)' : 'none', transition: 'background-color 150ms ease' }}
                               onMouseEnter={(e) => {
                                 e.currentTarget.style.backgroundColor = 'var(--panel-2)';
                                 const buttonsDiv = e.currentTarget.querySelector('[data-buttons-container]') as HTMLElement;

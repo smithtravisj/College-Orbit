@@ -44,8 +44,8 @@ export default function CourseList({ courses, onEdit, showSemester = false }: Co
         {courses.map((course) => (
           <div
             key={course.id}
-            style={{ paddingTop: '10px', paddingBottom: '10px' }}
-            className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors border-b border-[var(--border)] last:border-b-0"
+            style={{ paddingTop: '10px', paddingBottom: '10px', paddingLeft: '32px', paddingRight: '32px' }}
+            className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0"
           >
             <div className="flex-1 min-w-0">
               <div>
