@@ -39,12 +39,58 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
   const sessionStartTimeRef = useRef<number | null>(null);
   const lastMinuteCountedRef = useRef(0);
 
+  // Restore timer state from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedState = localStorage.getItem('pomodoroState');
+      if (savedState) {
+        const state = JSON.parse(savedState);
+        setWorkDuration(state.workDuration || 25);
+        setBreakDuration(state.breakDuration || 5);
+        setTimeLeft(state.timeLeft || (state.workDuration || 25) * 60);
+        setIsRunning(state.isRunning || false);
+        setIsWorkSession(state.isWorkSession !== false);
+        setSessionsCompleted(state.sessionsCompleted || 0);
+        setTotalWorkTime(state.totalWorkTime || 0);
+        setTotalBreakTime(state.totalBreakTime || 0);
+
+        // Restore session timing if timer was running
+        if (state.isRunning && state.sessionStartTime) {
+          const elapsedSeconds = Math.floor((Date.now() - state.sessionStartTime) / 1000);
+          const sessionDuration = state.isWorkSession ? state.workDuration * 60 : state.breakDuration * 60;
+          const newTimeLeft = Math.max(0, sessionDuration - elapsedSeconds);
+          setTimeLeft(newTimeLeft);
+          sessionStartTimeRef.current = Date.now() - (sessionDuration - newTimeLeft) * 1000;
+          lastMinuteCountedRef.current = Math.floor((sessionDuration - newTimeLeft) / 60);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to restore timer state:', error);
+    }
+  }, []);
+
   // Sync durations and mute setting from store to local state
   useEffect(() => {
     if (settings?.pomodoroWorkDuration) setWorkDuration(settings.pomodoroWorkDuration);
     if (settings?.pomodoroBreakDuration) setBreakDuration(settings.pomodoroBreakDuration);
     if (settings?.pomodoroIsMuted !== undefined) setIsMuted(settings.pomodoroIsMuted);
   }, [settings?.pomodoroWorkDuration, settings?.pomodoroBreakDuration, settings?.pomodoroIsMuted]);
+
+  // Save timer state to localStorage whenever it changes
+  useEffect(() => {
+    const state = {
+      workDuration,
+      breakDuration,
+      timeLeft,
+      isRunning,
+      isWorkSession,
+      sessionsCompleted,
+      totalWorkTime,
+      totalBreakTime,
+      sessionStartTime: sessionStartTimeRef.current,
+    };
+    localStorage.setItem('pomodoroState', JSON.stringify(state));
+  }, [workDuration, breakDuration, timeLeft, isRunning, isWorkSession, sessionsCompleted, totalWorkTime, totalBreakTime]);
 
   // Debounced function to save timer settings to database
   const savePomodoroSettings = useRef(
