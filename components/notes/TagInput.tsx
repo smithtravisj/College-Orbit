@@ -99,7 +99,7 @@ export default function TagInput({
             </button>
           </div>
         ))}
-        <div style={{ position: 'relative', flex: 1, minWidth: '100px' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: '100px', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 12px', backgroundColor: 'var(--panel-2)' }}>
           <input
             ref={inputRef}
             type="text"
