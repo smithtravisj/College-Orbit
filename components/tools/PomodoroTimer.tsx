@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, SkipForward } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import useAppStore from '@/lib/store';
@@ -35,16 +35,19 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
   const [tempWorkDuration, setTempWorkDuration] = useState<number | ''>(settings?.pomodoroWorkDuration || 25);
   const [tempBreakDuration, setTempBreakDuration] = useState<number | ''>(settings?.pomodoroBreakDuration || 5);
   const [isMuted, setIsMuted] = useState(settings?.pomodoroIsMuted || false);
+  const [hasRestored, setHasRestored] = useState(false); // Track if we've restored from localStorage
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartTimeRef = useRef<number | null>(null);
   const lastMinuteCountedRef = useRef(0);
 
-  // Restore timer state from localStorage on mount
-  useEffect(() => {
+  // Restore timer state from localStorage on mount (use layoutEffect to run synchronously)
+  useLayoutEffect(() => {
     try {
       const savedState = localStorage.getItem('pomodoroState');
+      console.log('[PomodoroTimer] Restoring from localStorage:', savedState);
       if (savedState) {
         const state = JSON.parse(savedState);
+        console.log('[PomodoroTimer] Parsed state:', state);
         setWorkDuration(state.workDuration || 25);
         setBreakDuration(state.breakDuration || 5);
         setTimeLeft(state.timeLeft || (state.workDuration || 25) * 60);
@@ -59,14 +62,22 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
           const elapsedSeconds = Math.floor((Date.now() - state.sessionStartTime) / 1000);
           const sessionDuration = state.isWorkSession ? state.workDuration * 60 : state.breakDuration * 60;
           const newTimeLeft = Math.max(0, sessionDuration - elapsedSeconds);
+          console.log('[PomodoroTimer] Timer was running, elapsed seconds:', elapsedSeconds, 'new timeLeft:', newTimeLeft);
           setTimeLeft(newTimeLeft);
           sessionStartTimeRef.current = Date.now() - (sessionDuration - newTimeLeft) * 1000;
           lastMinuteCountedRef.current = Math.floor((sessionDuration - newTimeLeft) / 60);
         }
+      } else {
+        console.log('[PomodoroTimer] No saved state in localStorage');
       }
     } catch (error) {
       console.error('Failed to restore timer state:', error);
     }
+  }, []);
+
+  // Signal that restore is complete so save effect can start working
+  useEffect(() => {
+    setHasRestored(true);
   }, []);
 
   // Sync durations and mute setting from store to local state
@@ -76,8 +87,14 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
     if (settings?.pomodoroIsMuted !== undefined) setIsMuted(settings.pomodoroIsMuted);
   }, [settings?.pomodoroWorkDuration, settings?.pomodoroBreakDuration, settings?.pomodoroIsMuted]);
 
-  // Save timer state to localStorage whenever it changes
+  // Save timer state to localStorage whenever it changes (but skip initial saves until after restore)
   useEffect(() => {
+    // Skip saves on initial mount - let restore effect complete first
+    if (!hasRestored) {
+      console.log('[PomodoroTimer] Skipping save until after restore');
+      return;
+    }
+
     const state = {
       workDuration,
       breakDuration,
@@ -89,8 +106,9 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
       totalBreakTime,
       sessionStartTime: sessionStartTimeRef.current,
     };
+    console.log('[PomodoroTimer] Saving to localStorage:', state);
     localStorage.setItem('pomodoroState', JSON.stringify(state));
-  }, [workDuration, breakDuration, timeLeft, isRunning, isWorkSession, sessionsCompleted, totalWorkTime, totalBreakTime]);
+  }, [hasRestored, workDuration, breakDuration, timeLeft, isRunning, isWorkSession, sessionsCompleted, totalWorkTime, totalBreakTime]);
 
   // Debounced function to save timer settings to database
   const savePomodoroSettings = useRef(
