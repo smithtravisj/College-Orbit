@@ -8,6 +8,7 @@ import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input, { Select } from '@/components/ui/Input';
+import PomodoroTimer from '@/components/tools/PomodoroTimer';
 import { Plus, Trash2 } from 'lucide-react';
 
 interface Course {
@@ -255,29 +256,10 @@ export default function ToolsPage() {
       <PageHeader title="Tools" subtitle="Useful utilities for your semester" />
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: '24px' }}>
         <div className="grid grid-cols-1 gap-[var(--grid-gap)]">
-          {/* Quick Links */}
-          {visibleToolsCards.includes(TOOLS_CARDS.QUICK_LINKS) && (
-          <Card title="Quick Links" subtitle={settings.university ? `Resources for ${settings.university}` : 'Select a college to view quick links'}>
-            {mounted && settings.university ? (
-              <div className="grid grid-cols-4 gap-3">
-                {getQuickLinks(settings.university).map((link) => (
-                  <a
-                    key={link.label}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-[12px] text-center text-sm font-medium transition-colors hover:opacity-80"
-                    style={{ display: 'block', padding: '12px', backgroundColor: settings.theme === 'light' ? 'var(--panel)' : 'var(--panel-2)', color: 'var(--text)', border: '2px solid var(--border)' }}
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
-                <p>Select a college in settings to view quick links</p>
-              </div>
-            )}
+          {/* Pomodoro Timer */}
+          {visibleToolsCards.includes(TOOLS_CARDS.POMODORO_TIMER) && (
+          <Card title="Pomodoro Timer" subtitle="Focus sessions for productive study">
+            <PomodoroTimer theme={settings.theme} />
           </Card>
           )}
 
@@ -405,6 +387,32 @@ export default function ToolsPage() {
                 </div>
               )}
             </div>
+          </Card>
+          )}
+
+          {/* Quick Links */}
+          {visibleToolsCards.includes(TOOLS_CARDS.QUICK_LINKS) && (
+          <Card title="Quick Links" subtitle={settings.university ? `Resources for ${settings.university}` : 'Select a college to view quick links'}>
+            {mounted && settings.university ? (
+              <div className="grid grid-cols-4 gap-3">
+                {getQuickLinks(settings.university).map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-[12px] text-center text-sm font-medium transition-colors hover:opacity-80"
+                    style={{ display: 'block', padding: '12px', backgroundColor: settings.theme === 'light' ? 'var(--panel)' : 'var(--panel-2)', color: 'var(--text)', border: '2px solid var(--border)' }}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                <p>Select a college in settings to view quick links</p>
+              </div>
+            )}
           </Card>
           )}
         </div>

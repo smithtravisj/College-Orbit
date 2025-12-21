@@ -22,6 +22,7 @@ export const DASHBOARD_CARDS = {
 export const TOOLS_CARDS = {
   QUICK_LINKS: 'tools_quickLinks',
   GPA_CALCULATOR: 'gpaCalculator',
+  POMODORO_TIMER: 'pomodoroTimer',
 } as const;
 
 export const DEFAULT_VISIBLE_PAGES = Object.values(PAGES);
@@ -37,4 +38,5 @@ export const CARD_LABELS: Record<string, string> = {
   [DASHBOARD_CARDS.UPCOMING_WEEK]: 'Upcoming This Week',
   [TOOLS_CARDS.QUICK_LINKS]: 'Quick Links',
   [TOOLS_CARDS.GPA_CALCULATOR]: 'GPA Calculator',
+  [TOOLS_CARDS.POMODORO_TIMER]: 'Pomodoro Timer',
 };

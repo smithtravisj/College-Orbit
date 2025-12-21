@@ -167,17 +167,22 @@ const useAppStore = create<AppStore>((set, get) => ({
       });
 
       // Parse JSON fields if they're strings
+      const savedVisiblePages = typeof rawSettings?.visiblePages === 'string'
+        ? JSON.parse(rawSettings.visiblePages)
+        : rawSettings?.visiblePages;
+      const savedVisibleDashboardCards = typeof rawSettings?.visibleDashboardCards === 'string'
+        ? JSON.parse(rawSettings.visibleDashboardCards)
+        : rawSettings?.visibleDashboardCards;
+      const savedVisibleToolsCards = typeof rawSettings?.visibleToolsCards === 'string'
+        ? JSON.parse(rawSettings.visibleToolsCards)
+        : rawSettings?.visibleToolsCards;
+
+      // Merge saved settings with defaults to include new cards
       const parsedSettings = {
         ...rawSettings,
-        visiblePages: typeof rawSettings?.visiblePages === 'string'
-          ? JSON.parse(rawSettings.visiblePages)
-          : rawSettings?.visiblePages || DEFAULT_VISIBLE_PAGES,
-        visibleDashboardCards: typeof rawSettings?.visibleDashboardCards === 'string'
-          ? JSON.parse(rawSettings.visibleDashboardCards)
-          : rawSettings?.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS,
-        visibleToolsCards: typeof rawSettings?.visibleToolsCards === 'string'
-          ? JSON.parse(rawSettings.visibleToolsCards)
-          : rawSettings?.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS,
+        visiblePages: savedVisiblePages ? [...new Set([...DEFAULT_VISIBLE_PAGES, ...savedVisiblePages])] : DEFAULT_VISIBLE_PAGES,
+        visibleDashboardCards: savedVisibleDashboardCards ? [...new Set([...DEFAULT_VISIBLE_DASHBOARD_CARDS, ...savedVisibleDashboardCards])] : DEFAULT_VISIBLE_DASHBOARD_CARDS,
+        visibleToolsCards: savedVisibleToolsCards ? [...new Set([...DEFAULT_VISIBLE_TOOLS_CARDS, ...savedVisibleToolsCards])] : DEFAULT_VISIBLE_TOOLS_CARDS,
       };
 
       const newData = {
