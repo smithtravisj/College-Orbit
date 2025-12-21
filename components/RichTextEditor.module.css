@@ -33,12 +33,6 @@
   margin: 0.5rem 0;
 }
 
-.editor.is-editor-empty p:first-of-type::before {
-  content: 'Click here and start typing your note...';
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
 .editor h1 {
   font-size: 2rem;
   font-weight: bold;

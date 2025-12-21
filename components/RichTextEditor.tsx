@@ -174,19 +174,36 @@ export default function RichTextEditor({
       )}
 
       {/* Editor */}
-      <EditorContent
-        editor={editor}
-        className={styles.editor}
-        style={{
-          minHeight: '80px',
-          border: '1px solid var(--border)',
-          borderRadius: '8px',
-          backgroundColor: 'var(--panel-1)',
-          padding: '16px',
-          boxSizing: 'border-box',
-          outline: 'none',
-        }}
-      />
+      <div style={{ position: 'relative' }}>
+        {editor && editor.isEmpty && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '16px',
+              left: '16px',
+              color: 'var(--text-muted)',
+              pointerEvents: 'none',
+              fontSize: '1rem',
+              zIndex: 1,
+            }}
+          >
+            Click here and start typing your note...
+          </div>
+        )}
+        <EditorContent
+          editor={editor}
+          className={styles.editor}
+          style={{
+            minHeight: '80px',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            backgroundColor: 'var(--panel-1)',
+            padding: '16px',
+            boxSizing: 'border-box',
+            outline: 'none',
+          }}
+        />
+      </div>
 
       {/* Character count (optional) */}
       <div className="text-xs text-[var(--text-muted)] text-right">
