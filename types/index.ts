@@ -67,6 +67,34 @@ export interface Exam {
   createdAt: string; // ISO datetime
 }
 
+export interface Note {
+  id: string;
+  title: string;
+  content: any; // TipTap JSON format
+  plainText?: string; // Optional: computed on server
+  folderId: string | null;
+  courseId: string | null;
+  tags: string[];
+  isPinned: boolean;
+  links: Array<{
+    label: string;
+    url: string;
+  }>;
+  createdAt: string; // ISO datetime
+  updatedAt: string; // ISO datetime
+}
+
+export interface Folder {
+  id: string;
+  name: string;
+  parentId: string | null;
+  courseId: string | null;
+  colorTag: string | null;
+  order: number;
+  createdAt: string; // ISO datetime
+  updatedAt: string; // ISO datetime
+}
+
 export interface Settings {
   dueSoonWindowDays: number;
   weekStartsOn: 'Sun' | 'Mon';
@@ -112,6 +140,8 @@ export interface AppData {
   deadlines: Deadline[];
   tasks: Task[];
   exams: Exam[];
+  notes: Note[];
+  folders: Folder[];
   settings: Settings;
   excludedDates: ExcludedDate[];
   gpaEntries?: GpaEntry[];

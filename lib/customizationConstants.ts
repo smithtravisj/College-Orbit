@@ -4,6 +4,7 @@ export const PAGES = {
   TASKS: 'Tasks',
   DEADLINES: 'Deadlines',
   EXAMS: 'Exams',
+  NOTES: 'Notes',
   COURSES: 'Courses',
   TOOLS: 'Tools',
   SETTINGS: 'Settings',

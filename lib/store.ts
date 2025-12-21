@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Course, Deadline, Task, Exam, Settings, AppData, ExcludedDate, GpaEntry } from '@/types';
+import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry } from '@/types';
 import { applyColorPalette, getCollegeColorPalette } from '@/lib/collegeColors';
 import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
@@ -27,6 +27,8 @@ interface AppStore {
   deadlines: Deadline[];
   tasks: Task[];
   exams: Exam[];
+  notes: Note[];
+  folders: Folder[];
   settings: Settings;
   excludedDates: ExcludedDate[];
   gpaEntries: GpaEntry[];
@@ -62,6 +64,17 @@ interface AppStore {
   updateExam: (id: string, exam: Partial<Exam>) => Promise<void>;
   deleteExam: (id: string) => Promise<void>;
 
+  // Notes
+  addNote: (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateNote: (id: string, note: Partial<Note>) => Promise<void>;
+  deleteNote: (id: string) => Promise<void>;
+  toggleNotePin: (id: string) => Promise<void>;
+
+  // Folders
+  addFolder: (folder: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateFolder: (id: string, folder: Partial<Folder>) => Promise<void>;
+  deleteFolder: (id: string) => Promise<void>;
+
   // Excluded Dates
   addExcludedDate: (excludedDate: Omit<ExcludedDate, 'id' | 'createdAt'>) => Promise<void>;
   addExcludedDateRange: (dates: Array<Omit<ExcludedDate, 'id' | 'createdAt'>>) => Promise<void>;
@@ -85,6 +98,8 @@ const useAppStore = create<AppStore>((set, get) => ({
   deadlines: [],
   tasks: [],
   exams: [],
+  notes: [],
+  folders: [],
   settings: DEFAULT_SETTINGS,
   excludedDates: [],
   gpaEntries: [],
@@ -119,11 +134,13 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   loadFromDatabase: async () => {
     try {
-      const [coursesRes, deadlinesRes, tasksRes, examsRes, settingsRes, excludedDatesRes, gpaRes] = await Promise.all([
+      const [coursesRes, deadlinesRes, tasksRes, examsRes, notesRes, foldersRes, settingsRes, excludedDatesRes, gpaRes] = await Promise.all([
         fetch('/api/courses'),
         fetch('/api/deadlines'),
         fetch('/api/tasks'),
         fetch('/api/exams'),
+        fetch('/api/notes'),
+        fetch('/api/folders'),
         fetch('/api/settings'),
         fetch('/api/excluded-dates'),
         fetch('/api/gpa-entries'),
@@ -133,6 +150,8 @@ const useAppStore = create<AppStore>((set, get) => ({
       const deadlinesData = await deadlinesRes.json();
       const tasksData = await tasksRes.json();
       const examsData = await examsRes.json();
+      const notesData = await notesRes.json();
+      const foldersData = await foldersRes.json();
       const settingsData = await settingsRes.json();
       const excludedDatesData = await excludedDatesRes.json();
       const gpaData = await gpaRes.json();
@@ -167,6 +186,8 @@ const useAppStore = create<AppStore>((set, get) => ({
         deadlines: deadlinesData.deadlines || [],
         tasks: tasksData.tasks || [],
         exams: examsData.exams || [],
+        notes: notesData.notes || [],
+        folders: foldersData.folders || [],
         settings: parsedSettings,
         excludedDates: excludedDatesData.excludedDates || [],
         gpaEntries: gpaData.entries || [],
@@ -213,6 +234,9 @@ const useAppStore = create<AppStore>((set, get) => ({
           courses: data.courses || [],
           deadlines: data.deadlines || [],
           tasks: data.tasks || [],
+          exams: data.exams || [],
+          notes: data.notes || [],
+          folders: data.folders || [],
           settings: settings,
           excludedDates: data.excludedDates || [],
           gpaEntries: data.gpaEntries || [],
@@ -622,6 +646,232 @@ const useAppStore = create<AppStore>((set, get) => ({
     }
   },
 
+  // Notes
+  addNote: async (note) => {
+    // Optimistic update with temp ID and timestamps
+    const tempId = uuidv4();
+    const now = new Date().toISOString();
+    set((state) => ({
+      notes: [...state.notes, {
+        ...note,
+        id: tempId,
+        createdAt: now,
+        updatedAt: now,
+      } as Note],
+    }));
+
+    try {
+      // API call
+      const response = await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(note),
+      });
+
+      if (!response.ok) throw new Error('Failed to create note');
+
+      const { note: newNote } = await response.json();
+
+      // Replace temp note with server response
+      set((state) => ({
+        notes: state.notes.map((n) => (n.id === tempId ? newNote : n)),
+      }));
+    } catch (error) {
+      // Rollback on error
+      set((state) => ({
+        notes: state.notes.filter((n) => n.id !== tempId),
+      }));
+      console.error('Error creating note:', error);
+      throw error;
+    }
+  },
+
+  updateNote: async (id, note) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        notes: state.notes.map((n) =>
+          n.id === id ? { ...n, ...note, updatedAt: new Date().toISOString() } : n
+        ),
+      }));
+
+      // API call
+      const response = await fetch(`/api/notes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(note),
+      });
+
+      if (!response.ok) throw new Error('Failed to update note');
+
+      const { note: updatedNote } = await response.json();
+
+      // Update with server response
+      set((state) => ({
+        notes: state.notes.map((n) => (n.id === id ? updatedNote : n)),
+      }));
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error updating note:', error);
+      throw error;
+    }
+  },
+
+  deleteNote: async (id) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        notes: state.notes.filter((n) => n.id !== id),
+      }));
+
+      // API call
+      const response = await fetch(`/api/notes/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete note');
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error deleting note:', error);
+      throw error;
+    }
+  },
+
+  toggleNotePin: async (id) => {
+    const note = get().notes.find((n) => n.id === id);
+    if (!note) return;
+
+    try {
+      // Optimistic update
+      const newPinState = !note.isPinned;
+      set((state) => ({
+        notes: state.notes.map((n) =>
+          n.id === id ? { ...n, isPinned: newPinState } : n
+        ),
+      }));
+
+      // API call
+      const response = await fetch(`/api/notes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPinned: newPinState }),
+      });
+
+      if (!response.ok) throw new Error('Failed to toggle pin');
+
+      const { note: updatedNote } = await response.json();
+
+      // Update with server response
+      set((state) => ({
+        notes: state.notes.map((n) => (n.id === id ? updatedNote : n)),
+      }));
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error toggling note pin:', error);
+      throw error;
+    }
+  },
+
+  // Folders
+  addFolder: async (folder) => {
+    // Optimistic update with temp ID and timestamps
+    const tempId = uuidv4();
+    const now = new Date().toISOString();
+    set((state) => ({
+      folders: [...state.folders, {
+        ...folder,
+        id: tempId,
+        createdAt: now,
+        updatedAt: now,
+      } as Folder],
+    }));
+
+    try {
+      // API call
+      const response = await fetch('/api/folders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(folder),
+      });
+
+      if (!response.ok) throw new Error('Failed to create folder');
+
+      const { folder: newFolder } = await response.json();
+
+      // Replace temp folder with server response
+      set((state) => ({
+        folders: state.folders.map((f) => (f.id === tempId ? newFolder : f)),
+      }));
+    } catch (error) {
+      // Rollback on error
+      set((state) => ({
+        folders: state.folders.filter((f) => f.id !== tempId),
+      }));
+      console.error('Error creating folder:', error);
+      throw error;
+    }
+  },
+
+  updateFolder: async (id, folder) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        folders: state.folders.map((f) =>
+          f.id === id ? { ...f, ...folder, updatedAt: new Date().toISOString() } : f
+        ),
+      }));
+
+      // API call
+      const response = await fetch(`/api/folders/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(folder),
+      });
+
+      if (!response.ok) throw new Error('Failed to update folder');
+
+      const { folder: updatedFolder } = await response.json();
+
+      // Update with server response
+      set((state) => ({
+        folders: state.folders.map((f) => (f.id === id ? updatedFolder : f)),
+      }));
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error updating folder:', error);
+      throw error;
+    }
+  },
+
+  deleteFolder: async (id) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        folders: state.folders.filter((f) => f.id !== id),
+        // Also remove notes from this folder
+        notes: state.notes.map((n) =>
+          n.folderId === id ? { ...n, folderId: null } : n
+        ),
+      }));
+
+      // API call
+      const response = await fetch(`/api/folders/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete folder');
+    } catch (error) {
+      // Reload from database on error
+      await get().loadFromDatabase();
+      console.error('Error deleting folder:', error);
+      throw error;
+    }
+  },
+
   addExcludedDate: async (excludedDate) => {
     // Optimistic update
     const tempId = uuidv4();
@@ -917,6 +1167,8 @@ const useAppStore = create<AppStore>((set, get) => ({
       deadlines: state.deadlines,
       tasks: state.tasks,
       exams: state.exams,
+      notes: state.notes,
+      folders: state.folders,
       settings: state.settings,
       excludedDates: state.excludedDates,
       gpaEntries: state.gpaEntries,
@@ -961,6 +1213,24 @@ const useAppStore = create<AppStore>((set, get) => ({
         for (const exam of data.exams) {
           const { id, createdAt, userId, ...examData } = exam as any;
           await store.addExam(examData);
+        }
+      }
+
+      // Import folders (before notes to ensure folders exist)
+      if (data.folders && data.folders.length > 0) {
+        console.log('Importing folders:', data.folders.length);
+        for (const folder of data.folders) {
+          const { id, createdAt, updatedAt, userId, ...folderData } = folder as any;
+          await store.addFolder(folderData);
+        }
+      }
+
+      // Import notes
+      if (data.notes && data.notes.length > 0) {
+        console.log('Importing notes:', data.notes.length);
+        for (const note of data.notes) {
+          const { id, createdAt, updatedAt, userId, ...noteData } = note as any;
+          await store.addNote(noteData);
         }
       }
 
