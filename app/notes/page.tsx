@@ -266,7 +266,7 @@ export default function NotesPage() {
                   </div>
 
                   {/* Tags input with suggestions */}
-                  <div style={{ marginTop: '2px' }}>
+                  <div style={{ marginTop: '0' }}>
                     <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>Tags</label>
                     <TagInput
                       tags={formData.tags}
