@@ -44,7 +44,41 @@ export default function Navigation() {
   const { data: session } = useSession();
   const university = useAppStore((state) => state.settings.university);
   const visiblePages = useAppStore((state) => state.settings.visiblePages || DEFAULT_VISIBLE_PAGES);
+  const visiblePagesOrder = useAppStore((state) => state.settings.visiblePagesOrder);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  // Sort NAV_ITEMS according to visiblePagesOrder if it exists
+  const sortedNavItems = (() => {
+    if (!visiblePagesOrder || typeof visiblePagesOrder === 'string') {
+      return NAV_ITEMS;
+    }
+
+    // Create a map of page labels to their order index
+    const orderMap: Record<string, number> = {};
+    (visiblePagesOrder as string[]).forEach((page, index) => {
+      orderMap[page] = index;
+    });
+
+    // Sort NAV_ITEMS by the order, keeping items not in the order at the end
+    return [...NAV_ITEMS].sort((a, b) => {
+      const orderA = orderMap[a.label];
+      const orderB = orderMap[b.label];
+
+      // If both are in the order, sort by order
+      if (orderA !== undefined && orderB !== undefined) {
+        return orderA - orderB;
+      }
+
+      // If only a is in order, it comes first
+      if (orderA !== undefined) return -1;
+
+      // If only b is in order, it comes first
+      if (orderB !== undefined) return 1;
+
+      // If neither are in order, maintain original order
+      return 0;
+    });
+  })();
 
   // Check if user is admin
   useEffect(() => {
@@ -92,7 +126,7 @@ export default function Navigation() {
           )}
         </div>
         <div className="space-y-3 flex-1">
-          {NAV_ITEMS.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
+          {sortedNavItems.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
@@ -173,7 +207,7 @@ export default function Navigation() {
       {/* Mobile Bottom Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 border-t border-[var(--border)] bg-[var(--panel)] md:hidden z-40">
         <div className="flex justify-around overflow-x-auto">
-          {NAV_ITEMS.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
+          {sortedNavItems.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (

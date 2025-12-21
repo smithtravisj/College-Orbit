@@ -31,6 +31,7 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
         enableNotifications: false,
         university: null,
         hasCompletedOnboarding: false,
+        selectedGradeSemester: 'all',
       },
     };
 
@@ -74,6 +75,9 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.pomodoroWorkDuration !== undefined) updateData.pomodoroWorkDuration = data.pomodoroWorkDuration;
     if (data.pomodoroBreakDuration !== undefined) updateData.pomodoroBreakDuration = data.pomodoroBreakDuration;
     if (data.pomodoroIsMuted !== undefined) updateData.pomodoroIsMuted = data.pomodoroIsMuted;
+    if (data.selectedGradeSemester !== undefined) updateData.selectedGradeSemester = data.selectedGradeSemester;
+    if (data.toolsCardsOrder !== undefined) updateData.toolsCardsOrder = data.toolsCardsOrder;
+    if (data.visiblePagesOrder !== undefined) updateData.visiblePagesOrder = data.visiblePagesOrder;
 
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 

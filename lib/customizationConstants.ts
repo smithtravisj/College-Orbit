@@ -20,9 +20,12 @@ export const DASHBOARD_CARDS = {
 } as const;
 
 export const TOOLS_CARDS = {
-  QUICK_LINKS: 'tools_quickLinks',
-  GPA_CALCULATOR: 'gpaCalculator',
   POMODORO_TIMER: 'pomodoroTimer',
+  GRADE_TRACKER: 'gradeTracker',
+  GPA_TREND_CHART: 'gpaTrendChart',
+  WHAT_IF_PROJECTOR: 'whatIfProjector',
+  GPA_CALCULATOR: 'gpaCalculator',
+  QUICK_LINKS: 'tools_quickLinks',
 } as const;
 
 export const DEFAULT_VISIBLE_PAGES = Object.values(PAGES);
@@ -37,6 +40,9 @@ export const CARD_LABELS: Record<string, string> = {
   [DASHBOARD_CARDS.QUICK_LINKS]: 'Quick Links',
   [DASHBOARD_CARDS.UPCOMING_WEEK]: 'Upcoming This Week',
   [TOOLS_CARDS.QUICK_LINKS]: 'Quick Links',
-  [TOOLS_CARDS.GPA_CALCULATOR]: 'GPA Calculator',
   [TOOLS_CARDS.POMODORO_TIMER]: 'Pomodoro Timer',
+  [TOOLS_CARDS.GRADE_TRACKER]: 'Grade Tracker',
+  [TOOLS_CARDS.WHAT_IF_PROJECTOR]: 'What-If GPA Projector',
+  [TOOLS_CARDS.GPA_TREND_CHART]: 'GPA Trend',
+  [TOOLS_CARDS.GPA_CALCULATOR]: 'GPA Calculator',
 };

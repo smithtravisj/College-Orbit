@@ -5,10 +5,13 @@ import useAppStore from '@/lib/store';
 import { getQuickLinks } from '@/lib/quickLinks';
 import { TOOLS_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 import PageHeader from '@/components/PageHeader';
-import Card from '@/components/ui/Card';
+import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select } from '@/components/ui/Input';
 import PomodoroTimer from '@/components/tools/PomodoroTimer';
+import GradeTracker from '@/components/tools/GradeTracker';
+import WhatIfProjector from '@/components/tools/WhatIfProjector';
+import GpaTrendChart from '@/components/tools/GpaTrendChart';
 import { Plus, Trash2 } from 'lucide-react';
 
 interface Course {
@@ -23,6 +26,8 @@ interface GpaEntry {
   courseName: string;
   grade: string;
   credits: number;
+  term?: string | null;
+  createdAt: string;
 }
 
 interface FormCourse {
@@ -41,7 +46,15 @@ export default function ToolsPage() {
     { courseName: '', gradeType: 'letter', grade: 'A', credits: '3' },
   ]);
   const [gpaResult, setGpaResult] = useState<number | null>(null);
+  const [gpaEntries, setGpaEntries] = useState<GpaEntry[]>([]);
   const visibleToolsCards = settings.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS;
+
+  // Get the tools cards order from settings, or use the default
+  const toolsCardsOrder = settings.toolsCardsOrder
+    ? (typeof settings.toolsCardsOrder === 'string'
+        ? JSON.parse(settings.toolsCardsOrder)
+        : settings.toolsCardsOrder)
+    : Object.values(TOOLS_CARDS);
 
   const gradePoints: { [key: string]: number } = {
     'A': 4.0,
@@ -55,6 +68,19 @@ export default function ToolsPage() {
     'D+': 1.3,
     'D': 1.0,
     'F': 0.0,
+  };
+
+  // Function to refresh GPA entries from the database
+  const refreshGpaEntries = async () => {
+    try {
+      const res = await fetch('/api/gpa-entries');
+      if (res.ok) {
+        const { entries: fetchedEntries } = await res.json();
+        setGpaEntries(fetchedEntries);
+      }
+    } catch (error) {
+      console.error('Error refreshing GPA entries:', error);
+    }
   };
 
   // Fetch courses and load saved GPA entries on mount
@@ -73,9 +99,14 @@ export default function ToolsPage() {
 
         if (entriesRes.ok) {
           const { entries: fetchedEntries } = await entriesRes.json();
-          if (fetchedEntries.length > 0) {
+          // Store all entries for components to use
+          setGpaEntries(fetchedEntries);
+
+          // Filter to only entries without a term (GPA Calculator entries)
+          const calculatorEntries = fetchedEntries.filter((e: GpaEntry) => !e.term || (typeof e.term === 'string' && e.term.trim() === ''));
+          if (calculatorEntries.length > 0) {
             // Convert saved entries to form courses
-            const savedCourses = fetchedEntries.map((entry: GpaEntry) => ({
+            const savedCourses = calculatorEntries.map((entry: GpaEntry) => ({
               id: entry.id,
               courseName: entry.courseName,
               gradeType: entry.grade.includes('.') || !Object.keys({ 'A+': 4.0, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D+': 1.3, 'D': 1.0, 'F': 0.0 }).includes(entry.grade) ? 'percentage' : 'letter',
@@ -177,8 +208,10 @@ export default function ToolsPage() {
       const entriesRes = await fetch('/api/gpa-entries');
       if (entriesRes.ok) {
         const { entries: fetchedEntries } = await entriesRes.json();
-        if (fetchedEntries.length > 0) {
-          const savedCourses = fetchedEntries.map((entry: GpaEntry) => ({
+        // Filter to only entries without a term (GPA Calculator entries)
+        const calculatorEntries = fetchedEntries.filter((e: GpaEntry) => !e.term || e.term.trim() === '');
+        if (calculatorEntries.length > 0) {
+          const savedCourses = calculatorEntries.map((entry: GpaEntry) => ({
             id: entry.id,
             courseName: entry.courseName,
             gradeType: entry.grade.includes('.') || !Object.keys({ 'A+': 4.0, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D+': 1.3, 'D': 1.0, 'F': 0.0 }).includes(entry.grade) ? 'percentage' : 'letter',
@@ -251,21 +284,36 @@ export default function ToolsPage() {
     setFormCourses(newCourses);
   };
 
-  return (
-    <>
-      <PageHeader title="Tools" subtitle="Useful utilities for your semester" />
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: '24px' }}>
-        <div className="grid grid-cols-1 gap-[var(--grid-gap)]">
-          {/* Pomodoro Timer */}
-          {visibleToolsCards.includes(TOOLS_CARDS.POMODORO_TIMER) && (
-          <Card title="Pomodoro Timer" subtitle="Focus sessions for productive study">
+  // Map card IDs to their rendering components
+  const renderCard = (cardId: string) => {
+    switch (cardId) {
+      case TOOLS_CARDS.POMODORO_TIMER:
+        return visibleToolsCards.includes(cardId) && (
+          <CollapsibleCard key={cardId} id="pomodoro-timer" title="Pomodoro Timer" subtitle="Focus sessions for productive study">
             <PomodoroTimer theme={settings.theme} />
-          </Card>
-          )}
-
-          {/* GPA Calculator */}
-          {visibleToolsCards.includes(TOOLS_CARDS.GPA_CALCULATOR) && (
-          <Card title="GPA Calculator">
+          </CollapsibleCard>
+        );
+      case TOOLS_CARDS.GRADE_TRACKER:
+        return visibleToolsCards.includes(cardId) && (
+          <CollapsibleCard key={cardId} id="grade-tracker" title="Grade Tracker" subtitle="Track your grades and GPA by semester">
+            <GradeTracker courses={courses} theme={settings.theme} onEntriesChange={refreshGpaEntries} />
+          </CollapsibleCard>
+        );
+      case TOOLS_CARDS.GPA_TREND_CHART:
+        return visibleToolsCards.includes(cardId) && (
+          <CollapsibleCard key={cardId} id="gpa-trend" title="GPA Trend" subtitle="Visualize your academic progress">
+            <GpaTrendChart entries={gpaEntries} theme={settings.theme} />
+          </CollapsibleCard>
+        );
+      case TOOLS_CARDS.WHAT_IF_PROJECTOR:
+        return visibleToolsCards.includes(cardId) && (
+          <CollapsibleCard key={cardId} id="whatif-projector" title="What-If GPA Projector" subtitle="See how future grades impact your GPA">
+            <WhatIfProjector theme={settings.theme} />
+          </CollapsibleCard>
+        );
+      case TOOLS_CARDS.GPA_CALCULATOR:
+        return visibleToolsCards.includes(cardId) && (
+          <CollapsibleCard key={cardId} id="gpa-calculator" title="GPA Calculator" subtitle="Calculate your GPA from individual courses">
             <div className="space-y-5">
               {/* Form Fields */}
               <div className="space-y-4">
@@ -381,18 +429,17 @@ export default function ToolsPage() {
               {gpaResult !== null && (
                 <div className="rounded-[16px] bg-[var(--accent-bg)] border border-[var(--accent)] text-center" style={{ marginTop: '24px', padding: '16px' }}>
                   <div className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>Your GPA</div>
-                  <div className="text-4xl font-bold text-[var(--accent)]">
+                  <div className="text-4xl font-bold" style={{ color: settings.theme === 'light' ? '#2563eb' : '#7fa8ff' }}>
                     {gpaResult}
                   </div>
                 </div>
               )}
             </div>
-          </Card>
-          )}
-
-          {/* Quick Links */}
-          {visibleToolsCards.includes(TOOLS_CARDS.QUICK_LINKS) && (
-          <Card title="Quick Links" subtitle={settings.university ? `Resources for ${settings.university}` : 'Select a college to view quick links'}>
+          </CollapsibleCard>
+        );
+      case TOOLS_CARDS.QUICK_LINKS:
+        return visibleToolsCards.includes(cardId) && (
+          <CollapsibleCard key={cardId} id="quick-links" title="Quick Links" subtitle={settings.university ? `Resources for ${settings.university}` : 'Select a college to view quick links'}>
             {mounted && settings.university ? (
               <div className="grid grid-cols-4 gap-3">
                 {getQuickLinks(settings.university).map((link) => (
@@ -413,8 +460,19 @@ export default function ToolsPage() {
                 <p>Select a college in settings to view quick links</p>
               </div>
             )}
-          </Card>
-          )}
+          </CollapsibleCard>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <>
+      <PageHeader title="Tools" subtitle="Useful utilities for your semester" />
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: '24px' }}>
+        <div className="grid grid-cols-1 gap-[var(--grid-gap)]">
+          {toolsCardsOrder.map((cardId: string) => renderCard(cardId))}
         </div>
       </div>
     </>

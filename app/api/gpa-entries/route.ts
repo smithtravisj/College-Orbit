@@ -60,6 +60,8 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         courseName: data.courseName,
         grade: data.grade,
         credits: parseFloat(data.credits),
+        term: data.term || "",
+        status: data.status || "final",
         university: university,
       },
     });

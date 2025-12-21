@@ -87,6 +87,10 @@ export default function SettingsPage() {
   const [visiblePages, setVisiblePages] = useState<string[]>(DEFAULT_VISIBLE_PAGES);
   const [visibleDashboardCards, setVisibleDashboardCards] = useState<string[]>(DEFAULT_VISIBLE_DASHBOARD_CARDS);
   const [visibleToolsCards, setVisibleToolsCards] = useState<string[]>(DEFAULT_VISIBLE_TOOLS_CARDS);
+  const [toolsCardsOrder, setToolsCardsOrder] = useState<string[]>(Object.values(TOOLS_CARDS));
+  const [visiblePagesOrder, setVisiblePagesOrder] = useState<string[]>(Object.values(PAGES).filter(p => p !== 'Settings'));
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [visibilityMessage, setVisibilityMessage] = useState('');
 
   const { settings, updateSettings, exportData, importData, deleteAllData } = useAppStore();
@@ -99,6 +103,26 @@ export default function SettingsPage() {
     setVisiblePages(settings.visiblePages || DEFAULT_VISIBLE_PAGES);
     setVisibleDashboardCards(settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS);
     setVisibleToolsCards(settings.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS);
+
+    // Load tools cards order from settings
+    if (settings.toolsCardsOrder) {
+      const order = typeof settings.toolsCardsOrder === 'string'
+        ? JSON.parse(settings.toolsCardsOrder)
+        : settings.toolsCardsOrder;
+      setToolsCardsOrder(order);
+    } else {
+      setToolsCardsOrder(Object.values(TOOLS_CARDS));
+    }
+
+    // Load pages order from settings
+    if (settings.visiblePagesOrder) {
+      const order = typeof settings.visiblePagesOrder === 'string'
+        ? JSON.parse(settings.visiblePagesOrder)
+        : settings.visiblePagesOrder;
+      setVisiblePagesOrder(order);
+    } else {
+      setVisiblePagesOrder(Object.values(PAGES).filter(p => p !== 'Settings'));
+    }
 
     // Load exam reminders from settings
     if (settings.examReminders) {
@@ -1361,40 +1385,119 @@ export default function SettingsPage() {
             {activeCustomizationTab === 'pages' && (
               <div>
                 <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px' }}>
-                  Choose which pages appear in the navigation menu
+                  Drag to reorder pages or uncheck to hide them from navigation
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {Object.values(PAGES).filter(page => page !== 'Settings').map((page) => (
-                    <label
-                      key={page}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        padding: '8px 12px',
-                        backgroundColor: 'var(--panel-2)',
-                        borderRadius: '6px',
-                        border: '1px solid var(--border)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={visiblePages.includes(page)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setVisiblePages([...visiblePages, page]);
-                          } else {
-                            setVisiblePages(visiblePages.filter((p) => p !== page));
-                          }
-                        }}
-                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                      />
-                      <span style={{ color: 'var(--text)', fontSize: '14px' }}>
-                        {page}
-                      </span>
-                    </label>
-                  ))}
+                  {visiblePagesOrder.map((page, index) => {
+                    const isDragging = draggingIndex === index;
+                    const showDropLine = draggingIndex !== null && dragOverIndex === index && draggingIndex !== index;
+
+                    return (
+                      <div key={page} style={{ position: 'relative' }}>
+                        {/* Drop line indicator - positioned absolutely so it doesn't shift items */}
+                        {showDropLine && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: '-6px',
+                              left: 0,
+                              right: 0,
+                              height: '3px',
+                              backgroundColor: 'var(--accent)',
+                              borderRadius: '1px',
+                              pointerEvents: 'none',
+                            }}
+                          />
+                        )}
+                        <div
+                          data-page={page}
+                          draggable
+                          onDragStart={(e) => {
+                            setDraggingIndex(index);
+                            e.dataTransfer.effectAllowed = 'move';
+                            e.dataTransfer.setData('text/plain', index.toString());
+                            const dragElement = e.currentTarget as HTMLElement;
+                            dragElement.style.opacity = '0.5';
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = 'move';
+
+                            const dragElement = e.currentTarget as HTMLElement;
+                            const rect = dragElement.getBoundingClientRect();
+                            const midpoint = rect.top + rect.height / 2;
+
+                            // Only update dragOverIndex when crossing the clear midpoint line
+                            const targetIndex = e.clientY < midpoint ? index : index + 1;
+                            if (dragOverIndex !== targetIndex) {
+                              setDragOverIndex(targetIndex);
+                            }
+                          }}
+                          onDragLeave={(e) => {
+                            const dragElement = e.currentTarget as HTMLElement;
+                            if (e.clientX < dragElement.getBoundingClientRect().left ||
+                                e.clientX > dragElement.getBoundingClientRect().right ||
+                                e.clientY < dragElement.getBoundingClientRect().top ||
+                                e.clientY > dragElement.getBoundingClientRect().bottom) {
+                              setDragOverIndex(null);
+                            }
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
+
+                            if (draggedIndex !== dragOverIndex && dragOverIndex !== null) {
+                              const newOrder = [...visiblePagesOrder];
+                              const [draggedItem] = newOrder.splice(draggedIndex, 1);
+                              // Adjust insertion index if dragging downward (draggedIndex < dragOverIndex)
+                              const insertIndex = draggedIndex < dragOverIndex ? dragOverIndex - 1 : dragOverIndex;
+                              newOrder.splice(insertIndex, 0, draggedItem);
+                              setVisiblePagesOrder(newOrder);
+                            }
+                            setDraggingIndex(null);
+                            setDragOverIndex(null);
+                          }}
+                          onDragEnd={(e) => {
+                            const dragElement = e.currentTarget as HTMLElement;
+                            dragElement.style.opacity = '1';
+                            setDraggingIndex(null);
+                            setDragOverIndex(null);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '8px 12px',
+                            backgroundColor: isDragging ? 'rgba(255, 255, 255, 0.05)' : 'var(--panel-2)',
+                            borderRadius: '6px',
+                            border: '1px solid var(--border)',
+                            cursor: isDragging ? 'grabbing' : 'grab',
+                            transition: 'all 0.15s ease-out',
+                            opacity: isDragging ? 0.5 : 1,
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={visiblePages.includes(page)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setVisiblePages([...visiblePages, page]);
+                              } else {
+                                setVisiblePages(visiblePages.filter((p) => p !== page));
+                              }
+                            }}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                          />
+                          <span style={{ color: 'var(--text)', fontSize: '14px', flex: 1 }}>
+                            {page}
+                          </span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '12px', userSelect: 'none', fontWeight: 'bold' }}>
+                            ⋮⋮
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1445,40 +1548,119 @@ export default function SettingsPage() {
             {activeCustomizationTab === 'tools' && (
               <div>
                 <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px' }}>
-                  Choose which cards appear on the Tools page
+                  Drag to reorder cards or uncheck to hide them from the Tools page
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {Object.values(TOOLS_CARDS).map((cardId) => (
-                    <label
-                      key={cardId}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        padding: '8px 12px',
-                        backgroundColor: 'var(--panel-2)',
-                        borderRadius: '6px',
-                        border: '1px solid var(--border)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={visibleToolsCards.includes(cardId)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setVisibleToolsCards([...visibleToolsCards, cardId]);
-                          } else {
-                            setVisibleToolsCards(visibleToolsCards.filter((c) => c !== cardId));
-                          }
-                        }}
-                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                      />
-                      <span style={{ color: 'var(--text)', fontSize: '14px' }}>
-                        {CARD_LABELS[cardId] || cardId}
-                      </span>
-                    </label>
-                  ))}
+                  {toolsCardsOrder.map((cardId, index) => {
+                    const isDragging = draggingIndex === index;
+                    const showDropLine = draggingIndex !== null && dragOverIndex === index && draggingIndex !== index;
+
+                    return (
+                      <div key={cardId} style={{ position: 'relative' }}>
+                        {/* Drop line indicator - positioned absolutely so it doesn't shift items */}
+                        {showDropLine && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: '-6px',
+                              left: 0,
+                              right: 0,
+                              height: '3px',
+                              backgroundColor: 'var(--accent)',
+                              borderRadius: '1px',
+                              pointerEvents: 'none',
+                            }}
+                          />
+                        )}
+                        <div
+                          data-card-id={cardId}
+                          draggable
+                          onDragStart={(e) => {
+                            setDraggingIndex(index);
+                            e.dataTransfer.effectAllowed = 'move';
+                            e.dataTransfer.setData('text/plain', index.toString());
+                            const dragElement = e.currentTarget as HTMLElement;
+                            dragElement.style.opacity = '0.5';
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = 'move';
+
+                            const dragElement = e.currentTarget as HTMLElement;
+                            const rect = dragElement.getBoundingClientRect();
+                            const midpoint = rect.top + rect.height / 2;
+
+                            // Only update dragOverIndex when crossing the clear midpoint line
+                            const targetIndex = e.clientY < midpoint ? index : index + 1;
+                            if (dragOverIndex !== targetIndex) {
+                              setDragOverIndex(targetIndex);
+                            }
+                          }}
+                          onDragLeave={(e) => {
+                            const dragElement = e.currentTarget as HTMLElement;
+                            if (e.clientX < dragElement.getBoundingClientRect().left ||
+                                e.clientX > dragElement.getBoundingClientRect().right ||
+                                e.clientY < dragElement.getBoundingClientRect().top ||
+                                e.clientY > dragElement.getBoundingClientRect().bottom) {
+                              setDragOverIndex(null);
+                            }
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
+
+                            if (draggedIndex !== dragOverIndex && dragOverIndex !== null) {
+                              const newOrder = [...toolsCardsOrder];
+                              const [draggedItem] = newOrder.splice(draggedIndex, 1);
+                              // Adjust insertion index if dragging downward (draggedIndex < dragOverIndex)
+                              const insertIndex = draggedIndex < dragOverIndex ? dragOverIndex - 1 : dragOverIndex;
+                              newOrder.splice(insertIndex, 0, draggedItem);
+                              setToolsCardsOrder(newOrder);
+                            }
+                            setDraggingIndex(null);
+                            setDragOverIndex(null);
+                          }}
+                          onDragEnd={(e) => {
+                            const dragElement = e.currentTarget as HTMLElement;
+                            dragElement.style.opacity = '1';
+                            setDraggingIndex(null);
+                            setDragOverIndex(null);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '8px 12px',
+                            backgroundColor: isDragging ? 'rgba(255, 255, 255, 0.05)' : 'var(--panel-2)',
+                            borderRadius: '6px',
+                            border: '1px solid var(--border)',
+                            cursor: isDragging ? 'grabbing' : 'grab',
+                            transition: 'all 0.2s ease-out',
+                            opacity: isDragging ? 0.5 : 1,
+                          }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={visibleToolsCards.includes(cardId)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setVisibleToolsCards([...visibleToolsCards, cardId]);
+                            } else {
+                              setVisibleToolsCards(visibleToolsCards.filter((c) => c !== cardId));
+                            }
+                          }}
+                          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                        />
+                        <span style={{ color: 'var(--text)', fontSize: '13px', flex: 1 }}>
+                          {CARD_LABELS[cardId] || cardId}
+                        </span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '12px', userSelect: 'none', fontWeight: 'bold' }}>
+                          ⋮⋮
+                        </span>
+                      </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1491,6 +1673,8 @@ export default function SettingsPage() {
                     visiblePages,
                     visibleDashboardCards,
                     visibleToolsCards,
+                    toolsCardsOrder,
+                    visiblePagesOrder,
                   });
                   setVisibilityMessage('Saved successfully!');
                   setTimeout(() => setVisibilityMessage(''), 3000);

@@ -8,32 +8,32 @@ datasource db {
 }
 
 model User {
-  id                    String           @id @default(cuid())
-  email                 String           @unique
-  passwordHash          String
-  name                  String?
-  resetPasswordToken     String?          @unique
-  resetPasswordTokenExpiry DateTime?
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
-  isAdmin               Boolean          @default(false)
-  collegeRequests CollegeRequest[]
-  courses         Course[]
-  deadlines       Deadline[]
-  exams           Exam[]
-  excludedDates   ExcludedDate[]
-  featureRequests FeatureRequest[]
-  folders         Folder[]
-  gpaEntries      GpaEntry[]
-  issueReports    IssueReport[]
-  notes           Note[]
-  notifications   Notification[]
-  rateLimits      RateLimit[]
-  settings        Settings?
-  tasks                     Task[]
-  recurringPatterns         RecurringPattern[]
+  id                        String                     @id @default(cuid())
+  email                     String                     @unique
+  passwordHash              String
+  name                      String?
+  resetPasswordToken        String?                    @unique
+  resetPasswordTokenExpiry  DateTime?
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime                   @updatedAt
+  isAdmin                   Boolean                    @default(false)
+  collegeRequests           CollegeRequest[]
+  courses                   Course[]
+  deadlines                 Deadline[]
+  exams                     Exam[]
+  excludedDates             ExcludedDate[]
+  featureRequests           FeatureRequest[]
+  folders                   Folder[]
+  gpaEntries                GpaEntry[]
+  issueReports              IssueReport[]
+  notes                     Note[]
+  notifications             Notification[]
+  rateLimits                RateLimit[]
   recurringDeadlinePatterns RecurringDeadlinePattern[]
   recurringExamPatterns     RecurringExamPattern[]
+  recurringPatterns         RecurringPattern[]
+  settings                  Settings?
+  tasks                     Task[]
 
   @@index([email])
 }
@@ -64,22 +64,22 @@ model Course {
 }
 
 model Deadline {
-  id                         String    @id @default(cuid())
-  userId                     String
-  title                      String
-  courseId                   String?
-  dueAt                      DateTime?
-  notes                      String    @default("")
-  status                     String    @default("open")
-  createdAt                  DateTime  @default(now())
-  updatedAt                  DateTime  @updatedAt
-  links                      Json      @default("[]")
-  recurringPatternId         String?
-  instanceDate               DateTime?
-  isRecurring                Boolean   @default(false)
-  course                     Course?   @relation(fields: [courseId], references: [id])
-  user                       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  recurringPattern           RecurringDeadlinePattern? @relation(fields: [recurringPatternId], references: [id], onDelete: SetNull)
+  id                 String                    @id @default(cuid())
+  userId             String
+  title              String
+  courseId           String?
+  dueAt              DateTime?
+  notes              String                    @default("")
+  status             String                    @default("open")
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  links              Json                      @default("[]")
+  instanceDate       DateTime?
+  isRecurring        Boolean                   @default(false)
+  recurringPatternId String?
+  course             Course?                   @relation(fields: [courseId], references: [id])
+  recurringPattern   RecurringDeadlinePattern? @relation(fields: [recurringPatternId], references: [id])
+  user               User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([courseId])
@@ -89,24 +89,24 @@ model Deadline {
 }
 
 model Task {
-  id                 String    @id @default(cuid())
+  id                 String            @id @default(cuid())
   userId             String
   title              String
   courseId           String?
   dueAt              DateTime?
-  pinned             Boolean   @default(false)
-  checklist          Json      @default("[]")
-  notes              String    @default("")
-  status             String    @default("open")
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  links              Json      @default("[]")
-  recurringPatternId String?
+  pinned             Boolean           @default(false)
+  checklist          Json              @default("[]")
+  notes              String            @default("")
+  status             String            @default("open")
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  links              Json              @default("[]")
   instanceDate       DateTime?
-  isRecurring        Boolean   @default(false)
-  course             Course?   @relation(fields: [courseId], references: [id])
-  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  recurringPattern   RecurringPattern? @relation(fields: [recurringPatternId], references: [id], onDelete: SetNull)
+  isRecurring        Boolean           @default(false)
+  recurringPatternId String?
+  course             Course?           @relation(fields: [courseId], references: [id])
+  recurringPattern   RecurringPattern? @relation(fields: [recurringPatternId], references: [id])
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([courseId])
@@ -117,94 +117,94 @@ model Task {
 }
 
 model RecurringPattern {
-  id                String   @id @default(cuid())
-  userId            String
-  recurrenceType    String
-  intervalDays      Int?
-  daysOfWeek        Json      @default("[]") // Array of day numbers (0-6)
-  daysOfMonth       Json      @default("[]") // Array of day numbers (1-31)
-  startDate         DateTime?
-  endDate           DateTime?
-  occurrenceCount   Int?
-  lastGenerated     DateTime  @default(now())
-  instanceCount     Int       @default(0)
-  taskTemplate      Json
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  isActive          Boolean   @default(true)
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tasks             Task[]
+  id              String    @id @default(cuid())
+  userId          String
+  recurrenceType  String
+  intervalDays    Int?
+  endDate         DateTime?
+  occurrenceCount Int?
+  lastGenerated   DateTime  @default(now())
+  instanceCount   Int       @default(0)
+  taskTemplate    Json
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  isActive        Boolean   @default(true)
+  daysOfWeek      Json      @default("[]")
+  daysOfMonth     Json      @default("[]")
+  startDate       DateTime?
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks           Task[]
 
   @@index([userId])
   @@index([isActive])
 }
 
 model RecurringDeadlinePattern {
-  id                String   @id @default(cuid())
-  userId            String
-  recurrenceType    String
-  intervalDays      Int?
-  daysOfWeek        Json      @default("[]") // Array of day numbers (0-6)
-  daysOfMonth       Json      @default("[]") // Array of day numbers (1-31)
-  startDate         DateTime?
-  endDate           DateTime?
-  occurrenceCount   Int?
-  lastGenerated     DateTime  @default(now())
-  instanceCount     Int       @default(0)
-  deadlineTemplate  Json
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  isActive          Boolean   @default(true)
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  deadlines         Deadline[]
+  id               String     @id @default(cuid())
+  userId           String
+  recurrenceType   String
+  intervalDays     Int?
+  daysOfWeek       Json       @default("[]")
+  daysOfMonth      Json       @default("[]")
+  startDate        DateTime?
+  endDate          DateTime?
+  occurrenceCount  Int?
+  lastGenerated    DateTime   @default(now())
+  instanceCount    Int        @default(0)
+  deadlineTemplate Json
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  isActive         Boolean    @default(true)
+  deadlines        Deadline[]
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([isActive])
 }
 
 model RecurringExamPattern {
-  id                String   @id @default(cuid())
-  userId            String
-  recurrenceType    String
-  intervalDays      Int?
-  daysOfWeek        Json      @default("[]") // Array of day numbers (0-6)
-  daysOfMonth       Json      @default("[]") // Array of day numbers (1-31)
-  startDate         DateTime?
-  endDate           DateTime?
-  occurrenceCount   Int?
-  lastGenerated     DateTime  @default(now())
-  instanceCount     Int       @default(0)
-  examTemplate      Json
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  isActive          Boolean   @default(true)
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  exams             Exam[]
+  id              String    @id @default(cuid())
+  userId          String
+  recurrenceType  String
+  intervalDays    Int?
+  daysOfWeek      Json      @default("[]")
+  daysOfMonth     Json      @default("[]")
+  startDate       DateTime?
+  endDate         DateTime?
+  occurrenceCount Int?
+  lastGenerated   DateTime  @default(now())
+  instanceCount   Int       @default(0)
+  examTemplate    Json
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  isActive        Boolean   @default(true)
+  exams           Exam[]
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([isActive])
 }
 
 model Exam {
-  id                         String    @id @default(cuid())
-  userId                     String
-  title                      String
-  courseId                   String?
-  examAt                     DateTime?
-  location                   String?
-  notes                      String    @default("")
-  status                     String    @default("scheduled")
-  links                      Json      @default("[]")
-  createdAt                  DateTime  @default(now())
-  updatedAt                  DateTime  @updatedAt
-  recurringPatternId         String?
-  instanceDate               DateTime?
-  isRecurring                Boolean   @default(false)
-  user                       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course                     Course?   @relation(fields: [courseId], references: [id])
-  reminders                  ExamReminder[]
-  notifications              Notification[]
-  recurringPattern           RecurringExamPattern? @relation(fields: [recurringPatternId], references: [id], onDelete: SetNull)
+  id                 String                @id @default(cuid())
+  userId             String
+  title              String
+  courseId           String?
+  examAt             DateTime?
+  location           String?
+  notes              String                @default("")
+  status             String                @default("scheduled")
+  links              Json                  @default("[]")
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  instanceDate       DateTime?
+  isRecurring        Boolean               @default(false)
+  recurringPatternId String?
+  course             Course?               @relation(fields: [courseId], references: [id])
+  recurringPattern   RecurringExamPattern? @relation(fields: [recurringPatternId], references: [id])
+  user               User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reminders          ExamReminder[]
+  notifications      Notification[]
 
   @@index([userId])
   @@index([courseId])
@@ -215,12 +215,12 @@ model Exam {
 }
 
 model ExamReminder {
-  id              String   @id @default(cuid())
-  examId          String
-  reminderType    String
-  sentAt          DateTime @default(now())
-  notificationId  String?
-  exam            Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  examId         String
+  reminderType   String
+  sentAt         DateTime @default(now())
+  notificationId String?
+  exam           Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
 
   @@unique([examId, reminderType])
   @@index([examId])
@@ -228,22 +228,21 @@ model ExamReminder {
 }
 
 model Note {
-  id          String   @id @default(cuid())
-  userId      String
-  title       String
-  content     Json     @default("{}")
-  plainText   String   @default("")
-  folderId    String?
-  courseId    String?
-  tags        Json     @default("[]")
-  isPinned    Boolean  @default(false)
-  links       Json     @default("[]")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  folder      Folder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
-  course      Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   Json     @default("{}")
+  plainText String   @default("")
+  folderId  String?
+  courseId  String?
+  tags      Json     @default("[]")
+  isPinned  Boolean  @default(false)
+  links     Json     @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  course    Course?  @relation(fields: [courseId], references: [id])
+  folder    Folder?  @relation(fields: [folderId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([folderId])
@@ -252,26 +251,25 @@ model Note {
 }
 
 model Folder {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  parentId    String?
-  courseId    String?
-  colorTag    String?
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  parentId  String?
+  courseId  String?
+  colorTag  String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  course    Course?  @relation(fields: [courseId], references: [id])
+  parent    Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Folder[] @relation("FolderHierarchy")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes     Note[]
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent      Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children    Folder[] @relation("FolderHierarchy")
-  course      Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
-  notes       Note[]
-
+  @@unique([userId, name, parentId])
   @@index([userId])
   @@index([parentId])
   @@index([courseId])
-  @@unique([userId, name, parentId])
 }
 
 model GpaEntry {
@@ -284,32 +282,39 @@ model GpaEntry {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   university String?
+  status     String   @default("final")
+  term       String   @default("")
   course     Course?  @relation(fields: [courseId], references: [id])
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([university])
+  @@index([term])
+  @@index([status])
 }
 
 model Settings {
-  id                      String   @id @default(cuid())
-  userId                  String   @unique
-  dueSoonWindowDays       Int      @default(7)
-  weekStartsOn            String   @default("Sun")
-  theme                   String   @default("dark")
-  enableNotifications     Boolean  @default(false)
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
-  university              String?
-  visibleDashboardCards   Json?    @default("[\"nextClass\", \"dueSoon\", \"overview\", \"todayTasks\", \"quickLinks\", \"upcomingWeek\"]")
-  visiblePages            Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Deadlines\", \"Exams\", \"Courses\", \"Tools\", \"Settings\"]")
-  visibleToolsCards       Json?    @default("[\"quickLinks\", \"gpaCalculator\"]")
-  hasCompletedOnboarding  Boolean  @default(false)
-  examReminders           Json?    @default("[{\"enabled\":true,\"value\":7,\"unit\":\"days\"},{\"enabled\":true,\"value\":1,\"unit\":\"days\"},{\"enabled\":true,\"value\":3,\"unit\":\"hours\"}]")
-  pomodoroWorkDuration    Int      @default(25)
-  pomodoroBreakDuration   Int      @default(5)
-  pomodoroIsMuted         Boolean  @default(false)
-  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  dueSoonWindowDays      Int      @default(7)
+  weekStartsOn           String   @default("Sun")
+  theme                  String   @default("dark")
+  enableNotifications    Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  university             String?
+  visibleDashboardCards  Json?    @default("[\"nextClass\", \"dueSoon\", \"overview\", \"todayTasks\", \"quickLinks\", \"upcomingWeek\"]")
+  visiblePages           Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Deadlines\", \"Exams\", \"Courses\", \"Tools\", \"Settings\"]")
+  visibleToolsCards      Json?    @default("[\"quickLinks\", \"gpaCalculator\"]")
+  hasCompletedOnboarding Boolean  @default(false)
+  examReminders          Json?    @default("[{\"unit\": \"days\", \"value\": 7, \"enabled\": true}, {\"unit\": \"days\", \"value\": 1, \"enabled\": true}, {\"unit\": \"hours\", \"value\": 3, \"enabled\": true}]")
+  pomodoroBreakDuration  Int      @default(5)
+  pomodoroIsMuted        Boolean  @default(false)
+  pomodoroWorkDuration   Int      @default(25)
+  selectedGradeSemester  String   @default("all")
+  toolsCardsOrder        Json?    @default("[\"pomodoroTimer\", \"gradeTracker\", \"gpaTrendChart\", \"whatIfProjector\", \"gpaCalculator\", \"tools_quickLinks\"]")
+  visiblePagesOrder      Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Deadlines\", \"Exams\", \"Notes\", \"Courses\", \"Tools\"]")
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -386,9 +391,9 @@ model Notification {
   issueReportId    String?
   examId           String?
   collegeRequest   CollegeRequest? @relation(fields: [collegeRequestId], references: [id], onDelete: Cascade)
+  exam             Exam?           @relation(fields: [examId], references: [id], onDelete: Cascade)
   featureRequest   FeatureRequest? @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
   issueReport      IssueReport?    @relation(fields: [issueReportId], references: [id], onDelete: Cascade)
-  exam             Exam?           @relation(fields: [examId], references: [id], onDelete: Cascade)
   user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -408,9 +413,9 @@ model RateLimit {
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, endpoint])
   @@index([userId])
   @@index([resetAt])
-  @@unique([userId, endpoint])
 }
 
 model AnalyticsEvent {

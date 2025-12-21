@@ -30,9 +30,11 @@ export async function PATCH(
     const updatedEntry = await prisma.gpaEntry.update({
       where: { id },
       data: {
-        courseName: data.courseName,
-        grade: data.grade,
-        credits: parseFloat(data.credits),
+        ...(data.courseName !== undefined && { courseName: data.courseName }),
+        ...(data.grade !== undefined && { grade: data.grade }),
+        ...(data.credits !== undefined && { credits: parseFloat(data.credits) }),
+        ...(data.term !== undefined && { term: data.term }),
+        ...(data.status !== undefined && { status: data.status }),
       },
     });
 

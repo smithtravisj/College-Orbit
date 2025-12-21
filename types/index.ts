@@ -222,11 +222,14 @@ export interface Settings {
   visiblePages?: string[];
   visibleDashboardCards?: string[];
   visibleToolsCards?: string[];
+  toolsCardsOrder?: string[] | string | null;
+  visiblePagesOrder?: string[] | string | null;
   hasCompletedOnboarding?: boolean;
   examReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
   pomodoroWorkDuration?: number;
   pomodoroBreakDuration?: number;
   pomodoroIsMuted?: boolean;
+  selectedGradeSemester?: string;
 }
 
 export interface ExcludedDate {
@@ -244,6 +247,8 @@ export interface GpaEntry {
   credits: number;
   courseId?: string | null;
   university?: string | null;
+  term?: string | null;
+  status?: 'in_progress' | 'final';
   createdAt: string; // ISO datetime
 }
 
