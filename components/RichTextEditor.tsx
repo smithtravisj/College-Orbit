@@ -190,7 +190,7 @@ export default function RichTextEditor({
             border: '1px solid var(--border)',
             borderRadius: '8px',
             backgroundColor: 'var(--panel-1)',
-            padding: '16px',
+            padding: '16px 16px 8px 16px',
             boxSizing: 'border-box',
             outline: 'none',
           }}
