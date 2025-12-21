@@ -25,6 +25,7 @@ export default function RichTextEditor({
   const [, setUpdateCount] = useState(0);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -77,11 +78,23 @@ export default function RichTextEditor({
       setUpdateCount(c => c + 1);
     };
 
+    const handleFocus = () => {
+      setIsFocused(true);
+    };
+
+    const handleBlur = () => {
+      setIsFocused(false);
+    };
+
     editor.on('update', handleUpdate);
     editor.on('selectionUpdate', handleUpdate);
+    editor.on('focus', handleFocus);
+    editor.on('blur', handleBlur);
     return () => {
       editor.off('update', handleUpdate);
       editor.off('selectionUpdate', handleUpdate);
+      editor.off('focus', handleFocus);
+      editor.off('blur', handleBlur);
     };
   }, [editor]);
 
@@ -167,7 +180,7 @@ export default function RichTextEditor({
 
       {/* Editor */}
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minHeight: '50px', border: '1px solid var(--border)', borderRadius: '8px', backgroundColor: 'var(--panel-1)', boxSizing: 'border-box' }}>
-        {editor && editor.isEmpty && (
+        {editor && editor.isEmpty && !isFocused && (
           <div
             style={{
               position: 'absolute',
