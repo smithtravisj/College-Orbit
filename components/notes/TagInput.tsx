@@ -80,7 +80,7 @@ export default function TagInput({
 
   return (
     <div style={{ position: 'relative' }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
         {tags.map((tag, idx) => (
           <div
             key={idx}
@@ -107,7 +107,7 @@ export default function TagInput({
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            style={{ width: '100%', backgroundColor: 'transparent', color: 'var(--text)', outline: 'none' }}
+            style={{ width: '100%', backgroundColor: 'transparent', color: 'var(--text)', outline: 'none', border: 'none', padding: 0 }}
             autoComplete="off"
           />
 
