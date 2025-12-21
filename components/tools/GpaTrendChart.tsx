@@ -5,7 +5,6 @@ import { GpaEntry } from '@/types';
 
 interface GpaTrendChartProps {
   entries?: GpaEntry[];
-  theme?: string;
 }
 
 const gradePoints: { [key: string]: number } = {
@@ -57,13 +56,13 @@ const getGradePoints = (grade: string): number => {
   return 0;
 };
 
-export default function GpaTrendChart({ entries: providedEntries, theme = 'dark' }: GpaTrendChartProps) {
+export default function GpaTrendChart({ entries: providedEntries }: GpaTrendChartProps) {
   const [entries, setEntries] = useState<GpaEntry[]>(providedEntries || []);
   const [loading, setLoading] = useState(!providedEntries);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  // Use lighter accent in dark mode, darker in light mode
-  const accentColor = theme === 'light' ? '#2563eb' : '#7fa8ff';
+  // Use college-specific accent color from color palette
+  const accentColor = 'var(--accent)';
 
   useEffect(() => {
     if (providedEntries) {

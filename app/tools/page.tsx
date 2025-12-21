@@ -302,7 +302,7 @@ export default function ToolsPage() {
       case TOOLS_CARDS.GPA_TREND_CHART:
         return visibleToolsCards.includes(cardId) && (
           <CollapsibleCard key={cardId} id="gpa-trend" title="GPA Trend" subtitle="Visualize your academic progress">
-            <GpaTrendChart entries={gpaEntries} theme={settings.theme} />
+            <GpaTrendChart entries={gpaEntries} />
           </CollapsibleCard>
         );
       case TOOLS_CARDS.WHAT_IF_PROJECTOR:
