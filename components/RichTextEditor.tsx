@@ -186,11 +186,11 @@ export default function RichTextEditor({
           editor={editor}
           className={styles.editor}
           style={{
-            minHeight: '80px',
+            minHeight: '40px',
             border: '1px solid var(--border)',
             borderRadius: '8px',
             backgroundColor: 'var(--panel-1)',
-            padding: '16px 16px 8px 16px',
+            padding: '8px 16px',
             boxSizing: 'border-box',
             outline: 'none',
           }}
