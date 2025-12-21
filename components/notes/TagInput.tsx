@@ -79,25 +79,27 @@ export default function TagInput({
   };
 
   return (
-    <div className="relative">
-      <div className="flex flex-wrap gap-2 p-3 bg-[var(--panel-2)] rounded-lg border border-[var(--border)]">
+    <div style={{ position: 'relative' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
         {tags.map((tag, idx) => (
           <div
             key={idx}
-            className="bg-[var(--accent)] text-white px-3 py-1 rounded-full text-sm flex items-center gap-2"
+            style={{ backgroundColor: 'var(--accent)', color: 'white', padding: '4px 12px', borderRadius: '9999px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             {tag}
             <button
               type="button"
               onClick={() => removeTag(idx)}
-              className="hover:opacity-75 transition-opacity"
+              style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, opacity: 1, transition: 'opacity 150ms ease' }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.75'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
               aria-label={`Remove tag ${tag}`}
             >
               <X size={14} />
             </button>
           </div>
         ))}
-        <div className="relative flex-1 min-w-[100px]">
+        <div style={{ position: 'relative', flex: 1, minWidth: '100px' }}>
           <input
             ref={inputRef}
             type="text"
@@ -105,7 +107,7 @@ export default function TagInput({
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="w-full bg-transparent text-[var(--text)] outline-none placeholder-[var(--text-muted)]"
+            style={{ width: '100%', backgroundColor: 'transparent', color: 'var(--text)', outline: 'none' }}
             autoComplete="off"
           />
 
@@ -113,18 +115,24 @@ export default function TagInput({
           {suggestions.length > 0 && (
             <div
               ref={suggestionsRef}
-              className="absolute top-full left-0 right-0 mt-1 bg-[var(--panel)] border border-[var(--border)] rounded-lg shadow-lg z-10"
+              style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', backgroundColor: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 10 }}
             >
               {suggestions.map((suggestion, idx) => (
                 <button
                   key={suggestion}
                   type="button"
                   onClick={() => addTag(suggestion)}
-                  className={`w-full text-left px-3 py-2 text-sm transition-colors ${
-                    idx === selectedSuggestionIndex
-                      ? 'bg-[var(--accent)] text-white'
-                      : 'hover:bg-[var(--panel-2)] text-[var(--text)]'
-                  }`}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '8px 12px',
+                    fontSize: '14px',
+                    transition: 'background-color 150ms ease',
+                    backgroundColor: idx === selectedSuggestionIndex ? 'var(--accent)' : 'transparent',
+                    color: idx === selectedSuggestionIndex ? 'white' : 'var(--text)',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
                   onMouseEnter={() => setSelectedSuggestionIndex(idx)}
                   onMouseLeave={() => setSelectedSuggestionIndex(-1)}
                 >
@@ -135,7 +143,7 @@ export default function TagInput({
           )}
         </div>
       </div>
-      <p className="text-xs text-[var(--text-muted)]" style={{ marginTop: '6px', marginBottom: '16px' }}>
+      <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px', marginBottom: '16px' }}>
         Type to search existing tags, press Enter or comma to add new tag
       </p>
     </div>
