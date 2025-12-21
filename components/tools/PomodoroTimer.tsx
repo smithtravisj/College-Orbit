@@ -36,6 +36,13 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
   const [tempBreakDuration, setTempBreakDuration] = useState<number | ''>(settings?.pomodoroBreakDuration || 5);
   const [isMuted, setIsMuted] = useState(settings?.pomodoroIsMuted || false);
   const [hasRestored, setHasRestored] = useState(false); // Track if we've restored from localStorage
+  const [isLightMode, setIsLightMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const storedTheme = localStorage.getItem('app-theme');
+      return storedTheme === 'light';
+    }
+    return false;
+  });
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartTimeRef = useRef<number | null>(null);
   const lastMinuteCountedRef = useRef(0);
@@ -78,6 +85,17 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
   // Signal that restore is complete so save effect can start working
   useEffect(() => {
     setHasRestored(true);
+  }, []);
+
+  // Listen for theme changes
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'app-theme') {
+        setIsLightMode(e.newValue === 'light');
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // Sync durations and mute setting from store to local state
@@ -622,7 +640,7 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
                 gap: '8px',
                 padding: '12px 24px',
                 backgroundColor: isRunning ? pauseButtonColor : 'var(--accent)',
-                color: 'white',
+                color: isLightMode ? 'black' : 'white',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: 'pointer',

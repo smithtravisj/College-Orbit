@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
+import { collegeColorPalettes, collegeColorPalettesLight } from '@/lib/collegeColors';
 
 interface AnalyticsData {
   summary: {
@@ -26,6 +27,7 @@ interface AnalyticsData {
     pages: Array<{ page: string; count: number }>;
   }>;
   uniquePages: string[];
+  universityDistribution: Array<{ university: string; count: number }>;
 }
 
 // Color palettes for pages (theme-aware)
@@ -461,6 +463,60 @@ export default function AnalyticsPage() {
                           {dayTotal}
                         </p>
                       </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* University Distribution */}
+        <div style={{ marginTop: 'var(--grid-gap)' }}>
+          <Card title="Users by University">
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.4', margin: 0 }}>
+                Number of users with each university selected in their settings.
+              </p>
+            </div>
+            {analytics.universityDistribution.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>No university data yet</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {analytics.universityDistribution.map((item, index) => {
+                  const colorPalette = isDarkMode
+                    ? collegeColorPalettes[item.university]
+                    : collegeColorPalettesLight[item.university];
+                  const accentColor = colorPalette?.accent || '#666666';
+
+                  return (
+                    <div
+                      key={index}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '12px',
+                        backgroundColor: 'var(--panel-2)',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '16px',
+                          height: '16px',
+                          borderRadius: '4px',
+                          backgroundColor: accentColor,
+                          flexShrink: 0,
+                        }}
+                      />
+                      <p style={{ fontSize: '14px', color: 'var(--text)', margin: 0, flex: 1 }}>
+                        {item.university}
+                      </p>
+                      <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>
+                        {item.count} {item.count === 1 ? 'user' : 'users'}
+                      </p>
                     </div>
                   );
                 })}
