@@ -41,7 +41,7 @@ export default function PrivacyPage() {
                 Academic Data
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We store the courses you create, deadlines you set, tasks you manage, calendar events, and GPA entries. This data is entirely user-generated and belongs to you. We do not analyze or process this data beyond providing it back to you.
+                We store all academic data you create: courses with meeting times and links, deadlines with notes and attachments, tasks with checklists, exams with locations, notes with rich text content and folders, GPA entries, excluded dates (holidays/breaks), and calendar events. This data is entirely user-generated and belongs to you. We do not analyze or process this data beyond providing it back to you.
               </p>
             </div>
             <div>
@@ -49,7 +49,7 @@ export default function PrivacyPage() {
                 Settings and Preferences
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We store your app settings, theme preferences, visibility customizations for dashboard cards, notification preferences, and other configuration choices you make.
+                We store your app settings including theme preferences (light/dark/system), visibility customizations for dashboard cards and pages, notification preferences, exam reminder settings, Pomodoro timer duration preferences, and other configuration choices you make. These settings are synchronized across your devices when you're logged in.
               </p>
             </div>
             <div>
@@ -65,7 +65,23 @@ export default function PrivacyPage() {
                 Communication Data
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                If you submit feedback, college requests, issue reports, or feature requests through the app, we store this information to help us improve the service.
+                If you submit feedback, college requests, issue reports, or feature requests through the app, we store this information to help us improve the service. This data may be viewed by administrators to review and address your feedback.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Analytics and Usage Data
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                We collect basic analytics data including which pages you visit, when you log in, and general usage patterns. This helps us understand how the app is being used and identify areas for improvement. We do not use third-party analytics services and do not track individual user behavior or create detailed usage profiles.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Notifications
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                We store notification records including exam reminders, feature request status updates, and other in-app notifications. Notifications are retained for 30 days before being automatically deleted.
               </p>
             </div>
           </div>
@@ -85,10 +101,13 @@ export default function PrivacyPage() {
                 <span className="font-medium" style={{ color: 'var(--text)' }}>Authentication & Security</span>: We use your email and authentication information to verify your identity and protect your account from unauthorized access.
               </li>
               <li>
-                <span className="font-medium" style={{ color: 'var(--text)' }}>Service Improvement</span>: We analyze usage patterns and feedback to improve features, fix bugs, and develop new functionality.
+                <span className="font-medium" style={{ color: 'var(--text)' }}>Analytics & Improvement</span>: We analyze usage patterns, page visits, and feedback to improve features, identify bugs, understand user needs, and develop new functionality. Only administrators can view analytics data.
               </li>
               <li>
-                <span className="font-medium" style={{ color: 'var(--text)' }}>Communications</span>: We may send you administrative emails about account security, service updates, or responses to your inquiries.
+                <span className="font-medium" style={{ color: 'var(--text)' }}>Notifications & Reminders</span>: We use your data to send you in-app notifications about exam reminders, feature request status updates, and other service-related information.
+              </li>
+              <li>
+                <span className="font-medium" style={{ color: 'var(--text)' }}>Communications</span>: We may send you administrative emails about account security, password resets, service updates, or responses to your inquiries.
               </li>
               <li>
                 <span className="font-medium" style={{ color: 'var(--text)' }}>Legal Compliance</span>: We use information as necessary to comply with applicable laws and regulations.
@@ -220,7 +239,7 @@ export default function PrivacyPage() {
                 Local Storage
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We use browser local storage to save your theme preferences, application settings, and navigation state. This data is stored only on your device.
+                We use browser local storage to save your theme preferences, application state, navigation settings, and Pomodoro timer state. This data is stored only on your device and is not sent to our servers. Local storage is useful for faster loading and offline functionality awareness.
               </p>
             </div>
             <div>

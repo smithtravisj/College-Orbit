@@ -45,10 +45,16 @@ export default function TermsPage() {
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <li>Personal task and deadline management tools</li>
-                <li>Course and calendar organization</li>
+                <li>Course and calendar organization with meeting schedules</li>
+                <li>Exam tracking with customizable reminders</li>
+                <li>Rich text note-taking with folder organization</li>
                 <li>GPA calculation and tracking</li>
+                <li>Pomodoro productivity timer</li>
+                <li>Dashboard customization (show/hide cards and pages)</li>
+                <li>Notification and reminder system</li>
+                <li>Feedback submission (feature requests, issue reports, college requests)</li>
                 <li>University-specific information and branding</li>
-                <li>Data export and backup functionality</li>
+                <li>Data export and import functionality for backup and portability</li>
               </ul>
             </div>
           </div>
@@ -186,7 +192,7 @@ export default function TermsPage() {
                 External Services
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                The Service may include links to or integrate with third-party services, including authentication providers (NextAuth, Google, university login systems) and educational resources. We are not responsible for third-party content or services.
+                The Service may include links to or reference third-party services and educational resources (Canvas, course portals, etc.). We do not directly integrate third-party authentication providers. We are not responsible for third-party content or services that you access through links in the Service.
               </p>
             </div>
             <div>
