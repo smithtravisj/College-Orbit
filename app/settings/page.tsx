@@ -1339,7 +1339,7 @@ export default function SettingsPage() {
                     flex: 1,
                     padding: '8px 12px',
                     backgroundColor: activeCustomizationTab === tab.id ? 'var(--accent)' : 'transparent',
-                    color: activeCustomizationTab === tab.id ? 'white' : 'var(--text)',
+                    color: activeCustomizationTab === tab.id ? (settings.theme === 'light' ? '#000000' : 'white') : (settings.theme === 'light' ? '#000000' : 'var(--text)'),
                     border: 'none',
                     borderRadius: '6px',
                     cursor: 'pointer',

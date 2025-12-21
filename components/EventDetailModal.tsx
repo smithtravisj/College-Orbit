@@ -725,7 +725,7 @@ function CourseContent({ event, course }: CourseContentProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  color: 'var(--accent)',
+                  color: 'var(--link)',
                   textDecoration: 'none',
                   fontSize: '0.875rem',
                   wordBreak: 'break-word',
@@ -859,7 +859,7 @@ function TaskContent({ task, relatedCourse }: TaskContentProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  color: 'var(--accent)',
+                  color: 'var(--link)',
                   textDecoration: 'none',
                   fontSize: '0.875rem',
                   wordBreak: 'break-word',
@@ -943,7 +943,7 @@ function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  color: 'var(--accent)',
+                  color: 'var(--link)',
                   textDecoration: 'none',
                   fontSize: '0.875rem',
                   wordBreak: 'break-word',
@@ -1038,7 +1038,7 @@ function ExamContent({ exam, relatedCourse }: ExamContentProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  color: 'var(--accent)',
+                  color: 'var(--link)',
                   textDecoration: 'none',
                   fontSize: '0.875rem',
                   wordBreak: 'break-word',

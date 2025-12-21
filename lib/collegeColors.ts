@@ -34,7 +34,7 @@ export interface ColorPalette {
   // Navigation
   navActive: string;
 
-  // Link color (always blue)
+  // Link color (college-specific)
   link: string;
 
   // Calendar indicators (always fixed)
@@ -101,7 +101,7 @@ export const byuColorPalette: ColorPalette = {
 
   navActive: "#002E5D",
 
-  link: "#2563eb",
+  link: "#6ab2ff",
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
@@ -159,7 +159,7 @@ export const defaultColorPalette: ColorPalette = {
 
   navActive: "#2d2d2d",
 
-  link: "#2563eb",
+  link: "#0ea5e9",
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
@@ -218,7 +218,7 @@ export const byuhColorPalette: ColorPalette = {
 
   navActive: "#9e1b34",
 
-  link: "#2563eb",
+  link: "#f5a6b4",
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
@@ -277,7 +277,8 @@ export const byuidColorPalette: ColorPalette = {
 
   navActive: "#0063A5",
 
-  link: "#2563eb",
+  link: "#7bbaff",
+
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
@@ -336,7 +337,8 @@ export const uvuColorPalette: ColorPalette = {
 
   navActive: "#275038",
 
-  link: "#2563eb",
+  link: "#7cc49a",
+
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
@@ -395,7 +397,8 @@ export const usuColorPalette: ColorPalette = {
 
   navActive: "#0F2439",
 
-  link: "#2563eb",
+  link: "#8ac8ff",
+
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
@@ -454,7 +457,8 @@ export const uncColorPalette: ColorPalette = {
 
   navActive: "#007FAE",
 
-  link: "#2563eb",
+  link: "#82ccff",
+
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
@@ -513,7 +517,8 @@ export const byuLightPalette: ColorPalette = {
 
   buttonSecondary: "#6ab2ff",
   navActive: "#6ab2ff",
-  link: "#0ea5e9",
+  link: "#002E5D",
+
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
@@ -565,7 +570,8 @@ export const defaultLightPalette: ColorPalette = {
 
   buttonSecondary: "#f0f1f3",
   navActive: "#f0f1f3",
-  link: "#0ea5e9",
+  link: "#0065cc",
+
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
@@ -579,7 +585,7 @@ export const defaultLightPalette: ColorPalette = {
   warningBg: "rgba(217, 119, 6, 0.1)",
   dangerBg: "rgba(220, 38, 38, 0.1)",
 
-  brandPrimary: "#404040",
+  brandPrimary: "#0065cc",
 
   shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
   shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
@@ -617,7 +623,8 @@ export const byuhLightPalette: ColorPalette = {
 
   buttonSecondary: "#f5a6b4",
   navActive: "#f5a6b4",
-  link: "#0ea5e9",
+  link: "#9e1b34",
+
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
@@ -669,7 +676,8 @@ export const byuidLightPalette: ColorPalette = {
 
   buttonSecondary: "#7bbaff",
   navActive: "#7bbaff",
-  link: "#0ea5e9",
+  link: "#0063A5",
+
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
@@ -721,7 +729,8 @@ export const uvuLightPalette: ColorPalette = {
 
   buttonSecondary: "#7cc49a",
   navActive: "#7cc49a",
-  link: "#0ea5e9",
+  link: "#275038",
+
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
@@ -773,7 +782,8 @@ export const usuLightPalette: ColorPalette = {
 
   buttonSecondary: "#8ac8ff",
   navActive: "#8ac8ff",
-  link: "#0ea5e9",
+  link: "#0F2439",
+
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
@@ -825,7 +835,8 @@ export const uncLightPalette: ColorPalette = {
 
   buttonSecondary: "#82ccff",
   navActive: "#82ccff",
-  link: "#0ea5e9",
+  link: "#007FAE",
+
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
