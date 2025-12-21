@@ -159,8 +159,7 @@ select {
 
 /* Accessibility */
 :focus-visible {
-  outline: 3px solid rgba(83, 155, 245, 0.3);
-  outline-offset: 2px;
+  outline: none;
 }
 
 /* Layout utilities */
@@ -410,7 +409,7 @@ input[type="checkbox"]:checked {
 }
 
 input[type="checkbox"]:focus {
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+  outline: none;
 }
 
 input::placeholder,
@@ -429,8 +428,6 @@ input[type="url"]:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  border-color: var(--border-active);
-  box-shadow: var(--focus-ring);
 }
 
 input:disabled,
