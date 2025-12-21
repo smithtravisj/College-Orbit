@@ -85,6 +85,26 @@ export async function GET() {
       pageVisitCounts.set(page, (pageVisitCounts.get(page) || 0) + 1);
     });
 
+    // Official pages that exist in the app
+    // Note: page names are converted from paths (e.g., '/' -> 'dashboard', '/calendar' -> 'calendar')
+    const officialPages = new Set([
+      'dashboard',
+      'calendar',
+      'profile',
+      'courses',
+      'privacy',
+      'terms',
+      'tools',
+      'settings',
+      'exams',
+      'notes',
+      'tasks',
+      'deadlines',
+      'analytics',
+      'forgot-password',
+      'reset-password',
+    ]);
+
     // Group by date and page name
     const pageViewTrendMap = new Map<string, Map<string, number>>();
 
@@ -104,17 +124,19 @@ export async function GET() {
       .map(([date, pageMap]) => ({
         date,
         pages: Array.from(pageMap.entries())
+          .filter(([page]) => officialPages.has(page))
           .map(([page, count]) => ({
             page,
             count,
           }))
           .sort((a, b) => (pageVisitCounts.get(b.page) || 0) - (pageVisitCounts.get(a.page) || 0)),
       }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      .filter((trend) => trend.pages.length > 0)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    const uniquePages = Array.from(allPages).sort(
-      (a, b) => (pageVisitCounts.get(b) || 0) - (pageVisitCounts.get(a) || 0)
-    );
+    const uniquePages = Array.from(allPages)
+      .filter((page) => officialPages.has(page))
+      .sort((a, b) => (pageVisitCounts.get(b) || 0) - (pageVisitCounts.get(a) || 0));
 
     // Total page views
     const totalPageViews = await prisma.analyticsEvent.count({

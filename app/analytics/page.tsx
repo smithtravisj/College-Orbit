@@ -370,13 +370,7 @@ export default function AnalyticsPage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px' }}>
                 {analytics.pageViewTrends.map((trend, index) => {
-                  const maxTotal = Math.max(
-                    ...analytics.pageViewTrends.map((t) =>
-                      t.pages.reduce((sum, p) => sum + p.count, 0)
-                    )
-                  );
                   const dayTotal = trend.pages.reduce((sum, p) => sum + p.count, 0);
-                  const percentage = maxTotal > 0 ? (dayTotal / maxTotal) * 100 : 0;
 
                   return (
                     <div key={index}>
@@ -397,10 +391,15 @@ export default function AnalyticsPage() {
                             minHeight: 'auto',
                           }}
                         >
-                          {trend.pages.map((pageData) => {
+                          {[...analytics.uniquePages]
+                          .sort()
+                          .map((page) => trend.pages.find((p) => p.page === page))
+                          .filter((page) => page !== undefined)
+                          .map((pageData) => {
+                            if (!pageData) return null;
                             const pagePercentage =
                               dayTotal > 0
-                                ? (pageData.count / dayTotal) * percentage
+                                ? (pageData.count / dayTotal) * 100
                                 : 0;
                             const isHovered = hoveredSegment === `${trend.date}-${pageData.page}`;
 
