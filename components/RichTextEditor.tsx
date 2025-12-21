@@ -166,14 +166,12 @@ export default function RichTextEditor({
       )}
 
       {/* Editor */}
-      <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minHeight: '50px', border: '1px solid var(--border)', borderRadius: '8px', backgroundColor: 'var(--panel-1)', boxSizing: 'border-box' }}>
         {editor && editor.isEmpty && (
           <div
             style={{
               position: 'absolute',
-              top: '50%',
               left: '16px',
-              transform: 'translateY(-50%)',
               color: 'var(--text-muted)',
               pointerEvents: 'none',
               fontSize: '1rem',
@@ -187,15 +185,10 @@ export default function RichTextEditor({
           editor={editor}
           className={styles.editor}
           style={{
-            minHeight: '50px',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            backgroundColor: 'var(--panel-1)',
+            flex: 1,
             padding: '12px 16px',
             boxSizing: 'border-box',
             outline: 'none',
-            display: 'flex',
-            alignItems: 'center',
           }}
         />
       </div>
