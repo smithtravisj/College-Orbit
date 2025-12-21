@@ -10,13 +10,16 @@ import Card from '@/components/ui/Card';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
 
 const UNIVERSITIES = [
+  'Arizona State University',
   'Brigham Young University',
-  'Brigham Young University Idaho',
   'Brigham Young University Hawaii',
+  'Brigham Young University Idaho',
+  'Ohio State University',
   'UNC Chapel Hill',
+  'University of Central Florida',
+  'University of Texas at Austin',
   'Utah State University',
   'Utah Valley University',
-  'Arizona State University',
 ];
 
 // College name abbreviations for display
@@ -28,6 +31,8 @@ const COLLEGE_ABBREVIATIONS: Record<string, string> = {
   'Utah State University': 'USU',
   'Utah Valley University': 'UVU',
   'Arizona State University': 'ASU',
+  'University of Central Florida': 'UCF',
+  'Ohio State University': 'OSU',
 };
 
 export default function SignupPage() {

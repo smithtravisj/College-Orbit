@@ -15,6 +15,9 @@ export default function BrowserTitle() {
       'Utah State University': 'USU Survival Tool',
       'Utah Valley University': 'UVU Survival Tool',
       'Arizona State University': 'ASU Survival Tool',
+      'University of Central Florida': 'UCF Survival Tool',
+      'Ohio State University': 'OSU Survival Tool',
+      'University of Texas at Austin': 'College Survival Tool',
     };
 
     const newTitle = university && titles[university] ? titles[university] : 'College Survival Tool';
@@ -31,6 +34,9 @@ export default function BrowserTitle() {
       'Utah State University': 'USU Survival Tool',
       'Utah Valley University': 'UVU Survival Tool',
       'Arizona State University': 'ASU Survival Tool',
+      'University of Central Florida': 'UCF Survival Tool',
+      'Ohio State University': 'OSU Survival Tool',
+      'University of Texas at Austin': 'College Survival Tool',
     };
 
     const expectedTitle = university && titles[university] ? titles[university] : 'College Survival Tool';

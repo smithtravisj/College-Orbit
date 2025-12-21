@@ -547,6 +547,122 @@ export const asuColorPalette: ColorPalette = {
 };
 
 /**
+ * UCF Color Palette - Dark theme with UCF gold accents
+ * Using official UCF brand color (dark palette)
+ * Primary: #b69317 (UCF Gold)
+ */
+export const ucfColorPalette: ColorPalette = {
+  bg: "#080a0a",
+  panel: "#141618",
+  panel2: "#0f1114",
+
+  text: "#e8e8e8",
+  textSecondary: "#b8b8b8",
+  muted: "#8a8a8a",
+  textMuted: "#707070",
+  textDisabled: "#555555",
+
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHover: "#2a3a3a",
+  borderActive: "#6d5611",
+  borderStrong: "rgba(255, 255, 255, 0.12)",
+
+  accent: "#6d5611",
+  accentHover: "#5a4710",
+  accent2: "rgba(109, 86, 17, 0.15)",
+  ring: "rgba(109, 86, 17, 0.35)",
+
+  buttonSecondary: "#6d5611",
+
+  navActive: "#6d5611",
+
+  link: "#ffc857",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "white",
+
+  success: "#57ab5a",
+  warning: "#c69026",
+  danger: "#e5534b",
+  dangerHover: "#d64941",
+  successBg: "rgba(87, 171, 90, 0.1)",
+  warningBg: "rgba(198, 144, 38, 0.1)",
+  dangerBg: "rgba(229, 83, 75, 0.1)",
+
+  brandPrimary: "#6d5611",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.3)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.4)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
+
+  focusRing: "0 0 0 3px rgba(109, 86, 17, 0.3)",
+
+  todayBg: "rgba(109, 86, 17, 0.12)",
+
+  weekViewTodayDateColor: "#ffc857",
+
+  calendarCurrentDateColor: "#ffc857",
+};
+
+/**
+ * OSU Color Palette - Dark theme with Ohio State red accents
+ */
+export const osuColorPalette: ColorPalette = {
+  bg: "#080a0a",
+  panel: "#141618",
+  panel2: "#0f1114",
+
+  text: "#e8e8e8",
+  textSecondary: "#b8b8b8",
+  muted: "#8a8a8a",
+  textMuted: "#707070",
+  textDisabled: "#555555",
+
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHover: "#2a3a3a",
+  borderActive: "#7a0b22",
+  borderStrong: "rgba(255, 255, 255, 0.12)",
+
+  accent: "#7a0b22",
+  accentHover: "#5a0818",
+  accent2: "rgba(122, 11, 34, 0.15)",
+  ring: "rgba(122, 11, 34, 0.35)",
+
+  buttonSecondary: "#7a0b22",
+
+  navActive: "#7a0b22",
+
+  link: "#ff6b7a",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "white",
+
+  success: "#57ab5a",
+  warning: "#c69026",
+  danger: "#e5534b",
+  dangerHover: "#d64941",
+  successBg: "rgba(87, 171, 90, 0.1)",
+  warningBg: "rgba(198, 144, 38, 0.1)",
+  dangerBg: "rgba(229, 83, 75, 0.1)",
+
+  brandPrimary: "#7a0b22",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.3)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.4)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
+
+  focusRing: "0 0 0 3px rgba(122, 11, 34, 0.3)",
+
+  todayBg: "rgba(122, 11, 34, 0.12)",
+
+  weekViewTodayDateColor: "#ff6b7a",
+
+  calendarCurrentDateColor: "#ff6b7a",
+};
+
+/**
  * Light Mode Palettes - Inverted backgrounds and text with same accent colors
  */
 
@@ -975,17 +1091,234 @@ export const asuLightPalette: ColorPalette = {
 };
 
 /**
+ * UCF Light Color Palette
+ */
+export const ucfLightPalette: ColorPalette = {
+  bg: "#f5f5f5",
+  panel: "#ffffff",
+  panel2: "#f0f1f3",
+
+  text: "#2a2a2a",
+  textSecondary: "#5a5a5a",
+  muted: "#5a5a5a",
+  textMuted: "#5a5a5a",
+  textDisabled: "#8a8a8a",
+
+  border: "rgba(0, 0, 0, 0.12)",
+  borderHover: "#d1d5db",
+  borderActive: "#fedf8c",
+  borderStrong: "rgba(0, 0, 0, 0.16)",
+
+  accent: "#fedf8c",
+  accentHover: "#fdd966",
+  accent2: "rgba(254, 223, 140, 0.15)",
+  ring: "rgba(254, 223, 140, 0.35)",
+
+  buttonSecondary: "#fedf8c",
+  navActive: "#fedf8c",
+  link: "#b69317",
+
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "#000000",
+
+  success: "#16a34a",
+  warning: "#d97706",
+  danger: "#dc2626",
+  dangerHover: "#b91c1c",
+  successBg: "rgba(22, 163, 74, 0.1)",
+  warningBg: "rgba(217, 119, 6, 0.1)",
+  dangerBg: "rgba(220, 38, 38, 0.1)",
+
+  brandPrimary: "#fedf8c",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.1)",
+
+  focusRing: "0 0 0 3px rgba(254, 223, 140, 0.3)",
+  todayBg: "rgba(254, 223, 140, 0.2)",
+  weekViewTodayDateColor: "#b69317",
+  calendarCurrentDateColor: "#fedf8c",
+};
+
+/**
+ * OSU Light Color Palette
+ */
+export const osuLightPalette: ColorPalette = {
+  bg: "#f5f5f5",
+  panel: "#ffffff",
+  panel2: "#f0f1f3",
+
+  text: "#2a2a2a",
+  textSecondary: "#5a5a5a",
+  muted: "#5a5a5a",
+  textMuted: "#5a5a5a",
+  textDisabled: "#8a8a8a",
+
+  border: "rgba(0, 0, 0, 0.12)",
+  borderHover: "#d1d5db",
+  borderActive: "#db7d88",
+  borderStrong: "rgba(0, 0, 0, 0.16)",
+
+  accent: "#db7d88",
+  accentHover: "#c96b7a",
+  accent2: "rgba(219, 125, 136, 0.15)",
+  ring: "rgba(219, 125, 136, 0.35)",
+
+  buttonSecondary: "#db7d88",
+  navActive: "#db7d88",
+  link: "#7a0b22",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "#000000",
+
+  success: "#16a34a",
+  warning: "#d97706",
+  danger: "#dc2626",
+  dangerHover: "#b91c1c",
+  successBg: "rgba(22, 163, 74, 0.1)",
+  warningBg: "rgba(217, 119, 6, 0.1)",
+  dangerBg: "rgba(220, 38, 38, 0.1)",
+
+  brandPrimary: "#db7d88",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.1)",
+
+  focusRing: "0 0 0 3px rgba(219, 125, 136, 0.3)",
+  todayBg: "rgba(219, 125, 136, 0.2)",
+  weekViewTodayDateColor: "#7a0b22",
+  calendarCurrentDateColor: "#db7d88",
+};
+
+/**
+ * UT Austin Color Palette - Dark theme with burnt orange accents
+ */
+export const utaColorPalette: ColorPalette = {
+  bg: "#080a0a",
+  panel: "#141618",
+  panel2: "#0f1114",
+
+  text: "#e8e8e8",
+  textSecondary: "#b8b8b8",
+  muted: "#8a8a8a",
+  textMuted: "#707070",
+  textDisabled: "#555555",
+
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHover: "#2a3a3a",
+  borderActive: "#bf5700",
+  borderStrong: "rgba(255, 255, 255, 0.12)",
+
+  accent: "#bf5700",
+  accentHover: "#944200",
+  accent2: "rgba(191, 87, 0, 0.15)",
+  ring: "rgba(191, 87, 0, 0.35)",
+
+  buttonSecondary: "#bf5700",
+
+  navActive: "#bf5700",
+
+  link: "#ff9d42",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "white",
+
+  success: "#57ab5a",
+  warning: "#c69026",
+  danger: "#e5534b",
+  dangerHover: "#d64941",
+  successBg: "rgba(87, 171, 90, 0.1)",
+  warningBg: "rgba(198, 144, 38, 0.1)",
+  dangerBg: "rgba(229, 83, 75, 0.1)",
+
+  brandPrimary: "#bf5700",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.3)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.4)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
+
+  focusRing: "0 0 0 3px rgba(191, 87, 0, 0.3)",
+
+  todayBg: "rgba(191, 87, 0, 0.12)",
+
+  weekViewTodayDateColor: "#ff9d42",
+
+  calendarCurrentDateColor: "#ff9d42",
+};
+
+/**
+ * UT Austin Light Color Palette
+ */
+export const utaLightPalette: ColorPalette = {
+  bg: "#f5f5f5",
+  panel: "#ffffff",
+  panel2: "#f0f1f3",
+
+  text: "#2a2a2a",
+  textSecondary: "#5a5a5a",
+  muted: "#5a5a5a",
+  textMuted: "#5a5a5a",
+  textDisabled: "#8a8a8a",
+
+  border: "rgba(0, 0, 0, 0.12)",
+  borderHover: "#d1d5db",
+  borderActive: "#fab368",
+  borderStrong: "rgba(0, 0, 0, 0.16)",
+
+  accent: "#fab368",
+  accentHover: "#f5a04f",
+  accent2: "rgba(250, 179, 104, 0.15)",
+  ring: "rgba(250, 179, 104, 0.35)",
+
+  buttonSecondary: "#fab368",
+  navActive: "#fab368",
+  link: "#bf5700",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "#000000",
+
+  success: "#16a34a",
+  warning: "#d97706",
+  danger: "#dc2626",
+  dangerHover: "#b91c1c",
+  successBg: "rgba(22, 163, 74, 0.1)",
+  warningBg: "rgba(217, 119, 6, 0.1)",
+  dangerBg: "rgba(220, 38, 38, 0.1)",
+
+  brandPrimary: "#fab368",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.1)",
+
+  focusRing: "0 0 0 3px rgba(250, 179, 104, 0.3)",
+  todayBg: "rgba(250, 179, 104, 0.2)",
+  weekViewTodayDateColor: "#bf5700",
+  calendarCurrentDateColor: "#fab368",
+};
+
+/**
  * College color palette map
  * Maps university names to their color palettes
  */
 export const collegeColorPalettes: Record<string, ColorPalette> = {
+  "Arizona State University": asuColorPalette,
   "Brigham Young University": byuColorPalette,
   "Brigham Young University Hawaii": byuhColorPalette,
   "Brigham Young University Idaho": byuidColorPalette,
+  "Ohio State University": osuColorPalette,
   "UNC Chapel Hill": uncColorPalette,
+  "University of Central Florida": ucfColorPalette,
+  "University of Texas at Austin": utaColorPalette,
   "Utah State University": usuColorPalette,
   "Utah Valley University": uvuColorPalette,
-  "Arizona State University": asuColorPalette,
 };
 
 /**
@@ -993,13 +1326,16 @@ export const collegeColorPalettes: Record<string, ColorPalette> = {
  * Maps university names to their light color palettes
  */
 export const collegeColorPalettesLight: Record<string, ColorPalette> = {
+  "Arizona State University": asuLightPalette,
   "Brigham Young University": byuLightPalette,
   "Brigham Young University Hawaii": byuhLightPalette,
   "Brigham Young University Idaho": byuidLightPalette,
+  "Ohio State University": osuLightPalette,
   "UNC Chapel Hill": uncLightPalette,
+  "University of Central Florida": ucfLightPalette,
+  "University of Texas at Austin": utaLightPalette,
   "Utah State University": usuLightPalette,
   "Utah Valley University": uvuLightPalette,
-  "Arizona State University": asuLightPalette,
 };
 
 /**

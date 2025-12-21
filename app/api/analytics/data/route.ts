@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authConfig } from '@/auth.config';
+import { universityTitles } from '@/lib/universityTitles';
 
 export async function GET() {
   try {
@@ -211,6 +212,36 @@ export async function GET() {
         ? ((activeNewUsers / newUsersLast30Days) * 100).toFixed(0)
         : '0';
 
+    // Get university distribution from settings, including all universities with 0 users
+    const universityCounts = await prisma.settings
+      .groupBy({
+        by: ['university'],
+        _count: { id: true },
+      })
+      .then((results) => {
+        const countMap = new Map<string | null, number>();
+        results.forEach((item) => {
+          countMap.set(item.university, item._count.id);
+        });
+        return countMap;
+      });
+
+    // Create complete list with all universities
+    const allUniversities = Object.keys(universityTitles);
+    const universityDistribution = [
+      // Add users with no university selection
+      {
+        university: 'No University Selected',
+        count: universityCounts.get(null) || 0,
+      },
+      // Add all configured universities
+      ...allUniversities
+        .map((university) => ({
+          university,
+          count: universityCounts.get(university) || 0,
+        })),
+    ].sort((a, b) => b.count - a.count);
+
     return NextResponse.json({
       summary: {
         totalUsers,
@@ -231,6 +262,7 @@ export async function GET() {
       })),
       pageViewTrends,
       uniquePages,
+      universityDistribution,
     });
   } catch (error) {
     console.error('Analytics data retrieval error:', error);
