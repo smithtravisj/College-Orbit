@@ -3,12 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, SkipForward } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import useAppStore from '@/lib/store';
 
 interface Props {
   theme?: string;
 }
 
 export default function PomodoroTimer({ theme = 'dark' }: Props) {
+  const { settings } = useAppStore();
   const [workDuration, setWorkDuration] = useState(25); // minutes
   const [breakDuration, setBreakDuration] = useState(5); // minutes
   const [timeLeft, setTimeLeft] = useState(25 * 60); // seconds
@@ -154,9 +156,20 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
     ? ((workDuration * 60 - timeLeft) / (workDuration * 60)) * 100
     : ((breakDuration * 60 - timeLeft) / (breakDuration * 60)) * 100;
 
-  // Lighten colors for dark mode
+  // Determine colors based on college selection and theme
   const isDarkMode = theme === 'dark' || theme === 'system';
-  const accentColor = isDarkMode ? '#5b9fff' : 'var(--accent)';
+  const hasCollegeSelected = settings?.university;
+
+  // For work session: use college color if selected, else use default blue
+  const accentColor = hasCollegeSelected
+    ? 'var(--accent)'
+    : (isDarkMode ? '#5b9fff' : '#3b82f6');
+
+  // Apply lightening filter when using college color in dark mode
+  const accentStyle = hasCollegeSelected && isDarkMode
+    ? { filter: 'brightness(1.3) saturate(1.1)' }
+    : {};
+
   const successColor = isDarkMode ? '#6bc96b' : 'var(--success)';
   const pauseButtonColor = isDarkMode ? '#660000' : '#e63946';
 
@@ -309,6 +322,7 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
               fontVariantNumeric: 'tabular-nums',
               marginBottom: '12px',
               letterSpacing: '-2px',
+              ...( isWorkSession ? accentStyle : {}),
             }}>
               {formatTime(timeLeft)}
             </div>
@@ -336,6 +350,7 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
                 width: `${progressPercentage}%`,
                 backgroundColor: isWorkSession ? accentColor : successColor,
                 transition: 'width 0.3s ease',
+                ...(isWorkSession ? accentStyle : {}),
               }} />
             </div>
           </div>
@@ -454,6 +469,7 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
                 fontSize: '20px',
                 fontWeight: 700,
                 color: accentColor,
+                ...accentStyle,
               }}>
                 {sessionsCompleted}
               </div>
@@ -477,6 +493,7 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
                 fontSize: '16px',
                 fontWeight: 700,
                 color: accentColor,
+                ...accentStyle,
               }}>
                 {formatDuration(totalWorkTime)}
               </div>
