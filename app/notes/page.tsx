@@ -226,7 +226,7 @@ export default function NotesPage() {
           </div>
 
           {/* Main content - 9 columns */}
-          <div className="col-span-12 lg:col-span-9" style={{ overflow: 'visible', height: 'fit-content', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="col-span-12 lg:col-span-9" style={{ overflow: 'visible', height: 'fit-content', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {/* Form */}
             {showForm && (
               <div style={{ marginBottom: '24px' }}>
