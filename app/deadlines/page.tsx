@@ -446,7 +446,7 @@ export default function DeadlinesPage() {
                   const isOverdueDeadline = d.dueAt && isOverdue(d.dueAt) && d.status === 'open';
                   const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
                   return (
-                    <div key={d.id} style={{ paddingTop: '10px', paddingBottom: '10px', paddingLeft: '32px', paddingRight: '32px', opacity: hidingDeadlines.has(d.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0">
+                    <div key={d.id} style={{ paddingTop: '10px', paddingBottom: '10px', paddingLeft: '20px', paddingRight: '20px', opacity: hidingDeadlines.has(d.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0">
                       <input
                         type="checkbox"
                         checked={d.status === 'done'}
