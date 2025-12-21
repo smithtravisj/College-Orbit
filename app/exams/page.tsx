@@ -29,6 +29,7 @@ export default function ExamsPage() {
   });
   const [filter, setFilter] = useState('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
+  const [formError, setFormError] = useState('');
 
   const { courses, exams, settings, addExam, updateExam, deleteExam, initializeStore } = useAppStore();
 
@@ -47,7 +48,17 @@ export default function ExamsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim()) return;
+    setFormError('');
+
+    if (!formData.title.trim()) {
+      setFormError('Exam title is required');
+      return;
+    }
+
+    if (!formData.examDate.trim()) {
+      setFormError('Exam date is required');
+      return;
+    }
 
     console.log('[Exams] Form submission started');
     console.log('[Exams] Form data:', JSON.stringify(formData, null, 2));
@@ -67,18 +78,25 @@ export default function ExamsPage() {
           console.log('[Exams] Valid examAt set to:', examAt);
         } else {
           console.log('[Exams] Date getTime() <= 0, rejecting');
+          setFormError('Please enter a valid exam date');
+          return;
         }
       } catch (err) {
         // If date parsing fails, leave examAt as null
         console.error('[Exams] Date parsing error:', err);
+        setFormError('Invalid date or time format');
+        return;
       }
     } else {
       console.log('[Exams] No date provided, examAt will be null');
       formData.examTime = '';
+      setFormError('Exam date is required');
+      return;
     }
 
     if (!examAt) {
       console.error('[Exams] examAt is required');
+      setFormError('Exam date is required');
       return;
     }
 
@@ -312,6 +330,11 @@ export default function ExamsPage() {
             <div style={{ marginBottom: '24px', overflow: 'visible' }}>
               <Card>
                 <form onSubmit={handleSubmit} className="space-y-5" style={{ overflow: 'visible' }}>
+                {formError && (
+                  <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '8px', padding: '10px' }}>
+                    <p style={{ fontSize: '13px', color: 'rgb(239, 68, 68)', margin: 0 }}>{formError}</p>
+                  </div>
+                )}
                 <Input
                   label="Exam title"
                   value={formData.title}
@@ -321,27 +344,27 @@ export default function ExamsPage() {
                 />
                 <div style={{ paddingTop: '12px' }}>
                   <Select
-                    label="Course (optional)"
+                    label="Course"
                     value={formData.courseId}
                     onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
                     options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4" style={{ overflow: 'visible' }}>
+                <div className="grid grid-cols-2 gap-4" style={{ overflow: 'visible', paddingTop: '8px' }}>
                   <CalendarPicker
-                    label="Exam Date (required)"
+                    label="Exam Date"
                     value={formData.examDate}
                     onChange={(date) => setFormData({ ...formData, examDate: date })}
                   />
                   <TimePicker
-                    label="Exam Time (required)"
+                    label="Exam Time"
                     value={formData.examTime}
                     onChange={(time) => setFormData({ ...formData, examTime: time })}
                   />
                 </div>
                 <div style={{ paddingTop: '12px' }}>
                   <Input
-                    label="Location (optional)"
+                    label="Location"
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     placeholder="e.g., Student Center Room 101 or Online"
@@ -349,14 +372,14 @@ export default function ExamsPage() {
                 </div>
                 <div style={{ paddingTop: '12px' }}>
                   <Textarea
-                    label="Notes (optional)"
+                    label="Notes"
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder="Add study tips, topics to review, etc."
                   />
                 </div>
-                <div style={{ paddingTop: '20px' }}>
-                  <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links (optional)</label>
+                <div style={{ paddingTop: '12px' }}>
+                  <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links</label>
                   <div className="space-y-3">
                     {formData.links.map((link, idx) => (
                       <div key={idx} className="flex gap-3 items-center">
@@ -537,7 +560,7 @@ export default function ExamsPage() {
               action={
                 filter !== 'all'
                   ? { label: 'View all exams', onClick: () => setFilter('all') }
-                  : { label: 'Schedule an exam', onClick: () => setShowForm(true) }
+                  : { label: 'Schedule an exam', onClick: () => { setShowForm(true); setFormError(''); } }
               }
             />
           )}

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
+import useAppStore from '@/lib/store';
 
 interface TagInputProps {
   tags: string[];
@@ -16,6 +17,10 @@ export default function TagInput({
   allAvailableTags,
   placeholder = 'Add tag...',
 }: TagInputProps) {
+  const { settings } = useAppStore();
+  const isLightMode = settings.theme === 'light';
+  const tagTextColor = isLightMode ? '#000000' : 'white';
+
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
@@ -84,7 +89,7 @@ export default function TagInput({
         {tags.map((tag, idx) => (
           <div
             key={idx}
-            style={{ backgroundColor: 'var(--accent)', color: 'white', padding: '4px 12px', borderRadius: '9999px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
+            style={{ backgroundColor: 'var(--accent)', color: tagTextColor, padding: '4px 12px', borderRadius: '9999px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             {tag}
             <button
@@ -129,7 +134,7 @@ export default function TagInput({
                     fontSize: '14px',
                     transition: 'background-color 150ms ease',
                     backgroundColor: idx === selectedSuggestionIndex ? 'var(--accent)' : 'transparent',
-                    color: idx === selectedSuggestionIndex ? 'white' : 'var(--text)',
+                    color: idx === selectedSuggestionIndex ? tagTextColor : 'var(--text)',
                     border: 'none',
                     cursor: 'pointer',
                   }}

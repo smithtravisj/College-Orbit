@@ -33,7 +33,7 @@ export default function NotesPage() {
     links: [{ label: '', url: '' }],
   });
 
-  const { courses, notes, folders, addNote, updateNote, deleteNote, toggleNotePin, initializeStore } = useAppStore();
+  const { courses, notes, folders, settings, addNote, updateNote, deleteNote, toggleNotePin, initializeStore } = useAppStore();
 
   useEffect(() => {
     initializeStore();
@@ -158,6 +158,11 @@ export default function NotesPage() {
   const pinnedNotes = filtered.filter((n) => n.isPinned);
   const unpinnedNotes = filtered.filter((n) => !n.isPinned);
 
+  // Light mode detection for delete button
+  const isLightMode = settings.theme === 'light';
+  const deleteButtonBgColor = isLightMode ? '#e63946' : '#660000';
+  const deleteButtonTextColor = isLightMode ? 'white' : 'var(--text)';
+
   return (
     <>
       <PageHeader
@@ -201,8 +206,8 @@ export default function NotesPage() {
                   onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
                 >
-                  <span style={{ fontSize: '14px', fontWeight: '600', color: 'white' }}>Folders</span>
-                  <ChevronDown size={16} style={{ transform: showFoldersDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms ease', color: 'white' }} />
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)' }}>Folders</span>
+                  <ChevronDown size={16} style={{ transform: showFoldersDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms ease', color: 'var(--text)' }} />
                 </button>
                 {showFoldersDropdown && (
                   <div style={{ marginTop: '0px' }}>
@@ -225,8 +230,8 @@ export default function NotesPage() {
                     onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
                   >
-                    <span style={{ fontSize: '14px', fontWeight: '600', color: 'white' }}>Tags</span>
-                    <ChevronDown size={16} style={{ transform: showTagsDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms ease', color: 'white' }} />
+                    <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)' }}>Tags</span>
+                    <ChevronDown size={16} style={{ transform: showTagsDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms ease', color: 'var(--text)' }} />
                   </button>
                   {showTagsDropdown && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0px', marginTop: '0px' }}>
@@ -273,13 +278,13 @@ export default function NotesPage() {
 
                   <div className="grid grid-cols-2 gap-4" style={{ marginTop: '16px' }}>
                     <Select
-                      label="Course (optional)"
+                      label="Course"
                       value={formData.courseId}
                       onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
                       options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: `${c.code} - ${c.name}` }))]}
                     />
                     <Select
-                      label="Folder (optional)"
+                      label="Folder"
                       value={formData.folderId}
                       onChange={(e) => setFormData({ ...formData, folderId: e.target.value })}
                       options={[
@@ -721,8 +726,8 @@ export default function NotesPage() {
                     fontWeight: '500',
                     fontSize: '14px',
                     border: 'none',
-                    backgroundColor: '#660000',
-                    color: 'white',
+                    backgroundColor: deleteButtonBgColor,
+                    color: deleteButtonTextColor,
                     cursor: 'pointer',
                     transition: 'opacity 150ms ease',
                   }}

@@ -158,6 +158,7 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
   const isDarkMode = theme === 'dark' || theme === 'system';
   const accentColor = isDarkMode ? '#5b9fff' : 'var(--accent)';
   const successColor = isDarkMode ? '#6bc96b' : 'var(--success)';
+  const pauseButtonColor = isDarkMode ? '#660000' : '#e63946';
 
   return (
     <div style={{
@@ -354,7 +355,7 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
                 justifyContent: 'center',
                 gap: '8px',
                 padding: '12px 24px',
-                backgroundColor: isRunning ? '#660000' : 'var(--accent)',
+                backgroundColor: isRunning ? pauseButtonColor : 'var(--accent)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',

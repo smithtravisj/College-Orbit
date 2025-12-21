@@ -1,4 +1,5 @@
 import React from 'react';
+import useAppStore from '@/lib/store';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
@@ -10,6 +11,9 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = 'primary', size = 'md', disabled = false, loading = false, className = '', children, ...props }, ref) => {
+    const { settings } = useAppStore();
+    const isLightMode = settings.theme === 'light';
+
     const baseStyles = 'inline-flex items-center justify-center gap-2 font-medium transition active:translate-y-[1px] disabled:opacity-50 disabled:pointer-events-none';
 
     const sizeStyles = {
@@ -25,7 +29,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const variantStyles = {
-      primary: 'bg-[var(--accent)] text-white hover:brightness-110 active:translate-y-[1px]',
+      primary: `bg-[var(--accent)] ${isLightMode ? 'text-black' : 'text-white'} hover:brightness-110 active:translate-y-[1px]`,
       secondary: 'bg-white/5 text-[var(--text)] hover:bg-white/8 border border-[var(--border)] active:translate-y-[1px]',
       danger: 'bg-[var(--danger)] text-white hover:brightness-110 active:translate-y-[1px]',
       ghost: 'bg-transparent hover:bg-white/5 text-[var(--muted)] hover:text-[var(--text)] active:translate-y-[1px]',

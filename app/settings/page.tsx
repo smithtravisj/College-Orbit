@@ -607,6 +607,10 @@ export default function SettingsPage() {
     }
   };
 
+  // Theme-specific colors for remove buttons
+  const isDarkMode = selectedTheme === 'dark' || selectedTheme === 'system';
+  const removeButtonColor = isDarkMode ? '#660000' : '#e63946';
+
   return (
     <>
       <style>{`
@@ -1271,7 +1275,7 @@ export default function SettingsPage() {
                           style={{
                             padding: '6px 12px',
                             fontSize: '12px',
-                            backgroundColor: '#660000',
+                            backgroundColor: removeButtonColor,
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',

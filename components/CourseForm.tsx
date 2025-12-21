@@ -127,12 +127,12 @@ const CourseFormComponent = forwardRef(function CourseForm(
 
       <div className="grid grid-cols-2 gap-4" style={{ paddingTop: '12px' }}>
         <CalendarPicker
-          label="Start Date (optional)"
+          label="Start Date"
           value={form.startDate}
           onChange={(date) => setForm({ ...form, startDate: date })}
         />
         <CalendarPicker
-          label="End Date (optional)"
+          label="End Date"
           value={form.endDate}
           onChange={(date) => setForm({ ...form, endDate: date })}
         />

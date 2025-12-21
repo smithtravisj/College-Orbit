@@ -322,7 +322,7 @@ export default function DeadlinesPage() {
                 />
                 <div style={{ paddingTop: '12px' }}>
                   <Select
-                    label="Course (optional)"
+                    label="Course"
                     value={formData.courseId}
                     onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
                     options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
@@ -330,7 +330,7 @@ export default function DeadlinesPage() {
                 </div>
                 <div style={{ paddingTop: '12px' }}>
                   <Textarea
-                    label="Notes (optional)"
+                    label="Notes"
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder="Add details..."
@@ -338,18 +338,18 @@ export default function DeadlinesPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4" style={{ overflow: 'visible' }}>
                   <CalendarPicker
-                    label="Due Date (optional)"
+                    label="Due Date"
                     value={formData.dueDate}
                     onChange={(date) => setFormData({ ...formData, dueDate: date })}
                   />
                   <TimePicker
-                    label="Due Time (optional)"
+                    label="Due Time"
                     value={formData.dueTime}
                     onChange={(time) => setFormData({ ...formData, dueTime: time })}
                   />
                 </div>
                 <div style={{ paddingTop: '20px' }}>
-                  <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links (optional)</label>
+                  <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links</label>
                   <div className="space-y-3">
                     {formData.links.map((link, idx) => (
                       <div key={idx} className="flex gap-3 items-center">

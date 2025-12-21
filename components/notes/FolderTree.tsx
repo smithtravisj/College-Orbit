@@ -16,7 +16,7 @@ export default function FolderTree({
   selectedFolderId,
   onSelectFolder,
 }: FolderTreeProps) {
-  const { deleteFolder, addFolder, updateFolder } = useAppStore();
+  const { deleteFolder, addFolder, updateFolder, settings } = useAppStore();
   const [contextMenu, setContextMenu] = useState<{ folderId: string; x: number; y: number } | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
@@ -97,6 +97,12 @@ export default function FolderTree({
 
   const allRootFolders = folders.filter((f) => !f.parentId).sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
 
+  // Light mode detection
+  const isLightMode = settings.theme === 'light';
+  const selectedTextColor = isLightMode ? '#000000' : 'white';
+  const addFolderBgColor = isLightMode ? '#f0f0f0' : 'rgba(255,255,255,0.08)';
+  const addFolderHoverBgColor = isLightMode ? '#e5e5e5' : 'rgba(255,255,255,0.12)';
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
       {/* All Notes */}
@@ -110,7 +116,7 @@ export default function FolderTree({
           borderRadius: '8px',
           cursor: 'pointer',
           backgroundColor: selectedFolderId === null ? 'var(--accent)' : 'transparent',
-          color: selectedFolderId === null ? 'white' : 'var(--text-muted)',
+          color: selectedFolderId === null ? selectedTextColor : 'var(--text-muted)',
           transition: 'all 150ms ease',
         }}
         onMouseEnter={(e) => {
@@ -178,7 +184,7 @@ export default function FolderTree({
               borderRadius: '8px',
               cursor: 'pointer',
               backgroundColor: isSelected ? 'var(--accent)' : 'transparent',
-              color: isSelected ? 'white' : 'var(--text-muted)',
+              color: isSelected ? selectedTextColor : 'var(--text-muted)',
               transition: 'all 150ms ease',
             }}
             onMouseEnter={(e) => {
@@ -216,8 +222,8 @@ export default function FolderTree({
             padding: '8px',
             borderRadius: '8px',
             border: '1px solid var(--border)',
-            backgroundColor: 'rgba(255,255,255,0.08)',
-            color: 'white',
+            backgroundColor: addFolderBgColor,
+            color: isLightMode ? '#000000' : 'white',
             cursor: 'pointer',
             fontSize: '14px',
             fontWeight: '500',
@@ -225,10 +231,10 @@ export default function FolderTree({
             marginTop: '4px',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)';
+            e.currentTarget.style.backgroundColor = addFolderHoverBgColor;
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
+            e.currentTarget.style.backgroundColor = addFolderBgColor;
           }}
         >
           + Add folder
