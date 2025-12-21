@@ -6,6 +6,7 @@ export const universityTitles: Record<string, string> = {
   'UNC Chapel Hill': 'UNC Survival Tool',
   'Utah State University': 'USU Survival Tool',
   'Utah Valley University': 'UVU Survival Tool',
+  'Arizona State University': 'ASU Survival Tool',
 };
 
 export function getAppTitle(university: string | null | undefined): string {
