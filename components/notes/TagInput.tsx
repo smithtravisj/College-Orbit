@@ -135,7 +135,7 @@ export default function TagInput({
           )}
         </div>
       </div>
-      <p className="text-xs text-[var(--text-muted)]" style={{ marginTop: '6px' }}>
+      <p className="text-xs text-[var(--text-muted)]" style={{ marginTop: '6px', marginBottom: '16px' }}>
         Type to search existing tags, press Enter or comma to add new tag
       </p>
     </div>
