@@ -85,8 +85,13 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
   } catch (error) {
     console.error('[PATCH /api/settings] Error:', error);
 
+    // Check if this is a record not found error (P2025)
+    const isNotFoundError = (error: any) => {
+      return error?.code === 'P2025' || error?.message?.includes('not found');
+    };
+
     // If settings don't exist, try to create them
-    if (error instanceof Error && error.message.includes('An operation failed because it depends on one or more records that were required but not found')) {
+    if (isNotFoundError(error)) {
       try {
         console.log('[PATCH /api/settings] Settings not found, creating new ones...');
 
