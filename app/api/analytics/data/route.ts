@@ -163,9 +163,30 @@ export async function GET() {
       activeUsers > 0 ? (loginCount / activeUsers).toFixed(1) : '0';
 
     // New user activation rate - % of new users who became active
+    // Count only users who were created in the last 30 days AND had activity in the last 30 days
+    const newUserIds = await prisma.user
+      .findMany({
+        where: {
+          createdAt: { gte: thirtyDaysAgo },
+        },
+        select: { id: true },
+      })
+      .then((results) => results.map((u) => u.id));
+
+    const activeNewUsers = await prisma.analyticsEvent
+      .findMany({
+        where: {
+          createdAt: { gte: thirtyDaysAgo },
+          userId: { in: newUserIds },
+        },
+        distinct: ['userId'],
+        select: { userId: true },
+      })
+      .then((results) => results.length);
+
     const newUserActivationRate =
       newUsersLast30Days > 0
-        ? ((activeUsers / newUsersLast30Days) * 100).toFixed(0)
+        ? ((activeNewUsers / newUsersLast30Days) * 100).toFixed(0)
         : '0';
 
     return NextResponse.json({
