@@ -16,7 +16,7 @@ export default function TermsPage() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Effective Date: December 2024
+                Effective Date: December 21, 2024
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 These Terms of Service ("Terms") govern your use of the College Survival Tool website and services ("Service"). By creating an account and using the Service, you agree to be legally bound by these Terms. If you do not agree to these Terms, please do not use the Service.
@@ -295,7 +295,7 @@ export default function TermsPage() {
                 Effect of Termination
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Upon termination, your access to the Service is immediately revoked. Your data will be permanently deleted within 30 days.
+                Upon termination, your access to the Service is immediately revoked. Your data will be permanently deleted immediately upon account termination or deletion request.
               </p>
             </div>
           </div>

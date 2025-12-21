@@ -271,5 +271,8 @@ export interface AppData {
   settings: Settings;
   excludedDates: ExcludedDate[];
   gpaEntries?: GpaEntry[];
+  recurringPatterns?: RecurringPattern[];
+  recurringDeadlinePatterns?: RecurringDeadlinePattern[];
+  recurringExamPatterns?: RecurringExamPattern[];
   notifications?: Notification[];
 }

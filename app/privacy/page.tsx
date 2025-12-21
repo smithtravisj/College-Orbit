@@ -16,7 +16,7 @@ export default function PrivacyPage() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Last Updated: December 2024
+                Last Updated: December 21, 2024
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 At College Survival Tool, your privacy is our priority. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our service. We believe in transparency and give you full control over your data.
@@ -73,7 +73,7 @@ export default function PrivacyPage() {
                 Analytics and Usage Data
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We collect basic analytics data including which pages you visit, when you log in, and general usage patterns. This helps us understand how the app is being used and identify areas for improvement. We do not use third-party analytics services and do not track individual user behavior or create detailed usage profiles.
+                We collect basic analytics data including which pages you visit, when you log in, and general usage patterns. This helps us understand how the app is being used and identify areas for improvement. We do not use third-party analytics services. Analytics events are associated with your user account to track your usage, but we only analyze aggregated, anonymized data (such as total users and popular pages) for improvements. Individual user data is never shared or sold.
               </p>
             </div>
             <div>
@@ -140,7 +140,7 @@ export default function PrivacyPage() {
                 Data Retention
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We retain your data as long as your account is active. If you delete your account, your data is permanently removed from our servers within 30 days. You can also export and backup all your data at any time.
+                We retain your data as long as your account is active. If you delete your account or request to delete all data, it is permanently removed from our servers immediately. You can also export and backup all your data at any time through Settings → Privacy.
               </p>
             </div>
             <div>

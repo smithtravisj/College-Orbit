@@ -1285,6 +1285,9 @@ const useAppStore = create<AppStore>((set, get) => ({
       settings: state.settings,
       excludedDates: state.excludedDates,
       gpaEntries: state.gpaEntries,
+      recurringPatterns: state.recurringPatterns,
+      recurringDeadlinePatterns: state.recurringDeadlinePatterns,
+      recurringExamPatterns: state.recurringExamPatterns,
       notifications,
     };
   },
@@ -1293,6 +1296,44 @@ const useAppStore = create<AppStore>((set, get) => ({
     const store = get();
 
     try {
+      // Validate import data structure
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid data format: expected an object');
+      }
+
+      if (!Array.isArray(data.courses)) {
+        throw new Error('Invalid data format: courses must be an array');
+      }
+
+      if (!Array.isArray(data.deadlines)) {
+        throw new Error('Invalid data format: deadlines must be an array');
+      }
+
+      if (!Array.isArray(data.tasks)) {
+        throw new Error('Invalid data format: tasks must be an array');
+      }
+
+      if (!Array.isArray(data.exams)) {
+        throw new Error('Invalid data format: exams must be an array');
+      }
+
+      if (!Array.isArray(data.notes)) {
+        throw new Error('Invalid data format: notes must be an array');
+      }
+
+      if (!Array.isArray(data.folders)) {
+        throw new Error('Invalid data format: folders must be an array');
+      }
+
+      if (!Array.isArray(data.excludedDates)) {
+        throw new Error('Invalid data format: excludedDates must be an array');
+      }
+
+      if (data.settings && typeof data.settings !== 'object') {
+        throw new Error('Invalid data format: settings must be an object');
+      }
+
+      console.log('Import data validation passed');
       // Import courses
       if (data.courses && data.courses.length > 0) {
         console.log('Importing courses:', data.courses.length);
@@ -1398,6 +1439,57 @@ const useAppStore = create<AppStore>((set, get) => ({
         }
       } else {
         console.log('No GPA entries to import');
+      }
+
+      // Import recurring task patterns
+      if (data.recurringPatterns && data.recurringPatterns.length > 0) {
+        console.log('Importing recurring task patterns:', data.recurringPatterns.length);
+        for (const pattern of data.recurringPatterns) {
+          const { id, createdAt, updatedAt, userId, ...patternData } = pattern as any;
+          // Post to create recurring task pattern via API
+          const response = await fetch('/api/recurring-patterns', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(patternData),
+          });
+          if (!response.ok) {
+            console.error('Failed to import recurring task pattern:', patternData);
+          }
+        }
+      }
+
+      // Import recurring deadline patterns
+      if (data.recurringDeadlinePatterns && data.recurringDeadlinePatterns.length > 0) {
+        console.log('Importing recurring deadline patterns:', data.recurringDeadlinePatterns.length);
+        for (const pattern of data.recurringDeadlinePatterns) {
+          const { id, createdAt, updatedAt, userId, ...patternData } = pattern as any;
+          // Post to create recurring deadline pattern via API
+          const response = await fetch('/api/recurring-deadline-patterns', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(patternData),
+          });
+          if (!response.ok) {
+            console.error('Failed to import recurring deadline pattern:', patternData);
+          }
+        }
+      }
+
+      // Import recurring exam patterns
+      if (data.recurringExamPatterns && data.recurringExamPatterns.length > 0) {
+        console.log('Importing recurring exam patterns:', data.recurringExamPatterns.length);
+        for (const pattern of data.recurringExamPatterns) {
+          const { id, createdAt, updatedAt, userId, ...patternData } = pattern as any;
+          // Post to create recurring exam pattern via API
+          const response = await fetch('/api/recurring-exam-patterns', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(patternData),
+          });
+          if (!response.ok) {
+            console.error('Failed to import recurring exam pattern:', patternData);
+          }
+        }
       }
 
       // Import settings
@@ -1793,9 +1885,15 @@ const useAppStore = create<AppStore>((set, get) => ({
         courses: [],
         deadlines: [],
         tasks: [],
+        exams: [],
+        notes: [],
+        folders: [],
         settings: DEFAULT_SETTINGS,
         excludedDates: [],
         gpaEntries: [],
+        recurringPatterns: [],
+        recurringDeadlinePatterns: [],
+        recurringExamPatterns: [],
       });
 
       // Clear localStorage
