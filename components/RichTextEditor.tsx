@@ -31,9 +31,7 @@ export default function RichTextEditor({
     extensions: [
       StarterKit.configure({
         paragraph: {
-          HTMLAttributes: {
-            class: 'text-base leading-relaxed',
-          },
+          HTMLAttributes: {},
         },
         heading: {
           levels: [1, 2, 3],
