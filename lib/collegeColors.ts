@@ -488,6 +488,65 @@ export const uncColorPalette: ColorPalette = {
 };
 
 /**
+ * ASU Color Palette - Dark theme with ASU maroon accents
+ * Using official ASU brand color (dark palette)
+ * Primary: #8C1D40 (ASU Maroon)
+ */
+export const asuColorPalette: ColorPalette = {
+  bg: "#080a0a",
+  panel: "#141618",
+  panel2: "#0f1114",
+
+  text: "#e8e8e8",
+  textSecondary: "#b8b8b8",
+  muted: "#8a8a8a",
+  textMuted: "#707070",
+  textDisabled: "#555555",
+
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHover: "#2a3a3a",
+  borderActive: "#8C1D40",
+  borderStrong: "rgba(255, 255, 255, 0.12)",
+
+  accent: "#8C1D40",
+  accentHover: "#6d1530",
+  accent2: "rgba(140, 29, 64, 0.15)",
+  ring: "rgba(140, 29, 64, 0.35)",
+
+  buttonSecondary: "#8C1D40",
+
+  navActive: "#8C1D40",
+
+  link: "#ff8fa3",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "white",
+
+  success: "#57ab5a",
+  warning: "#c69026",
+  danger: "#e5534b",
+  dangerHover: "#d64941",
+  successBg: "rgba(87, 171, 90, 0.1)",
+  warningBg: "rgba(198, 144, 38, 0.1)",
+  dangerBg: "rgba(229, 83, 75, 0.1)",
+
+  brandPrimary: "#8C1D40",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.3)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.4)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
+
+  focusRing: "0 0 0 3px rgba(140, 29, 64, 0.3)",
+
+  todayBg: "rgba(140, 29, 64, 0.12)",
+
+  weekViewTodayDateColor: "#ff8fa3",
+
+  calendarCurrentDateColor: "#ff8fa3",
+};
+
+/**
  * Light Mode Palettes - Inverted backgrounds and text with same accent colors
  */
 
@@ -863,6 +922,59 @@ export const uncLightPalette: ColorPalette = {
 };
 
 /**
+ * ASU Light Color Palette
+ */
+export const asuLightPalette: ColorPalette = {
+  bg: "#f5f5f5",
+  panel: "#ffffff",
+  panel2: "#f0f1f3",
+
+  text: "#2a2a2a",
+  textSecondary: "#5a5a5a",
+  muted: "#5a5a5a",
+  textMuted: "#5a5a5a",
+  textDisabled: "#8a8a8a",
+
+  border: "rgba(0, 0, 0, 0.12)",
+  borderHover: "#d1d5db",
+  borderActive: "#E74973",
+  borderStrong: "rgba(0, 0, 0, 0.16)",
+
+  accent: "#E74973",
+  accentHover: "#d63960",
+  accent2: "rgba(231, 73, 115, 0.15)",
+  ring: "rgba(231, 73, 115, 0.35)",
+
+  buttonSecondary: "#E74973",
+  navActive: "#E74973",
+  link: "#8C1D40",
+
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "#000000",
+
+  success: "#16a34a",
+  warning: "#d97706",
+  danger: "#dc2626",
+  dangerHover: "#b91c1c",
+  successBg: "rgba(22, 163, 74, 0.1)",
+  warningBg: "rgba(217, 119, 6, 0.1)",
+  dangerBg: "rgba(220, 38, 38, 0.1)",
+
+  brandPrimary: "#E74973",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.1)",
+
+  focusRing: "0 0 0 3px rgba(231, 73, 115, 0.3)",
+  todayBg: "rgba(231, 73, 115, 0.2)",
+  weekViewTodayDateColor: "#8C1D40",
+  calendarCurrentDateColor: "#E74973",
+};
+
+/**
  * College color palette map
  * Maps university names to their color palettes
  */
@@ -873,6 +985,7 @@ export const collegeColorPalettes: Record<string, ColorPalette> = {
   "UNC Chapel Hill": uncColorPalette,
   "Utah State University": usuColorPalette,
   "Utah Valley University": uvuColorPalette,
+  "Arizona State University": asuColorPalette,
 };
 
 /**
@@ -886,6 +999,7 @@ export const collegeColorPalettesLight: Record<string, ColorPalette> = {
   "UNC Chapel Hill": uncLightPalette,
   "Utah State University": usuLightPalette,
   "Utah Valley University": uvuLightPalette,
+  "Arizona State University": asuLightPalette,
 };
 
 /**

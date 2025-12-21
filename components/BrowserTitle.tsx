@@ -14,6 +14,7 @@ export default function BrowserTitle() {
       'UNC Chapel Hill': 'UNC Survival Tool',
       'Utah State University': 'USU Survival Tool',
       'Utah Valley University': 'UVU Survival Tool',
+      'Arizona State University': 'ASU Survival Tool',
     };
 
     const newTitle = university && titles[university] ? titles[university] : 'College Survival Tool';
@@ -29,6 +30,7 @@ export default function BrowserTitle() {
       'UNC Chapel Hill': 'UNC Survival Tool',
       'Utah State University': 'USU Survival Tool',
       'Utah Valley University': 'UVU Survival Tool',
+      'Arizona State University': 'ASU Survival Tool',
     };
 
     const expectedTitle = university && titles[university] ? titles[university] : 'College Survival Tool';

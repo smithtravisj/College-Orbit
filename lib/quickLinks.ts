@@ -81,6 +81,16 @@ export const universityLinks: Record<string, Array<{ label: string; url: string 
     { label: 'Advising Center', url: 'https://www.uvu.edu/advising/' },
     { label: 'Career Center', url: 'https://www.uvu.edu/career/' },
   ],
+  'Arizona State University': [
+    { label: 'Home', url: 'https://www.asu.edu/' },
+    { label: 'Academic Calendar', url: 'https://registrar.asu.edu/academic-calendar' },
+    { label: 'My ASU', url: 'https://my.asu.edu/' },
+    { label: 'Records & Transcript', url: 'https://registrar.asu.edu/' },
+    { label: 'ASU Email', url: 'https://email.asu.edu' },
+    { label: 'ASU Library', url: 'https://lib.asu.edu/' },
+    { label: 'Housing', url: 'https://asu.starrezhousing.com/StarRezPortalX/Login' },
+    { label: 'Registrar', url: 'https://registrar.asu.edu/' },
+  ],
 };
 
 export function getQuickLinks(university: string | null | undefined): Array<{ label: string; url: string }> {

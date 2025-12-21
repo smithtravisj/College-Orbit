@@ -1053,6 +1053,7 @@ export default function SettingsPage() {
                   <option value="UNC Chapel Hill">UNC Chapel Hill</option>
                   <option value="Utah State University">Utah State University</option>
                   <option value="Utah Valley University">Utah Valley University</option>
+                  <option value="Arizona State University">Arizona State University</option>
                 </select>
               </div>
 

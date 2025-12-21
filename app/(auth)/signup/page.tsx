@@ -16,6 +16,7 @@ const UNIVERSITIES = [
   'UNC Chapel Hill',
   'Utah State University',
   'Utah Valley University',
+  'Arizona State University',
 ];
 
 // College name abbreviations for display
@@ -26,6 +27,7 @@ const COLLEGE_ABBREVIATIONS: Record<string, string> = {
   'UNC Chapel Hill': 'UNC',
   'Utah State University': 'USU',
   'Utah Valley University': 'UVU',
+  'Arizona State University': 'ASU',
 };
 
 export default function SignupPage() {
