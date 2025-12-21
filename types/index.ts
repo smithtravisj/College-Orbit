@@ -106,6 +106,9 @@ export interface Settings {
   visibleToolsCards?: string[];
   hasCompletedOnboarding?: boolean;
   examReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
+  pomodoroWorkDuration?: number;
+  pomodoroBreakDuration?: number;
+  pomodoroIsMuted?: boolean;
 }
 
 export interface ExcludedDate {

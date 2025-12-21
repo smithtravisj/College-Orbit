@@ -216,6 +216,9 @@ model Settings {
   visibleToolsCards       Json?    @default("[\"quickLinks\", \"gpaCalculator\"]")
   hasCompletedOnboarding  Boolean  @default(false)
   examReminders           Json?    @default("[{\"enabled\":true,\"value\":7,\"unit\":\"days\"},{\"enabled\":true,\"value\":1,\"unit\":\"days\"},{\"enabled\":true,\"value\":3,\"unit\":\"hours\"}]")
+  pomodoroWorkDuration    Int      @default(25)
+  pomodoroBreakDuration   Int      @default(5)
+  pomodoroIsMuted         Boolean  @default(false)
   user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])

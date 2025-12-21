@@ -1116,7 +1116,10 @@ const useAppStore = create<AppStore>((set, get) => ({
         body: JSON.stringify(settings),
       });
 
-      if (!response.ok) throw new Error('Failed to update settings');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(`Failed to update settings: ${JSON.stringify(errorData)}`);
+      }
 
       const { settings: updatedSettings } = await response.json();
 
