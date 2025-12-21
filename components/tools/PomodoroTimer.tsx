@@ -9,6 +9,20 @@ interface Props {
   theme?: string;
 }
 
+const STORAGE_KEY = 'pomodoro-timer-state';
+
+interface PomodoroState {
+  workDuration: number;
+  breakDuration: number;
+  timeLeft: number;
+  isRunning: boolean;
+  isWorkSession: boolean;
+  sessionsCompleted: number;
+  totalBreakTime: number;
+  totalWorkTime: number;
+  lastStateChangeTime: number;
+}
+
 export default function PomodoroTimer({ theme = 'dark' }: Props) {
   const { settings } = useAppStore();
   const [workDuration, setWorkDuration] = useState(25); // minutes
@@ -24,6 +38,75 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
   const [tempBreakDuration, setTempBreakDuration] = useState<number | ''>(5);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartTimeRef = useRef<number | null>(null);
+  const isInitializedRef = useRef(false);
+  const lastMinuteCountedRef = useRef(0);
+
+  // Initialize state from localStorage on mount
+  useEffect(() => {
+    if (isInitializedRef.current) return;
+    isInitializedRef.current = true;
+
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const state: PomodoroState = JSON.parse(saved);
+
+        // Restore all state
+        setWorkDuration(state.workDuration);
+        setBreakDuration(state.breakDuration);
+        setIsWorkSession(state.isWorkSession);
+        setSessionsCompleted(state.sessionsCompleted);
+        setTotalBreakTime(state.totalBreakTime);
+        setTotalWorkTime(state.totalWorkTime);
+        setTempWorkDuration(state.workDuration);
+        setTempBreakDuration(state.breakDuration);
+
+        // If timer was running, calculate elapsed time and update timeLeft
+        if (state.isRunning) {
+          const elapsedMs = Date.now() - state.lastStateChangeTime;
+          const elapsedSeconds = Math.floor(elapsedMs / 1000);
+          const sessionDuration = state.isWorkSession ? state.workDuration * 60 : state.breakDuration * 60;
+          const newTimeLeft = Math.max(0, state.timeLeft - elapsedSeconds);
+
+          // Calculate total time spent in this session
+          const timeSpentInSession = sessionDuration - newTimeLeft;
+
+          setTimeLeft(newTimeLeft);
+          setIsRunning(true);
+          // Set sessionStartTimeRef so timer can correctly calculate elapsed time
+          sessionStartTimeRef.current = Date.now() - timeSpentInSession * 1000;
+          lastMinuteCountedRef.current = Math.floor(timeSpentInSession / 60);
+        } else {
+          setTimeLeft(state.timeLeft);
+          setIsRunning(false);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to restore Pomodoro state:', error);
+    }
+  }, []);
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    if (!isInitializedRef.current) return;
+
+    try {
+      const state: PomodoroState = {
+        workDuration,
+        breakDuration,
+        timeLeft,
+        isRunning,
+        isWorkSession,
+        sessionsCompleted,
+        totalBreakTime,
+        totalWorkTime,
+        lastStateChangeTime: Date.now(),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error('Failed to save Pomodoro state:', error);
+    }
+  }, [workDuration, breakDuration, timeLeft, isRunning, isWorkSession, sessionsCompleted, totalBreakTime, totalWorkTime]);
 
   // Timer logic
   useEffect(() => {
@@ -32,31 +115,50 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
     // Set session start time when timer starts
     if (sessionStartTimeRef.current === null) {
       sessionStartTimeRef.current = Date.now();
+      lastMinuteCountedRef.current = 0;
     }
 
     timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
+      // Calculate elapsed time based on session start
+      if (sessionStartTimeRef.current !== null) {
+        const elapsedSeconds = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000);
+        const sessionDuration = isWorkSession ? workDuration * 60 : breakDuration * 60;
+        const newTimeLeft = Math.max(0, sessionDuration - elapsedSeconds);
+
+        // Calculate elapsed minutes and update counters for each new minute
+        const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+        if (elapsedMinutes > lastMinuteCountedRef.current) {
+          const minutesCompleted = elapsedMinutes - lastMinuteCountedRef.current;
+          if (isWorkSession) {
+            setTotalWorkTime((t) => t + minutesCompleted);
+          } else {
+            setTotalBreakTime((t) => t + minutesCompleted);
+          }
+          lastMinuteCountedRef.current = elapsedMinutes;
+        }
+
+        if (newTimeLeft <= 0) {
           // Timer ended
           playNotification();
 
           if (isWorkSession) {
             // Work session ended, switch to break
             setSessionsCompleted((s) => s + 1);
-            setTotalWorkTime((t) => t + workDuration);
             setIsWorkSession(false);
             sessionStartTimeRef.current = null;
-            return breakDuration * 60;
+            lastMinuteCountedRef.current = 0;
+            setTimeLeft(breakDuration * 60);
           } else {
             // Break ended, switch to work
-            setTotalBreakTime((t) => t + breakDuration);
             setIsWorkSession(true);
             sessionStartTimeRef.current = null;
-            return workDuration * 60;
+            lastMinuteCountedRef.current = 0;
+            setTimeLeft(workDuration * 60);
           }
+        } else {
+          setTimeLeft(newTimeLeft);
         }
-        return prev - 1;
-      });
+      }
     }, 1000);
 
     return () => {
@@ -95,34 +197,21 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
     setTotalWorkTime(0);
     setTotalBreakTime(0);
     sessionStartTimeRef.current = null;
+    lastMinuteCountedRef.current = 0;
   };
 
   const skipSession = () => {
-    // Calculate elapsed time in minutes
-    let elapsedMinutes = 0;
-    if (sessionStartTimeRef.current !== null) {
-      const elapsedSeconds = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000);
-      elapsedMinutes = Math.round(elapsedSeconds / 60);
-    } else {
-      // If no start time (shouldn't happen), use the time spent (full duration - time left)
-      if (isWorkSession) {
-        elapsedMinutes = workDuration - Math.ceil(timeLeft / 60);
-      } else {
-        elapsedMinutes = breakDuration - Math.ceil(timeLeft / 60);
-      }
-    }
-
+    // Minutes are already counted by the timer, just switch to next session
     if (isWorkSession) {
-      setTotalWorkTime((t) => t + elapsedMinutes);
       setSessionsCompleted((s) => s + 1);
       setIsWorkSession(false);
       setTimeLeft(breakDuration * 60);
     } else {
-      setTotalBreakTime((t) => t + elapsedMinutes);
       setIsWorkSession(true);
       setTimeLeft(workDuration * 60);
     }
     sessionStartTimeRef.current = null;
+    lastMinuteCountedRef.current = 0;
     setIsRunning(false);
   };
 
@@ -135,6 +224,7 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
     setSettingsMode(false);
     setIsRunning(false);
     sessionStartTimeRef.current = null;
+    lastMinuteCountedRef.current = 0;
   };
 
   const formatTime = (seconds: number): string => {
