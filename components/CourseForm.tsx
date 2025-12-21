@@ -36,7 +36,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
     term: '',
     startDate: '',
     endDate: '',
-    meetingTimes: [{ days: ['Mon'], start: '10:00', end: '10:50', location: '' }],
+    meetingTimes: [{ days: ['Mon'], start: '', end: '', location: '' }],
     links: [{ label: '', url: '' }],
     colorTag: '',
   });
@@ -49,7 +49,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
         term: course.term,
         startDate: course.startDate ? course.startDate.split('T')[0] : '',
         endDate: course.endDate ? course.endDate.split('T')[0] : '',
-        meetingTimes: course.meetingTimes || [{ days: ['Mon'], start: '10:00', end: '10:50', location: '' }],
+        meetingTimes: course.meetingTimes || [{ days: ['Mon'], start: '', end: '', location: '' }],
         links: course.links || [{ label: '', url: '' }],
         colorTag: course.colorTag || '',
       });
@@ -209,7 +209,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
             ...form,
             meetingTimes: [
               ...form.meetingTimes,
-              { days: ['Mon'], start: '10:00', end: '10:50', location: '' },
+              { days: ['Mon'], start: '', end: '', location: '' },
             ],
           });
         }} style={{ marginTop: '12px', paddingLeft: '16px', paddingRight: '16px' }}>
