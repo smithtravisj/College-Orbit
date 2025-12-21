@@ -475,7 +475,7 @@ export default function ExamsPage() {
                   const examTime = exam.examAt ? new Date(exam.examAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
                   const shouldShowTime = examTime && !(examHours === 9 && examMinutes === 0);
                   return (
-                    <div key={exam.id} style={{ paddingTop: '10px', paddingBottom: '10px', opacity: hidingExams.has(exam.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors border-b border-[var(--border)] last:border-b-0">
+                    <div key={exam.id} style={{ paddingTop: '10px', paddingBottom: '10px', paddingLeft: '32px', paddingRight: '32px', opacity: hidingExams.has(exam.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <div className="text-sm font-medium text-[var(--text)]">
