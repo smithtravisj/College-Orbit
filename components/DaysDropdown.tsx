@@ -57,8 +57,8 @@ export default function DaysDropdown({ value, onChange, label }: DaysDropdownPro
 
       {isOpen && (
         <div
-          className="absolute top-full left-0 right-0 mt-1 bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg z-10"
-          style={{ minWidth: '140px' }}
+          className="absolute top-full left-0 right-0 mt-1 bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg"
+          style={{ minWidth: '140px', zIndex: 9999 }}
         >
           <div className="p-2 space-y-1">
             {days.map((day) => (
