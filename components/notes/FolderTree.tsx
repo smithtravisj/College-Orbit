@@ -263,13 +263,6 @@ export default function FolderTree({
         </div>
       )}
 
-      {/* Empty State */}
-      {allRootFolders.length === 0 && !isCreating && (
-        <div style={{ textAlign: 'center', paddingTop: '16px', paddingBottom: '8px' }}>
-          <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>No folders yet</p>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', margin: 0 }}>Create one to organize your notes</p>
-        </div>
-      )}
 
       {/* Context Menu */}
       {contextMenu && (
