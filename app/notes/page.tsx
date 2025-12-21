@@ -405,7 +405,7 @@ export default function NotesPage() {
             ) : filtered.length > 0 ? (
               <div style={{ marginBottom: '24px' }}>
                 <Card>
-                <div className="space-y-3 divide-y divide-[var(--border)]">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid var(--border)' }}>
                   {filtered.map((note) => {
                     const course = courses.find((c) => c.id === note.courseId);
                     const folder = folders.find((f) => f.id === note.folderId);
@@ -413,37 +413,39 @@ export default function NotesPage() {
                     return (
                       <div
                         key={note.id}
-                        className="first:pt-0 pt-3 group hover:bg-[var(--panel-2)] -mx-6 px-6 rounded transition-colors cursor-pointer"
+                        style={{ padding: '12px 0', borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'background-color 150ms ease' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--panel-2)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         onClick={() => setSelectedNoteId(note.id)}
                       >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              {note.isPinned && <Pin size={14} className="text-[var(--accent)]" />}
-                              <h3 className="text-sm font-semibold text-[var(--text)]">{note.title}</h3>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              {note.isPinned && <Pin size={14} style={{ color: 'var(--accent)' }} />}
+                              <h3 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>{note.title}</h3>
                             </div>
                             {note.plainText && (
-                              <p className="text-xs text-[var(--text-muted)] mt-1 line-clamp-2">
+                              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                                 {note.plainText}
                               </p>
                             )}
-                            <div className="flex flex-wrap items-center gap-2 mt-2">
-                              {course && <span className="text-xs bg-[var(--nav-active)] px-2 py-1 rounded">{course.code}</span>}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                              {course && <span style={{ fontSize: '12px', backgroundColor: 'var(--nav-active)', padding: '4px 8px', borderRadius: '4px' }}>{course.code}</span>}
                               {folder && (
-                                <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+                                <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                   <FolderIcon size={12} />
                                   {folder.name}
                                 </span>
                               )}
                               {note.tags && note.tags.length > 0 && (
-                                <div className="flex gap-1">
+                                <div style={{ display: 'flex', gap: '4px' }}>
                                   {note.tags.slice(0, 2).map((tag) => (
-                                    <span key={tag} className="text-xs text-[var(--accent)]">
+                                    <span key={tag} style={{ fontSize: '12px', color: 'var(--accent)' }}>
                                       #{tag}
                                     </span>
                                   ))}
                                   {note.tags.length > 2 && (
-                                    <span className="text-xs text-[var(--text-muted)]">
+                                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                                       +{note.tags.length - 2} more
                                     </span>
                                   )}
@@ -451,23 +453,27 @@ export default function NotesPage() {
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0, transition: 'opacity 150ms ease' }} onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleNotePin(note.id);
                               }}
-                              className="p-1.5 text-[var(--muted)] hover:text-[var(--accent)]"
+                              style={{ padding: '6px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease' }}
+                              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'}
+                              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
                               title={note.isPinned ? 'Unpin note' : 'Pin note'}
                             >
-                              <Pin size={16} className={note.isPinned ? 'fill-current' : ''} />
+                              <Pin size={16} style={{ fill: note.isPinned ? 'currentColor' : 'none' }} />
                             </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 startEdit(note);
                               }}
-                              className="p-1.5 text-[var(--muted)] hover:text-[var(--accent)]"
+                              style={{ padding: '6px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease' }}
+                              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'}
+                              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
                             >
                               <Edit2 size={16} />
                             </button>
@@ -476,7 +482,9 @@ export default function NotesPage() {
                                 e.stopPropagation();
                                 handleDeleteNote(note.id);
                               }}
-                              className="p-1.5 text-[var(--muted)] hover:text-[var(--danger)]"
+                              style={{ padding: '6px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease' }}
+                              onMouseEnter={(e) => e.currentTarget.style.color = '#dc2626'}
+                              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
                             >
                               <Trash2 size={16} />
                             </button>
