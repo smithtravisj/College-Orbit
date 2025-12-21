@@ -484,11 +484,18 @@ export default function NotesPage() {
                                     )}
                                     {note.tags && note.tags.length > 0 && (
                                       <div style={{ display: 'flex', gap: '4px' }}>
-                                        {note.tags.slice(0, 2).map((tag) => (
-                                          <span key={tag} style={{ fontSize: '12px', color: '#539bf5' }}>
-                                            #{tag}
-                                          </span>
-                                        ))}
+                                        {note.tags.slice(0, 2).map((tag) => {
+                                          const hasCollege = settings?.university;
+                                          const isLightMode = settings?.theme === 'light';
+                                          const tagColor = hasCollege
+                                            ? (isLightMode ? 'var(--accent)' : 'var(--calendar-current-date-color)')
+                                            : '#539bf5';
+                                          return (
+                                            <span key={tag} style={{ fontSize: '12px', color: tagColor }}>
+                                              #{tag}
+                                            </span>
+                                          );
+                                        })}
                                         {note.tags.length > 2 && (
                                           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                                             +{note.tags.length - 2} more
@@ -586,11 +593,18 @@ export default function NotesPage() {
                                     )}
                                     {note.tags && note.tags.length > 0 && (
                                       <div style={{ display: 'flex', gap: '4px' }}>
-                                        {note.tags.slice(0, 2).map((tag) => (
-                                          <span key={tag} style={{ fontSize: '12px', color: '#539bf5' }}>
-                                            #{tag}
-                                          </span>
-                                        ))}
+                                        {note.tags.slice(0, 2).map((tag) => {
+                                          const hasCollege = settings?.university;
+                                          const isLightMode = settings?.theme === 'light';
+                                          const tagColor = hasCollege
+                                            ? (isLightMode ? 'var(--accent)' : 'var(--calendar-current-date-color)')
+                                            : '#539bf5';
+                                          return (
+                                            <span key={tag} style={{ fontSize: '12px', color: tagColor }}>
+                                              #{tag}
+                                            </span>
+                                          );
+                                        })}
                                         {note.tags.length > 2 && (
                                           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                                             +{note.tags.length - 2} more
