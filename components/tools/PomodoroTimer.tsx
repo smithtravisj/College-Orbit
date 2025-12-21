@@ -274,6 +274,14 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
 
           <div style={{ display: 'flex', gap: '12px' }}>
             <Button
+              onClick={() => setSettingsMode(false)}
+              variant="secondary"
+              size="md"
+              style={{ flex: 1 }}
+            >
+              Cancel
+            </Button>
+            <Button
               onClick={applySettings}
               size="md"
               style={{
@@ -283,14 +291,6 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
               }}
             >
               Apply Settings
-            </Button>
-            <Button
-              onClick={() => setSettingsMode(false)}
-              variant="secondary"
-              size="md"
-              style={{ flex: 1 }}
-            >
-              Cancel
             </Button>
           </div>
         </div>
