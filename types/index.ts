@@ -30,6 +30,10 @@ export interface Deadline {
   }>;
   status: 'open' | 'done';
   createdAt: string; // ISO datetime
+  recurringPatternId: string | null;
+  instanceDate: string | null; // ISO datetime
+  isRecurring: boolean;
+  recurringPattern?: RecurringDeadlinePattern | null;
 }
 
 export interface Task {
@@ -50,13 +54,127 @@ export interface Task {
   }>;
   status: 'open' | 'done';
   createdAt: string; // ISO datetime
+  recurringPatternId: string | null;
+  instanceDate: string | null; // ISO datetime
+  isRecurring: boolean;
+  recurringPattern?: RecurringPattern | null;
+}
+
+export interface RecurringPattern {
+  id: string;
+  userId: string;
+  recurrenceType: 'weekly' | 'monthly' | 'custom';
+  intervalDays: number | null;
+  daysOfWeek?: number[]; // 0-6, Sunday-Saturday
+  daysOfMonth?: number[]; // 1-31
+  startDate: string | null; // ISO datetime - when recurrence starts
+  endDate: string | null; // ISO datetime
+  occurrenceCount: number | null;
+  lastGenerated: string; // ISO datetime
+  instanceCount: number;
+  taskTemplate: {
+    title: string;
+    courseId: string | null;
+    notes: string;
+    links: Array<{ label: string; url: string }>;
+    dueTime: string; // HH:mm
+  };
+  isActive: boolean;
+  createdAt: string; // ISO datetime
+  updatedAt: string; // ISO datetime
+}
+
+export interface RecurringTaskFormData {
+  isRecurring: boolean;
+  recurrenceType: 'weekly' | 'monthly' | 'custom';
+  customIntervalDays: number;
+  daysOfWeek: number[]; // 0=Sunday, 1=Monday, ..., 6=Saturday
+  daysOfMonth: number[]; // 1-31 for monthly recurrence
+  startDate: string; // ISO date - when recurrence starts
+  endCondition: 'date' | 'count' | 'never';
+  endDate: string;
+  occurrenceCount: number;
+  dueTime: string; // HH:mm
+}
+
+export interface RecurringDeadlinePattern {
+  id: string;
+  userId: string;
+  recurrenceType: 'weekly' | 'monthly' | 'custom';
+  intervalDays: number | null;
+  daysOfWeek?: number[]; // 0-6, Sunday-Saturday
+  daysOfMonth?: number[]; // 1-31
+  startDate: string | null; // ISO datetime - when recurrence starts
+  endDate: string | null; // ISO datetime
+  occurrenceCount: number | null;
+  lastGenerated: string; // ISO datetime
+  instanceCount: number;
+  deadlineTemplate: {
+    title: string;
+    courseId: string | null;
+    notes: string;
+    links: Array<{ label: string; url: string }>;
+  };
+  isActive: boolean;
+  createdAt: string; // ISO datetime
+  updatedAt: string; // ISO datetime
+}
+
+export interface RecurringExamPattern {
+  id: string;
+  userId: string;
+  recurrenceType: 'weekly' | 'monthly' | 'custom';
+  intervalDays: number | null;
+  daysOfWeek?: number[]; // 0-6, Sunday-Saturday
+  daysOfMonth?: number[]; // 1-31
+  startDate: string | null; // ISO datetime - when recurrence starts
+  endDate: string | null; // ISO datetime
+  occurrenceCount: number | null;
+  lastGenerated: string; // ISO datetime
+  instanceCount: number;
+  examTemplate: {
+    title: string;
+    courseId: string | null;
+    notes: string;
+    links: Array<{ label: string; url: string }>;
+    location: string | null;
+    examAt: string | null; // Time for exams (null for all-day)
+  };
+  isActive: boolean;
+  createdAt: string; // ISO datetime
+  updatedAt: string; // ISO datetime
+}
+
+export interface RecurringDeadlineFormData {
+  isRecurring: boolean;
+  recurrenceType: 'weekly' | 'monthly' | 'custom';
+  customIntervalDays: number;
+  daysOfWeek: number[]; // 0=Sunday, 1=Monday, ..., 6=Saturday
+  daysOfMonth: number[]; // 1-31 for monthly recurrence
+  startDate: string; // ISO date - when recurrence starts
+  endCondition: 'date' | 'count' | 'never';
+  endDate: string;
+  occurrenceCount: number;
+}
+
+export interface RecurringExamFormData {
+  isRecurring: boolean;
+  recurrenceType: 'weekly' | 'monthly' | 'custom';
+  customIntervalDays: number;
+  daysOfWeek: number[]; // 0=Sunday, 1=Monday, ..., 6=Saturday
+  daysOfMonth: number[]; // 1-31 for monthly recurrence
+  startDate: string; // ISO date - when recurrence starts
+  endCondition: 'date' | 'count' | 'never';
+  endDate: string;
+  occurrenceCount: number;
+  examTime: string; // HH:mm
 }
 
 export interface Exam {
   id: string;
   title: string;
   courseId: string | null;
-  examAt: string; // ISO datetime (required)
+  examAt: string; // ISO datetime
   location: string | null;
   notes: string;
   links: Array<{

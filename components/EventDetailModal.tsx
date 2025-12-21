@@ -76,13 +76,21 @@ export default function EventDetailModal({
   const { updateTask, updateDeadline, updateCourse } = useAppStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState<any>(null);
+  const [localStatus, setLocalStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
       setIsEditing(false);
       setEditFormData(null);
+      setLocalStatus(null);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (event && 'status' in event) {
+      setLocalStatus(null); // Reset local status when event changes
+    }
+  }, [event?.id]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -116,19 +124,34 @@ export default function EventDetailModal({
   if (event.type === 'course') {
     fullData = courses.find((c) => c.id === event.courseId) || null;
   } else if (event.type === 'task') {
-    fullData = tasks.find((t) => t.id === event.id) || null;
+    // For recurring tasks, match both ID and instanceDate to get the correct instance
+    if (event.instanceDate) {
+      fullData = tasks.find((t) => t.id === event.id && (t as any).instanceDate === event.instanceDate) || null;
+    } else {
+      fullData = tasks.find((t) => t.id === event.id) || null;
+    }
     if (fullData && 'courseId' in fullData && fullData.courseId) {
       const courseId = (fullData as Task).courseId;
       relatedCourse = courses.find((c) => c.id === courseId) || null;
     }
   } else if (event.type === 'deadline') {
-    fullData = deadlines.find((d) => d.id === event.id) || null;
+    // For recurring deadlines, match both ID and instanceDate to get the correct instance
+    if (event.instanceDate) {
+      fullData = deadlines.find((d) => d.id === event.id && (d as any).instanceDate === event.instanceDate) || null;
+    } else {
+      fullData = deadlines.find((d) => d.id === event.id) || null;
+    }
     if (fullData && 'courseId' in fullData && fullData.courseId) {
       const courseId = (fullData as Deadline).courseId;
       relatedCourse = courses.find((c) => c.id === courseId) || null;
     }
   } else if (event.type === 'exam') {
-    fullData = (exams || []).find((e) => e.id === event.id) || null;
+    // For recurring exams, match both ID and instanceDate to get the correct instance
+    if (event.instanceDate) {
+      fullData = (exams || []).find((e) => e.id === event.id && (e as any).instanceDate === event.instanceDate) || null;
+    } else {
+      fullData = (exams || []).find((e) => e.id === event.id) || null;
+    }
     if (fullData && 'courseId' in fullData && fullData.courseId) {
       const courseId = (fullData as Exam).courseId;
       relatedCourse = courses.find((c) => c.id === courseId) || null;
@@ -174,6 +197,7 @@ export default function EventDetailModal({
           dateStr = `${year}-${month}-${date}`;
           timeStr = `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}`;
         }
+
         setEditFormData({
           title: task.title,
           courseId: task.courseId || '',
@@ -233,6 +257,7 @@ export default function EventDetailModal({
               : `https://${l.url}`,
           }));
 
+        // Always update just this instance (even if it's part of a recurring pattern)
         await updateTask(task.id, {
           title: editFormData.title,
           courseId: editFormData.courseId || null,
@@ -282,13 +307,19 @@ export default function EventDetailModal({
   const handleMarkDoneClick = async () => {
     if (event.type === 'task' && 'status' in fullData) {
       const task = fullData as Task;
-      const newStatus = task.status === 'done' ? 'open' : 'done';
+      // Use localStatus if set, otherwise use task's status
+      const currentStatus = localStatus || task.status;
+      const newStatus = currentStatus === 'done' ? 'open' : 'done';
+      setLocalStatus(newStatus);
       await updateTask(task.id, {
         status: newStatus,
       });
     } else if (event.type === 'deadline' && 'status' in fullData) {
       const deadline = fullData as Deadline;
-      const newStatus = deadline.status === 'done' ? 'open' : 'done';
+      // Use localStatus if set, otherwise use deadline's status
+      const currentStatus = localStatus || deadline.status;
+      const newStatus = currentStatus === 'done' ? 'open' : 'done';
+      setLocalStatus(newStatus);
       await updateDeadline(deadline.id, {
         status: newStatus,
       });
@@ -510,7 +541,7 @@ export default function EventDetailModal({
             <>
               {event.type !== 'course' && event.type !== 'exam' && (
                 <Button variant="secondary" size="md" onClick={handleMarkDoneClick}>
-                  {fullData && 'status' in fullData && (fullData as Task | Deadline).status === 'done'
+                  {(localStatus || (fullData && 'status' in fullData && (fullData as Task | Deadline).status)) === 'done'
                     ? 'Mark Incomplete'
                     : 'Mark Complete'}
                 </Button>

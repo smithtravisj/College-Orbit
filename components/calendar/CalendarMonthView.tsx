@@ -41,6 +41,10 @@ export default function CalendarMonthView({
 }: CalendarMonthViewProps) {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [maxVisibleDots, setMaxVisibleDots] = useState<Map<string, number>>(new Map());
+  const [popupState, setPopupState] = useState<{
+    dateStr: string;
+    position: { top: number; left: number };
+  } | null>(null);
   const dotsRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const dates = useMemo(() => getDatesInMonth(year, month), [year, month]);
@@ -266,15 +270,33 @@ export default function CalendarMonthView({
 
                   const moreCount = dayEvents.length - limit;
                   return shouldShow && (
-                    <div style={{
-                      fontSize: '0.6rem',
-                      color: 'var(--text-muted)',
-                      fontWeight: 500,
-                      lineHeight: 1,
-                      paddingTop: '0.5px',
-                      flexShrink: 0,
-                      whiteSpace: 'nowrap',
-                    }}>
+                    <div
+                      style={{
+                        fontSize: '0.6rem',
+                        color: 'var(--accent)',
+                        fontWeight: 600,
+                        lineHeight: 1,
+                        paddingTop: '0.5px',
+                        flexShrink: 0,
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                        setPopupState({
+                          dateStr,
+                          position: { top: rect.bottom + 4, left: rect.left },
+                        });
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.opacity = '0.8';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.opacity = '1';
+                      }}
+                    >
                       +{moreCount}
                     </div>
                   );
@@ -284,6 +306,96 @@ export default function CalendarMonthView({
           );
         })}
       </div>
+
+      {/* Popup for more events */}
+      {popupState && (
+        <>
+          {/* Backdrop */}
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 999,
+            }}
+            onClick={() => setPopupState(null)}
+          />
+          {/* Popup */}
+          <div
+            style={{
+              position: 'fixed',
+              top: `${popupState.position.top}px`,
+              left: `${popupState.position.left}px`,
+              backgroundColor: 'var(--panel)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-control)',
+              padding: '12px',
+              minWidth: '200px',
+              maxWidth: '300px',
+              zIndex: 1000,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {(() => {
+              const dateStr = popupState.dateStr;
+              const dayEvents = eventsByDate.get(dateStr) || [];
+              const maxLimit = maxVisibleDots.get(dateStr) ?? 100;
+              let limit = maxLimit;
+              const shouldShow = dayEvents.length > limit;
+
+              if (shouldShow && limit > 0) {
+                limit = Math.max(1, limit - 2);
+              }
+
+              const hiddenEvents = dayEvents.slice(limit);
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', marginBottom: '4px' }}>
+                    {hiddenEvents.length} more event{hiddenEvents.length !== 1 ? 's' : ''}
+                  </div>
+                  {hiddenEvents.map((event) => {
+                    const color = getMonthViewColor(event);
+                    return (
+                      <div
+                        key={event.id}
+                        style={{
+                          fontSize: '0.7rem',
+                          paddingLeft: '6px',
+                          paddingRight: '6px',
+                          paddingTop: '4px',
+                          paddingBottom: '4px',
+                          borderRadius: '2px',
+                          backgroundColor: `${color}80`,
+                          color: 'var(--calendar-event-text)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                        }}
+                        title={event.title}
+                        onClick={() => {
+                          setSelectedEvent(event);
+                          setPopupState(null);
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.opacity = '0.9';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.opacity = '1';
+                        }}
+                      >
+                        {event.title.substring(0, 20)}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+        </>
+      )}
 
       <EventDetailModal
         isOpen={selectedEvent !== null}

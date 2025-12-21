@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry } from '@/types';
+import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData } from '@/types';
 import { applyColorPalette, getCollegeColorPalette } from '@/lib/collegeColors';
 import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
@@ -32,6 +32,9 @@ interface AppStore {
   settings: Settings;
   excludedDates: ExcludedDate[];
   gpaEntries: GpaEntry[];
+  recurringPatterns: RecurringPattern[];
+  recurringDeadlinePatterns: RecurringDeadlinePattern[];
+  recurringExamPatterns: RecurringExamPattern[];
   loading: boolean;
   userId: string | null;
 
@@ -41,6 +44,7 @@ interface AppStore {
   loadFromStorage: () => void;
   setUserId: (userId: string) => void;
   getStorageKey: () => string;
+  invalidateCalendarCache: () => void;
 
   // Courses
   addCourse: (course: Omit<Course, 'id'>) => Promise<void>;
@@ -51,6 +55,7 @@ interface AppStore {
   addDeadline: (deadline: Omit<Deadline, 'id' | 'createdAt'>) => Promise<void>;
   updateDeadline: (id: string, deadline: Partial<Deadline>) => Promise<void>;
   deleteDeadline: (id: string) => Promise<void>;
+  toggleDeadlineComplete: (id: string) => Promise<void>;
 
   // Tasks
   addTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<void>;
@@ -59,10 +64,32 @@ interface AppStore {
   toggleTaskDone: (id: string) => Promise<void>;
   toggleChecklistItem: (taskId: string, itemId: string) => Promise<void>;
 
+  // Recurring Tasks
+  addRecurringTask: (taskData: any, recurringData: RecurringTaskFormData) => Promise<void>;
+  updateRecurringPattern: (patternId: string, taskData: any, recurringData: RecurringTaskFormData) => Promise<void>;
+  deleteRecurringPattern: (patternId: string, deleteInstances: boolean) => Promise<void>;
+  pauseRecurringPattern: (patternId: string) => Promise<void>;
+  resumeRecurringPattern: (patternId: string) => Promise<void>;
+
+  // Recurring Deadlines
+  addRecurringDeadline: (deadlineData: any, recurringData: RecurringDeadlineFormData) => Promise<void>;
+  updateRecurringDeadlinePattern: (patternId: string, deadlineData: any, recurringData: RecurringDeadlineFormData) => Promise<void>;
+  deleteRecurringDeadlinePattern: (patternId: string, deleteInstances: boolean) => Promise<void>;
+  pauseRecurringDeadlinePattern: (patternId: string) => Promise<void>;
+  resumeRecurringDeadlinePattern: (patternId: string) => Promise<void>;
+
+  // Recurring Exams
+  addRecurringExam: (examData: any, recurringData: RecurringExamFormData) => Promise<void>;
+  updateRecurringExamPattern: (patternId: string, examData: any, recurringData: RecurringExamFormData) => Promise<void>;
+  deleteRecurringExamPattern: (patternId: string, deleteInstances: boolean) => Promise<void>;
+  pauseRecurringExamPattern: (patternId: string) => Promise<void>;
+  resumeRecurringExamPattern: (patternId: string) => Promise<void>;
+
   // Exams
   addExam: (exam: Omit<Exam, 'id' | 'createdAt'>) => Promise<void>;
   updateExam: (id: string, exam: Partial<Exam>) => Promise<void>;
   deleteExam: (id: string) => Promise<void>;
+  toggleExamComplete: (id: string) => Promise<void>;
 
   // Notes
   addNote: (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -103,6 +130,9 @@ const useAppStore = create<AppStore>((set, get) => ({
   settings: DEFAULT_SETTINGS,
   excludedDates: [],
   gpaEntries: [],
+  recurringPatterns: [],
+  recurringDeadlinePatterns: [],
+  recurringExamPatterns: [],
   loading: false,
   userId: null,
 
@@ -116,6 +146,17 @@ const useAppStore = create<AppStore>((set, get) => ({
       return `byu-survival-tool-data-${state.userId}`;
     }
     return 'byu-survival-tool-data'; // Fallback for when userId is not set
+  },
+
+  // Helper function to invalidate calendar cache when tasks/deadlines/exams change
+  invalidateCalendarCache: () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('calendarCache');
+      } catch (e) {
+        console.warn('Failed to clear calendar cache:', e);
+      }
+    }
   },
 
   initializeStore: async () => {
@@ -134,7 +175,7 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   loadFromDatabase: async () => {
     try {
-      const [coursesRes, deadlinesRes, tasksRes, examsRes, notesRes, foldersRes, settingsRes, excludedDatesRes, gpaRes] = await Promise.all([
+      const [coursesRes, deadlinesRes, tasksRes, examsRes, notesRes, foldersRes, settingsRes, excludedDatesRes, gpaRes, recurringPatternsRes, recurringDeadlinePatternsRes, recurringExamPatternsRes] = await Promise.all([
         fetch('/api/courses'),
         fetch('/api/deadlines'),
         fetch('/api/tasks'),
@@ -144,6 +185,9 @@ const useAppStore = create<AppStore>((set, get) => ({
         fetch('/api/settings'),
         fetch('/api/excluded-dates'),
         fetch('/api/gpa-entries'),
+        fetch('/api/recurring-patterns'),
+        fetch('/api/recurring-deadline-patterns'),
+        fetch('/api/recurring-exam-patterns'),
       ]);
 
       const coursesData = await coursesRes.json();
@@ -155,6 +199,9 @@ const useAppStore = create<AppStore>((set, get) => ({
       const settingsData = await settingsRes.json();
       const excludedDatesData = await excludedDatesRes.json();
       const gpaData = await gpaRes.json();
+      const recurringPatternsData = await recurringPatternsRes.json();
+      const recurringDeadlinePatternsData = await recurringDeadlinePatternsRes.json();
+      const recurringExamPatternsData = await recurringExamPatternsRes.json();
 
       // Extract userId from settings response
       const userId = settingsData.userId;
@@ -196,6 +243,9 @@ const useAppStore = create<AppStore>((set, get) => ({
         settings: parsedSettings,
         excludedDates: excludedDatesData.excludedDates || [],
         gpaEntries: gpaData.entries || [],
+        recurringPatterns: recurringPatternsData.patterns || [],
+        recurringDeadlinePatterns: recurringDeadlinePatternsData.patterns || [],
+        recurringExamPatterns: recurringExamPatternsData.patterns || [],
       };
 
       set(newData);
@@ -387,6 +437,7 @@ const useAppStore = create<AppStore>((set, get) => ({
           d.id === tempId ? newDeadline : d
         ),
       }));
+      get().invalidateCalendarCache();
     } catch (error) {
       // Rollback on error
       set((state) => ({
@@ -433,6 +484,7 @@ const useAppStore = create<AppStore>((set, get) => ({
           d.id === id ? updatedDeadline : d
         ),
       }));
+      get().invalidateCalendarCache();
     } catch (error) {
       // Reload from database on error
       await get().loadFromDatabase();
@@ -454,11 +506,31 @@ const useAppStore = create<AppStore>((set, get) => ({
       });
 
       if (!response.ok) throw new Error('Failed to delete deadline');
+      get().invalidateCalendarCache();
     } catch (error) {
       // Reload from database on error
       await get().loadFromDatabase();
       console.error('Error deleting deadline:', error);
       throw error;
+    }
+  },
+
+  toggleDeadlineComplete: async (id) => {
+    const currentDeadlines = get().deadlines;
+    const deadline = currentDeadlines.find((d) => d.id === id);
+    if (deadline) {
+      const oldStatus = deadline.status;
+
+      await get().updateDeadline(id, {
+        status: oldStatus === 'done' ? 'open' : 'done',
+      });
+
+      // Reload from database to ensure correct recurring deadline instances are shown
+      // (when toggling status, the next instance of a pattern might change)
+      if (deadline.isRecurring && oldStatus === 'done') {
+        // Only reload when marking as uncomplete - this brings back the deadline instance
+        await get().loadFromDatabase();
+      }
     }
   },
 
@@ -486,6 +558,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       set((state) => ({
         tasks: state.tasks.map((t) => (t.id === tempId ? newTask : t)),
       }));
+      get().invalidateCalendarCache();
     } catch (error) {
       // Rollback on error
       set((state) => ({
@@ -518,6 +591,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       set((state) => ({
         tasks: state.tasks.map((t) => (t.id === id ? updatedTask : t)),
       }));
+      get().invalidateCalendarCache();
     } catch (error) {
       // Reload from database on error
       await get().loadFromDatabase();
@@ -538,21 +612,37 @@ const useAppStore = create<AppStore>((set, get) => ({
         method: 'DELETE',
       });
 
-      if (!response.ok) throw new Error('Failed to delete task');
+      if (!response.ok) {
+        throw new Error('Failed to delete task');
+      }
+      // Don't reload on success - optimistic delete is final
+      get().invalidateCalendarCache();
     } catch (error) {
-      // Reload from database on error
-      await get().loadFromDatabase();
+      // Only reload on actual error, to restore the deleted task
       console.error('Error deleting task:', error);
+      await get().loadFromDatabase();
       throw error;
     }
   },
 
   toggleTaskDone: async (id) => {
-    const task = get().tasks.find((t) => t.id === id);
+    const currentTasks = get().tasks;
+    const task = currentTasks.find((t) => t.id === id);
     if (task) {
+      // Check if task is still in state before reloading
+      // (it might have been deleted)
+      const oldStatus = task.status;
+
       await get().updateTask(id, {
-        status: task.status === 'done' ? 'open' : 'done',
+        status: oldStatus === 'done' ? 'open' : 'done',
       });
+
+      // Reload from database to ensure correct recurring task instances are shown
+      // (when toggling status, the next instance of a pattern might change)
+      if (task.isRecurring && oldStatus === 'done') {
+        // Only reload when marking as uncomplete - this brings back the task instance
+        await get().loadFromDatabase();
+      }
     }
   },
 
@@ -590,6 +680,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       set((state) => ({
         exams: state.exams.map((e) => (e.id === tempId ? newExam : e)),
       }));
+      get().invalidateCalendarCache();
     } catch (error) {
       // Rollback on error
       set((state) => ({
@@ -622,6 +713,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       set((state) => ({
         exams: state.exams.map((e) => (e.id === id ? updatedExam : e)),
       }));
+      get().invalidateCalendarCache();
     } catch (error) {
       // Reload from database on error
       await get().loadFromDatabase();
@@ -643,11 +735,24 @@ const useAppStore = create<AppStore>((set, get) => ({
       });
 
       if (!response.ok) throw new Error('Failed to delete exam');
+      get().invalidateCalendarCache();
     } catch (error) {
       // Reload from database on error
       await get().loadFromDatabase();
       console.error('Error deleting exam:', error);
       throw error;
+    }
+  },
+
+  toggleExamComplete: async (id) => {
+    const currentExams = get().exams;
+    const exam = currentExams.find((e) => e.id === id);
+    if (exam) {
+      const oldStatus = exam.status;
+
+      await get().updateExam(id, {
+        status: oldStatus === 'completed' ? 'scheduled' : 'completed',
+      });
     }
   },
 
@@ -1305,6 +1410,368 @@ const useAppStore = create<AppStore>((set, get) => ({
       console.log('Notifications are not imported (auto-generated by system)');
     } catch (error) {
       console.error('Error importing data:', error);
+      throw error;
+    }
+  },
+
+  addRecurringTask: async (taskData, recurringData) => {
+    try {
+      // API call to create recurring task
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...taskData,
+          recurring: recurringData,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create recurring task');
+      }
+
+      // Reload from database to get new instances
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error creating recurring task:', error);
+      throw error;
+    }
+  },
+
+  updateRecurringPattern: async (patternId, taskData, recurringData) => {
+    try {
+      // Update the recurring pattern with new settings
+      const updatePayload = {
+        recurrenceType: recurringData.recurrenceType,
+        intervalDays: recurringData.recurrenceType === 'custom' ? recurringData.customIntervalDays : null,
+        daysOfWeek: recurringData.recurrenceType === 'weekly'
+          ? recurringData.daysOfWeek
+          : [],
+        daysOfMonth: recurringData.recurrenceType === 'monthly'
+          ? recurringData.daysOfMonth
+          : [],
+        startDate: recurringData.startDate ? recurringData.startDate : null,
+        endDate: recurringData.endCondition === 'date' ? recurringData.endDate : null,
+        occurrenceCount: recurringData.endCondition === 'count' ? recurringData.occurrenceCount : null,
+        taskTemplate: {
+          title: taskData.title,
+          courseId: taskData.courseId || null,
+          notes: taskData.notes,
+          links: taskData.links || [],
+          dueTime: recurringData.dueTime,
+        },
+      };
+
+      console.log('[updateRecurringPattern] Sending payload:', JSON.stringify(updatePayload, null, 2));
+
+      const response = await fetch(`/api/recurring-patterns/${patternId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatePayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update recurring pattern');
+      }
+
+      // Reload from database
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error updating recurring pattern:', error);
+      throw error;
+    }
+  },
+
+  deleteRecurringPattern: async (patternId, deleteInstances) => {
+    try {
+      const response = await fetch(
+        `/api/recurring-patterns?id=${patternId}&deleteInstances=${deleteInstances}`,
+        { method: 'DELETE' }
+      );
+
+      if (!response.ok) throw new Error('Failed to delete pattern');
+
+      // Reload from database
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error deleting pattern:', error);
+      throw error;
+    }
+  },
+
+  pauseRecurringPattern: async (patternId) => {
+    try {
+      const response = await fetch(`/api/recurring-patterns/${patternId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: false }),
+      });
+
+      if (!response.ok) throw new Error('Failed to pause pattern');
+
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error pausing pattern:', error);
+      throw error;
+    }
+  },
+
+  resumeRecurringPattern: async (patternId) => {
+    try {
+      const response = await fetch(`/api/recurring-patterns/${patternId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: true }),
+      });
+
+      if (!response.ok) throw new Error('Failed to resume pattern');
+
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error resuming pattern:', error);
+      throw error;
+    }
+  },
+
+  addRecurringDeadline: async (deadlineData, recurringData) => {
+    try {
+      const response = await fetch('/api/deadlines', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...deadlineData,
+          recurring: recurringData,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create recurring deadline');
+      }
+
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error creating recurring deadline:', error);
+      throw error;
+    }
+  },
+
+  updateRecurringDeadlinePattern: async (patternId, deadlineData, recurringData) => {
+    try {
+      const updatePayload = {
+        recurrenceType: recurringData.recurrenceType,
+        intervalDays: recurringData.recurrenceType === 'custom' ? recurringData.customIntervalDays : null,
+        daysOfWeek: recurringData.recurrenceType === 'weekly'
+          ? recurringData.daysOfWeek
+          : [],
+        daysOfMonth: recurringData.recurrenceType === 'monthly'
+          ? recurringData.daysOfMonth
+          : [],
+        startDate: recurringData.startDate ? recurringData.startDate : null,
+        endDate: recurringData.endCondition === 'date' ? recurringData.endDate : null,
+        occurrenceCount: recurringData.endCondition === 'count' ? recurringData.occurrenceCount : null,
+        deadlineTemplate: {
+          title: deadlineData.title,
+          courseId: deadlineData.courseId || null,
+          notes: deadlineData.notes,
+          links: deadlineData.links || [],
+        },
+      };
+
+      const response = await fetch(`/api/recurring-deadline-patterns/${patternId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatePayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update recurring deadline pattern');
+      }
+
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error updating recurring deadline pattern:', error);
+      throw error;
+    }
+  },
+
+  deleteRecurringDeadlinePattern: async (patternId, deleteInstances) => {
+    try {
+      const response = await fetch(
+        `/api/recurring-deadline-patterns?id=${patternId}&deleteInstances=${deleteInstances}`,
+        { method: 'DELETE' }
+      );
+
+      if (!response.ok) throw new Error('Failed to delete pattern');
+
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error deleting deadline pattern:', error);
+      throw error;
+    }
+  },
+
+  pauseRecurringDeadlinePattern: async (patternId) => {
+    try {
+      const response = await fetch(`/api/recurring-deadline-patterns/${patternId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: false }),
+      });
+
+      if (!response.ok) throw new Error('Failed to pause pattern');
+
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error pausing deadline pattern:', error);
+      throw error;
+    }
+  },
+
+  resumeRecurringDeadlinePattern: async (patternId) => {
+    try {
+      const response = await fetch(`/api/recurring-deadline-patterns/${patternId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: true }),
+      });
+
+      if (!response.ok) throw new Error('Failed to resume pattern');
+
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error resuming deadline pattern:', error);
+      throw error;
+    }
+  },
+
+  addRecurringExam: async (examData, recurringData) => {
+    try {
+      const response = await fetch('/api/exams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...examData,
+          recurring: recurringData,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create recurring exam');
+      }
+
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error creating recurring exam:', error);
+      throw error;
+    }
+  },
+
+  updateRecurringExamPattern: async (patternId, examData, recurringData) => {
+    try {
+      // Convert examTime to a full datetime string for storage in template
+      let templateExamAt: string | null = null;
+      if (recurringData.examTime && recurringData.examTime.trim()) {
+        try {
+          const [hours, minutes] = recurringData.examTime.split(':').map(Number);
+          const dummyDate = new Date();
+          dummyDate.setHours(hours, minutes, 0, 0);
+          templateExamAt = dummyDate.toISOString();
+        } catch (e) {
+          templateExamAt = null;
+        }
+      }
+
+      const updatePayload = {
+        recurrenceType: recurringData.recurrenceType,
+        intervalDays: recurringData.recurrenceType === 'custom' ? recurringData.customIntervalDays : null,
+        daysOfWeek: recurringData.recurrenceType === 'weekly'
+          ? recurringData.daysOfWeek
+          : [],
+        daysOfMonth: recurringData.recurrenceType === 'monthly'
+          ? recurringData.daysOfMonth
+          : [],
+        startDate: recurringData.startDate ? recurringData.startDate : null,
+        endDate: recurringData.endCondition === 'date' ? recurringData.endDate : null,
+        occurrenceCount: recurringData.endCondition === 'count' ? recurringData.occurrenceCount : null,
+        examTemplate: {
+          title: examData.title,
+          courseId: examData.courseId || null,
+          notes: examData.notes,
+          links: examData.links || [],
+          location: examData.location || null,
+          examAt: templateExamAt,
+        },
+      };
+
+      const response = await fetch(`/api/recurring-exam-patterns/${patternId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatePayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update recurring exam pattern');
+      }
+
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error updating recurring exam pattern:', error);
+      throw error;
+    }
+  },
+
+  deleteRecurringExamPattern: async (patternId, deleteInstances) => {
+    try {
+      const response = await fetch(
+        `/api/recurring-exam-patterns?id=${patternId}&deleteInstances=${deleteInstances}`,
+        { method: 'DELETE' }
+      );
+
+      if (!response.ok) throw new Error('Failed to delete pattern');
+
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error deleting exam pattern:', error);
+      throw error;
+    }
+  },
+
+  pauseRecurringExamPattern: async (patternId) => {
+    try {
+      const response = await fetch(`/api/recurring-exam-patterns/${patternId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: false }),
+      });
+
+      if (!response.ok) throw new Error('Failed to pause pattern');
+
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error pausing exam pattern:', error);
+      throw error;
+    }
+  },
+
+  resumeRecurringExamPattern: async (patternId) => {
+    try {
+      const response = await fetch(`/api/recurring-exam-patterns/${patternId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: true }),
+      });
+
+      if (!response.ok) throw new Error('Failed to resume pattern');
+
+      await get().loadFromDatabase();
+    } catch (error) {
+      console.error('Error resuming exam pattern:', error);
       throw error;
     }
   },

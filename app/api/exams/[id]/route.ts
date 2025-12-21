@@ -69,14 +69,19 @@ export async function PATCH(
 
     // Handle examAt update
     let updateExamAt = existingExam.examAt;
-    if ('examAt' in data && data.examAt) {
-      try {
-        updateExamAt = new Date(data.examAt);
-        if (isNaN(updateExamAt.getTime())) {
+    if ('examAt' in data) {
+      if (data.examAt) {
+        try {
+          updateExamAt = new Date(data.examAt);
+          if (isNaN(updateExamAt.getTime())) {
+            updateExamAt = existingExam.examAt;
+          }
+        } catch (dateError) {
           updateExamAt = existingExam.examAt;
         }
-      } catch (dateError) {
-        updateExamAt = existingExam.examAt;
+      } else {
+        // Explicitly set to null to clear the time
+        updateExamAt = null;
       }
     }
 
@@ -99,8 +104,8 @@ export async function PATCH(
       },
     });
 
-    // If exam time changed significantly (>1 hour), delete old reminders
-    if (Math.abs(updateExamAt.getTime() - existingExam.examAt.getTime()) > 3600000) {
+    // If exam time changed significantly (>1 hour) or if time was added/removed, delete old reminders
+    if (!updateExamAt || !existingExam.examAt || Math.abs(updateExamAt.getTime() - existingExam.examAt.getTime()) > 3600000) {
       await prisma.examReminder.deleteMany({
         where: { examId: id },
       });

@@ -131,6 +131,9 @@ export default function Dashboard() {
         notes: taskFormData.notes,
         links,
         status: 'open',
+        recurringPatternId: null,
+        instanceDate: null,
+        isRecurring: false,
       });
     }
 
@@ -959,7 +962,6 @@ export default function Dashboard() {
                   // Get exams for this day
                   const examsOnDay = exams
                     .filter((exam) => {
-                      if (!exam.examAt) return false;
                       const examDate = new Date(exam.examAt);
                       examDate.setHours(0, 0, 0, 0);
                       return examDate.getTime() === date.getTime();

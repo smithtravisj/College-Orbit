@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { generateAllUserRecurringDeadlineInstances } from '@/lib/recurringDeadlineUtils';
+import { generateRecurringDeadlineInstances } from '@/lib/recurringDeadlineUtils';
 
 // GET all deadlines for authenticated user
 export const GET = withRateLimit(async function(request: NextRequest) {
@@ -18,12 +20,61 @@ export const GET = withRateLimit(async function(request: NextRequest) {
     }
     console.log('[GET /api/deadlines] Authorized user:', token.id);
 
-    const deadlines = await prisma.deadline.findMany({
+    // Get query parameters
+    const url = new URL(request.url);
+    const showAll = url.searchParams.get('showAll') === 'true'; // For calendar view
+    const windowDays = showAll ? 365 : 60; // Generate 1 year for calendar, 60 days for deadline view
+
+    // Generate recurring deadline instances before fetching
+    try {
+      await generateAllUserRecurringDeadlineInstances(token.id, windowDays);
+    } catch (genError) {
+      console.error('[GET /api/deadlines] Error generating recurring instances:', genError);
+      // Continue even if generation fails
+    }
+
+    const allDeadlines = await prisma.deadline.findMany({
       where: { userId: token.id },
-      orderBy: { dueAt: 'asc' },
+      orderBy: [
+        { instanceDate: 'asc' }, // For recurring deadlines, order by instance date
+        { dueAt: 'asc' }, // For other deadlines, order by due date
+        { createdAt: 'desc' }, // Fallback to creation date
+      ],
+      include: { recurringPattern: true },
     });
 
-    return NextResponse.json({ deadlines });
+    // If showAll is true, return all deadlines (for calendar/detailed views)
+    if (showAll) {
+      console.log('[GET /api/deadlines] showAll=true, returning', allDeadlines.length, 'total deadlines');
+      const recurringCount = allDeadlines.filter(d => d.isRecurring).length;
+      console.log('[GET /api/deadlines] Recurring deadlines:', recurringCount);
+      return NextResponse.json({ deadlines: allDeadlines });
+    }
+
+    // Filter to show only the next occurrence of each recurring pattern (only for open deadlines)
+    // For completed deadlines, show all of them
+    const recurringPatternMap = new Map<string, typeof allDeadlines[0]>();
+    const filteredDeadlines = allDeadlines.filter((deadline) => {
+      // Keep non-recurring deadlines
+      if (!deadline.recurringPatternId) {
+        return true;
+      }
+
+      // For completed deadlines, show all instances
+      if (deadline.status === 'done') {
+        return true;
+      }
+
+      // For open recurring deadlines, keep the first occurrence (next OR overdue)
+      if (!recurringPatternMap.has(deadline.recurringPatternId)) {
+        recurringPatternMap.set(deadline.recurringPatternId, deadline);
+        return true;
+      }
+
+      return false;
+    });
+
+    return NextResponse.json({ deadlines: filteredDeadlines });
   } catch (error) {
     console.error('Error fetching deadlines:', error);
     return NextResponse.json(
@@ -79,6 +130,48 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     console.log('[POST /deadlines] Final dueAt value:', dueAt);
 
+    // Check if this is a recurring deadline
+    if (data.recurring) {
+      const pattern = await prisma.recurringDeadlinePattern.create({
+        data: {
+          userId: token.id,
+          recurrenceType: data.recurring.recurrenceType,
+          intervalDays: data.recurring.recurrenceType === 'custom' ? data.recurring.customIntervalDays : null,
+          daysOfWeek: data.recurring.recurrenceType === 'weekly' ? data.recurring.daysOfWeek : [],
+          daysOfMonth: data.recurring.recurrenceType === 'monthly' ? data.recurring.daysOfMonth : [],
+          startDate: data.recurring.startDate ? new Date(data.recurring.startDate) : null,
+          endDate: data.recurring.endCondition === 'date' ? new Date(data.recurring.endDate) : null,
+          occurrenceCount: data.recurring.endCondition === 'count' ? data.recurring.occurrenceCount : null,
+          deadlineTemplate: {
+            title: data.title.trim(),
+            courseId: data.courseId || null,
+            notes: data.notes || '',
+            links: (data.links || []).filter((l: any) => l.url).map((l: any) => ({
+              label: l.label || new URL(l.url).hostname,
+              url: l.url,
+            })),
+          },
+        },
+      });
+
+      // Generate initial instances
+      try {
+        await generateRecurringDeadlineInstances({
+          patternId: pattern.id,
+          userId: token.id,
+          windowDays: 365,
+        });
+        console.log('[POST /deadlines] Recurring deadline pattern created successfully:', pattern.id);
+      } catch (genError) {
+        console.error('[POST /deadlines] Error generating instances:', genError);
+        // Delete the pattern if instance generation fails
+        await prisma.recurringDeadlinePattern.delete({ where: { id: pattern.id } });
+        throw new Error(`Failed to generate deadline instances: ${genError instanceof Error ? genError.message : 'Unknown error'}`);
+      }
+
+      return NextResponse.json({ patternId: pattern.id }, { status: 201 });
+    }
+
     const deadline = await prisma.deadline.create({
       data: {
         userId: token.id,
@@ -91,6 +184,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
           url: l.url,
         })),
         status: data.status || 'open',
+        isRecurring: false,
       },
     });
 

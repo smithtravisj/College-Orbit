@@ -13,6 +13,15 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 type ViewType = 'month' | 'week' | 'day';
 
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+interface CachedCalendarData {
+  tasks: any[];
+  deadlines: any[];
+  exams: any[];
+  timestamp: number;
+}
+
 export default function CalendarContent() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -22,19 +31,112 @@ export default function CalendarContent() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [filteredTasks, setFilteredTasks] = useState<any[]>([]);
   const [filteredDeadlines, setFilteredDeadlines] = useState<any[]>([]);
+  const [filteredExams, setFilteredExams] = useState<any[]>([]);
+  const [allTaskInstances, setAllTaskInstances] = useState<any[]>([]);
+  const [allDeadlineInstances, setAllDeadlineInstances] = useState<any[]>([]);
+  const [allExamInstances, setAllExamInstances] = useState<any[]>([]);
   const hasFilteredRef = useRef(false);
+  const cacheLoadedRef = useRef(false);
 
   const { courses, tasks, deadlines, exams, excludedDates, initializeStore } = useAppStore();
+
+  // Load from localStorage cache and fetch fresh data in background
+  useEffect(() => {
+    const loadCalendarData = async () => {
+      try {
+        // Try to load from cache first
+        if (typeof window !== 'undefined' && !cacheLoadedRef.current) {
+          const cachedData = localStorage.getItem('calendarCache');
+          if (cachedData) {
+            try {
+              const parsed: CachedCalendarData = JSON.parse(cachedData);
+              const now = Date.now();
+
+              // Check if cache is still fresh
+              if (now - parsed.timestamp < CACHE_DURATION) {
+                console.log('[Calendar] Loading from cache');
+                setAllTaskInstances(parsed.tasks);
+                setAllDeadlineInstances(parsed.deadlines);
+                setAllExamInstances(parsed.exams);
+                cacheLoadedRef.current = true;
+              }
+            } catch (e) {
+              // Cache is invalid, clear it
+              localStorage.removeItem('calendarCache');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading from cache:', error);
+      }
+
+      // Always fetch fresh data in the background
+      try {
+        const fetchedData: CachedCalendarData = {
+          tasks: [],
+          deadlines: [],
+          exams: [],
+          timestamp: Date.now(),
+        };
+
+        // Fetch all task instances
+        const tasksResponse = await fetch('/api/tasks?showAll=true');
+        if (tasksResponse.ok) {
+          const tasksData = await tasksResponse.json();
+          const allOpenTasks = tasksData.tasks.filter((task: any) => task.status !== 'done');
+          setAllTaskInstances(allOpenTasks);
+          fetchedData.tasks = allOpenTasks;
+        }
+
+        // Fetch all deadline instances
+        const deadlinesResponse = await fetch('/api/deadlines?showAll=true');
+        if (deadlinesResponse.ok) {
+          const deadlinesData = await deadlinesResponse.json();
+          const allOpenDeadlines = deadlinesData.deadlines.filter((deadline: any) => deadline.status !== 'done');
+          setAllDeadlineInstances(allOpenDeadlines);
+          fetchedData.deadlines = allOpenDeadlines;
+        }
+
+        // Fetch all exam instances
+        const examsResponse = await fetch('/api/exams?showAll=true');
+        if (examsResponse.ok) {
+          const examsData = await examsResponse.json();
+          const allOpenExams = examsData.exams.filter((exam: any) => exam.status !== 'completed');
+          setAllExamInstances(allOpenExams);
+          fetchedData.exams = allOpenExams;
+        }
+
+        // Save to cache
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('calendarCache', JSON.stringify(fetchedData));
+          } catch (e) {
+            console.warn('Failed to save calendar cache:', e);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching all instances:', error);
+      }
+    };
+
+    loadCalendarData();
+  }, []);
 
   // Filter out completed tasks and deadlines on mount and when data loads
   useEffect(() => {
     // Only filter if we haven't filtered yet OR if the arrays were empty and now have data
-    if (!hasFilteredRef.current || (filteredTasks.length === 0 && tasks.length > 0)) {
-      setFilteredTasks(tasks.filter(task => task.status !== 'done'));
-      setFilteredDeadlines(deadlines.filter(deadline => deadline.status !== 'done'));
+    if (!hasFilteredRef.current || (filteredTasks.length === 0 && (tasks.length > 0 || allTaskInstances.length > 0))) {
+      // Use fetched instances if available, otherwise fall back to store data
+      const tasksToUse = allTaskInstances.length > 0 ? allTaskInstances : tasks;
+      const deadlinesToUse = allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines;
+      const examsToUse = allExamInstances.length > 0 ? allExamInstances : exams;
+
+      setFilteredTasks(tasksToUse.filter(task => task.status !== 'done'));
+      setFilteredDeadlines(deadlinesToUse.filter(deadline => deadline.status !== 'done'));
+      setFilteredExams(examsToUse.filter(exam => exam.status !== 'completed'));
       hasFilteredRef.current = true;
     }
-  }, [tasks.length, deadlines.length]); // Only depend on length, not the arrays themselves
+  }, [tasks.length, deadlines.length, exams.length, allTaskInstances.length, allDeadlineInstances.length, allExamInstances.length]);
 
   useEffect(() => {
     // Read view and date from URL or localStorage
@@ -278,11 +380,11 @@ export default function CalendarContent() {
                 year={currentDate.getFullYear()}
                 month={currentDate.getMonth()}
                 courses={courses}
-                tasks={filteredTasks}
-                deadlines={filteredDeadlines}
-                exams={exams}
-                allTasks={tasks}
-                allDeadlines={deadlines}
+                tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
+                deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
+                exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
+                allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
+                allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
                 excludedDates={excludedDates}
                 onSelectDate={handleSelectDate}
               />
@@ -291,11 +393,11 @@ export default function CalendarContent() {
               <CalendarWeekView
                 date={currentDate}
                 courses={courses}
-                tasks={filteredTasks}
-                deadlines={filteredDeadlines}
-                exams={exams}
-                allTasks={tasks}
-                allDeadlines={deadlines}
+                tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
+                deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
+                exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
+                allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
+                allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
                 excludedDates={excludedDates}
               />
             )}
@@ -303,11 +405,11 @@ export default function CalendarContent() {
               <CalendarDayView
                 date={currentDate}
                 courses={courses}
-                tasks={filteredTasks}
-                deadlines={filteredDeadlines}
-                exams={exams}
-                allTasks={tasks}
-                allDeadlines={deadlines}
+                tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
+                deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
+                exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
+                allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
+                allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
                 excludedDates={excludedDates}
               />
             )}
