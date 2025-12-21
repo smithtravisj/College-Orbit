@@ -937,16 +937,16 @@ export const asuLightPalette: ColorPalette = {
 
   border: "rgba(0, 0, 0, 0.12)",
   borderHover: "#d1d5db",
-  borderActive: "#E74973",
+  borderActive: "#ff90b3",
   borderStrong: "rgba(0, 0, 0, 0.16)",
 
-  accent: "#E74973",
-  accentHover: "#d63960",
-  accent2: "rgba(231, 73, 115, 0.15)",
-  ring: "rgba(231, 73, 115, 0.35)",
+  accent: "#ff90b3",
+  accentHover: "#ff7fa8",
+  accent2: "rgba(255, 144, 179, 0.15)",
+  ring: "rgba(255, 144, 179, 0.35)",
 
-  buttonSecondary: "#E74973",
-  navActive: "#E74973",
+  buttonSecondary: "#ff90b3",
+  navActive: "#ff90b3",
   link: "#8C1D40",
 
 
@@ -962,16 +962,16 @@ export const asuLightPalette: ColorPalette = {
   warningBg: "rgba(217, 119, 6, 0.1)",
   dangerBg: "rgba(220, 38, 38, 0.1)",
 
-  brandPrimary: "#E74973",
+  brandPrimary: "#ff90b3",
 
   shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
   shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
   shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.1)",
 
-  focusRing: "0 0 0 3px rgba(231, 73, 115, 0.3)",
-  todayBg: "rgba(231, 73, 115, 0.2)",
+  focusRing: "0 0 0 3px rgba(255, 144, 179, 0.3)",
+  todayBg: "rgba(255, 144, 179, 0.2)",
   weekViewTodayDateColor: "#8C1D40",
-  calendarCurrentDateColor: "#E74973",
+  calendarCurrentDateColor: "#ff90b3",
 };
 
 /**
