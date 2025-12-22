@@ -16,8 +16,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'BYU Survival Tool',
-  description: 'A personal, privacy-first BYU dashboard',
+  title: 'College Survival Tool',
+  description: 'A personal, privacy-first college dashboard',
   icons: {
     icon: '/favicon.svg',
     apple: '/favicon.svg',
