@@ -349,7 +349,7 @@ export default function LandingPage() {
 
         .features-subtitle {
           font-size: 17px;
-          color: #64748b;
+          color: #7a8a9b;
         }
 
         .features-grid {
@@ -367,7 +367,7 @@ export default function LandingPage() {
         .secondary-features-title {
           font-size: 18px;
           font-weight: 500;
-          color: #64748b;
+          color: #7a8a9b;
         }
 
         .feature-card-secondary {
@@ -390,8 +390,8 @@ export default function LandingPage() {
 
         .feature-card {
           padding: 26px;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
-          border: 1px solid rgba(255, 255, 255, 0.06);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 16px;
           transition: all 0.3s ease;
           position: relative;
@@ -405,16 +405,16 @@ export default function LandingPage() {
           left: 0;
           right: 0;
           height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
           opacity: 0;
           transition: opacity 0.3s ease;
         }
 
         .feature-card:hover {
-          border-color: rgba(255, 255, 255, 0.12);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-          transform: translateY(-3px);
-          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+          border-color: rgba(255, 255, 255, 0.18);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+          transform: translateY(-4px);
+          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
         }
 
         .feature-card:hover::before {
@@ -442,7 +442,7 @@ export default function LandingPage() {
 
         .feature-description {
           font-size: 14px;
-          color: #64748b;
+          color: #7a8a9b;
           line-height: 1.6;
         }
 
