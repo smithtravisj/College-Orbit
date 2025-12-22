@@ -517,7 +517,7 @@ export function calculateEventLayout(events: CalendarEvent[]): EventLayout[] {
 
   if (eventsWithTime.length === 0) return [];
 
-  // Assign events to columns using greedy interval scheduling
+  // First pass: Assign events to columns using greedy interval scheduling
   const openColumns: number[] = []; // Track the end time of the last event in each column
   const eventLayout: Array<{ event: CalendarEvent; column: number }> = [];
 
@@ -546,13 +546,24 @@ export function calculateEventLayout(events: CalendarEvent[]): EventLayout[] {
     });
   }
 
-  // Return layout with total column count
-  const totalColumns = openColumns.length;
-  return eventLayout.map(({ event, column }) => ({
-    event,
-    column,
-    totalColumns,
-  }));
+  // Second pass: Calculate totalColumns for each event based on overlapping groups
+  return eventLayout.map(({ event, column }, idx) => {
+    const { start, end } = eventsWithTime[idx];
+
+    // Count how many events overlap with this one at any point during its duration
+    const overlappingEvents = eventsWithTime.filter(({ start: otherStart, end: otherEnd }) => {
+      return !(otherEnd <= start || otherStart >= end); // True if they overlap
+    });
+
+    // Only use totalColumns if there are actual overlaps
+    const totalColumns = overlappingEvents.length > 1 ? overlappingEvents.length : 1;
+
+    return {
+      event,
+      column: column > totalColumns - 1 ? totalColumns - 1 : column,
+      totalColumns,
+    };
+  });
 }
 
 // Get description for an excluded date (prioritize global over course-specific)

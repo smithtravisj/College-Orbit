@@ -9,9 +9,12 @@ import Input from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 import CourseForm from '@/components/CourseForm';
 import CourseList from '@/components/CourseList';
+import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import { Plus } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 export default function CoursesPage() {
+  const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -126,6 +129,7 @@ export default function CoursesPage() {
     return variations;
   };
 
+
   // Get unique terms for filter
   const uniqueTerms = Array.from(new Set(courses.map((c) => c.term).filter(Boolean)));
 
@@ -187,8 +191,8 @@ export default function CoursesPage() {
       />
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]">
-          {/* Filters sidebar - 3 columns */}
-          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content' }}>
+          {/* Filters sidebar - 3 columns (desktop only) */}
+          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', display: isMobile ? 'none' : 'block' }}>
             <Card>
               <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: '16px' }}>Filters</h3>
               <div style={{ marginBottom: '20px' }}>
@@ -246,13 +250,76 @@ export default function CoursesPage() {
             </Card>
           </div>
 
+          {/* Mobile collapsible filters */}
+          {isMobile && (
+            <div className="col-span-12" style={{ marginBottom: isMobile ? '8px' : '0px' }}>
+              <CollapsibleCard
+                id="courses-filters"
+                title="Filters"
+              >
+                <div style={{ marginBottom: isMobile ? '8px' : '20px' }}>
+                  <Input
+                    label="Search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search courses..."
+                  />
+                </div>
+                <div className="space-y-2" style={{ marginBottom: isMobile ? '8px' : '16px' }}>
+                  {[
+                    { value: 'all', label: 'All Courses' },
+                    ...uniqueTerms.map((term) => ({ value: term, label: term })),
+                  ].map((f) => (
+                    <button
+                      key={f.value}
+                      onClick={() => setTermFilter(f.value)}
+                      className={`w-full text-left rounded-[var(--radius-control)] font-medium transition-colors ${
+                        termFilter === f.value
+                          ? 'text-[var(--text)]'
+                          : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
+                      }`}
+                      style={{ padding: isMobile ? '8px 12px' : '12px 16px', fontSize: isMobile ? '13px' : '14px', backgroundColor: termFilter === f.value ? 'var(--nav-active)' : 'transparent' }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ paddingTop: isMobile ? '6px' : '8px', borderTop: '1px solid var(--border)' }}>
+                  <label className="flex items-center gap-4 cursor-pointer" style={{ padding: isMobile ? '6px 0' : '8px 16px' }}>
+                    <input
+                      type="checkbox"
+                      checked={showEnded}
+                      onChange={(e) => setShowEnded(e.target.checked)}
+                      style={{
+                        appearance: 'none',
+                        width: isMobile ? '14px' : '16px',
+                        height: isMobile ? '14px' : '16px',
+                        border: '2px solid var(--border)',
+                        borderRadius: '3px',
+                        backgroundColor: showEnded ? 'var(--button-secondary)' : 'transparent',
+                        cursor: 'pointer',
+                        backgroundImage: showEnded ? 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22white%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z%22 clip-rule=%22evenodd%22 /%3E%3C/svg%3E")' : 'none',
+                        backgroundSize: '100%',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'center',
+                        transition: 'all 0.3s ease',
+                      }}
+                    />
+                    <span className="font-medium text-[var(--text)]" style={{ fontSize: isMobile ? '12px' : '14px' }}>Show Finished Courses</span>
+                  </label>
+                </div>
+              </CollapsibleCard>
+            </div>
+          )}
+
           {/* Courses list - 9 columns */}
           <div className="col-span-12 lg:col-span-9 space-y-6" style={{ height: 'fit-content' }}>
             {/* Add Course Form */}
             {isAdding && (
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
               <Card>
-                <h3 className="text-xl font-semibold text-[var(--text)]" style={{ marginBottom: '20px' }}>Add Course</h3>
+                <h3 className={isMobile ? 'text-lg font-semibold text-[var(--text)]' : 'text-xl font-semibold text-[var(--text)]'} style={{ marginBottom: isMobile ? '12px' : '20px' }}>Add Course</h3>
                 <CourseForm onClose={() => setIsAdding(false)} />
               </Card>
             </div>
@@ -260,9 +327,9 @@ export default function CoursesPage() {
 
             {/* Edit Course Form */}
             {editingId && (
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
               <Card>
-                <h3 className="text-xl font-semibold text-[var(--text)]" style={{ marginBottom: '20px' }}>Edit Course</h3>
+                <h3 className={isMobile ? 'text-lg font-semibold text-[var(--text)]' : 'text-xl font-semibold text-[var(--text)]'} style={{ marginBottom: isMobile ? '12px' : '20px' }}>Edit Course</h3>
                 <CourseForm courseId={editingId} onClose={() => setEditingId(null)} />
               </Card>
             </div>

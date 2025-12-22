@@ -11,9 +11,12 @@ import EmptyState from '@/components/ui/EmptyState';
 import RichTextEditor from '@/components/RichTextEditor';
 import FolderTree from '@/components/notes/FolderTree';
 import TagInput from '@/components/notes/TagInput';
+import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 export default function NotesPage() {
+  const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
@@ -33,7 +36,7 @@ export default function NotesPage() {
     links: [{ label: '', url: '' }],
   });
 
-  const { courses, notes, folders, settings, addNote, updateNote, deleteNote, toggleNotePin, initializeStore } = useAppStore();
+  const { courses, notes, folders, settings, addNote, updateNote, deleteNote, toggleNotePin, initializeStore, updateSettings } = useAppStore();
 
   useEffect(() => {
     initializeStore();
@@ -112,6 +115,14 @@ export default function NotesPage() {
     });
   };
 
+  const handleFiltersCollapseChange = (isOpen: boolean) => {
+    const currentCollapsed = settings.dashboardCardsCollapsedState || [];
+    const newState = isOpen
+      ? currentCollapsed.filter((id) => id !== 'notes-filters')
+      : [...currentCollapsed, 'notes-filters'];
+    updateSettings({ dashboardCardsCollapsedState: newState });
+  };
+
   const handleDeleteNote = async (id: string) => {
     setDeleteConfirmNote(id);
   };
@@ -186,7 +197,7 @@ export default function NotesPage() {
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ overflow: 'visible' }}>
           {/* Sidebar - 3 columns */}
-          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content' }}>
+          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', display: isMobile ? 'none' : 'block' }}>
             <Card>
               <div style={{ marginBottom: '20px' }}>
                 <Input
@@ -261,13 +272,96 @@ export default function NotesPage() {
             </Card>
           </div>
 
+          {/* Mobile collapsible filters */}
+          {isMobile && (
+            <div className="col-span-12" style={{ marginBottom: isMobile ? '8px' : '0px' }}>
+              <CollapsibleCard
+                id="notes-filters"
+                title="Filters"
+                initialOpen={!(settings.dashboardCardsCollapsedState || []).includes('notes-filters')}
+                onChange={handleFiltersCollapseChange}
+              >
+                <div style={{ marginBottom: isMobile ? '16px' : '20px' }}>
+                  <Input
+                    label="Search notes"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search"
+                  />
+                </div>
+
+                {/* Folder filter dropdown */}
+                <div style={{ marginBottom: isMobile ? '0' : '0', position: 'relative' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowFoldersDropdown(!showFoldersDropdown)}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '4px 8px' : '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', transition: 'color 150ms ease' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                  >
+                    <span style={{ fontSize: isMobile ? '11px' : '14px', fontWeight: '600', color: 'var(--text)' }}>Folders</span>
+                    <ChevronDown size={isMobile ? 12 : 16} style={{ transform: showFoldersDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms ease', color: 'var(--text)' }} />
+                  </button>
+                  {showFoldersDropdown && (
+                    <div style={{ marginTop: '0px' }}>
+                      <FolderTree
+                        folders={folders}
+                        selectedFolderId={selectedFolder}
+                        onSelectFolder={setSelectedFolder}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Tag filter dropdown */}
+                {allTags.length > 0 && (
+                  <div style={{ marginTop: isMobile ? '12px' : '20px', position: 'relative' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowTagsDropdown(!showTagsDropdown)}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '4px 8px' : '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', transition: 'color 150ms ease' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                    >
+                      <span style={{ fontSize: isMobile ? '11px' : '14px', fontWeight: '600', color: 'var(--text)' }}>Tags</span>
+                      <ChevronDown size={isMobile ? 12 : 16} style={{ transform: showTagsDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms ease', color: 'var(--text)' }} />
+                    </button>
+                    {showTagsDropdown && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0px', marginTop: '0px' }}>
+                        {allTags.map((tag) => (
+                          <label key={tag} style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '4px' : '8px', fontSize: isMobile ? '11px' : '14px', cursor: 'pointer', padding: isMobile ? '4px 6px' : '8px', borderRadius: '6px', transition: 'background-color 150ms ease, color 150ms ease', color: 'var(--text-muted)', minWidth: 0 }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
+                            <input
+                              type="checkbox"
+                              checked={selectedTags.has(tag)}
+                              onChange={(e) => {
+                                const newTags = new Set(selectedTags);
+                                if (e.target.checked) {
+                                  newTags.add(tag);
+                                } else {
+                                  newTags.delete(tag);
+                                }
+                                setSelectedTags(newTags);
+                              }}
+                              style={{ borderRadius: '4px', flexShrink: 0 }}
+                            />
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{tag}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CollapsibleCard>
+            </div>
+          )}
+
           {/* Main content - 9 columns */}
           <div className="col-span-12 lg:col-span-9" style={{ overflow: 'visible', height: 'fit-content', display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {/* Form */}
             {showForm && (
-              <div style={{ marginBottom: '24px' }}>
+              <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
                 <Card>
-                  <form onSubmit={handleSubmit} className="space-y-5">
+                  <form onSubmit={handleSubmit} className={isMobile ? 'space-y-2' : 'space-y-5'}>
                   <Input
                     label="Title"
                     value={formData.title}
@@ -276,7 +370,7 @@ export default function NotesPage() {
                     required
                   />
 
-                  <div className="grid grid-cols-2 gap-4" style={{ marginTop: '16px' }}>
+                  <div className="grid grid-cols-2 gap-4" style={{ marginTop: isMobile ? '8px' : '16px' }}>
                     <Select
                       label="Course"
                       value={formData.courseId}
@@ -294,7 +388,7 @@ export default function NotesPage() {
                     />
                   </div>
 
-                  <div style={{ marginTop: '16px' }}>
+                  <div style={{ marginTop: isMobile ? '8px' : '16px' }}>
                     <RichTextEditor
                       value={formData.content}
                       onChange={(content) => setFormData({ ...formData, content })}
@@ -302,8 +396,8 @@ export default function NotesPage() {
                   </div>
 
                   {/* Tags input with suggestions */}
-                  <div style={{ marginTop: '-6px' }}>
-                    <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>Tags</label>
+                  <div style={{ marginTop: isMobile ? '4px' : '-6px' }}>
+                    <label className={isMobile ? 'block text-xs font-medium text-[var(--text)]' : 'block text-sm font-medium text-[var(--text)]'} style={{ marginBottom: isMobile ? '4px' : '12px' }}>Tags</label>
                     <TagInput
                       tags={formData.tags}
                       onTagsChange={(tags) => setFormData({ ...formData, tags })}
@@ -312,13 +406,14 @@ export default function NotesPage() {
                     />
                   </div>
 
-                  <div className="flex gap-3">
-                    <Button variant="primary" type="submit">
+                  <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '8px' : '12px' }}>
+                    <Button variant="primary" type="submit" size={isMobile ? 'sm' : 'md'}>
                       {editingId ? 'Save Changes' : 'Create Note'}
                     </Button>
                     <Button
                       variant="secondary"
                       type="button"
+                      size={isMobile ? 'sm' : 'md'}
                       onClick={() => {
                         resetForm();
                         setShowForm(false);
@@ -336,82 +431,82 @@ export default function NotesPage() {
 
             {/* Notes list or detail view */}
             {selectedNote && !showForm ? (
-              <div style={{ marginBottom: '24px' }}>
+              <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
                 <Card>
-                  <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
+                  <div className={isMobile ? 'space-y-2' : 'space-y-4'}>
+                  <div className="flex items-start justify-between" style={{ gap: isMobile ? '8px' : '16px', flexDirection: isMobile ? 'column' : 'row' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="flex items-center gap-2">
-                        <h2 className="text-2xl font-bold text-[var(--text)]">{selectedNote.title}</h2>
+                        <h2 className={isMobile ? 'text-lg font-bold text-[var(--text)]' : 'text-2xl font-bold text-[var(--text)]'}>{selectedNote.title}</h2>
                         {selectedNote.isPinned && (
-                          <Pin size={20} className="text-[var(--accent)]" />
+                          <Pin size={isMobile ? 16 : 20} className="text-[var(--accent)]" />
                         )}
                       </div>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-[var(--text-muted)]">
+                      <div className={`flex items-center gap-${isMobile ? '2' : '4'} mt-${isMobile ? '1' : '2'} text-${isMobile ? 'xs' : 'sm'} text-[var(--text-muted)]`} style={{ marginTop: isMobile ? '4px' : '8px', fontSize: isMobile ? '12px' : '14px', gap: isMobile ? '8px' : '16px' }}>
                         {selectedNote.courseId && (
                           <span>{courses.find((c) => c.id === selectedNote.courseId)?.code}</span>
                         )}
                         {selectedNote.folderId && (
                           <span className="flex items-center gap-1">
-                            <FolderIcon size={14} />
+                            <FolderIcon size={isMobile ? 12 : 14} />
                             {folders.find((f) => f.id === selectedNote.folderId)?.name}
                           </span>
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2" style={{ alignSelf: isMobile ? 'flex-start' : 'initial' }}>
                       <Button
                         variant="secondary"
-                        size="sm"
+                        size={isMobile ? 'sm' : 'sm'}
                         onClick={() => toggleNotePin(selectedNote.id)}
                         title={selectedNote.isPinned ? 'Unpin note' : 'Pin note'}
                       >
-                        <Pin size={16} className={selectedNote.isPinned ? 'fill-current' : ''} />
+                        <Pin size={isMobile ? 14 : 16} className={selectedNote.isPinned ? 'fill-current' : ''} />
                       </Button>
                       <Button
                         variant="secondary"
-                        size="sm"
+                        size={isMobile ? 'sm' : 'sm'}
                         onClick={() => startEdit(selectedNote)}
                       >
-                        <Edit2 size={16} />
-                        Edit
+                        <Edit2 size={isMobile ? 14 : 16} />
+                        {!isMobile && 'Edit'}
                       </Button>
                       <Button
                         variant="secondary"
-                        size="sm"
+                        size={isMobile ? 'sm' : 'sm'}
                         onClick={() => handleDeleteNote(selectedNote.id)}
                       >
-                        <Trash2 size={16} />
-                        Delete
+                        <Trash2 size={isMobile ? 14 : 16} />
+                        {!isMobile && 'Delete'}
                       </Button>
                     </div>
                   </div>
 
                   {/* Rich text content display */}
-                  <div className="prose prose-sm max-w-none bg-[var(--panel-2)] p-4 rounded-lg text-[var(--text)]">
+                  <div className="prose prose-sm max-w-none bg-[var(--panel-2)] rounded-lg text-[var(--text)]" style={{ padding: isMobile ? '8px' : '16px' }}>
                     {selectedNote.tags && selectedNote.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-4">
+                      <div className="flex flex-wrap gap-2 mb-4" style={{ marginBottom: isMobile ? '8px' : '16px' }}>
                         {selectedNote.tags.map((tag) => (
-                          <span key={tag} className="bg-[var(--accent)] text-white px-2 py-1 rounded text-xs">
+                          <span key={tag} className="bg-[var(--accent)] text-white rounded text-xs" style={{ padding: isMobile ? '3px 6px' : '4px 8px', fontSize: isMobile ? '10px' : '12px' }}>
                             {tag}
                           </span>
                         ))}
                       </div>
                     )}
-                    <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                    <div className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: isMobile ? '12px' : '14px' }}>
                       {selectedNote.plainText || 'No content'}
                     </div>
                   </div>
 
                   {selectedNote.links && selectedNote.links.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-semibold text-[var(--text)] mb-2 flex items-center gap-2">
-                        <LinkIcon size={16} />
+                      <h4 className="font-semibold text-[var(--text)] mb-2 flex items-center gap-2" style={{ fontSize: isMobile ? '12px' : '14px', marginBottom: isMobile ? '6px' : '8px' }}>
+                        <LinkIcon size={isMobile ? 14 : 16} />
                         Links
                       </h4>
-                      <ul className="space-y-1">
+                      <ul className="space-y-1" style={{ gap: isMobile ? '4px' : '4px' }}>
                         {selectedNote.links.map((link, idx) => (
-                          <li key={idx}>
+                          <li key={idx} style={{ fontSize: isMobile ? '12px' : '14px' }}>
                             <a
                               href={link.url}
                               target="_blank"
@@ -426,13 +521,13 @@ export default function NotesPage() {
                     </div>
                   )}
 
-                  <div className="text-xs text-[var(--text-muted)] pt-4 border-t border-[var(--border)]">
+                  <div className="text-xs text-[var(--text-muted)] border-t border-[var(--border)]" style={{ paddingTop: isMobile ? '8px' : '16px', fontSize: isMobile ? '10px' : '12px' }}>
                     Last updated {new Date(selectedNote.updatedAt).toLocaleDateString()}
                   </div>
 
                   <Button
                     variant="secondary"
-                    size="sm"
+                    size={isMobile ? 'sm' : 'sm'}
                     onClick={() => setSelectedNoteId(null)}
                   >
                     Back to List
@@ -443,8 +538,8 @@ export default function NotesPage() {
             ) : filtered.length > 0 ? (
               <>
                 {pinnedNotes.length > 0 && (
-                  <div style={{ marginBottom: '24px' }}>
-                    <h4 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px', marginTop: 0 }}>Pinned Notes</h4>
+                  <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
+                    <h4 style={{ fontSize: isMobile ? '14px' : '16px', fontWeight: '600', color: 'var(--text)', marginBottom: isMobile ? '8px' : '12px', marginTop: 0 }}>Pinned Notes</h4>
                     <Card>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
                         {pinnedNotes.map((note, index) => {
@@ -454,36 +549,41 @@ export default function NotesPage() {
                           return (
                             <div
                               key={note.id}
-                              style={{ padding: '12px 32px', borderBottom: index < pinnedNotes.length - 1 ? '1px solid var(--border)' : 'none', transition: 'background-color 150ms ease' }}
+                              onClick={() => setSelectedNoteId(note.id)}
+                              style={{ padding: isMobile ? '8px 12px' : '12px 32px', borderBottom: index < pinnedNotes.length - 1 ? '1px solid var(--border)' : 'none', transition: 'background-color 150ms ease', cursor: 'pointer' }}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'var(--panel-2)';
-                                const buttonsDiv = e.currentTarget.querySelector('[data-buttons-container]') as HTMLElement;
-                                if (buttonsDiv) buttonsDiv.style.opacity = '1';
+                                if (!isMobile) {
+                                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                                  const buttonsDiv = e.currentTarget.querySelector('[data-buttons-container]') as HTMLElement;
+                                  if (buttonsDiv) buttonsDiv.style.opacity = '1';
+                                }
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                                const buttonsDiv = e.currentTarget.querySelector('[data-buttons-container]') as HTMLElement;
-                                if (buttonsDiv) buttonsDiv.style.opacity = '0';
+                                if (!isMobile) {
+                                  e.currentTarget.style.backgroundColor = 'transparent';
+                                  const buttonsDiv = e.currentTarget.querySelector('[data-buttons-container]') as HTMLElement;
+                                  if (buttonsDiv) buttonsDiv.style.opacity = '0';
+                                }
                               }}
                             >
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                                <div style={{ flex: 1 }}>
-                                  <h3 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>{note.title}</h3>
+                              <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: isMobile ? '8px' : '12px', flexDirection: isMobile ? 'column' : 'row' }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <h3 style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>{note.title}</h3>
                                   {note.plainText && (
-                                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                    <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', marginTop: isMobile ? '2px' : '4px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                                       {note.plainText}
                                     </p>
                                   )}
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-                                    {course && <span style={{ fontSize: '12px', backgroundColor: 'var(--nav-active)', padding: '4px 8px', borderRadius: '4px' }}>{course.code}</span>}
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: isMobile ? '4px' : '8px', marginTop: isMobile ? '4px' : '8px' }}>
+                                    {course && <span style={{ fontSize: isMobile ? '10px' : '12px', backgroundColor: 'var(--nav-active)', padding: isMobile ? '2px 4px' : '4px 8px', borderRadius: '4px' }}>{course.code}</span>}
                                     {folder && selectedFolder !== note.folderId && (
-                                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <FolderIcon size={12} />
+                                      <span style={{ fontSize: isMobile ? '10px' : '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                        <FolderIcon size={isMobile ? 10 : 12} />
                                         {folder.name}
                                       </span>
                                     )}
                                     {note.tags && note.tags.length > 0 && (
-                                      <div style={{ display: 'flex', gap: '4px' }}>
+                                      <div style={{ display: 'flex', gap: '2px' }}>
                                         {note.tags.slice(0, 2).map((tag) => {
                                           const hasCollege = settings?.university;
                                           const isLightMode = settings?.theme === 'light';
@@ -491,13 +591,13 @@ export default function NotesPage() {
                                             ? (isLightMode ? 'var(--accent)' : 'var(--calendar-current-date-color)')
                                             : '#539bf5';
                                           return (
-                                            <span key={tag} style={{ fontSize: '12px', color: tagColor }}>
+                                            <span key={tag} style={{ fontSize: isMobile ? '10px' : '12px', color: tagColor }}>
                                               #{tag}
                                             </span>
                                           );
                                         })}
                                         {note.tags.length > 2 && (
-                                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                          <span style={{ fontSize: isMobile ? '10px' : '12px', color: 'var(--text-muted)' }}>
                                             +{note.tags.length - 2} more
                                           </span>
                                         )}
@@ -505,40 +605,40 @@ export default function NotesPage() {
                                     )}
                                   </div>
                                 </div>
-                                <div data-buttons-container style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: 0, transition: 'opacity 150ms ease' }}>
+                                <div data-buttons-container style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? '4px' : '2px', opacity: isMobile ? 1 : 0, transition: 'opacity 150ms ease', marginLeft: isMobile ? '0' : 'auto' }}>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       toggleNotePin(note.id);
                                     }}
-                                    style={{ padding: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    style={{ padding: isMobile ? '4px' : '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     onMouseEnter={(e) => e.currentTarget.style.color = '#539bf5'}
                                     onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
                                     title="Unpin note"
                                   >
-                                    <Pin size={20} style={{ fill: 'currentColor' }} />
+                                    <Pin size={isMobile ? 16 : 20} style={{ fill: 'currentColor' }} />
                                   </button>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       startEdit(note);
                                     }}
-                                    style={{ padding: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    style={{ padding: isMobile ? '4px' : '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     onMouseEnter={(e) => e.currentTarget.style.color = '#539bf5'}
                                     onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
                                   >
-                                    <Edit2 size={20} />
+                                    <Edit2 size={isMobile ? 16 : 20} />
                                   </button>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleDeleteNote(note.id);
                                     }}
-                                    style={{ padding: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    style={{ padding: isMobile ? '4px' : '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     onMouseEnter={(e) => e.currentTarget.style.color = '#f85149'}
                                     onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
                                   >
-                                    <Trash2 size={20} />
+                                    <Trash2 size={isMobile ? 16 : 20} />
                                   </button>
                                 </div>
                               </div>
@@ -550,9 +650,9 @@ export default function NotesPage() {
                   </div>
                 )}
                 {unpinnedNotes.length > 0 && (
-                  <div style={{ marginBottom: '24px' }}>
+                  <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
                     {pinnedNotes.length > 0 && (
-                      <h4 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px', marginTop: 0 }}>All Notes</h4>
+                      <h4 style={{ fontSize: isMobile ? '14px' : '16px', fontWeight: '600', color: 'var(--text)', marginBottom: isMobile ? '8px' : '12px', marginTop: 0 }}>All Notes</h4>
                     )}
                     <Card>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
@@ -563,36 +663,41 @@ export default function NotesPage() {
                           return (
                             <div
                               key={note.id}
-                              style={{ padding: '12px 32px', borderBottom: index < unpinnedNotes.length - 1 ? '1px solid var(--border)' : 'none', transition: 'background-color 150ms ease' }}
+                              onClick={() => setSelectedNoteId(note.id)}
+                              style={{ padding: isMobile ? '8px 12px' : '12px 32px', borderBottom: index < unpinnedNotes.length - 1 ? '1px solid var(--border)' : 'none', transition: 'background-color 150ms ease', cursor: 'pointer' }}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'var(--panel-2)';
-                                const buttonsDiv = e.currentTarget.querySelector('[data-buttons-container]') as HTMLElement;
-                                if (buttonsDiv) buttonsDiv.style.opacity = '1';
+                                if (!isMobile) {
+                                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                                  const buttonsDiv = e.currentTarget.querySelector('[data-buttons-container]') as HTMLElement;
+                                  if (buttonsDiv) buttonsDiv.style.opacity = '1';
+                                }
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                                const buttonsDiv = e.currentTarget.querySelector('[data-buttons-container]') as HTMLElement;
-                                if (buttonsDiv) buttonsDiv.style.opacity = '0';
+                                if (!isMobile) {
+                                  e.currentTarget.style.backgroundColor = 'transparent';
+                                  const buttonsDiv = e.currentTarget.querySelector('[data-buttons-container]') as HTMLElement;
+                                  if (buttonsDiv) buttonsDiv.style.opacity = '0';
+                                }
                               }}
                             >
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                                <div style={{ flex: 1 }}>
-                                  <h3 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>{note.title}</h3>
+                              <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: isMobile ? '8px' : '12px', flexDirection: isMobile ? 'column' : 'row' }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <h3 style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>{note.title}</h3>
                                   {note.plainText && (
-                                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                    <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', marginTop: isMobile ? '2px' : '4px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                                       {note.plainText}
                                     </p>
                                   )}
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-                                    {course && <span style={{ fontSize: '12px', backgroundColor: 'var(--nav-active)', padding: '4px 8px', borderRadius: '4px' }}>{course.code}</span>}
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: isMobile ? '4px' : '8px', marginTop: isMobile ? '4px' : '8px' }}>
+                                    {course && <span style={{ fontSize: isMobile ? '10px' : '12px', backgroundColor: 'var(--nav-active)', padding: isMobile ? '2px 4px' : '4px 8px', borderRadius: '4px' }}>{course.code}</span>}
                                     {folder && selectedFolder !== note.folderId && (
-                                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <FolderIcon size={12} />
+                                      <span style={{ fontSize: isMobile ? '10px' : '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                        <FolderIcon size={isMobile ? 10 : 12} />
                                         {folder.name}
                                       </span>
                                     )}
                                     {note.tags && note.tags.length > 0 && (
-                                      <div style={{ display: 'flex', gap: '4px' }}>
+                                      <div style={{ display: 'flex', gap: '2px' }}>
                                         {note.tags.slice(0, 2).map((tag) => {
                                           const hasCollege = settings?.university;
                                           const isLightMode = settings?.theme === 'light';
@@ -600,13 +705,13 @@ export default function NotesPage() {
                                             ? (isLightMode ? 'var(--accent)' : 'var(--calendar-current-date-color)')
                                             : '#539bf5';
                                           return (
-                                            <span key={tag} style={{ fontSize: '12px', color: tagColor }}>
+                                            <span key={tag} style={{ fontSize: isMobile ? '10px' : '12px', color: tagColor }}>
                                               #{tag}
                                             </span>
                                           );
                                         })}
                                         {note.tags.length > 2 && (
-                                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                          <span style={{ fontSize: isMobile ? '10px' : '12px', color: 'var(--text-muted)' }}>
                                             +{note.tags.length - 2} more
                                           </span>
                                         )}
@@ -614,40 +719,40 @@ export default function NotesPage() {
                                     )}
                                   </div>
                                 </div>
-                                <div data-buttons-container style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: 0, transition: 'opacity 150ms ease' }}>
+                                <div data-buttons-container style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? '4px' : '2px', opacity: isMobile ? 1 : 0, transition: 'opacity 150ms ease', marginLeft: isMobile ? '0' : 'auto' }}>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       toggleNotePin(note.id);
                                     }}
-                                    style={{ padding: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    style={{ padding: isMobile ? '4px' : '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     onMouseEnter={(e) => e.currentTarget.style.color = '#539bf5'}
                                     onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
                                     title="Pin note"
                                   >
-                                    <Pin size={20} style={{ fill: 'none' }} />
+                                    <Pin size={isMobile ? 16 : 20} style={{ fill: 'none' }} />
                                   </button>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       startEdit(note);
                                     }}
-                                    style={{ padding: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    style={{ padding: isMobile ? '4px' : '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     onMouseEnter={(e) => e.currentTarget.style.color = '#539bf5'}
                                     onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
                                   >
-                                    <Edit2 size={20} />
+                                    <Edit2 size={isMobile ? 16 : 20} />
                                   </button>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleDeleteNote(note.id);
                                     }}
-                                    style={{ padding: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    style={{ padding: isMobile ? '4px' : '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     onMouseEnter={(e) => e.currentTarget.style.color = '#f85149'}
                                     onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
                                   >
-                                    <Trash2 size={20} />
+                                    <Trash2 size={isMobile ? 16 : 20} />
                                   </button>
                                 </div>
                               </div>
@@ -683,7 +788,7 @@ export default function NotesPage() {
               inset: 0,
               backgroundColor: 'rgba(0,0,0,0.5)',
               display: 'flex',
-              alignItems: 'center',
+              alignItems: isMobile ? 'flex-end' : 'center',
               justifyContent: 'center',
               zIndex: 50,
             }}
@@ -692,30 +797,30 @@ export default function NotesPage() {
             <div
               style={{
                 backgroundColor: 'var(--panel)',
-                borderRadius: '8px',
+                borderRadius: isMobile ? '12px 12px 0 0' : '8px',
                 boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                maxWidth: '400px',
-                width: '100%',
-                margin: '0 16px',
-                padding: '24px',
+                maxWidth: isMobile ? '100%' : '400px',
+                width: isMobile ? '100%' : '100%',
+                margin: isMobile ? 0 : '0 16px',
+                padding: isMobile ? '16px' : '24px',
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text)', margin: '0 0 12px 0' }}>
+              <h3 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '600', color: 'var(--text)', margin: '0 0 8px 0' }}>
                 Delete note?
               </h3>
-              <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '0 0 24px 0' }}>
+              <p style={{ fontSize: isMobile ? '12px' : '14px', color: 'var(--text-muted)', margin: '0 0 16px 0' }}>
                 This will permanently delete this note. This action cannot be undone.
               </p>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ display: 'flex', gap: isMobile ? '8px' : '12px' }}>
                 <button
                   onClick={() => setDeleteConfirmNote(null)}
                   style={{
                     flex: 1,
-                    padding: '8px 16px',
+                    padding: isMobile ? '10px 12px' : '8px 16px',
                     borderRadius: '8px',
                     fontWeight: '500',
-                    fontSize: '14px',
+                    fontSize: isMobile ? '13px' : '14px',
                     border: 'none',
                     background: 'transparent',
                     color: 'var(--text-muted)',
@@ -735,10 +840,10 @@ export default function NotesPage() {
                   onClick={confirmDeleteNote}
                   style={{
                     flex: 1,
-                    padding: '8px 16px',
+                    padding: isMobile ? '10px 12px' : '8px 16px',
                     borderRadius: '8px',
                     fontWeight: '500',
-                    fontSize: '14px',
+                    fontSize: isMobile ? '13px' : '14px',
                     border: 'none',
                     backgroundColor: deleteButtonBgColor,
                     color: deleteButtonTextColor,

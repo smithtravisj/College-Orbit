@@ -4,6 +4,7 @@ import { RecurringTaskFormData, RecurringDeadlineFormData, RecurringExamFormData
 import { Select } from '@/components/ui/Input';
 import CalendarPicker from './CalendarPicker';
 import useAppStore from '@/lib/store';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 type RecurringFormData = RecurringTaskFormData | RecurringDeadlineFormData | RecurringExamFormData;
 
@@ -14,6 +15,7 @@ interface RecurrenceSelectorProps {
 }
 
 export default function RecurrenceSelector({ value, onChange, disabled }: RecurrenceSelectorProps) {
+  const isMobile = useIsMobile();
   const theme = useAppStore((state) => state.settings.theme);
 
   const handleChange = (updates: Partial<RecurringFormData>) => {
@@ -71,7 +73,7 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
       style={{
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-control)',
-        padding: '16px',
+        padding: isMobile ? '10px' : '16px',
         backgroundColor: 'var(--panel-2)',
         opacity: disabled ? 0.6 : 1,
         pointerEvents: disabled ? 'none' : 'auto',
@@ -80,17 +82,17 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
       <label
         style={{
           display: 'block',
-          fontSize: '14px',
+          fontSize: isMobile ? '12px' : '14px',
           fontWeight: '600',
           color: 'var(--text)',
-          marginBottom: '12px',
+          marginBottom: isMobile ? '6px' : '12px',
         }}
       >
         Repeat Pattern
       </label>
 
       {/* Recurrence Type */}
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: isMobile ? '8px' : '16px' }}>
         <Select
           label="Frequency"
           value={value.recurrenceType}
@@ -104,7 +106,7 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
       </div>
 
       {/* Start Date */}
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: isMobile ? '8px' : '16px' }}>
         <CalendarPicker
           label="Start date"
           value={value.startDate}
@@ -114,14 +116,14 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
 
       {/* Days of Week Selector */}
       {value.recurrenceType === 'weekly' && (
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: isMobile ? '8px' : '16px' }}>
           <label
             style={{
               display: 'block',
-              fontSize: '14px',
+              fontSize: isMobile ? '12px' : '14px',
               fontWeight: '500',
               color: 'var(--text)',
-              marginBottom: '8px',
+              marginBottom: isMobile ? '4px' : '8px',
             }}
           >
             Repeat on
@@ -129,8 +131,8 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '8px',
+              gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(4, 1fr)',
+              gap: isMobile ? '4px' : '8px',
             }}
           >
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
@@ -139,10 +141,10 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: isMobile ? '3px' : '6px',
                   cursor: 'pointer',
-                  fontSize: '13px',
-                  padding: '8px',
+                  fontSize: isMobile ? '11px' : '13px',
+                  padding: isMobile ? '4px 6px' : '8px',
                   backgroundColor: value.daysOfWeek.includes(index)
                     ? 'var(--accent)'
                     : 'var(--panel)',
@@ -174,14 +176,14 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
 
       {/* Days of Month Selector */}
       {value.recurrenceType === 'monthly' && (
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: isMobile ? '8px' : '16px' }}>
           <label
             style={{
               display: 'block',
-              fontSize: '14px',
+              fontSize: isMobile ? '12px' : '14px',
               fontWeight: '500',
               color: 'var(--text)',
-              marginBottom: '8px',
+              marginBottom: isMobile ? '3px' : '8px',
             }}
           >
             Repeat on
@@ -226,14 +228,14 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
 
       {/* Custom Interval */}
       {value.recurrenceType === 'custom' && (
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: isMobile ? '8px' : '16px' }}>
           <label
             style={{
               display: 'block',
-              fontSize: '14px',
+              fontSize: isMobile ? '12px' : '14px',
               fontWeight: '500',
               color: 'var(--text)',
-              marginBottom: '6px',
+              marginBottom: isMobile ? '3px' : '6px',
             }}
           >
             Repeat every (days)
@@ -271,14 +273,14 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
       )}
 
       {/* Due/Exam Time */}
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: isMobile ? '8px' : '16px' }}>
         <label
           style={{
             display: 'block',
-            fontSize: '14px',
+            fontSize: isMobile ? '12px' : '14px',
             fontWeight: '500',
             color: 'var(--text)',
-            marginBottom: '6px',
+            marginBottom: isMobile ? '3px' : '6px',
           }}
         >
           {getTimeLabel()}
@@ -308,7 +310,7 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
       </div>
 
       {/* End Condition */}
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: isMobile ? '8px' : '16px' }}>
         <Select
           label="Ends"
           value={value.endCondition}
@@ -323,7 +325,7 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
 
       {/* End Date */}
       {value.endCondition === 'date' && (
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: isMobile ? '8px' : '16px' }}>
           <CalendarPicker
             label="End date"
             value={value.endDate}
@@ -334,14 +336,14 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
 
       {/* Occurrence Count */}
       {value.endCondition === 'count' && (
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: isMobile ? '8px' : '16px' }}>
           <label
             style={{
               display: 'block',
-              fontSize: '14px',
+              fontSize: isMobile ? '12px' : '14px',
               fontWeight: '500',
               color: 'var(--text)',
-              marginBottom: '6px',
+              marginBottom: isMobile ? '3px' : '6px',
             }}
           >
             Number of occurrences

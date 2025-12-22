@@ -7,6 +7,7 @@ import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { Download, Upload, Trash2 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { DASHBOARD_CARDS, TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
 interface CollegeRequest {
@@ -43,6 +44,7 @@ interface FeatureRequest {
 }
 
 export default function SettingsPage() {
+  const isMobile = useIsMobile();
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -957,7 +959,7 @@ export default function SettingsPage() {
           </div>
         )}
 
-        <div className="w-full" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--grid-gap)' }}>
+        <div className="w-full" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(400px, 1fr))', gap: isMobile ? '14px' : 'var(--grid-gap)' }}>
           {!session && (
             <div style={{ gridColumn: '1 / -1', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '6px', padding: '12px', marginBottom: '0px', color: '#856404', fontSize: '14px' }}>
               ⚠️ You are not logged in. Settings will be saved to your browser only.
@@ -1119,12 +1121,12 @@ export default function SettingsPage() {
                   disabled={collegeRequestLoading}
                 />
                 <Button
-                  size="lg"
+                  size={isMobile ? 'sm' : 'lg'}
                   onClick={handleSubmitCollegeRequest}
                   disabled={collegeRequestLoading}
                   style={{
-                    paddingLeft: '16px',
-                    paddingRight: '16px',
+                    paddingLeft: isMobile ? '12px' : '16px',
+                    paddingRight: isMobile ? '12px' : '16px',
                     backgroundColor: 'var(--button-secondary)',
                     color: settings.theme === 'light' ? '#000000' : 'white',
                     borderWidth: '1px',
@@ -1177,7 +1179,7 @@ export default function SettingsPage() {
                   />
                   <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>days</span>
                 </div>
-                <Button size="lg" onClick={async () => {
+                <Button size={isMobile ? 'sm' : 'lg'} onClick={async () => {
                   const inputValue = dueSoonInputRef.current?.value || '';
                   const val = parseInt(inputValue);
                   if (!inputValue) {
@@ -1198,7 +1200,7 @@ export default function SettingsPage() {
                     setSaveMessage('Please enter a number between 1 and 30');
                     setTimeout(() => setSaveMessage(''), 3000);
                   }
-                }} style={{ marginTop: '16px', paddingLeft: '16px', paddingRight: '16px', backgroundColor: 'var(--button-secondary)', color: settings.theme === 'light' ? '#000000' : 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                }} style={{ marginTop: '16px', paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: 'var(--button-secondary)', color: settings.theme === 'light' ? '#000000' : 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                   Save
                 </Button>
                 {saveMessage && (
@@ -1217,7 +1219,7 @@ export default function SettingsPage() {
                 <div className="space-y-3" style={{ marginBottom: '16px' }}>
                   {examReminders.map((reminder, idx) => {
                     return (
-                      <div key={idx} style={{ display: 'grid', gridTemplateColumns: '24px 1fr auto', gap: '12px', alignItems: 'start', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '6px' }}>
+                      <div key={idx} style={{ display: 'grid', gridTemplateColumns: isMobile ? '24px 1fr auto' : '24px 1fr auto', gap: isMobile ? '8px' : '12px', alignItems: isMobile ? 'start' : 'start', padding: isMobile ? '10px' : '12px', backgroundColor: 'var(--panel-2)', borderRadius: '6px' }}>
                         <input
                           type="checkbox"
                           checked={reminder.enabled}
@@ -1234,7 +1236,7 @@ export default function SettingsPage() {
                             marginTop: '2px',
                           }}
                         />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '4px' : '8px' }}>
                           <input
                             type="text"
                             inputMode="numeric"
@@ -1256,10 +1258,10 @@ export default function SettingsPage() {
                               updateSettings({ examReminders: newReminders });
                             }}
                             style={{
-                              width: '60px',
-                              height: '32px',
+                              width: isMobile ? '40px' : '60px',
+                              height: isMobile ? '28px' : '32px',
                               padding: '6px 8px',
-                              fontSize: '14px',
+                              fontSize: isMobile ? '12px' : '14px',
                               backgroundColor: 'var(--panel)',
                               color: 'var(--text)',
                               border: '1px solid var(--border)',
@@ -1276,9 +1278,9 @@ export default function SettingsPage() {
                               updateSettings({ examReminders: newReminders });
                             }}
                             style={{
-                              height: '32px',
+                              height: isMobile ? '28px' : '32px',
                               padding: '6px 8px',
-                              fontSize: '14px',
+                              fontSize: isMobile ? '12px' : '14px',
                               backgroundColor: 'var(--panel)',
                               color: 'var(--text)',
                               border: '1px solid var(--border)',
@@ -1290,7 +1292,7 @@ export default function SettingsPage() {
                             <option value="hours">hours</option>
                             <option value="days">days</option>
                           </select>
-                          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                          <span style={{ fontSize: isMobile ? '12px' : '13px', color: 'var(--text-muted)' }}>
                             before
                           </span>
                         </div>
@@ -1301,14 +1303,14 @@ export default function SettingsPage() {
                             updateSettings({ examReminders: newReminders });
                           }}
                           style={{
-                            padding: '6px 12px',
-                            fontSize: '12px',
+                            padding: isMobile ? '4px 8px' : '6px 12px',
+                            fontSize: isMobile ? '11px' : '12px',
                             backgroundColor: removeButtonColor,
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
                             cursor: 'pointer',
-                            height: '32px',
+                            height: isMobile ? '28px' : '32px',
                             display: 'flex',
                             alignItems: 'center',
                             whiteSpace: 'nowrap',
@@ -1358,7 +1360,7 @@ export default function SettingsPage() {
               {[
                 { id: 'pages', label: 'Pages' },
                 { id: 'dashboard', label: 'Dashboard Cards' },
-                { id: 'tools', label: 'Tools Cards' },
+                ...(isMobile ? [] : [{ id: 'tools', label: 'Tools Cards' }]),
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -1667,6 +1669,7 @@ export default function SettingsPage() {
 
             {/* Save Button */}
             <Button
+              size={isMobile ? 'sm' : 'lg'}
               onClick={async () => {
                 try {
                   await updateSettings({
@@ -1685,8 +1688,8 @@ export default function SettingsPage() {
               }}
               style={{
                 marginTop: '24px',
-                paddingLeft: '16px',
-                paddingRight: '16px',
+                paddingLeft: isMobile ? '12px' : '16px',
+                paddingRight: isMobile ? '12px' : '16px',
                 backgroundColor: 'var(--button-secondary)',
                 color: settings.theme === 'light' ? '#000000' : 'white',
                 borderWidth: '1px',
@@ -1745,12 +1748,12 @@ export default function SettingsPage() {
                   {featureDescription.length} / 1000 characters
                 </p>
                 <Button
-                  size="lg"
+                  size={isMobile ? 'sm' : 'lg'}
                   onClick={handleSubmitFeatureRequest}
                   disabled={featureRequestLoading}
                   style={{
-                    paddingLeft: '16px',
-                    paddingRight: '16px',
+                    paddingLeft: isMobile ? '12px' : '16px',
+                    paddingRight: isMobile ? '12px' : '16px',
                     backgroundColor: 'var(--button-secondary)',
                     color: settings.theme === 'light' ? '#000000' : 'white',
                     borderWidth: '1px',
@@ -1803,12 +1806,12 @@ export default function SettingsPage() {
                   {issueDescription.length} / 1000 characters
                 </p>
                 <Button
-                  size="lg"
+                  size={isMobile ? 'sm' : 'lg'}
                   onClick={handleSubmitIssueReport}
                   disabled={issueReportLoading}
                   style={{
-                    paddingLeft: '16px',
-                    paddingRight: '16px',
+                    paddingLeft: isMobile ? '12px' : '16px',
+                    paddingRight: isMobile ? '12px' : '16px',
                     backgroundColor: 'var(--button-secondary)',
                     color: settings.theme === 'light' ? '#000000' : 'white',
                     borderWidth: '1px',
@@ -1836,7 +1839,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Download a backup of all your data as a JSON file
                 </p>
-                <Button size="lg" onClick={handleExport} style={{ marginBottom: '16px', paddingLeft: '16px', paddingRight: '16px', backgroundColor: 'var(--button-secondary)', color: settings.theme === 'light' ? '#000000' : 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                <Button size={isMobile ? 'sm' : 'lg'} onClick={handleExport} style={{ marginBottom: '16px', paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: 'var(--button-secondary)', color: settings.theme === 'light' ? '#000000' : 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                   <Download size={18} />
                   Export Data
                 </Button>
@@ -1859,7 +1862,7 @@ export default function SettingsPage() {
                   onChange={handleImport}
                   className="hidden"
                 />
-                <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
+                <Button variant="secondary" size={isMobile ? 'sm' : 'lg'} onClick={() => fileInputRef.current?.click()} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
                   <Upload size={18} />
                   Import Data
                 </Button>
@@ -1885,12 +1888,12 @@ export default function SettingsPage() {
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Permanently delete all your data. This action cannot be undone.
                 </p>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <Button size="lg" onClick={handleDeleteAllData} style={{ paddingLeft: '16px', paddingRight: '16px', backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                <div style={{ display: 'flex', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
+                  <Button size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAllData} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                     <Trash2 size={18} />
                     Delete All Data
                   </Button>
-                  <Button size="lg" onClick={handleDeleteAccount} style={{ paddingLeft: '16px', paddingRight: '16px', backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                  <Button size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAccount} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
                     <Trash2 size={18} />
                     Delete Account
                   </Button>
@@ -1926,7 +1929,7 @@ export default function SettingsPage() {
                   Replay the interactive tutorial to learn about app features
                 </p>
                 <Button
-                  size="lg"
+                  size={isMobile ? 'sm' : 'lg'}
                   onClick={async () => {
                     try {
                       // Update settings in database
@@ -1947,8 +1950,8 @@ export default function SettingsPage() {
                     }
                   }}
                   style={{
-                    paddingLeft: '16px',
-                    paddingRight: '16px',
+                    paddingLeft: isMobile ? '12px' : '16px',
+                    paddingRight: isMobile ? '12px' : '16px',
                     backgroundColor: 'var(--button-secondary)',
                     color: settings.theme === 'light' ? '#000000' : 'white',
                     borderWidth: '1px',

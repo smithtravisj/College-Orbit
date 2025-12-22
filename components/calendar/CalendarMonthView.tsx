@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { Course, Task, Deadline, Exam, ExcludedDate } from '@/types';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   getDatesInMonth,
   getEventsForDate,
@@ -25,6 +26,7 @@ interface CalendarMonthViewProps {
   allDeadlines?: Deadline[];
   excludedDates?: ExcludedDate[];
   onSelectDate: (date: Date) => void;
+  selectedDate?: Date; // For mobile: highlight selected day
 }
 
 export default function CalendarMonthView({
@@ -38,7 +40,9 @@ export default function CalendarMonthView({
   allDeadlines = [],
   excludedDates = [],
   onSelectDate,
+  selectedDate,
 }: CalendarMonthViewProps) {
+  const isMobile = useIsMobile();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [maxVisibleDots, setMaxVisibleDots] = useState<Map<string, number>>(new Map());
   const [popupState, setPopupState] = useState<{
@@ -113,16 +117,16 @@ export default function CalendarMonthView({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Day headers */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', marginBottom: '8px', paddingLeft: '12px', paddingRight: '12px', paddingTop: '8px', flexShrink: 0 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', marginBottom: isMobile ? '4px' : '8px', paddingLeft: isMobile ? '6px' : '12px', paddingRight: isMobile ? '6px' : '12px', paddingTop: isMobile ? '4px' : '8px', flexShrink: 0 }}>
         {dayNames.map((day) => (
           <div
             key={day}
             style={{
               textAlign: 'center',
-              fontSize: '0.875rem',
+              fontSize: isMobile ? '0.7rem' : '0.875rem',
               fontWeight: 600,
               color: 'var(--text)',
-              padding: '6px 0',
+              padding: isMobile ? '2px 0' : '6px 0',
             }}
           >
             {day}
@@ -131,11 +135,12 @@ export default function CalendarMonthView({
       </div>
 
       {/* Calendar grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', paddingLeft: '12px', paddingRight: '12px', paddingBottom: '8px', flex: 1, overflow: 'hidden', gridAutoRows: 'minmax(0, 1fr)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', paddingLeft: isMobile ? '6px' : '12px', paddingRight: isMobile ? '6px' : '12px', paddingBottom: isMobile ? '4px' : '8px', flex: 1, overflow: 'hidden', gridAutoRows: 'minmax(0, 1fr)' }}>
         {dates.map((date) => {
           const dateStr = date.toISOString().split('T')[0];
           const isCurrentMonth = isInMonth(date, year, month);
           const isTodayDate = isToday(date);
+          const isSelectedDate = selectedDate && date.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0];
           const dayEvents = eventsByDate.get(dateStr) || [];
           const exclusionType = getExclusionType(date, excludedDates);
 
@@ -145,14 +150,14 @@ export default function CalendarMonthView({
               onClick={() => onSelectDate(date)}
               style={{
                 position: 'relative',
-                padding: '12px',
-                border: `1px solid ${isCurrentMonth ? 'var(--border)' : 'var(--border)'}`,
-                borderRadius: 'var(--radius-control)',
+                padding: isMobile ? '4px' : '12px',
+                border: `1px solid ${isSelectedDate ? 'var(--accent)' : isCurrentMonth ? 'var(--border)' : 'var(--border)'}`,
+                borderRadius: isMobile ? '4px' : 'var(--radius-control)',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                backgroundColor: isCurrentMonth ? 'var(--panel)' : 'var(--bg)',
+                backgroundColor: isSelectedDate ? 'var(--accent-2)' : isCurrentMonth ? 'var(--panel)' : 'var(--bg)',
                 opacity: isCurrentMonth ? 1 : 0.5,
-                boxShadow: isTodayDate ? '0 0 0 1px var(--accent)' : 'none',
+                boxShadow: isTodayDate && !isSelectedDate ? '0 0 0 1px var(--accent)' : isSelectedDate ? '0 0 0 2px var(--accent)' : 'none',
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
@@ -165,8 +170,13 @@ export default function CalendarMonthView({
               }}
               onMouseLeave={(e) => {
                 if (isCurrentMonth) {
-                  e.currentTarget.style.backgroundColor = 'var(--panel)';
-                  e.currentTarget.style.borderColor = 'var(--border)';
+                  if (isSelectedDate) {
+                    e.currentTarget.style.backgroundColor = 'var(--accent-2)';
+                    e.currentTarget.style.borderColor = 'var(--accent)';
+                  } else {
+                    e.currentTarget.style.backgroundColor = 'var(--panel)';
+                    e.currentTarget.style.borderColor = 'var(--border)';
+                  }
                 }
               }}
             >
@@ -189,6 +199,22 @@ export default function CalendarMonthView({
 
               {/* No School indicator */}
               {exclusionType === 'holiday' && (() => {
+                if (isMobile) {
+                  return (
+                    <div
+                      style={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        backgroundColor: '#3b82f6',
+                        flexShrink: 0,
+                        marginBottom: '2px',
+                      }}
+                      title="Holiday/No School"
+                    />
+                  );
+                }
+
                 const markerColor = getEventColor({ courseId: '' } as any);
                 return (
                   <div
@@ -238,19 +264,25 @@ export default function CalendarMonthView({
                           borderRadius: '50%',
                           backgroundColor: color,
                           flexShrink: 0,
-                          cursor: 'pointer',
-                          transition: 'transform 0.2s',
+                          cursor: isMobile ? 'default' : 'pointer',
+                          transition: isMobile ? 'none' : 'transform 0.2s',
                         }}
-                        title={event.type === 'course' ? `${event.courseCode}: ${event.title}` : event.title}
+                        title={isMobile ? undefined : (event.type === 'course' ? `${event.courseCode}: ${event.title}` : event.title)}
                         onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedEvent(event);
+                          if (!isMobile) {
+                            e.stopPropagation();
+                            setSelectedEvent(event);
+                          }
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'scale(1.5)';
+                          if (!isMobile) {
+                            e.currentTarget.style.transform = 'scale(1.5)';
+                          }
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'scale(1)';
+                          if (!isMobile) {
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }
                         }}
                       />
                     );
@@ -279,22 +311,29 @@ export default function CalendarMonthView({
                         paddingTop: '0.5px',
                         flexShrink: 0,
                         whiteSpace: 'nowrap',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
+                        cursor: isMobile ? 'default' : 'pointer',
+                        transition: isMobile ? 'none' : 'all 0.2s',
+                        pointerEvents: isMobile ? 'none' : 'auto',
                       }}
                       onClick={(e) => {
-                        e.stopPropagation();
-                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                        setPopupState({
-                          dateStr,
-                          position: { top: rect.bottom + 4, left: rect.left },
-                        });
+                        if (!isMobile) {
+                          e.stopPropagation();
+                          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                          setPopupState({
+                            dateStr,
+                            position: { top: rect.bottom + 4, left: rect.left },
+                          });
+                        }
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.opacity = '0.8';
+                        if (!isMobile) {
+                          e.currentTarget.style.opacity = '0.8';
+                        }
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.opacity = '1';
+                        if (!isMobile) {
+                          e.currentTarget.style.opacity = '1';
+                        }
                       }}
                     >
                       +{moreCount}

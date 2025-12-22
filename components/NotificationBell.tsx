@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Bell, X, Check, Clock, AlertCircle } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
+import useAppStore from '@/lib/store';
 
 interface Notification {
   id: string;
@@ -14,6 +16,8 @@ interface Notification {
 }
 
 export default function NotificationBell() {
+  const isMobile = useIsMobile();
+  const { settings } = useAppStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -256,13 +260,13 @@ export default function NotificationBell() {
               left: `${dropdownOffset.left}px`,
               top: `${dropdownOffset.top}px`,
               width: 'auto',
-              minWidth: '300px',
-              maxWidth: '360px',
+              minWidth: isMobile ? '280px' : '300px',
+              maxWidth: isMobile ? '320px' : '360px',
               backgroundColor: 'var(--panel)',
               border: '1px solid var(--border)',
               borderRadius: '20px',
               boxShadow: 'var(--shadow-lg)',
-              maxHeight: '500px',
+              maxHeight: isMobile ? '400px' : '500px',
               overflow: 'auto',
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
@@ -272,14 +276,14 @@ export default function NotificationBell() {
             {/* Header */}
             <div
               style={{
-                padding: '12px 16px',
+                padding: isMobile ? '8px 12px' : '12px 16px',
                 borderBottom: '1px solid var(--border)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}
             >
-              <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: 'var(--text)' }}>
+              <h3 style={{ margin: 0, fontSize: isMobile ? '13px' : '14px', fontWeight: '600', color: 'var(--text)' }}>
                 Notifications
               </h3>
               {unreadCount > 0 && (
@@ -290,9 +294,10 @@ export default function NotificationBell() {
                     border: 'none',
                     color: 'var(--accent)',
                     cursor: 'pointer',
-                    fontSize: '12px',
+                    fontSize: isMobile ? '11px' : '12px',
                     fontWeight: '500',
                     transition: 'opacity 0.2s ease',
+                    ...(settings.theme === 'dark' && { filter: 'brightness(1.6)' }),
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.opacity = '0.8';
@@ -308,8 +313,8 @@ export default function NotificationBell() {
 
             {/* Notifications List */}
             {notifications.length === 0 ? (
-              <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                <p style={{ fontSize: '14px', margin: 0 }}>No notifications</p>
+              <div style={{ padding: isMobile ? '16px 12px' : '24px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <p style={{ fontSize: isMobile ? '13px' : '14px', margin: 0 }}>No notifications</p>
               </div>
             ) : (
               <div>
@@ -317,7 +322,7 @@ export default function NotificationBell() {
                   <div
                     key={notification.id}
                     style={{
-                      padding: '8px 16px',
+                      padding: isMobile ? '6px 12px' : '8px 16px',
                       borderBottom: '1px solid var(--border)',
                       backgroundColor: notification.read ? 'transparent' : 'rgba(59, 130, 246, 0.05)',
                       cursor: 'pointer',
@@ -351,7 +356,7 @@ export default function NotificationBell() {
                             <p
                               style={{
                                 margin: '0 0 4px 0',
-                                fontSize: '15px',
+                                fontSize: isMobile ? '14px' : '15px',
                                 fontWeight: notification.read ? '400' : '600',
                                 color: 'var(--text)',
                               }}
@@ -361,7 +366,7 @@ export default function NotificationBell() {
                             <p
                               style={{
                                 margin: '0 0 6px 0',
-                                fontSize: '14px',
+                                fontSize: isMobile ? '12px' : '14px',
                                 color: 'var(--text-muted)',
                                 lineHeight: '1.4',
                                 overflow: 'hidden',
@@ -386,7 +391,7 @@ export default function NotificationBell() {
                           border: 'none',
                           color: 'var(--text-muted)',
                           cursor: 'pointer',
-                          padding: '6px 8px',
+                          padding: isMobile ? '4px 6px' : '6px 8px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -406,7 +411,7 @@ export default function NotificationBell() {
                           e.currentTarget.style.backgroundColor = 'transparent';
                         }}
                       >
-                        <X size={18} />
+                        <X size={isMobile ? 16 : 18} />
                       </button>
                     </div>
                   </div>

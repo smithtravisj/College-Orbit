@@ -8,8 +8,10 @@ import { isDateExcluded } from '@/lib/calendarUtils';
 import { getQuickLinks } from '@/lib/quickLinks';
 import { getDashboardCardSpan } from '@/lib/dashboardLayout';
 import { DASHBOARD_CARDS, DEFAULT_VISIBLE_DASHBOARD_CARDS } from '@/lib/customizationConstants';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
+import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
@@ -47,6 +49,39 @@ export default function Dashboard() {
   });
   const { courses, deadlines, tasks, exams, settings, excludedDates, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone, updateDeadline, deleteDeadline } = useAppStore();
   const visibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
+  const isMobile = useIsMobile();
+
+  // Handle card collapse state changes and save to database
+  const handleCardCollapseChange = (cardId: string, isOpen: boolean) => {
+    const currentCollapsed = settings.dashboardCardsCollapsedState || [];
+    const newCollapsed = isOpen
+      ? currentCollapsed.filter(id => id !== cardId)
+      : [...currentCollapsed, cardId];
+
+    // Update store immediately for local UI sync
+    useAppStore.setState((state) => ({
+      settings: {
+        ...state.settings,
+        dashboardCardsCollapsedState: newCollapsed,
+      },
+    }));
+
+    // Save to database
+    fetch('/api/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dashboardCardsCollapsedState: newCollapsed }),
+    })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(err => {
+            console.error('[Dashboard] Save failed:', err);
+          });
+        }
+        return res.json();
+      })
+      .catch(err => console.error('[Dashboard] Failed to save card collapse state:', err));
+  };
 
   useEffect(() => {
     initializeStore().then(() => {
@@ -303,6 +338,44 @@ export default function Dashboard() {
   const classesLeft = todayClasses.filter((c) => c.start > nowTime).length;
   const overdueCount = overdueTasks.length + deadlines.filter((d) => d.dueAt && isOverdue(d.dueAt) && d.status === 'open').length;
 
+  // Helper function to get card wrapper classes based on device
+  const getCardWrapperClasses = (baseSpanClass: string) => {
+    // On mobile, don't apply h-full and min-h constraints to allow collapse
+    if (isMobile) {
+      return baseSpanClass;
+    }
+    return `${baseSpanClass} h-full min-h-[220px]`;
+  };
+
+  // Helper function to render card with appropriate component based on device
+  const renderCard = (cardId: string, title: string, children: React.ReactNode, className?: string, subtitle?: string) => {
+    // Check if card is collapsed in database
+    const isCollapsed = (settings.dashboardCardsCollapsedState || []).includes(cardId);
+
+    if (isMobile) {
+      // On mobile, remove h-full height constraint to prevent layout issues when collapsing
+      const mobileClassName = className?.replace(/h-full/g, '').trim() || '';
+      return (
+        <CollapsibleCard
+          id={cardId}
+          title={title}
+          subtitle={subtitle}
+          className={mobileClassName}
+          initialOpen={!isCollapsed}
+          onChange={(isOpen) => handleCardCollapseChange(cardId, isOpen)}
+        >
+          {children}
+        </CollapsibleCard>
+      );
+    }
+
+    return (
+      <Card title={title} className={className}>
+        {children}
+      </Card>
+    );
+  };
+
   return (
     <>
       <OnboardingTour
@@ -312,13 +385,15 @@ export default function Dashboard() {
 
       <PageHeader title="Dashboard" subtitle="Welcome back. Here's your schedule and tasks for today." />
       <div className="mx-auto w-full max-w-[1400px] min-h-[calc(100vh-var(--header-h))] flex flex-col" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
-        <div className="grid grid-cols-12 gap-[var(--grid-gap)] flex-1">
+        <div className={`grid grid-cols-12 ${!isMobile ? 'flex-1' : ''}`} style={{ gap: isMobile ? '16px' : 'var(--grid-gap)' }}>
           {/* Top row - 3 cards */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.NEXT_CLASS) && (
-          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.NEXT_CLASS, visibleDashboardCards)} h-full min-h-[220px]`} data-tour="next-class">
-            <Card title="Next Class" className="h-full flex flex-col">
-              {nextClass ? (
-                <div className="flex flex-col gap-4">
+          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.NEXT_CLASS, visibleDashboardCards))} data-tour="next-class">
+            {renderCard(
+              DASHBOARD_CARDS.NEXT_CLASS,
+              'Next Class',
+              nextClass ? (
+                <div className={`flex flex-col ${isMobile ? '' : 'gap-4'}`} style={{ gap: isMobile ? '6px' : undefined }}>
                   {/* Course Code & Name */}
                   <div>
                     <div className="text-sm font-medium text-[var(--text)]">
@@ -338,7 +413,7 @@ export default function Dashboard() {
 
                   {/* Course Links */}
                   {nextClass.courseLinks && nextClass.courseLinks.length > 0 && (
-                    <div className="flex flex-col pt-2" style={{ gap: '2px' }}>
+                    <div className="flex flex-col" style={{ gap: '2px', marginTop: isMobile ? '4px' : '8px' }}>
                       {nextClass.courseLinks.map((link) => (
                         <a
                           key={link.url}
@@ -355,16 +430,20 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <EmptyState title="No classes today" description="You're free for the rest of the day!" />
-              )}
-            </Card>
+              ),
+              'h-full flex flex-col'
+            )}
           </div>
           )}
 
           {/* Due Soon */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.DUE_SOON) && (
-          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.DUE_SOON, visibleDashboardCards)} h-full min-h-[220px]`} data-tour="due-soon">
-            <Card title="Due Soon" className="h-full flex flex-col">
-              {showDeadlineForm && (
+          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.DUE_SOON, visibleDashboardCards))} data-tour="due-soon">
+            {renderCard(
+              DASHBOARD_CARDS.DUE_SOON,
+              'Due Soon',
+              <>
+                {showDeadlineForm && (
                 <div style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid var(--border)' }}>
                   <form onSubmit={handleDeadlineSubmit} className="space-y-5">
                     <Input
@@ -596,43 +675,51 @@ export default function Dashboard() {
               ) : (
                 <EmptyState title="No deadlines soon" description="You're all caught up!" />
               )}
-            </Card>
+              </>,
+              'h-full flex flex-col'
+            )}
           </div>
           )}
 
           {/* Overview */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.OVERVIEW) && (
-          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.OVERVIEW, visibleDashboardCards)} h-full min-h-[220px]`} data-tour="overview">
-            <Card title="Overview" className="h-full flex flex-col">
+          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.OVERVIEW, visibleDashboardCards))} style={isMobile ? { order: -1 } : {}} data-tour="overview">
+            {renderCard(
+              DASHBOARD_CARDS.OVERVIEW,
+              'Overview',
               <div className="space-y-0">
-                <div className="flex items-center justify-between border-b border-[var(--border)] first:pt-0" style={{ paddingTop: '12px', paddingBottom: '12px' }}>
+                <div className="flex items-center justify-between border-b border-[var(--border)] first:pt-0" style={{ paddingTop: isMobile ? '8px' : '12px', paddingBottom: isMobile ? '8px' : '12px' }}>
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Classes remaining</div>
                   <div className="text-base font-semibold tabular-nums" style={{ color: settings.theme === 'light' ? '#000000' : 'white', filter: 'brightness(1.3) saturate(1.1)' }}>{classesLeft}</div>
                 </div>
-                <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: '12px', paddingBottom: '12px' }}>
+                <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: isMobile ? '8px' : '12px', paddingBottom: isMobile ? '8px' : '12px' }}>
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Due soon</div>
                   <div className="text-base font-semibold tabular-nums text-[var(--text)]">{dueSoon.length}</div>
                 </div>
-                <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: '12px', paddingBottom: '12px' }}>
+                <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: isMobile ? '8px' : '12px', paddingBottom: isMobile ? '8px' : '12px' }}>
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Overdue</div>
                   <div className={`text-base font-semibold tabular-nums ${overdueCount > 0 ? 'text-[var(--danger)]' : 'text-[var(--text)]'}`}>
                     {overdueCount}
                   </div>
                 </div>
-                <div className="flex items-center justify-between last:pb-0" style={{ paddingTop: '12px', paddingBottom: '12px' }}>
+                <div className="flex items-center justify-between last:pb-0" style={{ paddingTop: isMobile ? '8px' : '12px', paddingBottom: isMobile ? '8px' : '12px' }}>
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Tasks today</div>
                   <div className="text-base font-semibold tabular-nums text-[var(--text)]">{todayTasks.length}</div>
                 </div>
-              </div>
-            </Card>
+              </div>,
+              'h-full flex flex-col'
+            )}
           </div>
           )}
 
           {/* Second row - Today's Tasks & Quick Links */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.TODAY_TASKS) && (
-          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.TODAY_TASKS, visibleDashboardCards)} lg:flex`} data-tour="today-tasks">
-            <Card title="Today's Tasks" className="h-full flex flex-col w-full">
-            {todayTasks.length > 0 || showTaskForm ? (
+          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.TODAY_TASKS, visibleDashboardCards) + ' lg:flex')} data-tour="today-tasks">
+            {renderCard(
+              DASHBOARD_CARDS.TODAY_TASKS,
+              'Today\'s Tasks',
+              <>
+              {todayTasks.length > 0 || showTaskForm ? (
               <div className="space-y-4 divide-y divide-[var(--border)]">
                 {todayTasks.slice(0, 5).map((t) => {
                   const dueHours = t.dueAt ? new Date(t.dueAt).getHours() : null;
@@ -888,47 +975,58 @@ export default function Dashboard() {
                 </form>
               </div>
             )}
-            </Card>
+            </>,
+              'h-full flex flex-col w-full'
+            )}
           </div>
           )}
 
           {/* Quick Links */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.QUICK_LINKS) && (
-          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.QUICK_LINKS, visibleDashboardCards)} lg:flex`}>
-            <Card title="Quick Links" subtitle={settings.university ? `Resources for ${settings.university}` : 'Select a college to view quick links'} className="h-full flex flex-col w-full">
-              {settings.university ? (
-                <div className="grid grid-cols-2 gap-3">
-                  {quickLinks.map((link) => (
-                    <a
-                      key={link.label}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rounded-[12px] text-center text-sm font-medium transition-colors hover:opacity-80"
-                      style={{ display: 'block', padding: '12px', backgroundColor: settings.theme === 'light' ? 'var(--panel)' : 'var(--panel-2)', color: 'var(--text)', border: '2px solid var(--border)' }}
-                    >
-                      {link.label}
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  title="Quick Links"
-                  description="Go to settings to select a university to add quick links."
-                  action={{
-                    label: "Go to Settings",
-                    onClick: () => window.location.href = '/settings'
-                  }}
-                />
-              )}
-            </Card>
+          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.QUICK_LINKS, visibleDashboardCards) + ' lg:flex')}>
+            {renderCard(
+              DASHBOARD_CARDS.QUICK_LINKS,
+              'Quick Links',
+              <>
+                {settings.university ? (
+                  <div className={`grid grid-cols-2 ${isMobile ? 'gap-2' : 'gap-3'}`}>
+                    {quickLinks.map((link) => (
+                      <a
+                        key={link.label}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-[12px] text-center text-sm font-medium transition-colors hover:opacity-80"
+                        style={{ display: 'block', padding: isMobile ? '8px' : '12px', backgroundColor: settings.theme === 'light' ? 'var(--panel)' : 'var(--panel-2)', color: 'var(--text)', border: '2px solid var(--border)' }}
+                      >
+                        {link.label}
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="Quick Links"
+                    description="Go to settings to select a university to add quick links."
+                    action={{
+                      label: "Go to Settings",
+                      onClick: () => window.location.href = '/settings'
+                    }}
+                  />
+                )}
+              </>,
+              'h-full flex flex-col w-full',
+              settings.university ? `Resources for ${settings.university}` : 'Select a college to view quick links'
+            )}
           </div>
           )}
 
           {/* Upcoming This Week - Full Width */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.UPCOMING_WEEK) && (
-          <div className={`${getDashboardCardSpan(DASHBOARD_CARDS.UPCOMING_WEEK, visibleDashboardCards)} lg:flex`}>
-            <Card title="Upcoming This Week" subtitle="Your schedule for the next 7 days" className="h-full flex flex-col w-full">
+          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.UPCOMING_WEEK, visibleDashboardCards) + ' lg:flex')}>
+            {renderCard(
+              DASHBOARD_CARDS.UPCOMING_WEEK,
+              'Upcoming This Week',
+              <>
               {(() => {
                 // Get classes and exams for the next 7 days
                 const daysList: Array<{ dateKey: string; date: Date; items: Array<any> }> = [];
@@ -1039,7 +1137,10 @@ export default function Dashboard() {
                   <EmptyState title="No classes or exams this week" description="You have a free week ahead!" />
                 );
               })()}
-            </Card>
+              </>,
+              'h-full flex flex-col w-full',
+              'Your schedule for the next 7 days'
+            )}
           </div>
           )}
         </div>

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface CalendarPickerProps {
   value: string; // ISO date string (YYYY-MM-DD)
@@ -10,6 +11,7 @@ interface CalendarPickerProps {
 }
 
 export default function CalendarPicker({ value, onChange, label }: CalendarPickerProps) {
+  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<Date>(() => {
     if (value) {
@@ -93,7 +95,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
   return (
     <div ref={containerRef} style={{ position: 'relative', display: 'block', width: '100%', overflow: 'visible' }}>
       {label && (
-        <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>
+        <label style={{ display: 'block', marginBottom: isMobile ? '4px' : '6px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>
           {label}
         </label>
       )}

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useAppStore from '@/lib/store';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import PageHeader from '@/components/PageHeader';
 import CalendarMonthView from './CalendarMonthView';
 import CalendarDayView from './CalendarDayView';
@@ -26,9 +27,11 @@ export default function CalendarContent() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isMobile = useIsMobile();
 
   const [view, setView] = useState<ViewType>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState<Date>(new Date()); // For mobile: track selected day separate from month
   const [filteredTasks, setFilteredTasks] = useState<any[]>([]);
   const [filteredDeadlines, setFilteredDeadlines] = useState<any[]>([]);
   const [filteredExams, setFilteredExams] = useState<any[]>([]);
@@ -215,9 +218,13 @@ export default function CalendarContent() {
   };
 
   const handleSelectDate = (date: Date) => {
-    setCurrentDate(date);
-    if (view !== 'day') {
-      setView('day');
+    setSelectedDay(date); // Always update selectedDay for mobile
+    if (!isMobile) {
+      // On desktop, switch view to day
+      setCurrentDate(date);
+      if (view !== 'day') {
+        setView('day');
+      }
     }
   };
 
@@ -339,6 +346,7 @@ export default function CalendarContent() {
               {getDateDisplay()}
             </div>
             <div style={{ flex: 1 }} />
+            {!isMobile && (
             <div style={{ display: 'flex', gap: '6px' }}>
               {(['month', 'week', 'day'] as const).map((v) => (
                 <button
@@ -372,46 +380,84 @@ export default function CalendarContent() {
                 </button>
               ))}
             </div>
+            )}
           </div>
 
           <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
-            {view === 'month' && (
-              <CalendarMonthView
-                year={currentDate.getFullYear()}
-                month={currentDate.getMonth()}
-                courses={courses}
-                tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
-                deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
-                exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
-                allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
-                allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
-                excludedDates={excludedDates}
-                onSelectDate={handleSelectDate}
-              />
-            )}
-            {view === 'week' && (
-              <CalendarWeekView
-                date={currentDate}
-                courses={courses}
-                tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
-                deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
-                exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
-                allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
-                allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
-                excludedDates={excludedDates}
-              />
-            )}
-            {view === 'day' && (
-              <CalendarDayView
-                date={currentDate}
-                courses={courses}
-                tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
-                deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
-                exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
-                allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
-                allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
-                excludedDates={excludedDates}
-              />
+            {isMobile ? (
+              <>
+                {/* Mobile: Month view at top with compact height */}
+                <div style={{ flexShrink: 0, borderBottom: '1px solid var(--border)', overflow: 'hidden', maxHeight: isMobile ? '55%' : undefined }}>
+                  <CalendarMonthView
+                    year={currentDate.getFullYear()}
+                    month={currentDate.getMonth()}
+                    courses={courses}
+                    tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
+                    deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
+                    exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
+                    allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
+                    allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
+                    excludedDates={excludedDates}
+                    onSelectDate={handleSelectDate}
+                    selectedDate={selectedDay}
+                  />
+                </div>
+                {/* Mobile: Day view below the month, showing schedule for selected day */}
+                <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+                  <CalendarDayView
+                    date={selectedDay}
+                    courses={courses}
+                    tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
+                    deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
+                    exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
+                    allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
+                    allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
+                    excludedDates={excludedDates}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Desktop: Original behavior with view switching */}
+                {view === 'month' && (
+                  <CalendarMonthView
+                    year={currentDate.getFullYear()}
+                    month={currentDate.getMonth()}
+                    courses={courses}
+                    tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
+                    deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
+                    exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
+                    allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
+                    allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
+                    excludedDates={excludedDates}
+                    onSelectDate={handleSelectDate}
+                  />
+                )}
+                {view === 'week' && (
+                  <CalendarWeekView
+                    date={currentDate}
+                    courses={courses}
+                    tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
+                    deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
+                    exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
+                    allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
+                    allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
+                    excludedDates={excludedDates}
+                  />
+                )}
+                {view === 'day' && (
+                  <CalendarDayView
+                    date={currentDate}
+                    courses={courses}
+                    tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
+                    deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
+                    exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
+                    allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
+                    allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
+                    excludedDates={excludedDates}
+                  />
+                )}
+              </>
             )}
           </div>
           <CalendarLegend />

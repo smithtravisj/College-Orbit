@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Folder, Edit2, Trash2 } from 'lucide-react';
 import { Folder as FolderType } from '@/types/index';
 import useAppStore from '@/lib/store';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface FolderTreeProps {
   folders: FolderType[];
@@ -16,6 +17,7 @@ export default function FolderTree({
   selectedFolderId,
   onSelectFolder,
 }: FolderTreeProps) {
+  const isMobile = useIsMobile();
   const { deleteFolder, addFolder, updateFolder, settings } = useAppStore();
   const [contextMenu, setContextMenu] = useState<{ folderId: string; x: number; y: number } | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -110,9 +112,9 @@ export default function FolderTree({
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          padding: '12px 8px 12px 16px',
-          marginTop: '8px',
+          gap: isMobile ? '6px' : '8px',
+          padding: isMobile ? '6px 6px 6px 12px' : '12px 8px 12px 16px',
+          marginTop: isMobile ? '4px' : '8px',
           borderRadius: '8px',
           cursor: 'pointer',
           backgroundColor: selectedFolderId === null ? 'var(--accent)' : 'transparent',
@@ -133,8 +135,8 @@ export default function FolderTree({
         }}
         onClick={() => onSelectFolder(null)}
       >
-        <Folder size={16} style={{ flexShrink: 0 }} />
-        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', fontWeight: '500' }}>All Notes</span>
+        <Folder size={isMobile ? 14 : 16} style={{ flexShrink: 0 }} />
+        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: isMobile ? '12px' : '14px', fontWeight: '500' }}>All Notes</span>
       </div>
 
       {/* Folders */}
@@ -179,8 +181,8 @@ export default function FolderTree({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              padding: '12px 8px 12px 16px',
+              gap: isMobile ? '6px' : '8px',
+              padding: isMobile ? '6px 6px 6px 12px' : '12px 8px 12px 16px',
               borderRadius: '8px',
               cursor: 'pointer',
               backgroundColor: isSelected ? 'var(--accent)' : 'transparent',
@@ -205,8 +207,8 @@ export default function FolderTree({
               setContextMenu({ folderId: folder.id, x: e.clientX, y: e.clientY });
             }}
           >
-            <Folder size={16} style={{ flexShrink: 0 }} />
-            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px', fontWeight: '500' }}>
+            <Folder size={isMobile ? 14 : 16} style={{ flexShrink: 0 }} />
+            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: isMobile ? '12px' : '14px', fontWeight: '500' }}>
               {folder.name}
             </span>
           </div>
@@ -219,16 +221,16 @@ export default function FolderTree({
           onClick={() => setIsCreating(true)}
           style={{
             width: '100%',
-            padding: '8px',
+            padding: isMobile ? '6px' : '8px',
             borderRadius: '8px',
             border: '1px solid var(--border)',
             backgroundColor: addFolderBgColor,
             color: isLightMode ? '#000000' : 'white',
             cursor: 'pointer',
-            fontSize: '14px',
+            fontSize: isMobile ? '12px' : '14px',
             fontWeight: '500',
             transition: 'all 150ms ease',
-            marginTop: '4px',
+            marginTop: isMobile ? '2px' : '4px',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = addFolderHoverBgColor;

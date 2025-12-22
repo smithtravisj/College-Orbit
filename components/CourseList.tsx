@@ -5,6 +5,7 @@ import useAppStore from '@/lib/store';
 import Card from '@/components/ui/Card';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { Edit2, Trash2 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { Course } from '@/types';
 
 interface CourseListProps {
@@ -22,6 +23,7 @@ const formatTime12Hour = (time24: string): string => {
 };
 
 export default function CourseList({ courses, onEdit, showSemester = false }: CourseListProps) {
+  const isMobile = useIsMobile();
   const { deleteCourse } = useAppStore();
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
@@ -85,13 +87,14 @@ export default function CourseList({ courses, onEdit, showSemester = false }: Co
               </div>
             </div>
 
-            <div className="flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
+            <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '6px' }}>
               <button
                 onClick={() => onEdit(course.id)}
-                className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                style={{ padding: isMobile ? '6px' : '8px' }}
                 title="Edit course"
               >
-                <Edit2 size={18} />
+                <Edit2 size={isMobile ? 18 : 20} />
               </button>
               <button
                 onClick={() => {
@@ -101,10 +104,11 @@ export default function CourseList({ courses, onEdit, showSemester = false }: Co
                     courseName: course.code,
                   });
                 }}
-                className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                style={{ padding: isMobile ? '6px' : '8px' }}
                 title="Delete course"
               >
-                <Trash2 size={18} />
+                <Trash2 size={isMobile ? 18 : 20} />
               </button>
             </div>
           </div>

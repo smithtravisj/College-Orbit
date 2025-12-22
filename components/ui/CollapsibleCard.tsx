@@ -12,6 +12,8 @@ interface CollapsibleCardProps {
   children: React.ReactNode;
   hoverable?: boolean;
   className?: string;
+  onChange?: (isOpen: boolean) => void;
+  initialOpen?: boolean;
 }
 
 const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
@@ -22,24 +24,25 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   children,
   hoverable = false,
   className = '',
+  onChange,
+  initialOpen = true,
 }) => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(initialOpen);
   const [mounted, setMounted] = useState(false);
 
-  // Load state from localStorage on mount
+  // Load state from database (via initialOpen prop)
   useEffect(() => {
-    const stored = localStorage.getItem(`card-${id}-open`);
-    if (stored !== null) {
-      setIsOpen(stored === 'true');
-    }
+    setIsOpen(initialOpen);
     setMounted(true);
-  }, [id]);
+  }, [id, initialOpen]);
 
-  // Save state to localStorage when it changes
+  // Save state to database via onChange callback
   const handleToggle = () => {
     const newState = !isOpen;
     setIsOpen(newState);
-    localStorage.setItem(`card-${id}-open`, String(newState));
+    if (onChange) {
+      onChange(newState);
+    }
   };
 
   if (!mounted) {
@@ -48,22 +51,26 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
 
   return (
     <div
-      className={`rounded-[16px] border border-[var(--border)] bg-[var(--panel)] shadow-[var(--shadow-sm)] transition-colors w-full h-full flex flex-col ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${className}`}
+      className={`rounded-[16px] border border-[var(--border)] bg-[var(--panel)] shadow-[var(--shadow-sm)] transition-colors w-full flex flex-col ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${!isOpen ? 'cursor-pointer' : ''} ${className}`}
       style={{ position: 'relative', overflow: 'visible' }}
+      onClick={() => !isOpen && handleToggle()}
     >
       {/* Inner content wrapper */}
-      <div className="flex flex-col flex-1" style={{ padding: '24px', overflow: 'visible' }}>
+      <div className="flex flex-col" style={{ padding: isOpen ? '24px' : '8px 24px 12px 24px', overflow: 'visible' }}>
         {/* Header block */}
         {title && (
-          <div className="flex items-start justify-between gap-4" style={{ marginBottom: '16px' }}>
+          <div className="flex items-start justify-between gap-4" style={{ marginBottom: isOpen ? '16px' : '0px', paddingTop: isOpen ? '0px' : '8px' }}>
             <div className="space-y-2 flex-1">
               <h3 className="text-lg md:text-xl font-semibold leading-[1.25] text-[var(--text)]">{title}</h3>
-              {subtitle && <p className="text-sm leading-[1.8] text-[var(--muted)]">{subtitle}</p>}
+              {subtitle && isOpen && <p className="text-sm leading-[1.8] text-[var(--muted)]">{subtitle}</p>}
             </div>
             <div className="flex items-center gap-2">
               {action && <div>{action}</div>}
               <button
-                onClick={handleToggle}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggle();
+                }}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -75,6 +82,7 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
                   color: 'var(--text-muted)',
                   transition: 'color 0.2s',
                   flexShrink: 0,
+                  marginTop: isOpen ? '0px' : '-4px',
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget).style.color = 'var(--text)';

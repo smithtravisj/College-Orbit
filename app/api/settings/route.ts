@@ -78,6 +78,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.selectedGradeSemester !== undefined) updateData.selectedGradeSemester = data.selectedGradeSemester;
     if (data.toolsCardsOrder !== undefined) updateData.toolsCardsOrder = data.toolsCardsOrder;
     if (data.visiblePagesOrder !== undefined) updateData.visiblePagesOrder = data.visiblePagesOrder;
+    if (data.dashboardCardsCollapsedState !== undefined) updateData.dashboardCardsCollapsedState = data.dashboardCardsCollapsedState;
 
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 

@@ -230,6 +230,7 @@ export interface Settings {
   pomodoroBreakDuration?: number;
   pomodoroIsMuted?: boolean;
   selectedGradeSemester?: string;
+  dashboardCardsCollapsedState?: string[] | null;
 }
 
 export interface ExcludedDate {

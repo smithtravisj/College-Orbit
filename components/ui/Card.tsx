@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface CardProps {
   title?: string;
@@ -19,13 +20,14 @@ const Card: React.FC<CardProps> = ({
   hoverable = false,
   className = '',
 }) => {
+  const isMobile = useIsMobile();
   return (
     <div
       className={`rounded-[16px] border border-[var(--border)] bg-[var(--panel)] shadow-[var(--shadow-sm)] transition-colors w-full h-full flex flex-col ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${className}`}
-      style={{ position: 'relative', overflow: 'visible' }}
+      style={{ position: 'relative', overflow: 'visible', minWidth: isMobile ? '0' : 'auto' }}
     >
       {/* Inner content wrapper: padding is HARDCODED but overridden on mobile */}
-      <div className="flex flex-col flex-1" style={{ padding: '24px', overflow: 'visible' }}>
+      <div className="flex flex-col flex-1" style={{ padding: isMobile ? '14px' : '24px', overflow: 'visible' }}>
         {/* Header block: enforced spacing */}
         {title && (
           <div className="flex items-start justify-between gap-4" style={{ marginBottom: '16px' }}>

@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import DaysDropdown from '@/components/DaysDropdown';
 import TimePicker from '@/components/TimePicker';
 import CalendarPicker from '@/components/CalendarPicker';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { Plus, Trash2 } from 'lucide-react';
 
 interface CourseFormProps {
@@ -20,6 +21,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
   { courseId, onClose, hideSubmitButton = false, onSave }: CourseFormProps,
   ref: React.ForwardedRef<{ submit: () => void }>
 ) {
+  const isMobile = useIsMobile();
   const { courses, settings, addCourse, updateCourse } = useAppStore();
   const course = courses.find((c) => c.id === courseId);
   const formRef = useRef<HTMLFormElement>(null);
@@ -142,7 +144,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
         <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Meeting Times</label>
         <div className="space-y-2" style={{ overflow: 'visible' }}>
           {form.meetingTimes.map((mt, idx) => (
-            <div key={idx} className="flex items-center" style={{ gap: '4px', paddingBottom: '4px' }}>
+            <div key={idx} className={isMobile ? 'flex flex-wrap items-end' : 'flex items-center'} style={{ gap: isMobile ? '6px' : '4px', paddingBottom: '4px' }}>
               <DaysDropdown
                 label={idx === 0 ? 'Days' : ''}
                 value={mt.days}
@@ -170,22 +172,19 @@ const CourseFormComponent = forwardRef(function CourseForm(
                   setForm({ ...form, meetingTimes: newMeetingTimes });
                 }}
               />
-              <Input
-                label={idx === 0 ? 'Location' : ''}
-                type="text"
-                value={mt.location}
-                onChange={(e) => {
-                  const newMeetingTimes = [...form.meetingTimes];
-                  newMeetingTimes[idx].location = e.target.value;
-                  setForm({ ...form, meetingTimes: newMeetingTimes });
-                }}
-                placeholder="e.g., Room 101"
-                style={{ minWidth: '100px', maxWidth: '150px' }}
-              />
-              <div>
-                {idx === 0 && (
-                  <label className="block text-sm font-medium text-[var(--text)] mb-2" style={{ height: '20px' }}></label>
-                )}
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
+                <Input
+                  label={idx === 0 ? 'Location' : ''}
+                  type="text"
+                  value={mt.location}
+                  onChange={(e) => {
+                    const newMeetingTimes = [...form.meetingTimes];
+                    newMeetingTimes[idx].location = e.target.value;
+                    setForm({ ...form, meetingTimes: newMeetingTimes });
+                  }}
+                  placeholder="e.g., Room 101"
+                  style={{ minWidth: '100px', maxWidth: '150px' }}
+                />
                 <button
                   type="button"
                   onClick={() => {
@@ -195,7 +194,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
                     });
                   }}
                   className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                  style={{ padding: '8px' }}
+                  style={{ padding: '8px', marginBottom: idx === 0 ? '8px' : '0px', marginLeft: isMobile ? '0' : '-6px' }}
                   title="Remove meeting time"
                 >
                   <Trash2 size={18} />
@@ -260,7 +259,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
                     });
                   }}
                   className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                  style={{ padding: '8px' }}
+                  style={{ padding: '8px', marginTop: isMobile ? '0' : '8px' }}
                   title="Remove link"
                 >
                   <Trash2 size={18} />

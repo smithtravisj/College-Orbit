@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface TimePickerProps {
   value: string;
@@ -10,6 +11,7 @@ interface TimePickerProps {
 }
 
 export default function TimePicker({ value, onChange, label }: TimePickerProps) {
+  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [hours, setHours] = useState<string>('');
   const [minutes, setMinutes] = useState<string>('');
@@ -149,7 +151,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   return (
     <div ref={containerRef} className="relative w-full" style={{ minWidth: '120px', overflow: 'visible' }}>
       {label && (
-        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px', paddingTop: '4px', paddingBottom: '3px' }}>
+        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: isMobile ? '4px' : '6px', paddingTop: '4px', paddingBottom: '3px' }}>
           {label}
         </label>
       )}

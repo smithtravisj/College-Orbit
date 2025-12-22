@@ -265,7 +265,7 @@ export default function Navigation() {
 
           {/* Navigation links */}
           <nav className={styles.drawerNav}>
-            {sortedNavItems.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
+            {sortedNavItems.filter(item => (visiblePages.includes(item.label) || item.label === 'Settings') && item.label !== 'Tools').map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
               return (
@@ -279,7 +279,7 @@ export default function Navigation() {
                 </Link>
               );
             })}
-            {isAdmin && ADMIN_NAV_ITEMS.map((item) => {
+            {isAdmin && ADMIN_NAV_ITEMS.filter(item => item.label !== 'Analytics').map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
               return (

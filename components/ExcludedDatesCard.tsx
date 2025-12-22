@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import useAppStore from '@/lib/store';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
@@ -9,6 +10,7 @@ import ExcludedDateForm from '@/components/ExcludedDateForm';
 import { Plus, Trash2 } from 'lucide-react';
 
 export default function ExcludedDatesCard() {
+  const isMobile = useIsMobile();
   const { excludedDates, courses, settings, deleteExcludedDate } = useAppStore();
   const [showForm, setShowForm] = useState(false);
   const [isDeleting, setIsDeleting] = useState<Set<string>>(new Set());
@@ -94,34 +96,35 @@ export default function ExcludedDatesCard() {
 
   return (
     <Card>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: isMobile ? '12px' : '20px', gap: isMobile ? '8px' : '0px' }}>
         <div>
-          <h2 style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 4px 0' }}>
+          <h2 style={{ fontSize: isMobile ? '14px' : '18px', fontWeight: '600', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Excluded Dates & Holidays
           </h2>
-          <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
+          <p style={{ fontSize: isMobile ? '12px' : '14px', color: 'var(--text-muted)', margin: 0 }}>
             Mark days where you have no classes
           </p>
         </div>
         <Button
           onClick={() => setShowForm(!showForm)}
+          size={isMobile ? 'sm' : 'md'}
           style={{
             backgroundColor: 'var(--button-secondary)',
             color: settings.theme === 'light' ? '#000000' : '#ffffff',
             border: '1px solid var(--border)',
-            padding: '8px 16px',
+            padding: isMobile ? '6px 12px' : '8px 16px',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            gap: isMobile ? '4px' : '8px',
           }}
         >
-          <Plus size={16} />
+          <Plus size={isMobile ? 14 : 16} />
           Add
         </Button>
       </div>
 
       {showForm && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--background-secondary)', borderRadius: '8px' }}>
+        <div style={{ marginBottom: isMobile ? '16px' : '24px', padding: isMobile ? '10px' : '16px', backgroundColor: 'var(--background-secondary)', borderRadius: '8px' }}>
           <ExcludedDateForm onClose={() => setShowForm(false)} />
         </div>
       )}
@@ -132,7 +135,7 @@ export default function ExcludedDatesCard() {
           description="Add holidays or days with no classes to keep your calendar organized"
         />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
           {groupedDates.map((group) => {
             const isRange = group.dates.length > 1;
             const dateDisplay = isRange
@@ -144,29 +147,30 @@ export default function ExcludedDatesCard() {
               <div
                 key={group.dates[0].id}
                 style={{
-                  padding: '12px 16px',
+                  padding: isMobile ? '8px 10px' : '12px 16px',
                   backgroundColor: 'var(--background-secondary)',
                   borderRadius: '8px',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center',
+                  alignItems: isMobile ? 'flex-start' : 'center',
+                  gap: isMobile ? '6px' : '0px',
                 }}
               >
-                <div>
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '13px', color: 'var(--text)' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '4px' : '12px', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: isMobile ? '2px' : '4px' }}>
+                    <span style={{ fontSize: isMobile ? '11px' : '13px', color: 'var(--text)', whiteSpace: 'nowrap' }}>
                       {getCourseName(group.courseId)}
                     </span>
-                    <span style={{ fontSize: '12px', backgroundColor: 'var(--border)', padding: '2px 8px', borderRadius: '4px', color: 'var(--text)' }}>
+                    <span style={{ fontSize: isMobile ? '10px' : '12px', backgroundColor: 'var(--border)', padding: isMobile ? '1px 6px' : '2px 8px', borderRadius: '4px', color: 'var(--text)' }}>
                       {dateDisplay}
                     </span>
                     {isRange && (
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                      <span style={{ fontSize: isMobile ? '9px' : '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
                         ({group.dates.length} days)
                       </span>
                     )}
                   </div>
-                  <p style={{ fontSize: '14px', fontWeight: '500', margin: 0, color: settings.theme === 'light' ? 'var(--text)' : '#e6edf6' }}>
+                  <p style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: '500', margin: 0, color: settings.theme === 'light' ? 'var(--text)' : '#e6edf6', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {group.description}
                   </p>
                 </div>
@@ -180,12 +184,13 @@ export default function ExcludedDatesCard() {
                     background: 'none',
                     border: 'none',
                     cursor: anyDeleting ? 'not-allowed' : 'pointer',
-                    padding: '8px',
+                    padding: isMobile ? '4px' : '8px',
                     color: 'var(--text-muted)',
                     opacity: anyDeleting ? 0.5 : 1,
                     transition: 'color 0.2s',
                     display: 'flex',
                     alignItems: 'center',
+                    flexShrink: 0,
                   }}
                   onMouseEnter={(e) => {
                     if (!anyDeleting) {
@@ -198,7 +203,7 @@ export default function ExcludedDatesCard() {
                     }
                   }}
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={isMobile ? 14 : 16} />
                 </button>
               </div>
             );

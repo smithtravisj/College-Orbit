@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Course, Task, Deadline, Exam } from '@/types';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { CalendarEvent } from '@/lib/calendarUtils';
 import useAppStore from '@/lib/store';
 import Button from '@/components/ui/Button';
@@ -70,6 +71,7 @@ export default function EventDetailModal({
   deadlines,
   exams = [],
 }: EventDetailModalProps) {
+  const isMobile = useIsMobile();
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
   const courseFormRef = useRef<{ submit: () => void }>(null);
@@ -384,7 +386,7 @@ export default function EventDetailModal({
             display: 'flex',
             alignItems: 'flex-start',
             justifyContent: 'space-between',
-            padding: '24px 24px 16px 24px',
+            padding: isMobile ? '12px 12px 8px 12px' : '24px 24px 16px 24px',
             borderBottom: '1px solid var(--border)',
           }}
         >
@@ -393,8 +395,8 @@ export default function EventDetailModal({
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
-                marginBottom: '8px',
+                gap: isMobile ? '8px' : '12px',
+                marginBottom: isMobile ? '4px' : '8px',
               }}
             >
               {event.type === 'course' ? (
@@ -404,9 +406,9 @@ export default function EventDetailModal({
                       display: 'inline-block',
                       backgroundColor: getEventTypeColor(),
                       color: 'white',
-                      padding: '4px 8px',
+                      padding: isMobile ? '2px 6px' : '4px 8px',
                       borderRadius: '4px',
-                      fontSize: '0.75rem',
+                      fontSize: isMobile ? '0.65rem' : '0.75rem',
                       fontWeight: 600,
                     }}
                   >
@@ -414,7 +416,7 @@ export default function EventDetailModal({
                   </div>
                   <h2
                     style={{
-                      fontSize: '1.125rem',
+                      fontSize: isMobile ? '0.875rem' : '1.125rem',
                       fontWeight: 600,
                       color: 'var(--text)',
                       margin: 0,
@@ -430,9 +432,9 @@ export default function EventDetailModal({
                       display: 'inline-block',
                       backgroundColor: getEventTypeColor(),
                       color: 'white',
-                      padding: '4px 8px',
+                      padding: isMobile ? '2px 6px' : '4px 8px',
                       borderRadius: '4px',
-                      fontSize: '0.75rem',
+                      fontSize: isMobile ? '0.65rem' : '0.75rem',
                       fontWeight: 600,
                     }}
                   >
@@ -440,7 +442,7 @@ export default function EventDetailModal({
                   </div>
                   <h2
                     style={{
-                      fontSize: '1.125rem',
+                      fontSize: isMobile ? '0.875rem' : '1.125rem',
                       fontWeight: 600,
                       color: 'var(--text)',
                       margin: 0,
@@ -477,7 +479,7 @@ export default function EventDetailModal({
         </div>
 
         {/* Content */}
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: isMobile ? '12px' : '24px' }}>
           {isEditing ? (
             event.type === 'course' ? (
               <CourseForm
@@ -510,28 +512,28 @@ export default function EventDetailModal({
         <div
           style={{
             display: 'flex',
-            gap: '12px',
+            gap: isMobile ? '8px' : '12px',
             justifyContent: 'flex-end',
-            padding: '16px 24px',
+            padding: isMobile ? '8px 12px' : '16px 24px',
             borderTop: '1px solid var(--border)',
           }}
         >
           {isEditing ? (
             <>
-              <Button variant="secondary" size="md" onClick={handleEditToggle}>
+              <Button variant="secondary" size={isMobile ? 'sm' : 'md'} onClick={handleEditToggle}>
                 Cancel
               </Button>
               <Button
                 variant="primary"
-                size="md"
+                size={isMobile ? 'sm' : 'md'}
                 onClick={handleSaveClick}
                 style={{
                   backgroundColor: 'var(--button-secondary)',
                   borderWidth: '1px',
                   borderStyle: 'solid',
                   borderColor: 'var(--border)',
-                  paddingLeft: '16px',
-                  paddingRight: '16px',
+                  paddingLeft: isMobile ? '12px' : '16px',
+                  paddingRight: isMobile ? '12px' : '16px',
                 }}
               >
                 Save
@@ -540,7 +542,7 @@ export default function EventDetailModal({
           ) : (
             <>
               {event.type !== 'course' && event.type !== 'exam' && (
-                <Button variant="secondary" size="md" onClick={handleMarkDoneClick}>
+                <Button variant="secondary" size={isMobile ? 'sm' : 'md'} onClick={handleMarkDoneClick}>
                   {(localStatus || (fullData && 'status' in fullData && (fullData as Task | Deadline).status)) === 'done'
                     ? 'Mark Incomplete'
                     : 'Mark Complete'}
@@ -548,30 +550,30 @@ export default function EventDetailModal({
               )}
               <Button
                 variant="primary"
-                size="md"
+                size={isMobile ? 'sm' : 'md'}
                 onClick={handleEditToggle}
                 style={{
                   backgroundColor: 'var(--button-secondary)',
                   borderWidth: '1px',
                   borderStyle: 'solid',
                   borderColor: 'var(--border)',
-                  paddingLeft: '16px',
-                  paddingRight: '16px',
+                  paddingLeft: isMobile ? '12px' : '16px',
+                  paddingRight: isMobile ? '12px' : '16px',
                 }}
               >
                 Edit
               </Button>
               <Button
                 variant="primary"
-                size="md"
+                size={isMobile ? 'sm' : 'md'}
                 onClick={handleDoneAndClose}
                 style={{
                   backgroundColor: 'var(--button-secondary)',
                   borderWidth: '1px',
                   borderStyle: 'solid',
                   borderColor: 'var(--border)',
-                  paddingLeft: '16px',
-                  paddingRight: '16px',
+                  paddingLeft: isMobile ? '12px' : '16px',
+                  paddingRight: isMobile ? '12px' : '16px',
                 }}
               >
                 Done
@@ -593,52 +595,78 @@ interface TaskDeadlineFormProps {
 }
 
 function TaskDeadlineForm({ formData, setFormData, courses }: TaskDeadlineFormProps) {
+  const isMobile = useIsMobile();
   if (!formData) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <Input
-        label="Title"
-        value={formData.title}
-        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-      />
-
-      <Select
-        label="Course (Optional)"
-        value={formData.courseId}
-        onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-        options={[
-          { value: '', label: 'None' },
-          ...courses.map((c) => ({ value: c.id, label: `${c.code}: ${c.name}` })),
-        ]}
-      />
-
-      <CalendarPicker
-        label="Due Date"
-        value={formData.dueDate}
-        onChange={(date) => setFormData({ ...formData, dueDate: date })}
-      />
-
-      <TimePicker
-        label="Due Time (Optional)"
-        value={formData.dueTime}
-        onChange={(time) => setFormData({ ...formData, dueTime: time })}
-      />
-
-      <Textarea
-        label="Notes"
-        value={formData.notes}
-        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-      />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
+      <div>
+        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
+          Title
+        </p>
+        <Input
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', ...(isMobile && { paddingLeft: '12px' }) }}
+        />
+      </div>
 
       <div>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text)', margin: '0 0 8px 0' }}>
+        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
+          Course (Optional)
+        </p>
+        <Select
+          value={formData.courseId}
+          onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
+          options={[
+            { value: '', label: 'None' },
+            ...courses.map((c) => ({ value: c.id, label: `${c.code}: ${c.name}` })),
+          ]}
+          style={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '8px' : '12px' }}>
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
+            Due Date
+          </p>
+          <CalendarPicker
+            value={formData.dueDate}
+            onChange={(date) => setFormData({ ...formData, dueDate: date })}
+          />
+        </div>
+
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
+            Due Time (Optional)
+          </p>
+          <TimePicker
+            value={formData.dueTime}
+            onChange={(time) => setFormData({ ...formData, dueTime: time })}
+          />
+        </div>
+      </div>
+
+      <div>
+        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
+          Notes
+        </p>
+        <Textarea
+          value={formData.notes}
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          style={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}
+        />
+      </div>
+
+      <div>
+        <p style={{ fontSize: isMobile ? '0.75rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 6px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
           Links
         </p>
-        {formData.links.map((link: any, index: number) => (
-          <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-            <div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0 0 4px 8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
+          {formData.links.map((link: any, index: number) => (
+            <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '6px', paddingBottom: isMobile ? '6px' : '8px', borderBottom: '1px solid var(--border)' }}>
+              <p style={{ fontSize: isMobile ? '0.6rem' : '0.65rem', color: 'var(--text-muted)', margin: 0, fontWeight: 500, ...(isMobile && { paddingLeft: '6px' }) }}>
                 Label
               </p>
               <Input
@@ -648,10 +676,9 @@ function TaskDeadlineForm({ formData, setFormData, courses }: TaskDeadlineFormPr
                   newLinks[index].label = e.target.value;
                   setFormData({ ...formData, links: newLinks });
                 }}
+                style={{ fontSize: isMobile ? '0.7rem' : '0.75rem' }}
               />
-            </div>
-            <div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0 0 4px 8px' }}>
+              <p style={{ fontSize: isMobile ? '0.6rem' : '0.65rem', color: 'var(--text-muted)', margin: 0, fontWeight: 500, ...(isMobile && { paddingLeft: '6px' }) }}>
                 URL
               </p>
               <Input
@@ -661,29 +688,30 @@ function TaskDeadlineForm({ formData, setFormData, courses }: TaskDeadlineFormPr
                   newLinks[index].url = e.target.value;
                   setFormData({ ...formData, links: newLinks });
                 }}
+                style={{ fontSize: isMobile ? '0.7rem' : '0.75rem' }}
               />
+              <Button
+                variant="secondary"
+                size={isMobile ? 'sm' : 'sm'}
+                onClick={() => {
+                  const newLinks = formData.links.filter((_: any, i: number) => i !== index);
+                  setFormData({ ...formData, links: newLinks });
+                }}
+              >
+                Remove
+              </Button>
             </div>
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={() => {
-                const newLinks = formData.links.filter((_: any, i: number) => i !== index);
-                setFormData({ ...formData, links: newLinks });
-              }}
-            >
-              Remove
-            </Button>
-          </div>
-        ))}
-        <Button
-          variant="secondary"
-          size="md"
-          onClick={() => {
-            setFormData({ ...formData, links: [...formData.links, { label: '', url: '' }] });
-          }}
-        >
-          Add Link
-        </Button>
+          ))}
+          <Button
+            variant="secondary"
+            size={isMobile ? 'sm' : 'sm'}
+            onClick={() => {
+              setFormData({ ...formData, links: [...formData.links, { label: '', url: '' }] });
+            }}
+          >
+            Add Link
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -696,36 +724,37 @@ interface CourseContentProps {
 }
 
 function CourseContent({ event, course }: CourseContentProps) {
+  const isMobile = useIsMobile();
   const meetingTime = course.meetingTimes.find(
     (mt) => mt.start === event.time && mt.end === event.endTime
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '20px' }}>
       <div>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+        <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
           Course Name
         </p>
-        <p style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+        <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
           {course.name}
         </p>
       </div>
 
       <div>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+        <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
           Term
         </p>
-        <p style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+        <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
           {course.term}
         </p>
       </div>
 
       {meetingTime && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Meeting Time
           </p>
-          <p style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
             {meetingTime.days.join(', ')} {formatTime(meetingTime.start)} -{' '}
             {formatTime(meetingTime.end)}
           </p>
@@ -734,10 +763,10 @@ function CourseContent({ event, course }: CourseContentProps) {
 
       {meetingTime?.location && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Location
           </p>
-          <p style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
             {meetingTime.location}
           </p>
         </div>
@@ -745,10 +774,10 @@ function CourseContent({ event, course }: CourseContentProps) {
 
       {course.links && course.links.length > 0 && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
             Links
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
             {course.links.map((link) => (
               <a
                 key={link.label}
@@ -784,14 +813,15 @@ interface TaskContentProps {
 }
 
 function TaskContent({ task, relatedCourse }: TaskContentProps) {
+  const isMobile = useIsMobile();
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '20px' }}>
       {relatedCourse && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Related Course
           </p>
-          <p style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
             {relatedCourse.code}: {relatedCourse.name}
           </p>
         </div>
@@ -799,10 +829,10 @@ function TaskContent({ task, relatedCourse }: TaskContentProps) {
 
       {task.dueAt && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Due Date
           </p>
-          <p style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
             {formatDateTimeWithTime(task.dueAt)}
           </p>
         </div>
@@ -810,12 +840,12 @@ function TaskContent({ task, relatedCourse }: TaskContentProps) {
 
       {task.notes && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
             Notes
           </p>
           <p
             style={{
-              fontSize: '0.875rem',
+              fontSize: isMobile ? '0.75rem' : '0.875rem',
               color: 'var(--text)',
               margin: 0,
               whiteSpace: 'pre-wrap',
@@ -829,19 +859,19 @@ function TaskContent({ task, relatedCourse }: TaskContentProps) {
 
       {task.checklist && task.checklist.length > 0 && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 8px 0' : '0 0 12px 0' }}>
             Checklist
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
             {task.checklist.map((item) => (
               <label
                 key={item.id}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
+                  gap: isMobile ? '8px' : '10px',
                   cursor: 'pointer',
-                  padding: '8px',
+                  padding: isMobile ? '4px' : '8px',
                   borderRadius: '4px',
                 }}
                 onMouseEnter={(e) => {
@@ -856,15 +886,15 @@ function TaskContent({ task, relatedCourse }: TaskContentProps) {
                   checked={item.done}
                   readOnly
                   style={{
-                    width: '16px',
-                    height: '16px',
+                    width: isMobile ? '14px' : '16px',
+                    height: isMobile ? '14px' : '16px',
                     cursor: 'pointer',
                     flexShrink: 0,
                   }}
                 />
                 <span
                   style={{
-                    fontSize: '0.875rem',
+                    fontSize: isMobile ? '0.75rem' : '0.875rem',
                     color: item.done ? 'var(--text-muted)' : 'var(--text)',
                     textDecoration: item.done ? 'line-through' : 'none',
                   }}
@@ -879,10 +909,10 @@ function TaskContent({ task, relatedCourse }: TaskContentProps) {
 
       {task.links && task.links.length > 0 && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
             Links
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
             {task.links.map((link) => (
               <a
                 key={link.label}
@@ -918,14 +948,15 @@ interface DeadlineContentProps {
 }
 
 function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
+  const isMobile = useIsMobile();
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '20px' }}>
       {relatedCourse && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Related Course
           </p>
-          <p style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
             {relatedCourse.code}: {relatedCourse.name}
           </p>
         </div>
@@ -933,10 +964,10 @@ function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
 
       {deadline.dueAt && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Due Date
           </p>
-          <p style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
             {formatDateTimeWithTime(deadline.dueAt)}
           </p>
         </div>
@@ -944,12 +975,12 @@ function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
 
       {deadline.notes && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
             Notes
           </p>
           <p
             style={{
-              fontSize: '0.875rem',
+              fontSize: isMobile ? '0.75rem' : '0.875rem',
               color: 'var(--text)',
               margin: 0,
               whiteSpace: 'pre-wrap',
@@ -963,10 +994,10 @@ function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
 
       {deadline.links && deadline.links.length > 0 && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
             Links
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
             {deadline.links.map((link) => (
               <a
                 key={link.label}
@@ -1002,14 +1033,15 @@ interface ExamContentProps {
 }
 
 function ExamContent({ exam, relatedCourse }: ExamContentProps) {
+  const isMobile = useIsMobile();
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '20px' }}>
       {relatedCourse && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Related Course
           </p>
-          <p style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
             {relatedCourse.code}: {relatedCourse.name}
           </p>
         </div>
@@ -1017,10 +1049,10 @@ function ExamContent({ exam, relatedCourse }: ExamContentProps) {
 
       {exam.examAt && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Exam Date & Time
           </p>
-          <p style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
             {formatDateTimeWithTime(exam.examAt)}
           </p>
         </div>
@@ -1028,10 +1060,10 @@ function ExamContent({ exam, relatedCourse }: ExamContentProps) {
 
       {exam.location && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Location
           </p>
-          <p style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
             {exam.location}
           </p>
         </div>
@@ -1039,12 +1071,12 @@ function ExamContent({ exam, relatedCourse }: ExamContentProps) {
 
       {exam.notes && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
             Notes
           </p>
           <p
             style={{
-              fontSize: '0.875rem',
+              fontSize: isMobile ? '0.75rem' : '0.875rem',
               color: 'var(--text)',
               margin: 0,
               whiteSpace: 'pre-wrap',
@@ -1058,10 +1090,10 @@ function ExamContent({ exam, relatedCourse }: ExamContentProps) {
 
       {exam.links && exam.links.length > 0 && (
         <div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
             Links
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
             {exam.links.map((link) => (
               <a
                 key={link.label}

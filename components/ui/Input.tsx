@@ -1,18 +1,22 @@
 import React, { useMemo } from 'react';
 import useAppStore from '@/lib/store';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   helperText?: string;
+  labelClassName?: string;
+  labelStyle?: React.CSSProperties;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helperText, className = '', ...props }, ref) => {
+  ({ label, error, helperText, className = '', labelClassName = 'text-sm', labelStyle = {}, ...props }, ref) => {
+    const isMobile = useIsMobile();
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
+          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: isMobile ? '4px' : '12px', ...labelStyle }}>
             {label}
             {props.required && <span className="text-[var(--danger)]"> *</span>}
           </label>
@@ -39,14 +43,17 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   label?: string;
   error?: string;
   helperText?: string;
+  labelClassName?: string;
+  labelStyle?: React.CSSProperties;
 }
 
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, helperText, className = '', ...props }, ref) => {
+  ({ label, error, helperText, className = '', labelClassName = 'text-sm', labelStyle = {}, ...props }, ref) => {
+    const isMobile = useIsMobile();
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
+          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: isMobile ? '4px' : '12px', ...labelStyle }}>
             {label}
             {props.required && <span className="text-[var(--danger)]"> *</span>}
           </label>
@@ -72,12 +79,15 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   error?: string;
   helperText?: string;
   options: Array<{ value: string; label: string }>;
+  labelClassName?: string;
+  labelStyle?: React.CSSProperties;
 }
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, helperText, options, className = '', ...props }, ref) => {
+  ({ label, error, helperText, options, className = '', labelClassName = 'text-sm', labelStyle = {}, ...props }, ref) => {
     const isMultiple = (props as any).multiple;
     const { settings } = useAppStore();
+    const isMobile = useIsMobile();
 
     const selectStyle = useMemo(() => ({
       padding: '10px 12px',
@@ -94,7 +104,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
+          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: isMobile ? '4px' : '12px', ...labelStyle }}>
             {label}
             {props.required && <span className="text-[var(--danger)]"> *</span>}
           </label>

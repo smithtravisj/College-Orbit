@@ -314,6 +314,7 @@ model Settings {
   selectedGradeSemester  String   @default("all")
   toolsCardsOrder        Json?    @default("[\"pomodoroTimer\", \"gradeTracker\", \"gpaTrendChart\", \"whatIfProjector\", \"gpaCalculator\", \"tools_quickLinks\"]")
   visiblePagesOrder      Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Deadlines\", \"Exams\", \"Notes\", \"Courses\", \"Tools\"]")
+  dashboardCardsCollapsedState Json? @default("[]")
   user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])

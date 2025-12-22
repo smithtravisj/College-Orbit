@@ -13,6 +13,7 @@ import GradeTracker from '@/components/tools/GradeTracker';
 import WhatIfProjector from '@/components/tools/WhatIfProjector';
 import GpaTrendChart from '@/components/tools/GpaTrendChart';
 import { Plus, Trash2 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface Course {
   id: string;
@@ -39,6 +40,7 @@ interface FormCourse {
 }
 
 export default function ToolsPage() {
+  const isMobile = useIsMobile();
   const { settings } = useAppStore();
   const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -314,37 +316,37 @@ export default function ToolsPage() {
       case TOOLS_CARDS.GPA_CALCULATOR:
         return visibleToolsCards.includes(cardId) && (
           <CollapsibleCard key={cardId} id="gpa-calculator" title="GPA Calculator" subtitle="Calculate your GPA from individual courses">
-            <div className="space-y-5">
+            <div className={isMobile ? 'space-y-3' : 'space-y-5'}>
               {/* Form Fields */}
-              <div className="space-y-4">
+              <div className={isMobile ? 'space-y-2' : 'space-y-4'}>
                 {formCourses.map((course, idx) => (
-                  <div key={idx} style={{ paddingBottom: '8px' }}>
+                  <div key={idx} style={{ paddingBottom: isMobile ? '4px' : '8px' }}>
                     {idx === 0 && (
-                      <div className="flex gap-3 mb-2">
+                      <div className="flex gap-3 mb-2" style={{ display: isMobile ? 'none' : 'flex' }}>
                         <div className="flex-1">
-                          <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                          <div style={{ fontSize: isMobile ? '11px' : '14px', fontWeight: 500, color: 'var(--text-muted)' }}>
                             Course
                           </div>
                         </div>
                         <div style={{ minWidth: '140px' }}>
-                          <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                          <div style={{ fontSize: isMobile ? '11px' : '14px', fontWeight: 500, color: 'var(--text-muted)' }}>
                             Grade Type
                           </div>
                         </div>
                         <div style={{ minWidth: '120px' }}>
-                          <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                          <div style={{ fontSize: isMobile ? '11px' : '14px', fontWeight: 500, color: 'var(--text-muted)' }}>
                             Grade
                           </div>
                         </div>
                         <div style={{ minWidth: '80px' }}>
-                          <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                          <div style={{ fontSize: isMobile ? '11px' : '14px', fontWeight: 500, color: 'var(--text-muted)' }}>
                             Credits
                           </div>
                         </div>
                         <div style={{ width: '34px' }}></div>
                       </div>
                     )}
-                    <div className="flex gap-3 items-end">
+                    <div className="flex gap-3 items-end" style={{ flexDirection: isMobile ? 'column' : 'row' }}>
                       <div className="flex-1">
                         {idx === 0 && <div style={{ marginBottom: '4px' }}></div>}
                         <Select
@@ -415,21 +417,21 @@ export default function ToolsPage() {
                 ))}
               </div>
 
-              <div className="flex gap-3" style={{ marginTop: '20px' }}>
-                <Button variant="secondary" size="md" type="button" onClick={addCourse}>
-                  <Plus size={18} />
+              <div className={isMobile ? 'flex flex-col gap-2' : 'flex gap-3'} style={{ marginTop: isMobile ? '12px' : '20px' }}>
+                <Button variant="secondary" size={isMobile ? 'sm' : 'md'} type="button" onClick={addCourse} style={isMobile ? { paddingLeft: '10px', paddingRight: '10px' } : {}}>
+                  <Plus size={isMobile ? 14 : 18} />
                   Add Row
                 </Button>
 
-                <Button size="lg" onClick={calculateGPA} style={{ backgroundColor: 'var(--button-secondary)', color: settings.theme === 'light' ? '#000000' : 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', paddingLeft: '16px', paddingRight: '16px' }}>
+                <Button size={isMobile ? 'sm' : 'lg'} onClick={calculateGPA} style={{ backgroundColor: 'var(--button-secondary)', color: settings.theme === 'light' ? '#000000' : 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
                   Calculate GPA
                 </Button>
               </div>
 
               {gpaResult !== null && (
-                <div className="rounded-[16px] bg-[var(--accent-bg)] border border-[var(--accent)] text-center" style={{ marginTop: '24px', padding: '16px' }}>
-                  <div className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>Your GPA</div>
-                  <div className="text-4xl font-bold" style={{ color: settings.theme === 'light' ? '#2563eb' : '#7fa8ff' }}>
+                <div className="rounded-[16px] bg-[var(--accent-bg)] border border-[var(--accent)] text-center" style={{ marginTop: isMobile ? '12px' : '24px', padding: isMobile ? '12px' : '16px' }}>
+                  <div className="text-sm text-[var(--text-muted)]" style={{ marginBottom: isMobile ? '4px' : '8px', fontSize: isMobile ? '12px' : '14px' }}>Your GPA</div>
+                  <div className="font-bold" style={{ fontSize: isMobile ? '28px' : '32px', color: settings.theme === 'light' ? '#2563eb' : '#7fa8ff' }}>
                     {gpaResult}
                   </div>
                 </div>
@@ -441,22 +443,22 @@ export default function ToolsPage() {
         return visibleToolsCards.includes(cardId) && (
           <CollapsibleCard key={cardId} id="quick-links" title="Quick Links" subtitle={settings.university ? `Resources for ${settings.university}` : 'Select a college to view quick links'}>
             {mounted && settings.university ? (
-              <div className="grid grid-cols-4 gap-3">
+              <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-4 gap-3'}>
                 {getQuickLinks(settings.university).map((link) => (
                   <a
                     key={link.label}
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-[12px] text-center text-sm font-medium transition-colors hover:opacity-80"
-                    style={{ display: 'block', padding: '12px', backgroundColor: settings.theme === 'light' ? 'var(--panel)' : 'var(--panel-2)', color: 'var(--text)', border: '2px solid var(--border)' }}
+                    className="rounded-[12px] text-center font-medium transition-colors hover:opacity-80"
+                    style={{ display: 'block', padding: isMobile ? '8px' : '12px', fontSize: isMobile ? '12px' : '14px', backgroundColor: settings.theme === 'light' ? 'var(--panel)' : 'var(--panel-2)', color: 'var(--text)', border: '2px solid var(--border)' }}
                   >
                     {link.label}
                   </a>
                 ))}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+              <div style={{ textAlign: 'center', padding: isMobile ? '16px' : '24px', color: 'var(--text-muted)', fontSize: isMobile ? '13px' : '14px' }}>
                 <p>Select a college in settings to view quick links</p>
               </div>
             )}
@@ -470,7 +472,7 @@ export default function ToolsPage() {
   return (
     <>
       <PageHeader title="Tools" subtitle="Useful utilities for your semester" />
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: '24px' }}>
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? 'clamp(12px, 4%, 24px)' : '24px' }}>
         <div className="grid grid-cols-1 gap-[var(--grid-gap)]">
           {toolsCardsOrder.map((cardId: string) => renderCard(cardId))}
         </div>

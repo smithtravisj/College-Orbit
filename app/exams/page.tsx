@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { formatDate } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
+import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
@@ -13,6 +15,7 @@ import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 
 export default function ExamsPage() {
+  const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -32,6 +35,38 @@ export default function ExamsPage() {
   const [formError, setFormError] = useState('');
 
   const { courses, exams, settings, addExam, updateExam, deleteExam, initializeStore } = useAppStore();
+
+  // Handle filters card collapse state changes and save to database
+  const handleFiltersCollapseChange = (isOpen: boolean) => {
+    const currentCollapsed = settings.dashboardCardsCollapsedState || [];
+    const newCollapsed = isOpen
+      ? currentCollapsed.filter(id => id !== 'exams-filters')  // Remove from array when opening
+      : [...currentCollapsed, 'exams-filters'];  // Add to array when closing
+
+    // Update store immediately for local UI sync
+    useAppStore.setState((state) => ({
+      settings: {
+        ...state.settings,
+        dashboardCardsCollapsedState: newCollapsed,
+      },
+    }));
+
+    // Save to database
+    fetch('/api/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dashboardCardsCollapsedState: newCollapsed }),
+    })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(err => {
+            console.error('[Exams] Save failed:', err);
+          });
+        }
+        return res.json();
+      })
+      .catch(err => console.error('[Exams] Failed to save filters collapse state:', err));
+  };
 
   useEffect(() => {
     initializeStore();
@@ -286,50 +321,88 @@ export default function ExamsPage() {
         }
       />
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
-        <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ overflow: 'visible' }}>
+        <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ gap: isMobile ? '16px' : undefined, overflow: 'visible' }}>
           {/* Filters sidebar - 3 columns */}
           <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content' }}>
-            <Card>
-              <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: '16px' }}>Filters</h3>
-              <div style={{ marginBottom: '20px' }}>
-                <Input
-                  label="Search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search exams..."
-                />
-              </div>
-              <div className="space-y-2">
-                {[
-                  { value: 'all', label: 'All' },
-                  { value: 'upcoming', label: 'Upcoming' },
-                  { value: 'past', label: 'Past' },
-                ].map((f) => (
-                  <button
-                    key={f.value}
-                    onClick={() => setFilter(f.value)}
-                    className={`w-full text-left rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
-                      filter === f.value
-                        ? 'text-[var(--text)]'
-                        : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
-                    }`}
-                    style={{ padding: '12px 16px', backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent' }}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-            </Card>
+            {isMobile ? (
+              <CollapsibleCard
+                id="exams-filters"
+                title="Filters"
+                initialOpen={!(settings.dashboardCardsCollapsedState || []).includes('exams-filters')}
+                onChange={handleFiltersCollapseChange}
+              >
+                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+                  <Input
+                    label="Search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search exams..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  {[
+                    { value: 'all', label: 'All' },
+                    { value: 'upcoming', label: 'Upcoming' },
+                    { value: 'past', label: 'Past' },
+                  ].map((f) => (
+                    <button
+                      key={f.value}
+                      onClick={() => setFilter(f.value)}
+                      className={`w-full text-left rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
+                        filter === f.value
+                          ? 'text-[var(--text)]'
+                          : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
+                      }`}
+                      style={{ padding: isMobile ? '8px 12px' : '12px 16px', backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent', fontSize: isMobile ? '13px' : '14px' }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </CollapsibleCard>
+            ) : (
+              <Card>
+                <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: isMobile ? '10px' : '16px' }}>Filters</h3>
+                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+                  <Input
+                    label="Search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search exams..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  {[
+                    { value: 'all', label: 'All' },
+                    { value: 'upcoming', label: 'Upcoming' },
+                    { value: 'past', label: 'Past' },
+                  ].map((f) => (
+                    <button
+                      key={f.value}
+                      onClick={() => setFilter(f.value)}
+                      className={`w-full text-left rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
+                        filter === f.value
+                          ? 'text-[var(--text)]'
+                          : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
+                      }`}
+                      style={{ padding: isMobile ? '8px 12px' : '12px 16px', backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent', fontSize: isMobile ? '13px' : '14px' }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </Card>
+            )}
           </div>
 
           {/* Exams list - 9 columns */}
-          <div className="col-span-12 lg:col-span-9 space-y-6" style={{ overflow: 'visible', height: 'fit-content' }}>
+          <div className="col-span-12 lg:col-span-9" style={{ overflow: 'visible', height: 'fit-content', display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '24px' }}>
 
             {/* Add Exam Form */}
             {showForm && (
-            <div style={{ marginBottom: '24px', overflow: 'visible' }}>
+            <div style={{ marginBottom: isMobile ? '16px' : '24px', overflow: 'visible' }}>
               <Card>
-                <form onSubmit={handleSubmit} className="space-y-5" style={{ overflow: 'visible' }}>
+                <form onSubmit={handleSubmit} className={isMobile ? 'space-y-2' : 'space-y-5'} style={{ overflow: 'visible' }}>
                 {formError && (
                   <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '8px', padding: '10px' }}>
                     <p style={{ fontSize: '13px', color: 'rgb(239, 68, 68)', margin: 0 }}>{formError}</p>
@@ -342,7 +415,7 @@ export default function ExamsPage() {
                   placeholder="e.g., Calculus Midterm"
                   required
                 />
-                <div style={{ paddingTop: '12px' }}>
+                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
                   <Select
                     label="Course"
                     value={formData.courseId}
@@ -350,7 +423,7 @@ export default function ExamsPage() {
                     options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4" style={{ overflow: 'visible', paddingTop: '8px' }}>
+                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-4'} style={{ overflow: 'visible' }}>
                   <CalendarPicker
                     label="Exam Date"
                     value={formData.examDate}
@@ -362,7 +435,7 @@ export default function ExamsPage() {
                     onChange={(time) => setFormData({ ...formData, examTime: time })}
                   />
                 </div>
-                <div style={{ paddingTop: '12px' }}>
+                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
                   <Input
                     label="Location"
                     value={formData.location}
@@ -370,7 +443,7 @@ export default function ExamsPage() {
                     placeholder="e.g., Student Center Room 101 or Online"
                   />
                 </div>
-                <div style={{ paddingTop: '12px' }}>
+                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
                   <Textarea
                     label="Notes"
                     value={formData.notes}
@@ -378,11 +451,11 @@ export default function ExamsPage() {
                     placeholder="Add study tips, topics to review, etc."
                   />
                 </div>
-                <div style={{ paddingTop: '12px' }}>
-                  <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links</label>
-                  <div className="space-y-3">
+                <div style={{ paddingTop: isMobile ? '6px' : '20px' }}>
+                  <label className={isMobile ? 'block text-sm font-medium text-[var(--text)]' : 'block text-lg font-medium text-[var(--text)]'} style={{ marginBottom: isMobile ? '3px' : '8px' }}>Links</label>
+                  <div className={isMobile ? 'space-y-1' : 'space-y-3'}>
                     {formData.links.map((link, idx) => (
-                      <div key={idx} className="flex gap-3 items-center">
+                      <div key={idx} className={isMobile ? 'flex gap-1 items-center' : 'flex gap-3 items-center'}>
                         <Input
                           label={idx === 0 ? 'Label' : ''}
                           type="text"
@@ -394,6 +467,7 @@ export default function ExamsPage() {
                           }}
                           placeholder="e.g., Study Guide"
                           className="w-32"
+                          labelClassName={isMobile ? 'text-xs' : 'text-sm'}
                         />
                         <Input
                           label={idx === 0 ? 'URL' : ''}
@@ -406,11 +480,9 @@ export default function ExamsPage() {
                           }}
                           placeholder="example.com or https://..."
                           className="flex-1"
+                          labelClassName={isMobile ? 'text-xs' : 'text-sm'}
                         />
-                        <div>
-                          {idx === 0 && (
-                            <label className="block text-sm font-medium text-[var(--text)] mb-2" style={{ height: '20px' }}></label>
-                          )}
+                        <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%' }}>
                           <button
                             type="button"
                             onClick={() => {
@@ -420,10 +492,10 @@ export default function ExamsPage() {
                               });
                             }}
                             className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                            style={{ padding: '8px' }}
+                            style={{ padding: isMobile ? '2px' : '8px', marginTop: isMobile ? '20px' : '28px' }}
                             title="Remove link"
                           >
-                            <Trash2 size={18} />
+                            <Trash2 size={isMobile ? 14 : 18} />
                           </button>
                         </div>
                       </div>
@@ -434,14 +506,15 @@ export default function ExamsPage() {
                       ...formData,
                       links: [...formData.links, { label: '', url: '' }],
                     });
-                  }} style={{ marginTop: '12px', paddingLeft: '16px', paddingRight: '16px' }}>
-                    <Plus size={16} />
+                  }} style={{ marginTop: isMobile ? '4px' : '12px', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
+                    <Plus size={isMobile ? 12 : 16} />
                     Add Link
                   </Button>
                 </div>
-                <div className="flex gap-3" style={{ paddingTop: '12px' }}>
+                <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '10px' : '12px' }}>
                   <Button
                     variant="primary"
+                    size={isMobile ? 'sm' : 'md'}
                     type="submit"
                     style={{
                       backgroundColor: 'var(--button-secondary)',
@@ -449,13 +522,13 @@ export default function ExamsPage() {
                       borderWidth: '1px',
                       borderStyle: 'solid',
                       borderColor: 'var(--border)',
-                      paddingLeft: '16px',
-                      paddingRight: '16px'
+                      paddingLeft: isMobile ? '10px' : '16px',
+                      paddingRight: isMobile ? '10px' : '16px'
                     }}
                   >
                     {editingId ? 'Save Changes' : 'Schedule Exam'}
                   </Button>
-                  <Button variant="secondary" type="button" onClick={cancelEdit}>
+                  <Button variant="secondary" size={isMobile ? 'sm' : 'md'} type="button" onClick={cancelEdit}>
                     Cancel
                   </Button>
                 </div>
@@ -467,7 +540,7 @@ export default function ExamsPage() {
           {/* Exams List */}
           {filtered.length > 0 ? (
             <Card>
-              <div className="space-y-4 divide-y divide-[var(--border)]">
+              <div className="divide-y divide-[var(--border)]" style={{ display: 'flex', flexDirection: 'column' }}>
                 {filtered.map((exam) => {
                   const course = courses.find((c) => c.id === exam.courseId);
                   const examHours = exam.examAt ? new Date(exam.examAt).getHours() : null;
@@ -475,10 +548,10 @@ export default function ExamsPage() {
                   const examTime = exam.examAt ? new Date(exam.examAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
                   const shouldShowTime = examTime && !(examHours === 9 && examMinutes === 0);
                   return (
-                    <div key={exam.id} style={{ paddingTop: '10px', paddingBottom: '10px', paddingLeft: '32px', paddingRight: '32px', opacity: hidingExams.has(exam.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0">
+                    <div key={exam.id} style={{ paddingTop: isMobile ? '3px' : '12px', paddingBottom: isMobile ? '3px' : '12px', paddingLeft: isMobile ? '2px' : '20px', paddingRight: isMobile ? '2px' : '20px', gap: isMobile ? '8px' : '16px', opacity: hidingExams.has(exam.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <div className="text-sm font-medium text-[var(--text)]">
+                        <div className="flex items-center" style={{ gap: isMobile ? '2px' : '8px' }}>
+                          <div style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: '500', color: 'var(--text)' }}>
                             {exam.title}
                           </div>
                           {exam.status !== 'scheduled' && (
@@ -488,37 +561,38 @@ export default function ExamsPage() {
                           )}
                         </div>
                         {exam.notes && (
-                          <div className="text-xs text-[var(--text-muted)] mt-1">
+                          <div style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', marginTop: isMobile ? '0px' : '4px' }}>
                             {exam.notes}
                           </div>
                         )}
-                        <div className="flex items-center gap-3 mt-2 flex-wrap">
+                        <div className="flex items-center flex-wrap" style={{ gap: isMobile ? '2px' : '12px', marginTop: isMobile ? '0px' : '8px' }}>
                           {exam.examAt && (
-                            <span className="text-xs text-[var(--text-muted)]">
+                            <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
                               {formatDate(exam.examAt)} {shouldShowTime && `at ${examTime}`}
                             </span>
                           )}
                           {exam.location && (
-                            <span className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
-                              <MapPin size={14} />
+                            <span className="flex items-center" style={{ gap: isMobile ? '1px' : '4px', fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
+                              <MapPin size={isMobile ? 12 : 14} />
                               {exam.location}
                             </span>
                           )}
                           {course && (
-                            <span className="text-xs text-[var(--text-muted)]">
+                            <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
                               {course.code}
                             </span>
                           )}
                         </div>
                         {exam.links && exam.links.length > 0 && (
-                          <div className="flex flex-col mt-2" style={{ gap: '0px' }}>
+                          <div className="flex flex-col" style={{ gap: '0px', marginTop: isMobile ? '0px' : '8px' }}>
                             {exam.links.map((link: any) => (
                               <a
                                 key={link.url}
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs text-[var(--link)] hover:text-blue-400"
+                                style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--link)' }}
+                                className="hover:text-blue-400"
                               >
                                 {link.label}
                               </a>
@@ -526,20 +600,22 @@ export default function ExamsPage() {
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '12px' }}>
                         <button
                           onClick={() => startEdit(exam)}
-                          className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors -ml-2"
+                          className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                          style={{ padding: isMobile ? '2px' : '6px' }}
                           title="Edit exam"
                         >
-                          <Edit2 size={20} />
+                          <Edit2 size={isMobile ? 14 : 20} />
                         </button>
                         <button
                           onClick={() => deleteExam(exam.id)}
-                          className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                          className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                          style={{ padding: isMobile ? '2px' : '6px' }}
                           title="Delete exam"
                         >
-                          <Trash2 size={20} />
+                          <Trash2 size={isMobile ? 14 : 20} />
                         </button>
                       </div>
                     </div>

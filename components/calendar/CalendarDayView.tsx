@@ -2,6 +2,7 @@
 
 import { useMemo, useEffect, useRef, useState } from 'react';
 import { Course, Task, Deadline, Exam, ExcludedDate } from '@/types';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   getEventsForDate,
   getTimeSlotPosition,
@@ -39,6 +40,7 @@ export default function CalendarDayView({
   allDeadlines = [],
   excludedDates = [],
 }: CalendarDayViewProps) {
+  const isMobile = useIsMobile();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
@@ -64,6 +66,8 @@ export default function CalendarDayView({
   const eventLayout = useMemo(() => calculateEventLayout(allTimedEvents), [allTimedEvents]);
 
   const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
+  const mobileHourHeight = 40;
+  const hourHeight = isMobile ? mobileHourHeight : HOUR_HEIGHT;
 
   const dateStr = date.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -92,8 +96,8 @@ export default function CalendarDayView({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--panel)', overflow: 'auto' }}>
       {/* Header */}
-      <div style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text)', margin: 0 }}>{dateStr}</h2>
+      <div style={{ paddingLeft: isMobile ? '8px' : '16px', paddingRight: isMobile ? '8px' : '16px', paddingTop: isMobile ? '6px' : '12px', paddingBottom: isMobile ? '6px' : '12px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+        <h2 style={{ fontSize: isMobile ? '0.875rem' : '1.125rem', fontWeight: 600, color: 'var(--text)', margin: 0 }}>{dateStr}</h2>
       </div>
 
       {(() => {
@@ -101,21 +105,21 @@ export default function CalendarDayView({
         if (allDayEvents.length === 0 && !exclusionType) return null;
 
         return (
-          <div style={{ paddingLeft: '16px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--panel)', flexShrink: 0 }}>
-            <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>All Day</p>
-            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ paddingLeft: isMobile ? '8px' : '16px', paddingRight: isMobile ? '8px' : '16px', paddingTop: isMobile ? '6px' : '12px', paddingBottom: isMobile ? '6px' : '12px', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--panel)', flexShrink: 0 }}>
+            <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: isMobile ? '4px' : '8px' }}>All Day</p>
+            <div style={{ display: 'flex', gap: isMobile ? '2px' : '4px', flexWrap: 'wrap', alignItems: 'center' }}>
               {exclusionType && (() => {
                 let markerColor = getEventColor({ courseId: exclusionCourseId } as any);
 
                 return (
                   <div
                     style={{
-                      paddingLeft: '8px',
-                      paddingRight: '8px',
-                      paddingTop: '4px',
-                      paddingBottom: '4px',
+                      paddingLeft: isMobile ? '4px' : '8px',
+                      paddingRight: isMobile ? '4px' : '8px',
+                      paddingTop: isMobile ? '1px' : '4px',
+                      paddingBottom: isMobile ? '1px' : '4px',
                       borderRadius: 'var(--radius-control)',
-                      fontSize: '0.875rem',
+                      fontSize: isMobile ? '0.65rem' : '0.875rem',
                       backgroundColor: `${markerColor}80`,
                       color: 'var(--calendar-event-text)',
                       overflow: 'hidden',
@@ -135,12 +139,12 @@ export default function CalendarDayView({
                   <div
                     key={event.id}
                     style={{
-                      paddingLeft: '8px',
-                      paddingRight: '8px',
-                      paddingTop: '4px',
-                      paddingBottom: '4px',
+                      paddingLeft: isMobile ? '6px' : '8px',
+                      paddingRight: isMobile ? '6px' : '8px',
+                      paddingTop: isMobile ? '2px' : '4px',
+                      paddingBottom: isMobile ? '2px' : '4px',
                       borderRadius: 'var(--radius-control)',
-                      fontSize: '0.875rem',
+                      fontSize: isMobile ? '0.75rem' : '0.875rem',
                       backgroundColor: `${color}80`,
                       color: 'var(--calendar-event-text)',
                       overflow: 'hidden',
@@ -164,7 +168,7 @@ export default function CalendarDayView({
       {/* Time grid */}
       <div ref={scrollContainerRef} style={{ display: 'flex', flex: 1, overflow: 'auto' }}>
         {/* Time column */}
-        <div style={{ width: '80px', paddingTop: '8px', paddingLeft: '8px', flexShrink: 0 }}>
+        <div style={{ width: isMobile ? '50px' : '80px', paddingTop: isMobile ? '4px' : '8px', paddingLeft: isMobile ? '4px' : '8px', flexShrink: 0 }}>
           {hours.map((hour) => {
             const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
             const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -172,14 +176,14 @@ export default function CalendarDayView({
               <div
                 key={hour}
                 style={{
-                  height: `${HOUR_HEIGHT}px`,
-                  paddingRight: '8px',
-                  fontSize: '0.75rem',
+                  height: `${hourHeight}px`,
+                  paddingRight: isMobile ? '4px' : '8px',
+                  fontSize: isMobile ? '0.65rem' : '0.75rem',
                   color: 'var(--text-muted)',
                   display: 'flex',
                   alignItems: 'flex-start',
                   justifyContent: 'flex-end',
-                  paddingTop: '4px',
+                  paddingTop: isMobile ? '2px' : '4px',
                 }}
               >
                 {displayHour} {ampm}
@@ -189,7 +193,7 @@ export default function CalendarDayView({
         </div>
 
         {/* Events column */}
-        <div style={{ flex: 1, position: 'relative', paddingTop: '8px', paddingRight: '8px' }}>
+        <div style={{ flex: 1, position: 'relative', paddingTop: isMobile ? '4px' : '8px', paddingRight: isMobile ? '4px' : '8px' }}>
           {/* Hour grid lines */}
           {hours.map((hour) => {
             if (hour === START_HOUR) return null; // Skip first hour line
@@ -200,8 +204,8 @@ export default function CalendarDayView({
                   position: 'absolute',
                   width: '100%',
                   borderTop: '1px solid var(--border)',
-                  top: `${(hour - START_HOUR) * HOUR_HEIGHT}px`,
-                  height: `${HOUR_HEIGHT}px`,
+                  top: `${(hour - START_HOUR) * hourHeight}px`,
+                  height: `${hourHeight}px`,
                 }}
               />
             );
@@ -216,8 +220,10 @@ export default function CalendarDayView({
             if (!layout) return null;
 
             const { top: baseTop } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
-            const top = baseTop + 1;
-            const height = getEventHeight(event.time, event.endTime);
+            const baseHeight = getEventHeight(event.time, event.endTime);
+            const scaleFactor = hourHeight / HOUR_HEIGHT;
+            const top = (baseTop + 1) * scaleFactor;
+            const height = baseHeight * scaleFactor;
             const color = getEventColor(event);
 
             // Calculate width and left position based on column
@@ -238,10 +244,10 @@ export default function CalendarDayView({
                 key={event.id}
                 style={{
                   position: 'absolute',
-                  left: `calc(${eventLeft}% + 8px)`,
-                  width: `calc(${eventWidth}% - 16px)`,
-                  borderRadius: 'var(--radius-control)',
-                  padding: '8px',
+                  left: `calc(${eventLeft}% + ${isMobile ? '4px' : '8px'})`,
+                  width: `calc(${eventWidth}% - ${isMobile ? '8px' : '16px'})`,
+                  borderRadius: isMobile ? '6px' : 'var(--radius-control)',
+                  padding: isMobile ? '4px' : '8px',
                   overflow: 'hidden',
                   cursor: 'pointer',
                   transition: 'opacity 0.2s',
@@ -256,14 +262,14 @@ export default function CalendarDayView({
                 title={event.title}
                 onClick={() => setSelectedEvent(event)}
               >
-                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {event.courseCode}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {formatTime(event.time)} - {formatTime(event.endTime)}
                 </div>
                 {event.location && (
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {event.location}
                   </div>
                 )}
@@ -282,8 +288,10 @@ export default function CalendarDayView({
               if (!layout) return null;
 
               const { top: baseTop } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
-              const top = baseTop + 1;
-              const height = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
+              const baseHeight = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
+              const scaleFactor = hourHeight / HOUR_HEIGHT;
+              const top = (baseTop + 1) * scaleFactor;
+              const height = baseHeight * scaleFactor;
               const color = getEventColor(event);
 
               const eventWidth = 100 / layout.totalColumns;
@@ -294,10 +302,10 @@ export default function CalendarDayView({
                   key={event.id}
                   style={{
                     position: 'absolute',
-                    left: `calc(${eventLeft}% + 8px)`,
-                    width: `calc(${eventWidth}% - 16px)`,
-                    borderRadius: 'var(--radius-control)',
-                    padding: '8px',
+                    left: `calc(${eventLeft}% + ${isMobile ? '4px' : '8px'})`,
+                    width: `calc(${eventWidth}% - ${isMobile ? '8px' : '16px'})`,
+                    borderRadius: isMobile ? '6px' : 'var(--radius-control)',
+                    padding: isMobile ? '4px' : '8px',
                     cursor: 'pointer',
                     transition: 'opacity 0.2s',
                     top: `${top}px`,
@@ -316,7 +324,7 @@ export default function CalendarDayView({
                   title={event.title}
                   onClick={() => setSelectedEvent(event)}
                 >
-                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left', width: '100%', lineHeight: 1.3 }}>
+                  <div style={{ fontSize: isMobile ? '0.65rem' : '0.8rem', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left', width: '100%', lineHeight: 1.3 }}>
                     {event.title}
                   </div>
                 </div>
