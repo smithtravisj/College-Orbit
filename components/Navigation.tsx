@@ -129,7 +129,12 @@ export default function Navigation() {
   // Handle click outside drawer
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
+      console.log('[Navigation] Click outside handler fired', {
+        target: (e.target as HTMLElement)?.className,
+        inDrawer: drawerRef.current?.contains(e.target as Node)
+      });
       if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
+        console.log('[Navigation] Closing drawer due to click outside');
         closeDrawer();
       }
     };
