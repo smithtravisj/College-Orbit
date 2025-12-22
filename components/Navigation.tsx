@@ -245,13 +245,18 @@ export default function Navigation() {
             <X size={24} />
           </button>
 
-          {/* Drawer header with user info */}
-          {session?.user && (
-            <div className={styles.drawerHeader}>
+          {/* Drawer header with title and notification */}
+          <div className={styles.drawerHeader}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
               <h2 className={styles.drawerTitle}>{getAppTitle(university)}</h2>
-              <p className={styles.drawerUserEmail}>{session.user.name || session.user.email}</p>
+              <div style={{ paddingRight: '4px' }}>
+                <NotificationBell />
+              </div>
             </div>
-          )}
+            {session?.user && (
+              <p className={styles.drawerUserEmail}>{session.user.name || session.user.email}</p>
+            )}
+          </div>
 
           {/* Navigation links */}
           <nav className={styles.drawerNav}>
