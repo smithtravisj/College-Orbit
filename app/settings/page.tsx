@@ -6,7 +6,7 @@ import useAppStore from '@/lib/store';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Download, Upload, Trash2 } from 'lucide-react';
+import { Download, Upload, Trash2, Monitor } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { DASHBOARD_CARDS, TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
@@ -94,8 +94,15 @@ export default function SettingsPage() {
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [visibilityMessage, setVisibilityMessage] = useState('');
+  const [isMacDesktop, setIsMacDesktop] = useState(false);
 
   const { settings, updateSettings, exportData, importData, deleteAllData } = useAppStore();
+
+  // Check if running on Mac desktop browser
+  useEffect(() => {
+    const isMac = typeof window !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    setIsMacDesktop(isMac);
+  }, []);
 
   useEffect(() => {
     // Store is already initialized globally by AppLoader
@@ -955,6 +962,45 @@ export default function SettingsPage() {
                   )}
                 </>
               )}
+            </Card>
+          </div>
+        )}
+
+        {/* Desktop App - Hidden for now, uncomment when ready to release */}
+        {false && isMacDesktop && (
+          <div style={{ marginBottom: '24px' }}>
+            <Card title="Desktop App">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                  <p className="text-sm text-[var(--text-muted)]" style={{ margin: 0, maxWidth: '600px' }}>
+                    Download the native Mac app for a better desktop experience. The app runs in its own window without browser tabs or address bar.
+                  </p>
+                  <a
+                    href="/downloads/College-Survival-Tool.zip"
+                    download
+                    className="inline-flex items-center gap-2 font-medium text-sm transition-all duration-150"
+                    style={{
+                      padding: '10px 20px',
+                      backgroundColor: 'var(--accent)',
+                      color: selectedTheme === 'light' ? '#000000' : 'white',
+                      borderRadius: 'var(--radius-control)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <Monitor size={18} />
+                    Download Mac App
+                  </a>
+                </div>
+                <div style={{
+                  backgroundColor: 'var(--bg-muted)',
+                  borderRadius: 'var(--radius-control)',
+                  padding: '12px 16px',
+                  fontSize: '13px',
+                  color: 'var(--text-muted)'
+                }}>
+                  <strong style={{ color: 'var(--text)' }}>First time opening?</strong> After unzipping, drag the app to Applications. If macOS blocks it, go to <strong>System Settings → Privacy &amp; Security</strong> and click &quot;Open Anyway&quot; next to the blocked app message.
+                </div>
+              </div>
             </Card>
           </div>
         )}
