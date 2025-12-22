@@ -1,0 +1,86 @@
+@media (max-width: 767px) {
+  /* Task list container - aggressive spacing */
+  .taskContainer {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  /* Task item - compact layout */
+  .taskItem {
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+  }
+
+  /* Task title - smaller font */
+  .taskTitle {
+    font-size: var(--font-size-lg);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  /* Task subtitle info - inline layout */
+  .taskSubtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* Due date badge - compact */
+  .dueDateBadge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  /* Course tag - minimal */
+  .courseTag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+  }
+
+  /* Task actions button - touch-friendly */
+  .taskActions {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  /* Form fields - full width */
+  .formField {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  /* Form button - full width */
+  .formButton {
+    width: 100%;
+    padding: 10px 16px;
+  }
+
+  /* Empty state text */
+  .emptyState {
+    font-size: var(--font-size-base);
+    padding: 20px 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .taskContainer,
+  .taskItem,
+  .taskTitle,
+  .taskSubtitle,
+  .dueDateBadge,
+  .courseTag,
+  .taskActions,
+  .formField,
+  .formButton,
+  .emptyState {
+    /* Desktop styles handled by existing classes */
+  }
+}

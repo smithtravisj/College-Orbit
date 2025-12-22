@@ -1,0 +1,153 @@
+@media (max-width: 767px) {
+  /* Settings container */
+  .settingsContainer {
+    padding: 12px;
+  }
+
+  /* Settings section */
+  .section {
+    margin-bottom: 16px;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+  }
+
+  /* Section title */
+  .sectionTitle {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Section subtitle */
+  .sectionSubtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  /* Setting row - full width */
+  .settingRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: var(--font-size-sm);
+  }
+
+  .settingLabel {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .settingControl {
+    margin-left: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Toggle switch - compact */
+  .toggleSwitch {
+    width: 40px;
+    height: 24px;
+  }
+
+  /* Form field - full width */
+  .formField {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .formField label {
+    display: block;
+    font-size: var(--font-size-sm);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  .formField input,
+  .formField select,
+  .formField textarea {
+    width: 100%;
+    font-size: var(--font-size-sm);
+    padding: 8px;
+    border-radius: 4px;
+  }
+
+  /* Button - full width */
+  .button {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: var(--font-size-sm);
+    border-radius: 6px;
+    margin-top: 8px;
+  }
+
+  /* Danger button */
+  .dangerButton {
+    background-color: var(--danger);
+    color: white;
+  }
+
+  /* Card ordering - compact */
+  .cardOrder {
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    background-color: var(--panel-2);
+    font-size: 12px;
+  }
+
+  .dragHandle {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+  }
+
+  /* Visibility toggle - inline */
+  .visibilityToggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    font-size: 12px;
+  }
+
+  /* Info text - compact */
+  .infoText {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* Warning text */
+  .warningText {
+    font-size: 11px;
+    color: var(--warning);
+    margin-top: 4px;
+  }
+}
+
+@media (min-width: 768px) {
+  .settingsContainer,
+  .section,
+  .sectionTitle,
+  .sectionSubtitle,
+  .settingRow,
+  .settingLabel,
+  .settingControl,
+  .toggleSwitch,
+  .formField,
+  .button,
+  .dangerButton,
+  .cardOrder,
+  .dragHandle,
+  .visibilityToggle,
+  .infoText,
+  .warningText {
+    /* Desktop styles handled by existing classes */
+  }
+}

@@ -3,10 +3,15 @@
 import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
 import Navigation from './Navigation';
+import { MobileHeader } from './MobileHeader';
+import { FloatingMenuButton } from './FloatingMenuButton';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAnalyticsPageView } from '@/lib/useAnalytics';
+import styles from './LayoutWrapper.module.css';
 
 export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const isMobile = useIsMobile();
 
   // Track page views for analytics
   useAnalyticsPageView();
@@ -34,7 +39,21 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
     );
   }
 
-  // Standard layout with sidebar for authenticated users
+  // Mobile layout with header
+  if (isMobile) {
+    return (
+      <>
+        <MobileHeader />
+        <Navigation />
+        <FloatingMenuButton />
+        <main className={styles.mobileMain}>
+          {children}
+        </main>
+      </>
+    );
+  }
+
+  // Desktop layout with sidebar - UNCHANGED
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '264px 1fr', gap: 0, minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
       <Navigation />

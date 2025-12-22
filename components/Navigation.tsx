@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -8,6 +8,8 @@ import useAppStore from '@/lib/store';
 import { getAppTitle } from '@/lib/universityTitles';
 import NotificationBell from '@/components/NotificationBell';
 import { DEFAULT_VISIBLE_PAGES } from '@/lib/customizationConstants';
+import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useMobileNav } from '@/context/MobileNavContext';
 import {
   Home,
   CheckSquare,
@@ -21,7 +23,9 @@ import {
   User,
   LogOut,
   BarChart3,
+  X,
 } from 'lucide-react';
+import styles from './Navigation.module.css';
 
 export const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: Home },
@@ -113,9 +117,37 @@ export default function Navigation() {
     return null;
   }
 
+  const isMobile = useIsMobile();
+  const { isDrawerOpen, closeDrawer } = useMobileNav();
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  // Close drawer when pathname changes
+  useEffect(() => {
+    closeDrawer();
+  }, [pathname, closeDrawer]);
+
+  // Handle click outside drawer
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
+        closeDrawer();
+      }
+    };
+
+    if (isDrawerOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = '';
+    };
+  }, [isDrawerOpen, closeDrawer]);
+
   return (
     <>
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar - UNCHANGED */}
       <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)]" style={{ padding: '20px 16px' }} data-tour="navigation">
         <div style={{ marginBottom: '16px' }}>
           <h1 className="font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px', fontSize: university === 'Brigham Young University Hawaii' ? '22px' : university === 'Brigham Young University Idaho' ? '23px' : (university === 'Brigham Young University' || university === 'UNC Chapel Hill' || university === 'Utah State University' || university === 'Utah Valley University' || university === 'Arizona State University' || university === 'University of Central Florida' || university === 'Ohio State University') ? '24px' : '21px' }}>{getAppTitle(university)}</h1>
@@ -197,54 +229,77 @@ export default function Navigation() {
         )}
       </nav>
 
-      {/* Mobile Header with Notification */}
-      {session?.user && (
-        <div className="md:hidden fixed top-0 left-0 right-0 border-b border-[var(--border)] bg-[var(--panel)] z-40 flex justify-end items-center" style={{ padding: '12px 16px', height: '56px' }}>
-          <NotificationBell />
+      {/* Mobile Drawer Backdrop */}
+      {isMobile && isDrawerOpen && <div className={styles.backdrop} onClick={closeDrawer} />}
+
+      {/* Mobile Drawer Navigation */}
+      {isMobile && (
+        <div ref={drawerRef} className={styles.drawer} data-open={isDrawerOpen}>
+          {/* Close button */}
+          <button
+            onClick={closeDrawer}
+            className={styles.closeButton}
+            aria-label="Close navigation menu"
+            type="button"
+          >
+            <X size={24} />
+          </button>
+
+          {/* Drawer header with user info */}
+          {session?.user && (
+            <div className={styles.drawerHeader}>
+              <h2 className={styles.drawerTitle}>{getAppTitle(university)}</h2>
+              <p className={styles.drawerUserEmail}>{session.user.name || session.user.email}</p>
+            </div>
+          )}
+
+          {/* Navigation links */}
+          <nav className={styles.drawerNav}>
+            {sortedNavItems.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`${styles.drawerLink} ${isActive ? styles.active : ''}`}
+                >
+                  <Icon size={20} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+            {isAdmin && ADMIN_NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`${styles.drawerLink} ${isActive ? styles.active : ''}`}
+                >
+                  <Icon size={20} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Drawer footer with profile/logout */}
+          {session?.user && (
+            <div className={styles.drawerFooter}>
+              <Link href="/profile" className={styles.drawerLink}>
+                <User size={20} />
+                <span>Profile</span>
+              </Link>
+              <button onClick={handleLogout} className={styles.drawerLink}>
+                <LogOut size={20} />
+                <span>Log Out</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
-
-      {/* Mobile Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 border-t border-[var(--border)] bg-[var(--panel)] md:hidden z-40">
-        <div className="flex justify-around overflow-x-auto">
-          {sortedNavItems.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? 'page' : undefined}
-                className={`flex flex-col items-center justify-center text-xs font-medium transition-colors duration-150 flex-shrink-0 ${
-                  isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
-                }`}
-                style={{ padding: '12px 8px', minWidth: 'auto' }}
-              >
-                <Icon size={24} className="mb-1" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-          {isAdmin && ADMIN_NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? 'page' : undefined}
-                className={`flex flex-col items-center justify-center text-xs font-medium transition-colors duration-150 flex-shrink-0 ${
-                  isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
-                }`}
-                style={{ padding: '12px 8px', minWidth: 'auto' }}
-              >
-                <Icon size={24} className="mb-1" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
     </>
   );
 }

@@ -1,0 +1,35 @@
+@media (max-width: 767px) {
+  .fab {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 150ms ease;
+    z-index: calc(var(--z-header) - 1);
+  }
+
+  .fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  .fab:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Hide on desktop */
+@media (min-width: 768px) {
+  .fab {
+    display: none;
+  }
+}

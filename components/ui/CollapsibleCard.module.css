@@ -1,0 +1,32 @@
+@media (max-width: 767px) {
+  /* Override the hardcoded padding on mobile collapsible cards */
+  .mobileCard {
+    padding: 10px !important;
+  }
+
+  /* Reduce spacing between header and content */
+  .mobileHeader {
+    margin-bottom: 8px !important;
+  }
+
+  /* Reduce spacing between children */
+  .mobileContent {
+    gap: 12px !important;
+  }
+
+  /* Reduce title size */
+  .mobileTitle {
+    font-size: var(--font-size-lg);
+  }
+
+  /* Smaller chevron on mobile */
+  .mobileChevron {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Reduce subtitle/text sizes */
+  .mobileSubtitle {
+    font-size: var(--font-size-sm);
+  }
+}
