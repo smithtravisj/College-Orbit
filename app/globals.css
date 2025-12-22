@@ -501,5 +501,20 @@ select:disabled {
   body {
     font-size: var(--font-size-base);
   }
+
+  /* Prevent iOS Safari zoom on input focus - requires 16px minimum */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="datetime-local"],
+  input[type="date"],
+  input[type="time"],
+  input[type="number"],
+  input[type="url"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }
 

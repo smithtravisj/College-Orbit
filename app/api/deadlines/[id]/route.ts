@@ -154,9 +154,32 @@ export async function DELETE(
       );
     }
 
-    await prisma.deadline.delete({
-      where: { id },
-    });
+    // If this is a recurring deadline, delete this instance and all future instances
+    if (existingDeadline.recurringPatternId) {
+      const now = new Date();
+      console.log(`[DELETE /api/deadlines/${id}] Deleting future instances of recurring pattern ${existingDeadline.recurringPatternId}`);
+
+      // Delete this deadline and all future deadlines for this pattern
+      await prisma.deadline.deleteMany({
+        where: {
+          recurringPatternId: existingDeadline.recurringPatternId,
+          dueAt: {
+            gte: now,
+          },
+        },
+      });
+
+      // Mark the pattern as inactive so no new instances are generated
+      await prisma.recurringDeadlinePattern.update({
+        where: { id: existingDeadline.recurringPatternId },
+        data: { isActive: false },
+      });
+    } else {
+      // For non-recurring deadlines, just delete the single deadline
+      await prisma.deadline.delete({
+        where: { id },
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

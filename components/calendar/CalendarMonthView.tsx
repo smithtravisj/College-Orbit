@@ -115,7 +115,7 @@ export default function CalendarMonthView({
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%', minHeight: isMobile ? '100%' : undefined, overflow: isMobile ? 'visible' : 'hidden' }}>
       {/* Day headers */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', marginBottom: isMobile ? '4px' : '8px', paddingLeft: isMobile ? '6px' : '12px', paddingRight: isMobile ? '6px' : '12px', paddingTop: isMobile ? '4px' : '8px', flexShrink: 0 }}>
         {dayNames.map((day) => (
@@ -135,7 +135,7 @@ export default function CalendarMonthView({
       </div>
 
       {/* Calendar grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', paddingLeft: isMobile ? '6px' : '12px', paddingRight: isMobile ? '6px' : '12px', paddingBottom: isMobile ? '4px' : '8px', flex: 1, overflow: 'hidden', gridAutoRows: 'minmax(0, 1fr)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', paddingLeft: isMobile ? '6px' : '12px', paddingRight: isMobile ? '6px' : '12px', paddingBottom: isMobile ? '4px' : '8px', flex: isMobile ? 'none' : 1, overflow: 'hidden', gridAutoRows: isMobile ? 'minmax(38px, 1fr)' : 'minmax(0, 1fr)' }}>
         {dates.map((date) => {
           const dateStr = date.toISOString().split('T')[0];
           const isCurrentMonth = isInMonth(date, year, month);

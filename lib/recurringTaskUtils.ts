@@ -45,34 +45,16 @@ export async function generateRecurringInstances(
       orderBy: { instanceDate: 'desc' },
     });
 
-    // Start generating from the last instance, or from startDate if set, or from now
+    // Start generating from the last instance, or from startDate if set, or from today
     let currentDate: Date;
     if (lastTask?.instanceDate) {
       currentDate = new Date(lastTask.instanceDate);
     } else if (pattern.startDate) {
       currentDate = new Date(pattern.startDate);
     } else {
-      // Start from earlier to capture all instances in the first cycle
+      // No startDate set - start from today (go back 1 day so moveToNextOccurrence finds today or later)
       currentDate = new Date(now);
-      const daysOfWeek = (pattern.daysOfWeek as number[]) || [];
-      const daysOfMonth = (pattern.daysOfMonth as number[]) || [];
-
-      // For weekly patterns, look back a full week to catch all days
-      if (pattern.recurrenceType === 'weekly' && daysOfWeek.length > 0) {
-        currentDate.setDate(currentDate.getDate() - 7);
-      }
-      // For bi-weekly patterns, look back 2 weeks
-      else if (pattern.recurrenceType === 'biweekly' && daysOfWeek.length > 0) {
-        currentDate.setDate(currentDate.getDate() - 14);
-      }
-      // For monthly patterns, look back a full month to catch all days
-      else if (pattern.recurrenceType === 'monthly' && daysOfMonth.length > 0) {
-        currentDate.setDate(currentDate.getDate() - 30);
-      }
-      // For custom intervals, look back by that interval
-      else if (pattern.recurrenceType === 'custom') {
-        currentDate.setDate(currentDate.getDate() - (pattern.intervalDays || 7));
-      }
+      currentDate.setDate(currentDate.getDate() - 1);
     }
 
     // 4. Calculate interval based on recurrence type and get days of week/month

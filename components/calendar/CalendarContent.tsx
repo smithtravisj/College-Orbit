@@ -387,7 +387,7 @@ export default function CalendarContent() {
             {isMobile ? (
               <>
                 {/* Mobile: Month view at top with compact height */}
-                <div style={{ flexShrink: 0, borderBottom: '1px solid var(--border)', overflow: 'hidden', maxHeight: isMobile ? '55%' : undefined }}>
+                <div style={{ flexShrink: 0, borderBottom: '1px solid var(--border)', overflow: 'visible', minHeight: '280px' }}>
                   <CalendarMonthView
                     year={currentDate.getFullYear()}
                     month={currentDate.getMonth()}

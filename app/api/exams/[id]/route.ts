@@ -147,7 +147,30 @@ export async function DELETE(
       return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
     }
 
-    await prisma.exam.delete({ where: { id } });
+    // If this is a recurring exam, delete this instance and all future instances
+    if (existingExam.recurringPatternId) {
+      const now = new Date();
+      console.log(`[DELETE /api/exams/${id}] Deleting future instances of recurring pattern ${existingExam.recurringPatternId}`);
+
+      // Delete this exam and all future exams for this pattern
+      await prisma.exam.deleteMany({
+        where: {
+          recurringPatternId: existingExam.recurringPatternId,
+          examAt: {
+            gte: now,
+          },
+        },
+      });
+
+      // Mark the pattern as inactive so no new instances are generated
+      await prisma.recurringExamPattern.update({
+        where: { id: existingExam.recurringPatternId },
+        data: { isActive: false },
+      });
+    } else {
+      // For non-recurring exams, just delete the single exam
+      await prisma.exam.delete({ where: { id } });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

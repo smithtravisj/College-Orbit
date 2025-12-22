@@ -135,18 +135,22 @@ export async function DELETE(
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
-    // If this is a recurring task, delete all instances of the pattern
+    // If this is a recurring task, delete this instance and all future instances
     if (existingTask.recurringPatternId) {
-      console.log(`[DELETE /api/tasks/${id}] Deleting all instances of recurring pattern ${existingTask.recurringPatternId}`);
+      const now = new Date();
+      console.log(`[DELETE /api/tasks/${id}] Deleting future instances of recurring pattern ${existingTask.recurringPatternId}`);
 
-      // Delete all tasks for this pattern
+      // Delete this task and all future tasks for this pattern
       await prisma.task.deleteMany({
         where: {
           recurringPatternId: existingTask.recurringPatternId,
+          dueAt: {
+            gte: now,
+          },
         },
       });
 
-      // Mark the pattern as inactive instead of deleting it (preserve history)
+      // Mark the pattern as inactive so no new instances are generated
       await prisma.recurringPattern.update({
         where: { id: existingTask.recurringPatternId },
         data: { isActive: false },
