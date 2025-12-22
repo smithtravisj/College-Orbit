@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import useAppStore from '@/lib/store';
 import OnboardingTour from '@/components/OnboardingTour';
 import { isToday, formatDate, isOverdue } from '@/lib/utils';
@@ -19,8 +20,24 @@ import Link from 'next/link';
 import { Trash2, Plus } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
+import LandingPage from '@/components/LandingPage';
 
-export default function Dashboard() {
+export default function HomePage() {
+  const { status } = useSession();
+
+  // Show landing page for unauthenticated users
+  if (status === 'loading') {
+    return null; // AppLoader handles the loading state
+  }
+
+  if (status === 'unauthenticated') {
+    return <LandingPage />;
+  }
+
+  return <Dashboard />;
+}
+
+function Dashboard() {
   const [mounted, setMounted] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);

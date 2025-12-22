@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
+import { useSession } from 'next-auth/react';
 import Navigation from './Navigation';
 import { MobileHeader } from './MobileHeader';
 import { FloatingMenuButton } from './FloatingMenuButton';
@@ -12,12 +13,26 @@ import styles from './LayoutWrapper.module.css';
 export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const { status } = useSession();
 
   // Track page views for analytics
   useAnalyticsPageView();
 
   const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password' || pathname === '/reset-password';
   const isPublicPage = pathname === '/privacy' || pathname === '/terms';
+
+  // Landing page detection - show for unauthenticated users on root path
+  // Wait for session to be determined (not loading) before deciding
+  const isLandingPage = pathname === '/' && status === 'unauthenticated';
+
+  // Landing page - full screen, no navigation
+  if (isLandingPage) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
+        {children}
+      </div>
+    );
+  }
 
   if (isAuthPage) {
     // Full-width centered layout for login/signup

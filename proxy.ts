@@ -20,8 +20,11 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/privacy') ||
     request.nextUrl.pathname.startsWith('/terms');
 
-  // Redirect to login if accessing protected page without token
-  if (!isLoginSignupPage && !isPublicPage && !token) {
+  // Landing page is public - unauthenticated users see landing, authenticated see dashboard
+  const isLandingPage = request.nextUrl.pathname === '/';
+
+  // Redirect to login if accessing protected page without token (except landing page)
+  if (!isLoginSignupPage && !isPublicPage && !isLandingPage && !token) {
     console.log('No token found, redirecting to login');
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname);
