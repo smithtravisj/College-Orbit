@@ -1,18 +1,6 @@
 @media (max-width: 767px) {
   .header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: var(--mobile-header-height);
-    background-color: var(--panel);
-    border-bottom: 1px solid var(--border);
-    z-index: var(--z-header);
-    transition: height 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .header[data-minimized='true'] {
-    height: var(--mobile-header-minimized);
+    display: none;
   }
 
   .container {

@@ -10,9 +10,14 @@ export function FloatingMenuButton() {
   const university = useAppStore((state) => state.settings.university);
   const collegeColor = getCollegeColor(university);
 
+  const handleClick = () => {
+    console.log('FAB clicked!');
+    toggleDrawer();
+  };
+
   return (
     <button
-      onClick={toggleDrawer}
+      onClick={handleClick}
       className={styles.fab}
       style={{
         backgroundColor: collegeColor,
