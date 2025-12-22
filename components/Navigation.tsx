@@ -23,7 +23,6 @@ import {
   User,
   LogOut,
   BarChart3,
-  X,
 } from 'lucide-react';
 import styles from './Navigation.module.css';
 
@@ -129,6 +128,13 @@ export default function Navigation() {
   // Handle click outside drawer
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
+      // Check if click is on the FAB (hamburger button)
+      const fabButton = document.querySelector('[data-tour="mobile-hamburger"]');
+      if (fabButton && (fabButton.contains(e.target as Node) || fabButton === e.target)) {
+        console.log('[Navigation] Click on FAB, ignoring');
+        return;
+      }
+
       console.log('[Navigation] Click outside handler fired', {
         target: (e.target as HTMLElement)?.className,
         inDrawer: drawerRef.current?.contains(e.target as Node)
@@ -240,19 +246,9 @@ export default function Navigation() {
       {/* Mobile Drawer Navigation */}
       {isMobile && (
         <div ref={drawerRef} className={styles.drawer} data-open={isDrawerOpen ? 'true' : 'false'}>
-          {/* Close button */}
-          <button
-            onClick={closeDrawer}
-            className={styles.closeButton}
-            aria-label="Close navigation menu"
-            type="button"
-          >
-            <X size={24} />
-          </button>
-
           {/* Drawer header with title and notification */}
           <div className={styles.drawerHeader}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0' }}>
               <h2 className={styles.drawerTitle}>{getAppTitle(university)}</h2>
               <div style={{ paddingRight: '4px' }}>
                 <NotificationBell />
