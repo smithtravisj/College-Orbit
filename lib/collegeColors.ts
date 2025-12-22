@@ -1443,3 +1443,16 @@ export function getCollegeColorPalette(
 
   return isLight ? lightPalette : darkPalette;
 }
+
+/**
+ * Get the accent color for a college
+ * Returns appropriate accent color based on college and theme
+ * Used for FAB buttons, badges, and other accent elements
+ */
+export function getCollegeColor(
+  collegeName: string | null | undefined,
+  theme: 'light' | 'dark' | 'system' = 'dark'
+): string {
+  const palette = getCollegeColorPalette(collegeName || null, theme);
+  return palette.accent;
+}

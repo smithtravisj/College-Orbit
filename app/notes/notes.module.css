@@ -1,0 +1,106 @@
+@media (max-width: 767px) {
+  /* Notes container */
+  .notesContainer {
+    padding: 12px;
+  }
+
+  /* Folder list - compact */
+  .folderList {
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  /* Folder item */
+  .folderItem {
+    padding: 10px 12px;
+    font-size: var(--font-size-base);
+    border-radius: 6px;
+  }
+
+  /* Folder name */
+  .folderName {
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  /* Folder count - compact */
+  .folderCount {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* Notes list */
+  .notesList {
+    gap: 8px;
+  }
+
+  /* Note card - minimal padding */
+  .noteCard {
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  /* Note title */
+  .noteTitle {
+    font-size: var(--font-size-lg);
+    font-weight: 500;
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+
+  /* Note preview - limited */
+  .notePreview {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin-bottom: 6px;
+  }
+
+  /* Note tags - inline compact */
+  .noteTags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .tagPill {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  /* Search/filter - full width */
+  .searchInput {
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  /* Empty state */
+  .emptyState {
+    font-size: var(--font-size-base);
+    padding: 20px 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .notesContainer,
+  .folderList,
+  .folderItem,
+  .folderName,
+  .folderCount,
+  .notesList,
+  .noteCard,
+  .noteTitle,
+  .notePreview,
+  .noteTags,
+  .tagPill,
+  .searchInput,
+  .emptyState {
+    /* Desktop styles handled by existing classes */
+  }
+}

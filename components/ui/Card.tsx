@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 
 interface CardProps {
@@ -22,7 +24,7 @@ const Card: React.FC<CardProps> = ({
       className={`rounded-[16px] border border-[var(--border)] bg-[var(--panel)] shadow-[var(--shadow-sm)] transition-colors w-full h-full flex flex-col ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${className}`}
       style={{ position: 'relative', overflow: 'visible' }}
     >
-      {/* Inner content wrapper: padding is HARDCODED and CANNOT be bypassed */}
+      {/* Inner content wrapper: padding is HARDCODED but overridden on mobile */}
       <div className="flex flex-col flex-1" style={{ padding: '24px', overflow: 'visible' }}>
         {/* Header block: enforced spacing */}
         {title && (

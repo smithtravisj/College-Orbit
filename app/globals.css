@@ -275,9 +275,33 @@ select {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   :root {
+    /* Mobile spacing scale for aggressive density */
+    --mobile-space-xs: 4px;
+    --mobile-space-sm: 6px;
+    --mobile-space-base: 8px;
+    --mobile-space-md: 10px;
+    --mobile-space-lg: 12px;
+    --mobile-space-xl: 16px;
+
+    /* Mobile typography scale - reduced sizes for mobile */
+    --font-size-xs: 10px;
+    --font-size-sm: 12px;
+    --font-size-base: 14px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+    --font-size-2xl: 20px;
+    --font-size-3xl: 24px;
+
+    /* Mobile header dimensions */
+    --mobile-header-height: 48px;
+    --mobile-header-minimized: 40px;
+
+    /* Mobile layout */
     --grid-gap: 12px;
+    --card-padding: 10px;
   }
 
   .content-container {

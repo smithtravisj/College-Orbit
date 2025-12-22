@@ -1,0 +1,26 @@
+@media (max-width: 767px) {
+  /* Override the hardcoded padding on mobile cards */
+  .mobileCard {
+    padding: 10px !important;
+  }
+
+  /* Reduce spacing between header and content */
+  .mobileHeader {
+    margin-bottom: 8px !important;
+  }
+
+  /* Reduce spacing between children */
+  .mobileContent {
+    gap: 12px !important;
+  }
+
+  /* Reduce title size */
+  .mobileTitle {
+    font-size: var(--font-size-lg);
+  }
+
+  /* Reduce subtitle/text sizes */
+  .mobileSubtitle {
+    font-size: var(--font-size-sm);
+  }
+}

@@ -1,0 +1,103 @@
+@media (max-width: 767px) {
+  /* Exam list - compact layout */
+  .examContainer {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  /* Exam card - minimal padding */
+  .examCard {
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+  }
+
+  /* Exam title */
+  .examTitle {
+    font-size: var(--font-size-lg);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  /* Course name - inline */
+  .courseName {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* Date/time info - inline compact */
+  .examDateTime {
+    display: flex;
+    gap: 12px;
+    font-size: var(--font-size-sm);
+    margin-top: 6px;
+    color: var(--text);
+  }
+
+  /* Location - compact */
+  .examLocation {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Exam notes - limited display */
+  .examNotes {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  /* Action buttons */
+  .examActions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .actionButton {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 12px;
+    border-radius: 4px;
+  }
+
+  /* Form - full width */
+  .formField {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .formButton {
+    width: 100%;
+    padding: 10px 16px;
+  }
+
+  /* Empty state */
+  .emptyState {
+    font-size: var(--font-size-base);
+    padding: 20px 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .examContainer,
+  .examCard,
+  .examTitle,
+  .courseName,
+  .examDateTime,
+  .examLocation,
+  .examNotes,
+  .examActions,
+  .actionButton,
+  .formField,
+  .formButton,
+  .emptyState {
+    /* Desktop styles handled by existing classes */
+  }
+}

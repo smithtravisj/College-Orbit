@@ -1,0 +1,111 @@
+@media (max-width: 767px) {
+  /* Courses container */
+  .coursesContainer {
+    padding: 12px;
+  }
+
+  /* Course list - single column */
+  .coursesList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Course card - minimal padding */
+  .courseCard {
+    padding: 10px;
+    border-radius: 8px;
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+  }
+
+  /* Course title */
+  .courseTitle {
+    font-size: var(--font-size-lg);
+    font-weight: 500;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+
+  /* Course meta - inline compact */
+  .courseMeta {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .courseCode {
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .courseTerm {
+    color: var(--text-muted);
+  }
+
+  .courseCredits {
+    color: var(--text-muted);
+  }
+
+  /* Professor/instructor */
+  .instructor {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  /* Meeting times - compact */
+  .meetingTimes {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* Course links - inline */
+  .courseLinks {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+
+  .linkButton {
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  /* Filter - full width */
+  .filterControl {
+    width: 100%;
+    margin-bottom: 12px;
+    font-size: var(--font-size-sm);
+  }
+
+  /* Empty state */
+  .emptyState {
+    font-size: var(--font-size-base);
+    padding: 20px 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .coursesContainer,
+  .coursesList,
+  .courseCard,
+  .courseTitle,
+  .courseMeta,
+  .courseCode,
+  .courseTerm,
+  .courseCredits,
+  .instructor,
+  .meetingTimes,
+  .courseLinks,
+  .linkButton,
+  .filterControl,
+  .emptyState {
+    /* Desktop styles handled by grid system */
+  }
+}

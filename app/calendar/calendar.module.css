@@ -1,0 +1,90 @@
+@media (max-width: 767px) {
+  /* Calendar container - aggressive padding */
+  .calendarContainer {
+    padding: 12px;
+  }
+
+  /* Month view - condensed */
+  .monthGrid {
+    gap: 4px;
+  }
+
+  /* Date cell - minimal padding */
+  .dateCell {
+    padding: 6px 4px;
+    font-size: var(--font-size-sm);
+    border-radius: 6px;
+  }
+
+  /* Weekday header - smaller text */
+  .weekdayHeader {
+    font-size: 10px;
+    padding: 4px 0;
+  }
+
+  /* Week view - compact */
+  .weekContainer {
+    gap: 8px;
+  }
+
+  /* Day cell - minimal */
+  .dayCell {
+    padding: 8px;
+    border-radius: 6px;
+  }
+
+  /* Time slot - compact */
+  .timeSlot {
+    padding: 6px 8px;
+    min-height: 40px;
+    font-size: 11px;
+  }
+
+  /* Event - compact display */
+  .eventBadge {
+    padding: 4px 6px;
+    font-size: 10px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+  }
+
+  /* Calendar header - minimal */
+  .calendarHeader {
+    padding: 10px 0;
+    margin-bottom: 10px;
+  }
+
+  /* Navigation buttons */
+  .navButton {
+    padding: 6px 10px;
+    font-size: var(--font-size-sm);
+  }
+
+  /* View selector */
+  .viewSelector {
+    font-size: var(--font-size-sm);
+    padding: 4px 8px;
+  }
+
+  /* Today indicator - subtle */
+  .todayIndicator {
+    font-size: 10px;
+  }
+}
+
+@media (min-width: 768px) {
+  .calendarContainer,
+  .monthGrid,
+  .dateCell,
+  .weekdayHeader,
+  .weekContainer,
+  .dayCell,
+  .timeSlot,
+  .eventBadge,
+  .calendarHeader,
+  .navButton,
+  .viewSelector,
+  .todayIndicator {
+    /* Desktop styles handled by existing classes */
+  }
+}
