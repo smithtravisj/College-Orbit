@@ -10,8 +10,9 @@ export function FloatingMenuButton() {
   const university = useAppStore((state) => state.settings.university);
   const collegeColor = getCollegeColor(university);
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
     console.log('FAB clicked!');
+    e.stopPropagation();
     toggleDrawer();
   };
 
