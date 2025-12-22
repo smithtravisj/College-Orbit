@@ -234,7 +234,7 @@ export default function Navigation() {
 
       {/* Mobile Drawer Navigation */}
       {isMobile && (
-        <div ref={drawerRef} className={styles.drawer} data-open={isDrawerOpen}>
+        <div ref={drawerRef} className={styles.drawer} data-open={isDrawerOpen ? 'true' : 'false'}>
           {/* Close button */}
           <button
             onClick={closeDrawer}
