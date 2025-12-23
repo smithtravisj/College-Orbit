@@ -1,25 +1,15 @@
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5b21b6;stop-opacity:1" />
     </linearGradient>
   </defs>
-
-  <!-- Background with rounded corners -->
-  <rect width="256" height="256" rx="56" fill="url(#bgGradient)"/>
-
-  <!-- Simple open book -->
-  <g transform="translate(128, 135) rotate(180)">
-    <!-- Left page (curved) -->
-    <path d="M-6 -50 Q-50 -45 -55 -40 L-55 45 Q-50 50 -6 45 Z"
-          fill="white" opacity="0.95"/>
-
-    <!-- Right page (curved) -->
-    <path d="M6 -50 Q50 -45 55 -40 L55 45 Q50 50 6 45 Z"
-          fill="white"/>
-
-    <!-- Center binding shadow -->
-    <path d="M-6 -50 L-6 45 L6 45 L6 -50 Z" fill="white" opacity="0.8"/>
+  <rect width="100" height="100" fill="url(#grad1)" rx="20"/>
+  <g transform="translate(50, 50)">
+    <circle cx="-15" cy="-15" r="8" fill="white" opacity="0.9"/>
+    <circle cx="15" cy="-15" r="8" fill="white" opacity="0.9"/>
+    <circle cx="-15" cy="15" r="8" fill="white" opacity="0.9"/>
+    <circle cx="15" cy="15" r="8" fill="white" opacity="0.9"/>
   </g>
 </svg>
