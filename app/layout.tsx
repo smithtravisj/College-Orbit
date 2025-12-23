@@ -40,6 +40,16 @@ export default function RootLayout({
         <meta name="theme-color" content="#0b0f14" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
+        <link rel="mask-icon" href="/mask-icon.svg" color="#0b0f14" />
+        <style>{`
+          @supports (color-scheme: dark) {
+            :root { color-scheme: dark; }
+          }
+          html {
+            background-color: #0b0f14 !important;
+            color: #e6edf6 !important;
+          }
+        `}</style>
       </head>
       <body style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
         <Providers>
