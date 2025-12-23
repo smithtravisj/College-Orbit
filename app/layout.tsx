@@ -31,6 +31,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.className} style={{ backgroundColor: 'var(--bg)' }}>
+      <head>
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      </head>
       <body style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
         <Providers>
           <LayoutWrapper>
