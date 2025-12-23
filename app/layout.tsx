@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description: 'A personal, privacy-first college dashboard',
   icons: {
     icon: '/favicon.svg',
-    apple: '/favicon.svg',
+    apple: '/apple-touch-icon.png',
   },
 };
 
