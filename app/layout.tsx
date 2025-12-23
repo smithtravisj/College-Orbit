@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google';
 import { Providers } from './providers';
 import './globals.css';
 import LayoutWrapper from '@/components/LayoutWrapper';
-import FaviconSwitcher from '@/components/FaviconSwitcher';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -20,8 +19,8 @@ export const metadata: Metadata = {
   title: 'College Survival Tool',
   description: 'A personal, privacy-first college dashboard',
   icons: {
-    icon: '/favicon-light.svg',
-    apple: '/favicon-light.svg',
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
   },
 };
 
@@ -34,7 +33,6 @@ export default function RootLayout({
     <html lang="en" className={inter.className} style={{ backgroundColor: 'var(--bg)' }}>
       <body style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
         <Providers>
-          <FaviconSwitcher />
           <LayoutWrapper>
             {children}
           </LayoutWrapper>
