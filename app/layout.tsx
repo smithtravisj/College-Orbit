@@ -22,6 +22,7 @@ export const metadata: Metadata = {
     icon: '/favicon.svg',
     apple: '/apple-touch-icon.png',
   },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -30,13 +31,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.className} style={{ backgroundColor: 'var(--bg)' }}>
+    <html lang="en" className={inter.className} style={{ backgroundColor: '#0b0f14' }}>
       <head>
         <meta name="color-scheme" content="dark" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black" />
         <meta name="apple-mobile-web-app-title" content="College Survival" />
+        <meta name="theme-color" content="#0b0f14" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
       </head>
       <body style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
         <Providers>
