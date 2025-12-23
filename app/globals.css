@@ -8,6 +8,8 @@
 }
 
 :root {
+  color-scheme: dark;
+
   /* Backgrounds */
   --bg: #0b0f14;
   --panel: #101826;
