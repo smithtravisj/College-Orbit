@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useEffect, useRef, useState } from 'react';
-import { Course, Task, Deadline, Exam, ExcludedDate } from '@/types';
+import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent } from '@/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   getEventsForDate,
@@ -14,6 +14,7 @@ import {
   CalendarEvent,
 } from '@/lib/calendarUtils';
 import EventDetailModal from '@/components/EventDetailModal';
+import ExclusionDetailModal from '@/components/ExclusionDetailModal';
 
 interface CalendarDayViewProps {
   date: Date;
@@ -24,6 +25,8 @@ interface CalendarDayViewProps {
   allTasks?: Task[];
   allDeadlines?: Deadline[];
   excludedDates?: ExcludedDate[];
+  calendarEvents?: CustomCalendarEvent[];
+  onTimeSlotClick?: (date: Date, time?: string, allDay?: boolean) => void;
 }
 
 const HOUR_HEIGHT = 60; // pixels
@@ -39,10 +42,12 @@ export default function CalendarDayView({
   allTasks = [],
   allDeadlines = [],
   excludedDates = [],
+  calendarEvents = [],
 }: CalendarDayViewProps) {
   const isMobile = useIsMobile();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedExclusion, setSelectedExclusion] = useState<ExcludedDate | null>(null);
 
   useEffect(() => {
     // Scroll to 8 AM on mount
@@ -53,16 +58,18 @@ export default function CalendarDayView({
   }, []);
 
   const events = useMemo(
-    () => getEventsForDate(date, courses, tasks, deadlines, exams, excludedDates),
-    [date, courses, tasks, deadlines, exams, excludedDates]
+    () => getEventsForDate(date, courses, tasks, deadlines, exams, excludedDates, calendarEvents),
+    [date, courses, tasks, deadlines, exams, excludedDates, calendarEvents]
   );
 
   const courseEvents = useMemo(() => events.filter((e) => e.type === 'course'), [events]);
-  const taskDeadlineEvents = useMemo(() => events.filter((e) => e.type !== 'course'), [events]);
+  // Get custom calendar events that have times (not all-day)
+  const customEvents = useMemo(() => events.filter((e) => e.type === 'event' && !e.allDay && e.time), [events]);
+  const taskDeadlineEvents = useMemo(() => events.filter((e) => e.type !== 'course' && e.type !== 'event'), [events]);
   const { timed: timedTaskDeadlineEvents } = useMemo(() => separateTaskDeadlineEvents(taskDeadlineEvents), [taskDeadlineEvents]);
 
-  // Combine all timed events (courses + timed tasks/deadlines) for unified layout
-  const allTimedEvents = useMemo(() => [...courseEvents, ...timedTaskDeadlineEvents], [courseEvents, timedTaskDeadlineEvents]);
+  // Combine all timed events (courses + custom events + timed tasks/deadlines) for unified layout
+  const allTimedEvents = useMemo(() => [...courseEvents, ...customEvents, ...timedTaskDeadlineEvents], [courseEvents, customEvents, timedTaskDeadlineEvents]);
   const eventLayout = useMemo(() => calculateEventLayout(allTimedEvents), [allTimedEvents]);
 
   const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
@@ -110,6 +117,14 @@ export default function CalendarDayView({
             <div style={{ display: 'flex', gap: isMobile ? '2px' : '4px', flexWrap: 'wrap', alignItems: 'center' }}>
               {exclusionType && (() => {
                 let markerColor = getEventColor({ courseId: exclusionCourseId } as any);
+                const dateYear = date.getFullYear();
+                const dateMonth = String(date.getMonth() + 1).padStart(2, '0');
+                const dateDay = String(date.getDate()).padStart(2, '0');
+                const dateKey = `${dateYear}-${dateMonth}-${dateDay}`;
+                const exclusion = excludedDates.find((ex) => {
+                  const exDateOnly = ex.date.includes('T') ? ex.date.split('T')[0] : ex.date;
+                  return exDateOnly === dateKey && (exclusionType === 'holiday' ? !ex.courseId : ex.courseId);
+                });
 
                 return (
                   <div
@@ -127,6 +142,17 @@ export default function CalendarDayView({
                       whiteSpace: 'nowrap',
                       flex: '0 0 auto',
                       fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'opacity 0.2s',
+                    }}
+                    onClick={() => {
+                      if (exclusion) setSelectedExclusion(exclusion);
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '0.8';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '1';
                     }}
                   >
                     {exclusionType === 'holiday' ? 'No School' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
@@ -277,6 +303,83 @@ export default function CalendarDayView({
             );
           })}
 
+          {/* Custom calendar events (non-all-day) */}
+          {customEvents.map((event) => {
+            if (!event.time) return null;
+
+            const layout = eventLayout.find(l => l.event.id === event.id);
+            if (!layout) return null;
+
+            const { top: baseTop } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
+            const baseHeight = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
+            const scaleFactor = hourHeight / HOUR_HEIGHT;
+            const top = (baseTop + 1) * scaleFactor;
+            const minHeight = isMobile ? 28 : 36; // Minimum height for readability
+            const height = Math.max(baseHeight * scaleFactor, minHeight);
+            const isCompact = baseHeight * scaleFactor < minHeight;
+            const color = getEventColor(event);
+
+            const eventWidth = 100 / layout.totalColumns;
+            const eventLeft = layout.column * eventWidth;
+
+            // Convert 24-hour time to 12-hour format
+            const formatTime = (time: string) => {
+              const [hours, minutes] = time.split(':');
+              const hour = parseInt(hours);
+              const ampm = hour >= 12 ? 'PM' : 'AM';
+              const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+              return `${displayHour}:${minutes} ${ampm}`;
+            };
+
+            return (
+              <div
+                key={event.id}
+                style={{
+                  position: 'absolute',
+                  left: `calc(${eventLeft}% + ${isMobile ? '4px' : '8px'})`,
+                  width: `calc(${eventWidth}% - ${isMobile ? '8px' : '16px'})`,
+                  borderRadius: isMobile ? '6px' : 'var(--radius-control)',
+                  padding: isMobile ? '4px' : '6px 8px',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s',
+                  top: `${top}px`,
+                  height: `${height}px`,
+                  backgroundColor: `${color}50`,
+                  zIndex: 10,
+                  boxSizing: 'border-box',
+                  display: 'flex',
+                  flexDirection: isCompact ? 'row' : 'column',
+                  alignItems: isCompact ? 'center' : 'flex-start',
+                  gap: isCompact ? '8px' : '0',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                title={`${event.title}${event.endTime ? ` (${formatTime(event.time)} - ${formatTime(event.endTime)})` : ''}`}
+                onClick={() => setSelectedEvent(event)}
+              >
+                <div style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: isCompact ? '0 1 auto' : undefined }}>
+                  {event.title}
+                </div>
+                {!isCompact && (
+                  <div style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {formatTime(event.time)}{event.endTime ? ` - ${formatTime(event.endTime)}` : ''}
+                  </div>
+                )}
+                {!isCompact && event.location && (
+                  <div style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {event.location}
+                  </div>
+                )}
+                {isCompact && (
+                  <div style={{ fontSize: isMobile ? '0.6rem' : '0.7rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: '0 1 auto' }}>
+                    {formatTime(event.time)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
           {/* Timed task/deadline events */}
           {(() => {
             const { timed: timedEvents } = separateTaskDeadlineEvents(taskDeadlineEvents);
@@ -342,6 +445,14 @@ export default function CalendarDayView({
         tasks={allTasks.length > 0 ? allTasks : tasks}
         deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
         exams={exams}
+        calendarEvents={calendarEvents}
+      />
+
+      <ExclusionDetailModal
+        isOpen={selectedExclusion !== null}
+        exclusion={selectedExclusion}
+        courses={courses}
+        onClose={() => setSelectedExclusion(null)}
       />
     </div>
   );

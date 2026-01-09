@@ -19,6 +19,7 @@ model User {
   isAdmin                   Boolean                    @default(false)
   collegeRequests           CollegeRequest[]
   courses                   Course[]
+  customQuickLinks          CustomQuickLink[]
   deadlines                 Deadline[]
   exams                     Exam[]
   excludedDates             ExcludedDate[]
@@ -33,7 +34,9 @@ model User {
   recurringExamPatterns     RecurringExamPattern[]
   recurringPatterns         RecurringPattern[]
   settings                  Settings?
+  shoppingItems             ShoppingItem[]
   tasks                     Task[]
+  calendarEvents            CalendarEvent[]
 
   @@index([email])
 }
@@ -315,6 +318,7 @@ model Settings {
   toolsCardsOrder        Json?    @default("[\"pomodoroTimer\", \"gradeTracker\", \"gpaTrendChart\", \"whatIfProjector\", \"gpaCalculator\", \"tools_quickLinks\"]")
   visiblePagesOrder      Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Deadlines\", \"Exams\", \"Notes\", \"Courses\", \"Tools\"]")
   dashboardCardsCollapsedState Json? @default("[]")
+  hiddenQuickLinks       Json?    @default("{}")
   user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -432,4 +436,58 @@ model AnalyticsEvent {
   @@index([userId])
   @@index([eventType])
   @@index([createdAt])
+}
+
+model CustomQuickLink {
+  id         String   @id @default(cuid())
+  userId     String
+  university String
+  label      String
+  url        String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([university])
+}
+
+model ShoppingItem {
+  id        String   @id @default(cuid())
+  userId    String
+  listType  String   // "grocery" | "wishlist" | "pantry"
+  name      String
+  quantity  Int      @default(1)
+  unit      String?
+  category  String
+  notes     String   @default("")
+  checked   Boolean  @default(false)
+  priority  String?  // "low" | "medium" | "high"
+  price     Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([listType])
+  @@index([category])
+  @@index([checked])
+}
+
+model CalendarEvent {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  description String    @default("")
+  startAt     DateTime
+  endAt       DateTime?
+  allDay      Boolean   @default(false)
+  color       String?
+  location    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([startAt])
 }

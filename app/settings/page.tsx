@@ -109,7 +109,12 @@ export default function SettingsPage() {
     setDueSoonDays(settings.dueSoonWindowDays);
     setUniversity(settings.university || null);
     setSelectedTheme(settings.theme || 'dark');
-    setVisiblePages(settings.visiblePages || DEFAULT_VISIBLE_PAGES);
+    // Merge saved visible pages with any new pages added to defaults
+    const savedVisiblePages = settings.visiblePages || [];
+    const mergedVisiblePages = savedVisiblePages.length > 0
+      ? [...new Set([...savedVisiblePages, ...DEFAULT_VISIBLE_PAGES.filter(p => !savedVisiblePages.includes(p))])]
+      : DEFAULT_VISIBLE_PAGES;
+    setVisiblePages(mergedVisiblePages);
     setVisibleDashboardCards(settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS);
     setVisibleToolsCards(settings.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS);
 
@@ -128,7 +133,10 @@ export default function SettingsPage() {
       const order = typeof settings.visiblePagesOrder === 'string'
         ? JSON.parse(settings.visiblePagesOrder)
         : settings.visiblePagesOrder;
-      setVisiblePagesOrder(order);
+      // Add any new pages that aren't in the saved order (excluding Settings)
+      const allPages = Object.values(PAGES).filter(p => p !== 'Settings');
+      const newPages = allPages.filter(p => !order.includes(p));
+      setVisiblePagesOrder([...order, ...newPages]);
     } else {
       setVisiblePagesOrder(Object.values(PAGES).filter(p => p !== 'Settings'));
     }

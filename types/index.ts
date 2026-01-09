@@ -231,6 +231,7 @@ export interface Settings {
   pomodoroIsMuted?: boolean;
   selectedGradeSemester?: string;
   dashboardCardsCollapsedState?: string[] | null;
+  hiddenQuickLinks?: Record<string, string[]> | null;
 }
 
 export interface ExcludedDate {
@@ -276,4 +277,81 @@ export interface AppData {
   recurringDeadlinePatterns?: RecurringDeadlinePattern[];
   recurringExamPatterns?: RecurringExamPattern[];
   notifications?: Notification[];
+  shoppingItems?: ShoppingItem[];
+  calendarEvents?: CalendarEvent[];
 }
+
+// Calendar Event Types
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  description: string;
+  startAt: string;
+  endAt: string | null;
+  allDay: boolean;
+  color: string | null;
+  location: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Shopping List Types
+export type ShoppingListType = 'grocery' | 'wishlist' | 'pantry';
+
+export interface ShoppingItem {
+  id: string;
+  listType: ShoppingListType;
+  name: string;
+  quantity: number;
+  unit: string | null;
+  category: string;
+  notes: string;
+  checked: boolean;
+  priority: 'low' | 'medium' | 'high' | null;
+  price: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const GROCERY_CATEGORIES = [
+  'Produce',
+  'Dairy',
+  'Meat & Seafood',
+  'Bakery',
+  'Frozen',
+  'Canned Goods',
+  'Snacks',
+  'Beverages',
+  'Condiments',
+  'Household',
+  'Personal Care',
+  'Other',
+] as const;
+
+export const WISHLIST_CATEGORIES = [
+  'Electronics',
+  'Clothing',
+  'Books',
+  'Home & Garden',
+  'Sports & Outdoors',
+  'Entertainment',
+  'Kitchen',
+  'School Supplies',
+  'Gifts',
+  'Other',
+] as const;
+
+export const PANTRY_CATEGORIES = [
+  'Grains & Pasta',
+  'Canned Goods',
+  'Baking Supplies',
+  'Spices & Seasonings',
+  'Oils & Vinegars',
+  'Snacks',
+  'Beverages',
+  'Breakfast',
+  'Condiments',
+  'Frozen',
+  'Refrigerated',
+  'Other',
+] as const;

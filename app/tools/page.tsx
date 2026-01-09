@@ -12,13 +12,20 @@ import PomodoroTimer from '@/components/tools/PomodoroTimer';
 import GradeTracker from '@/components/tools/GradeTracker';
 import WhatIfProjector from '@/components/tools/WhatIfProjector';
 import GpaTrendChart from '@/components/tools/GpaTrendChart';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, X, Pencil } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface Course {
   id: string;
   name: string;
   code: string;
+}
+
+interface CustomQuickLink {
+  id: string;
+  label: string;
+  url: string;
+  university: string;
 }
 
 interface GpaEntry {
@@ -41,7 +48,7 @@ interface FormCourse {
 
 export default function ToolsPage() {
   const isMobile = useIsMobile();
-  const { settings } = useAppStore();
+  const { settings, updateSettings } = useAppStore();
   const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [formCourses, setFormCourses] = useState<FormCourse[]>([
@@ -49,6 +56,18 @@ export default function ToolsPage() {
   ]);
   const [gpaResult, setGpaResult] = useState<number | null>(null);
   const [gpaEntries, setGpaEntries] = useState<GpaEntry[]>([]);
+  const [customLinks, setCustomLinks] = useState<CustomQuickLink[]>([]);
+  const [showAddLinkForm, setShowAddLinkForm] = useState(false);
+  const [newLinkLabel, setNewLinkLabel] = useState('');
+  const [newLinkUrl, setNewLinkUrl] = useState('');
+  const [addLinkError, setAddLinkError] = useState('');
+  const [isEditingLinks, setIsEditingLinks] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
   const visibleToolsCards = settings.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS;
 
   // Get the tools cards order from settings, or use the default
@@ -89,9 +108,10 @@ export default function ToolsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [coursesRes, entriesRes] = await Promise.all([
+        const [coursesRes, entriesRes, linksRes] = await Promise.all([
           fetch('/api/courses'),
           fetch('/api/gpa-entries'),
+          fetch('/api/custom-quick-links'),
         ]);
 
         if (coursesRes.ok) {
@@ -117,6 +137,12 @@ export default function ToolsPage() {
             }));
             setFormCourses(savedCourses);
           }
+        }
+
+        if (linksRes.ok) {
+          const { links: fetchedLinks } = await linksRes.json();
+          setCustomLinks(fetchedLinks);
+          localStorage.setItem('customQuickLinks', JSON.stringify(fetchedLinks));
         }
 
         setMounted(true);
@@ -286,6 +312,114 @@ export default function ToolsPage() {
     setFormCourses(newCourses);
   };
 
+  // Custom Quick Links functions
+  const addCustomLink = async () => {
+    if (!newLinkLabel.trim() || !newLinkUrl.trim()) {
+      setAddLinkError('Please enter both a label and URL');
+      return;
+    }
+
+    if (!settings.university) {
+      setAddLinkError('Please select a college in settings first');
+      return;
+    }
+
+    // Ensure URL has a protocol
+    let url = newLinkUrl.trim();
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url;
+    }
+
+    try {
+      const res = await fetch('/api/custom-quick-links', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          label: newLinkLabel.trim(),
+          url: url,
+          university: settings.university,
+        }),
+      });
+
+      if (res.ok) {
+        const { link } = await res.json();
+        setCustomLinks((prev) => {
+          const newLinks = [...prev, link];
+          localStorage.setItem('customQuickLinks', JSON.stringify(newLinks));
+          return newLinks;
+        });
+        setNewLinkLabel('');
+        setNewLinkUrl('');
+        setShowAddLinkForm(false);
+        setAddLinkError('');
+      } else {
+        const data = await res.json();
+        setAddLinkError(data.error || 'Failed to add link');
+      }
+    } catch (error) {
+      console.error('Error adding custom link:', error);
+      setAddLinkError('Failed to add link');
+    }
+  };
+
+  const removeCustomLink = (id: string, label: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Remove Link',
+      message: `Are you sure you want to remove "${label}" from your quick links? This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/custom-quick-links/${id}`, {
+            method: 'DELETE',
+          });
+
+          if (res.ok) {
+            setCustomLinks((prev) => {
+              const newLinks = prev.filter((link) => link.id !== id);
+              localStorage.setItem('customQuickLinks', JSON.stringify(newLinks));
+              return newLinks;
+            });
+          }
+        } catch (error) {
+          console.error('Error removing custom link:', error);
+        }
+        setConfirmModal(null);
+      },
+    });
+  };
+
+  const hideDefaultLink = (university: string, linkLabel: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Hide Link',
+      message: `Are you sure you want to hide "${linkLabel}"? You can restore it later from the Hidden Links section.`,
+      onConfirm: async () => {
+        const currentHidden = settings.hiddenQuickLinks || {};
+        const universityHidden = currentHidden[university] || [];
+
+        if (!universityHidden.includes(linkLabel)) {
+          const newHidden = {
+            ...currentHidden,
+            [university]: [...universityHidden, linkLabel],
+          };
+          await updateSettings({ hiddenQuickLinks: newHidden });
+        }
+        setConfirmModal(null);
+      },
+    });
+  };
+
+  const unhideDefaultLink = async (university: string, linkLabel: string) => {
+    const currentHidden = settings.hiddenQuickLinks || {};
+    const universityHidden = currentHidden[university] || [];
+
+    const newHidden = {
+      ...currentHidden,
+      [university]: universityHidden.filter((l) => l !== linkLabel),
+    };
+    await updateSettings({ hiddenQuickLinks: newHidden });
+  };
+
   // Map card IDs to their rendering components
   const renderCard = (cardId: string) => {
     switch (cardId) {
@@ -418,7 +552,7 @@ export default function ToolsPage() {
               </div>
 
               <div className={isMobile ? 'flex flex-col gap-2' : 'flex gap-3'} style={{ marginTop: isMobile ? '12px' : '20px' }}>
-                <Button variant="secondary" size={isMobile ? 'sm' : 'md'} type="button" onClick={addCourse} style={isMobile ? { paddingLeft: '10px', paddingRight: '10px' } : {}}>
+                <Button variant="secondary" size={isMobile ? 'sm' : 'md'} type="button" onClick={addCourse} style={{ paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
                   <Plus size={isMobile ? 14 : 18} />
                   Add Row
                 </Button>
@@ -440,22 +574,214 @@ export default function ToolsPage() {
           </CollapsibleCard>
         );
       case TOOLS_CARDS.QUICK_LINKS:
+        const universityCustomLinks = customLinks.filter((link) => link.university === settings.university);
+        const hiddenLinksForUniversity = (settings.hiddenQuickLinks && settings.university) ? (settings.hiddenQuickLinks[settings.university] || []) : [];
+        const allDefaultLinks = settings.university ? getQuickLinks(settings.university) : [];
+        const visibleDefaultLinks = allDefaultLinks.filter((link) => !hiddenLinksForUniversity.includes(link.label));
+        const hiddenDefaultLinks = allDefaultLinks.filter((link) => hiddenLinksForUniversity.includes(link.label));
+
         return visibleToolsCards.includes(cardId) && (
           <CollapsibleCard key={cardId} id="quick-links" title="Quick Links" subtitle={settings.university ? `Resources for ${settings.university}` : 'Select a college to view quick links'}>
             {mounted && settings.university ? (
-              <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-4 gap-3'}>
-                {getQuickLinks(settings.university).map((link) => (
-                  <a
-                    key={link.label}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-[12px] text-center font-medium transition-colors hover:opacity-80"
-                    style={{ display: 'block', padding: isMobile ? '8px' : '12px', fontSize: isMobile ? '12px' : '14px', backgroundColor: settings.theme === 'light' ? 'var(--panel)' : 'var(--panel-2)', color: 'var(--text)', border: '2px solid var(--border)' }}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '16px' }}>
+                {/* Links Grid */}
+                <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-4 gap-3'}>
+                  {/* Default Links (visible) */}
+                  {visibleDefaultLinks.map((link) => (
+                    <div
+                      key={link.label}
+                      style={{ position: 'relative' }}
+                    >
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-[12px] text-center font-medium transition-colors hover:opacity-80"
+                        style={{ display: 'block', padding: isMobile ? '8px' : '12px', fontSize: isMobile ? '12px' : '14px', backgroundColor: settings.theme === 'light' ? 'var(--panel)' : 'var(--panel-2)', color: 'var(--text)', border: '2px solid var(--border)' }}
+                      >
+                        {link.label}
+                      </a>
+                      {isEditingLinks && (
+                        <button
+                          onClick={() => hideDefaultLink(settings.university!, link.label)}
+                          style={{
+                            position: 'absolute',
+                            top: '-6px',
+                            right: '-6px',
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '12px',
+                            padding: 0,
+                          }}
+                          title="Hide link"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {/* Custom Links */}
+                  {universityCustomLinks.map((link) => (
+                    <div
+                      key={link.id}
+                      style={{ position: 'relative' }}
+                    >
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-[12px] text-center font-medium transition-colors hover:opacity-80"
+                        style={{ display: 'block', padding: isMobile ? '8px' : '12px', fontSize: isMobile ? '12px' : '14px', backgroundColor: settings.theme === 'light' ? 'var(--panel)' : 'var(--panel-2)', color: 'var(--text)', border: '2px solid var(--border)' }}
+                      >
+                        {link.label}
+                      </a>
+                      {isEditingLinks && (
+                        <button
+                          onClick={() => removeCustomLink(link.id, link.label)}
+                          style={{
+                            position: 'absolute',
+                            top: '-6px',
+                            right: '-6px',
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '12px',
+                            padding: 0,
+                          }}
+                          title="Remove link"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Hidden Links Section - only show in edit mode */}
+                {isEditingLinks && hiddenDefaultLinks.length > 0 && (
+                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: isMobile ? '12px' : '16px' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Hidden Links
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {hiddenDefaultLinks.map((link) => (
+                        <button
+                          key={link.label}
+                          onClick={() => unhideDefaultLink(settings.university!, link.label)}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '12px',
+                            backgroundColor: 'var(--panel-2)',
+                            color: 'var(--text-muted)',
+                            border: '1px dashed var(--border)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                          title="Click to restore"
+                        >
+                          <Plus size={12} />
+                          {link.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Add Link Form - only show in edit mode */}
+                {isEditingLinks && showAddLinkForm && (
+                  <div style={{ padding: isMobile ? '12px' : '16px', backgroundColor: 'var(--panel-2)', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ display: 'flex', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
+                        <div style={{ flex: 1 }}>
+                          <Input
+                            type="text"
+                            placeholder="Link name"
+                            value={newLinkLabel}
+                            onChange={(e) => setNewLinkLabel(e.target.value)}
+                          />
+                        </div>
+                        <div style={{ flex: 2 }}>
+                          <Input
+                            type="text"
+                            placeholder="URL (e.g., https://example.com)"
+                            value={newLinkUrl}
+                            onChange={(e) => setNewLinkUrl(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      {addLinkError && (
+                        <div style={{ color: 'var(--danger)', fontSize: '13px' }}>{addLinkError}</div>
+                      )}
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            setShowAddLinkForm(false);
+                            setNewLinkLabel('');
+                            setNewLinkUrl('');
+                            setAddLinkError('');
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button size="sm" onClick={addCustomLink}>
+                          Add Link
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <Button
+                    variant="secondary"
+                    size={isMobile ? 'sm' : 'md'}
+                    onClick={() => {
+                      setIsEditingLinks(!isEditingLinks);
+                      if (isEditingLinks) {
+                        setShowAddLinkForm(false);
+                        setNewLinkLabel('');
+                        setNewLinkUrl('');
+                        setAddLinkError('');
+                      }
+                    }}
+                    style={{ paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}
                   >
-                    {link.label}
-                  </a>
-                ))}
+                    <Pencil size={isMobile ? 14 : 18} />
+                    {isEditingLinks ? 'Done' : 'Edit'}
+                  </Button>
+                  {isEditingLinks && !showAddLinkForm && (
+                    <Button
+                      variant="secondary"
+                      size={isMobile ? 'sm' : 'md'}
+                      onClick={() => setShowAddLinkForm(true)}
+                      style={{ paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}
+                    >
+                      <Plus size={isMobile ? 14 : 18} />
+                      Add Link
+                    </Button>
+                  )}
+                </div>
               </div>
             ) : (
               <div style={{ textAlign: 'center', padding: isMobile ? '16px' : '24px', color: 'var(--text-muted)', fontSize: isMobile ? '13px' : '14px' }}>
@@ -477,6 +803,90 @@ export default function ToolsPage() {
           {toolsCardsOrder.map((cardId: string) => renderCard(cardId))}
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmModal?.isOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 1000,
+            }}
+            onClick={() => setConfirmModal(null)}
+          />
+          {/* Modal */}
+          <div
+            style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              backgroundColor: 'var(--panel)',
+              border: '1px solid var(--border)',
+              borderRadius: '16px',
+              padding: '24px',
+              minWidth: isMobile ? '280px' : '360px',
+              maxWidth: '90%',
+              zIndex: 1001,
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+            }}
+          >
+            <h3
+              style={{
+                margin: 0,
+                marginBottom: '12px',
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                color: 'var(--text)',
+              }}
+            >
+              {confirmModal.title}
+            </h3>
+            <p
+              style={{
+                margin: 0,
+                marginBottom: '20px',
+                fontSize: '0.9rem',
+                color: 'var(--text-muted)',
+                lineHeight: 1.5,
+              }}
+            >
+              {confirmModal.message}
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setConfirmModal(null)}
+                style={{
+                  padding: '8px 16px',
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={confirmModal.onConfirm}
+                style={{
+                  backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
+                  borderColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
+                  color: 'white',
+                  padding: '8px 16px',
+                  boxShadow: settings.theme === 'light' ? '0 0 0 1px rgba(229, 83, 75, 0.3)' : '0 0 0 1px #731915',
+                }}
+              >
+                {confirmModal.title === 'Remove Link' ? 'Remove' : 'Hide'}
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }

@@ -48,6 +48,20 @@ function Dashboard() {
   const [toggledTasks, setToggledTasks] = useState<Set<string>>(new Set());
   const [hidingDeadlines, setHidingDeadlines] = useState<Set<string>>(new Set());
   const [toggledDeadlines, setToggledDeadlines] = useState<Set<string>>(new Set());
+  const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>(() => {
+    // Load from localStorage on initial render
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('customQuickLinks');
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch {
+          return [];
+        }
+      }
+    }
+    return [];
+  });
   const [taskFormData, setTaskFormData] = useState({
     title: '',
     courseId: '',
@@ -64,7 +78,7 @@ function Dashboard() {
     notes: '',
     links: [{ label: '', url: '' }],
   });
-  const { courses, deadlines, tasks, exams, settings, excludedDates, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone, updateDeadline, deleteDeadline } = useAppStore();
+  const { courses, deadlines, tasks, exams, settings, excludedDates, calendarEvents, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone, updateDeadline, deleteDeadline } = useAppStore();
   const visibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
   const isMobile = useIsMobile();
 
@@ -105,6 +119,24 @@ function Dashboard() {
       setMounted(true);
     });
   }, [initializeStore]);
+
+  // Fetch custom links when university changes
+  useEffect(() => {
+    if (mounted && settings.university) {
+      console.log('[Dashboard] Fetching custom links for:', settings.university);
+      fetch(`/api/custom-quick-links?university=${encodeURIComponent(settings.university)}`, { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => {
+          console.log('[Dashboard] Custom links response:', data);
+          if (data.links && Array.isArray(data.links)) {
+            setCustomLinks(data.links);
+            // Cache in localStorage for faster loading
+            localStorage.setItem('customQuickLinks', JSON.stringify(data.links));
+          }
+        })
+        .catch(err => console.error('Failed to fetch custom links:', err));
+    }
+  }, [mounted, settings.university]);
 
   // Check if user needs onboarding after mount
   useEffect(() => {
@@ -348,8 +380,15 @@ function Dashboard() {
 
   const overdueTasks = tasks.filter((d) => d.dueAt && isOverdue(d.dueAt) && d.status === 'open');
 
-  // Get quick links - use hardcoded BYU resources
-  const quickLinks = getQuickLinks(settings.university);
+  // Get quick links - filter out hidden ones and add custom links
+  const hiddenLinksForUniversity = settings.university && settings.hiddenQuickLinks
+    ? (settings.hiddenQuickLinks[settings.university] || [])
+    : [];
+  const defaultQuickLinks = getQuickLinks(settings.university).filter(
+    link => !hiddenLinksForUniversity.includes(link.label)
+  );
+  const universityCustomLinks = customLinks.filter(link => link.university === settings.university);
+  const quickLinks = [...defaultQuickLinks, ...universityCustomLinks];
 
   // Status summary
   const classesLeft = todayClasses.filter((c) => c.start > nowTime).length;
@@ -1007,9 +1046,9 @@ function Dashboard() {
               <>
                 {settings.university ? (
                   <div className={`grid grid-cols-2 ${isMobile ? 'gap-2' : 'gap-3'}`}>
-                    {quickLinks.map((link) => (
+                    {quickLinks.map((link: { id?: string; label: string; url: string }) => (
                       <a
-                        key={link.label}
+                        key={link.id || link.label}
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -1095,11 +1134,43 @@ function Dashboard() {
                       };
                     });
 
-                  // Combine and sort by time
-                  const allItems = [...classesOnDay, ...examsOnDay].sort((a, b) => {
-                    const aTime = a.type === 'class' ? (a as any).start : (a as any).time;
-                    const bTime = b.type === 'class' ? (b as any).start : (b as any).time;
-                    return aTime.localeCompare(bTime);
+                  // Get calendar events for this day
+                  const eventsOnDay = (calendarEvents || [])
+                    .filter((evt) => {
+                      const evtDate = new Date(evt.startAt);
+                      evtDate.setHours(0, 0, 0, 0);
+                      return evtDate.getTime() === date.getTime();
+                    })
+                    .map((evt) => ({
+                      type: 'event',
+                      title: evt.title,
+                      location: evt.location || '',
+                      allDay: evt.allDay,
+                      color: evt.color,
+                      startAt: evt.startAt,
+                      endAt: evt.endAt,
+                      time: evt.allDay ? 'All day' : new Date(evt.startAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+                    }));
+
+                  // Combine and sort by time (using 24-hour format for consistent sorting)
+                  const allItems = [...classesOnDay, ...examsOnDay, ...eventsOnDay].sort((a, b) => {
+                    // Get sortable time in 24-hour format
+                    const getSortTime = (item: any): string => {
+                      if (item.type === 'class') return item.start || '23:59';
+                      if (item.type === 'exam' && item.examAt) {
+                        const d = new Date(item.examAt);
+                        return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                      }
+                      if (item.type === 'event') {
+                        if (item.allDay) return '00:00'; // All-day events at top
+                        if (item.startAt) {
+                          const d = new Date(item.startAt);
+                          return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                        }
+                      }
+                      return '23:59';
+                    };
+                    return getSortTime(a).localeCompare(getSortTime(b));
                   });
 
                   daysList.push({
@@ -1128,11 +1199,15 @@ function Dashboard() {
                                   <div className="text-sm font-medium text-[var(--text)]">
                                     {item.type === 'class'
                                       ? `${item.courseCode}${item.courseName ? ` - ${item.courseName}` : ''}`
-                                      : `${item.courseCode ? `${item.courseCode} - ` : ''}${item.title} (Exam)`}
+                                      : item.type === 'exam'
+                                      ? `${item.courseCode ? `${item.courseCode} - ` : ''}${item.title} (Exam)`
+                                      : item.title}
                                   </div>
                                   <div className="text-sm text-[var(--text-secondary)]" style={{ marginTop: '3px' }}>
                                     {item.type === 'class'
                                       ? `${formatTime12Hour(item.start)} – ${formatTime12Hour(item.end)}`
+                                      : item.type === 'event' && !item.allDay && item.endAt
+                                      ? `${item.time} – ${new Date(item.endAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`
                                       : item.time}
                                   </div>
                                   {item.location && (
@@ -1144,14 +1219,14 @@ function Dashboard() {
                               ))}
                             </div>
                           ) : (
-                            <div className="text-sm text-[var(--text-muted)]">No classes or exams</div>
+                            <div className="text-sm text-[var(--text-muted)]">No classes, exams, or events</div>
                           )}
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <EmptyState title="No classes or exams this week" description="You have a free week ahead!" />
+                  <EmptyState title="No classes, exams, or events this week" description="You have a free week ahead!" />
                 );
               })()}
               </>,

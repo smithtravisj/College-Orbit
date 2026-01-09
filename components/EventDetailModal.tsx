@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Course, Task, Deadline, Exam } from '@/types';
+import { Course, Task, Deadline, Exam, CalendarEvent as CustomCalendarEvent } from '@/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { CalendarEvent } from '@/lib/calendarUtils';
 import useAppStore from '@/lib/store';
@@ -20,6 +20,7 @@ interface EventDetailModalProps {
   tasks: Task[];
   deadlines: Deadline[];
   exams?: Exam[];
+  calendarEvents?: CustomCalendarEvent[];
 }
 
 function formatTime(time?: string): string {
@@ -70,12 +71,13 @@ export default function EventDetailModal({
   tasks,
   deadlines,
   exams = [],
+  calendarEvents = [],
 }: EventDetailModalProps) {
   const isMobile = useIsMobile();
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
   const courseFormRef = useRef<{ submit: () => void }>(null);
-  const { updateTask, updateDeadline, updateCourse } = useAppStore();
+  const { updateTask, updateDeadline, updateCourse, updateCalendarEvent } = useAppStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState<any>(null);
   const [localStatus, setLocalStatus] = useState<string | null>(null);
@@ -120,7 +122,7 @@ export default function EventDetailModal({
 
   if (!isOpen || !event) return null;
 
-  let fullData: Course | Task | Deadline | Exam | null = null;
+  let fullData: Course | Task | Deadline | Exam | CustomCalendarEvent | null = null;
   let relatedCourse: Course | null = null;
 
   if (event.type === 'course') {
@@ -158,6 +160,9 @@ export default function EventDetailModal({
       const courseId = (fullData as Exam).courseId;
       relatedCourse = courses.find((c) => c.id === courseId) || null;
     }
+  } else if (event.type === 'event') {
+    // Custom calendar event
+    fullData = calendarEvents.find((e) => e.id === event.id) || null;
   }
 
   if (!fullData) return null;
@@ -167,6 +172,7 @@ export default function EventDetailModal({
     if (event.type === 'task') return '#3d7855';
     if (event.type === 'deadline') return '#7d5c52';
     if (event.type === 'exam') return '#c41e3a';
+    if (event.type === 'event') return event.color || '#a855f7'; // Purple for custom events
     return '#666';
   };
 
@@ -227,6 +233,33 @@ export default function EventDetailModal({
           dueTime: timeStr,
           notes: deadline.notes,
           links: deadline.links && deadline.links.length > 0 ? deadline.links : [{ label: '', url: '' }],
+        });
+      } else if (event.type === 'event') {
+        const calEvent = fullData as CustomCalendarEvent;
+        const startDate = calEvent.startAt ? new Date(calEvent.startAt) : null;
+        const endDate = calEvent.endAt ? new Date(calEvent.endAt) : null;
+        let dateStr = '';
+        let startTimeStr = '';
+        let endTimeStr = '';
+        if (startDate) {
+          const year = startDate.getFullYear();
+          const month = String(startDate.getMonth() + 1).padStart(2, '0');
+          const date = String(startDate.getDate()).padStart(2, '0');
+          dateStr = `${year}-${month}-${date}`;
+          startTimeStr = `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`;
+        }
+        if (endDate) {
+          endTimeStr = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
+        }
+        setEditFormData({
+          title: calEvent.title,
+          date: dateStr,
+          startTime: startTimeStr,
+          endTime: endTimeStr,
+          allDay: calEvent.allDay,
+          location: calEvent.location || '',
+          description: calEvent.description || '',
+          color: calEvent.color || '#a855f7',
         });
       }
       }
@@ -297,6 +330,42 @@ export default function EventDetailModal({
           dueAt,
           notes: editFormData.notes,
           links,
+        });
+        setIsEditing(false);
+        setEditFormData(null);
+      } else if (event.type === 'event') {
+        const calEvent = fullData as CustomCalendarEvent;
+
+        // Build start datetime
+        let startAt: string | null = null;
+        if (editFormData.date && editFormData.date.trim()) {
+          const startDate = new Date(editFormData.date + 'T00:00:00');
+          if (!editFormData.allDay && editFormData.startTime) {
+            const [hours, minutes] = editFormData.startTime.split(':').map(Number);
+            startDate.setHours(hours, minutes, 0, 0);
+          } else {
+            startDate.setHours(0, 0, 0, 0);
+          }
+          startAt = startDate.toISOString();
+        }
+
+        // Build end datetime
+        let endAt: string | null = null;
+        if (!editFormData.allDay && editFormData.date && editFormData.endTime) {
+          const endDate = new Date(editFormData.date + 'T00:00:00');
+          const [endHours, endMinutes] = editFormData.endTime.split(':').map(Number);
+          endDate.setHours(endHours, endMinutes, 0, 0);
+          endAt = endDate.toISOString();
+        }
+
+        await updateCalendarEvent(calEvent.id, {
+          title: editFormData.title,
+          description: editFormData.description,
+          startAt: startAt || calEvent.startAt,
+          endAt,
+          allDay: editFormData.allDay,
+          location: editFormData.location || null,
+          color: editFormData.color,
         });
         setIsEditing(false);
         setEditFormData(null);
@@ -438,7 +507,7 @@ export default function EventDetailModal({
                       fontWeight: 600,
                     }}
                   >
-                    {event.type === 'task' ? 'TASK' : event.type === 'deadline' ? 'DEADLINE' : 'EXAM'}
+                    {event.type === 'task' ? 'TASK' : event.type === 'deadline' ? 'DEADLINE' : event.type === 'exam' ? 'EXAM' : 'EVENT'}
                   </div>
                   <h2
                     style={{
@@ -489,6 +558,11 @@ export default function EventDetailModal({
                 hideSubmitButton={true}
                 onSave={handleSaveEditCourse}
               />
+            ) : event.type === 'event' ? (
+              <CalendarEventForm
+                formData={editFormData}
+                setFormData={setEditFormData}
+              />
             ) : (
               <TaskDeadlineForm
                 type={event.type as 'task' | 'deadline'}
@@ -505,6 +579,8 @@ export default function EventDetailModal({
             <DeadlineContent deadline={fullData as Deadline} relatedCourse={relatedCourse} />
           ) : event.type === 'exam' ? (
             <ExamContent exam={fullData as Exam} relatedCourse={relatedCourse} />
+          ) : event.type === 'event' ? (
+            <CalendarEventContent calendarEvent={fullData as CustomCalendarEvent} />
           ) : null}
         </div>
 
@@ -541,7 +617,7 @@ export default function EventDetailModal({
             </>
           ) : (
             <>
-              {event.type !== 'course' && event.type !== 'exam' && (
+              {event.type !== 'course' && event.type !== 'exam' && event.type !== 'event' && (
                 <Button variant="secondary" size={isMobile ? 'sm' : 'md'} onClick={handleMarkDoneClick}>
                   {(localStatus || (fullData && 'status' in fullData && (fullData as Task | Deadline).status)) === 'done'
                     ? 'Mark Incomplete'
@@ -711,6 +787,138 @@ function TaskDeadlineForm({ formData, setFormData, courses }: TaskDeadlineFormPr
           >
             Add Link
           </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Calendar Event edit form component
+interface CalendarEventFormProps {
+  formData: any;
+  setFormData: (data: any) => void;
+}
+
+const EVENT_COLORS = [
+  { value: '#a855f7', label: 'Purple' },
+  { value: '#3b82f6', label: 'Blue' },
+  { value: '#22c55e', label: 'Green' },
+  { value: '#f59e0b', label: 'Orange' },
+  { value: '#ef4444', label: 'Red' },
+  { value: '#ec4899', label: 'Pink' },
+  { value: '#6366f1', label: 'Indigo' },
+  { value: '#14b8a6', label: 'Teal' },
+];
+
+function CalendarEventForm({ formData, setFormData }: CalendarEventFormProps) {
+  const isMobile = useIsMobile();
+  if (!formData) return null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
+      <div>
+        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
+          Title
+        </p>
+        <Input
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '10px 12px' }}
+        />
+      </div>
+
+      <div>
+        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
+          Date
+        </p>
+        <CalendarPicker
+          value={formData.date}
+          onChange={(date) => setFormData({ ...formData, date })}
+        />
+      </div>
+
+      {/* All Day Toggle */}
+      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+        <input
+          type="checkbox"
+          checked={formData.allDay}
+          onChange={(e) => setFormData({ ...formData, allDay: e.target.checked })}
+          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+        />
+        <span style={{ fontSize: '14px', color: 'var(--text)' }}>All day</span>
+      </label>
+
+      {/* Time Pickers (only if not all day) */}
+      {!formData.allDay && (
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '8px' : '12px' }}>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
+              Start Time
+            </p>
+            <TimePicker
+              value={formData.startTime}
+              onChange={(time) => setFormData({ ...formData, startTime: time })}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
+              End Time
+            </p>
+            <TimePicker
+              value={formData.endTime}
+              onChange={(time) => setFormData({ ...formData, endTime: time })}
+            />
+          </div>
+        </div>
+      )}
+
+      <div>
+        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
+          Location (Optional)
+        </p>
+        <Input
+          value={formData.location}
+          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+          placeholder="Where is it?"
+          style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '10px 12px' }}
+        />
+      </div>
+
+      <div>
+        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
+          Description (Optional)
+        </p>
+        <Textarea
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Add details..."
+          style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '10px 12px' }}
+        />
+      </div>
+
+      {/* Color Picker */}
+      <div>
+        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0', fontWeight: 600 }}>
+          Color
+        </p>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {EVENT_COLORS.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              onClick={() => setFormData({ ...formData, color: c.value })}
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                backgroundColor: c.value,
+                border: formData.color === c.value ? '3px solid var(--text)' : '2px solid transparent',
+                cursor: 'pointer',
+                transition: 'transform 0.1s',
+              }}
+              title={c.label}
+            />
+          ))}
         </div>
       </div>
     </div>
@@ -1117,6 +1325,63 @@ function ExamContent({ exam, relatedCourse }: ExamContentProps) {
               </a>
             ))}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface CalendarEventContentProps {
+  calendarEvent: CustomCalendarEvent;
+}
+
+function CalendarEventContent({ calendarEvent }: CalendarEventContentProps) {
+  const isMobile = useIsMobile();
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '20px' }}>
+      {calendarEvent.startAt && (
+        <div>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
+            {calendarEvent.allDay ? 'Date' : 'Date & Time'}
+          </p>
+          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+            {calendarEvent.allDay
+              ? new Date(calendarEvent.startAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+              : formatDateTimeWithTime(calendarEvent.startAt)}
+            {!calendarEvent.allDay && calendarEvent.endAt && (
+              <> - {new Date(calendarEvent.endAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</>
+            )}
+          </p>
+        </div>
+      )}
+
+      {calendarEvent.location && (
+        <div>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
+            Location
+          </p>
+          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+            {calendarEvent.location}
+          </p>
+        </div>
+      )}
+
+      {calendarEvent.description && (
+        <div>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+            Description
+          </p>
+          <p
+            style={{
+              fontSize: isMobile ? '0.75rem' : '0.875rem',
+              color: 'var(--text)',
+              margin: 0,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+            }}
+          >
+            {calendarEvent.description}
+          </p>
         </div>
       )}
     </div>

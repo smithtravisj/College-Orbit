@@ -79,6 +79,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.toolsCardsOrder !== undefined) updateData.toolsCardsOrder = data.toolsCardsOrder;
     if (data.visiblePagesOrder !== undefined) updateData.visiblePagesOrder = data.visiblePagesOrder;
     if (data.dashboardCardsCollapsedState !== undefined) updateData.dashboardCardsCollapsedState = data.dashboardCardsCollapsedState;
+    if (data.hiddenQuickLinks !== undefined) updateData.hiddenQuickLinks = data.hiddenQuickLinks;
 
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 

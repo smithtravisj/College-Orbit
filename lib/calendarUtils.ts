@@ -1,9 +1,9 @@
-import { Course, Task, Deadline, Exam, ExcludedDate } from '@/types';
+import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent } from '@/types';
 import { getDayOfWeek } from './utils';
 
 export interface CalendarEvent {
   id: string;
-  type: 'course' | 'task' | 'deadline' | 'exam';
+  type: 'course' | 'task' | 'deadline' | 'exam' | 'event';
   title: string;
   time?: string;
   endTime?: string;
@@ -11,9 +11,14 @@ export interface CalendarEvent {
   courseCode?: string;
   courseId?: string | null;
   colorTag?: string;
+  color?: string | null; // Custom color for calendar events
   status?: 'open' | 'done' | 'scheduled' | 'completed' | 'cancelled';
   dueAt?: string | null;
   examAt?: string | null;
+  startAt?: string | null; // For custom calendar events
+  endAt?: string | null; // For custom calendar events
+  allDay?: boolean; // For custom calendar events
+  description?: string; // For custom calendar events
   instanceDate?: string | null; // For recurring task instances
   meetingTimeData?: {
     days: string[];
@@ -264,23 +269,82 @@ export function getExamEventsForDate(
     });
 }
 
-// Get all events for a specific date (combined courses, tasks, deadlines, exams)
+// Get custom calendar events for a specific date
+export function getCustomCalendarEventsForDate(
+  date: Date,
+  calendarEvents: CustomCalendarEvent[]
+): CalendarEvent[] {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const dateStr = `${year}-${month}-${day}`;
+
+  return calendarEvents
+    .filter((event) => {
+      if (!event.startAt) return false;
+
+      const eventDate = new Date(event.startAt);
+      const eventYear = eventDate.getFullYear();
+      const eventMonth = String(eventDate.getMonth() + 1).padStart(2, '0');
+      const eventDay = String(eventDate.getDate()).padStart(2, '0');
+      const eventDateLocal = `${eventYear}-${eventMonth}-${eventDay}`;
+
+      return eventDateLocal === dateStr;
+    })
+    .map((event) => {
+      // Get time in 24-hour format (HH:MM) if not all-day
+      let time: string | undefined;
+      let endTime: string | undefined;
+
+      if (!event.allDay && event.startAt) {
+        const startDate = new Date(event.startAt);
+        const hours = String(startDate.getHours()).padStart(2, '0');
+        const minutes = String(startDate.getMinutes()).padStart(2, '0');
+        time = `${hours}:${minutes}`;
+
+        if (event.endAt) {
+          const endDate = new Date(event.endAt);
+          const endHours = String(endDate.getHours()).padStart(2, '0');
+          const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+          endTime = `${endHours}:${endMinutes}`;
+        }
+      }
+
+      return {
+        id: event.id,
+        type: 'event' as const,
+        title: event.title,
+        time,
+        endTime,
+        location: event.location || undefined,
+        color: event.color,
+        startAt: event.startAt,
+        endAt: event.endAt,
+        allDay: event.allDay,
+        description: event.description,
+      };
+    });
+}
+
+// Get all events for a specific date (combined courses, tasks, deadlines, exams, custom events)
 export function getEventsForDate(
   date: Date,
   courses: Course[],
   tasks: Task[],
   deadlines: Deadline[],
   exams?: Exam[],
-  excludedDates?: ExcludedDate[]
+  excludedDates?: ExcludedDate[],
+  calendarEvents?: CustomCalendarEvent[]
 ): CalendarEvent[] {
   const courseEvents = getCourseEventsForDate(date, courses, excludedDates);
   const taskDeadlineEvents = getTaskDeadlineEventsForDate(date, tasks, deadlines);
   const examEvents = exams ? getExamEventsForDate(date, exams) : [];
+  const customEvents = calendarEvents ? getCustomCalendarEventsForDate(date, calendarEvents) : [];
 
-  // Sort by type priority (courses > exams > deadlines > tasks), then by time
-  return [...courseEvents, ...examEvents, ...taskDeadlineEvents].sort((a, b) => {
-    // Priority order: course, exam, deadline, task
-    const typePriority: Record<string, number> = { course: 0, exam: 1, deadline: 2, task: 3 };
+  // Sort by type priority (courses > exams > events > deadlines > tasks), then by time
+  return [...courseEvents, ...examEvents, ...customEvents, ...taskDeadlineEvents].sort((a, b) => {
+    // Priority order: course, exam, event, deadline, task
+    const typePriority: Record<string, number> = { course: 0, exam: 1, event: 2, deadline: 3, task: 4 };
     const priorityA = typePriority[a.type];
     const priorityB = typePriority[b.type];
 
@@ -425,6 +489,11 @@ export function getEventColor(event: CalendarEvent): string {
     return COLOR_PALETTE.orange;
   }
 
+  if (event.type === 'event') {
+    // Use custom color if set, otherwise purple for calendar events
+    return event.color || COLOR_PALETTE.purple;
+  }
+
   return COLOR_PALETTE.blue;
 }
 
@@ -448,11 +517,17 @@ export function parseColor(colorTag?: string): string {
 
 // Get color for month view dots and legend
 export function getMonthViewColor(event: CalendarEvent): string {
+  // For custom calendar events, use their custom color if set
+  if (event.type === 'event' && event.color) {
+    return event.color;
+  }
+
   const monthViewColors: Record<string, string> = {
     course: '#3b82f6',
     exam: '#ef4444',
     task: '#22c55e',
     deadline: '#ff7d00',
+    event: '#a855f7', // Purple for custom calendar events
   };
   return monthViewColors[event.type] || monthViewColors.course;
 }
@@ -482,7 +557,20 @@ export function separateTaskDeadlineEvents(events: CalendarEvent[]): {
   const timed: CalendarEvent[] = [];
 
   events.forEach((event) => {
-    if (event.type !== 'course') {
+    if (event.type === 'course') {
+      // Courses are handled separately (timed events with their own logic)
+      return;
+    }
+
+    if (event.type === 'event') {
+      // Custom calendar events use allDay property
+      if (event.allDay) {
+        allDay.push(event);
+      } else {
+        timed.push(event);
+      }
+    } else {
+      // Tasks and deadlines use dueAt time
       if (isDefaultEndOfDayTime(event.dueAt)) {
         allDay.push(event);
       } else {

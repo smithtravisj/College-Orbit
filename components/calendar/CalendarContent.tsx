@@ -10,7 +10,9 @@ import CalendarDayView from './CalendarDayView';
 import CalendarWeekView from './CalendarWeekView';
 import CalendarLegend from './CalendarLegend';
 import ExcludedDatesCard from '@/components/ExcludedDatesCard';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import AddEventModal from './AddEventModal';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { CalendarEvent } from '@/types';
 
 type ViewType = 'month' | 'week' | 'day';
 
@@ -20,6 +22,7 @@ interface CachedCalendarData {
   tasks: any[];
   deadlines: any[];
   exams: any[];
+  calendarEvents: CalendarEvent[];
   timestamp: number;
 }
 
@@ -38,6 +41,11 @@ export default function CalendarContent() {
   const [allTaskInstances, setAllTaskInstances] = useState<any[]>([]);
   const [allDeadlineInstances, setAllDeadlineInstances] = useState<any[]>([]);
   const [allExamInstances, setAllExamInstances] = useState<any[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [showAddEventModal, setShowAddEventModal] = useState(false);
+  const [addEventInitialDate, setAddEventInitialDate] = useState<Date | undefined>(undefined);
+  const [addEventInitialTime, setAddEventInitialTime] = useState<string | undefined>(undefined);
+  const [addEventInitialAllDay, setAddEventInitialAllDay] = useState(false);
   const hasFilteredRef = useRef(false);
   const cacheLoadedRef = useRef(false);
 
@@ -61,6 +69,9 @@ export default function CalendarContent() {
                 setAllTaskInstances(parsed.tasks);
                 setAllDeadlineInstances(parsed.deadlines);
                 setAllExamInstances(parsed.exams);
+                if (parsed.calendarEvents) {
+                  setCalendarEvents(parsed.calendarEvents);
+                }
                 cacheLoadedRef.current = true;
               }
             } catch (e) {
@@ -79,6 +90,7 @@ export default function CalendarContent() {
           tasks: [],
           deadlines: [],
           exams: [],
+          calendarEvents: [],
           timestamp: Date.now(),
         };
 
@@ -107,6 +119,14 @@ export default function CalendarContent() {
           const allOpenExams = examsData.exams.filter((exam: any) => exam.status !== 'completed');
           setAllExamInstances(allOpenExams);
           fetchedData.exams = allOpenExams;
+        }
+
+        // Fetch all calendar events
+        const eventsResponse = await fetch('/api/calendar-events');
+        if (eventsResponse.ok) {
+          const eventsData = await eventsResponse.json();
+          setCalendarEvents(eventsData.events || []);
+          fetchedData.calendarEvents = eventsData.events || [];
         }
 
         // Save to cache
@@ -249,6 +269,45 @@ export default function CalendarContent() {
     }
   };
 
+  const handleSaveEvent = async (eventData: {
+    title: string;
+    description: string;
+    startAt: string;
+    endAt: string | null;
+    allDay: boolean;
+    location: string | null;
+    color: string | null;
+  }) => {
+    try {
+      const response = await fetch('/api/calendar-events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCalendarEvents((prev) => [...prev, data.event]);
+        // Clear cache to force refresh
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('calendarCache');
+        }
+      } else {
+        throw new Error('Failed to save event');
+      }
+    } catch (error) {
+      console.error('Error saving event:', error);
+      throw error;
+    }
+  };
+
+  const handleTimeSlotClick = (date: Date, time?: string, allDay?: boolean) => {
+    setAddEventInitialDate(date);
+    setAddEventInitialTime(time);
+    setAddEventInitialAllDay(allDay || false);
+    setShowAddEventModal(true);
+  };
+
   return (
     <>
       <PageHeader
@@ -345,6 +404,39 @@ export default function CalendarContent() {
             <div style={{ fontSize: '0.875rem', color: 'var(--text)', fontWeight: 500, marginLeft: '12px' }}>
               {getDateDisplay()}
             </div>
+            <button
+              onClick={() => {
+                // Default to current view's date
+                setAddEventInitialDate(view === 'day' ? currentDate : (isMobile ? selectedDay : currentDate));
+                setAddEventInitialTime(undefined);
+                setAddEventInitialAllDay(false);
+                setShowAddEventModal(true);
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: 'var(--radius-control)',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: 'white',
+                backgroundColor: 'var(--accent)',
+                border: '1px solid #183e6a',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                marginLeft: '12px',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = '0.9';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = '1';
+              }}
+            >
+              <Plus size={16} />
+              <span style={{ display: isMobile ? 'none' : 'inline' }}>Add Event</span>
+            </button>
             <div style={{ flex: 1 }} />
             {!isMobile && (
             <div style={{ display: 'flex', gap: '6px' }}>
@@ -398,6 +490,7 @@ export default function CalendarContent() {
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
                     excludedDates={excludedDates}
+                    calendarEvents={calendarEvents}
                     onSelectDate={handleSelectDate}
                     selectedDate={selectedDay}
                   />
@@ -413,6 +506,8 @@ export default function CalendarContent() {
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
                     excludedDates={excludedDates}
+                    calendarEvents={calendarEvents}
+                    onTimeSlotClick={handleTimeSlotClick}
                   />
                 </div>
               </>
@@ -430,6 +525,7 @@ export default function CalendarContent() {
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
                     excludedDates={excludedDates}
+                    calendarEvents={calendarEvents}
                     onSelectDate={handleSelectDate}
                   />
                 )}
@@ -443,6 +539,8 @@ export default function CalendarContent() {
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
                     excludedDates={excludedDates}
+                    calendarEvents={calendarEvents}
+                    onTimeSlotClick={handleTimeSlotClick}
                   />
                 )}
                 {view === 'day' && (
@@ -455,6 +553,8 @@ export default function CalendarContent() {
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
                     excludedDates={excludedDates}
+                    calendarEvents={calendarEvents}
+                    onTimeSlotClick={handleTimeSlotClick}
                   />
                 )}
               </>
@@ -467,6 +567,15 @@ export default function CalendarContent() {
           <ExcludedDatesCard />
         </div>
       </div>
+
+      <AddEventModal
+        isOpen={showAddEventModal}
+        onClose={() => setShowAddEventModal(false)}
+        onSave={handleSaveEvent}
+        initialDate={addEventInitialDate}
+        initialTime={addEventInitialTime}
+        initialAllDay={addEventInitialAllDay}
+      />
     </>
   );
 }
