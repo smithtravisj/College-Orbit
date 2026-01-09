@@ -129,29 +129,61 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
     handleTimeChange(formattedHours, formattedMinutes);
   };
 
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Select all text on focus so typing replaces the value
+    e.target.select();
+  };
+
   const handleHourInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, '');
     if (val.length > 2) val = val.slice(-2);
-    const numVal = parseInt(val) || 0;
-    if (numVal > 12) val = '12';
-    if (numVal < 1 && val !== '') val = '1';
+    // Allow empty and don't force min while typing
+    if (val !== '') {
+      const numVal = parseInt(val);
+      if (numVal > 12) val = '12';
+    }
     setHours(val);
-    handleTimeChange(val.padStart(2, '0'), minutes.padStart(2, '0'));
+  };
+
+  const handleHourBlur = () => {
+    // Validate and format on blur
+    let val = hours;
+    if (val === '' || parseInt(val) < 1) {
+      val = '01';
+    } else {
+      val = String(parseInt(val)).padStart(2, '0');
+    }
+    setHours(val);
+    handleTimeChange(val, minutes.padStart(2, '0') || '00');
   };
 
   const handleMinuteInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, '');
     if (val.length > 2) val = val.slice(-2);
-    const numVal = parseInt(val) || 0;
-    if (numVal > 59) val = '59';
+    // Allow empty and don't force values while typing
+    if (val !== '') {
+      const numVal = parseInt(val);
+      if (numVal > 59) val = '59';
+    }
     setMinutes(val);
-    handleTimeChange(hours, val.padStart(2, '0'));
+  };
+
+  const handleMinuteBlur = () => {
+    // Validate and format on blur
+    let val = minutes;
+    if (val === '') {
+      val = '00';
+    } else {
+      val = String(parseInt(val)).padStart(2, '0');
+    }
+    setMinutes(val);
+    handleTimeChange(hours.padStart(2, '0') || '01', val);
   };
 
   return (
     <div ref={containerRef} className="relative w-full" style={{ minWidth: '120px', overflow: 'visible' }}>
       {label && (
-        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: isMobile ? '4px' : '6px', paddingTop: '4px', paddingBottom: '3px' }}>
+        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: isMobile ? '4px' : '6px' }}>
           {label}
         </label>
       )}
@@ -180,22 +212,25 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
                 <button
                   type="button"
                   onClick={incrementHours}
-                  className="p-1 rounded text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                  className="p-1 rounded text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
                 >
                   <ChevronUp size={18} />
                 </button>
                 <input
                   type="text"
-                  value={hours.padStart(2, '0')}
+                  value={hours}
                   onChange={handleHourInput}
+                  onFocus={handleFocus}
+                  onBlur={handleHourBlur}
+                  placeholder="00"
                   className="w-12 text-center bg-[var(--panel)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] text-sm font-semibold"
                   style={{ padding: '6px' }}
-                  maxLength={3}
+                  maxLength={2}
                 />
                 <button
                   type="button"
                   onClick={decrementHours}
-                  className="p-1 rounded text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                  className="p-1 rounded text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
                 >
                   <ChevronDown size={18} />
                 </button>
@@ -210,22 +245,25 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
                 <button
                   type="button"
                   onClick={incrementMinutes}
-                  className="p-1 rounded text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                  className="p-1 rounded text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
                 >
                   <ChevronUp size={18} />
                 </button>
                 <input
                   type="text"
-                  value={minutes.padStart(2, '0')}
+                  value={minutes}
                   onChange={handleMinuteInput}
+                  onFocus={handleFocus}
+                  onBlur={handleMinuteBlur}
+                  placeholder="00"
                   className="w-12 text-center bg-[var(--panel)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] text-sm font-semibold"
                   style={{ padding: '6px' }}
-                  maxLength={3}
+                  maxLength={2}
                 />
                 <button
                   type="button"
                   onClick={decrementMinutes}
-                  className="p-1 rounded text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                  className="p-1 rounded text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
                 >
                   <ChevronDown size={18} />
                 </button>

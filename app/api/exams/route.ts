@@ -75,6 +75,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         examAt: examAt,
         location: data.location || null,
         notes: data.notes || '',
+        tags: data.tags || [],
         links: (data.links || []).filter((l: any) => l.url).map((l: any) => ({
           label: l.label || new URL(l.url).hostname,
           url: l.url,

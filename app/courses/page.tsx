@@ -192,7 +192,7 @@ export default function CoursesPage() {
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]">
           {/* Filters sidebar - 3 columns (desktop only) */}
-          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', display: isMobile ? 'none' : 'block' }}>
+          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', display: isMobile ? 'none' : 'block', position: 'sticky', top: '107px', alignSelf: 'start' }}>
             <Card>
               <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: '16px' }}>Filters</h3>
               <div style={{ marginBottom: '20px' }}>
@@ -337,7 +337,7 @@ export default function CoursesPage() {
 
             {/* Courses List */}
             {filteredCourses.length > 0 ? (
-              <CourseList courses={filteredCourses} onEdit={setEditingId} showSemester={termFilter === 'all'} />
+              <CourseList courses={filteredCourses} onEdit={(courseId) => { window.scrollTo({ top: 0, behavior: 'smooth' }); setEditingId(courseId); }} showSemester={termFilter === 'all'} />
             ) : (
               <EmptyState
                 title={termFilter === 'all' ? 'No courses yet' : 'No courses in this term'}

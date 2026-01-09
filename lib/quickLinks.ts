@@ -56,7 +56,12 @@ export const universityLinks: Record<string, Array<{ label: string; url: string 
   ],
   'North Lincoln High School': [
     { label: 'Home', url: 'https://www.lcsnc.org/o/nlhs' },
-    { label: 'Classlink', url: 'https://launchpad.classlink.com/' },
+    { label: 'Canvas', url: 'https://lcs-arms.lincoln.k12.nc.us' },
+    { label: 'Google Classroom', url: 'https://classroom.google.com' },
+    { label: 'Gmail', url: 'https://mail.google.com' },
+    { label: 'Google Drive', url: 'https://drive.google.com' },
+    { label: 'Classlink', url: 'https://launchpad.classlink.com/lcsnc' },
+    { label: 'LaunchPad', url: 'https://myapps.classlink.com/home' },
     { label: 'Library', url: 'https://www.lcsnc.org/o/nlhs/page/media-center' },
     { label: 'Calendar', url: 'https://www.lcsnc.org/o/nlhs/events' },
   ],

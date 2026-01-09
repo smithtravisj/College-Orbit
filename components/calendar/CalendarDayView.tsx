@@ -27,6 +27,7 @@ interface CalendarDayViewProps {
   excludedDates?: ExcludedDate[];
   calendarEvents?: CustomCalendarEvent[];
   onTimeSlotClick?: (date: Date, time?: string, allDay?: boolean) => void;
+  onEventUpdate?: (updatedEvent: CustomCalendarEvent) => void;
 }
 
 const HOUR_HEIGHT = 60; // pixels
@@ -43,11 +44,34 @@ export default function CalendarDayView({
   allDeadlines = [],
   excludedDates = [],
   calendarEvents = [],
+  onEventUpdate,
 }: CalendarDayViewProps) {
   const isMobile = useIsMobile();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedExclusion, setSelectedExclusion] = useState<ExcludedDate | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Check if the viewed date is today
+  const isViewingToday = useMemo(() => {
+    const today = new Date();
+    return (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    );
+  }, [date]);
+
+  // Update current time every minute
+  useEffect(() => {
+    if (!isViewingToday) return;
+
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [isViewingToday]);
 
   useEffect(() => {
     // Scroll to 8 AM on mount
@@ -65,6 +89,8 @@ export default function CalendarDayView({
   const courseEvents = useMemo(() => events.filter((e) => e.type === 'course'), [events]);
   // Get custom calendar events that have times (not all-day)
   const customEvents = useMemo(() => events.filter((e) => e.type === 'event' && !e.allDay && e.time), [events]);
+  // Get all-day custom calendar events
+  const allDayCustomEvents = useMemo(() => events.filter((e) => e.type === 'event' && e.allDay), [events]);
   const taskDeadlineEvents = useMemo(() => events.filter((e) => e.type !== 'course' && e.type !== 'event'), [events]);
   const { timed: timedTaskDeadlineEvents } = useMemo(() => separateTaskDeadlineEvents(taskDeadlineEvents), [taskDeadlineEvents]);
 
@@ -108,7 +134,8 @@ export default function CalendarDayView({
       </div>
 
       {(() => {
-        const { allDay: allDayEvents } = separateTaskDeadlineEvents(taskDeadlineEvents);
+        const { allDay: allDayTaskDeadlineEvents } = separateTaskDeadlineEvents(taskDeadlineEvents);
+        const allDayEvents = [...allDayTaskDeadlineEvents, ...allDayCustomEvents];
         if (allDayEvents.length === 0 && !exclusionType) return null;
 
         return (
@@ -237,6 +264,46 @@ export default function CalendarDayView({
             );
           })}
 
+          {/* Current time indicator line */}
+          {isViewingToday && (() => {
+            const hours = currentTime.getHours();
+            const minutes = currentTime.getMinutes();
+            const totalMinutes = hours * 60 + minutes;
+            const topPosition = (totalMinutes / 60) * hourHeight;
+
+            return (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  top: `${topPosition}px`,
+                  zIndex: 10,
+                  pointerEvents: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <div
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--link)',
+                    marginLeft: '-4px',
+                  }}
+                />
+                <div
+                  style={{
+                    flex: 1,
+                    height: '2px',
+                    backgroundColor: 'var(--link)',
+                  }}
+                />
+              </div>
+            );
+          })()}
+
           {/* Course events as blocks */}
           {courseEvents.map((event) => {
             if (!event.time || !event.endTime) return null;
@@ -314,7 +381,7 @@ export default function CalendarDayView({
             const baseHeight = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
             const scaleFactor = hourHeight / HOUR_HEIGHT;
             const top = (baseTop + 1) * scaleFactor;
-            const minHeight = isMobile ? 28 : 36; // Minimum height for readability
+            const minHeight = 30; // Minimum height ~30 minutes
             const height = Math.max(baseHeight * scaleFactor, minHeight);
             const isCompact = baseHeight * scaleFactor < minHeight;
             const color = getEventColor(event);
@@ -446,6 +513,7 @@ export default function CalendarDayView({
         deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
         exams={exams}
         calendarEvents={calendarEvents}
+        onEventUpdate={onEventUpdate}
       />
 
       <ExclusionDetailModal

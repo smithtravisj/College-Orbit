@@ -95,7 +95,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
   return (
     <div ref={containerRef} style={{ position: 'relative', display: 'block', width: '100%', overflow: 'visible' }}>
       {label && (
-        <label style={{ display: 'block', marginBottom: isMobile ? '4px' : '6px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>
+        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: isMobile ? '4px' : '6px' }}>
           {label}
         </label>
       )}

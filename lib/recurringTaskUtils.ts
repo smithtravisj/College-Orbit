@@ -177,6 +177,7 @@ export async function generateRecurringInstances(
           title: template.title,
           courseId: template.courseId || null,
           notes: template.notes || '',
+          tags: template.tags || [],
           links: template.links || [],
           dueAt: dueAt.toISOString(),
           recurringPatternId: patternId,

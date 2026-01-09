@@ -9,7 +9,7 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, ShoppingCart, Heart, Package, Check } from 'lucide-react';
+import { Plus, Trash2, Edit2, ShoppingCart, Heart, Package, Check, Copy } from 'lucide-react';
 import {
   ShoppingListType,
   ShoppingItem,
@@ -45,14 +45,17 @@ export default function ShoppingPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const [perishableFilter, setPerishableFilter] = useState<string>('');
+  const [copied, setCopied] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    quantity: 1,
+    quantity: '' as string | number,
     unit: '',
     category: '',
     notes: '',
     priority: '' as '' | 'low' | 'medium' | 'high',
     price: '',
+    perishable: false,
   });
 
   const {
@@ -103,14 +106,16 @@ export default function ShoppingPage() {
   useEffect(() => {
     setFormData({
       name: '',
-      quantity: 1,
+      quantity: '',
       unit: '',
       category: '',
       notes: '',
       priority: '',
       price: '',
+      perishable: false,
     });
     setCategoryFilter('');
+    setPerishableFilter('');
     setShowForm(false);
     setEditingId(null);
   }, [activeTab]);
@@ -129,16 +134,21 @@ export default function ShoppingPage() {
     e.preventDefault();
     if (!formData.name.trim()) return;
 
+    const quantity = typeof formData.quantity === 'string'
+      ? (formData.quantity ? parseInt(formData.quantity, 10) : 1)
+      : (formData.quantity || 1);
+
     const itemData = {
       listType: activeTab,
       name: formData.name.trim(),
-      quantity: formData.quantity || 1,
+      quantity,
       unit: formData.unit || null,
       category: formData.category || 'Other',
       notes: formData.notes,
       checked: false,
       priority: (formData.priority || null) as 'low' | 'medium' | 'high' | null,
       price: formData.price ? parseFloat(formData.price) : null,
+      perishable: activeTab === 'pantry' ? formData.perishable : null,
     };
 
     if (editingId) {
@@ -153,6 +163,7 @@ export default function ShoppingPage() {
   };
 
   const startEdit = (item: ShoppingItem) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingId(item.id);
     setFormData({
       name: item.name,
@@ -162,6 +173,7 @@ export default function ShoppingPage() {
       notes: item.notes,
       priority: item.priority || '',
       price: item.price?.toString() || '',
+      perishable: item.perishable || false,
     });
     setShowForm(true);
   };
@@ -170,12 +182,13 @@ export default function ShoppingPage() {
     setEditingId(null);
     setFormData({
       name: '',
-      quantity: 1,
+      quantity: '',
       unit: '',
       category: '',
       notes: '',
       priority: '',
       price: '',
+      perishable: false,
     });
   };
 
@@ -183,6 +196,12 @@ export default function ShoppingPage() {
   const filteredItems = shoppingItems
     .filter((item) => item.listType === activeTab)
     .filter((item) => !categoryFilter || item.category === categoryFilter)
+    .filter((item) => {
+      if (!perishableFilter) return true;
+      if (perishableFilter === 'perishable') return item.perishable === true;
+      if (perishableFilter === 'non-perishable') return !item.perishable;
+      return true;
+    })
     .filter((item) => {
       if (!searchQuery.trim()) return true;
       const query = searchQuery.toLowerCase();
@@ -200,6 +219,49 @@ export default function ShoppingPage() {
 
   const checkedCount = filteredItems.filter((i) => i.checked).length;
   const TabIcon = TAB_CONFIG[activeTab].icon;
+
+  const copyAllToClipboard = () => {
+    const pantryItems = shoppingItems.filter((item) => item.listType === 'pantry');
+
+    // Group by category
+    const grouped: Record<string, typeof pantryItems> = {};
+    pantryItems.forEach((item) => {
+      if (!grouped[item.category]) grouped[item.category] = [];
+      grouped[item.category].push(item);
+    });
+
+    // Sort categories
+    const sortedCategories = Object.keys(grouped).sort((a, b) => {
+      const aIndex = currentCategories.indexOf(a);
+      const bIndex = currentCategories.indexOf(b);
+      if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      return aIndex - bIndex;
+    });
+
+    const text = sortedCategories
+      .map((category) => {
+        const items = grouped[category]
+          .map((item) => {
+            let line = `  ${item.name} x${item.quantity}${item.unit ? ` ${item.unit}` : ''}`;
+            if (item.perishable) {
+              line += ` (perishable)`;
+            }
+            if (item.notes) {
+              line += ` - ${item.notes}`;
+            }
+            return line;
+          })
+          .join('\n');
+        return `${category}\n${items}`;
+      })
+      .join('\n\n');
+
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const filtersContent = (
     <>
@@ -222,6 +284,20 @@ export default function ShoppingPage() {
           ]}
         />
       </div>
+      {activeTab === 'pantry' && (
+        <div style={{ marginBottom: checkedCount > 0 ? (isMobile ? '12px' : '20px') : 0 }}>
+          <Select
+            label="Perishable"
+            value={perishableFilter}
+            onChange={(e) => setPerishableFilter(e.target.value)}
+            options={[
+              { value: '', label: 'All Items' },
+              { value: 'perishable', label: 'Perishable Only' },
+              { value: 'non-perishable', label: 'Non-Perishable Only' },
+            ]}
+          />
+        </div>
+      )}
       {checkedCount > 0 && (
         <Button
           variant="secondary"
@@ -275,7 +351,7 @@ export default function ShoppingPage() {
 
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]">
           {/* Sidebar - 3 columns */}
-          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content' }}>
+          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : '107px', alignSelf: 'start' }}>
             {isMobile ? (
               <CollapsibleCard
                 id="shopping-filters"
@@ -305,7 +381,11 @@ export default function ShoppingPage() {
                     label="Item Name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="What do you need?"
+                    placeholder={
+                      activeTab === 'pantry' ? 'What item do you have?' :
+                      activeTab === 'wishlist' ? 'What do you want?' :
+                      'What do you need?'
+                    }
                     required
                   />
 
@@ -315,7 +395,7 @@ export default function ShoppingPage() {
                       type="number"
                       min={1}
                       value={formData.quantity}
-                      onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
+                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value === '' ? '' : parseInt(e.target.value) || '' })}
                     />
                     <Input
                       label="Unit (optional)"
@@ -363,8 +443,25 @@ export default function ShoppingPage() {
                     label="Notes"
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="Brand preferences, store location, etc."
+                    placeholder={
+                      activeTab === 'pantry' ? 'Storage location, expiration date, etc.' :
+                      activeTab === 'wishlist' ? 'Where to buy, links, notes...' :
+                      'Brand preferences, store location, etc.'
+                    }
                   />
+
+                  {/* Pantry-specific fields */}
+                  {activeTab === 'pantry' && (
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.perishable}
+                        onChange={(e) => setFormData({ ...formData, perishable: e.target.checked })}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                      />
+                      <span style={{ fontSize: '14px', color: 'var(--text)' }}>Perishable</span>
+                    </label>
+                  )}
 
                   <div className="flex gap-3" style={{ marginTop: '4px' }}>
                     <Button variant="primary" type="submit" size={isMobile ? 'sm' : 'md'}>
@@ -386,99 +483,172 @@ export default function ShoppingPage() {
             {/* Item List */}
             {filteredItems.length > 0 ? (
               <Card>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  {filteredItems.map((item, index) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors"
-                      style={{
-                        padding: isMobile ? '10px 8px' : '12px 16px',
-                        opacity: item.checked ? 0.6 : 1,
-                        borderBottom: index < filteredItems.length - 1 ? '1px solid var(--border)' : 'none',
-                      }}
+                {activeTab === 'pantry' && (
+                  <div style={{ marginBottom: '8px' }}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={copyAllToClipboard}
                     >
-                      {/* Checkbox */}
-                      <button
-                        onClick={() => toggleShoppingItemChecked(item.id)}
-                        style={{
-                          width: isMobile ? '20px' : '24px',
-                          height: isMobile ? '20px' : '24px',
-                          border: item.checked ? 'none' : '2px solid var(--border)',
-                          borderRadius: '6px',
-                          backgroundColor: item.checked ? 'var(--accent)' : 'transparent',
-                          cursor: 'pointer',
-                          flexShrink: 0,
-                          marginRight: isMobile ? '10px' : '14px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        {item.checked && <Check size={14} color="white" strokeWidth={3} />}
-                      </button>
+                      {copied ? <Check size={14} /> : <Copy size={14} />}
+                      <span style={{ marginLeft: '6px' }}>{copied ? 'Copied!' : 'Copy All'}</span>
+                    </Button>
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {(() => {
+                    // Group items by category, maintaining category order
+                    const groupedItems: Record<string, ShoppingItem[]> = {};
+                    filteredItems.forEach((item) => {
+                      if (!groupedItems[item.category]) {
+                        groupedItems[item.category] = [];
+                      }
+                      groupedItems[item.category].push(item);
+                    });
 
-                      {/* Item details */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span
-                            className={`font-medium ${item.checked ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'}`}
-                            style={{ fontSize: isMobile ? '13px' : '14px' }}
+                    // Sort categories by their order in the category list
+                    const sortedCategories = Object.keys(groupedItems).sort((a, b) => {
+                      const aIndex = currentCategories.indexOf(a);
+                      const bIndex = currentCategories.indexOf(b);
+                      // Put unknown categories at the end
+                      if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+                      if (aIndex === -1) return 1;
+                      if (bIndex === -1) return -1;
+                      return aIndex - bIndex;
+                    });
+
+                    return sortedCategories.map((category, catIndex) => (
+                      <div key={category}>
+                        {/* Category heading */}
+                        <div
+                          style={{
+                            padding: isMobile ? '12px 8px 8px' : '16px 16px 10px',
+                            fontSize: isMobile ? '12px' : '13px',
+                            fontWeight: 600,
+                            color: 'var(--text-muted)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            borderTop: catIndex > 0 ? '1px solid var(--border)' : 'none',
+                          }}
+                        >
+                          {category}
+                        </div>
+                        {/* Items in this category */}
+                        {groupedItems[category].map((item, index) => (
+                          <div
+                            key={item.id}
+                            className="flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors"
+                            style={{
+                              padding: isMobile ? '10px 8px' : '12px 16px',
+                              opacity: (item.checked && activeTab !== 'pantry') ? 0.6 : 1,
+                              borderBottom: index < groupedItems[category].length - 1 ? '1px solid var(--border)' : 'none',
+                              cursor: activeTab === 'pantry' ? 'pointer' : 'default',
+                            }}
+                            onClick={activeTab === 'pantry' ? () => startEdit(item) : undefined}
                           >
-                            {item.name}
-                          </span>
-                          {item.quantity > 1 && (
-                            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                              x{item.quantity} {item.unit}
-                            </span>
-                          )}
-                          {item.priority && (
-                            <span
-                              style={{
-                                fontSize: '10px',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                backgroundColor: item.priority === 'high' ? 'rgba(220,38,38,0.1)' :
-                                  item.priority === 'medium' ? 'rgba(234,179,8,0.1)' : 'rgba(34,197,94,0.1)',
-                                color: item.priority === 'high' ? 'var(--danger)' :
-                                  item.priority === 'medium' ? '#eab308' : '#22c55e',
-                              }}
-                            >
-                              {item.priority}
-                            </span>
-                          )}
-                        </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                          {item.category}
-                          {item.price && ` - $${item.price.toFixed(2)}`}
-                        </div>
-                        {item.notes && (
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                            {item.notes}
-                          </div>
-                        )}
-                      </div>
+                            {/* Checkbox - hidden for pantry, replaced with spacing */}
+                            {activeTab !== 'pantry' ? (
+                              <button
+                                onClick={() => toggleShoppingItemChecked(item.id)}
+                                style={{
+                                  width: isMobile ? '20px' : '24px',
+                                  height: isMobile ? '20px' : '24px',
+                                  border: item.checked ? 'none' : '2px solid var(--border)',
+                                  borderRadius: '6px',
+                                  backgroundColor: item.checked ? 'var(--accent)' : 'transparent',
+                                  cursor: 'pointer',
+                                  flexShrink: 0,
+                                  marginRight: isMobile ? '10px' : '14px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                {item.checked && <Check size={14} color="white" strokeWidth={3} />}
+                              </button>
+                            ) : (
+                              <div style={{ width: isMobile ? '12px' : '18px', flexShrink: 0 }} />
+                            )}
 
-                      {/* Actions */}
-                      <div className="flex items-center gap-2" style={{ opacity: isMobile ? 1 : 0, transition: 'opacity 0.2s' }}>
-                        <button
-                          onClick={() => startEdit(item)}
-                          className="text-[var(--text-muted)] hover:text-[var(--accent)]"
-                          style={{ padding: '4px' }}
-                          aria-label="Edit item"
-                        >
-                          <Edit2 size={isMobile ? 16 : 18} />
-                        </button>
-                        <button
-                          onClick={() => deleteShoppingItem(item.id)}
-                          className="text-[var(--text-muted)] hover:text-[var(--danger)]"
-                          style={{ padding: '4px' }}
-                          aria-label="Delete item"
-                        >
-                          <Trash2 size={isMobile ? 16 : 18} />
-                        </button>
+                            {/* Item details */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span
+                                  className={`font-medium ${(item.checked && activeTab !== 'pantry') ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'}`}
+                                  style={{ fontSize: isMobile ? '13px' : '14px' }}
+                                >
+                                  {item.name}
+                                </span>
+                                {(activeTab !== 'wishlist' || item.quantity > 1) && (
+                                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                    x{item.quantity} {item.unit}
+                                  </span>
+                                )}
+                                {item.priority && (
+                                  <span
+                                    style={{
+                                      fontSize: '10px',
+                                      padding: '2px 6px',
+                                      borderRadius: '4px',
+                                      backgroundColor: item.priority === 'high' ? 'rgba(220,38,38,0.1)' :
+                                        item.priority === 'medium' ? 'rgba(234,179,8,0.1)' : 'rgba(34,197,94,0.1)',
+                                      color: item.priority === 'high' ? 'var(--danger)' :
+                                        item.priority === 'medium' ? '#eab308' : '#22c55e',
+                                    }}
+                                  >
+                                    {item.priority}
+                                  </span>
+                                )}
+                                {item.perishable && (
+                                  <span
+                                    style={{
+                                      fontSize: '10px',
+                                      padding: '2px 6px',
+                                      borderRadius: '4px',
+                                      backgroundColor: 'rgba(249,115,22,0.15)',
+                                      color: '#f97316',
+                                    }}
+                                  >
+                                    perishable
+                                  </span>
+                                )}
+                              </div>
+                              {item.price && (
+                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                  ${item.price.toFixed(2)}
+                                </div>
+                              )}
+                              {item.notes && (
+                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                  {item.notes}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-2" style={{ opacity: isMobile ? 1 : 0, transition: 'opacity 0.2s' }}>
+                              <button
+                                onClick={() => startEdit(item)}
+                                className="text-[var(--text-muted)] hover:text-[var(--edit-hover)]"
+                                style={{ padding: '4px' }}
+                                aria-label="Edit item"
+                              >
+                                <Edit2 size={isMobile ? 16 : 18} />
+                              </button>
+                              <button
+                                onClick={() => deleteShoppingItem(item.id)}
+                                className="text-[var(--text-muted)] hover:text-[var(--danger)]"
+                                style={{ padding: '4px' }}
+                                aria-label="Delete item"
+                              >
+                                <Trash2 size={isMobile ? 16 : 18} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
               </Card>
             ) : (

@@ -90,6 +90,7 @@ export default function NotesPage() {
   };
 
   const startEdit = (note: Note) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setSelectedNoteId(note.id);
     setEditingId(note.id);
     setFormData({
@@ -197,7 +198,7 @@ export default function NotesPage() {
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ overflow: 'visible' }}>
           {/* Sidebar - 3 columns */}
-          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', display: isMobile ? 'none' : 'block' }}>
+          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', display: isMobile ? 'none' : 'block', position: 'sticky', top: '107px', alignSelf: 'start' }}>
             <Card>
               <div style={{ marginBottom: '20px' }}>
                 <Input
@@ -623,9 +624,8 @@ export default function NotesPage() {
                                       e.stopPropagation();
                                       startEdit(note);
                                     }}
-                                    style={{ padding: isMobile ? '4px' : '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.color = '#539bf5'}
-                                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+                                    className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
+                                    style={{ padding: isMobile ? '4px' : '8px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                   >
                                     <Edit2 size={isMobile ? 16 : 20} />
                                   </button>
@@ -737,9 +737,8 @@ export default function NotesPage() {
                                       e.stopPropagation();
                                       startEdit(note);
                                     }}
-                                    style={{ padding: isMobile ? '4px' : '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.color = '#539bf5'}
-                                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+                                    className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
+                                    style={{ padding: isMobile ? '4px' : '8px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                   >
                                     <Edit2 size={isMobile ? 16 : 20} />
                                   </button>

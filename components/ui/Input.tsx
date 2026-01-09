@@ -16,7 +16,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: isMobile ? '4px' : '12px', ...labelStyle }}>
+          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: isMobile ? '4px' : '6px', ...labelStyle }}>
             {label}
             {props.required && <span className="text-[var(--danger)]"> *</span>}
           </label>
@@ -53,7 +53,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: isMobile ? '4px' : '12px', ...labelStyle }}>
+          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: isMobile ? '4px' : '6px', ...labelStyle }}>
             {label}
             {props.required && <span className="text-[var(--danger)]"> *</span>}
           </label>
@@ -104,7 +104,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: isMobile ? '4px' : '12px', ...labelStyle }}>
+          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: isMobile ? '4px' : '6px', ...labelStyle }}>
             {label}
             {props.required && <span className="text-[var(--danger)]"> *</span>}
           </label>

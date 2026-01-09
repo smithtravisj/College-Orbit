@@ -76,6 +76,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         checked: false,
         priority: data.priority || null,
         price: data.price || null,
+        perishable: data.perishable ?? false,
       },
     });
 

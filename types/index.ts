@@ -26,6 +26,7 @@ export interface Deadline {
   priority: 1 | 2 | 3 | null; // 1 = highest, 3 = lowest
   effort: 'small' | 'medium' | 'large' | null;
   notes: string;
+  tags: string[];
   links: Array<{
     label: string;
     url: string;
@@ -51,6 +52,7 @@ export interface Task {
     done: boolean;
   }>;
   notes: string;
+  tags: string[];
   links: Array<{
     label: string;
     url: string;
@@ -79,6 +81,7 @@ export interface RecurringPattern {
     title: string;
     courseId: string | null;
     notes: string;
+    tags: string[];
     links: Array<{ label: string; url: string }>;
     dueTime: string; // HH:mm
   };
@@ -116,6 +119,7 @@ export interface RecurringDeadlinePattern {
     title: string;
     courseId: string | null;
     notes: string;
+    tags: string[];
     links: Array<{ label: string; url: string }>;
   };
   isActive: boolean;
@@ -139,6 +143,7 @@ export interface RecurringExamPattern {
     title: string;
     courseId: string | null;
     notes: string;
+    tags: string[];
     links: Array<{ label: string; url: string }>;
     location: string | null;
     examAt: string | null; // Time for exams (null for all-day)
@@ -180,6 +185,7 @@ export interface Exam {
   examAt: string; // ISO datetime
   location: string | null;
   notes: string;
+  tags: string[];
   links: Array<{
     label: string;
     url: string;
@@ -312,6 +318,7 @@ export interface ShoppingItem {
   checked: boolean;
   priority: 'low' | 'medium' | 'high' | null;
   price: number | null;
+  perishable: boolean | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -345,16 +352,21 @@ export const WISHLIST_CATEGORIES = [
 ] as const;
 
 export const PANTRY_CATEGORIES = [
-  'Grains & Pasta',
-  'Canned Goods',
   'Baking Supplies',
-  'Spices & Seasonings',
-  'Oils & Vinegars',
-  'Snacks',
   'Beverages',
+  'Bread',
   'Breakfast',
+  'Canned Goods',
   'Condiments',
   'Frozen',
+  'Instant Meals',
+  'Pasta & Rice',
+  'Oils & Cooking Sprays',
+  'Produce',
   'Refrigerated',
+  'Sauces',
+  'Snacks',
+  'Spices & Seasonings',
+  'Spreads',
   'Other',
 ] as const;

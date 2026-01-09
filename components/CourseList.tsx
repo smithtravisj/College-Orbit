@@ -90,7 +90,7 @@ export default function CourseList({ courses, onEdit, showSemester = false }: Co
             <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '6px' }}>
               <button
                 onClick={() => onEdit(course.id)}
-                className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
                 style={{ padding: isMobile ? '6px' : '8px' }}
                 title="Edit course"
               >
