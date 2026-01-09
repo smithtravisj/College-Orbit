@@ -85,6 +85,7 @@ export default function TasksPage() {
   });
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [courseFilter, setCourseFilter] = useState('');
 
   const { courses, tasks, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, initializeStore } = useAppStore();
 
@@ -464,6 +465,11 @@ export default function TasksPage() {
       return t.status === 'open';
     })
     .filter((t) => {
+      // Filter by course if a course is selected
+      if (courseFilter && t.courseId !== courseFilter) return false;
+      return true;
+    })
+    .filter((t) => {
       if (!searchQuery.trim()) return true;
 
       const query = searchQuery.toLowerCase();
@@ -527,6 +533,14 @@ export default function TasksPage() {
                     placeholder="Search tasks..."
                   />
                 </div>
+                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+                  <Select
+                    label="Course"
+                    value={courseFilter}
+                    onChange={(e) => setCourseFilter(e.target.value)}
+                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                  />
+                </div>
                 <div className="space-y-2">
                   {[
                     { value: 'all', label: 'All Tasks' },
@@ -558,6 +572,14 @@ export default function TasksPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search tasks..."
+                  />
+                </div>
+                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+                  <Select
+                    label="Course"
+                    value={courseFilter}
+                    onChange={(e) => setCourseFilter(e.target.value)}
+                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
                   />
                 </div>
                 <div className="space-y-2">

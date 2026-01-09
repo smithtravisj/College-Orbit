@@ -4,6 +4,7 @@ export const universityTitles: Record<string, string> = {
   'Brigham Young University': 'BYU Survival Tool',
   'Brigham Young University Hawaii': 'BYUH Survival Tool',
   'Brigham Young University Idaho': 'BYUI Survival Tool',
+  'North Lincoln High School': 'NLHS Survival Tool',
   'Ohio State University': 'OSU Survival Tool',
   'UNC Chapel Hill': 'UNC Survival Tool',
   'University of Central Florida': 'UCF Survival Tool',

@@ -54,6 +54,12 @@ export const universityLinks: Record<string, Array<{ label: string; url: string 
     { label: 'Career Services', url: 'https://www.byui.edu/career-services' },
     { label: 'Endorsements', url: 'https://www.byui.edu/student-honor-office/endorsements' },
   ],
+  'North Lincoln High School': [
+    { label: 'Home', url: 'https://www.lcsnc.org/o/nlhs' },
+    { label: 'Classlink', url: 'https://launchpad.classlink.com/' },
+    { label: 'Library', url: 'https://www.lcsnc.org/o/nlhs/page/media-center' },
+    { label: 'Calendar', url: 'https://www.lcsnc.org/o/nlhs/events' },
+  ],
   'Ohio State University': [
     { label: 'Home', url: 'https://www.osu.edu/' },
     { label: 'Buckeye Link', url: 'https://buckeyelink.osu.edu/' },
