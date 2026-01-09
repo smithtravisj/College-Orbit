@@ -178,6 +178,8 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         title: data.title.trim(),
         courseId: data.courseId || null,
         dueAt: dueAt,
+        priority: data.priority || null,
+        effort: data.effort || null,
         notes: data.notes || '',
         links: (data.links || []).filter((l: any) => l.url).map((l: any) => ({
           label: l.label || new URL(l.url).hostname,

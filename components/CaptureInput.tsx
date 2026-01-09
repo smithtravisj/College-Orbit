@@ -48,6 +48,8 @@ export default function CaptureInput() {
           0,
           0
         ).toISOString(),
+        priority: null,
+        effort: null,
         notes: '',
         links: [],
         status: 'open',
@@ -61,6 +63,7 @@ export default function CaptureInput() {
         courseId: null,
         dueAt: null,
         pinned: false,
+        importance: null,
         checklist: [],
         notes: '',
         links: [],

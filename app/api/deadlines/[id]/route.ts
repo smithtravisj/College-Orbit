@@ -103,11 +103,20 @@ export async function PATCH(
         title: 'title' in data ? data.title : existingDeadline.title,
         courseId: 'courseId' in data ? data.courseId : existingDeadline.courseId,
         dueAt: 'dueAt' in data ? updateDueAt : existingDeadline.dueAt,
+        priority: 'priority' in data ? (data.priority || null) : (existingDeadline.priority || null),
+        effort: 'effort' in data ? (data.effort || null) : (existingDeadline.effort || null),
         notes: 'notes' in data ? data.notes : existingDeadline.notes,
-        links: 'links' in data ? (data.links || []).filter((l: any) => l.url).map((l: any) => ({
-          label: l.label || new URL(l.url).hostname,
-          url: l.url,
-        })) : existingDeadline.links,
+        links: 'links' in data ? (data.links || []).filter((l: any) => l.url).map((l: any) => {
+          let label = l.label;
+          if (!label) {
+            try {
+              label = new URL(l.url).hostname;
+            } catch {
+              label = l.url;
+            }
+          }
+          return { label, url: l.url };
+        }) : existingDeadline.links,
         status: 'status' in data ? data.status : existingDeadline.status,
       },
     });

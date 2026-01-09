@@ -211,6 +211,7 @@ function Dashboard() {
         courseId: taskFormData.courseId || null,
         dueAt,
         pinned: false,
+        importance: null,
         checklist: [],
         notes: taskFormData.notes,
         links,

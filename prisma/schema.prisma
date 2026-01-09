@@ -72,6 +72,8 @@ model Deadline {
   title              String
   courseId           String?
   dueAt              DateTime?
+  priority           Int?
+  effort             String?
   notes              String                    @default("")
   status             String                    @default("open")
   createdAt          DateTime                  @default(now())
@@ -98,6 +100,7 @@ model Task {
   courseId           String?
   dueAt              DateTime?
   pinned             Boolean           @default(false)
+  importance         String?
   checklist          Json              @default("[]")
   notes              String            @default("")
   status             String            @default("open")
