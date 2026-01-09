@@ -83,6 +83,7 @@ export default function DeadlinesPage() {
   });
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [courseFilter, setCourseFilter] = useState('');
 
   const { courses, deadlines, settings, addDeadline, updateDeadline, deleteDeadline, addRecurringDeadline, updateRecurringDeadlinePattern, initializeStore } = useAppStore();
   const isMobile = useIsMobile();
@@ -448,6 +449,11 @@ export default function DeadlinesPage() {
       return d.status === 'open';
     })
     .filter((d) => {
+      // Filter by course if a course is selected
+      if (courseFilter && d.courseId !== courseFilter) return false;
+      return true;
+    })
+    .filter((d) => {
       if (!searchQuery.trim()) return true;
 
       const query = searchQuery.toLowerCase();
@@ -511,6 +517,14 @@ export default function DeadlinesPage() {
                     placeholder="Search deadlines..."
                   />
                 </div>
+                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+                  <Select
+                    label="Course"
+                    value={courseFilter}
+                    onChange={(e) => setCourseFilter(e.target.value)}
+                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                  />
+                </div>
                 <div className="space-y-2">
                   {[
                     { value: 'all', label: 'All' },
@@ -542,6 +556,14 @@ export default function DeadlinesPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search deadlines..."
+                  />
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <Select
+                    label="Course"
+                    value={courseFilter}
+                    onChange={(e) => setCourseFilter(e.target.value)}
+                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
                   />
                 </div>
                 <div className="space-y-2">

@@ -663,6 +663,64 @@ export const osuColorPalette: ColorPalette = {
 };
 
 /**
+ * North Lincoln High School Color Palette - Dark theme with NLHS blue accents
+ * Primary: #0035a8 (NLHS Blue)
+ */
+export const nlhsColorPalette: ColorPalette = {
+  bg: "#080a0a",
+  panel: "#141618",
+  panel2: "#0f1114",
+
+  text: "#e8e8e8",
+  textSecondary: "#b8b8b8",
+  muted: "#8a8a8a",
+  textMuted: "#707070",
+  textDisabled: "#555555",
+
+  border: "rgba(255, 255, 255, 0.08)",
+  borderHover: "#2a3a3a",
+  borderActive: "#0035a8",
+  borderStrong: "rgba(255, 255, 255, 0.12)",
+
+  accent: "#0035a8",
+  accentHover: "#002a86",
+  accent2: "rgba(0, 53, 168, 0.15)",
+  ring: "rgba(0, 53, 168, 0.35)",
+
+  buttonSecondary: "#0035a8",
+
+  navActive: "#0035a8",
+
+  link: "#6ab2ff",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "white",
+
+  success: "#57ab5a",
+  warning: "#c69026",
+  danger: "#e5534b",
+  dangerHover: "#d64941",
+  successBg: "rgba(87, 171, 90, 0.1)",
+  warningBg: "rgba(198, 144, 38, 0.1)",
+  dangerBg: "rgba(229, 83, 75, 0.1)",
+
+  brandPrimary: "#0035a8",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.3)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.4)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
+
+  focusRing: "0 0 0 3px rgba(0, 53, 168, 0.3)",
+
+  todayBg: "rgba(0, 53, 168, 0.12)",
+
+  weekViewTodayDateColor: "#6ab2ff",
+
+  calendarCurrentDateColor: "#6ab2ff",
+};
+
+/**
  * Light Mode Palettes - Inverted backgrounds and text with same accent colors
  */
 
@@ -692,7 +750,7 @@ export const byuLightPalette: ColorPalette = {
 
   buttonSecondary: "#6ab2ff",
   navActive: "#6ab2ff",
-  link: "#002E5D",
+  link: "#0035a8",
 
 
   calendarNoSchool: "#d1d5db",
@@ -1196,6 +1254,58 @@ export const osuLightPalette: ColorPalette = {
 };
 
 /**
+ * North Lincoln High School Light Color Palette
+ */
+export const nlhsLightPalette: ColorPalette = {
+  bg: "#f5f5f5",
+  panel: "#ffffff",
+  panel2: "#f0f1f3",
+
+  text: "#2a2a2a",
+  textSecondary: "#5a5a5a",
+  muted: "#5a5a5a",
+  textMuted: "#5a5a5a",
+  textDisabled: "#8a8a8a",
+
+  border: "rgba(0, 0, 0, 0.12)",
+  borderHover: "#d1d5db",
+  borderActive: "#64a7f0",
+  borderStrong: "rgba(0, 0, 0, 0.16)",
+
+  accent: "#64a7f0",
+  accentHover: "#5497e0",
+  accent2: "rgba(100, 167, 240, 0.15)",
+  ring: "rgba(100, 167, 240, 0.35)",
+
+  buttonSecondary: "#64a7f0",
+  navActive: "#64a7f0",
+  link: "#0035a8",
+
+  calendarNoSchool: "#d1d5db",
+  calendarCancelled: "#d1d5db",
+  calendarEventText: "#000000",
+
+  success: "#16a34a",
+  warning: "#d97706",
+  danger: "#dc2626",
+  dangerHover: "#b91c1c",
+  successBg: "rgba(22, 163, 74, 0.1)",
+  warningBg: "rgba(217, 119, 6, 0.1)",
+  dangerBg: "rgba(220, 38, 38, 0.1)",
+
+  brandPrimary: "#64a7f0",
+
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
+  shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.1)",
+
+  focusRing: "0 0 0 3px rgba(100, 167, 240, 0.3)",
+  todayBg: "rgba(100, 167, 240, 0.2)",
+  weekViewTodayDateColor: "#64a7f0",
+  calendarCurrentDateColor: "#64a7f0",
+};
+
+/**
  * UT Austin Color Palette - Dark theme with burnt orange accents
  */
 export const utaColorPalette: ColorPalette = {
@@ -1313,6 +1423,7 @@ export const collegeColorPalettes: Record<string, ColorPalette> = {
   "Brigham Young University": byuColorPalette,
   "Brigham Young University Hawaii": byuhColorPalette,
   "Brigham Young University Idaho": byuidColorPalette,
+  "North Lincoln High School": nlhsColorPalette,
   "Ohio State University": osuColorPalette,
   "UNC Chapel Hill": uncColorPalette,
   "University of Central Florida": ucfColorPalette,
@@ -1330,6 +1441,7 @@ export const collegeColorPalettesLight: Record<string, ColorPalette> = {
   "Brigham Young University": byuLightPalette,
   "Brigham Young University Hawaii": byuhLightPalette,
   "Brigham Young University Idaho": byuidLightPalette,
+  "North Lincoln High School": nlhsLightPalette,
   "Ohio State University": osuLightPalette,
   "UNC Chapel Hill": uncLightPalette,
   "University of Central Florida": ucfLightPalette,

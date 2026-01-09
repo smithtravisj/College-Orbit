@@ -1131,6 +1131,7 @@ export default function SettingsPage() {
                   <option value="Brigham Young University">Brigham Young University</option>
                   <option value="Brigham Young University Hawaii">Brigham Young University Hawaii</option>
                   <option value="Brigham Young University Idaho">Brigham Young University Idaho</option>
+                  <option value="North Lincoln High School">North Lincoln High School</option>
                   <option value="Ohio State University">Ohio State University</option>
                   <option value="UNC Chapel Hill">UNC Chapel Hill</option>
                   <option value="University of Central Florida">University of Central Florida</option>
