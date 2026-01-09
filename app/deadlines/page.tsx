@@ -761,7 +761,7 @@ export default function DeadlinesPage() {
                   const isOverdueDeadline = d.dueAt && isOverdue(d.dueAt) && d.status === 'open';
                   const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
                   return (
-                    <div key={d.id} style={{ paddingTop: isMobile ? '3px' : '12px', paddingBottom: isMobile ? '3px' : '12px', paddingLeft: isMobile ? '2px' : '20px', paddingRight: isMobile ? '2px' : '20px', gap: isMobile ? '8px' : '16px', opacity: hidingDeadlines.has(d.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0">
+                    <div key={d.id} style={{ paddingTop: isMobile ? '6px' : '10px', paddingBottom: isMobile ? '6px' : '10px', paddingLeft: isMobile ? '2px' : '16px', paddingRight: isMobile ? '2px' : '16px', gap: isMobile ? '8px' : '12px', opacity: hidingDeadlines.has(d.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0">
                       <input
                         type="checkbox"
                         checked={d.status === 'done'}
@@ -810,8 +810,8 @@ export default function DeadlinesPage() {
                         }}
                         title={d.status === 'done' ? 'Mark as incomplete' : 'Mark as complete'}
                       />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center" style={{ gap: isMobile ? '2px' : '8px' }}>
+                      <div className="flex-1 min-w-0" style={{ lineHeight: 1.4 }}>
+                        <div className="flex items-center" style={{ gap: isMobile ? '2px' : '6px' }}>
                           <div
                             className={`font-medium ${
                               d.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'
@@ -830,16 +830,16 @@ export default function DeadlinesPage() {
                           {isOverdueDeadline && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                         </div>
                         {d.notes && (
-                          <div style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', marginTop: isMobile ? '0px' : '4px' }}>
+                          <div style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                             {d.notes}
                           </div>
                         )}
                         {d.isRecurring && d.recurringPattern && (
-                          <div style={{ fontSize: isMobile ? '10px' : '12px', color: 'var(--text-muted)', marginTop: isMobile ? '0px' : '4px' }}>
+                          <div style={{ fontSize: isMobile ? '10px' : '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                             {getRecurrenceText(d.recurringPattern)}
                           </div>
                         )}
-                        <div className="flex items-center flex-wrap" style={{ gap: isMobile ? '2px' : '12px', marginTop: isMobile ? '0px' : '8px' }}>
+                        <div className="flex items-center flex-wrap" style={{ gap: isMobile ? '2px' : '6px', marginTop: '3px' }}>
                           {d.dueAt && (
                             <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
                               {formatDate(d.dueAt)} {shouldShowTime && `at ${dueTime}`}
@@ -852,7 +852,7 @@ export default function DeadlinesPage() {
                           )}
                         </div>
                         {d.links && d.links.length > 0 && (
-                          <div className="flex flex-col" style={{ gap: '0px', marginTop: isMobile ? '0px' : '8px' }}>
+                          <div className="flex flex-col" style={{ gap: '0px' }}>
                             {d.links.map((link: any) => (
                               <a
                                 key={link.url}

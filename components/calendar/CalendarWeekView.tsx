@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useEffect, useRef, useState } from 'react';
-import { Course, Task, Deadline, Exam, ExcludedDate } from '@/types';
+import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent } from '@/types';
 import {
   getWeekRange,
   getEventsForDate,
@@ -15,6 +15,7 @@ import {
 } from '@/lib/calendarUtils';
 import { getDayOfWeek, isToday } from '@/lib/utils';
 import EventDetailModal from '@/components/EventDetailModal';
+import ExclusionDetailModal from '@/components/ExclusionDetailModal';
 
 interface CalendarWeekViewProps {
   date: Date;
@@ -25,6 +26,8 @@ interface CalendarWeekViewProps {
   allTasks?: Task[];
   allDeadlines?: Deadline[];
   excludedDates?: ExcludedDate[];
+  calendarEvents?: CustomCalendarEvent[];
+  onTimeSlotClick?: (date: Date, time?: string, allDay?: boolean) => void;
 }
 
 const HOUR_HEIGHT = 60; // pixels
@@ -40,11 +43,13 @@ export default function CalendarWeekView({
   allTasks = [],
   allDeadlines = [],
   excludedDates = [],
+  calendarEvents = [],
 }: CalendarWeekViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedExclusion, setSelectedExclusion] = useState<ExcludedDate | null>(null);
   const [popupState, setPopupState] = useState<{
-    type: 'exclusion' | 'more';
+    type: 'more';
     dateStr: string;
     position: { top: number; left: number };
     hasExclusion?: boolean;
@@ -73,11 +78,11 @@ export default function CalendarWeekView({
   const eventsByDay = useMemo(() => {
     const map = new Map<string, ReturnType<typeof getEventsForDate>>();
     weekDays.forEach((day) => {
-      const events = getEventsForDate(day, courses, tasks, deadlines, exams, excludedDates);
+      const events = getEventsForDate(day, courses, tasks, deadlines, exams, excludedDates, calendarEvents);
       map.set(day.toISOString().split('T')[0], events);
     });
     return map;
-  }, [weekDays, courses, tasks, deadlines, exams, excludedDates]);
+  }, [weekDays, courses, tasks, deadlines, exams, excludedDates, calendarEvents]);
 
   const eventLayoutsByDay = useMemo(() => {
     const map = new Map<string, ReturnType<typeof calculateEventLayout>>();
@@ -85,8 +90,9 @@ export default function CalendarWeekView({
       const dateStr = day.toISOString().split('T')[0];
       const dayEvents = eventsByDay.get(dateStr) || [];
       const courseEvents = dayEvents.filter((e) => e.type === 'course');
+      // separateTaskDeadlineEvents now includes custom calendar events with times
       const { timed: timedEvents } = separateTaskDeadlineEvents(dayEvents);
-      // Combine all timed events (courses + timed tasks/deadlines) for unified layout
+      // Combine all timed events (courses + custom events + timed tasks/deadlines) for unified layout
       const allTimedEvents = [...courseEvents, ...timedEvents];
       const layout = calculateEventLayout(allTimedEvents);
       if (layout.length > 0) {
@@ -194,6 +200,10 @@ export default function CalendarWeekView({
             >
               {exclusionType && (() => {
                 let markerColor = getEventColor({ courseId: exclusionCourseId } as any);
+                const exclusion = excludedDates.find((ex) => {
+                  const exDateOnly = ex.date.includes('T') ? ex.date.split('T')[0] : ex.date;
+                  return exDateOnly === dateStr && (exclusionType === 'holiday' ? !ex.courseId : ex.courseId);
+                });
 
                 return (
                   <div
@@ -214,14 +224,16 @@ export default function CalendarWeekView({
                       fontWeight: 500,
                       flexShrink: 0,
                       cursor: 'pointer',
+                      transition: 'opacity 0.2s',
                     }}
-                    onClick={(e) => {
-                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                      setPopupState({
-                        type: 'exclusion',
-                        dateStr,
-                        position: { top: rect.bottom + 4, left: rect.left },
-                      });
+                    onClick={() => {
+                      if (exclusion) setSelectedExclusion(exclusion);
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '0.8';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '1';
                     }}
                   >
                     {exclusionType === 'holiday' ? 'No School' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
@@ -409,11 +421,20 @@ export default function CalendarWeekView({
                   );
                 })}
 
-                {/* Timed task/deadline events */}
+                {/* Timed task/deadline/calendar events */}
                 {(() => {
                   const dayEvents = eventsByDay.get(dateStr) || [];
                   const { timed: timedEvents } = separateTaskDeadlineEvents(dayEvents);
                   const layout = eventLayoutsByDay.get(dateStr) || [];
+
+                  // Convert 24-hour time to 12-hour format
+                  const formatTime = (time: string) => {
+                    const [hours, minutes] = time.split(':');
+                    const hour = parseInt(hours);
+                    const ampm = hour >= 12 ? 'PM' : 'AM';
+                    const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+                    return `${displayHour}:${minutes} ${ampm}`;
+                  };
 
                   return timedEvents.map((event) => {
                     if (!event.time) return null;
@@ -423,7 +444,9 @@ export default function CalendarWeekView({
 
                     const { top: baseTop } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
                     const top = baseTop + 9;
-                    const height = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
+                    const baseHeight = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
+                    const minHeight = 28; // Minimum height for readability
+                    const height = Math.max(baseHeight, minHeight);
                     const color = getEventColor(event);
 
                     // Check if there are any other events overlapping this one in time
@@ -455,7 +478,7 @@ export default function CalendarWeekView({
                           width: `calc(${eventWidth}% - 6px)`,
                           borderRadius: 'var(--radius-control)',
                           fontSize: '0.75rem',
-                          padding: '6px',
+                          padding: '4px 6px',
                           overflow: 'hidden',
                           cursor: 'pointer',
                           transition: 'opacity 0.2s',
@@ -471,7 +494,7 @@ export default function CalendarWeekView({
                         }}
                         onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                         onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-                        title={event.title}
+                        title={`${event.title}${event.endTime ? ` (${formatTime(event.time)} - ${formatTime(event.endTime)})` : ` (${formatTime(event.time)})`}`}
                         onClick={() => setSelectedEvent(event)}
                       >
                         <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2, width: '100%', minWidth: 0 }}>
@@ -487,7 +510,7 @@ export default function CalendarWeekView({
         </div>
       </div>
 
-      {/* Popup for exclusion details or more events */}
+      {/* Popup for more events */}
       {popupState && (
         <>
           {/* Backdrop */}
@@ -519,39 +542,7 @@ export default function CalendarWeekView({
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {popupState.type === 'exclusion' && (() => {
-              const exclusion = excludedDates.find((ex) => {
-                const exDateOnly = ex.date.includes('T') ? ex.date.split('T')[0] : ex.date;
-                return exDateOnly === popupState.dateStr;
-              });
-
-              if (!exclusion) return null;
-
-              const exclusionType = exclusion.courseId ? 'class-cancelled' : 'holiday';
-              let courseName = '';
-              if (exclusionType === 'class-cancelled' && exclusion.courseId) {
-                const course = courses.find(c => c.id === exclusion.courseId);
-                courseName = course?.code || course?.name || '';
-              }
-
-              return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)' }}>
-                    {exclusionType === 'holiday' ? 'No School' : 'Class Cancelled'}
-                  </div>
-                  {courseName && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                      {courseName}
-                    </div>
-                  )}
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    {exclusion.description}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {popupState.type === 'more' && (() => {
+            {(() => {
               const dateStr = popupState.dateStr;
               const dayEvents = eventsByDay.get(dateStr) || [];
               const { allDay: allDayEvents } = separateTaskDeadlineEvents(dayEvents);
@@ -603,6 +594,14 @@ export default function CalendarWeekView({
         tasks={allTasks.length > 0 ? allTasks : tasks}
         deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
         exams={exams}
+        calendarEvents={calendarEvents}
+      />
+
+      <ExclusionDetailModal
+        isOpen={selectedExclusion !== null}
+        exclusion={selectedExclusion}
+        courses={courses}
+        onClose={() => setSelectedExclusion(null)}
       />
     </div>
   );

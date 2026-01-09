@@ -570,11 +570,11 @@ export default function NotesPage() {
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <h3 style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>{note.title}</h3>
                                   {note.plainText && (
-                                    <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', marginTop: isMobile ? '2px' : '4px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                    <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', marginTop: isMobile ? '2px' : '2px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                                       {note.plainText}
                                     </p>
                                   )}
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: isMobile ? '4px' : '8px', marginTop: isMobile ? '4px' : '8px' }}>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: isMobile ? '4px' : '6px', marginTop: isMobile ? '4px' : '4px' }}>
                                     {course && <span style={{ fontSize: isMobile ? '10px' : '12px', backgroundColor: 'var(--nav-active)', padding: isMobile ? '2px 4px' : '4px 8px', borderRadius: '4px' }}>{course.code}</span>}
                                     {folder && selectedFolder !== note.folderId && (
                                       <span style={{ fontSize: isMobile ? '10px' : '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>
@@ -684,11 +684,11 @@ export default function NotesPage() {
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <h3 style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>{note.title}</h3>
                                   {note.plainText && (
-                                    <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', marginTop: isMobile ? '2px' : '4px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                    <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', marginTop: isMobile ? '2px' : '2px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                                       {note.plainText}
                                     </p>
                                   )}
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: isMobile ? '4px' : '8px', marginTop: isMobile ? '4px' : '8px' }}>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: isMobile ? '4px' : '6px', marginTop: isMobile ? '4px' : '4px' }}>
                                     {course && <span style={{ fontSize: isMobile ? '10px' : '12px', backgroundColor: 'var(--nav-active)', padding: isMobile ? '2px 4px' : '4px 8px', borderRadius: '4px' }}>{course.code}</span>}
                                     {folder && selectedFolder !== note.folderId && (
                                       <span style={{ fontSize: isMobile ? '10px' : '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>

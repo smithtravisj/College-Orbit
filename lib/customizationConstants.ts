@@ -6,6 +6,7 @@ export const PAGES = {
   EXAMS: 'Exams',
   NOTES: 'Notes',
   COURSES: 'Courses',
+  SHOPPING: 'Shopping',
   TOOLS: 'Tools',
   SETTINGS: 'Settings',
 } as const;

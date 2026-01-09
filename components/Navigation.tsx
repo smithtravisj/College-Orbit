@@ -18,6 +18,7 @@ import {
   Clock,
   FileText,
   StickyNote,
+  ShoppingCart,
   Wrench,
   Settings,
   User,
@@ -34,6 +35,7 @@ export const NAV_ITEMS = [
   { href: '/exams', label: 'Exams', icon: FileText },
   { href: '/notes', label: 'Notes', icon: StickyNote },
   { href: '/courses', label: 'Courses', icon: BookOpen },
+  { href: '/shopping', label: 'Shopping', icon: ShoppingCart },
   { href: '/tools', label: 'Tools', icon: Wrench },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];

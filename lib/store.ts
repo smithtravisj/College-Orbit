@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData } from '@/types';
+import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData, ShoppingItem, ShoppingListType, CalendarEvent } from '@/types';
 import { applyColorPalette, getCollegeColorPalette } from '@/lib/collegeColors';
 import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
@@ -35,6 +35,8 @@ interface AppStore {
   recurringPatterns: RecurringPattern[];
   recurringDeadlinePatterns: RecurringDeadlinePattern[];
   recurringExamPatterns: RecurringExamPattern[];
+  shoppingItems: ShoppingItem[];
+  calendarEvents: CalendarEvent[];
   loading: boolean;
   userId: string | null;
 
@@ -111,6 +113,18 @@ interface AppStore {
   // GPA Entries
   addGpaEntry: (gpaEntry: Omit<GpaEntry, 'id' | 'createdAt'>) => Promise<void>;
 
+  // Shopping Items
+  addShoppingItem: (item: Omit<ShoppingItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateShoppingItem: (id: string, item: Partial<ShoppingItem>) => Promise<void>;
+  deleteShoppingItem: (id: string) => Promise<void>;
+  toggleShoppingItemChecked: (id: string) => Promise<void>;
+  clearCheckedShoppingItems: (listType: ShoppingListType) => Promise<void>;
+
+  // Calendar Events
+  addCalendarEvent: (event: Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateCalendarEvent: (id: string, event: Partial<CalendarEvent>) => Promise<void>;
+  deleteCalendarEvent: (id: string) => Promise<void>;
+
   // Settings
   updateSettings: (settings: Partial<Settings>) => Promise<void>;
 
@@ -133,6 +147,8 @@ const useAppStore = create<AppStore>((set, get) => ({
   recurringPatterns: [],
   recurringDeadlinePatterns: [],
   recurringExamPatterns: [],
+  shoppingItems: [],
+  calendarEvents: [],
   loading: false,
   userId: null,
 
@@ -175,7 +191,7 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   loadFromDatabase: async () => {
     try {
-      const [coursesRes, deadlinesRes, tasksRes, examsRes, notesRes, foldersRes, settingsRes, excludedDatesRes, gpaRes, recurringPatternsRes, recurringDeadlinePatternsRes, recurringExamPatternsRes] = await Promise.all([
+      const [coursesRes, deadlinesRes, tasksRes, examsRes, notesRes, foldersRes, settingsRes, excludedDatesRes, gpaRes, recurringPatternsRes, recurringDeadlinePatternsRes, recurringExamPatternsRes, shoppingRes, calendarEventsRes] = await Promise.all([
         fetch('/api/courses'),
         fetch('/api/deadlines'),
         fetch('/api/tasks'),
@@ -188,6 +204,8 @@ const useAppStore = create<AppStore>((set, get) => ({
         fetch('/api/recurring-patterns'),
         fetch('/api/recurring-deadline-patterns'),
         fetch('/api/recurring-exam-patterns'),
+        fetch('/api/shopping'),
+        fetch('/api/calendar-events'),
       ]);
 
       const coursesData = await coursesRes.json();
@@ -202,6 +220,8 @@ const useAppStore = create<AppStore>((set, get) => ({
       const recurringPatternsData = await recurringPatternsRes.json();
       const recurringDeadlinePatternsData = await recurringDeadlinePatternsRes.json();
       const recurringExamPatternsData = await recurringExamPatternsRes.json();
+      const shoppingData = await shoppingRes.json();
+      const calendarEventsData = await calendarEventsRes.json();
 
       // Extract userId from settings response
       const userId = settingsData.userId;
@@ -246,6 +266,8 @@ const useAppStore = create<AppStore>((set, get) => ({
         recurringPatterns: recurringPatternsData.patterns || [],
         recurringDeadlinePatterns: recurringDeadlinePatternsData.patterns || [],
         recurringExamPatterns: recurringExamPatternsData.patterns || [],
+        shoppingItems: shoppingData.items || [],
+        calendarEvents: calendarEventsData.events || [],
       };
 
       set(newData);
@@ -1171,6 +1193,184 @@ const useAppStore = create<AppStore>((set, get) => ({
         gpaEntries: state.gpaEntries.filter((ge) => ge.id !== tempId),
       }));
       console.error('Error creating GPA entry:', error);
+      throw error;
+    }
+  },
+
+  // Shopping Item Actions
+  addShoppingItem: async (item) => {
+    const tempId = uuidv4();
+    const now = new Date().toISOString();
+    set((state) => ({
+      shoppingItems: [...state.shoppingItems, { ...item, id: tempId, createdAt: now, updatedAt: now } as ShoppingItem],
+    }));
+
+    try {
+      const response = await fetch('/api/shopping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item),
+      });
+
+      if (!response.ok) throw new Error('Failed to create item');
+
+      const { item: newItem } = await response.json();
+      set((state) => ({
+        shoppingItems: state.shoppingItems.map((i) => (i.id === tempId ? newItem : i)),
+      }));
+    } catch (error) {
+      set((state) => ({
+        shoppingItems: state.shoppingItems.filter((i) => i.id !== tempId),
+      }));
+      console.error('Error creating shopping item:', error);
+      throw error;
+    }
+  },
+
+  updateShoppingItem: async (id, item) => {
+    try {
+      set((state) => ({
+        shoppingItems: state.shoppingItems.map((i) =>
+          i.id === id ? { ...i, ...item, updatedAt: new Date().toISOString() } : i
+        ),
+      }));
+
+      const response = await fetch(`/api/shopping/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item),
+      });
+
+      if (!response.ok) throw new Error('Failed to update item');
+
+      const { item: updatedItem } = await response.json();
+      set((state) => ({
+        shoppingItems: state.shoppingItems.map((i) => (i.id === id ? updatedItem : i)),
+      }));
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error updating shopping item:', error);
+      throw error;
+    }
+  },
+
+  deleteShoppingItem: async (id) => {
+    try {
+      set((state) => ({
+        shoppingItems: state.shoppingItems.filter((i) => i.id !== id),
+      }));
+
+      const response = await fetch(`/api/shopping/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to delete item');
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error deleting shopping item:', error);
+      throw error;
+    }
+  },
+
+  toggleShoppingItemChecked: async (id) => {
+    const item = get().shoppingItems.find((i) => i.id === id);
+    if (item) {
+      await get().updateShoppingItem(id, { checked: !item.checked });
+    }
+  },
+
+  clearCheckedShoppingItems: async (listType) => {
+    try {
+      // Optimistically remove checked items
+      set((state) => ({
+        shoppingItems: state.shoppingItems.filter(
+          (i) => !(i.listType === listType && i.checked)
+        ),
+      }));
+
+      const response = await fetch(`/api/shopping?listType=${listType}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to clear checked items');
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error clearing checked items:', error);
+      throw error;
+    }
+  },
+
+  // Calendar Event Actions
+  addCalendarEvent: async (event) => {
+    const tempId = uuidv4();
+    const now = new Date().toISOString();
+    set((state) => ({
+      calendarEvents: [...state.calendarEvents, { ...event, id: tempId, createdAt: now, updatedAt: now } as CalendarEvent],
+    }));
+
+    try {
+      const response = await fetch('/api/calendar-events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event),
+      });
+
+      if (!response.ok) throw new Error('Failed to create event');
+
+      const { event: newEvent } = await response.json();
+      set((state) => ({
+        calendarEvents: state.calendarEvents.map((e) => (e.id === tempId ? newEvent : e)),
+      }));
+
+      // Invalidate calendar cache
+      get().invalidateCalendarCache();
+    } catch (error) {
+      set((state) => ({
+        calendarEvents: state.calendarEvents.filter((e) => e.id !== tempId),
+      }));
+      console.error('Error creating calendar event:', error);
+      throw error;
+    }
+  },
+
+  updateCalendarEvent: async (id, event) => {
+    try {
+      set((state) => ({
+        calendarEvents: state.calendarEvents.map((e) =>
+          e.id === id ? { ...e, ...event, updatedAt: new Date().toISOString() } : e
+        ),
+      }));
+
+      const response = await fetch(`/api/calendar-events/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event),
+      });
+
+      if (!response.ok) throw new Error('Failed to update event');
+
+      const { event: updatedEvent } = await response.json();
+      set((state) => ({
+        calendarEvents: state.calendarEvents.map((e) => (e.id === id ? updatedEvent : e)),
+      }));
+
+      // Invalidate calendar cache
+      get().invalidateCalendarCache();
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error updating calendar event:', error);
+      throw error;
+    }
+  },
+
+  deleteCalendarEvent: async (id) => {
+    try {
+      set((state) => ({
+        calendarEvents: state.calendarEvents.filter((e) => e.id !== id),
+      }));
+
+      const response = await fetch(`/api/calendar-events/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to delete event');
+
+      // Invalidate calendar cache
+      get().invalidateCalendarCache();
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error deleting calendar event:', error);
       throw error;
     }
   },

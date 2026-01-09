@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useRef, useEffect } from 'react';
-import { Course, Task, Deadline, Exam, ExcludedDate } from '@/types';
+import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent } from '@/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   getDatesInMonth,
@@ -14,6 +14,7 @@ import {
 } from '@/lib/calendarUtils';
 import { isToday } from '@/lib/utils';
 import EventDetailModal from '@/components/EventDetailModal';
+import ExclusionDetailModal from '@/components/ExclusionDetailModal';
 
 interface CalendarMonthViewProps {
   year: number;
@@ -25,6 +26,7 @@ interface CalendarMonthViewProps {
   allTasks?: Task[];
   allDeadlines?: Deadline[];
   excludedDates?: ExcludedDate[];
+  calendarEvents?: CustomCalendarEvent[];
   onSelectDate: (date: Date) => void;
   selectedDate?: Date; // For mobile: highlight selected day
 }
@@ -39,11 +41,13 @@ export default function CalendarMonthView({
   allTasks = [],
   allDeadlines = [],
   excludedDates = [],
+  calendarEvents = [],
   onSelectDate,
   selectedDate,
 }: CalendarMonthViewProps) {
   const isMobile = useIsMobile();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedExclusion, setSelectedExclusion] = useState<ExcludedDate | null>(null);
   const [maxVisibleDots, setMaxVisibleDots] = useState<Map<string, number>>(new Map());
   const [popupState, setPopupState] = useState<{
     dateStr: string;
@@ -57,13 +61,13 @@ export default function CalendarMonthView({
     const map = new Map<string, ReturnType<typeof getEventsForDate>>();
     dates.forEach((date) => {
       const dateStr = date.toISOString().split('T')[0];
-      const events = getEventsForDate(date, courses, tasks, deadlines, exams, excludedDates);
+      const events = getEventsForDate(date, courses, tasks, deadlines, exams, excludedDates, calendarEvents);
       if (events.length > 0) {
         map.set(dateStr, events);
       }
     });
     return map;
-  }, [dates, courses, tasks, deadlines, exams, excludedDates]);
+  }, [dates, courses, tasks, deadlines, exams, excludedDates, calendarEvents]);
 
   // Measure dots containers to determine how many can fit
   useEffect(() => {
@@ -199,6 +203,11 @@ export default function CalendarMonthView({
 
               {/* No School indicator */}
               {exclusionType === 'holiday' && (() => {
+                const exclusion = excludedDates.find((ex) => {
+                  const exDateOnly = ex.date.includes('T') ? ex.date.split('T')[0] : ex.date;
+                  return exDateOnly === dateStr && !ex.courseId;
+                });
+
                 if (isMobile) {
                   return (
                     <div
@@ -209,8 +218,13 @@ export default function CalendarMonthView({
                         backgroundColor: '#3b82f6',
                         flexShrink: 0,
                         marginBottom: '2px',
+                        cursor: 'pointer',
                       }}
                       title="Holiday/No School"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (exclusion) setSelectedExclusion(exclusion);
+                      }}
                     />
                   );
                 }
@@ -229,6 +243,18 @@ export default function CalendarMonthView({
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'opacity 0.2s',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (exclusion) setSelectedExclusion(exclusion);
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '0.8';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '1';
                     }}
                   >
                     No School
@@ -444,6 +470,14 @@ export default function CalendarMonthView({
         tasks={allTasks.length > 0 ? allTasks : tasks}
         deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
         exams={exams}
+        calendarEvents={calendarEvents}
+      />
+
+      <ExclusionDetailModal
+        isOpen={selectedExclusion !== null}
+        exclusion={selectedExclusion}
+        courses={courses}
+        onClose={() => setSelectedExclusion(null)}
       />
     </div>
   );
