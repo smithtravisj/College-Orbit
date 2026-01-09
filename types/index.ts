@@ -23,6 +23,8 @@ export interface Deadline {
   title: string;
   courseId: string | null;
   dueAt: string | null; // ISO datetime
+  priority: 1 | 2 | 3 | null; // 1 = highest, 3 = lowest
+  effort: 'small' | 'medium' | 'large' | null;
   notes: string;
   links: Array<{
     label: string;
@@ -42,6 +44,7 @@ export interface Task {
   courseId: string | null;
   dueAt: string | null; // ISO datetime
   pinned: boolean;
+  importance: 'low' | 'medium' | 'high' | null;
   checklist: Array<{
     id: string;
     text: string;

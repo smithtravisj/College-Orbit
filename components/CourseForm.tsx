@@ -98,7 +98,8 @@ const CourseFormComponent = forwardRef(function CourseForm(
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
-      <div className="grid grid-cols-2 gap-4">
+      {/* Code, Name, Term row */}
+      <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-3 gap-4'}>
         <Input
           label="Course Code"
           type="text"
@@ -115,9 +116,6 @@ const CourseFormComponent = forwardRef(function CourseForm(
           placeholder="e.g., Chemistry I"
           required
         />
-      </div>
-
-      <div style={{ paddingTop: '12px' }}>
         <Input
           label="Term"
           type="text"
@@ -127,7 +125,8 @@ const CourseFormComponent = forwardRef(function CourseForm(
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4" style={{ paddingTop: '12px' }}>
+      {/* Start/End Date row */}
+      <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-4'} style={{ paddingTop: isMobile ? '4px' : '12px' }}>
         <CalendarPicker
           label="Start Date"
           value={form.startDate}
@@ -140,8 +139,8 @@ const CourseFormComponent = forwardRef(function CourseForm(
         />
       </div>
 
-      <div style={{ paddingTop: '20px' }}>
-        <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Meeting Times</label>
+      <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
+        <label className={isMobile ? 'block text-sm font-medium text-[var(--text)]' : 'block text-lg font-medium text-[var(--text)]'} style={{ marginBottom: '8px' }}>Meeting Times</label>
         <div className="space-y-2" style={{ overflow: 'visible' }}>
           {form.meetingTimes.map((mt, idx) => (
             <div key={idx} className={isMobile ? 'flex flex-wrap items-end' : 'flex items-center'} style={{ gap: isMobile ? '6px' : '4px', paddingBottom: '4px' }}>
@@ -217,8 +216,8 @@ const CourseFormComponent = forwardRef(function CourseForm(
         </Button>
       </div>
 
-      <div style={{ paddingTop: '20px' }}>
-        <label className="block text-lg font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Links</label>
+      <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
+        <label className={isMobile ? 'block text-sm font-medium text-[var(--text)]' : 'block text-lg font-medium text-[var(--text)]'} style={{ marginBottom: '8px' }}>Links</label>
         <div className="space-y-3">
           {form.links.map((link, idx) => (
             <div key={idx} className="flex gap-3 items-center">
@@ -273,14 +272,14 @@ const CourseFormComponent = forwardRef(function CourseForm(
             ...form,
             links: [...form.links, { label: '', url: '' }],
           });
-        }} style={{ marginTop: '12px', paddingLeft: '16px', paddingRight: '16px' }}>
+        }} style={{ marginTop: isMobile ? '4px' : '12px', marginBottom: isMobile ? '8px' : '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <Plus size={16} />
           Add Link
         </Button>
       </div>
 
       {!hideSubmitButton && (
-        <div className="flex gap-3" style={{ paddingTop: '20px' }}>
+        <div className="flex gap-3" style={{ paddingTop: isMobile ? '6px' : '8px' }}>
           <Button
             variant="primary"
             size="md"

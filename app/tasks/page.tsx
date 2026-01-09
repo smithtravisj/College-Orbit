@@ -67,6 +67,7 @@ export default function TasksPage() {
     courseId: '',
     dueDate: '',
     dueTime: '',
+    importance: '' as '' | 'low' | 'medium' | 'high',
     notes: '',
     links: [{ label: '', url: '' }],
     isRecurring: false,
@@ -86,6 +87,7 @@ export default function TasksPage() {
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [courseFilter, setCourseFilter] = useState('');
+  const [importanceFilter, setImportanceFilter] = useState('');
 
   const { courses, tasks, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, initializeStore } = useAppStore();
 
@@ -189,6 +191,7 @@ export default function TasksPage() {
         courseId: '',
         dueDate: '',
         dueTime: '',
+        importance: '',
         notes: '',
         links: [{ label: '', url: '' }],
         isRecurring: false,
@@ -267,6 +270,7 @@ export default function TasksPage() {
           title: formData.title,
           courseId: formData.courseId || null,
           dueAt,
+          importance: formData.importance || null,
           notes: formData.notes,
           links,
         });
@@ -278,6 +282,7 @@ export default function TasksPage() {
         courseId: formData.courseId || null,
         dueAt,
         pinned: false,
+        importance: formData.importance || null,
         checklist: [],
         notes: formData.notes,
         links,
@@ -293,6 +298,7 @@ export default function TasksPage() {
       courseId: '',
       dueDate: '',
       dueTime: '',
+      importance: '',
       notes: '',
       links: [{ label: '', url: '' }],
       isRecurring: false,
@@ -360,6 +366,7 @@ export default function TasksPage() {
       courseId: task.courseId || '',
       dueDate: dateStr,
       dueTime: timeStr,
+      importance: task.importance || '',
       notes: task.notes,
       links: task.links && task.links.length > 0 ? task.links : [{ label: '', url: '' }],
       isRecurring: task.isRecurring || false,
@@ -375,6 +382,7 @@ export default function TasksPage() {
       courseId: '',
       dueDate: '',
       dueTime: '',
+      importance: '',
       notes: '',
       links: [{ label: '', url: '' }],
       isRecurring: false,
@@ -470,6 +478,11 @@ export default function TasksPage() {
       return true;
     })
     .filter((t) => {
+      // Filter by importance if selected
+      if (importanceFilter && t.importance !== importanceFilter) return false;
+      return true;
+    })
+    .filter((t) => {
       if (!searchQuery.trim()) return true;
 
       const query = searchQuery.toLowerCase();
@@ -541,6 +554,19 @@ export default function TasksPage() {
                     options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
                   />
                 </div>
+                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+                  <Select
+                    label="Importance"
+                    value={importanceFilter}
+                    onChange={(e) => setImportanceFilter(e.target.value)}
+                    options={[
+                      { value: '', label: 'All' },
+                      { value: 'high', label: 'High' },
+                      { value: 'medium', label: 'Medium' },
+                      { value: 'low', label: 'Low' },
+                    ]}
+                  />
+                </div>
                 <div className="space-y-2">
                   {[
                     { value: 'all', label: 'All Tasks' },
@@ -580,6 +606,19 @@ export default function TasksPage() {
                     value={courseFilter}
                     onChange={(e) => setCourseFilter(e.target.value)}
                     options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                  />
+                </div>
+                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+                  <Select
+                    label="Importance"
+                    value={importanceFilter}
+                    onChange={(e) => setImportanceFilter(e.target.value)}
+                    options={[
+                      { value: '', label: 'All' },
+                      { value: 'high', label: 'High' },
+                      { value: 'medium', label: 'Medium' },
+                      { value: 'low', label: 'Low' },
+                    ]}
                   />
                 </div>
                 <div className="space-y-2">
@@ -622,63 +661,86 @@ export default function TasksPage() {
                   placeholder="What needs to be done?"
                   required
                 />
-                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
+
+                {/* Course and Importance row */}
+                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-4'} style={{ paddingTop: isMobile ? '4px' : '12px' }}>
                   <Select
                     label="Course"
                     value={formData.courseId}
                     onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
                     options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
                   />
-                </div>
-                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
-                  <Textarea
-                    label="Notes"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="Add any additional notes..."
+                  <Select
+                    label="Importance"
+                    value={formData.importance}
+                    onChange={(e) => setFormData({ ...formData, importance: e.target.value as '' | 'low' | 'medium' | 'high' })}
+                    options={[
+                      { value: '', label: 'None' },
+                      { value: 'high', label: 'High' },
+                      { value: 'medium', label: 'Medium' },
+                      { value: 'low', label: 'Low' },
+                    ]}
                   />
                 </div>
 
-                {/* Recurring toggle */}
-                <div style={{ paddingTop: isMobile ? '4px' : '12px', paddingBottom: isMobile ? '4px' : '12px' }}>
-                  <label
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: isMobile ? '4px' : '8px',
-                      cursor: 'pointer',
-                      fontSize: isMobile ? '12px' : '14px',
-                      fontWeight: '500',
-                      color: 'var(--text)',
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.isRecurring}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          isRecurring: e.target.checked,
-                          recurring: {
-                            ...formData.recurring,
-                            isRecurring: e.target.checked,
-                          },
-                        })
-                      }
+                {/* Date/Time and Recurring row */}
+                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-3 gap-4'} style={{ paddingTop: isMobile ? '4px' : '12px', overflow: 'visible' }}>
+                  {!formData.isRecurring ? (
+                    <>
+                      <CalendarPicker
+                        label="Due Date"
+                        value={formData.dueDate}
+                        onChange={(date) => setFormData({ ...formData, dueDate: date })}
+                      />
+                      <TimePicker
+                        label="Due Time"
+                        value={formData.dueTime}
+                        onChange={(time) => setFormData({ ...formData, dueTime: time })}
+                      />
+                    </>
+                  ) : (
+                    <div className="col-span-2" />
+                  )}
+                  <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '8px' }}>
+                    <label
                       style={{
-                        width: isMobile ? '14px' : '18px',
-                        height: isMobile ? '14px' : '18px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: isMobile ? '4px' : '8px',
                         cursor: 'pointer',
+                        fontSize: isMobile ? '12px' : '14px',
+                        fontWeight: '500',
+                        color: 'var(--text)',
                       }}
-                    />
-                    <Repeat size={isMobile ? 14 : 16} />
-                    Recurring task
-                  </label>
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.isRecurring}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            isRecurring: e.target.checked,
+                            recurring: {
+                              ...formData.recurring,
+                              isRecurring: e.target.checked,
+                            },
+                          })
+                        }
+                        style={{
+                          width: isMobile ? '14px' : '18px',
+                          height: isMobile ? '14px' : '18px',
+                          cursor: 'pointer',
+                        }}
+                      />
+                      <Repeat size={isMobile ? 14 : 16} />
+                      Recurring
+                    </label>
+                  </div>
                 </div>
 
                 {/* Recurrence selector */}
                 {formData.isRecurring && (
-                  <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
+                  <div style={{ paddingTop: isMobile ? '4px' : '8px' }}>
                     <RecurrenceSelector
                       value={formData.recurring}
                       onChange={(recurring) => setFormData({ ...formData, recurring: recurring as RecurringTaskFormData })}
@@ -686,22 +748,16 @@ export default function TasksPage() {
                   </div>
                 )}
 
-                {/* Date/Time pickers - only show for non-recurring tasks */}
-                {!formData.isRecurring && (
-                  <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-4'} style={{ overflow: 'visible' }}>
-                    <CalendarPicker
-                      label="Due Date"
-                      value={formData.dueDate}
-                      onChange={(date) => setFormData({ ...formData, dueDate: date })}
-                    />
-                    <TimePicker
-                      label="Due Time"
-                      value={formData.dueTime}
-                      onChange={(time) => setFormData({ ...formData, dueTime: time })}
-                    />
-                  </div>
-                )}
-                <div style={{ paddingTop: isMobile ? '6px' : '20px' }}>
+                {/* Notes */}
+                <div style={{ paddingTop: isMobile ? '4px' : '8px' }}>
+                  <Textarea
+                    label="Notes"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    placeholder="Add any additional notes..."
+                  />
+                </div>
+                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
                   <label className={isMobile ? 'block text-sm font-medium text-[var(--text)]' : 'block text-lg font-medium text-[var(--text)]'} style={{ marginBottom: isMobile ? '3px' : '8px' }}>Links</label>
                   <div className={isMobile ? 'space-y-1' : 'space-y-3'}>
                     {formData.links.map((link, idx) => (
@@ -756,12 +812,12 @@ export default function TasksPage() {
                       ...formData,
                       links: [...formData.links, { label: '', url: '' }],
                     });
-                  }} style={{ marginTop: isMobile ? '4px' : '12px', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
+                  }} style={{ marginTop: isMobile ? '4px' : '12px', marginBottom: isMobile ? '8px' : '16px', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
                     <Plus size={isMobile ? 12 : 16} />
                     Add Link
                   </Button>
                 </div>
-                <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '10px' : '12px' }}>
+                <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '6px' : '8px' }}>
                   <Button
                     variant="primary"
                     size={isMobile ? 'sm' : 'md'}
@@ -884,6 +940,18 @@ export default function TasksPage() {
                           {course && (
                             <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
                               {course.code}
+                            </span>
+                          )}
+                          {t.importance && (
+                            <span style={{
+                              fontSize: isMobile ? '10px' : '11px',
+                              fontWeight: '600',
+                              padding: '1px 6px',
+                              borderRadius: '3px',
+                              backgroundColor: t.importance === 'high' ? 'rgba(239, 68, 68, 0.15)' : t.importance === 'medium' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                              color: t.importance === 'high' ? '#ef4444' : t.importance === 'medium' ? '#eab308' : '#22c55e',
+                            }}>
+                              {t.importance.charAt(0).toUpperCase() + t.importance.slice(1)}
                             </span>
                           )}
                         </div>

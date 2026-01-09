@@ -66,6 +66,8 @@ export default function DeadlinesPage() {
     courseId: '',
     dueDate: '',
     dueTime: '',
+    priority: '' as '' | '1' | '2' | '3',
+    effort: '' as '' | 'small' | 'medium' | 'large',
     notes: '',
     links: [{ label: '', url: '' }],
     isRecurring: false,
@@ -84,6 +86,8 @@ export default function DeadlinesPage() {
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [courseFilter, setCourseFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
+  const [effortFilter, setEffortFilter] = useState('');
 
   const { courses, deadlines, settings, addDeadline, updateDeadline, deleteDeadline, addRecurringDeadline, updateRecurringDeadlinePattern, initializeStore } = useAppStore();
   const isMobile = useIsMobile();
@@ -188,6 +192,8 @@ export default function DeadlinesPage() {
         courseId: '',
         dueDate: '',
         dueTime: '',
+        priority: '',
+        effort: '',
         notes: '',
         links: [{ label: '', url: '' }],
         isRecurring: false,
@@ -253,6 +259,8 @@ export default function DeadlinesPage() {
           title: formData.title,
           courseId: formData.courseId || null,
           dueAt,
+          priority: formData.priority ? parseInt(formData.priority) as 1 | 2 | 3 : null,
+          effort: formData.effort || null,
           notes: formData.notes,
           links,
         });
@@ -263,6 +271,8 @@ export default function DeadlinesPage() {
         title: formData.title,
         courseId: formData.courseId || null,
         dueAt,
+        priority: formData.priority ? parseInt(formData.priority) as 1 | 2 | 3 : null,
+        effort: formData.effort || null,
         notes: formData.notes,
         links,
         status: 'open',
@@ -277,6 +287,8 @@ export default function DeadlinesPage() {
       courseId: '',
       dueDate: '',
       dueTime: '',
+      priority: '',
+      effort: '',
       notes: '',
       links: [{ label: '', url: '' }],
       isRecurring: false,
@@ -341,6 +353,8 @@ export default function DeadlinesPage() {
       courseId: deadline.courseId || '',
       dueDate: dateStr,
       dueTime: timeStr,
+      priority: deadline.priority ? String(deadline.priority) as '1' | '2' | '3' : '',
+      effort: deadline.effort || '',
       notes: deadline.notes,
       links: deadline.links && deadline.links.length > 0 ? deadline.links : [{ label: '', url: '' }],
       isRecurring: deadline.isRecurring || false,
@@ -356,6 +370,8 @@ export default function DeadlinesPage() {
       courseId: '',
       dueDate: '',
       dueTime: '',
+      priority: '',
+      effort: '',
       notes: '',
       links: [{ label: '', url: '' }],
       isRecurring: false,
@@ -454,6 +470,16 @@ export default function DeadlinesPage() {
       return true;
     })
     .filter((d) => {
+      // Filter by priority if selected
+      if (priorityFilter && d.priority !== parseInt(priorityFilter)) return false;
+      return true;
+    })
+    .filter((d) => {
+      // Filter by effort if selected
+      if (effortFilter && d.effort !== effortFilter) return false;
+      return true;
+    })
+    .filter((d) => {
       if (!searchQuery.trim()) return true;
 
       const query = searchQuery.toLowerCase();
@@ -525,6 +551,32 @@ export default function DeadlinesPage() {
                     options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
                   />
                 </div>
+                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+                  <Select
+                    label="Priority"
+                    value={priorityFilter}
+                    onChange={(e) => setPriorityFilter(e.target.value)}
+                    options={[
+                      { value: '', label: 'All' },
+                      { value: '1', label: 'High' },
+                      { value: '2', label: 'Medium' },
+                      { value: '3', label: 'Low' },
+                    ]}
+                  />
+                </div>
+                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+                  <Select
+                    label="Effort"
+                    value={effortFilter}
+                    onChange={(e) => setEffortFilter(e.target.value)}
+                    options={[
+                      { value: '', label: 'All' },
+                      { value: 'large', label: 'Large' },
+                      { value: 'medium', label: 'Medium' },
+                      { value: 'small', label: 'Small' },
+                    ]}
+                  />
+                </div>
                 <div className="space-y-2">
                   {[
                     { value: 'all', label: 'All' },
@@ -564,6 +616,32 @@ export default function DeadlinesPage() {
                     value={courseFilter}
                     onChange={(e) => setCourseFilter(e.target.value)}
                     options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                  />
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <Select
+                    label="Priority"
+                    value={priorityFilter}
+                    onChange={(e) => setPriorityFilter(e.target.value)}
+                    options={[
+                      { value: '', label: 'All' },
+                      { value: '1', label: 'High' },
+                      { value: '2', label: 'Medium' },
+                      { value: '3', label: 'Low' },
+                    ]}
+                  />
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <Select
+                    label="Effort"
+                    value={effortFilter}
+                    onChange={(e) => setEffortFilter(e.target.value)}
+                    options={[
+                      { value: '', label: 'All' },
+                      { value: 'large', label: 'Large' },
+                      { value: 'medium', label: 'Medium' },
+                      { value: 'small', label: 'Small' },
+                    ]}
                   />
                 </div>
                 <div className="space-y-2">
@@ -606,63 +684,97 @@ export default function DeadlinesPage() {
                   placeholder="What needs to be done?"
                   required
                 />
-                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
+
+                {/* Course, Priority, Effort row */}
+                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-3 gap-4'} style={{ paddingTop: isMobile ? '4px' : '12px' }}>
                   <Select
                     label="Course"
                     value={formData.courseId}
                     onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
                     options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
                   />
-                </div>
-                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
-                  <Textarea
-                    label="Notes"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="Add details..."
+                  <Select
+                    label="Priority"
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as '' | '1' | '2' | '3' })}
+                    options={[
+                      { value: '', label: 'None' },
+                      { value: '1', label: 'High' },
+                      { value: '2', label: 'Medium' },
+                      { value: '3', label: 'Low' },
+                    ]}
+                  />
+                  <Select
+                    label="Effort"
+                    value={formData.effort}
+                    onChange={(e) => setFormData({ ...formData, effort: e.target.value as '' | 'small' | 'medium' | 'large' })}
+                    options={[
+                      { value: '', label: 'None' },
+                      { value: 'large', label: 'Large' },
+                      { value: 'medium', label: 'Medium' },
+                      { value: 'small', label: 'Small' },
+                    ]}
                   />
                 </div>
 
-                {/* Recurring toggle */}
-                <div style={{ paddingTop: isMobile ? '4px' : '12px', paddingBottom: isMobile ? '4px' : '12px' }}>
-                  <label
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: isMobile ? '4px' : '8px',
-                      cursor: 'pointer',
-                      fontSize: isMobile ? '12px' : '14px',
-                      fontWeight: '500',
-                      color: 'var(--text)',
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.isRecurring}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          isRecurring: e.target.checked,
-                          recurring: {
-                            ...formData.recurring,
-                            isRecurring: e.target.checked,
-                          },
-                        })
-                      }
+                {/* Date/Time and Recurring row */}
+                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-3 gap-4'} style={{ paddingTop: isMobile ? '4px' : '12px', overflow: 'visible' }}>
+                  {!formData.isRecurring ? (
+                    <>
+                      <CalendarPicker
+                        label="Due Date"
+                        value={formData.dueDate}
+                        onChange={(date) => setFormData({ ...formData, dueDate: date })}
+                      />
+                      <TimePicker
+                        label="Due Time"
+                        value={formData.dueTime}
+                        onChange={(time) => setFormData({ ...formData, dueTime: time })}
+                      />
+                    </>
+                  ) : (
+                    <div className="col-span-2" />
+                  )}
+                  <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '8px' }}>
+                    <label
                       style={{
-                        width: isMobile ? '14px' : '18px',
-                        height: isMobile ? '14px' : '18px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: isMobile ? '4px' : '8px',
                         cursor: 'pointer',
+                        fontSize: isMobile ? '12px' : '14px',
+                        fontWeight: '500',
+                        color: 'var(--text)',
                       }}
-                    />
-                    <Repeat size={isMobile ? 14 : 16} />
-                    Recurring deadline
-                  </label>
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.isRecurring}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            isRecurring: e.target.checked,
+                            recurring: {
+                              ...formData.recurring,
+                              isRecurring: e.target.checked,
+                            },
+                          })
+                        }
+                        style={{
+                          width: isMobile ? '14px' : '18px',
+                          height: isMobile ? '14px' : '18px',
+                          cursor: 'pointer',
+                        }}
+                      />
+                      <Repeat size={isMobile ? 14 : 16} />
+                      Recurring
+                    </label>
+                  </div>
                 </div>
 
                 {/* Recurrence selector */}
                 {formData.isRecurring && (
-                  <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
+                  <div style={{ paddingTop: isMobile ? '4px' : '8px' }}>
                     <RecurrenceSelector
                       value={formData.recurring}
                       onChange={(recurring) => setFormData({ ...formData, recurring: recurring as RecurringDeadlineFormData })}
@@ -670,22 +782,16 @@ export default function DeadlinesPage() {
                   </div>
                 )}
 
-                {/* Date/Time pickers - only show for non-recurring deadlines */}
-                {!formData.isRecurring && (
-                  <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-4'} style={{ overflow: 'visible' }}>
-                    <CalendarPicker
-                      label="Due Date"
-                      value={formData.dueDate}
-                      onChange={(date) => setFormData({ ...formData, dueDate: date })}
-                    />
-                    <TimePicker
-                      label="Due Time"
-                      value={formData.dueTime}
-                      onChange={(time) => setFormData({ ...formData, dueTime: time })}
-                    />
-                  </div>
-                )}
-                <div style={{ paddingTop: isMobile ? '6px' : '20px' }}>
+                {/* Notes */}
+                <div style={{ paddingTop: isMobile ? '4px' : '8px' }}>
+                  <Textarea
+                    label="Notes"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    placeholder="Add details..."
+                  />
+                </div>
+                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
                   <label className={isMobile ? 'block text-sm font-medium text-[var(--text)]' : 'block text-lg font-medium text-[var(--text)]'} style={{ marginBottom: isMobile ? '3px' : '8px' }}>Links</label>
                   <div className={isMobile ? 'space-y-1' : 'space-y-3'}>
                     {formData.links.map((link, idx) => (
@@ -740,12 +846,12 @@ export default function DeadlinesPage() {
                       ...formData,
                       links: [...formData.links, { label: '', url: '' }],
                     });
-                  }} style={{ marginTop: isMobile ? '4px' : '12px', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
+                  }} style={{ marginTop: isMobile ? '4px' : '12px', marginBottom: isMobile ? '8px' : '16px', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
                     <Plus size={isMobile ? 12 : 16} />
                     Add Link
                   </Button>
                 </div>
-                <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '10px' : '12px' }}>
+                <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '6px' : '8px' }}>
                   <Button
                     variant="primary"
                     size={isMobile ? 'sm' : 'md'}
@@ -870,6 +976,30 @@ export default function DeadlinesPage() {
                           {course && (
                             <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
                               {course.code}
+                            </span>
+                          )}
+                          {d.priority && (
+                            <span style={{
+                              fontSize: isMobile ? '10px' : '11px',
+                              fontWeight: '600',
+                              padding: '1px 6px',
+                              borderRadius: '3px',
+                              backgroundColor: d.priority === 1 ? 'rgba(239, 68, 68, 0.15)' : d.priority === 2 ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                              color: d.priority === 1 ? '#ef4444' : d.priority === 2 ? '#eab308' : '#22c55e',
+                            }}>
+                              {d.priority === 1 ? 'High' : d.priority === 2 ? 'Medium' : 'Low'}
+                            </span>
+                          )}
+                          {d.effort && (
+                            <span style={{
+                              fontSize: isMobile ? '10px' : '11px',
+                              fontWeight: '600',
+                              padding: '1px 6px',
+                              borderRadius: '3px',
+                              backgroundColor: d.effort === 'large' ? 'rgba(147, 51, 234, 0.15)' : d.effort === 'medium' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(107, 114, 128, 0.15)',
+                              color: d.effort === 'large' ? '#9333ea' : d.effort === 'medium' ? '#3b82f6' : '#6b7280',
+                            }}>
+                              {d.effort.charAt(0).toUpperCase() + d.effort.slice(1)}
                             </span>
                           )}
                         </div>

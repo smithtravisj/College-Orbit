@@ -178,6 +178,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         courseId: data.courseId || null,
         dueAt,
         pinned: data.pinned || false,
+        importance: data.importance || null,
         checklist: data.checklist || [],
         notes: data.notes || '',
         links: (data.links || []).filter((l: any) => l.url).map((l: any) => ({

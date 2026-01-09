@@ -437,15 +437,25 @@ export default function ExamsPage() {
                   placeholder="e.g., Calculus Midterm"
                   required
                 />
-                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
+
+                {/* Course and Location row */}
+                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-4'} style={{ paddingTop: isMobile ? '4px' : '12px' }}>
                   <Select
                     label="Course"
                     value={formData.courseId}
                     onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
                     options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
                   />
+                  <Input
+                    label="Location"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="e.g., Room 101 or Online"
+                  />
                 </div>
-                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-4'} style={{ overflow: 'visible' }}>
+
+                {/* Date and Time row */}
+                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-4'} style={{ paddingTop: isMobile ? '4px' : '12px', overflow: 'visible' }}>
                   <CalendarPicker
                     label="Exam Date"
                     value={formData.examDate}
@@ -457,15 +467,9 @@ export default function ExamsPage() {
                     onChange={(time) => setFormData({ ...formData, examTime: time })}
                   />
                 </div>
-                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
-                  <Input
-                    label="Location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="e.g., Student Center Room 101 or Online"
-                  />
-                </div>
-                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
+
+                {/* Notes */}
+                <div style={{ paddingTop: isMobile ? '4px' : '8px' }}>
                   <Textarea
                     label="Notes"
                     value={formData.notes}
@@ -473,7 +477,9 @@ export default function ExamsPage() {
                     placeholder="Add study tips, topics to review, etc."
                   />
                 </div>
-                <div style={{ paddingTop: isMobile ? '6px' : '20px' }}>
+
+                {/* Links */}
+                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
                   <label className={isMobile ? 'block text-sm font-medium text-[var(--text)]' : 'block text-lg font-medium text-[var(--text)]'} style={{ marginBottom: isMobile ? '3px' : '8px' }}>Links</label>
                   <div className={isMobile ? 'space-y-1' : 'space-y-3'}>
                     {formData.links.map((link, idx) => (
@@ -528,12 +534,12 @@ export default function ExamsPage() {
                       ...formData,
                       links: [...formData.links, { label: '', url: '' }],
                     });
-                  }} style={{ marginTop: isMobile ? '4px' : '12px', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
+                  }} style={{ marginTop: isMobile ? '4px' : '12px', marginBottom: isMobile ? '8px' : '16px', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
                     <Plus size={isMobile ? 12 : 16} />
                     Add Link
                   </Button>
                 </div>
-                <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '10px' : '12px' }}>
+                <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '6px' : '8px' }}>
                   <Button
                     variant="primary"
                     size={isMobile ? 'sm' : 'md'}

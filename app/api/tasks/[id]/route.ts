@@ -89,12 +89,20 @@ export async function PATCH(
         courseId: 'courseId' in data ? data.courseId : existingTask.courseId,
         dueAt: 'dueAt' in data ? updateDueAt : existingTask.dueAt,
         pinned: 'pinned' in data ? data.pinned : existingTask.pinned,
+        importance: 'importance' in data ? (data.importance || null) : (existingTask.importance || null),
         checklist: 'checklist' in data ? data.checklist : existingTask.checklist,
         notes: 'notes' in data ? data.notes : existingTask.notes,
-        links: 'links' in data ? (data.links || []).filter((l: any) => l.url).map((l: any) => ({
-          label: l.label || new URL(l.url).hostname,
-          url: l.url,
-        })) : existingTask.links,
+        links: 'links' in data ? (data.links || []).filter((l: any) => l.url).map((l: any) => {
+          let label = l.label;
+          if (!label) {
+            try {
+              label = new URL(l.url).hostname;
+            } catch {
+              label = l.url;
+            }
+          }
+          return { label, url: l.url };
+        }) : existingTask.links,
         status: 'status' in data ? data.status : existingTask.status,
       },
     });
@@ -102,8 +110,9 @@ export async function PATCH(
     return NextResponse.json({ task });
   } catch (error) {
     console.error('Error updating task:', error);
+    console.error('Error details:', error instanceof Error ? error.message : String(error));
     return NextResponse.json(
-      { error: 'Failed to update task' },
+      { error: 'Failed to update task', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
