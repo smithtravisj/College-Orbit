@@ -23,6 +23,8 @@ interface CachedCalendarData {
   deadlines: any[];
   exams: any[];
   calendarEvents: CalendarEvent[];
+  courses: any[];
+  excludedDates: any[];
   timestamp: number;
 }
 
@@ -42,6 +44,8 @@ export default function CalendarContent() {
   const [allDeadlineInstances, setAllDeadlineInstances] = useState<any[]>([]);
   const [allExamInstances, setAllExamInstances] = useState<any[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [cachedCourses, setCachedCourses] = useState<any[]>([]);
+  const [cachedExcludedDates, setCachedExcludedDates] = useState<any[]>([]);
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [addEventInitialDate, setAddEventInitialDate] = useState<Date | undefined>(undefined);
   const [addEventInitialTime, setAddEventInitialTime] = useState<string | undefined>(undefined);
@@ -66,11 +70,17 @@ export default function CalendarContent() {
               // Check if cache is still fresh
               if (now - parsed.timestamp < CACHE_DURATION) {
                 console.log('[Calendar] Loading from cache');
-                setAllTaskInstances(parsed.tasks);
-                setAllDeadlineInstances(parsed.deadlines);
-                setAllExamInstances(parsed.exams);
+                setAllTaskInstances(parsed.tasks || []);
+                setAllDeadlineInstances(parsed.deadlines || []);
+                setAllExamInstances(parsed.exams || []);
                 if (parsed.calendarEvents) {
                   setCalendarEvents(parsed.calendarEvents);
+                }
+                if (parsed.courses) {
+                  setCachedCourses(parsed.courses);
+                }
+                if (parsed.excludedDates) {
+                  setCachedExcludedDates(parsed.excludedDates);
                 }
                 cacheLoadedRef.current = true;
               }
@@ -91,6 +101,8 @@ export default function CalendarContent() {
           deadlines: [],
           exams: [],
           calendarEvents: [],
+          courses: [],
+          excludedDates: [],
           timestamp: Date.now(),
         };
 
@@ -127,6 +139,22 @@ export default function CalendarContent() {
           const eventsData = await eventsResponse.json();
           setCalendarEvents(eventsData.events || []);
           fetchedData.calendarEvents = eventsData.events || [];
+        }
+
+        // Fetch courses
+        const coursesResponse = await fetch('/api/courses');
+        if (coursesResponse.ok) {
+          const coursesData = await coursesResponse.json();
+          setCachedCourses(coursesData.courses || []);
+          fetchedData.courses = coursesData.courses || [];
+        }
+
+        // Fetch excluded dates
+        const excludedDatesResponse = await fetch('/api/excluded-dates');
+        if (excludedDatesResponse.ok) {
+          const excludedDatesData = await excludedDatesResponse.json();
+          setCachedExcludedDates(excludedDatesData.excludedDates || []);
+          fetchedData.excludedDates = excludedDatesData.excludedDates || [];
         }
 
         // Save to cache
@@ -308,6 +336,17 @@ export default function CalendarContent() {
     setShowAddEventModal(true);
   };
 
+  const handleEventUpdate = (updatedEvent: CalendarEvent) => {
+    // Update local state for instant UI refresh
+    setCalendarEvents((prev) =>
+      prev.map((event) => (event.id === updatedEvent.id ? updatedEvent : event))
+    );
+    // Clear cache to force refresh on next page load
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('calendarCache');
+    }
+  };
+
   return (
     <>
       <PageHeader
@@ -483,31 +522,33 @@ export default function CalendarContent() {
                   <CalendarMonthView
                     year={currentDate.getFullYear()}
                     month={currentDate.getMonth()}
-                    courses={courses}
+                    courses={cachedCourses.length > 0 ? cachedCourses : courses}
                     tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
                     deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
                     exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
-                    excludedDates={excludedDates}
+                    excludedDates={cachedExcludedDates.length > 0 ? cachedExcludedDates : excludedDates}
                     calendarEvents={calendarEvents}
                     onSelectDate={handleSelectDate}
                     selectedDate={selectedDay}
+                    onEventUpdate={handleEventUpdate}
                   />
                 </div>
                 {/* Mobile: Day view below the month, showing schedule for selected day */}
                 <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
                   <CalendarDayView
                     date={selectedDay}
-                    courses={courses}
+                    courses={cachedCourses.length > 0 ? cachedCourses : courses}
                     tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
                     deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
                     exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
-                    excludedDates={excludedDates}
+                    excludedDates={cachedExcludedDates.length > 0 ? cachedExcludedDates : excludedDates}
                     calendarEvents={calendarEvents}
                     onTimeSlotClick={handleTimeSlotClick}
+                    onEventUpdate={handleEventUpdate}
                   />
                 </div>
               </>
@@ -518,43 +559,46 @@ export default function CalendarContent() {
                   <CalendarMonthView
                     year={currentDate.getFullYear()}
                     month={currentDate.getMonth()}
-                    courses={courses}
+                    courses={cachedCourses.length > 0 ? cachedCourses : courses}
                     tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
                     deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
                     exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
-                    excludedDates={excludedDates}
+                    excludedDates={cachedExcludedDates.length > 0 ? cachedExcludedDates : excludedDates}
                     calendarEvents={calendarEvents}
                     onSelectDate={handleSelectDate}
+                    onEventUpdate={handleEventUpdate}
                   />
                 )}
                 {view === 'week' && (
                   <CalendarWeekView
                     date={currentDate}
-                    courses={courses}
+                    courses={cachedCourses.length > 0 ? cachedCourses : courses}
                     tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
                     deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
                     exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
-                    excludedDates={excludedDates}
+                    excludedDates={cachedExcludedDates.length > 0 ? cachedExcludedDates : excludedDates}
                     calendarEvents={calendarEvents}
                     onTimeSlotClick={handleTimeSlotClick}
+                    onEventUpdate={handleEventUpdate}
                   />
                 )}
                 {view === 'day' && (
                   <CalendarDayView
                     date={currentDate}
-                    courses={courses}
+                    courses={cachedCourses.length > 0 ? cachedCourses : courses}
                     tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
                     deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
                     exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
-                    excludedDates={excludedDates}
+                    excludedDates={cachedExcludedDates.length > 0 ? cachedExcludedDates : excludedDates}
                     calendarEvents={calendarEvents}
                     onTimeSlotClick={handleTimeSlotClick}
+                    onEventUpdate={handleEventUpdate}
                   />
                 )}
               </>

@@ -58,6 +58,27 @@ const CourseFormComponent = forwardRef(function CourseForm(
     }
   }, [course]);
 
+  // Helper to add minutes to a time string
+  const addMinutesToTime = (time: string, minutesToAdd: number): string => {
+    if (!time) return '';
+    const [hours, minutes] = time.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + minutesToAdd;
+    const newHours = Math.floor(totalMinutes / 60) % 24;
+    const newMinutes = totalMinutes % 60;
+    return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
+  };
+
+  // Calculate duration in minutes between two time strings
+  const getDurationMinutes = (start: string, end: string): number => {
+    if (!start || !end) return 60; // Default to 1 hour
+    const [startH, startM] = start.split(':').map(Number);
+    const [endH, endM] = end.split(':').map(Number);
+    const startTotal = startH * 60 + startM;
+    const endTotal = endH * 60 + endM;
+    const duration = endTotal - startTotal;
+    return duration > 0 ? duration : 60;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -158,7 +179,9 @@ const CourseFormComponent = forwardRef(function CourseForm(
                 value={mt.start}
                 onChange={(time) => {
                   const newMeetingTimes = [...form.meetingTimes];
+                  const duration = getDurationMinutes(mt.start, mt.end);
                   newMeetingTimes[idx].start = time;
+                  newMeetingTimes[idx].end = addMinutesToTime(time, duration);
                   setForm({ ...form, meetingTimes: newMeetingTimes });
                 }}
               />

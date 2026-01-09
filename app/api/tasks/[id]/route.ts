@@ -92,6 +92,7 @@ export async function PATCH(
         importance: 'importance' in data ? (data.importance || null) : (existingTask.importance || null),
         checklist: 'checklist' in data ? data.checklist : existingTask.checklist,
         notes: 'notes' in data ? data.notes : existingTask.notes,
+        tags: 'tags' in data ? data.tags : existingTask.tags,
         links: 'links' in data ? (data.links || []).filter((l: any) => l.url).map((l: any) => {
           let label = l.label;
           if (!label) {

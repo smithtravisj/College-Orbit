@@ -106,6 +106,7 @@ export async function PATCH(
         priority: 'priority' in data ? (data.priority || null) : (existingDeadline.priority || null),
         effort: 'effort' in data ? (data.effort || null) : (existingDeadline.effort || null),
         notes: 'notes' in data ? data.notes : existingDeadline.notes,
+        tags: 'tags' in data ? data.tags : existingDeadline.tags,
         links: 'links' in data ? (data.links || []).filter((l: any) => l.url).map((l: any) => {
           let label = l.label;
           if (!label) {

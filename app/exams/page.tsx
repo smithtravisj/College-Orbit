@@ -13,6 +13,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import { Plus, Trash2, Edit2, MapPin } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
+import TagInput from '@/components/notes/TagInput';
 
 export default function ExamsPage() {
   const isMobile = useIsMobile();
@@ -28,11 +29,13 @@ export default function ExamsPage() {
     examTime: '',
     location: '',
     notes: '',
+    tags: [] as string[],
     links: [{ label: '', url: '' }],
   });
   const [filter, setFilter] = useState('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
   const [courseFilter, setCourseFilter] = useState('');
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [formError, setFormError] = useState('');
 
   const { courses, exams, settings, addExam, updateExam, deleteExam, initializeStore } = useAppStore();
@@ -154,6 +157,7 @@ export default function ExamsPage() {
       examAt,
       location: formData.location || null,
       notes: formData.notes,
+      tags: formData.tags,
       links,
       status: 'scheduled' as const,
     };
@@ -168,6 +172,7 @@ export default function ExamsPage() {
         examAt,
         location: formData.location || null,
         notes: formData.notes,
+        tags: formData.tags,
         links,
       });
       setEditingId(null);
@@ -176,11 +181,12 @@ export default function ExamsPage() {
       await addExam(payload);
     }
 
-    setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', links: [{ label: '', url: '' }] });
+    setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', tags: [], links: [{ label: '', url: '' }] });
     setShowForm(false);
   };
 
   const startEdit = (exam: any) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingId(exam.id);
     const examDateTime = exam.examAt ? new Date(exam.examAt) : null;
     let dateStr = '';
@@ -199,6 +205,7 @@ export default function ExamsPage() {
       examTime: timeStr,
       location: exam.location || '',
       notes: exam.notes,
+      tags: exam.tags || [],
       links: exam.links && exam.links.length > 0 ? exam.links : [{ label: '', url: '' }],
     });
     setShowForm(true);
@@ -206,7 +213,7 @@ export default function ExamsPage() {
 
   const cancelEdit = () => {
     setEditingId(null);
-    setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', links: [{ label: '', url: '' }] });
+    setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', tags: [], links: [{ label: '', url: '' }] });
     setShowForm(false);
   };
 
@@ -266,6 +273,9 @@ export default function ExamsPage() {
     ];
   };
 
+  // Collect all unique tags from exams
+  const allTags = Array.from(new Set(exams.flatMap((e) => e.tags || [])));
+
   const now = new Date();
   const filtered = exams
     .filter((exam) => {
@@ -282,6 +292,11 @@ export default function ExamsPage() {
     .filter((exam) => {
       // Filter by course if a course is selected
       if (courseFilter && exam.courseId !== courseFilter) return false;
+      return true;
+    })
+    .filter((exam) => {
+      // Filter by selected tags
+      if (selectedTags.size > 0 && !exam.tags?.some((tag) => selectedTags.has(tag))) return false;
       return true;
     })
     .filter((exam) => {
@@ -329,7 +344,7 @@ export default function ExamsPage() {
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ gap: isMobile ? '16px' : undefined, overflow: 'visible' }}>
           {/* Filters sidebar - 3 columns */}
-          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content' }}>
+          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : '107px', alignSelf: 'start' }}>
             {isMobile ? (
               <CollapsibleCard
                 id="exams-filters"
@@ -373,6 +388,32 @@ export default function ExamsPage() {
                     </button>
                   ))}
                 </div>
+                {allTags.length > 0 && (
+                  <div style={{ marginTop: isMobile ? '12px' : '20px' }}>
+                    <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Tags</label>
+                    <div className="space-y-1">
+                      {allTags.map((tag) => (
+                        <label key={tag} className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)] hover:text-[var(--text)]">
+                          <input
+                            type="checkbox"
+                            checked={selectedTags.has(tag)}
+                            onChange={(e) => {
+                              const newTags = new Set(selectedTags);
+                              if (e.target.checked) {
+                                newTags.add(tag);
+                              } else {
+                                newTags.delete(tag);
+                              }
+                              setSelectedTags(newTags);
+                            }}
+                            className="rounded border-[var(--border)]"
+                          />
+                          {tag}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CollapsibleCard>
             ) : (
               <Card>
@@ -413,6 +454,32 @@ export default function ExamsPage() {
                     </button>
                   ))}
                 </div>
+                {allTags.length > 0 && (
+                  <div style={{ marginTop: isMobile ? '12px' : '20px' }}>
+                    <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Tags</label>
+                    <div className="space-y-1">
+                      {allTags.map((tag) => (
+                        <label key={tag} className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)] hover:text-[var(--text)]">
+                          <input
+                            type="checkbox"
+                            checked={selectedTags.has(tag)}
+                            onChange={(e) => {
+                              const newTags = new Set(selectedTags);
+                              if (e.target.checked) {
+                                newTags.add(tag);
+                              } else {
+                                newTags.delete(tag);
+                              }
+                              setSelectedTags(newTags);
+                            }}
+                            className="rounded border-[var(--border)]"
+                          />
+                          {tag}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </Card>
             )}
           </div>
@@ -422,11 +489,11 @@ export default function ExamsPage() {
 
             {/* Add Exam Form */}
             {showForm && (
-            <div style={{ marginBottom: isMobile ? '16px' : '24px', overflow: 'visible' }}>
+            <div style={{ overflow: 'visible' }}>
               <Card>
-                <form onSubmit={handleSubmit} className={isMobile ? 'space-y-2' : 'space-y-5'} style={{ overflow: 'visible' }}>
+                <form onSubmit={handleSubmit} className={isMobile ? 'space-y-2' : 'space-y-3'} style={{ overflow: 'visible' }}>
                 {formError && (
-                  <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '8px', padding: '10px' }}>
+                  <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '8px', padding: '8px' }}>
                     <p style={{ fontSize: '13px', color: 'rgb(239, 68, 68)', margin: 0 }}>{formError}</p>
                   </div>
                 )}
@@ -438,8 +505,8 @@ export default function ExamsPage() {
                   required
                 />
 
-                {/* Course and Location row */}
-                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-4'} style={{ paddingTop: isMobile ? '4px' : '12px' }}>
+                {/* Course, Location, Date, Time row */}
+                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-4 gap-3'} style={{ overflow: 'visible', paddingTop: isMobile ? '4px' : '8px' }}>
                   <Select
                     label="Course"
                     value={formData.courseId}
@@ -450,12 +517,8 @@ export default function ExamsPage() {
                     label="Location"
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="e.g., Room 101 or Online"
+                    placeholder="e.g., Room 101"
                   />
-                </div>
-
-                {/* Date and Time row */}
-                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-4'} style={{ paddingTop: isMobile ? '4px' : '12px', overflow: 'visible' }}>
                   <CalendarPicker
                     label="Exam Date"
                     value={formData.examDate}
@@ -468,20 +531,29 @@ export default function ExamsPage() {
                   />
                 </div>
 
-                {/* Notes */}
-                <div style={{ paddingTop: isMobile ? '4px' : '8px' }}>
+                {/* Notes and Tags row */}
+                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-3'} style={{ paddingTop: isMobile ? '4px' : '8px' }}>
                   <Textarea
                     label="Notes"
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder="Add study tips, topics to review, etc."
                   />
+                  <div>
+                    <label className={isMobile ? 'block text-xs font-medium text-[var(--text)]' : 'block text-sm font-medium text-[var(--text)]'} style={{ marginBottom: isMobile ? '4px' : '6px' }}>Tags</label>
+                    <TagInput
+                      tags={formData.tags}
+                      onTagsChange={(tags) => setFormData({ ...formData, tags })}
+                      allAvailableTags={allTags}
+                      placeholder="Add tags..."
+                    />
+                  </div>
                 </div>
 
                 {/* Links */}
-                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
-                  <label className={isMobile ? 'block text-sm font-medium text-[var(--text)]' : 'block text-lg font-medium text-[var(--text)]'} style={{ marginBottom: isMobile ? '3px' : '8px' }}>Links</label>
-                  <div className={isMobile ? 'space-y-1' : 'space-y-3'}>
+                <div style={{ marginTop: isMobile ? '-4px' : '-6px' }}>
+                  <label className="block font-semibold text-[var(--text)]" style={{ fontSize: isMobile ? '15px' : '18px', marginBottom: isMobile ? '4px' : '8px' }}>Links</label>
+                  <div className={isMobile ? 'space-y-1' : 'space-y-2'}>
                     {formData.links.map((link, idx) => (
                       <div key={idx} className={isMobile ? 'flex gap-1 items-center' : 'flex gap-3 items-center'}>
                         <Input
@@ -534,12 +606,12 @@ export default function ExamsPage() {
                       ...formData,
                       links: [...formData.links, { label: '', url: '' }],
                     });
-                  }} style={{ marginTop: isMobile ? '4px' : '12px', marginBottom: isMobile ? '8px' : '16px', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
+                  }} style={{ marginTop: isMobile ? '4px' : '8px', marginBottom: isMobile ? '8px' : '8px', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
                     <Plus size={isMobile ? 12 : 16} />
                     Add Link
                   </Button>
                 </div>
-                <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '6px' : '8px' }}>
+                <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '6px' : '4px' }}>
                   <Button
                     variant="primary"
                     size={isMobile ? 'sm' : 'md'}
@@ -611,6 +683,24 @@ export default function ExamsPage() {
                             </span>
                           )}
                         </div>
+                        {exam.tags && exam.tags.length > 0 && (
+                          <div className="flex flex-wrap" style={{ gap: '4px', marginTop: '4px' }}>
+                            {exam.tags.map((tag: string) => (
+                              <span
+                                key={tag}
+                                style={{
+                                  fontSize: isMobile ? '10px' : '11px',
+                                  backgroundColor: 'var(--panel-2)',
+                                  color: 'var(--text-muted)',
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                }}
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                         {exam.links && exam.links.length > 0 && (
                           <div className="flex flex-col" style={{ gap: '0px' }}>
                             {exam.links.map((link: any) => (
@@ -631,7 +721,7 @@ export default function ExamsPage() {
                       <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '12px' }}>
                         <button
                           onClick={() => startEdit(exam)}
-                          className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                          className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
                           style={{ padding: isMobile ? '2px' : '6px' }}
                           title="Edit exam"
                         >

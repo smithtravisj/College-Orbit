@@ -93,6 +93,7 @@ export async function PATCH(
         examAt: updateExamAt,
         location: 'location' in data ? data.location : existingExam.location,
         notes: 'notes' in data ? data.notes : existingExam.notes,
+        tags: 'tags' in data ? data.tags : existingExam.tags,
         links: 'links' in data ? (data.links || []).filter((l: any) => l.url).map((l: any) => ({
           label: l.label || new URL(l.url).hostname,
           url: l.url,

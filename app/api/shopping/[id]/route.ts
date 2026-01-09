@@ -75,6 +75,7 @@ export async function PATCH(
         checked: 'checked' in data ? data.checked : existingItem.checked,
         priority: 'priority' in data ? data.priority : existingItem.priority,
         price: 'price' in data ? data.price : existingItem.price,
+        perishable: 'perishable' in data ? data.perishable : existingItem.perishable,
       },
     });
 

@@ -63,6 +63,13 @@ export default function AddEventModal({
     return `${year}-${month}-${day}`;
   };
 
+  // Helper to add one hour to a time string
+  const addHour = (time: string): string => {
+    const [hours, minutes] = time.split(':').map(Number);
+    const newHours = (hours + 1) % 24;
+    return `${newHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  };
+
   // Reset form when modal opens with new initial values
   useEffect(() => {
     if (isOpen) {
@@ -77,12 +84,33 @@ export default function AddEventModal({
     }
   }, [isOpen, initialDate, initialTime, initialAllDay]);
 
-  // Helper to add an hour to a time string
-  function addHour(time: string): string {
+  // Helper to add minutes to a time string
+  function addMinutesToTime(time: string, minutesToAdd: number): string {
     const [hours, minutes] = time.split(':').map(Number);
-    const newHours = (hours + 1) % 24;
-    return `${newHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    const totalMinutes = hours * 60 + minutes + minutesToAdd;
+    const newHours = Math.floor(totalMinutes / 60) % 24;
+    const newMinutes = totalMinutes % 60;
+    return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
   }
+
+  // Calculate duration in minutes between two time strings
+  function getDurationMinutes(start: string, end: string): number {
+    const [startH, startM] = start.split(':').map(Number);
+    const [endH, endM] = end.split(':').map(Number);
+    const startTotal = startH * 60 + startM;
+    const endTotal = endH * 60 + endM;
+    return endTotal - startTotal;
+  }
+
+  // Update end time when start time changes, maintaining the current duration
+  const handleStartTimeChange = (newStartTime: string) => {
+    // Calculate current duration (default to 60 minutes if no valid duration)
+    const currentDuration = getDurationMinutes(startTime, endTime);
+    const duration = currentDuration > 0 ? currentDuration : 60;
+
+    setStartTime(newStartTime);
+    setEndTime(addMinutesToTime(newStartTime, duration));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,7 +249,7 @@ export default function AddEventModal({
                   <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '8px' }}>
                     Start Time
                   </label>
-                  <TimePicker value={startTime} onChange={setStartTime} />
+                  <TimePicker value={startTime} onChange={handleStartTimeChange} />
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '8px' }}>

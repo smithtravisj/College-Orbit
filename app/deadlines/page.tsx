@@ -14,6 +14,7 @@ import { Plus, Trash2, Edit2, Repeat } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import RecurrenceSelector from '@/components/RecurrenceSelector';
+import TagInput from '@/components/notes/TagInput';
 import { RecurringDeadlineFormData } from '@/types';
 
 // Helper function to format recurring pattern as human-readable text
@@ -69,6 +70,7 @@ export default function DeadlinesPage() {
     priority: '' as '' | '1' | '2' | '3',
     effort: '' as '' | 'small' | 'medium' | 'large',
     notes: '',
+    tags: [] as string[],
     links: [{ label: '', url: '' }],
     isRecurring: false,
     recurring: {
@@ -87,6 +89,7 @@ export default function DeadlinesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [courseFilter, setCourseFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [effortFilter, setEffortFilter] = useState('');
 
   const { courses, deadlines, settings, addDeadline, updateDeadline, deleteDeadline, addRecurringDeadline, updateRecurringDeadlinePattern, initializeStore } = useAppStore();
@@ -180,6 +183,7 @@ export default function DeadlinesPage() {
             title: formData.title,
             courseId: formData.courseId || null,
             notes: formData.notes,
+            tags: formData.tags,
             links,
           },
           formData.recurring
@@ -195,6 +199,7 @@ export default function DeadlinesPage() {
         priority: '',
         effort: '',
         notes: '',
+        tags: [],
         links: [{ label: '', url: '' }],
         isRecurring: false,
         recurring: {
@@ -262,6 +267,7 @@ export default function DeadlinesPage() {
           priority: formData.priority ? parseInt(formData.priority) as 1 | 2 | 3 : null,
           effort: formData.effort || null,
           notes: formData.notes,
+          tags: formData.tags,
           links,
         });
       }
@@ -274,6 +280,7 @@ export default function DeadlinesPage() {
         priority: formData.priority ? parseInt(formData.priority) as 1 | 2 | 3 : null,
         effort: formData.effort || null,
         notes: formData.notes,
+        tags: formData.tags,
         links,
         status: 'open',
         recurringPatternId: null,
@@ -290,6 +297,7 @@ export default function DeadlinesPage() {
       priority: '',
       effort: '',
       notes: '',
+      tags: [],
       links: [{ label: '', url: '' }],
       isRecurring: false,
       recurring: {
@@ -308,6 +316,7 @@ export default function DeadlinesPage() {
   };
 
   const startEdit = (deadline: any) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingId(deadline.id);
     const dueDate = deadline.dueAt ? new Date(deadline.dueAt) : null;
     let dateStr = '';
@@ -356,6 +365,7 @@ export default function DeadlinesPage() {
       priority: deadline.priority ? String(deadline.priority) as '1' | '2' | '3' : '',
       effort: deadline.effort || '',
       notes: deadline.notes,
+      tags: deadline.tags || [],
       links: deadline.links && deadline.links.length > 0 ? deadline.links : [{ label: '', url: '' }],
       isRecurring: deadline.isRecurring || false,
       recurring: recurringData,
@@ -373,6 +383,7 @@ export default function DeadlinesPage() {
       priority: '',
       effort: '',
       notes: '',
+      tags: [],
       links: [{ label: '', url: '' }],
       isRecurring: false,
       recurring: {
@@ -446,6 +457,9 @@ export default function DeadlinesPage() {
     ];
   };
 
+  // Collect all unique tags from deadlines
+  const allTags = Array.from(new Set(deadlines.flatMap((d) => d.tags || [])));
+
   const filtered = deadlines
     .filter((d) => {
       // Always include toggled deadlines (keep them visible after status change)
@@ -477,6 +491,11 @@ export default function DeadlinesPage() {
     .filter((d) => {
       // Filter by effort if selected
       if (effortFilter && d.effort !== effortFilter) return false;
+      return true;
+    })
+    .filter((d) => {
+      // Filter by selected tags
+      if (selectedTags.size > 0 && !d.tags?.some((tag) => selectedTags.has(tag))) return false;
       return true;
     })
     .filter((d) => {
@@ -527,7 +546,7 @@ export default function DeadlinesPage() {
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ gap: isMobile ? '16px' : undefined, overflow: 'visible' }}>
           {/* Filters sidebar - 3 columns */}
-          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content' }}>
+          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : '107px', alignSelf: 'start' }}>
             {isMobile ? (
               <CollapsibleCard
                 id="deadlines-filters"
@@ -577,6 +596,32 @@ export default function DeadlinesPage() {
                     ]}
                   />
                 </div>
+                {allTags.length > 0 && (
+                  <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+                    <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Tags</label>
+                    <div className="space-y-1">
+                      {allTags.map((tag) => (
+                        <label key={tag} className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)] hover:text-[var(--text)]">
+                          <input
+                            type="checkbox"
+                            checked={selectedTags.has(tag)}
+                            onChange={() => {
+                              const newTags = new Set(selectedTags);
+                              if (newTags.has(tag)) {
+                                newTags.delete(tag);
+                              } else {
+                                newTags.add(tag);
+                              }
+                              setSelectedTags(newTags);
+                            }}
+                            style={{ width: '16px', height: '16px' }}
+                          />
+                          #{tag}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-2">
                   {[
                     { value: 'all', label: 'All' },
@@ -644,6 +689,32 @@ export default function DeadlinesPage() {
                     ]}
                   />
                 </div>
+                {allTags.length > 0 && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Tags</label>
+                    <div className="space-y-1">
+                      {allTags.map((tag) => (
+                        <label key={tag} className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)] hover:text-[var(--text)]">
+                          <input
+                            type="checkbox"
+                            checked={selectedTags.has(tag)}
+                            onChange={() => {
+                              const newTags = new Set(selectedTags);
+                              if (newTags.has(tag)) {
+                                newTags.delete(tag);
+                              } else {
+                                newTags.add(tag);
+                              }
+                              setSelectedTags(newTags);
+                            }}
+                            style={{ width: '16px', height: '16px' }}
+                          />
+                          #{tag}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-2">
                   {[
                     { value: 'all', label: 'All' },
@@ -674,9 +745,9 @@ export default function DeadlinesPage() {
 
             {/* Add Deadline Form */}
             {showForm && (
-            <div style={{ marginBottom: isMobile ? '16px' : '24px', overflow: 'visible' }}>
+            <div style={{ overflow: 'visible' }}>
               <Card>
-                <form onSubmit={handleSubmit} className={isMobile ? 'space-y-2' : 'space-y-5'} style={{ overflow: 'visible' }}>
+                <form onSubmit={handleSubmit} className={isMobile ? 'space-y-2' : 'space-y-3'} style={{ overflow: 'visible' }}>
                 <Input
                   label="Deadline title"
                   value={formData.title}
@@ -685,8 +756,8 @@ export default function DeadlinesPage() {
                   required
                 />
 
-                {/* Course, Priority, Effort row */}
-                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-3 gap-4'} style={{ paddingTop: isMobile ? '4px' : '12px' }}>
+                {/* Course, Priority, Effort, Date, Time row */}
+                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-5 gap-3'} style={{ overflow: 'visible', paddingTop: isMobile ? '4px' : '8px' }}>
                   <Select
                     label="Course"
                     value={formData.courseId}
@@ -715,11 +786,7 @@ export default function DeadlinesPage() {
                       { value: 'small', label: 'Small' },
                     ]}
                   />
-                </div>
-
-                {/* Date/Time and Recurring row */}
-                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-3 gap-4'} style={{ paddingTop: isMobile ? '4px' : '12px', overflow: 'visible' }}>
-                  {!formData.isRecurring ? (
+                  {!formData.isRecurring && (
                     <>
                       <CalendarPicker
                         label="Due Date"
@@ -732,68 +799,55 @@ export default function DeadlinesPage() {
                         onChange={(time) => setFormData({ ...formData, dueTime: time })}
                       />
                     </>
-                  ) : (
-                    <div className="col-span-2" />
                   )}
-                  <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '8px' }}>
-                    <label
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: isMobile ? '4px' : '8px',
-                        cursor: 'pointer',
-                        fontSize: isMobile ? '12px' : '14px',
-                        fontWeight: '500',
-                        color: 'var(--text)',
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.isRecurring}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            isRecurring: e.target.checked,
-                            recurring: {
-                              ...formData.recurring,
-                              isRecurring: e.target.checked,
-                            },
-                          })
-                        }
-                        style={{
-                          width: isMobile ? '14px' : '18px',
-                          height: isMobile ? '14px' : '18px',
-                          cursor: 'pointer',
-                        }}
-                      />
-                      <Repeat size={isMobile ? 14 : 16} />
-                      Recurring
-                    </label>
-                  </div>
+                  {formData.isRecurring && <div className="col-span-2" />}
+                </div>
+
+                {/* Recurring checkbox */}
+                <div style={{ display: 'flex', alignItems: 'center', paddingTop: isMobile ? '4px' : '8px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '4px' : '8px', cursor: 'pointer', fontSize: isMobile ? '12px' : '14px', fontWeight: '500', color: 'var(--text)' }}>
+                    <input
+                      type="checkbox"
+                      checked={formData.isRecurring}
+                      onChange={(e) => setFormData({ ...formData, isRecurring: e.target.checked, recurring: { ...formData.recurring, isRecurring: e.target.checked } })}
+                      style={{ width: isMobile ? '14px' : '16px', height: isMobile ? '14px' : '16px', cursor: 'pointer' }}
+                    />
+                    <Repeat size={isMobile ? 14 : 16} />
+                    Recurring
+                  </label>
                 </div>
 
                 {/* Recurrence selector */}
                 {formData.isRecurring && (
-                  <div style={{ paddingTop: isMobile ? '4px' : '8px' }}>
-                    <RecurrenceSelector
-                      value={formData.recurring}
-                      onChange={(recurring) => setFormData({ ...formData, recurring: recurring as RecurringDeadlineFormData })}
-                    />
-                  </div>
+                  <RecurrenceSelector
+                    value={formData.recurring}
+                    onChange={(recurring) => setFormData({ ...formData, recurring: recurring as RecurringDeadlineFormData })}
+                  />
                 )}
 
-                {/* Notes */}
-                <div style={{ paddingTop: isMobile ? '4px' : '8px' }}>
+                {/* Notes and Tags row */}
+                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-3'} style={{ paddingTop: isMobile ? '4px' : '8px' }}>
                   <Textarea
                     label="Notes"
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder="Add details..."
                   />
+                  <div>
+                    <label className={isMobile ? 'block text-xs font-medium text-[var(--text)]' : 'block text-sm font-medium text-[var(--text)]'} style={{ marginBottom: isMobile ? '4px' : '6px' }}>Tags</label>
+                    <TagInput
+                      tags={formData.tags}
+                      onTagsChange={(tags) => setFormData({ ...formData, tags })}
+                      allAvailableTags={allTags}
+                      placeholder="Add tag..."
+                    />
+                  </div>
                 </div>
-                <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
-                  <label className={isMobile ? 'block text-sm font-medium text-[var(--text)]' : 'block text-lg font-medium text-[var(--text)]'} style={{ marginBottom: isMobile ? '3px' : '8px' }}>Links</label>
-                  <div className={isMobile ? 'space-y-1' : 'space-y-3'}>
+
+                {/* Links */}
+                <div style={{ marginTop: isMobile ? '-4px' : '-6px' }}>
+                  <label className="block font-semibold text-[var(--text)]" style={{ fontSize: isMobile ? '15px' : '18px', marginBottom: isMobile ? '4px' : '8px' }}>Links</label>
+                  <div className={isMobile ? 'space-y-1' : 'space-y-2'}>
                     {formData.links.map((link, idx) => (
                       <div key={idx} className={isMobile ? 'flex gap-1 items-center' : 'flex gap-3 items-center'}>
                         <Input
@@ -846,12 +900,12 @@ export default function DeadlinesPage() {
                       ...formData,
                       links: [...formData.links, { label: '', url: '' }],
                     });
-                  }} style={{ marginTop: isMobile ? '4px' : '12px', marginBottom: isMobile ? '8px' : '16px', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
+                  }} style={{ marginTop: isMobile ? '4px' : '8px', marginBottom: isMobile ? '8px' : '8px', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
                     <Plus size={isMobile ? 12 : 16} />
                     Add Link
                   </Button>
                 </div>
-                <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '6px' : '8px' }}>
+                <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '6px' : '4px' }}>
                   <Button
                     variant="primary"
                     size={isMobile ? 'sm' : 'md'}
@@ -967,6 +1021,20 @@ export default function DeadlinesPage() {
                             {getRecurrenceText(d.recurringPattern)}
                           </div>
                         )}
+                        {d.tags && d.tags.length > 0 && (
+                          <div style={{ display: 'flex', gap: '4px', marginTop: '3px', flexWrap: 'wrap' }}>
+                            {d.tags.slice(0, 3).map((tag) => (
+                              <span key={tag} style={{ fontSize: isMobile ? '10px' : '11px', color: 'var(--link)', backgroundColor: 'var(--panel-2)', padding: '1px 6px', borderRadius: '4px' }}>
+                                #{tag}
+                              </span>
+                            ))}
+                            {d.tags.length > 3 && (
+                              <span style={{ fontSize: isMobile ? '10px' : '11px', color: 'var(--text-muted)' }}>
+                                +{d.tags.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        )}
                         <div className="flex items-center flex-wrap" style={{ gap: isMobile ? '2px' : '6px', marginTop: '3px' }}>
                           {d.dueAt && (
                             <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
@@ -1023,7 +1091,7 @@ export default function DeadlinesPage() {
                       <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '12px' }}>
                         <button
                           onClick={() => startEdit(d)}
-                          className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--accent)] hover:bg-white/5 transition-colors"
+                          className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
                           style={{ padding: isMobile ? '2px' : '6px' }}
                           title="Edit deadline"
                         >

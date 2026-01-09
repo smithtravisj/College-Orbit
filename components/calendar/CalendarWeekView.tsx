@@ -28,6 +28,7 @@ interface CalendarWeekViewProps {
   excludedDates?: ExcludedDate[];
   calendarEvents?: CustomCalendarEvent[];
   onTimeSlotClick?: (date: Date, time?: string, allDay?: boolean) => void;
+  onEventUpdate?: (updatedEvent: CustomCalendarEvent) => void;
 }
 
 const HOUR_HEIGHT = 60; // pixels
@@ -44,6 +45,7 @@ export default function CalendarWeekView({
   allDeadlines = [],
   excludedDates = [],
   calendarEvents = [],
+  onEventUpdate,
 }: CalendarWeekViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -54,6 +56,16 @@ export default function CalendarWeekView({
     position: { top: number; left: number };
     hasExclusion?: boolean;
   } | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     // Scroll to 8 AM on mount
@@ -155,7 +167,9 @@ export default function CalendarWeekView({
         {weekDays.map((day, index) => {
           const dateStr = day.toISOString().split('T')[0];
           const dayEvents = eventsByDay.get(dateStr) || [];
-          const { allDay: allDayEvents } = separateTaskDeadlineEvents(dayEvents);
+          const { allDay: allDayTaskDeadlineEvents } = separateTaskDeadlineEvents(dayEvents);
+          const allDayCustomEvents = dayEvents.filter((e) => e.type === 'event' && e.allDay);
+          const allDayEvents = [...allDayTaskDeadlineEvents, ...allDayCustomEvents];
           const isLastDay = index === weekDays.length - 1;
           const isTodayDate = isToday(day);
           const exclusionType = getExclusionType(day, excludedDates);
@@ -359,6 +373,46 @@ export default function CalendarWeekView({
                   />
                 ))}
 
+                {/* Current time indicator line (only for today) */}
+                {isTodayDate && (() => {
+                  const hours = currentTime.getHours();
+                  const minutes = currentTime.getMinutes();
+                  const totalMinutes = hours * 60 + minutes;
+                  const topPosition = (totalMinutes / 60) * HOUR_HEIGHT + 8;
+
+                  return (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        top: `${topPosition}px`,
+                        zIndex: 20,
+                        pointerEvents: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          backgroundColor: 'var(--link)',
+                          marginLeft: '-4px',
+                        }}
+                      />
+                      <div
+                        style={{
+                          flex: 1,
+                          height: '2px',
+                          backgroundColor: 'var(--link)',
+                        }}
+                      />
+                    </div>
+                  );
+                })()}
+
                 {/* Course events */}
                 {courseEvents.map((event) => {
                   if (!event.time || !event.endTime) return null;
@@ -445,7 +499,7 @@ export default function CalendarWeekView({
                     const { top: baseTop } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
                     const top = baseTop + 9;
                     const baseHeight = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
-                    const minHeight = 28; // Minimum height for readability
+                    const minHeight = 30; // Minimum height ~30 minutes
                     const height = Math.max(baseHeight, minHeight);
                     const color = getEventColor(event);
 
@@ -545,7 +599,9 @@ export default function CalendarWeekView({
             {(() => {
               const dateStr = popupState.dateStr;
               const dayEvents = eventsByDay.get(dateStr) || [];
-              const { allDay: allDayEvents } = separateTaskDeadlineEvents(dayEvents);
+              const { allDay: allDayTaskDeadlineEvents } = separateTaskDeadlineEvents(dayEvents);
+              const allDayCustomEvents = dayEvents.filter((e) => e.type === 'event' && e.allDay);
+              const allDayEvents = [...allDayTaskDeadlineEvents, ...allDayCustomEvents];
               const maxVisibleEvents = popupState.hasExclusion ? 2 : 3;
               const hiddenEvents = allDayEvents.slice(maxVisibleEvents);
 
@@ -595,6 +651,7 @@ export default function CalendarWeekView({
         deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
         exams={exams}
         calendarEvents={calendarEvents}
+        onEventUpdate={onEventUpdate}
       />
 
       <ExclusionDetailModal

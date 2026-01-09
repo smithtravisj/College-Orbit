@@ -70,6 +70,9 @@ export interface ColorPalette {
 
   // Calendar current date color (matches college color, brighter in dark mode)
   calendarCurrentDateColor: string;
+
+  // Edit button hover color (light mode link color in dark mode for better visibility)
+  editHover: string;
 }
 
 /**
@@ -128,6 +131,8 @@ export const byuColorPalette: ColorPalette = {
   weekViewTodayDateColor: "#0ea5e9",
 
   calendarCurrentDateColor: "#6ab2ff",
+
+  editHover: "#6ab2ff", // Bright link color for better visibility
 };
 
 /**
@@ -186,6 +191,8 @@ export const defaultColorPalette: ColorPalette = {
   weekViewTodayDateColor: "#e8e8e8",
 
   calendarCurrentDateColor: "#f0f1f3",
+
+  editHover: "#0ea5e9", // Bright link color for better visibility
 };
 
 /**
@@ -245,6 +252,8 @@ export const byuhColorPalette: ColorPalette = {
   weekViewTodayDateColor: "#ff5577",
 
   calendarCurrentDateColor: "#f5a6b4",
+
+  editHover: "#f5a6b4", // Bright link color for better visibility
 };
 
 /**
@@ -305,6 +314,8 @@ export const byuidColorPalette: ColorPalette = {
   weekViewTodayDateColor: "#0ea5e9",
 
   calendarCurrentDateColor: "#7bbaff",
+
+  editHover: "#7bbaff", // Bright link color for better visibility
 };
 
 /**
@@ -365,6 +376,8 @@ export const uvuColorPalette: ColorPalette = {
   weekViewTodayDateColor: "#52b788",
 
   calendarCurrentDateColor: "#7cc49a",
+
+  editHover: "#7cc49a", // Bright link color for better visibility
 };
 
 /**
@@ -425,6 +438,8 @@ export const usuColorPalette: ColorPalette = {
   weekViewTodayDateColor: "#0ea5e9",
 
   calendarCurrentDateColor: "#8ac8ff",
+
+  editHover: "#8ac8ff", // Bright link color for better visibility
 };
 
 /**
@@ -485,6 +500,8 @@ export const uncColorPalette: ColorPalette = {
   weekViewTodayDateColor: "#0ea5e9",
 
   calendarCurrentDateColor: "#82ccff",
+
+  editHover: "#82ccff", // Bright link color for better visibility
 };
 
 /**
@@ -544,6 +561,8 @@ export const asuColorPalette: ColorPalette = {
   weekViewTodayDateColor: "#ff8fa3",
 
   calendarCurrentDateColor: "#ff8fa3",
+
+  editHover: "#ff8fa3", // Bright link color for better visibility
 };
 
 /**
@@ -603,6 +622,8 @@ export const ucfColorPalette: ColorPalette = {
   weekViewTodayDateColor: "#ffc857",
 
   calendarCurrentDateColor: "#ffc857",
+
+  editHover: "#ffc857", // Bright link color for better visibility
 };
 
 /**
@@ -660,6 +681,8 @@ export const osuColorPalette: ColorPalette = {
   weekViewTodayDateColor: "#ff6b7a",
 
   calendarCurrentDateColor: "#ff6b7a",
+
+  editHover: "#ff6b7a", // Bright link color for better visibility
 };
 
 /**
@@ -718,6 +741,8 @@ export const nlhsColorPalette: ColorPalette = {
   weekViewTodayDateColor: "#6ab2ff",
 
   calendarCurrentDateColor: "#6ab2ff",
+
+  editHover: "#6ab2ff", // Bright link color for better visibility
 };
 
 /**
@@ -775,6 +800,7 @@ export const byuLightPalette: ColorPalette = {
   todayBg: "rgba(106, 178, 255, 0.2)",
   weekViewTodayDateColor: "#0ea5e9",
   calendarCurrentDateColor: "#6ab2ff",
+  editHover: "#6ab2ff", // Uses accent in light mode
 };
 
 /**
@@ -828,6 +854,7 @@ export const defaultLightPalette: ColorPalette = {
   todayBg: "rgba(240, 241, 243, 0.12)",
   weekViewTodayDateColor: "#0ea5e9",
   calendarCurrentDateColor: "#f0f1f3",
+  editHover: "#f0f1f3", // Uses accent in light mode
 };
 
 /**
@@ -881,6 +908,7 @@ export const byuhLightPalette: ColorPalette = {
   todayBg: "rgba(245, 166, 180, 0.2)",
   weekViewTodayDateColor: "#0ea5e9",
   calendarCurrentDateColor: "#f5a6b4",
+  editHover: "#f5a6b4", // Uses accent in light mode
 };
 
 /**
@@ -934,6 +962,7 @@ export const byuidLightPalette: ColorPalette = {
   todayBg: "rgba(123, 186, 255, 0.2)",
   weekViewTodayDateColor: "#0ea5e9",
   calendarCurrentDateColor: "#7bbaff",
+  editHover: "#7bbaff", // Uses accent in light mode
 };
 
 /**
@@ -987,6 +1016,7 @@ export const uvuLightPalette: ColorPalette = {
   todayBg: "rgba(124, 196, 154, 0.12)",
   weekViewTodayDateColor: "#0ea5e9",
   calendarCurrentDateColor: "#7cc49a",
+  editHover: "#7cc49a", // Uses accent in light mode
 };
 
 /**
@@ -1040,6 +1070,7 @@ export const usuLightPalette: ColorPalette = {
   todayBg: "rgba(138, 200, 255, 0.12)",
   weekViewTodayDateColor: "#0ea5e9",
   calendarCurrentDateColor: "#8ac8ff",
+  editHover: "#8ac8ff", // Uses accent in light mode
 };
 
 /**
@@ -1093,6 +1124,7 @@ export const uncLightPalette: ColorPalette = {
   todayBg: "rgba(130, 204, 255, 0.2)",
   weekViewTodayDateColor: "#007FAE",
   calendarCurrentDateColor: "#82ccff",
+  editHover: "#82ccff", // Uses accent in light mode
 };
 
 /**
@@ -1146,6 +1178,7 @@ export const asuLightPalette: ColorPalette = {
   todayBg: "rgba(255, 144, 179, 0.2)",
   weekViewTodayDateColor: "#8C1D40",
   calendarCurrentDateColor: "#ff90b3",
+  editHover: "#ff90b3", // Uses accent in light mode
 };
 
 /**
@@ -1199,6 +1232,7 @@ export const ucfLightPalette: ColorPalette = {
   todayBg: "rgba(254, 223, 140, 0.2)",
   weekViewTodayDateColor: "#b69317",
   calendarCurrentDateColor: "#fedf8c",
+  editHover: "#fedf8c", // Uses accent in light mode
 };
 
 /**
@@ -1251,6 +1285,7 @@ export const osuLightPalette: ColorPalette = {
   todayBg: "rgba(219, 125, 136, 0.2)",
   weekViewTodayDateColor: "#7a0b22",
   calendarCurrentDateColor: "#db7d88",
+  editHover: "#db7d88", // Uses accent in light mode
 };
 
 /**
@@ -1303,6 +1338,7 @@ export const nlhsLightPalette: ColorPalette = {
   todayBg: "rgba(100, 167, 240, 0.2)",
   weekViewTodayDateColor: "#64a7f0",
   calendarCurrentDateColor: "#64a7f0",
+  editHover: "#64a7f0", // Uses accent in light mode
 };
 
 /**
@@ -1360,6 +1396,8 @@ export const utaColorPalette: ColorPalette = {
   weekViewTodayDateColor: "#ff9d42",
 
   calendarCurrentDateColor: "#ff9d42",
+
+  editHover: "#ff9d42", // Bright link color for better visibility
 };
 
 /**
@@ -1412,6 +1450,7 @@ export const utaLightPalette: ColorPalette = {
   todayBg: "rgba(250, 179, 104, 0.2)",
   weekViewTodayDateColor: "#bf5700",
   calendarCurrentDateColor: "#fab368",
+  editHover: "#fab368", // Uses accent in light mode
 };
 
 /**
@@ -1522,6 +1561,9 @@ export function applyColorPalette(palette: ColorPalette): void {
 
   // Calendar current date color
   root.style.setProperty("--calendar-current-date-color", palette.calendarCurrentDateColor);
+
+  // Edit button hover color
+  root.style.setProperty("--edit-hover", palette.editHover);
 }
 
 /**

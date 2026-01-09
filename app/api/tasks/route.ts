@@ -124,6 +124,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
               title: data.title,
               courseId: data.courseId || null,
               notes: data.notes || '',
+              tags: data.tags || [],
               links: (data.links || []).filter((l: any) => l.url).map((l: any) => ({
                 label: l.label || new URL(l.url).hostname,
                 url: l.url,
@@ -181,6 +182,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         importance: data.importance || null,
         checklist: data.checklist || [],
         notes: data.notes || '',
+        tags: data.tags || [],
         links: (data.links || []).filter((l: any) => l.url).map((l: any) => ({
           label: l.label || new URL(l.url).hostname,
           url: l.url,

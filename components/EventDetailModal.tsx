@@ -21,6 +21,7 @@ interface EventDetailModalProps {
   deadlines: Deadline[];
   exams?: Exam[];
   calendarEvents?: CustomCalendarEvent[];
+  onEventUpdate?: (updatedEvent: CustomCalendarEvent) => void;
 }
 
 function formatTime(time?: string): string {
@@ -72,6 +73,7 @@ export default function EventDetailModal({
   deadlines,
   exams = [],
   calendarEvents = [],
+  onEventUpdate,
 }: EventDetailModalProps) {
   const isMobile = useIsMobile();
   const router = useRouter();
@@ -358,7 +360,7 @@ export default function EventDetailModal({
           endAt = endDate.toISOString();
         }
 
-        await updateCalendarEvent(calEvent.id, {
+        const updatedData = {
           title: editFormData.title,
           description: editFormData.description,
           startAt: startAt || calEvent.startAt,
@@ -366,7 +368,17 @@ export default function EventDetailModal({
           allDay: editFormData.allDay,
           location: editFormData.location || null,
           color: editFormData.color,
-        });
+        };
+        await updateCalendarEvent(calEvent.id, updatedData);
+
+        // Notify parent of the update for instant UI refresh
+        if (onEventUpdate) {
+          onEventUpdate({
+            ...calEvent,
+            ...updatedData,
+          });
+        }
+
         setIsEditing(false);
         setEditFormData(null);
       }
@@ -810,6 +822,27 @@ const EVENT_COLORS = [
   { value: '#14b8a6', label: 'Teal' },
 ];
 
+// Helper to add minutes to a time string
+function addMinutesToTime(time: string, minutesToAdd: number): string {
+  if (!time) return '';
+  const [hours, minutes] = time.split(':').map(Number);
+  const totalMinutes = hours * 60 + minutes + minutesToAdd;
+  const newHours = Math.floor(totalMinutes / 60) % 24;
+  const newMinutes = totalMinutes % 60;
+  return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
+}
+
+// Calculate duration in minutes between two time strings
+function getDurationMinutes(start: string, end: string): number {
+  if (!start || !end) return 60; // Default to 1 hour
+  const [startH, startM] = start.split(':').map(Number);
+  const [endH, endM] = end.split(':').map(Number);
+  const startTotal = startH * 60 + startM;
+  const endTotal = endH * 60 + endM;
+  const duration = endTotal - startTotal;
+  return duration > 0 ? duration : 60;
+}
+
 function CalendarEventForm({ formData, setFormData }: CalendarEventFormProps) {
   const isMobile = useIsMobile();
   if (!formData) return null;
@@ -857,7 +890,10 @@ function CalendarEventForm({ formData, setFormData }: CalendarEventFormProps) {
             </p>
             <TimePicker
               value={formData.startTime}
-              onChange={(time) => setFormData({ ...formData, startTime: time })}
+              onChange={(time) => {
+                const duration = getDurationMinutes(formData.startTime, formData.endTime);
+                setFormData({ ...formData, startTime: time, endTime: addMinutesToTime(time, duration) });
+              }}
             />
           </div>
           <div style={{ flex: 1 }}>

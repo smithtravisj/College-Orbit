@@ -166,6 +166,7 @@ export async function generateRecurringExamInstances(
           title: template.title,
           courseId: template.courseId || null,
           notes: template.notes || '',
+          tags: template.tags || [],
           links: template.links || [],
           location: template.location || null,
           examAt: examAt,

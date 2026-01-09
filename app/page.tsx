@@ -214,6 +214,7 @@ function Dashboard() {
         importance: null,
         checklist: [],
         notes: taskFormData.notes,
+        tags: [],
         links,
         status: 'open',
         recurringPatternId: null,
