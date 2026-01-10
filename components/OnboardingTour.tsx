@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { driver } from 'driver.js';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { driver, Driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import './OnboardingTour.css';
 import useAppStore from '@/lib/store';
@@ -15,7 +15,24 @@ interface OnboardingTourProps {
 export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTourProps) {
   const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
-  const { updateSettings } = useAppStore();
+  const driverRef = useRef<Driver | null>(null);
+  const hasStartedRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+
+  // Keep refs updated
+  onCompleteRef.current = onComplete;
+
+  const handleTourComplete = useCallback(async () => {
+    const { updateSettings } = useAppStore.getState();
+    try {
+      console.log('[OnboardingTour] Marking onboarding as complete...');
+      await updateSettings({ hasCompletedOnboarding: true });
+      console.log('[OnboardingTour] Successfully marked onboarding as complete');
+    } catch (error) {
+      console.error('[OnboardingTour] Failed to mark onboarding as complete:', error);
+    }
+    onCompleteRef.current?.();
+  }, []);
 
   // Only render on client after mount to ensure useIsMobile works correctly
   useEffect(() => {
@@ -24,6 +41,12 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
 
   useEffect(() => {
     if (!shouldRun || !mounted) return;
+
+    // Prevent re-starting the tour if it's already running
+    if (hasStartedRef.current && driverRef.current) {
+      console.log('[OnboardingTour] Tour already running, skipping re-init');
+      return;
+    }
 
     // Build steps based on device type
     const baseSteps = [
@@ -199,36 +222,45 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
       },
     ];
 
+    const finalStep = {
+      popover: {
+        title: 'You\'re All Set!',
+        description: 'You now know the basics of your College Survival Tool. Start by adding your courses, and everything else will fall into place. Good luck this semester!',
+      }
+    };
+
     const steps = [
       ...baseSteps,
       navigationStep,
       ...dashboardSteps,
       ...navigationSteps,
+      finalStep,
     ];
 
     const tourDriver = driver({
       showProgress: true,
       showButtons: ['next', 'previous', 'close'],
       steps,
-      onDestroyed: async () => {
-        // Mark onboarding as complete when tour ends (completed or skipped)
-        try {
-          console.log('[OnboardingTour] Marking onboarding as complete...');
-          await updateSettings({ hasCompletedOnboarding: true });
-          console.log('[OnboardingTour] Successfully marked onboarding as complete');
-        } catch (error) {
-          console.error('[OnboardingTour] Failed to mark onboarding as complete:', error);
-        }
-        onComplete?.();
+      onPopoverRender: (_popover, options) => {
+        console.log('[OnboardingTour] Rendering step:', options.state.activeIndex, 'of', steps.length);
+      },
+      onDestroyed: () => {
+        console.log('[OnboardingTour] Tour destroyed');
+        hasStartedRef.current = false;
+        driverRef.current = null;
+        handleTourComplete();
       },
     });
 
+    driverRef.current = tourDriver;
+    hasStartedRef.current = true;
     tourDriver.drive();
 
     return () => {
-      tourDriver.destroy();
+      // Only destroy if component is actually unmounting, not on re-renders
+      // The tour will handle its own cleanup via onDestroyed
     };
-  }, [shouldRun, mounted, isMobile, updateSettings, onComplete]);
+  }, [shouldRun, mounted, isMobile, handleTourComplete]);
 
   return null;
 }

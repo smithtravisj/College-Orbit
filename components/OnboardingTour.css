@@ -104,3 +104,25 @@
 .driver-popover-navigation-btns {
   gap: 8px !important;
 }
+
+/* Mobile-specific styles to prevent popover from being cut off */
+@media (max-width: 768px) {
+  .driver-popover {
+    max-height: calc(100vh - 120px) !important;
+    max-height: calc(100dvh - 120px) !important;
+    overflow-y: auto !important;
+    margin: 16px !important;
+    left: 16px !important;
+    right: 16px !important;
+    width: auto !important;
+    max-width: calc(100vw - 32px) !important;
+    bottom: auto !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
+
+  .driver-popover-description {
+    max-height: 40vh !important;
+    overflow-y: auto !important;
+  }
+}
