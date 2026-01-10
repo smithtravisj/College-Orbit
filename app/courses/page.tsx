@@ -19,9 +19,15 @@ export default function CoursesPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [termFilter, setTermFilter] = useState('all');
+  const [termFilterInitialized, setTermFilterInitialized] = useState(false);
   const [showEnded, setShowEnded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { courses, initializeStore } = useAppStore();
+  const { courses, settings, initializeStore, updateSettings } = useAppStore();
+
+  const handleTermFilterChange = (newFilter: string) => {
+    setTermFilter(newFilter);
+    updateSettings({ courseTermFilter: newFilter });
+  };
 
   useEffect(() => {
     initializeStore();
@@ -32,6 +38,14 @@ export default function CoursesPage() {
     }
     setMounted(true);
   }, [initializeStore]);
+
+  // Sync termFilter from settings on initial load only
+  useEffect(() => {
+    if (mounted && !termFilterInitialized && settings.courseTermFilter) {
+      setTermFilter(settings.courseTermFilter);
+      setTermFilterInitialized(true);
+    }
+  }, [mounted, termFilterInitialized, settings.courseTermFilter]);
 
   // Save showEnded to localStorage when it changes
   useEffect(() => {
@@ -210,7 +224,7 @@ export default function CoursesPage() {
                 ].map((f) => (
                   <button
                     key={f.value}
-                    onClick={() => setTermFilter(f.value)}
+                    onClick={() => handleTermFilterChange(f.value)}
                     className={`w-full text-left rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
                       termFilter === f.value
                         ? 'text-[var(--text)]'
@@ -272,7 +286,7 @@ export default function CoursesPage() {
                   ].map((f) => (
                     <button
                       key={f.value}
-                      onClick={() => setTermFilter(f.value)}
+                      onClick={() => handleTermFilterChange(f.value)}
                       className={`w-full text-left rounded-[var(--radius-control)] font-medium transition-colors ${
                         termFilter === f.value
                           ? 'text-[var(--text)]'
@@ -344,7 +358,7 @@ export default function CoursesPage() {
                 description={termFilter === 'all' ? 'Add your first course to get started' : 'Try selecting a different term'}
                 action={
                   termFilter !== 'all'
-                    ? { label: 'View all courses', onClick: () => setTermFilter('all') }
+                    ? { label: 'View all courses', onClick: () => handleTermFilterChange('all') }
                     : { label: 'Add Course', onClick: () => setIsAdding(true) }
                 }
               />

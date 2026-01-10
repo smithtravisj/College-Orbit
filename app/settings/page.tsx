@@ -79,6 +79,7 @@ export default function SettingsPage() {
   const [deleteRequestId, setDeleteRequestId] = useState<string | null>(null);
   const [showDeleteIssueConfirm, setShowDeleteIssueConfirm] = useState(false);
   const [deleteIssueId, setDeleteIssueId] = useState<string | null>(null);
+  const [showEmailConfirm, setShowEmailConfirm] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<IssueReport | null>(null);
   const [showIssueModal, setShowIssueModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1957,6 +1958,32 @@ export default function SettingsPage() {
                   <p style={{ marginTop: '8px', fontSize: '14px', color: deleteMessage.includes('✓') ? 'var(--success)' : 'var(--danger)' }}>{deleteMessage}</p>
                 )}
               </div>
+              {/* Legal Section */}
+              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', marginTop: '16px' }}>
+                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
+                  Legal
+                </p>
+                <div className="flex flex-col gap-2">
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    Privacy Policy
+                  </a>
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    Terms of Service
+                  </a>
+                </div>
+              </div>
             </div>
           </Card>
 
@@ -1966,7 +1993,7 @@ export default function SettingsPage() {
               <div className="space-y-3 text-sm border-b border-[var(--border)]" style={{ paddingBottom: '18px' }}>
                 <div>
                   <p className="font-semibold text-[var(--text)]">College Survival Tool</p>
-                  <p className="text-[var(--text-muted)]">v1.0</p>
+                  <p className="text-[var(--text-muted)]">v1.1</p>
                 </div>
                 <p className="text-[var(--text-secondary)]">
                   A personal, privacy-first dashboard for students to manage courses, deadlines, and tasks.
@@ -2017,31 +2044,21 @@ export default function SettingsPage() {
                   Restart Tutorial
                 </Button>
               </div>
-              {/* Legal Section */}
+              {/* Contact Section */}
               <div style={{ paddingTop: '22px', borderTop: '1px solid var(--border)' }}>
-                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
-                  Legal
+                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+                  Contact
                 </p>
-                <div className="flex flex-col gap-2">
-                  <a
-                    href="/privacy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
-                    style={{ textDecoration: 'none' }}
-                  >
-                    Privacy Policy
-                  </a>
-                  <a
-                    href="/terms"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
-                    style={{ textDecoration: 'none' }}
-                  >
-                    Terms of Service
-                  </a>
-                </div>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>
+                  Questions, feedback, or issues? Reach out anytime.
+                </p>
+                <button
+                  onClick={() => setShowEmailConfirm(true)}
+                  className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+                >
+                  collegesurvivaltool@protonmail.com
+                </button>
               </div>
             </div>
           </Card>
@@ -2583,6 +2600,94 @@ export default function SettingsPage() {
                 }}
               >
                 Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email confirmation modal */}
+      {showEmailConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'var(--panel)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '24px',
+            maxWidth: '400px',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <h3 style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
+              Open Email App?
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '14px' }}>
+              This will open your default email app to send a message to:
+            </p>
+            <p style={{ color: 'var(--text)', marginBottom: '24px', fontSize: '14px', fontWeight: '500' }}>
+              collegesurvivaltool@protonmail.com
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowEmailConfirm(false)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText('collegesurvivaltool@protonmail.com');
+                  setShowEmailConfirm(false);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Copy Email
+              </button>
+              <button
+                onClick={() => {
+                  window.location.href = 'mailto:collegesurvivaltool@protonmail.com';
+                  setShowEmailConfirm(false);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--accent)',
+                  color: 'white',
+                  border: '1px solid var(--accent)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Open Email
               </button>
             </div>
           </div>

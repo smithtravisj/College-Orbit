@@ -108,7 +108,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '264px 1fr', gap: 0, minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
       <Navigation />
-      <main style={{ minWidth: 0, paddingBottom: '80px' }}>
+      <main style={{ minWidth: 0 }}>
         {children}
       </main>
     </div>

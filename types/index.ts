@@ -241,6 +241,7 @@ export interface Settings {
   selectedGradeSemester?: string;
   dashboardCardsCollapsedState?: string[] | null;
   hiddenQuickLinks?: Record<string, string[]> | null;
+  courseTermFilter?: string;
 }
 
 export interface ExcludedDate {

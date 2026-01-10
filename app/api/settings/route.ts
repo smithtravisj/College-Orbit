@@ -32,6 +32,7 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
         university: null,
         hasCompletedOnboarding: false,
         selectedGradeSemester: 'all',
+        courseTermFilter: 'all',
       },
     };
 
@@ -80,6 +81,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.visiblePagesOrder !== undefined) updateData.visiblePagesOrder = data.visiblePagesOrder;
     if (data.dashboardCardsCollapsedState !== undefined) updateData.dashboardCardsCollapsedState = data.dashboardCardsCollapsedState;
     if (data.hiddenQuickLinks !== undefined) updateData.hiddenQuickLinks = data.hiddenQuickLinks;
+    if (data.courseTermFilter !== undefined) updateData.courseTermFilter = data.courseTermFilter;
 
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 
