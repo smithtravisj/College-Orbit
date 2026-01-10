@@ -16,7 +16,7 @@ export default function PrivacyPage() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Last Updated: December 21, 2024
+                Last Updated: January 9, 2025
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 At College Survival Tool, your privacy is our priority. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our service. We believe in transparency and give you full control over your data.
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
                 Account Information
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                When you create an account, we collect your name, email address, and selected university. This information helps us provide personalized features and university-specific branding.
+                When you create an account, we collect your name, email address, and selected school (university or high school). This information helps us provide personalized features and school-specific branding.
               </p>
             </div>
             <div>
@@ -41,7 +41,15 @@ export default function PrivacyPage() {
                 Academic Data
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We store all academic data you create: courses with meeting times and links, deadlines with notes and attachments, tasks with checklists, exams with locations, notes with rich text content and folders, GPA entries, excluded dates (holidays/breaks), and calendar events. This data is entirely user-generated and belongs to you. We do not analyze or process this data beyond providing it back to you.
+                We store all academic data you create: courses with meeting times and links, deadlines with priority and effort levels, tasks with checklists and importance markers, exams with locations, notes with rich text content and folders, GPA entries, excluded dates (holidays/breaks), custom calendar events, and recurring patterns for tasks, deadlines, and exams. This data is entirely user-generated and belongs to you. We do not analyze or process this data beyond providing it back to you.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Shopping & Lifestyle Data
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                We store shopping lists you create, including grocery lists, wishlists, and pantry inventory. This includes item names, quantities, categories, prices, and perishable status. This data is entirely user-generated and belongs to you.
               </p>
             </div>
             <div>
@@ -49,7 +57,7 @@ export default function PrivacyPage() {
                 Settings and Preferences
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We store your app settings including theme preferences (light/dark/system), visibility customizations for dashboard cards and pages, notification preferences, exam reminder settings, Pomodoro timer duration preferences, and other configuration choices you make. These settings are synchronized across your devices when you're logged in.
+                We store your app settings including theme preferences (light/dark/system), visibility customizations for dashboard cards and pages, page ordering, notification preferences, exam reminder settings, Pomodoro timer duration preferences, course filter preferences, quick link visibility, dashboard card collapsed states, and other configuration choices you make. These settings are synchronized across your devices when you're logged in.
               </p>
             </div>
             <div>
@@ -95,7 +103,7 @@ export default function PrivacyPage() {
                 <span className="font-medium" style={{ color: 'var(--text)' }}>Provide the Service</span>: We use your information to create and maintain your account, store your academic data, and deliver the core functionality of the College Survival Tool.
               </li>
               <li>
-                <span className="font-medium" style={{ color: 'var(--text)' }}>Personalization</span>: We use your selected university to provide university-specific branding, course information, and relevant features.
+                <span className="font-medium" style={{ color: 'var(--text)' }}>Personalization</span>: We use your selected school to provide school-specific branding, course information, and relevant features.
               </li>
               <li>
                 <span className="font-medium" style={{ color: 'var(--text)' }}>Authentication & Security</span>: We use your email and authentication information to verify your identity and protect your account from unauthorized access.
@@ -239,7 +247,7 @@ export default function PrivacyPage() {
                 Local Storage
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We use browser local storage to save your theme preferences, application state, navigation settings, and Pomodoro timer state. This data is stored only on your device and is not sent to our servers. Local storage is useful for faster loading and offline functionality awareness.
+                We use browser local storage to save your theme preferences, application state, navigation settings, Pomodoro timer state, and calendar cache for faster loading. This data is stored only on your device and is not sent to our servers. Local storage is useful for faster loading and offline functionality awareness.
               </p>
             </div>
             <div>

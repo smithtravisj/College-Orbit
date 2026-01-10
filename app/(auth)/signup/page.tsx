@@ -333,6 +333,23 @@ export default function SignupPage() {
           </p>
         </div>
       </Card>
+
+      <div style={{ textAlign: 'center', marginTop: '24px' }}>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+          Questions?{' '}
+          <a
+            href="mailto:collegesurvivaltool@protonmail.com"
+            style={{
+              color: collegeButtonColor || 'var(--accent)',
+              textDecoration: 'none',
+              fontWeight: 500,
+              filter: collegeButtonColor ? 'brightness(1.8) saturate(1.1)' : 'brightness(1.3)',
+            }}
+          >
+            collegesurvivaltool@protonmail.com
+          </a>
+        </p>
+      </div>
     </div>
   );
 }

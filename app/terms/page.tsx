@@ -16,7 +16,7 @@ export default function TermsPage() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Effective Date: December 21, 2024
+                Effective Date: January 9, 2025
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 These Terms of Service ("Terms") govern your use of the College Survival Tool website and services ("Service"). By creating an account and using the Service, you agree to be legally bound by these Terms. If you do not agree to these Terms, please do not use the Service.
@@ -37,23 +37,27 @@ export default function TermsPage() {
         <Card title="Description of Service">
           <div className="space-y-4">
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              College Survival Tool is an educational productivity platform designed to help students manage their academic lives. The Service provides features for organizing courses, tracking deadlines, managing tasks, maintaining a calendar, calculating GPA, and organizing academic information.
+              College Survival Tool is an educational productivity platform designed to help students manage their academic and personal lives. The Service provides features for organizing courses, tracking deadlines, managing tasks, maintaining a calendar, calculating GPA, managing shopping lists, and organizing academic information.
             </p>
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
                 What We Provide
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                <li>Personal task and deadline management tools</li>
+                <li>Personal task management with importance levels and checklists</li>
+                <li>Deadline tracking with priority and effort markers</li>
+                <li>Recurring tasks, deadlines, and exams with flexible scheduling</li>
                 <li>Course and calendar organization with meeting schedules</li>
+                <li>Custom calendar events for personal scheduling</li>
                 <li>Exam tracking with customizable reminders</li>
                 <li>Rich text note-taking with folder organization</li>
                 <li>GPA calculation and tracking</li>
+                <li>Shopping lists (grocery, wishlist, and pantry inventory)</li>
                 <li>Pomodoro productivity timer</li>
-                <li>Dashboard customization (show/hide cards and pages)</li>
+                <li>Dashboard customization (show/hide cards, pages, and quick links)</li>
                 <li>Notification and reminder system</li>
-                <li>Feedback submission (feature requests, issue reports, college requests)</li>
-                <li>University-specific information and branding</li>
+                <li>Feedback submission (feature requests, issue reports, school requests)</li>
+                <li>School-specific information and branding (universities and high schools)</li>
                 <li>Data export and import functionality for backup and portability</li>
               </ul>
             </div>
@@ -132,7 +136,7 @@ export default function TermsPage() {
                 Ownership
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                You retain full ownership of all content, data, and information you create in the Service (courses, tasks, deadlines, notes, etc.). We do not claim ownership of your data.
+                You retain full ownership of all content, data, and information you create in the Service (courses, tasks, deadlines, notes, shopping lists, calendar events, etc.). We do not claim ownership of your data.
               </p>
             </div>
             <div>
@@ -170,7 +174,7 @@ export default function TermsPage() {
                 Trademarks
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                "College Survival Tool" and related logos are trademarks. University names and logos (BYU, etc.) are trademarks of their respective institutions and are used with permission. You may not use these trademarks without authorization.
+                "College Survival Tool" and related logos are trademarks. School names and logos (universities, high schools, etc.) are trademarks of their respective institutions and are used with permission. You may not use these trademarks without authorization.
               </p>
             </div>
             <div>

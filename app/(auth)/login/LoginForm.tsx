@@ -125,6 +125,18 @@ export function LoginForm() {
             </p>
           </div>
         </Card>
+
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+            Questions?{' '}
+            <a
+              href="mailto:collegesurvivaltool@protonmail.com"
+              style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500, filter: 'brightness(1.6)' }}
+            >
+              collegesurvivaltool@protonmail.com
+            </a>
+          </p>
+        </div>
     </div>
   );
 }

@@ -325,6 +325,7 @@ model Settings {
   visiblePagesOrder      Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Deadlines\", \"Exams\", \"Notes\", \"Courses\", \"Tools\"]")
   dashboardCardsCollapsedState Json? @default("[]")
   hiddenQuickLinks       Json?    @default("{}")
+  courseTermFilter       String   @default("all")
   user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
