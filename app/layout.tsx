@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   title: 'College Survival Tool',
   description: 'A personal, privacy-first college dashboard',
   icons: {
-    icon: '/favicon.svg',
+    icon: '/apple-touch-icon-copy.svg',
     apple: '/apple-touch-icon.png',
   },
   manifest: '/manifest.json',
