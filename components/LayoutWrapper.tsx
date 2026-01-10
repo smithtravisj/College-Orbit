@@ -1,22 +1,58 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import Navigation from './Navigation';
 import { MobileHeader } from './MobileHeader';
 import { FloatingMenuButton } from './FloatingMenuButton';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAnalyticsPageView } from '@/lib/useAnalytics';
+import useAppStore from '@/lib/store';
 import styles from './LayoutWrapper.module.css';
 
 export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
   const { status } = useSession();
+  const loadFromDatabase = useAppStore((state) => state.loadFromDatabase);
+  const isRefreshing = useRef(false);
 
   // Track page views for analytics
   useAnalyticsPageView();
+
+  // Mobile auto-refresh: poll database every 10 seconds and refresh on visibility change
+  useEffect(() => {
+    if (!isMobile || status !== 'authenticated') return;
+
+    const refreshData = async () => {
+      if (isRefreshing.current) return;
+      isRefreshing.current = true;
+      try {
+        await loadFromDatabase();
+      } catch (error) {
+        console.error('Auto-refresh failed:', error);
+      } finally {
+        isRefreshing.current = false;
+      }
+    };
+
+    // Poll every 10 seconds
+    const interval = setInterval(refreshData, 10000);
+
+    // Also refresh when app comes back to foreground
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshData();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isMobile, status, loadFromDatabase]);
 
   const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password' || pathname === '/reset-password';
   const isPublicPage = pathname === '/privacy' || pathname === '/terms';

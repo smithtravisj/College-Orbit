@@ -351,7 +351,7 @@ export default function ShoppingPage() {
 
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]">
           {/* Sidebar - 3 columns */}
-          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : '107px', alignSelf: 'start' }}>
+          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : '107px', alignSelf: 'start', marginBottom: isMobile ? '8px' : undefined }}>
             {isMobile ? (
               <CollapsibleCard
                 id="shopping-filters"
@@ -376,7 +376,7 @@ export default function ShoppingPage() {
             {/* Add Item Form */}
             {showForm && (
               <Card>
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '16px' }}>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '16px' }}>
                   <Input
                     label="Item Name"
                     value={formData.name}
@@ -389,19 +389,20 @@ export default function ShoppingPage() {
                     required
                   />
 
-                  <div className={isMobile ? 'flex flex-col' : 'grid grid-cols-3'} style={{ gap: isMobile ? '12px' : '16px' }}>
+                  <div className={isMobile ? 'grid grid-cols-3' : 'grid grid-cols-3'} style={{ gap: isMobile ? '8px' : '16px' }}>
                     <Input
                       label="Quantity"
                       type="number"
                       min={1}
                       value={formData.quantity}
                       onChange={(e) => setFormData({ ...formData, quantity: e.target.value === '' ? '' : parseInt(e.target.value) || '' })}
+                      placeholder="1"
                     />
                     <Input
-                      label="Unit (optional)"
+                      label="Unit"
                       value={formData.unit}
                       onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                      placeholder="lbs, oz, each..."
+                      placeholder="lbs, oz..."
                     />
                     <Select
                       label="Category"
@@ -416,7 +417,7 @@ export default function ShoppingPage() {
 
                   {/* Wishlist-specific fields */}
                   {activeTab === 'wishlist' && (
-                    <div className={isMobile ? 'flex flex-col' : 'grid grid-cols-2'} style={{ gap: isMobile ? '12px' : '16px' }}>
+                    <div className={isMobile ? 'grid grid-cols-2' : 'grid grid-cols-2'} style={{ gap: isMobile ? '8px' : '16px' }}>
                       <Select
                         label="Priority"
                         value={formData.priority}
@@ -439,31 +440,54 @@ export default function ShoppingPage() {
                     </div>
                   )}
 
-                  <Textarea
-                    label="Notes"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder={
-                      activeTab === 'pantry' ? 'Storage location, expiration date, etc.' :
-                      activeTab === 'wishlist' ? 'Where to buy, links, notes...' :
-                      'Brand preferences, store location, etc.'
-                    }
-                  />
-
-                  {/* Pantry-specific fields */}
-                  {activeTab === 'pantry' && (
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                      <input
-                        type="checkbox"
-                        checked={formData.perishable}
-                        onChange={(e) => setFormData({ ...formData, perishable: e.target.checked })}
-                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  {/* Notes and Perishable row for pantry on mobile */}
+                  {isMobile && activeTab === 'pantry' ? (
+                    <div className="grid grid-cols-2 gap-2" style={{ alignItems: 'end' }}>
+                      <Textarea
+                        label="Notes"
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        placeholder="Storage, expiration..."
                       />
-                      <span style={{ fontSize: '14px', color: 'var(--text)' }}>Perishable</span>
-                    </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', height: 'var(--input-height)' }}>
+                        <input
+                          type="checkbox"
+                          checked={formData.perishable}
+                          onChange={(e) => setFormData({ ...formData, perishable: e.target.checked })}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <span style={{ fontSize: '12px', color: 'var(--text)' }}>Perishable</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <>
+                      <Textarea
+                        label="Notes"
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        placeholder={
+                          activeTab === 'pantry' ? 'Storage location, expiration date, etc.' :
+                          activeTab === 'wishlist' ? 'Where to buy, links, notes...' :
+                          'Brand preferences, store location, etc.'
+                        }
+                      />
+
+                      {/* Pantry-specific fields - desktop only */}
+                      {activeTab === 'pantry' && (
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={formData.perishable}
+                            onChange={(e) => setFormData({ ...formData, perishable: e.target.checked })}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                          />
+                          <span style={{ fontSize: '14px', color: 'var(--text)' }}>Perishable</span>
+                        </label>
+                      )}
+                    </>
                   )}
 
-                  <div className="flex gap-3" style={{ marginTop: '4px' }}>
+                  <div className="flex gap-3" style={{ marginTop: isMobile ? '4px' : '4px' }}>
                     <Button variant="primary" type="submit" size={isMobile ? 'sm' : 'md'}>
                       {editingId ? 'Save Changes' : 'Add Item'}
                     </Button>

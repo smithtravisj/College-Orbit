@@ -371,7 +371,7 @@ export default function NotesPage() {
                     required
                   />
 
-                  <div className="grid grid-cols-2 gap-4" style={{ marginTop: isMobile ? '8px' : '16px' }}>
+                  <div className="grid grid-cols-2 gap-2 lg:gap-4" style={{ marginTop: isMobile ? '4px' : '16px' }}>
                     <Select
                       label="Course"
                       value={formData.courseId}

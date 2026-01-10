@@ -188,11 +188,11 @@ export default function AddEventModal({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: isMobile ? '16px' : '20px 24px',
+            padding: isMobile ? '16px' : '12px 20px',
             borderBottom: '1px solid var(--border)',
           }}
         >
-          <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>
+          <h2 style={{ fontSize: isMobile ? '18px' : '16px', fontWeight: 600, color: 'var(--text)' }}>
             Add Event
           </h2>
           <button
@@ -210,8 +210,8 @@ export default function AddEventModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} style={{ padding: isMobile ? '16px' : '24px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSubmit} style={{ padding: isMobile ? '16px' : '16px 20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '10px' }}>
             <Input
               label="Event Title"
               value={title}
@@ -221,42 +221,29 @@ export default function AddEventModal({
               autoFocus
             />
 
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '8px' }}>
-                Date
-              </label>
+            {/* Date and All Day on same row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'end' }}>
               <CalendarPicker
+                label="Date"
                 value={dateStr}
                 onChange={(d) => setDateStr(d)}
               />
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', height: 'var(--input-height)', paddingBottom: '2px' }}>
+                <input
+                  type="checkbox"
+                  checked={allDay}
+                  onChange={(e) => setAllDay(e.target.checked)}
+                  style={{ width: isMobile ? '18px' : '16px', height: isMobile ? '18px' : '16px', cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: isMobile ? '14px' : '13px', color: 'var(--text)', whiteSpace: 'nowrap' }}>All day</span>
+              </label>
             </div>
-
-            {/* All Day Toggle */}
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={allDay}
-                onChange={(e) => setAllDay(e.target.checked)}
-                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-              />
-              <span style={{ fontSize: '14px', color: 'var(--text)' }}>All day</span>
-            </label>
 
             {/* Time Pickers (only if not all day) */}
             {!allDay && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '8px' }}>
-                    Start Time
-                  </label>
-                  <TimePicker value={startTime} onChange={handleStartTimeChange} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '8px' }}>
-                    End Time
-                  </label>
-                  <TimePicker value={endTime} onChange={setEndTime} />
-                </div>
+                <TimePicker label="Start Time" value={startTime} onChange={handleStartTimeChange} />
+                <TimePicker label="End Time" value={endTime} onChange={setEndTime} />
               </div>
             )}
 
@@ -272,22 +259,23 @@ export default function AddEventModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add details..."
+              style={!isMobile ? { minHeight: '60px', height: '60px' } : undefined}
             />
 
             {/* Color Picker */}
             <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: isMobile ? '14px' : '13px', fontWeight: 500, color: 'var(--text)', marginBottom: isMobile ? '8px' : '6px' }}>
                 Color
               </label>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: isMobile ? '6px' : '6px', flexWrap: 'wrap' }}>
                 {EVENT_COLORS.map((c) => (
                   <button
                     key={c.value}
                     type="button"
                     onClick={() => setColor(c.value)}
                     style={{
-                      width: '32px',
-                      height: '32px',
+                      width: isMobile ? '28px' : '24px',
+                      height: isMobile ? '28px' : '24px',
                       borderRadius: '50%',
                       backgroundColor: c.value,
                       border: color === c.value ? '3px solid var(--text)' : '2px solid transparent',
@@ -302,7 +290,7 @@ export default function AddEventModal({
           </div>
 
           {/* Actions */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+          <div style={{ display: 'flex', gap: '12px', marginTop: isMobile ? '16px' : '14px' }}>
             <Button variant="primary" type="submit" disabled={saving || !title.trim()}>
               {saving ? 'Saving...' : 'Add Event'}
             </Button>

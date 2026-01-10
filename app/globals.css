@@ -304,6 +304,10 @@ select {
     /* Mobile layout */
     --grid-gap: 8px;
     --card-padding: 10px;
+
+    /* Mobile input sizes */
+    --input-height: 36px;
+    --button-height: 36px;
   }
 
   .content-container {
@@ -505,15 +509,7 @@ select:disabled {
   }
 
   /* Prevent iOS Safari zoom on input focus - requires 16px minimum */
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="datetime-local"],
-  input[type="date"],
-  input[type="time"],
-  input[type="number"],
-  input[type="url"],
-  input[type="search"],
+  input:not([type="checkbox"]):not([type="radio"]),
   textarea,
   select {
     font-size: 16px !important;

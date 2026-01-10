@@ -12,11 +12,10 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, helperText, className = '', labelClassName = 'text-sm', labelStyle = {}, ...props }, ref) => {
-    const isMobile = useIsMobile();
     return (
       <div className="w-full">
         {label && (
-          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: isMobile ? '4px' : '6px', ...labelStyle }}>
+          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: '6px', ...labelStyle }}>
             {label}
             {props.required && <span className="text-[var(--danger)]"> *</span>}
           </label>
@@ -48,20 +47,20 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 }
 
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, helperText, className = '', labelClassName = 'text-sm', labelStyle = {}, ...props }, ref) => {
+  ({ label, error, helperText, className = '', labelClassName = 'text-sm', labelStyle = {}, style, ...props }, ref) => {
     const isMobile = useIsMobile();
     return (
       <div className="w-full">
         {label && (
-          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: isMobile ? '4px' : '6px', ...labelStyle }}>
+          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: '6px', ...labelStyle }}>
             {label}
             {props.required && <span className="text-[var(--danger)]"> *</span>}
           </label>
         )}
         <textarea
           ref={ref}
-          className={`w-full min-h-24 bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] rounded-[var(--radius-control)] transition-colors focus:outline-none disabled:bg-[var(--panel)] disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed resize-none ${error ? 'border-[var(--danger)]' : ''} ${className}`}
-          style={{ padding: '10px 12px' }}
+          className={`w-full bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] rounded-[var(--radius-control)] transition-colors focus:outline-none disabled:bg-[var(--panel)] disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed resize-none ${error ? 'border-[var(--danger)]' : ''} ${className}`}
+          style={{ padding: '10px 12px', minHeight: isMobile ? '64px' : '96px', ...style }}
           {...props}
         />
         {error && <p className="text-xs text-[var(--danger)] mt-1">{error}</p>}
@@ -88,30 +87,34 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     const isMultiple = (props as any).multiple;
     const { settings } = useAppStore();
     const isMobile = useIsMobile();
+    const hasValue = props.value !== undefined && props.value !== '';
 
     const selectStyle = useMemo(() => ({
-      padding: '10px 12px',
+      padding: isMobile ? '0 8px' : '10px 12px',
       backgroundColor: 'var(--panel-2)',
+      textOverflow: 'ellipsis',
+      lineHeight: isMobile ? 'var(--input-height)' : undefined,
+      color: hasValue ? 'var(--text)' : 'var(--text-muted)',
       ...(isMultiple ? {} : {
         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${settings.theme === 'light' ? '%23656666' : '%23adbac7'}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
         backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'right 0.75rem center',
-        backgroundSize: '16px 16px',
-        paddingRight: '2.5rem',
+        backgroundPosition: isMobile ? 'right 0.5rem center' : 'right 0.75rem center',
+        backgroundSize: isMobile ? '12px 12px' : '16px 16px',
+        paddingRight: isMobile ? '1.75rem' : '2.5rem',
       })
-    }), [settings.theme, isMultiple]);
+    }), [settings.theme, isMultiple, isMobile, hasValue]);
 
     return (
       <div className="w-full">
         {label && (
-          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: isMobile ? '4px' : '6px', ...labelStyle }}>
+          <label className={`block font-medium text-[var(--text)] ${labelClassName}`} style={{ marginBottom: '6px', ...labelStyle }}>
             {label}
             {props.required && <span className="text-[var(--danger)]"> *</span>}
           </label>
         )}
         <select
           ref={ref}
-          className={`w-full ${isMultiple ? 'min-h-[150px]' : 'h-[var(--input-height)]'} border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors focus:outline-none disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed ${!isMultiple ? 'appearance-none' : ''} cursor-pointer ${error ? 'border-[var(--danger)]' : ''} ${className}`}
+          className={`w-full ${isMultiple ? (isMobile ? 'min-h-[100px]' : 'min-h-[150px]') : 'h-[var(--input-height)]'} border border-[var(--border)] rounded-[var(--radius-control)] transition-colors focus:outline-none disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed ${!isMultiple ? 'appearance-none' : ''} cursor-pointer ${error ? 'border-[var(--danger)]' : ''} ${className}`}
           style={selectStyle}
           {...props}
         >

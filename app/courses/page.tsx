@@ -181,7 +181,7 @@ export default function CoursesPage() {
         title="Courses"
         subtitle="Manage your classes"
         actions={
-          !isAdding && !editingId && (
+          !isMobile && !isAdding && !editingId && (
             <Button variant="secondary" size="md" onClick={() => setIsAdding(true)}>
               <Plus size={18} />
               New Course
@@ -315,21 +315,21 @@ export default function CoursesPage() {
 
           {/* Courses list - 9 columns */}
           <div className="col-span-12 lg:col-span-9 space-y-6" style={{ height: 'fit-content' }}>
-            {/* Add Course Form */}
-            {isAdding && (
-            <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
+            {/* Add Course Form - desktop only */}
+            {!isMobile && isAdding && (
+            <div style={{ marginBottom: '24px' }}>
               <Card>
-                <h3 className={isMobile ? 'text-lg font-semibold text-[var(--text)]' : 'text-xl font-semibold text-[var(--text)]'} style={{ marginBottom: isMobile ? '12px' : '20px' }}>Add Course</h3>
+                <h3 className="text-xl font-semibold text-[var(--text)]" style={{ marginBottom: '20px' }}>Add Course</h3>
                 <CourseForm onClose={() => setIsAdding(false)} />
               </Card>
             </div>
           )}
 
-            {/* Edit Course Form */}
-            {editingId && (
-            <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
+            {/* Edit Course Form - desktop only */}
+            {!isMobile && editingId && (
+            <div style={{ marginBottom: '24px' }}>
               <Card>
-                <h3 className={isMobile ? 'text-lg font-semibold text-[var(--text)]' : 'text-xl font-semibold text-[var(--text)]'} style={{ marginBottom: isMobile ? '12px' : '20px' }}>Edit Course</h3>
+                <h3 className="text-xl font-semibold text-[var(--text)]" style={{ marginBottom: '20px' }}>Edit Course</h3>
                 <CourseForm courseId={editingId} onClose={() => setEditingId(null)} />
               </Card>
             </div>

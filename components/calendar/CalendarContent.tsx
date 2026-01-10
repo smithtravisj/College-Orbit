@@ -239,8 +239,14 @@ export default function CalendarContent() {
 
   const handlePreviousDate = () => {
     const newDate = new Date(currentDate);
-    if (view === 'month') {
+    // On mobile, always navigate by month
+    if (isMobile || view === 'month') {
       newDate.setMonth(newDate.getMonth() - 1);
+      // On mobile, also update selectedDay to first day of new month
+      if (isMobile) {
+        const newSelectedDay = new Date(newDate.getFullYear(), newDate.getMonth(), 1);
+        setSelectedDay(newSelectedDay);
+      }
     } else if (view === 'week') {
       newDate.setDate(newDate.getDate() - 7);
     } else {
@@ -251,8 +257,14 @@ export default function CalendarContent() {
 
   const handleNextDate = () => {
     const newDate = new Date(currentDate);
-    if (view === 'month') {
+    // On mobile, always navigate by month
+    if (isMobile || view === 'month') {
       newDate.setMonth(newDate.getMonth() + 1);
+      // On mobile, also update selectedDay to first day of new month
+      if (isMobile) {
+        const newSelectedDay = new Date(newDate.getFullYear(), newDate.getMonth(), 1);
+        setSelectedDay(newSelectedDay);
+      }
     } else if (view === 'week') {
       newDate.setDate(newDate.getDate() + 7);
     } else {
@@ -263,6 +275,10 @@ export default function CalendarContent() {
 
   const handleToday = () => {
     setCurrentDate(new Date());
+    // On mobile, also update selectedDay to today
+    if (isMobile) {
+      setSelectedDay(new Date());
+    }
   };
 
   const handleSelectDate = (date: Date) => {
@@ -281,6 +297,11 @@ export default function CalendarContent() {
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December',
     ];
+
+    // On mobile, show the selected day's date
+    if (isMobile) {
+      return `${monthNames[selectedDay.getMonth()]} ${selectedDay.getDate()}, ${selectedDay.getFullYear()}`;
+    }
 
     if (view === 'month') {
       return `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
@@ -361,8 +382,7 @@ export default function CalendarContent() {
           boxShadow: 'var(--shadow-sm)',
           display: 'flex',
           flexDirection: 'column',
-          height: 'calc(100vh - 140px)',
-          overflow: 'hidden',
+          ...(isMobile ? { minHeight: 'calc(100vh - 140px)' } : { height: 'calc(100vh - 140px)', overflow: 'hidden' }),
         }}>
           {/* Controls Bar */}
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
@@ -514,7 +534,7 @@ export default function CalendarContent() {
             )}
           </div>
 
-          <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: isMobile ? 'none' : 1, overflow: isMobile ? 'visible' : 'auto', display: 'flex', flexDirection: 'column' }}>
             {isMobile ? (
               <>
                 {/* Mobile: Month view at top with compact height */}
@@ -536,7 +556,7 @@ export default function CalendarContent() {
                   />
                 </div>
                 {/* Mobile: Day view below the month, showing schedule for selected day */}
-                <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+                <div style={{ overflow: 'visible' }}>
                   <CalendarDayView
                     date={selectedDay}
                     courses={cachedCourses.length > 0 ? cachedCourses : courses}
@@ -604,7 +624,7 @@ export default function CalendarContent() {
               </>
             )}
           </div>
-          <CalendarLegend />
+          {!isMobile && <CalendarLegend />}
         </div>
 
         <div style={{ marginTop: '24px' }}>
