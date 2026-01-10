@@ -728,13 +728,15 @@ export default function TasksPage() {
             <div style={{ overflow: 'visible' }}>
               <Card>
                 <form onSubmit={handleSubmit} className={isMobile ? 'space-y-2' : 'space-y-3'} style={{ overflow: 'visible' }}>
-                <Input
-                  label="Task title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="What needs to be done?"
-                  required
-                />
+                <div style={{ paddingBottom: isMobile ? '0px' : '4px' }}>
+                  <Input
+                    label="Task title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="What needs to be done?"
+                    required
+                  />
+                </div>
 
                 {/* Course, Importance row */}
                 <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-4 gap-3'} style={{ overflow: 'visible', paddingTop: isMobile ? '4px' : '8px' }}>
@@ -810,16 +812,16 @@ export default function TasksPage() {
                   />
                 )}
 
-                {/* Notes and Tags row */}
-                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-3'} style={{ paddingTop: isMobile ? '4px' : '8px' }}>
+                {/* Notes and Tags */}
+                <div className="flex flex-col gap-2" style={{ paddingTop: isMobile ? '4px' : '8px' }}>
                   <Textarea
                     label="Notes"
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder="Add any additional notes..."
-                    style={isMobile ? { minHeight: '52px', height: '52px', padding: '8px 10px' } : undefined}
+                    style={isMobile ? { minHeight: '52px', height: '52px', padding: '8px 10px' } : { minHeight: '60px', height: '60px' }}
                   />
-                  <div style={isMobile ? { marginTop: '-8px' } : undefined}>
+                  <div style={{ marginTop: isMobile ? '-8px' : '-4px' }}>
                     <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: isMobile ? '4px' : '6px' }}>Tags</label>
                     <TagInput
                       tags={formData.tags}
@@ -831,7 +833,7 @@ export default function TasksPage() {
                 </div>
 
                 {/* Links */}
-                <div style={{ marginTop: isMobile ? '8px' : '-6px' }}>
+                <div style={{ marginTop: isMobile ? '8px' : '10px' }}>
                   <label className="block font-semibold text-[var(--text)]" style={{ fontSize: isMobile ? '15px' : '18px', marginBottom: isMobile ? '4px' : '8px' }}>Links</label>
                   <div className={isMobile ? 'space-y-1' : 'space-y-2'}>
                     {formData.links.map((link, idx) => (

@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import useAppStore from '@/lib/store';
-import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface TagInputProps {
   tags: string[];
@@ -18,7 +17,6 @@ export default function TagInput({
   allAvailableTags,
   placeholder = 'Add tag...',
 }: TagInputProps) {
-  const isMobile = useIsMobile();
   const { settings } = useAppStore();
   const isLightMode = settings.theme === 'light';
   const tagTextColor = isLightMode ? '#000000' : 'white';
@@ -150,11 +148,6 @@ export default function TagInput({
           )}
         </div>
       </div>
-{!isMobile && (
-        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px', marginBottom: '16px' }}>
-          Type to search existing tags, press Enter or comma to add new tag
-        </p>
-      )}
     </div>
   );
 }

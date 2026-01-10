@@ -497,13 +497,15 @@ export default function ExamsPage() {
                     <p style={{ fontSize: '13px', color: 'rgb(239, 68, 68)', margin: 0 }}>{formError}</p>
                   </div>
                 )}
-                <Input
-                  label="Exam title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g., Calculus Midterm"
-                  required
-                />
+                <div style={{ paddingBottom: isMobile ? '0px' : '4px' }}>
+                  <Input
+                    label="Exam title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="e.g., Calculus Midterm"
+                    required
+                  />
+                </div>
 
                 {/* Course and Location row */}
                 <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-4 gap-3'} style={{ overflow: 'visible', paddingTop: isMobile ? '4px' : '8px' }}>
@@ -551,16 +553,16 @@ export default function ExamsPage() {
                   </div>
                 )}
 
-                {/* Notes and Tags row */}
-                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-3'} style={{ paddingTop: isMobile ? '4px' : '8px' }}>
+                {/* Notes and Tags */}
+                <div className="flex flex-col gap-2" style={{ paddingTop: isMobile ? '4px' : '8px' }}>
                   <Textarea
                     label="Notes"
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder="Add study tips, topics to review, etc."
-                    style={isMobile ? { minHeight: '52px', height: '52px', padding: '8px 10px' } : undefined}
+                    style={isMobile ? { minHeight: '52px', height: '52px', padding: '8px 10px' } : { minHeight: '60px', height: '60px' }}
                   />
-                  <div style={isMobile ? { marginTop: '-8px' } : undefined}>
+                  <div style={{ marginTop: isMobile ? '-8px' : '-4px' }}>
                     <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: isMobile ? '4px' : '6px' }}>Tags</label>
                     <TagInput
                       tags={formData.tags}
@@ -572,7 +574,7 @@ export default function ExamsPage() {
                 </div>
 
                 {/* Links */}
-                <div style={{ marginTop: isMobile ? '8px' : '-6px' }}>
+                <div style={{ marginTop: isMobile ? '8px' : '10px' }}>
                   <label className="block font-semibold text-[var(--text)]" style={{ fontSize: isMobile ? '15px' : '18px', marginBottom: isMobile ? '4px' : '8px' }}>Links</label>
                   <div className={isMobile ? 'space-y-1' : 'space-y-2'}>
                     {formData.links.map((link, idx) => (
