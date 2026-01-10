@@ -736,8 +736,8 @@ export default function TasksPage() {
                   required
                 />
 
-                {/* Course, Importance, Date, Time row */}
-                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-4 gap-3'} style={{ overflow: 'visible', paddingTop: isMobile ? '4px' : '8px' }}>
+                {/* Course, Importance row */}
+                <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-4 gap-3'} style={{ overflow: 'visible', paddingTop: isMobile ? '4px' : '8px' }}>
                   <Select
                     label="Course"
                     value={formData.courseId}
@@ -755,7 +755,7 @@ export default function TasksPage() {
                       { value: 'low', label: 'Low' },
                     ]}
                   />
-                  {!formData.isRecurring && (
+                  {!isMobile && !formData.isRecurring && (
                     <>
                       <CalendarPicker
                         label="Due Date"
@@ -769,8 +769,24 @@ export default function TasksPage() {
                       />
                     </>
                   )}
-                  {formData.isRecurring && <div className="col-span-2" />}
+                  {!isMobile && formData.isRecurring && <div className="col-span-2" />}
                 </div>
+
+                {/* Due Date and Time row - mobile only */}
+                {isMobile && !formData.isRecurring && (
+                  <div className="grid grid-cols-2 gap-2" style={{ overflow: 'visible', paddingTop: '8px' }}>
+                    <CalendarPicker
+                      label="Due Date"
+                      value={formData.dueDate}
+                      onChange={(date) => setFormData({ ...formData, dueDate: date })}
+                    />
+                    <TimePicker
+                      label="Due Time"
+                      value={formData.dueTime}
+                      onChange={(time) => setFormData({ ...formData, dueTime: time })}
+                    />
+                  </div>
+                )}
 
                 {/* Recurring checkbox */}
                 <div style={{ display: 'flex', alignItems: 'center', paddingTop: isMobile ? '4px' : '8px' }}>
@@ -801,9 +817,10 @@ export default function TasksPage() {
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder="Add any additional notes..."
+                    style={isMobile ? { minHeight: '52px', height: '52px', padding: '8px 10px' } : undefined}
                   />
-                  <div>
-                    <label className={isMobile ? 'block text-xs font-medium text-[var(--text)]' : 'block text-sm font-medium text-[var(--text)]'} style={{ marginBottom: isMobile ? '4px' : '6px' }}>Tags</label>
+                  <div style={isMobile ? { marginTop: '-8px' } : undefined}>
+                    <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: isMobile ? '4px' : '6px' }}>Tags</label>
                     <TagInput
                       tags={formData.tags}
                       onTagsChange={(tags) => setFormData({ ...formData, tags })}
@@ -814,7 +831,7 @@ export default function TasksPage() {
                 </div>
 
                 {/* Links */}
-                <div style={{ marginTop: isMobile ? '-4px' : '-6px' }}>
+                <div style={{ marginTop: isMobile ? '8px' : '-6px' }}>
                   <label className="block font-semibold text-[var(--text)]" style={{ fontSize: isMobile ? '15px' : '18px', marginBottom: isMobile ? '4px' : '8px' }}>Links</label>
                   <div className={isMobile ? 'space-y-1' : 'space-y-2'}>
                     {formData.links.map((link, idx) => (

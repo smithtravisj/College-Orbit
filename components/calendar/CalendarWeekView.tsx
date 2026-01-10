@@ -67,14 +67,6 @@ export default function CalendarWeekView({
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    // Scroll to 8 AM on mount
-    if (scrollContainerRef.current) {
-      const scrollPosition = 8 * HOUR_HEIGHT; // 8 AM
-      scrollContainerRef.current.scrollTop = scrollPosition;
-    }
-  }, []);
-
   const { start: weekStart } = getWeekRange(date);
 
   const weekDays = useMemo(() => {
@@ -113,6 +105,37 @@ export default function CalendarWeekView({
     });
     return map;
   }, [weekDays, eventsByDay]);
+
+  // Calculate the earliest event time across the entire week for scrolling
+  const earliestEventHour = useMemo(() => {
+    let earliest: number | null = null;
+
+    // Check all days in the week for the earliest timed event
+    eventsByDay.forEach((dayEvents) => {
+      dayEvents.forEach((event) => {
+        if (event.time && !event.allDay) {
+          const [hours] = event.time.split(':').map(Number);
+          if (earliest === null || hours < earliest) {
+            earliest = hours;
+          }
+        }
+      });
+    });
+
+    // If no events, default to 8 AM; otherwise scroll to 1 hour before earliest event
+    if (earliest === null) {
+      return 8;
+    }
+    return Math.max(0, earliest - 1);
+  }, [eventsByDay]);
+
+  useEffect(() => {
+    // Scroll to the earliest event time on mount or when week changes
+    if (scrollContainerRef.current) {
+      const scrollPosition = earliestEventHour * HOUR_HEIGHT;
+      scrollContainerRef.current.scrollTop = scrollPosition;
+    }
+  }, [earliestEventHour, weekStart]);
 
   const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 
@@ -169,7 +192,13 @@ export default function CalendarWeekView({
           const dayEvents = eventsByDay.get(dateStr) || [];
           const { allDay: allDayTaskDeadlineEvents } = separateTaskDeadlineEvents(dayEvents);
           const allDayCustomEvents = dayEvents.filter((e) => e.type === 'event' && e.allDay);
-          const allDayEvents = [...allDayTaskDeadlineEvents, ...allDayCustomEvents];
+          // Deduplicate by event ID
+          const seenIds = new Set<string>();
+          const allDayEvents = [...allDayTaskDeadlineEvents, ...allDayCustomEvents].filter((e) => {
+            if (seenIds.has(e.id)) return false;
+            seenIds.add(e.id);
+            return true;
+          });
           const isLastDay = index === weekDays.length - 1;
           const isTodayDate = isToday(day);
           const exclusionType = getExclusionType(day, excludedDates);
@@ -254,11 +283,11 @@ export default function CalendarWeekView({
                   </div>
                 );
               })()}
-              {visibleEvents.map((event) => {
+              {visibleEvents.map((event, idx) => {
                 const color = getEventColor(event);
                 return (
                   <div
-                    key={event.id}
+                    key={`${dateStr}-allday-${event.id}-${idx}`}
                     style={{
                       fontSize: '0.7rem',
                       paddingLeft: '6px',
@@ -441,7 +470,7 @@ export default function CalendarWeekView({
 
                   return (
                     <div
-                      key={event.id}
+                      key={`${dateStr}-course-${event.id}`}
                       style={{
                         position: 'absolute',
                         left: `calc(${eventLeft}% + 3px)`,
@@ -525,7 +554,7 @@ export default function CalendarWeekView({
 
                     return (
                       <div
-                        key={event.id}
+                        key={`${dateStr}-timed-${event.id}`}
                         style={{
                           position: 'absolute',
                           left: `calc(${eventLeft}% + 3px)`,
@@ -601,7 +630,13 @@ export default function CalendarWeekView({
               const dayEvents = eventsByDay.get(dateStr) || [];
               const { allDay: allDayTaskDeadlineEvents } = separateTaskDeadlineEvents(dayEvents);
               const allDayCustomEvents = dayEvents.filter((e) => e.type === 'event' && e.allDay);
-              const allDayEvents = [...allDayTaskDeadlineEvents, ...allDayCustomEvents];
+              // Deduplicate by event ID
+              const seenIds = new Set<string>();
+              const allDayEvents = [...allDayTaskDeadlineEvents, ...allDayCustomEvents].filter((e) => {
+                if (seenIds.has(e.id)) return false;
+                seenIds.add(e.id);
+                return true;
+              });
               const maxVisibleEvents = popupState.hasExclusion ? 2 : 3;
               const hiddenEvents = allDayEvents.slice(maxVisibleEvents);
 
@@ -610,11 +645,11 @@ export default function CalendarWeekView({
                   <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', marginBottom: '4px' }}>
                     All-day events
                   </div>
-                  {hiddenEvents.map((event) => {
+                  {hiddenEvents.map((event, idx) => {
                     const color = getEventColor(event);
                     return (
                       <div
-                        key={event.id}
+                        key={`${dateStr}-hidden-${event.id}-${idx}`}
                         style={{
                           fontSize: '0.7rem',
                           paddingLeft: '6px',

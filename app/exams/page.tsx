@@ -505,8 +505,8 @@ export default function ExamsPage() {
                   required
                 />
 
-                {/* Course, Location, Date, Time row */}
-                <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-4 gap-3'} style={{ overflow: 'visible', paddingTop: isMobile ? '4px' : '8px' }}>
+                {/* Course and Location row */}
+                <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-4 gap-3'} style={{ overflow: 'visible', paddingTop: isMobile ? '4px' : '8px' }}>
                   <Select
                     label="Course"
                     value={formData.courseId}
@@ -519,17 +519,37 @@ export default function ExamsPage() {
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     placeholder="e.g., Room 101"
                   />
-                  <CalendarPicker
-                    label="Exam Date"
-                    value={formData.examDate}
-                    onChange={(date) => setFormData({ ...formData, examDate: date })}
-                  />
-                  <TimePicker
-                    label="Exam Time"
-                    value={formData.examTime}
-                    onChange={(time) => setFormData({ ...formData, examTime: time })}
-                  />
+                  {!isMobile && (
+                    <>
+                      <CalendarPicker
+                        label="Exam Date"
+                        value={formData.examDate}
+                        onChange={(date) => setFormData({ ...formData, examDate: date })}
+                      />
+                      <TimePicker
+                        label="Exam Time"
+                        value={formData.examTime}
+                        onChange={(time) => setFormData({ ...formData, examTime: time })}
+                      />
+                    </>
+                  )}
                 </div>
+
+                {/* Date and Time row - mobile only */}
+                {isMobile && (
+                  <div className="grid grid-cols-2 gap-2" style={{ overflow: 'visible', paddingTop: '8px' }}>
+                    <CalendarPicker
+                      label="Exam Date"
+                      value={formData.examDate}
+                      onChange={(date) => setFormData({ ...formData, examDate: date })}
+                    />
+                    <TimePicker
+                      label="Exam Time"
+                      value={formData.examTime}
+                      onChange={(time) => setFormData({ ...formData, examTime: time })}
+                    />
+                  </div>
+                )}
 
                 {/* Notes and Tags row */}
                 <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-3'} style={{ paddingTop: isMobile ? '4px' : '8px' }}>
@@ -538,9 +558,10 @@ export default function ExamsPage() {
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder="Add study tips, topics to review, etc."
+                    style={isMobile ? { minHeight: '52px', height: '52px', padding: '8px 10px' } : undefined}
                   />
-                  <div>
-                    <label className={isMobile ? 'block text-xs font-medium text-[var(--text)]' : 'block text-sm font-medium text-[var(--text)]'} style={{ marginBottom: isMobile ? '4px' : '6px' }}>Tags</label>
+                  <div style={isMobile ? { marginTop: '-8px' } : undefined}>
+                    <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: isMobile ? '4px' : '6px' }}>Tags</label>
                     <TagInput
                       tags={formData.tags}
                       onTagsChange={(tags) => setFormData({ ...formData, tags })}
@@ -551,7 +572,7 @@ export default function ExamsPage() {
                 </div>
 
                 {/* Links */}
-                <div style={{ marginTop: isMobile ? '-4px' : '-6px' }}>
+                <div style={{ marginTop: isMobile ? '8px' : '-6px' }}>
                   <label className="block font-semibold text-[var(--text)]" style={{ fontSize: isMobile ? '15px' : '18px', marginBottom: isMobile ? '4px' : '8px' }}>Links</label>
                   <div className={isMobile ? 'space-y-1' : 'space-y-2'}>
                     {formData.links.map((link, idx) => (

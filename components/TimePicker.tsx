@@ -183,18 +183,18 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   return (
     <div ref={containerRef} className="relative w-full" style={{ minWidth: '120px', overflow: 'visible' }}>
       {label && (
-        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: isMobile ? '4px' : '6px' }}>
+        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px' }}>
           {label}
         </label>
       )}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none flex items-center"
-        style={{ padding: '10px 12px' }}
+        className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none flex items-center"
+        style={{ padding: isMobile ? '8px 10px' : '10px 12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: hours && minutes ? 'var(--text)' : 'var(--text-muted)' }}
       >
-        <span className="text-sm font-medium">
-          {hours && minutes ? `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')} ${isPM ? 'PM' : 'AM'}` : 'Select time...'}
+        <span style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', fontWeight: 500 }}>
+          {hours && minutes ? `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')} ${isPM ? 'PM' : 'AM'}` : (isMobile ? 'Select...' : 'Select time...')}
         </span>
       </button>
 

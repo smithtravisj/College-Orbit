@@ -95,7 +95,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
   return (
     <div ref={containerRef} style={{ position: 'relative', display: 'block', width: '100%', overflow: 'visible' }}>
       {label && (
-        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: isMobile ? '4px' : '6px' }}>
+        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px' }}>
           {label}
         </label>
       )}
@@ -108,14 +108,17 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
           backgroundColor: 'var(--panel-2)',
           border: '1px solid var(--border)',
           borderRadius: 'var(--radius-control)',
-          padding: '10px 12px',
-          color: 'var(--text)',
-          fontSize: '0.875rem',
+          padding: isMobile ? '8px 10px' : '10px 12px',
+          color: displayValue ? 'var(--text)' : 'var(--text-muted)',
+          fontSize: isMobile ? '0.75rem' : '0.875rem',
           cursor: 'pointer',
           textAlign: 'left',
           transition: 'border-color 0.2s',
           display: 'flex',
           alignItems: 'center',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.borderColor = 'var(--border-hover)';
@@ -124,7 +127,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
           e.currentTarget.style.borderColor = 'var(--border)';
         }}
       >
-        {displayValue || 'Select date...'}
+        {displayValue || (isMobile ? 'Select...' : 'Select date...')}
       </button>
 
       {isOpen && (

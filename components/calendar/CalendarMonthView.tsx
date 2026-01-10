@@ -333,7 +333,7 @@ export default function CalendarMonthView({
                     <div
                       style={{
                         fontSize: '0.6rem',
-                        color: 'var(--accent)',
+                        color: 'var(--link)',
                         fontWeight: 600,
                         lineHeight: 1,
                         paddingTop: '0.5px',

@@ -118,9 +118,9 @@ const CourseFormComponent = forwardRef(function CourseForm(
   };
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
-      {/* Code, Name, Term row */}
-      <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-3 gap-4'}>
+    <form ref={formRef} onSubmit={handleSubmit} className={isMobile ? 'space-y-2' : 'space-y-5'}>
+      {/* Code, Name row */}
+      <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-3 gap-4'}>
         <Input
           label="Course Code"
           type="text"
@@ -137,28 +137,67 @@ const CourseFormComponent = forwardRef(function CourseForm(
           placeholder="e.g., Chemistry I"
           required
         />
-        <Input
-          label="Term"
-          type="text"
-          value={form.term}
-          onChange={(e) => setForm({ ...form, term: e.target.value })}
-          placeholder="e.g., Winter 2026"
-        />
+        {!isMobile && (
+          <Input
+            label="Term"
+            type="text"
+            value={form.term}
+            onChange={(e) => setForm({ ...form, term: e.target.value })}
+            placeholder="e.g., Winter 2026"
+          />
+        )}
       </div>
 
-      {/* Start/End Date row */}
-      <div className={isMobile ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-4'} style={{ paddingTop: isMobile ? '4px' : '12px' }}>
-        <CalendarPicker
-          label="Start Date"
-          value={form.startDate}
-          onChange={(date) => setForm({ ...form, startDate: date })}
-        />
-        <CalendarPicker
-          label="End Date"
-          value={form.endDate}
-          onChange={(date) => setForm({ ...form, endDate: date })}
-        />
-      </div>
+      {/* Term and Start/End Date row - mobile */}
+      {isMobile && (
+        <div className="grid grid-cols-3 gap-2" style={{ overflow: 'visible', paddingTop: '8px' }}>
+          <div>
+            <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px' }}>Term</label>
+            <input
+              type="text"
+              value={form.term}
+              onChange={(e) => setForm({ ...form, term: e.target.value })}
+              placeholder="e.g., Win 26"
+              style={{
+                width: '100%',
+                height: 'var(--input-height)',
+                backgroundColor: 'var(--panel-2)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-control)',
+                padding: '8px 10px',
+                color: 'var(--text)',
+                fontSize: '0.75rem',
+              }}
+            />
+          </div>
+          <CalendarPicker
+            label="Start Date"
+            value={form.startDate}
+            onChange={(date) => setForm({ ...form, startDate: date })}
+          />
+          <CalendarPicker
+            label="End Date"
+            value={form.endDate}
+            onChange={(date) => setForm({ ...form, endDate: date })}
+          />
+        </div>
+      )}
+
+      {/* Start/End Date row - desktop only */}
+      {!isMobile && (
+        <div className="grid grid-cols-2 gap-4" style={{ paddingTop: '12px' }}>
+          <CalendarPicker
+            label="Start Date"
+            value={form.startDate}
+            onChange={(date) => setForm({ ...form, startDate: date })}
+          />
+          <CalendarPicker
+            label="End Date"
+            value={form.endDate}
+            onChange={(date) => setForm({ ...form, endDate: date })}
+          />
+        </div>
+      )}
 
       <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
         <label className={isMobile ? 'block text-sm font-medium text-[var(--text)]' : 'block text-lg font-medium text-[var(--text)]'} style={{ marginBottom: '8px' }}>Meeting Times</label>
