@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import PageHeader from '@/components/PageHeader';
@@ -31,7 +31,6 @@ interface CachedCalendarData {
 export default function CalendarContent() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const isMobile = useIsMobile();
 
   const [view, setView] = useState<ViewType>('month');
@@ -190,15 +189,9 @@ export default function CalendarContent() {
   }, [tasks.length, deadlines.length, exams.length, allTaskInstances.length, allDeadlineInstances.length, allExamInstances.length]);
 
   useEffect(() => {
-    // Read view and date from URL or localStorage
-    const viewParam = searchParams.get('view') as ViewType;
-    const dateParam = searchParams.get('date');
-
-    // First try URL param, then localStorage, then default to 'month'
+    // Read view from localStorage (persists across refreshes)
     let viewToUse: ViewType = 'month';
-    if (viewParam && ['month', 'week', 'day'].includes(viewParam)) {
-      viewToUse = viewParam;
-    } else if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       const savedView = localStorage.getItem('calendarView') as ViewType;
       if (savedView && ['month', 'week', 'day'].includes(savedView)) {
         viewToUse = savedView;
@@ -206,19 +199,12 @@ export default function CalendarContent() {
     }
     setView(viewToUse);
 
-    // If in day view, always go to today. Otherwise use dateParam if available
-    if (viewToUse === 'day') {
-      setCurrentDate(new Date());
-    } else if (dateParam) {
-      const date = new Date(dateParam);
-      if (!isNaN(date.getTime())) {
-        setCurrentDate(date);
-      }
-    }
+    // Always start at current date on refresh
+    setCurrentDate(new Date());
 
     initializeStore();
     setMounted(true);
-  }, [initializeStore, searchParams]);
+  }, [initializeStore]);
 
   if (!mounted) {
     return (
@@ -365,6 +351,37 @@ export default function CalendarContent() {
     // Clear cache to force refresh on next page load
     if (typeof window !== 'undefined') {
       localStorage.removeItem('calendarCache');
+    }
+  };
+
+  const handleStatusChange = async () => {
+    // Refresh tasks and deadlines when status changes
+    try {
+      const [tasksResponse, deadlinesResponse] = await Promise.all([
+        fetch('/api/tasks?showAll=true'),
+        fetch('/api/deadlines?showAll=true'),
+      ]);
+
+      if (tasksResponse.ok) {
+        const tasksData = await tasksResponse.json();
+        const allOpenTasks = tasksData.tasks.filter((task: any) => task.status !== 'done');
+        setAllTaskInstances(allOpenTasks);
+        setFilteredTasks(allOpenTasks);
+      }
+
+      if (deadlinesResponse.ok) {
+        const deadlinesData = await deadlinesResponse.json();
+        const allOpenDeadlines = deadlinesData.deadlines.filter((deadline: any) => deadline.status !== 'done');
+        setAllDeadlineInstances(allOpenDeadlines);
+        setFilteredDeadlines(allOpenDeadlines);
+      }
+
+      // Clear cache
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('calendarCache');
+      }
+    } catch (error) {
+      console.error('Error refreshing calendar data:', error);
     }
   };
 
@@ -553,6 +570,7 @@ export default function CalendarContent() {
                     onSelectDate={handleSelectDate}
                     selectedDate={selectedDay}
                     onEventUpdate={handleEventUpdate}
+                    onStatusChange={handleStatusChange}
                   />
                 </div>
                 {/* Mobile: Day view below the month, showing schedule for selected day */}
@@ -569,6 +587,7 @@ export default function CalendarContent() {
                     calendarEvents={calendarEvents}
                     onTimeSlotClick={handleTimeSlotClick}
                     onEventUpdate={handleEventUpdate}
+                    onStatusChange={handleStatusChange}
                   />
                 </div>
               </>
@@ -589,6 +608,7 @@ export default function CalendarContent() {
                     calendarEvents={calendarEvents}
                     onSelectDate={handleSelectDate}
                     onEventUpdate={handleEventUpdate}
+                    onStatusChange={handleStatusChange}
                   />
                 )}
                 {view === 'week' && (
@@ -604,6 +624,7 @@ export default function CalendarContent() {
                     calendarEvents={calendarEvents}
                     onTimeSlotClick={handleTimeSlotClick}
                     onEventUpdate={handleEventUpdate}
+                    onStatusChange={handleStatusChange}
                   />
                 )}
                 {view === 'day' && (
@@ -619,6 +640,7 @@ export default function CalendarContent() {
                     calendarEvents={calendarEvents}
                     onTimeSlotClick={handleTimeSlotClick}
                     onEventUpdate={handleEventUpdate}
+                    onStatusChange={handleStatusChange}
                   />
                 )}
               </>

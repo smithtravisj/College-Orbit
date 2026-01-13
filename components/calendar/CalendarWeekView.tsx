@@ -29,6 +29,7 @@ interface CalendarWeekViewProps {
   calendarEvents?: CustomCalendarEvent[];
   onTimeSlotClick?: (date: Date, time?: string, allDay?: boolean) => void;
   onEventUpdate?: (updatedEvent: CustomCalendarEvent) => void;
+  onStatusChange?: () => void;
 }
 
 const HOUR_HEIGHT = 60; // pixels
@@ -46,6 +47,7 @@ export default function CalendarWeekView({
   excludedDates = [],
   calendarEvents = [],
   onEventUpdate,
+  onStatusChange,
 }: CalendarWeekViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -687,6 +689,7 @@ export default function CalendarWeekView({
         exams={exams}
         calendarEvents={calendarEvents}
         onEventUpdate={onEventUpdate}
+        onStatusChange={onStatusChange}
       />
 
       <ExclusionDetailModal

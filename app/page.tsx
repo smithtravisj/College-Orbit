@@ -220,6 +220,8 @@ function Dashboard() {
         recurringPatternId: null,
         instanceDate: null,
         isRecurring: false,
+        workingOn: false,
+        updatedAt: new Date().toISOString(),
       });
     }
 
@@ -376,9 +378,19 @@ function Dashboard() {
   const now = new Date();
   const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-  const nextClass = todayClasses
+  // Check for current class (one that's currently in session)
+  const currentClass = todayClasses
+    .filter((c) => c.start <= nowTime && c.end > nowTime)
+    .sort((a, b) => a.start.localeCompare(b.start))[0] || null;
+
+  // Get next upcoming class (starts after now)
+  const upcomingClass = todayClasses
     .filter((c) => c.start > nowTime)
     .sort((a, b) => a.start.localeCompare(b.start))[0] || null;
+
+  // Show current class if in session, otherwise show next class
+  const displayClass = currentClass || upcomingClass;
+  const isCurrentClass = !!currentClass;
 
   const overdueTasks = tasks.filter((d) => d.dueAt && isOverdue(d.dueAt) && d.status === 'open');
 
@@ -393,7 +405,7 @@ function Dashboard() {
   const quickLinks = [...defaultQuickLinks, ...universityCustomLinks];
 
   // Status summary
-  const classesLeft = todayClasses.filter((c) => c.start > nowTime).length;
+  const classesLeft = todayClasses.filter((c) => c.end > nowTime).length;
   const overdueCount = overdueTasks.length + deadlines.filter((d) => d.dueAt && isOverdue(d.dueAt) && d.status === 'open').length;
 
   // Helper function to get card wrapper classes based on device
@@ -449,30 +461,30 @@ function Dashboard() {
           <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.NEXT_CLASS, visibleDashboardCards))} data-tour="next-class">
             {renderCard(
               DASHBOARD_CARDS.NEXT_CLASS,
-              'Next Class',
-              nextClass ? (
+              isCurrentClass ? 'Current Class' : 'Next Class',
+              displayClass ? (
                 <div className={`flex flex-col ${isMobile ? '' : 'gap-4'}`} style={{ gap: isMobile ? '6px' : undefined }}>
                   {/* Course Code & Name */}
                   <div>
                     <div className="text-sm font-medium text-[var(--text)]">
-                      {nextClass.courseCode}{nextClass.courseName ? ` - ${nextClass.courseName}` : ''}
+                      {displayClass.courseCode}{displayClass.courseName ? ` - ${displayClass.courseName}` : ''}
                     </div>
                   </div>
 
                   {/* Time */}
                   <div className="text-sm text-[var(--text-secondary)]">
-                    {formatTime12Hour(nextClass.start)} – {formatTime12Hour(nextClass.end)}
+                    {formatTime12Hour(displayClass.start)} – {formatTime12Hour(displayClass.end)}
                   </div>
 
                   {/* Location */}
                   <div className="text-sm text-[var(--text-secondary)]">
-                    {nextClass.location}
+                    {displayClass.location}
                   </div>
 
                   {/* Course Links */}
-                  {nextClass.courseLinks && nextClass.courseLinks.length > 0 && (
+                  {displayClass.courseLinks && displayClass.courseLinks.length > 0 && (
                     <div className="flex flex-col" style={{ gap: '2px', marginTop: isMobile ? '4px' : '8px' }}>
-                      {nextClass.courseLinks.map((link) => (
+                      {displayClass.courseLinks.map((link) => (
                         <a
                           key={link.url}
                           href={link.url}
@@ -487,7 +499,7 @@ function Dashboard() {
                   )}
                 </div>
               ) : (
-                <EmptyState title="No classes today" description="You're free for the rest of the day!" />
+                <EmptyState title="No more classes" description="You're free for the rest of the day!" />
               ),
               'h-full flex flex-col'
             )}

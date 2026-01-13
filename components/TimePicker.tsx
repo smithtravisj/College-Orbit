@@ -15,7 +15,8 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   const [isOpen, setIsOpen] = useState(false);
   const [hours, setHours] = useState<string>('');
   const [minutes, setMinutes] = useState<string>('');
-  const [isPM, setIsPM] = useState(false);
+  const [isPM, setIsPM] = useState(true);
+  const [inputValue, setInputValue] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
   const isUpdatingFromParent = useRef(false);
 
@@ -48,8 +49,112 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
       setHours(hours12);
       setMinutes(m);
       setIsPM(ispm);
+      setInputValue(`${hours12}:${m} ${ispm ? 'PM' : 'AM'}`);
     }
   }, [value]);
+
+  // Parse typed input (supports formats like "2:30pm", "2:30 PM", "14:30", "230pm", etc.)
+  const parseTimeInput = (input: string): { hours: string; minutes: string; isPM: boolean } | null => {
+    const trimmed = input.trim().toLowerCase();
+    if (!trimmed) return null;
+
+    // Check for AM/PM indicator
+    const hasAM = trimmed.includes('am') || trimmed.includes('a');
+    const hasPM = trimmed.includes('pm') || trimmed.includes('p');
+    const cleanInput = trimmed.replace(/[ap]m?/gi, '').trim();
+
+    // Try to parse time
+    let h: number, m: number;
+
+    if (cleanInput.includes(':')) {
+      // Format: "2:30" or "14:30"
+      const [hourPart, minPart] = cleanInput.split(':');
+      h = parseInt(hourPart) || 0;
+      m = parseInt(minPart) || 0;
+    } else if (cleanInput.length <= 2) {
+      // Format: "2" or "14" (just hours)
+      h = parseInt(cleanInput) || 0;
+      m = 0;
+    } else if (cleanInput.length === 3) {
+      // Format: "230" -> 2:30
+      h = parseInt(cleanInput[0]) || 0;
+      m = parseInt(cleanInput.slice(1)) || 0;
+    } else if (cleanInput.length === 4) {
+      // Format: "1430" -> 14:30 or "0230" -> 2:30
+      h = parseInt(cleanInput.slice(0, 2)) || 0;
+      m = parseInt(cleanInput.slice(2)) || 0;
+    } else {
+      return null;
+    }
+
+    // Validate
+    if (m > 59) m = 59;
+
+    // Determine AM/PM
+    let isPMResult: boolean;
+    if (hasAM) {
+      isPMResult = false;
+      if (h > 12) h = h % 12 || 12;
+    } else if (hasPM) {
+      isPMResult = true;
+      if (h > 12) h = h % 12 || 12;
+    } else if (h > 12) {
+      // 24-hour format
+      isPMResult = h >= 12;
+      h = h % 12 || 12;
+    } else if (h === 0) {
+      // Midnight
+      h = 12;
+      isPMResult = false;
+    } else {
+      // Default to current isPM state or PM
+      isPMResult = isPM;
+    }
+
+    if (h > 12) h = 12;
+    if (h < 1) h = 12;
+
+    return {
+      hours: String(h).padStart(2, '0'),
+      minutes: String(m).padStart(2, '0'),
+      isPM: isPMResult,
+    };
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  const handleInputBlur = () => {
+    const parsed = parseTimeInput(inputValue);
+    if (parsed) {
+      setHours(parsed.hours);
+      setMinutes(parsed.minutes);
+      setIsPM(parsed.isPM);
+      handleTimeChange(parsed.hours, parsed.minutes, parsed.isPM);
+      setInputValue(`${parsed.hours}:${parsed.minutes} ${parsed.isPM ? 'PM' : 'AM'}`);
+    } else if (inputValue.trim() === '') {
+      // Clear the time
+      setHours('');
+      setMinutes('');
+      setInputValue('');
+      onChange('');
+    } else {
+      // Invalid input, revert to current value
+      if (hours && minutes) {
+        setInputValue(`${hours}:${minutes} ${isPM ? 'PM' : 'AM'}`);
+      } else {
+        setInputValue('');
+      }
+    }
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleInputBlur();
+      setIsOpen(false);
+    }
+  };
 
   // Close dropdown on Escape key or click outside
   useEffect(() => {
@@ -76,9 +181,11 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   }, [isOpen]);
 
   const handleTimeChange = (h: string, m: string, pm: boolean = isPM) => {
+    const formattedHours = String(parseInt(h) || 12).padStart(2, '0');
     const formattedMinutes = String(parseInt(m) || 0).padStart(2, '0');
-    const hours24 = convert12To24(h, pm);
+    const hours24 = convert12To24(formattedHours, pm);
     const timeValue = `${hours24}:${formattedMinutes}`;
+    setInputValue(`${formattedHours}:${formattedMinutes} ${pm ? 'PM' : 'AM'}`);
     onChange(timeValue);
   };
 
@@ -187,16 +294,22 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
           {label}
         </label>
       )}
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none flex items-center"
-        style={{ padding: isMobile ? '8px 10px' : '10px 12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: hours && minutes ? 'var(--text)' : 'var(--text-muted)' }}
-      >
-        <span style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', fontWeight: 500 }}>
-          {hours && minutes ? `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')} ${isPM ? 'PM' : 'AM'}` : (isMobile ? 'Select...' : 'Select time...')}
-        </span>
-      </button>
+      <input
+        type="text"
+        value={inputValue}
+        onChange={handleInputChange}
+        onBlur={handleInputBlur}
+        onKeyDown={handleInputKeyDown}
+        onFocus={() => setIsOpen(true)}
+        placeholder={isMobile ? 'e.g. 2:30pm' : 'e.g. 2:30pm, 14:30'}
+        className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--border-hover)]"
+        style={{
+          padding: isMobile ? '8px 10px' : '10px 12px',
+          fontSize: isMobile ? '0.75rem' : '0.875rem',
+          fontWeight: 500,
+          color: 'var(--text)',
+        }}
+      />
 
       {isOpen && (
         <div

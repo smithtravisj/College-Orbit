@@ -513,6 +513,7 @@ export default function NotesPage() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-[var(--accent)] hover:underline"
+                              style={{ width: 'fit-content' }}
                             >
                               {link.label}
                             </a>

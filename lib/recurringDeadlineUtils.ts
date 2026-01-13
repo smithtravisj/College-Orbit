@@ -160,6 +160,7 @@ export async function generateRecurringDeadlineInstances(
           notes: template.notes || '',
           tags: template.tags || [],
           links: template.links || [],
+          effort: template.effort || null,
           dueAt: dueAt.toISOString(),
           recurringPatternId: patternId,
           instanceDate: instanceDateStr,

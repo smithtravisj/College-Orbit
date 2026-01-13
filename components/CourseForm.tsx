@@ -282,7 +282,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
         <label className={isMobile ? 'block text-sm font-medium text-[var(--text)]' : 'block text-lg font-medium text-[var(--text)]'} style={{ marginBottom: '8px' }}>Links</label>
         <div className="space-y-3">
           {form.links.map((link, idx) => (
-            <div key={idx} className="flex gap-3 items-center">
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <Input
                 label={idx === 0 ? 'Label' : ''}
                 type="text"

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useBulkSelect } from '@/hooks/useBulkSelect';
 import { formatDate } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
@@ -10,10 +11,20 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, MapPin } from 'lucide-react';
+import { Plus, Trash2, Edit2, MapPin, Check } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import TagInput from '@/components/notes/TagInput';
+import BulkEditToolbar, { BulkAction } from '@/components/BulkEditToolbar';
+import {
+  BulkChangeCourseModal,
+  BulkChangeTagsModal,
+  BulkChangeDateModal,
+  BulkChangeTimeModal,
+  BulkAddLinkModal,
+  BulkChangeLocationModal,
+  BulkDeleteModal,
+} from '@/components/BulkActionModals';
 
 export default function ExamsPage() {
   const isMobile = useIsMobile();
@@ -38,7 +49,11 @@ export default function ExamsPage() {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [formError, setFormError] = useState('');
 
-  const { courses, exams, settings, addExam, updateExam, deleteExam, initializeStore } = useAppStore();
+  // Bulk selection state
+  const bulkSelect = useBulkSelect();
+  const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
+
+  const { courses, exams, settings, addExam, updateExam, deleteExam, bulkUpdateExams, bulkDeleteExams, initializeStore } = useAppStore();
 
   // Handle filters card collapse state changes and save to database
   const handleFiltersCollapseChange = (isOpen: boolean) => {
@@ -275,6 +290,80 @@ export default function ExamsPage() {
 
   // Collect all unique tags from exams
   const allTags = Array.from(new Set(exams.flatMap((e) => e.tags || [])));
+
+  // Bulk action handlers
+  const handleBulkAction = (action: BulkAction) => {
+    setBulkModal(action);
+  };
+
+  const handleBulkCourseChange = async (courseId: string | null) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    await bulkUpdateExams(ids, { courseId });
+  };
+
+  const handleBulkTagsChange = async (tags: string[], mode: 'add' | 'replace') => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    if (mode === 'replace') {
+      await bulkUpdateExams(ids, { tags });
+    } else {
+      for (const id of ids) {
+        const exam = exams.find(e => e.id === id);
+        if (exam) {
+          const newTags = Array.from(new Set([...(exam.tags || []), ...tags]));
+          await updateExam(id, { tags: newTags });
+        }
+      }
+    }
+  };
+
+  const handleBulkDateChange = async (date: string | null) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    for (const id of ids) {
+      const exam = exams.find(e => e.id === id);
+      if (exam) {
+        let examAt: string | undefined = undefined;
+        if (date) {
+          const existingTime = exam.examAt ? new Date(exam.examAt).toTimeString().slice(0, 5) : '09:00';
+          examAt = new Date(`${date}T${existingTime}`).toISOString();
+        }
+        await updateExam(id, { examAt });
+      }
+    }
+  };
+
+  const handleBulkTimeChange = async (time: string | null) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    for (const id of ids) {
+      const exam = exams.find(e => e.id === id);
+      if (exam && exam.examAt) {
+        const existingDate = new Date(exam.examAt).toISOString().split('T')[0];
+        const examAt = time ? new Date(`${existingDate}T${time}`).toISOString() : exam.examAt;
+        await updateExam(id, { examAt });
+      }
+    }
+  };
+
+  const handleBulkLocationChange = async (location: string | null) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    await bulkUpdateExams(ids, { location });
+  };
+
+  const handleBulkAddLink = async (link: { label: string; url: string }) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    for (const id of ids) {
+      const exam = exams.find(e => e.id === id);
+      if (exam) {
+        const newLinks = [...(exam.links || []), link];
+        await updateExam(id, { links: newLinks });
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    await bulkDeleteExams(ids);
+    bulkSelect.clearSelection();
+  };
 
   const now = new Date();
   const filtered = exams
@@ -576,9 +665,9 @@ export default function ExamsPage() {
                 {/* Links */}
                 <div style={{ marginTop: isMobile ? '8px' : '10px' }}>
                   <label className="block font-semibold text-[var(--text)]" style={{ fontSize: isMobile ? '15px' : '18px', marginBottom: isMobile ? '4px' : '8px' }}>Links</label>
-                  <div className={isMobile ? 'space-y-1' : 'space-y-2'}>
+                  <div className={isMobile ? 'space-y-2' : 'space-y-3'}>
                     {formData.links.map((link, idx) => (
-                      <div key={idx} className={isMobile ? 'flex gap-1 items-center' : 'flex gap-3 items-center'}>
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
                         <Input
                           label={idx === 0 ? 'Label' : ''}
                           type="text"
@@ -615,7 +704,7 @@ export default function ExamsPage() {
                               });
                             }}
                             className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                            style={{ padding: isMobile ? '2px' : '8px', marginTop: isMobile ? '20px' : '28px' }}
+                            style={{ padding: isMobile ? '2px' : '8px', marginTop: idx === 0 ? (isMobile ? '20px' : '28px') : '0px' }}
                             title="Remove link"
                           >
                             <Trash2 size={isMobile ? 14 : 18} />
@@ -670,8 +759,56 @@ export default function ExamsPage() {
                   const examMinutes = exam.examAt ? new Date(exam.examAt).getMinutes() : null;
                   const examTime = exam.examAt ? new Date(exam.examAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
                   const shouldShowTime = examTime && !(examHours === 9 && examMinutes === 0);
+                  const isSelected = bulkSelect.isSelected(exam.id);
                   return (
-                    <div key={exam.id} style={{ paddingTop: isMobile ? '6px' : '10px', paddingBottom: isMobile ? '6px' : '10px', paddingLeft: isMobile ? '2px' : '16px', paddingRight: isMobile ? '2px' : '16px', gap: isMobile ? '8px' : '12px', opacity: hidingExams.has(exam.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0">
+                    <div
+                      key={exam.id}
+                      style={{
+                        paddingTop: isMobile ? '6px' : '10px',
+                        paddingBottom: isMobile ? '6px' : '10px',
+                        paddingLeft: isMobile ? '2px' : '16px',
+                        paddingRight: isMobile ? '2px' : '16px',
+                        gap: isMobile ? '8px' : '12px',
+                        opacity: hidingExams.has(exam.id) ? 0.5 : 1,
+                        transition: 'opacity 0.3s ease, background-color 0.2s ease',
+                        backgroundColor: isSelected ? 'var(--nav-active)' : undefined,
+                      }}
+                      className="first:pt-0 last:pb-0 flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0"
+                      onContextMenu={(e) => bulkSelect.handleContextMenu(e, exam.id)}
+                      onTouchStart={() => bulkSelect.handleLongPressStart(exam.id)}
+                      onTouchEnd={bulkSelect.handleLongPressEnd}
+                      onTouchCancel={bulkSelect.handleLongPressEnd}
+                      onClick={() => {
+                        if (bulkSelect.isSelecting) {
+                          bulkSelect.toggleSelection(exam.id);
+                        }
+                      }}
+                    >
+                      {/* Selection checkbox - appears when in selection mode */}
+                      {bulkSelect.isSelecting && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            bulkSelect.toggleSelection(exam.id);
+                          }}
+                          style={{
+                            width: isMobile ? '20px' : '24px',
+                            height: isMobile ? '20px' : '24px',
+                            borderRadius: '50%',
+                            border: isSelected ? 'none' : '2px solid var(--border)',
+                            backgroundColor: isSelected ? 'var(--accent)' : 'transparent',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            marginRight: isMobile ? '4px' : '8px',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          {isSelected && <Check size={isMobile ? 12 : 14} color="white" />}
+                        </button>
+                      )}
                       <div className="flex-1 min-w-0" style={{ lineHeight: 1.4 }}>
                         <div className="flex items-center" style={{ gap: isMobile ? '2px' : '6px' }}>
                           <div style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: '500', color: 'var(--text)' }}>
@@ -732,7 +869,7 @@ export default function ExamsPage() {
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--link)' }}
+                                style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--link)', width: 'fit-content' }}
                                 className="hover:text-blue-400"
                               >
                                 {link.label}
@@ -784,6 +921,64 @@ export default function ExamsPage() {
           </div>
         </div>
       </div>
+
+      {/* Bulk Edit Toolbar */}
+      {bulkSelect.isSelecting && bulkSelect.selectedIds.size > 0 && (
+        <BulkEditToolbar
+          selectedCount={bulkSelect.selectedIds.size}
+          entityType="exam"
+          onAction={handleBulkAction}
+          onCancel={bulkSelect.clearSelection}
+          onSelectAll={() => bulkSelect.selectAll(filtered.map(e => e.id))}
+        />
+      )}
+
+      {/* Bulk Action Modals */}
+      <BulkChangeCourseModal
+        isOpen={bulkModal === 'course'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        courses={courses}
+        onConfirm={handleBulkCourseChange}
+      />
+      <BulkChangeTagsModal
+        isOpen={bulkModal === 'tags'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        allTags={allTags}
+        onConfirm={handleBulkTagsChange}
+      />
+      <BulkChangeDateModal
+        isOpen={bulkModal === 'date'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        onConfirm={handleBulkDateChange}
+      />
+      <BulkChangeTimeModal
+        isOpen={bulkModal === 'time'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        onConfirm={handleBulkTimeChange}
+      />
+      <BulkChangeLocationModal
+        isOpen={bulkModal === 'location'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        onConfirm={handleBulkLocationChange}
+      />
+      <BulkAddLinkModal
+        isOpen={bulkModal === 'link'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        onConfirm={handleBulkAddLink}
+      />
+      <BulkDeleteModal
+        isOpen={bulkModal === 'delete'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        entityType="exam"
+        onConfirm={handleBulkDelete}
+      />
     </>
   );
 }

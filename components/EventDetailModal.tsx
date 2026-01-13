@@ -22,6 +22,7 @@ interface EventDetailModalProps {
   exams?: Exam[];
   calendarEvents?: CustomCalendarEvent[];
   onEventUpdate?: (updatedEvent: CustomCalendarEvent) => void;
+  onStatusChange?: () => void;
 }
 
 function formatTime(time?: string): string {
@@ -74,6 +75,7 @@ export default function EventDetailModal({
   exams = [],
   calendarEvents = [],
   onEventUpdate,
+  onStatusChange,
 }: EventDetailModalProps) {
   const isMobile = useIsMobile();
   const router = useRouter();
@@ -410,6 +412,10 @@ export default function EventDetailModal({
   };
 
   const handleDoneAndClose = () => {
+    // If status was changed, trigger calendar refresh
+    if (localStatus !== null) {
+      onStatusChange?.();
+    }
     onClose();
   };
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
+import { useBulkSelect } from '@/hooks/useBulkSelect';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -12,6 +13,12 @@ import CourseList from '@/components/CourseList';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import { Plus } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import BulkEditToolbar, { BulkAction } from '@/components/BulkEditToolbar';
+import {
+  BulkChangeTermModal,
+  BulkAddLinkModal,
+  BulkDeleteModal,
+} from '@/components/BulkActionModals';
 
 export default function CoursesPage() {
   const isMobile = useIsMobile();
@@ -22,7 +29,12 @@ export default function CoursesPage() {
   const [termFilterInitialized, setTermFilterInitialized] = useState(false);
   const [showEnded, setShowEnded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { courses, settings, initializeStore, updateSettings } = useAppStore();
+
+  // Bulk selection state
+  const bulkSelect = useBulkSelect();
+  const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
+
+  const { courses, settings, initializeStore, updateSettings, updateCourse, bulkUpdateCourses, bulkDeleteCourses } = useAppStore();
 
   const handleTermFilterChange = (newFilter: string) => {
     setTermFilter(newFilter);
@@ -146,6 +158,33 @@ export default function CoursesPage() {
 
   // Get unique terms for filter
   const uniqueTerms = Array.from(new Set(courses.map((c) => c.term).filter(Boolean)));
+
+  // Bulk action handlers
+  const handleBulkAction = (action: BulkAction) => {
+    setBulkModal(action);
+  };
+
+  const handleBulkTermChange = async (term: string | null) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    await bulkUpdateCourses(ids, { term: term || undefined });
+  };
+
+  const handleBulkAddLink = async (link: { label: string; url: string }) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    for (const id of ids) {
+      const course = courses.find(c => c.id === id);
+      if (course) {
+        const newLinks = [...(course.links || []), link];
+        await updateCourse(id, { links: newLinks });
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    await bulkDeleteCourses(ids);
+    bulkSelect.clearSelection();
+  };
 
   // Filter by term
   let filteredCourses = termFilter === 'all' ? courses : courses.filter((c) => c.term === termFilter);
@@ -351,7 +390,17 @@ export default function CoursesPage() {
 
             {/* Courses List */}
             {filteredCourses.length > 0 ? (
-              <CourseList courses={filteredCourses} onEdit={(courseId) => { window.scrollTo({ top: 0, behavior: 'smooth' }); setEditingId(courseId); }} showSemester={termFilter === 'all'} />
+              <CourseList
+                courses={filteredCourses}
+                onEdit={(courseId) => { window.scrollTo({ top: 0, behavior: 'smooth' }); setEditingId(courseId); }}
+                showSemester={termFilter === 'all'}
+                isSelecting={bulkSelect.isSelecting}
+                selectedIds={bulkSelect.selectedIds}
+                onToggleSelection={bulkSelect.toggleSelection}
+                onLongPressStart={bulkSelect.handleLongPressStart}
+                onLongPressEnd={bulkSelect.handleLongPressEnd}
+                onContextMenu={bulkSelect.handleContextMenu}
+              />
             ) : (
               <EmptyState
                 title={termFilter === 'all' ? 'No courses yet' : 'No courses in this term'}
@@ -366,6 +415,39 @@ export default function CoursesPage() {
           </div>
         </div>
       </div>
+
+      {/* Bulk Edit Toolbar */}
+      {bulkSelect.isSelecting && bulkSelect.selectedIds.size > 0 && (
+        <BulkEditToolbar
+          selectedCount={bulkSelect.selectedIds.size}
+          entityType="course"
+          onAction={handleBulkAction}
+          onCancel={bulkSelect.clearSelection}
+          onSelectAll={() => bulkSelect.selectAll(filteredCourses.map(c => c.id))}
+        />
+      )}
+
+      {/* Bulk Action Modals */}
+      <BulkChangeTermModal
+        isOpen={bulkModal === 'term'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        allTerms={uniqueTerms as string[]}
+        onConfirm={handleBulkTermChange}
+      />
+      <BulkAddLinkModal
+        isOpen={bulkModal === 'link'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        onConfirm={handleBulkAddLink}
+      />
+      <BulkDeleteModal
+        isOpen={bulkModal === 'delete'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        entityType="course"
+        onConfirm={handleBulkDelete}
+      />
     </>
   );
 }

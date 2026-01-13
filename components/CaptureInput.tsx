@@ -50,6 +50,7 @@ export default function CaptureInput() {
         ).toISOString(),
         priority: null,
         effort: null,
+        workingOn: false,
         notes: '',
         tags: [],
         links: [],
@@ -57,6 +58,7 @@ export default function CaptureInput() {
         recurringPatternId: null,
         instanceDate: null,
         isRecurring: false,
+        updatedAt: new Date().toISOString(),
       });
     } else if (title) {
       addTask({
@@ -73,6 +75,8 @@ export default function CaptureInput() {
         recurringPatternId: null,
         instanceDate: null,
         isRecurring: false,
+        workingOn: false,
+        updatedAt: new Date().toISOString(),
       });
     }
 

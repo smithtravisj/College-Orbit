@@ -105,6 +105,7 @@ export async function PATCH(
           return { label, url: l.url };
         }) : existingTask.links,
         status: 'status' in data ? data.status : existingTask.status,
+        workingOn: 'workingOn' in data ? data.workingOn : existingTask.workingOn,
       },
     });
 
