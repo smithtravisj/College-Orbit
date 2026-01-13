@@ -119,7 +119,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
             daysOfMonth: data.recurring.daysOfMonth || [],
             startDate: data.recurring.startDate && data.recurring.startDate.trim() ? new Date(data.recurring.startDate) : null,
             endDate: data.recurring.endDate && data.recurring.endDate.trim() ? new Date(data.recurring.endDate) : null,
-            occurrenceCount: data.recurring.occurrenceCount && data.recurring.occurrenceCount > 0 ? data.recurring.occurrenceCount : null,
+            occurrenceCount: data.recurring.endCondition === 'count' && data.recurring.occurrenceCount > 0 ? data.recurring.occurrenceCount : null,
             taskTemplate: {
               title: data.title,
               courseId: data.courseId || null,
@@ -130,6 +130,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
                 url: l.url,
               })),
               dueTime: data.recurring.dueTime || '23:59',
+              importance: data.importance || null,
             },
             isActive: true,
           },

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import useAppStore from '@/lib/store';
 import Card from '@/components/ui/Card';
 import ConfirmationModal from '@/components/ConfirmationModal';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, Check } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { Course } from '@/types';
 
@@ -12,6 +12,13 @@ interface CourseListProps {
   courses: Course[];
   onEdit: (courseId: string) => void;
   showSemester?: boolean;
+  // Bulk selection props
+  isSelecting?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelection?: (id: string) => void;
+  onLongPressStart?: (id: string) => void;
+  onLongPressEnd?: () => void;
+  onContextMenu?: (e: React.MouseEvent, id: string) => void;
 }
 
 const formatTime12Hour = (time24: string): string => {
@@ -22,7 +29,17 @@ const formatTime12Hour = (time24: string): string => {
   return `${hours12}:${String(minutes).padStart(2, '0')} ${ampm}`;
 };
 
-export default function CourseList({ courses, onEdit, showSemester = false }: CourseListProps) {
+export default function CourseList({
+  courses,
+  onEdit,
+  showSemester = false,
+  isSelecting = false,
+  selectedIds = new Set(),
+  onToggleSelection,
+  onLongPressStart,
+  onLongPressEnd,
+  onContextMenu,
+}: CourseListProps) {
   const isMobile = useIsMobile();
   const { deleteCourse } = useAppStore();
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
@@ -43,12 +60,54 @@ export default function CourseList({ courses, onEdit, showSemester = false }: Co
     <>
       <Card>
       <div className="space-y-4 divide-y divide-[var(--border)]">
-        {courses.map((course) => (
+        {courses.map((course) => {
+          const isSelected = selectedIds.has(course.id);
+          return (
           <div
             key={course.id}
-            style={{ paddingTop: '10px', paddingBottom: '10px', paddingLeft: '32px', paddingRight: '32px' }}
+            style={{
+              paddingTop: '10px',
+              paddingBottom: '10px',
+              paddingLeft: '32px',
+              paddingRight: '32px',
+              transition: 'background-color 0.2s ease',
+              backgroundColor: isSelected ? 'var(--nav-active)' : undefined,
+            }}
             className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0"
+            onContextMenu={(e) => onContextMenu?.(e, course.id)}
+            onTouchStart={() => onLongPressStart?.(course.id)}
+            onTouchEnd={onLongPressEnd}
+            onTouchCancel={onLongPressEnd}
+            onClick={() => {
+              if (isSelecting) {
+                onToggleSelection?.(course.id);
+              }
+            }}
           >
+            {/* Selection checkbox - appears when in selection mode */}
+            {isSelecting && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleSelection?.(course.id);
+                }}
+                style={{
+                  width: isMobile ? '20px' : '24px',
+                  height: isMobile ? '20px' : '24px',
+                  borderRadius: '50%',
+                  border: isSelected ? 'none' : '2px solid var(--border)',
+                  backgroundColor: isSelected ? 'var(--accent)' : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {isSelected && <Check size={isMobile ? 12 : 14} color="white" />}
+              </button>
+            )}
             <div className="flex-1 min-w-0">
               <div>
                 <h3 className="text-sm font-medium text-[var(--text)]">
@@ -78,6 +137,7 @@ export default function CourseList({ courses, onEdit, showSemester = false }: Co
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs text-[var(--link)] hover:text-blue-400 transition-colors"
+                        style={{ width: 'fit-content' }}
                       >
                         {link.label}
                       </a>
@@ -114,7 +174,8 @@ export default function CourseList({ courses, onEdit, showSemester = false }: Co
               </button>
             </div>
           </div>
-        ))}
+        );
+        })}
       </div>
     </Card>
 

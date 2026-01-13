@@ -13,6 +13,7 @@ interface CalendarPickerProps {
 export default function CalendarPicker({ value, onChange, label }: CalendarPickerProps) {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
+  const [inputValue, setInputValue] = useState('');
   const [currentMonth, setCurrentMonth] = useState<Date>(() => {
     if (value) {
       return new Date(value + 'T00:00:00');
@@ -22,6 +23,105 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedDate = value ? new Date(value + 'T00:00:00') : null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Update input value when value changes
+  useEffect(() => {
+    if (value) {
+      const date = new Date(value + 'T00:00:00');
+      setInputValue(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
+    } else {
+      setInputValue('');
+    }
+  }, [value]);
+
+  // Parse typed date input (supports formats like "1/15", "Jan 15", "01-15-2025", "January 15, 2025", etc.)
+  const parseDateInput = (input: string): Date | null => {
+    const trimmed = input.trim();
+    if (!trimmed) return null;
+
+    const currentYear = new Date().getFullYear();
+    const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+    // Try parsing with built-in Date
+    const directParse = new Date(trimmed);
+    if (!isNaN(directParse.getTime()) && directParse.getFullYear() > 1970) {
+      return directParse;
+    }
+
+    // Try MM/DD or MM-DD format
+    const slashMatch = trimmed.match(/^(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?$/);
+    if (slashMatch) {
+      const month = parseInt(slashMatch[1]) - 1;
+      const day = parseInt(slashMatch[2]);
+      let year = slashMatch[3] ? parseInt(slashMatch[3]) : currentYear;
+      if (year < 100) year += 2000;
+      if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+        return new Date(year, month, day);
+      }
+    }
+
+    // Try "Mon DD" or "Month DD" format
+    const lower = trimmed.toLowerCase();
+    for (let i = 0; i < monthNames.length; i++) {
+      const shortMatch = lower.match(new RegExp(`^${monthNames[i]}[a-z]*\\.?\\s+(\\d{1,2})(?:[,\\s]+(\\d{2,4}))?$`));
+      if (shortMatch) {
+        const day = parseInt(shortMatch[1]);
+        let year = shortMatch[2] ? parseInt(shortMatch[2]) : currentYear;
+        if (year < 100) year += 2000;
+        if (day >= 1 && day <= 31) {
+          return new Date(year, i, day);
+        }
+      }
+    }
+
+    // Try "DD Mon" format
+    for (let i = 0; i < monthNames.length; i++) {
+      const dayFirstMatch = lower.match(new RegExp(`^(\\d{1,2})\\s+${monthNames[i]}[a-z]*\\.?(?:[,\\s]+(\\d{2,4}))?$`));
+      if (dayFirstMatch) {
+        const day = parseInt(dayFirstMatch[1]);
+        let year = dayFirstMatch[2] ? parseInt(dayFirstMatch[2]) : currentYear;
+        if (year < 100) year += 2000;
+        if (day >= 1 && day <= 31) {
+          return new Date(year, i, day);
+        }
+      }
+    }
+
+    return null;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  const handleInputBlur = () => {
+    const parsed = parseDateInput(inputValue);
+    if (parsed) {
+      const dateString = parsed.toISOString().split('T')[0];
+      onChange(dateString);
+      setCurrentMonth(parsed);
+      setInputValue(parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
+    } else if (inputValue.trim() === '') {
+      onChange('');
+      setInputValue('');
+    } else {
+      // Invalid input, revert to current value
+      if (selectedDate) {
+        setInputValue(selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
+      } else {
+        setInputValue('');
+      }
+    }
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleInputBlur();
+      setIsOpen(false);
+    }
+  };
 
   // Close popup on Escape key or click outside
   useEffect(() => {
@@ -72,14 +172,8 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
     const selected = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
     const dateString = selected.toISOString().split('T')[0];
     onChange(dateString);
+    setInputValue(selected.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
     setIsOpen(false);
-  };
-
-  const handleButtonClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('[CalendarPicker] Button clicked, isOpen before toggle:', isOpen);
-    setIsOpen(!isOpen);
   };
 
   const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -88,10 +182,6 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const emptyDays = Array.from({ length: firstDay }, (_, i) => i);
 
-  const displayValue = selectedDate
-    ? selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-    : '';
-
   return (
     <div ref={containerRef} style={{ position: 'relative', display: 'block', width: '100%', overflow: 'visible' }}>
       {label && (
@@ -99,9 +189,14 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
           {label}
         </label>
       )}
-      <button
-        type="button"
-        onClick={handleButtonClick}
+      <input
+        type="text"
+        value={inputValue}
+        onChange={handleInputChange}
+        onBlur={handleInputBlur}
+        onKeyDown={handleInputKeyDown}
+        onFocus={() => setIsOpen(true)}
+        placeholder={isMobile ? 'e.g. 1/15, Jan 15' : 'e.g. 1/15, Jan 15, 2025'}
         style={{
           width: '100%',
           height: 'var(--input-height)',
@@ -109,26 +204,12 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
           border: '1px solid var(--border)',
           borderRadius: 'var(--radius-control)',
           padding: isMobile ? '8px 10px' : '10px 12px',
-          color: displayValue ? 'var(--text)' : 'var(--text-muted)',
+          color: 'var(--text)',
           fontSize: isMobile ? '0.75rem' : '0.875rem',
-          cursor: 'pointer',
-          textAlign: 'left',
+          fontWeight: 500,
           transition: 'border-color 0.2s',
-          display: 'flex',
-          alignItems: 'center',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = 'var(--border-hover)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = 'var(--border)';
-        }}
-      >
-        {displayValue || (isMobile ? 'Select...' : 'Select date...')}
-      </button>
+      />
 
       {isOpen && (
         <div
@@ -263,6 +344,11 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
                 selectedDate.getMonth() === currentMonth.getMonth() &&
                 selectedDate.getFullYear() === currentMonth.getFullYear();
 
+              const isToday =
+                today.getDate() === day &&
+                today.getMonth() === currentMonth.getMonth() &&
+                today.getFullYear() === currentMonth.getFullYear();
+
               return (
                 <button
                   key={day}
@@ -270,24 +356,29 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
                   style={{
                     height: '28px',
                     padding: 0,
-                    border: isSelected ? '1px solid var(--accent)' : '1px solid transparent',
+                    border: isSelected
+                      ? '1px solid var(--link)'
+                      : isToday
+                        ? '2px solid var(--link)'
+                        : '1px solid transparent',
                     borderRadius: '6px',
-                    backgroundColor: isSelected ? 'var(--accent)' : 'transparent',
-                    color: isSelected ? '#ffffff' : 'var(--text)',
+                    backgroundColor: isSelected ? 'var(--link)' : 'transparent',
+                    color: isSelected ? '#ffffff' : isToday ? 'var(--link)' : 'var(--text)',
                     fontSize: '0.75rem',
+                    fontWeight: isToday ? 600 : 400,
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                   }}
                   onMouseEnter={(e) => {
                     if (!isSelected) {
-                      e.currentTarget.style.backgroundColor = 'rgba(83, 155, 245, 0.1)';
-                      e.currentTarget.style.borderColor = 'var(--accent)';
+                      e.currentTarget.style.backgroundColor = 'var(--nav-active)';
+                      e.currentTarget.style.borderColor = 'var(--link)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isSelected) {
                       e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.borderColor = 'transparent';
+                      e.currentTarget.style.borderColor = isToday ? 'var(--link)' : 'transparent';
                     }
                   }}
                 >
@@ -296,6 +387,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
               );
             })}
           </div>
+
         </div>
       )}
     </div>

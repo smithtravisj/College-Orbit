@@ -4,17 +4,28 @@ import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { formatDate, isOverdue } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useBulkSelect } from '@/hooks/useBulkSelect';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, Repeat } from 'lucide-react';
+import { Plus, Trash2, Edit2, Repeat, Hammer, Check } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import RecurrenceSelector from '@/components/RecurrenceSelector';
 import TagInput from '@/components/notes/TagInput';
+import BulkEditToolbar, { BulkAction } from '@/components/BulkEditToolbar';
+import {
+  BulkChangeCourseModal,
+  BulkChangeTagsModal,
+  BulkChangePriorityModal,
+  BulkChangeDateModal,
+  BulkChangeTimeModal,
+  BulkAddLinkModal,
+  BulkDeleteModal,
+} from '@/components/BulkActionModals';
 import { RecurringDeadlineFormData } from '@/types';
 
 // Helper function to format recurring pattern as human-readable text
@@ -67,7 +78,6 @@ export default function DeadlinesPage() {
     courseId: '',
     dueDate: '',
     dueTime: '',
-    priority: '' as '' | '1' | '2' | '3',
     effort: '' as '' | 'small' | 'medium' | 'large',
     notes: '',
     tags: [] as string[],
@@ -88,11 +98,14 @@ export default function DeadlinesPage() {
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [courseFilter, setCourseFilter] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [effortFilter, setEffortFilter] = useState('');
 
-  const { courses, deadlines, settings, addDeadline, updateDeadline, deleteDeadline, addRecurringDeadline, updateRecurringDeadlinePattern, initializeStore } = useAppStore();
+  // Bulk selection state
+  const bulkSelect = useBulkSelect();
+  const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
+
+  const { courses, deadlines, settings, addDeadline, updateDeadline, deleteDeadline, addRecurringDeadline, updateRecurringDeadlinePattern, bulkUpdateDeadlines, bulkDeleteDeadlines, initializeStore } = useAppStore();
   const isMobile = useIsMobile();
 
   // Handle filters card collapse state changes and save to database
@@ -185,6 +198,7 @@ export default function DeadlinesPage() {
             notes: formData.notes,
             tags: formData.tags,
             links,
+            effort: formData.effort || null,
           },
           formData.recurring
         );
@@ -196,7 +210,6 @@ export default function DeadlinesPage() {
         courseId: '',
         dueDate: '',
         dueTime: '',
-        priority: '',
         effort: '',
         notes: '',
         tags: [],
@@ -264,7 +277,6 @@ export default function DeadlinesPage() {
           title: formData.title,
           courseId: formData.courseId || null,
           dueAt,
-          priority: formData.priority ? parseInt(formData.priority) as 1 | 2 | 3 : null,
           effort: formData.effort || null,
           notes: formData.notes,
           tags: formData.tags,
@@ -277,8 +289,9 @@ export default function DeadlinesPage() {
         title: formData.title,
         courseId: formData.courseId || null,
         dueAt,
-        priority: formData.priority ? parseInt(formData.priority) as 1 | 2 | 3 : null,
         effort: formData.effort || null,
+        priority: null,
+        workingOn: false,
         notes: formData.notes,
         tags: formData.tags,
         links,
@@ -286,6 +299,7 @@ export default function DeadlinesPage() {
         recurringPatternId: null,
         instanceDate: null,
         isRecurring: false,
+        updatedAt: new Date().toISOString(),
       });
     }
 
@@ -294,7 +308,6 @@ export default function DeadlinesPage() {
       courseId: '',
       dueDate: '',
       dueTime: '',
-      priority: '',
       effort: '',
       notes: '',
       tags: [],
@@ -362,7 +375,6 @@ export default function DeadlinesPage() {
       courseId: deadline.courseId || '',
       dueDate: dateStr,
       dueTime: timeStr,
-      priority: deadline.priority ? String(deadline.priority) as '1' | '2' | '3' : '',
       effort: deadline.effort || '',
       notes: deadline.notes,
       tags: deadline.tags || [],
@@ -380,7 +392,6 @@ export default function DeadlinesPage() {
       courseId: '',
       dueDate: '',
       dueTime: '',
-      priority: '',
       effort: '',
       notes: '',
       tags: [],
@@ -460,6 +471,101 @@ export default function DeadlinesPage() {
   // Collect all unique tags from deadlines
   const allTags = Array.from(new Set(deadlines.flatMap((d) => d.tags || [])));
 
+  // Bulk action handlers
+  const handleBulkAction = (action: BulkAction) => {
+    if (action === 'complete') {
+      // Mark all selected as done with fade effect (same as individual completion)
+      const ids = Array.from(bulkSelect.selectedIds);
+      // Add to toggledDeadlines to keep them visible
+      setToggledDeadlines(prev => {
+        const newSet = new Set(prev);
+        ids.forEach(id => newSet.add(id));
+        return newSet;
+      });
+      // Update the deadlines
+      bulkUpdateDeadlines(ids, { status: 'done' });
+      // Add fade effect after delay
+      setTimeout(() => {
+        setHidingDeadlines(prev => {
+          const newSet = new Set(prev);
+          ids.forEach(id => newSet.add(id));
+          return newSet;
+        });
+      }, 50);
+    } else {
+      setBulkModal(action);
+    }
+  };
+
+  const handleBulkCourseChange = async (courseId: string | null) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    await bulkUpdateDeadlines(ids, { courseId });
+  };
+
+  const handleBulkTagsChange = async (tags: string[], mode: 'add' | 'replace') => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    if (mode === 'replace') {
+      await bulkUpdateDeadlines(ids, { tags });
+    } else {
+      for (const id of ids) {
+        const deadline = deadlines.find(d => d.id === id);
+        if (deadline) {
+          const newTags = Array.from(new Set([...(deadline.tags || []), ...tags]));
+          await updateDeadline(id, { tags: newTags });
+        }
+      }
+    }
+  };
+
+  const handleBulkPriorityChange = async (value: string | null) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    await bulkUpdateDeadlines(ids, { effort: value as 'small' | 'medium' | 'large' | null });
+  };
+
+  const handleBulkDateChange = async (date: string | null) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    for (const id of ids) {
+      const deadline = deadlines.find(d => d.id === id);
+      if (deadline) {
+        let dueAt: string | null = null;
+        if (date) {
+          const existingTime = deadline.dueAt ? new Date(deadline.dueAt).toTimeString().slice(0, 5) : '23:59';
+          dueAt = new Date(`${date}T${existingTime}`).toISOString();
+        }
+        await updateDeadline(id, { dueAt });
+      }
+    }
+  };
+
+  const handleBulkTimeChange = async (time: string | null) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    for (const id of ids) {
+      const deadline = deadlines.find(d => d.id === id);
+      if (deadline && deadline.dueAt) {
+        const existingDate = new Date(deadline.dueAt).toISOString().split('T')[0];
+        const dueAt = time ? new Date(`${existingDate}T${time}`).toISOString() : deadline.dueAt;
+        await updateDeadline(id, { dueAt });
+      }
+    }
+  };
+
+  const handleBulkAddLink = async (link: { label: string; url: string }) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    for (const id of ids) {
+      const deadline = deadlines.find(d => d.id === id);
+      if (deadline) {
+        const newLinks = [...(deadline.links || []), link];
+        await updateDeadline(id, { links: newLinks });
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    await bulkDeleteDeadlines(ids);
+    bulkSelect.clearSelection();
+  };
+
   const filtered = deadlines
     .filter((d) => {
       // Always include toggled deadlines (keep them visible after status change)
@@ -468,6 +574,7 @@ export default function DeadlinesPage() {
       }
 
       if (filter === 'overdue') return d.dueAt && isOverdue(d.dueAt) && d.status === 'open';
+      if (filter === 'working-on') return d.workingOn && d.status === 'open';
       if (filter === 'due-soon') {
         if (!d.dueAt || d.status !== 'open') return false;
         const dueDate = new Date(d.dueAt);
@@ -481,11 +588,6 @@ export default function DeadlinesPage() {
     .filter((d) => {
       // Filter by course if a course is selected
       if (courseFilter && d.courseId !== courseFilter) return false;
-      return true;
-    })
-    .filter((d) => {
-      // Filter by priority if selected
-      if (priorityFilter && d.priority !== parseInt(priorityFilter)) return false;
       return true;
     })
     .filter((d) => {
@@ -524,8 +626,8 @@ export default function DeadlinesPage() {
         return new Date(a.dueAt!).getTime() - new Date(b.dueAt!).getTime();
       }
 
-      if (aHasDue && !bHasDue) return -1; // Deadlines with dates come first
-      if (!aHasDue && bHasDue) return 1; // Deadlines without dates come last
+      if (!aHasDue && bHasDue) return -1; // Deadlines without dates come first
+      if (aHasDue && !bHasDue) return 1; // Deadlines with dates come after
 
       // Both don't have due dates, sort alphabetically
       return a.title.localeCompare(b.title);
@@ -570,20 +672,7 @@ export default function DeadlinesPage() {
                     options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
                   />
                 </div>
-                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
-                  <Select
-                    label="Priority"
-                    value={priorityFilter}
-                    onChange={(e) => setPriorityFilter(e.target.value)}
-                    options={[
-                      { value: '', label: 'All' },
-                      { value: '1', label: 'High' },
-                      { value: '2', label: 'Medium' },
-                      { value: '3', label: 'Low' },
-                    ]}
-                  />
-                </div>
-                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+                                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
                   <Select
                     label="Effort"
                     value={effortFilter}
@@ -625,6 +714,7 @@ export default function DeadlinesPage() {
                 <div className="space-y-2">
                   {[
                     { value: 'all', label: 'All' },
+                    { value: 'working-on', label: 'Working On' },
                     { value: 'due-soon', label: 'Due Soon' },
                     { value: 'overdue', label: 'Overdue' },
                     { value: 'done', label: 'Completed' },
@@ -661,19 +751,6 @@ export default function DeadlinesPage() {
                     value={courseFilter}
                     onChange={(e) => setCourseFilter(e.target.value)}
                     options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
-                  />
-                </div>
-                <div style={{ marginBottom: '20px' }}>
-                  <Select
-                    label="Priority"
-                    value={priorityFilter}
-                    onChange={(e) => setPriorityFilter(e.target.value)}
-                    options={[
-                      { value: '', label: 'All' },
-                      { value: '1', label: 'High' },
-                      { value: '2', label: 'Medium' },
-                      { value: '3', label: 'Low' },
-                    ]}
                   />
                 </div>
                 <div style={{ marginBottom: '20px' }}>
@@ -718,6 +795,7 @@ export default function DeadlinesPage() {
                 <div className="space-y-2">
                   {[
                     { value: 'all', label: 'All' },
+                    { value: 'working-on', label: 'Working On' },
                     { value: 'due-soon', label: 'Due Soon' },
                     { value: 'overdue', label: 'Overdue' },
                     { value: 'done', label: 'Completed' },
@@ -758,24 +836,13 @@ export default function DeadlinesPage() {
                   />
                 </div>
 
-                {/* Course, Priority, Effort row */}
-                <div className={isMobile ? 'grid grid-cols-3 gap-2' : 'grid grid-cols-5 gap-3'} style={{ overflow: 'visible', paddingTop: isMobile ? '4px' : '8px' }}>
+                {/* Course, Effort row */}
+                <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-4 gap-3'} style={{ overflow: 'visible', paddingTop: isMobile ? '4px' : '8px' }}>
                   <Select
                     label="Course"
                     value={formData.courseId}
                     onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
                     options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
-                  />
-                  <Select
-                    label="Priority"
-                    value={formData.priority}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as '' | '1' | '2' | '3' })}
-                    options={[
-                      { value: '', label: 'None' },
-                      { value: '1', label: 'High' },
-                      { value: '2', label: 'Medium' },
-                      { value: '3', label: 'Low' },
-                    ]}
                   />
                   <Select
                     label="Effort"
@@ -866,9 +933,9 @@ export default function DeadlinesPage() {
                 {/* Links */}
                 <div style={{ marginTop: isMobile ? '8px' : '10px' }}>
                   <label className="block font-semibold text-[var(--text)]" style={{ fontSize: isMobile ? '15px' : '18px', marginBottom: isMobile ? '4px' : '8px' }}>Links</label>
-                  <div className={isMobile ? 'space-y-1' : 'space-y-2'}>
+                  <div className={isMobile ? 'space-y-2' : 'space-y-3'}>
                     {formData.links.map((link, idx) => (
-                      <div key={idx} className={isMobile ? 'flex gap-1 items-center' : 'flex gap-3 items-center'}>
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
                         <Input
                           label={idx === 0 ? 'Label' : ''}
                           type="text"
@@ -905,7 +972,7 @@ export default function DeadlinesPage() {
                               });
                             }}
                             className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                            style={{ padding: isMobile ? '4px' : '6px', marginTop: isMobile ? '20px' : '28px' }}
+                            style={{ padding: isMobile ? '4px' : '6px', marginTop: idx === 0 ? (isMobile ? '20px' : '28px') : '0px' }}
                             title="Remove link"
                           >
                             <Trash2 size={isMobile ? 18 : 20} />
@@ -961,8 +1028,56 @@ export default function DeadlinesPage() {
                   const dueTime = d.dueAt ? new Date(d.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
                   const isOverdueDeadline = d.dueAt && isOverdue(d.dueAt) && d.status === 'open';
                   const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
+                  const isSelected = bulkSelect.isSelected(d.id);
                   return (
-                    <div key={d.id} style={{ paddingTop: isMobile ? '6px' : '10px', paddingBottom: isMobile ? '6px' : '10px', paddingLeft: isMobile ? '2px' : '16px', paddingRight: isMobile ? '2px' : '16px', gap: isMobile ? '8px' : '12px', opacity: hidingDeadlines.has(d.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0">
+                    <div
+                      key={d.id}
+                      style={{
+                        paddingTop: isMobile ? '6px' : '10px',
+                        paddingBottom: isMobile ? '6px' : '10px',
+                        paddingLeft: isMobile ? '2px' : '16px',
+                        paddingRight: isMobile ? '2px' : '16px',
+                        gap: isMobile ? '8px' : '12px',
+                        opacity: hidingDeadlines.has(d.id) ? 0.5 : 1,
+                        transition: 'opacity 0.3s ease, background-color 0.2s ease',
+                        backgroundColor: isSelected ? 'var(--nav-active)' : undefined,
+                      }}
+                      className="first:pt-0 last:pb-0 flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0"
+                      onContextMenu={(e) => bulkSelect.handleContextMenu(e, d.id)}
+                      onTouchStart={() => bulkSelect.handleLongPressStart(d.id)}
+                      onTouchEnd={bulkSelect.handleLongPressEnd}
+                      onTouchCancel={bulkSelect.handleLongPressEnd}
+                      onClick={() => {
+                        if (bulkSelect.isSelecting) {
+                          bulkSelect.toggleSelection(d.id);
+                        }
+                      }}
+                    >
+                      {/* Selection checkbox - appears when in selection mode */}
+                      {bulkSelect.isSelecting && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            bulkSelect.toggleSelection(d.id);
+                          }}
+                          style={{
+                            width: isMobile ? '20px' : '24px',
+                            height: isMobile ? '20px' : '24px',
+                            borderRadius: '50%',
+                            border: isSelected ? 'none' : '2px solid var(--border)',
+                            backgroundColor: isSelected ? 'var(--accent)' : 'transparent',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            marginRight: isMobile ? '4px' : '8px',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          {isSelected && <Check size={isMobile ? 12 : 14} color="white" />}
+                        </button>
+                      )}
                       <input
                         type="checkbox"
                         checked={d.status === 'done'}
@@ -1028,6 +1143,7 @@ export default function DeadlinesPage() {
                               aria-label="Recurring deadline"
                             />
                           )}
+                          {d.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
                           {isOverdueDeadline && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                         </div>
                         {d.notes && (
@@ -1065,26 +1181,14 @@ export default function DeadlinesPage() {
                               {course.code}
                             </span>
                           )}
-                          {d.priority && (
-                            <span style={{
-                              fontSize: isMobile ? '10px' : '11px',
-                              fontWeight: '600',
-                              padding: '1px 6px',
-                              borderRadius: '3px',
-                              backgroundColor: d.priority === 1 ? 'rgba(239, 68, 68, 0.15)' : d.priority === 2 ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
-                              color: d.priority === 1 ? '#ef4444' : d.priority === 2 ? '#eab308' : '#22c55e',
-                            }}>
-                              {d.priority === 1 ? 'High' : d.priority === 2 ? 'Medium' : 'Low'}
-                            </span>
-                          )}
                           {d.effort && (
                             <span style={{
                               fontSize: isMobile ? '10px' : '11px',
                               fontWeight: '600',
                               padding: '1px 6px',
                               borderRadius: '3px',
-                              backgroundColor: d.effort === 'large' ? 'rgba(147, 51, 234, 0.15)' : d.effort === 'medium' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(107, 114, 128, 0.15)',
-                              color: d.effort === 'large' ? '#9333ea' : d.effort === 'medium' ? '#3b82f6' : '#6b7280',
+                              backgroundColor: d.effort === 'large' ? 'rgba(239, 68, 68, 0.15)' : d.effort === 'medium' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                              color: d.effort === 'large' ? '#ef4444' : d.effort === 'medium' ? '#eab308' : '#22c55e',
                             }}>
                               {d.effort.charAt(0).toUpperCase() + d.effort.slice(1)}
                             </span>
@@ -1098,7 +1202,7 @@ export default function DeadlinesPage() {
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--link)' }}
+                                style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--link)', width: 'fit-content' }}
                                 className="hover:text-blue-400"
                               >
                                 {link.label}
@@ -1108,6 +1212,14 @@ export default function DeadlinesPage() {
                         )}
                       </div>
                       <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '12px' }}>
+                        <button
+                          onClick={() => updateDeadline(d.id, { workingOn: !d.workingOn })}
+                          className={`rounded-[var(--radius-control)] transition-colors hover:bg-white/5 ${d.workingOn ? 'text-[var(--success)]' : 'text-[var(--muted)] hover:text-[var(--success)]'}`}
+                          style={{ padding: isMobile ? '2px' : '6px' }}
+                          title={d.workingOn ? 'Stop working on deadline' : 'Start working on deadline'}
+                        >
+                          <Hammer size={isMobile ? 14 : 20} />
+                        </button>
                         <button
                           onClick={() => startEdit(d)}
                           className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
@@ -1150,6 +1262,65 @@ export default function DeadlinesPage() {
           </div>
         </div>
       </div>
+
+      {/* Bulk Edit Toolbar */}
+      {bulkSelect.isSelecting && bulkSelect.selectedIds.size > 0 && (
+        <BulkEditToolbar
+          selectedCount={bulkSelect.selectedIds.size}
+          entityType="deadline"
+          onAction={handleBulkAction}
+          onCancel={bulkSelect.clearSelection}
+          onSelectAll={() => bulkSelect.selectAll(filtered.map(d => d.id))}
+        />
+      )}
+
+      {/* Bulk Action Modals */}
+      <BulkChangeCourseModal
+        isOpen={bulkModal === 'course'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        courses={courses}
+        onConfirm={handleBulkCourseChange}
+      />
+      <BulkChangeTagsModal
+        isOpen={bulkModal === 'tags'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        allTags={allTags}
+        onConfirm={handleBulkTagsChange}
+      />
+      <BulkChangePriorityModal
+        isOpen={bulkModal === 'priority'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        entityType="deadline"
+        onConfirm={handleBulkPriorityChange}
+      />
+      <BulkChangeDateModal
+        isOpen={bulkModal === 'date'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        onConfirm={handleBulkDateChange}
+      />
+      <BulkChangeTimeModal
+        isOpen={bulkModal === 'time'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        onConfirm={handleBulkTimeChange}
+      />
+      <BulkAddLinkModal
+        isOpen={bulkModal === 'link'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        onConfirm={handleBulkAddLink}
+      />
+      <BulkDeleteModal
+        isOpen={bulkModal === 'delete'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        entityType="deadline"
+        onConfirm={handleBulkDelete}
+      />
     </>
   );
 }

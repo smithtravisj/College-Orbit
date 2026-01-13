@@ -119,6 +119,7 @@ export async function PATCH(
           return { label, url: l.url };
         }) : existingDeadline.links,
         status: 'status' in data ? data.status : existingDeadline.status,
+        workingOn: 'workingOn' in data ? data.workingOn : existingDeadline.workingOn,
       },
     });
 

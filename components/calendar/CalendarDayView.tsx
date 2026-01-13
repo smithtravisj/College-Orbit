@@ -28,6 +28,7 @@ interface CalendarDayViewProps {
   calendarEvents?: CustomCalendarEvent[];
   onTimeSlotClick?: (date: Date, time?: string, allDay?: boolean) => void;
   onEventUpdate?: (updatedEvent: CustomCalendarEvent) => void;
+  onStatusChange?: () => void;
 }
 
 const HOUR_HEIGHT = 60; // pixels
@@ -45,6 +46,7 @@ export default function CalendarDayView({
   excludedDates = [],
   calendarEvents = [],
   onEventUpdate,
+  onStatusChange,
 }: CalendarDayViewProps) {
   const isMobile = useIsMobile();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -535,6 +537,7 @@ export default function CalendarDayView({
         exams={exams}
         calendarEvents={calendarEvents}
         onEventUpdate={onEventUpdate}
+        onStatusChange={onStatusChange}
       />
 
       <ExclusionDetailModal

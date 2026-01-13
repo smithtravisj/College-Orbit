@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useBulkSelect } from '@/hooks/useBulkSelect';
 import { isToday, formatDate, isOverdue } from '@/lib/utils';
 import PageHeader from '@/components/PageHeader';
 import Card from '@/components/ui/Card';
@@ -10,11 +11,21 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, Repeat } from 'lucide-react';
+import { Plus, Trash2, Edit2, Repeat, Hammer, Check } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import RecurrenceSelector from '@/components/RecurrenceSelector';
 import TagInput from '@/components/notes/TagInput';
+import BulkEditToolbar, { BulkAction } from '@/components/BulkEditToolbar';
+import {
+  BulkChangeCourseModal,
+  BulkChangeTagsModal,
+  BulkChangePriorityModal,
+  BulkChangeDateModal,
+  BulkChangeTimeModal,
+  BulkAddLinkModal,
+  BulkDeleteModal,
+} from '@/components/BulkActionModals';
 import { RecurringTaskFormData } from '@/types';
 
 // Helper function to format recurring pattern as human-readable text
@@ -92,7 +103,11 @@ export default function TasksPage() {
   const [importanceFilter, setImportanceFilter] = useState('');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
 
-  const { courses, tasks, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, initializeStore } = useAppStore();
+  // Bulk selection state
+  const bulkSelect = useBulkSelect();
+  const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
+
+  const { courses, tasks, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, bulkUpdateTasks, bulkDeleteTasks, initializeStore } = useAppStore();
 
   // Handle filters card collapse state changes and save to database
   const handleFiltersCollapseChange = (isOpen: boolean) => {
@@ -184,6 +199,7 @@ export default function TasksPage() {
             notes: formData.notes,
             tags: formData.tags,
             links,
+            importance: formData.importance || null,
           },
           formData.recurring
         );
@@ -297,6 +313,8 @@ export default function TasksPage() {
         recurringPatternId: null,
         instanceDate: null,
         isRecurring: false,
+        workingOn: false,
+        updatedAt: new Date().toISOString(),
       });
     }
 
@@ -472,6 +490,102 @@ export default function TasksPage() {
   // Collect all unique tags from tasks
   const allTags = Array.from(new Set(tasks.flatMap((t) => t.tags || [])));
 
+  // Bulk action handlers
+  const handleBulkAction = (action: BulkAction) => {
+    if (action === 'complete') {
+      // Mark all selected as done with fade effect (same as individual completion)
+      const ids = Array.from(bulkSelect.selectedIds);
+      // Add to toggledTasks to keep them visible
+      setToggledTasks(prev => {
+        const newSet = new Set(prev);
+        ids.forEach(id => newSet.add(id));
+        return newSet;
+      });
+      // Update the tasks
+      bulkUpdateTasks(ids, { status: 'done' });
+      // Add fade effect after delay
+      setTimeout(() => {
+        setHidingTasks(prev => {
+          const newSet = new Set(prev);
+          ids.forEach(id => newSet.add(id));
+          return newSet;
+        });
+      }, 50);
+    } else {
+      setBulkModal(action);
+    }
+  };
+
+  const handleBulkCourseChange = async (courseId: string | null) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    await bulkUpdateTasks(ids, { courseId });
+  };
+
+  const handleBulkTagsChange = async (tags: string[], mode: 'add' | 'replace') => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    if (mode === 'replace') {
+      await bulkUpdateTasks(ids, { tags });
+    } else {
+      // Add tags to each task's existing tags
+      for (const id of ids) {
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+          const newTags = Array.from(new Set([...(task.tags || []), ...tags]));
+          await updateTask(id, { tags: newTags });
+        }
+      }
+    }
+  };
+
+  const handleBulkPriorityChange = async (value: string | null) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    await bulkUpdateTasks(ids, { importance: value as 'low' | 'medium' | 'high' | null });
+  };
+
+  const handleBulkDateChange = async (date: string | null) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    for (const id of ids) {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        let dueAt: string | null = null;
+        if (date) {
+          const existingTime = task.dueAt ? new Date(task.dueAt).toTimeString().slice(0, 5) : '23:59';
+          dueAt = new Date(`${date}T${existingTime}`).toISOString();
+        }
+        await updateTask(id, { dueAt });
+      }
+    }
+  };
+
+  const handleBulkTimeChange = async (time: string | null) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    for (const id of ids) {
+      const task = tasks.find(t => t.id === id);
+      if (task && task.dueAt) {
+        const existingDate = new Date(task.dueAt).toISOString().split('T')[0];
+        const dueAt = time ? new Date(`${existingDate}T${time}`).toISOString() : task.dueAt;
+        await updateTask(id, { dueAt });
+      }
+    }
+  };
+
+  const handleBulkAddLink = async (link: { label: string; url: string }) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    for (const id of ids) {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        const newLinks = [...(task.links || []), link];
+        await updateTask(id, { links: newLinks });
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    await bulkDeleteTasks(ids);
+    bulkSelect.clearSelection();
+  };
+
   const filtered = tasks
     .filter((t) => {
       // Always include toggled tasks (keep them visible after status change)
@@ -481,6 +595,7 @@ export default function TasksPage() {
 
       if (filter === 'today') return t.dueAt && isToday(t.dueAt) && t.status === 'open';
       if (filter === 'done') return t.status === 'done';
+      if (filter === 'working-on') return t.workingOn && t.status === 'open';
       if (filter === 'overdue') {
         return t.dueAt && new Date(t.dueAt) < new Date() && t.status === 'open';
       }
@@ -520,6 +635,13 @@ export default function TasksPage() {
       );
     })
     .sort((a, b) => {
+      // For completed tasks, sort by most recently completed (updatedAt descending)
+      if (filter === 'done') {
+        const aUpdated = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+        const bUpdated = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+        return bUpdated - aUpdated; // Most recent first
+      }
+
       // Sort by due date first
       const aHasDue = !!a.dueAt;
       const bHasDue = !!b.dueAt;
@@ -528,8 +650,8 @@ export default function TasksPage() {
         return new Date(a.dueAt!).getTime() - new Date(b.dueAt!).getTime();
       }
 
-      if (aHasDue && !bHasDue) return -1; // Tasks with dates come first
-      if (!aHasDue && bHasDue) return 1; // Tasks without dates come last
+      if (!aHasDue && bHasDue) return -1; // Tasks without dates come first
+      if (aHasDue && !bHasDue) return 1; // Tasks with dates come after
 
       // Both don't have due dates, sort alphabetically
       return a.title.localeCompare(b.title);
@@ -616,6 +738,7 @@ export default function TasksPage() {
                 <div className="space-y-2">
                   {[
                     { value: 'all', label: 'All Tasks' },
+                    { value: 'working-on', label: 'Working On' },
                     { value: 'today', label: 'Today' },
                     { value: 'overdue', label: 'Overdue' },
                     { value: 'no-date', label: 'No Due Date' },
@@ -697,6 +820,7 @@ export default function TasksPage() {
                 <div className="space-y-2">
                   {[
                     { value: 'all', label: 'All Tasks' },
+                    { value: 'working-on', label: 'Working On' },
                     { value: 'today', label: 'Today' },
                     { value: 'overdue', label: 'Overdue' },
                     { value: 'no-date', label: 'No Due Date' },
@@ -835,9 +959,9 @@ export default function TasksPage() {
                 {/* Links */}
                 <div style={{ marginTop: isMobile ? '8px' : '10px' }}>
                   <label className="block font-semibold text-[var(--text)]" style={{ fontSize: isMobile ? '15px' : '18px', marginBottom: isMobile ? '4px' : '8px' }}>Links</label>
-                  <div className={isMobile ? 'space-y-1' : 'space-y-2'}>
+                  <div className={isMobile ? 'space-y-2' : 'space-y-3'}>
                     {formData.links.map((link, idx) => (
-                      <div key={idx} className={isMobile ? 'flex gap-1 items-center' : 'flex gap-3 items-center'}>
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
                         <Input
                           label={idx === 0 ? 'Label' : ''}
                           type="text"
@@ -874,7 +998,7 @@ export default function TasksPage() {
                               });
                             }}
                             className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                            style={{ padding: isMobile ? '4px' : '6px', marginTop: isMobile ? '20px' : '28px' }}
+                            style={{ padding: isMobile ? '4px' : '6px', marginTop: idx === 0 ? (isMobile ? '20px' : '28px') : '0px' }}
                             title="Remove link"
                           >
                             <Trash2 size={isMobile ? 18 : 20} />
@@ -930,8 +1054,56 @@ export default function TasksPage() {
                   const dueTime = t.dueAt ? new Date(t.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
                   const isOverdueTask = t.dueAt && isOverdue(t.dueAt) && t.status === 'open';
                   const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
+                  const isSelected = bulkSelect.isSelected(t.id);
                   return (
-                    <div key={t.id} style={{ paddingTop: isMobile ? '6px' : '10px', paddingBottom: isMobile ? '6px' : '10px', paddingLeft: isMobile ? '2px' : '16px', paddingRight: isMobile ? '2px' : '16px', gap: isMobile ? '8px' : '12px', opacity: hidingTasks.has(t.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0">
+                    <div
+                      key={t.id}
+                      style={{
+                        paddingTop: isMobile ? '6px' : '10px',
+                        paddingBottom: isMobile ? '6px' : '10px',
+                        paddingLeft: isMobile ? '2px' : '16px',
+                        paddingRight: isMobile ? '2px' : '16px',
+                        gap: isMobile ? '8px' : '12px',
+                        opacity: hidingTasks.has(t.id) ? 0.5 : 1,
+                        transition: 'opacity 0.3s ease, background-color 0.2s ease',
+                        backgroundColor: isSelected ? 'var(--nav-active)' : undefined,
+                      }}
+                      className="first:pt-0 last:pb-0 flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0"
+                      onContextMenu={(e) => bulkSelect.handleContextMenu(e, t.id)}
+                      onTouchStart={() => bulkSelect.handleLongPressStart(t.id)}
+                      onTouchEnd={bulkSelect.handleLongPressEnd}
+                      onTouchCancel={bulkSelect.handleLongPressEnd}
+                      onClick={() => {
+                        if (bulkSelect.isSelecting) {
+                          bulkSelect.toggleSelection(t.id);
+                        }
+                      }}
+                    >
+                      {/* Selection checkbox - appears when in selection mode */}
+                      {bulkSelect.isSelecting && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            bulkSelect.toggleSelection(t.id);
+                          }}
+                          style={{
+                            width: isMobile ? '20px' : '24px',
+                            height: isMobile ? '20px' : '24px',
+                            borderRadius: '50%',
+                            border: isSelected ? 'none' : '2px solid var(--border)',
+                            backgroundColor: isSelected ? 'var(--accent)' : 'transparent',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            marginRight: isMobile ? '4px' : '8px',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          {isSelected && <Check size={isMobile ? 12 : 14} color="white" />}
+                        </button>
+                      )}
                       <input
                         type="checkbox"
                         checked={t.status === 'done'}
@@ -995,6 +1167,7 @@ export default function TasksPage() {
                               aria-label="Recurring task"
                             />
                           )}
+                          {t.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
                           {isOverdueTask && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                         </div>
                         {t.notes && (
@@ -1053,7 +1226,7 @@ export default function TasksPage() {
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--link)' }}
+                                style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--link)', width: 'fit-content' }}
                                 className="hover:text-blue-400"
                               >
                                 {link.label}
@@ -1063,6 +1236,14 @@ export default function TasksPage() {
                         )}
                       </div>
                       <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '12px' }}>
+                        <button
+                          onClick={() => updateTask(t.id, { workingOn: !t.workingOn })}
+                          className={`rounded-[var(--radius-control)] transition-colors hover:bg-white/5 ${t.workingOn ? 'text-[var(--success)]' : 'text-[var(--muted)] hover:text-[var(--success)]'}`}
+                          style={{ padding: isMobile ? '2px' : '6px' }}
+                          title={t.workingOn ? 'Stop working on task' : 'Start working on task'}
+                        >
+                          <Hammer size={isMobile ? 14 : 20} />
+                        </button>
                         <button
                           onClick={() => startEdit(t)}
                           className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
@@ -1105,6 +1286,65 @@ export default function TasksPage() {
           </div>
         </div>
       </div>
+
+      {/* Bulk Edit Toolbar */}
+      {bulkSelect.isSelecting && bulkSelect.selectedIds.size > 0 && (
+        <BulkEditToolbar
+          selectedCount={bulkSelect.selectedIds.size}
+          entityType="task"
+          onAction={handleBulkAction}
+          onCancel={bulkSelect.clearSelection}
+          onSelectAll={() => bulkSelect.selectAll(filtered.map(t => t.id))}
+        />
+      )}
+
+      {/* Bulk Action Modals */}
+      <BulkChangeCourseModal
+        isOpen={bulkModal === 'course'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        courses={courses}
+        onConfirm={handleBulkCourseChange}
+      />
+      <BulkChangeTagsModal
+        isOpen={bulkModal === 'tags'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        allTags={allTags}
+        onConfirm={handleBulkTagsChange}
+      />
+      <BulkChangePriorityModal
+        isOpen={bulkModal === 'priority'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        entityType="task"
+        onConfirm={handleBulkPriorityChange}
+      />
+      <BulkChangeDateModal
+        isOpen={bulkModal === 'date'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        onConfirm={handleBulkDateChange}
+      />
+      <BulkChangeTimeModal
+        isOpen={bulkModal === 'time'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        onConfirm={handleBulkTimeChange}
+      />
+      <BulkAddLinkModal
+        isOpen={bulkModal === 'link'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        onConfirm={handleBulkAddLink}
+      />
+      <BulkDeleteModal
+        isOpen={bulkModal === 'delete'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        entityType="task"
+        onConfirm={handleBulkDelete}
+      />
     </>
   );
 }

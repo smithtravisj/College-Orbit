@@ -66,6 +66,16 @@ interface AppStore {
   toggleTaskDone: (id: string) => Promise<void>;
   toggleChecklistItem: (taskId: string, itemId: string) => Promise<void>;
 
+  // Bulk Operations
+  bulkUpdateTasks: (ids: string[], updates: Partial<Task>) => Promise<void>;
+  bulkDeleteTasks: (ids: string[]) => Promise<void>;
+  bulkUpdateDeadlines: (ids: string[], updates: Partial<Deadline>) => Promise<void>;
+  bulkDeleteDeadlines: (ids: string[]) => Promise<void>;
+  bulkUpdateExams: (ids: string[], updates: Partial<Exam>) => Promise<void>;
+  bulkDeleteExams: (ids: string[]) => Promise<void>;
+  bulkUpdateCourses: (ids: string[], updates: Partial<Course>) => Promise<void>;
+  bulkDeleteCourses: (ids: string[]) => Promise<void>;
+
   // Recurring Tasks
   addRecurringTask: (taskData: any, recurringData: RecurringTaskFormData) => Promise<void>;
   updateRecurringPattern: (patternId: string, taskData: any, recurringData: RecurringTaskFormData) => Promise<void>;
@@ -675,6 +685,209 @@ const useAppStore = create<AppStore>((set, get) => ({
         item.id === itemId ? { ...item, done: !item.done } : item
       );
       await get().updateTask(taskId, { checklist: newChecklist });
+    }
+  },
+
+  // Bulk Operations
+  bulkUpdateTasks: async (ids, updates) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        tasks: state.tasks.map((t) => (ids.includes(t.id) ? { ...t, ...updates } : t)),
+      }));
+
+      // API calls in parallel
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`/api/tasks/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates),
+          })
+        )
+      );
+
+      get().invalidateCalendarCache();
+      // Reload to get server state
+      await get().loadFromDatabase();
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error bulk updating tasks:', error);
+      throw error;
+    }
+  },
+
+  bulkDeleteTasks: async (ids) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        tasks: state.tasks.filter((t) => !ids.includes(t.id)),
+      }));
+
+      // API calls in parallel
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`/api/tasks/${id}`, {
+            method: 'DELETE',
+          })
+        )
+      );
+
+      get().invalidateCalendarCache();
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error bulk deleting tasks:', error);
+      throw error;
+    }
+  },
+
+  bulkUpdateDeadlines: async (ids, updates) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        deadlines: state.deadlines.map((d) => (ids.includes(d.id) ? { ...d, ...updates } : d)),
+      }));
+
+      // API calls in parallel
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`/api/deadlines/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates),
+          })
+        )
+      );
+
+      get().invalidateCalendarCache();
+      await get().loadFromDatabase();
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error bulk updating deadlines:', error);
+      throw error;
+    }
+  },
+
+  bulkDeleteDeadlines: async (ids) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        deadlines: state.deadlines.filter((d) => !ids.includes(d.id)),
+      }));
+
+      // API calls in parallel
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`/api/deadlines/${id}`, {
+            method: 'DELETE',
+          })
+        )
+      );
+
+      get().invalidateCalendarCache();
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error bulk deleting deadlines:', error);
+      throw error;
+    }
+  },
+
+  bulkUpdateExams: async (ids, updates) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        exams: state.exams.map((e) => (ids.includes(e.id) ? { ...e, ...updates } : e)),
+      }));
+
+      // API calls in parallel
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`/api/exams/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates),
+          })
+        )
+      );
+
+      get().invalidateCalendarCache();
+      await get().loadFromDatabase();
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error bulk updating exams:', error);
+      throw error;
+    }
+  },
+
+  bulkDeleteExams: async (ids) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        exams: state.exams.filter((e) => !ids.includes(e.id)),
+      }));
+
+      // API calls in parallel
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`/api/exams/${id}`, {
+            method: 'DELETE',
+          })
+        )
+      );
+
+      get().invalidateCalendarCache();
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error bulk deleting exams:', error);
+      throw error;
+    }
+  },
+
+  bulkUpdateCourses: async (ids, updates) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        courses: state.courses.map((c) => (ids.includes(c.id) ? { ...c, ...updates } : c)),
+      }));
+
+      // API calls in parallel
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`/api/courses/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates),
+          })
+        )
+      );
+
+      await get().loadFromDatabase();
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error bulk updating courses:', error);
+      throw error;
+    }
+  },
+
+  bulkDeleteCourses: async (ids) => {
+    try {
+      // Optimistic update
+      set((state) => ({
+        courses: state.courses.filter((c) => !ids.includes(c.id)),
+      }));
+
+      // API calls in parallel
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`/api/courses/${id}`, {
+            method: 'DELETE',
+          })
+        )
+      );
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error bulk deleting courses:', error);
+      throw error;
     }
   },
 

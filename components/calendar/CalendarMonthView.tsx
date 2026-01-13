@@ -30,6 +30,7 @@ interface CalendarMonthViewProps {
   onSelectDate: (date: Date) => void;
   selectedDate?: Date; // For mobile: highlight selected day
   onEventUpdate?: (updatedEvent: CustomCalendarEvent) => void;
+  onStatusChange?: () => void;
 }
 
 export default function CalendarMonthView({
@@ -46,6 +47,7 @@ export default function CalendarMonthView({
   onSelectDate,
   selectedDate,
   onEventUpdate,
+  onStatusChange,
 }: CalendarMonthViewProps) {
   const isMobile = useIsMobile();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -474,6 +476,7 @@ export default function CalendarMonthView({
         exams={exams}
         calendarEvents={calendarEvents}
         onEventUpdate={onEventUpdate}
+        onStatusChange={onStatusChange}
       />
 
       <ExclusionDetailModal

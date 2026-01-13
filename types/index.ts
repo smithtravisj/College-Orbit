@@ -32,7 +32,9 @@ export interface Deadline {
     url: string;
   }>;
   status: 'open' | 'done';
+  workingOn: boolean;
   createdAt: string; // ISO datetime
+  updatedAt: string; // ISO datetime
   recurringPatternId: string | null;
   instanceDate: string | null; // ISO datetime
   isRecurring: boolean;
@@ -58,7 +60,9 @@ export interface Task {
     url: string;
   }>;
   status: 'open' | 'done';
+  workingOn: boolean;
   createdAt: string; // ISO datetime
+  updatedAt: string; // ISO datetime
   recurringPatternId: string | null;
   instanceDate: string | null; // ISO datetime
   isRecurring: boolean;
