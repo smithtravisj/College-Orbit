@@ -315,7 +315,7 @@ model Settings {
   updatedAt              DateTime @updatedAt
   university             String?
   visibleDashboardCards  Json?    @default("[\"nextClass\", \"dueSoon\", \"overview\", \"todayTasks\", \"quickLinks\", \"upcomingWeek\"]")
-  visiblePages           Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Deadlines\", \"Exams\", \"Courses\", \"Tools\", \"Settings\"]")
+  visiblePages           Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Assignments\", \"Exams\", \"Courses\", \"Tools\", \"Settings\"]")
   visibleToolsCards      Json?    @default("[\"quickLinks\", \"gpaCalculator\"]")
   hasCompletedOnboarding Boolean  @default(false)
   examReminders          Json?    @default("[{\"unit\": \"days\", \"value\": 7, \"enabled\": true}, {\"unit\": \"days\", \"value\": 1, \"enabled\": true}, {\"unit\": \"hours\", \"value\": 3, \"enabled\": true}]")
@@ -324,7 +324,7 @@ model Settings {
   pomodoroWorkDuration   Int      @default(25)
   selectedGradeSemester  String   @default("all")
   toolsCardsOrder        Json?    @default("[\"pomodoroTimer\", \"gradeTracker\", \"gpaTrendChart\", \"whatIfProjector\", \"gpaCalculator\", \"tools_quickLinks\"]")
-  visiblePagesOrder      Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Deadlines\", \"Exams\", \"Notes\", \"Courses\", \"Tools\"]")
+  visiblePagesOrder      Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Assignments\", \"Exams\", \"Notes\", \"Courses\", \"Tools\"]")
   dashboardCardsCollapsedState Json? @default("[]")
   hiddenQuickLinks       Json?    @default("{}")
   courseTermFilter       String   @default("all")

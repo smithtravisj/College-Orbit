@@ -53,7 +53,7 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
       {
         popover: {
           title: 'Welcome to Your College Survival Tool!',
-          description: 'This app helps you manage your courses, deadlines, tasks, notes, exams, and more—all in one place. Let\'s take a quick tour to show you around!',
+          description: 'This app helps you manage your courses, assignments, tasks, notes, exams, and more—all in one place. Let\'s take a quick tour to show you around!',
         }
       },
     ];
@@ -64,7 +64,7 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
           element: '[data-tour="mobile-hamburger"]',
           popover: {
             title: 'Navigation Menu',
-            description: 'Tap the menu icon (☰) to open the navigation drawer. From there, you can navigate to Dashboard, Calendar, Courses, Tasks, Deadlines, Exams, Notes, and Settings.',
+            description: 'Tap the menu icon (☰) to open the navigation drawer. From there, you can navigate to Dashboard, Calendar, Courses, Tasks, Assignments, Exams, Notes, and Settings.',
             side: 'bottom',
             align: 'center'
           }
@@ -73,7 +73,7 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
           element: '[data-tour="navigation"]',
           popover: {
             title: 'Navigation',
-            description: 'Use the sidebar to navigate to your Dashboard, Calendar, Courses, Tasks, Deadlines, Exams, Notes, Tools, and Settings.',
+            description: 'Use the sidebar to navigate to your Dashboard, Calendar, Courses, Tasks, Assignments, Exams, Notes, Tools, and Settings.',
             side: 'right',
             align: 'start'
           }
@@ -93,7 +93,7 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
         element: '[data-tour="overview"]',
         popover: {
           title: 'Quick Overview',
-          description: 'See at a glance how many classes you have left today, overdue items, deadlines coming up, and tasks due today.',
+          description: 'See at a glance how many classes you have left today, overdue items, assignments coming up, and tasks due today.',
           side: 'top',
           align: 'start'
         }
@@ -110,8 +110,8 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
       {
         element: '[data-tour="due-soon"]',
         popover: {
-          title: 'Upcoming Deadlines',
-          description: 'Course assignments and deadlines coming up. Click the + button to add new deadlines for your courses. These appear on your calendar and send you reminders.',
+          title: 'Upcoming Assignments',
+          description: 'Course assignments and deadlines coming up. Click the + button to add new assignments for your courses. These appear on your calendar and send you reminders.',
           side: 'top',
           align: 'start'
         }

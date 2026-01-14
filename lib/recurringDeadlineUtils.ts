@@ -70,6 +70,9 @@ export async function generateRecurringDeadlineInstances(
     const daysOfMonth = (pattern.daysOfMonth as number[]) || [];
 
     switch (pattern.recurrenceType) {
+      case 'daily':
+        intervalDays = 1;
+        break;
       case 'weekly':
         intervalDays = 7;
         break;

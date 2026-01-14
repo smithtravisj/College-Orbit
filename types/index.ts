@@ -72,7 +72,7 @@ export interface Task {
 export interface RecurringPattern {
   id: string;
   userId: string;
-  recurrenceType: 'weekly' | 'monthly' | 'custom';
+  recurrenceType: 'daily' | 'weekly' | 'monthly' | 'custom';
   intervalDays: number | null;
   daysOfWeek?: number[]; // 0-6, Sunday-Saturday
   daysOfMonth?: number[]; // 1-31
@@ -96,7 +96,7 @@ export interface RecurringPattern {
 
 export interface RecurringTaskFormData {
   isRecurring: boolean;
-  recurrenceType: 'weekly' | 'monthly' | 'custom';
+  recurrenceType: 'daily' | 'weekly' | 'monthly' | 'custom';
   customIntervalDays: number;
   daysOfWeek: number[]; // 0=Sunday, 1=Monday, ..., 6=Saturday
   daysOfMonth: number[]; // 1-31 for monthly recurrence
@@ -110,7 +110,7 @@ export interface RecurringTaskFormData {
 export interface RecurringDeadlinePattern {
   id: string;
   userId: string;
-  recurrenceType: 'weekly' | 'monthly' | 'custom';
+  recurrenceType: 'daily' | 'weekly' | 'monthly' | 'custom';
   intervalDays: number | null;
   daysOfWeek?: number[]; // 0-6, Sunday-Saturday
   daysOfMonth?: number[]; // 1-31
@@ -134,7 +134,7 @@ export interface RecurringDeadlinePattern {
 export interface RecurringExamPattern {
   id: string;
   userId: string;
-  recurrenceType: 'weekly' | 'monthly' | 'custom';
+  recurrenceType: 'daily' | 'weekly' | 'monthly' | 'custom';
   intervalDays: number | null;
   daysOfWeek?: number[]; // 0-6, Sunday-Saturday
   daysOfMonth?: number[]; // 1-31
@@ -159,7 +159,7 @@ export interface RecurringExamPattern {
 
 export interface RecurringDeadlineFormData {
   isRecurring: boolean;
-  recurrenceType: 'weekly' | 'monthly' | 'custom';
+  recurrenceType: 'daily' | 'weekly' | 'monthly' | 'custom';
   customIntervalDays: number;
   daysOfWeek: number[]; // 0=Sunday, 1=Monday, ..., 6=Saturday
   daysOfMonth: number[]; // 1-31 for monthly recurrence
@@ -171,7 +171,7 @@ export interface RecurringDeadlineFormData {
 
 export interface RecurringExamFormData {
   isRecurring: boolean;
-  recurrenceType: 'weekly' | 'monthly' | 'custom';
+  recurrenceType: 'daily' | 'weekly' | 'monthly' | 'custom';
   customIntervalDays: number;
   daysOfWeek: number[]; // 0=Sunday, 1=Monday, ..., 6=Saturday
   daysOfMonth: number[]; // 1-31 for monthly recurrence

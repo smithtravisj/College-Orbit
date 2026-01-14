@@ -11,7 +11,7 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, Repeat, Hammer, Check } from 'lucide-react';
+import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import RecurrenceSelector from '@/components/RecurrenceSelector';
@@ -36,6 +36,10 @@ function getRecurrenceText(pattern: any): string {
   let text = '';
 
   switch (pattern.recurrenceType) {
+    case 'daily': {
+      text = 'Every day';
+      break;
+    }
     case 'weekly': {
       const days = (pattern.daysOfWeek as number[])
         .sort((a, b) => a - b)
@@ -102,6 +106,7 @@ export default function TasksPage() {
   const [courseFilter, setCourseFilter] = useState('');
   const [importanceFilter, setImportanceFilter] = useState('');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [previewingTask, setPreviewingTask] = useState<any>(null);
 
   // Bulk selection state
   const bulkSelect = useBulkSelect();
@@ -277,7 +282,9 @@ export default function TasksPage() {
               title: formData.title,
               courseId: formData.courseId || null,
               notes: formData.notes,
+              tags: formData.tags,
               links,
+              importance: formData.importance || null,
             },
             formData.recurring
           );
@@ -663,7 +670,38 @@ export default function TasksPage() {
         title="Tasks"
         subtitle="Organize your work"
         actions={
-          <Button variant="secondary" size="md" onClick={() => setShowForm(!showForm)}>
+          <Button variant="secondary" size="md" onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              if (editingId || !showForm) {
+                setEditingId(null);
+                setFormData({
+                  title: '',
+                  courseId: courseFilter || '',
+                  dueDate: '',
+                  dueTime: '',
+                  importance: (importanceFilter || '') as '' | 'low' | 'medium' | 'high',
+                  notes: '',
+                  tags: Array.from(selectedTags),
+                  links: [{ label: '', url: '' }],
+                  isRecurring: false,
+                  recurring: {
+                    isRecurring: false,
+                    recurrenceType: 'weekly' as const,
+                    customIntervalDays: 7,
+                    daysOfWeek: [1],
+                    daysOfMonth: [1],
+                    startDate: '',
+                    endCondition: 'never' as const,
+                    endDate: '',
+                    occurrenceCount: 10,
+                    dueTime: '23:59',
+                  } as RecurringTaskFormData,
+                });
+                setShowForm(true);
+              } else {
+                setShowForm(false);
+              }
+            }}>
             <Plus size={18} />
             New Task
           </Button>
@@ -943,7 +981,9 @@ export default function TasksPage() {
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder="Add any additional notes..."
-                    style={isMobile ? { minHeight: '52px', height: '52px', padding: '8px 10px' } : { minHeight: '60px', height: '60px' }}
+                    autoExpand
+                    maxHeight={200}
+                    style={isMobile ? { minHeight: '52px', padding: '8px 10px' } : { minHeight: '60px' }}
                   />
                   <div style={{ marginTop: isMobile ? '-8px' : '-4px' }}>
                     <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: isMobile ? '4px' : '6px' }}>Tags</label>
@@ -1067,6 +1107,7 @@ export default function TasksPage() {
                         opacity: hidingTasks.has(t.id) ? 0.5 : 1,
                         transition: 'opacity 0.3s ease, background-color 0.2s ease',
                         backgroundColor: isSelected ? 'var(--nav-active)' : undefined,
+                        cursor: 'pointer',
                       }}
                       className="first:pt-0 last:pb-0 flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0"
                       onContextMenu={(e) => bulkSelect.handleContextMenu(e, t.id)}
@@ -1076,6 +1117,8 @@ export default function TasksPage() {
                       onClick={() => {
                         if (bulkSelect.isSelecting) {
                           bulkSelect.toggleSelection(t.id);
+                        } else {
+                          setPreviewingTask(t);
                         }
                       }}
                     >
@@ -1107,6 +1150,7 @@ export default function TasksPage() {
                       <input
                         type="checkbox"
                         checked={t.status === 'done'}
+                        onClick={(e) => e.stopPropagation()}
                         onChange={() => {
                           const isCurrentlyDone = t.status === 'done';
                           setToggledTasks(prev => {
@@ -1171,7 +1215,15 @@ export default function TasksPage() {
                           {isOverdueTask && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                         </div>
                         {t.notes && (
-                          <div style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          <div style={{
+                            fontSize: isMobile ? '11px' : '12px',
+                            color: 'var(--text-muted)',
+                            marginTop: '2px',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                          }}>
                             {t.notes}
                           </div>
                         )}
@@ -1228,6 +1280,7 @@ export default function TasksPage() {
                                 rel="noopener noreferrer"
                                 style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--link)', width: 'fit-content' }}
                                 className="hover:text-blue-400"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 {link.label}
                               </a>
@@ -1237,7 +1290,7 @@ export default function TasksPage() {
                       </div>
                       <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '12px' }}>
                         <button
-                          onClick={() => updateTask(t.id, { workingOn: !t.workingOn })}
+                          onClick={(e) => { e.stopPropagation(); updateTask(t.id, { workingOn: !t.workingOn }); }}
                           className={`rounded-[var(--radius-control)] transition-colors hover:bg-white/5 ${t.workingOn ? 'text-[var(--success)]' : 'text-[var(--muted)] hover:text-[var(--success)]'}`}
                           style={{ padding: isMobile ? '2px' : '6px' }}
                           title={t.workingOn ? 'Stop working on task' : 'Start working on task'}
@@ -1245,7 +1298,7 @@ export default function TasksPage() {
                           <Hammer size={isMobile ? 14 : 20} />
                         </button>
                         <button
-                          onClick={() => startEdit(t)}
+                          onClick={(e) => { e.stopPropagation(); startEdit(t); }}
                           className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
                           style={{ padding: isMobile ? '2px' : '6px' }}
                           title="Edit task"
@@ -1253,7 +1306,7 @@ export default function TasksPage() {
                           <Edit2 size={isMobile ? 14 : 20} />
                         </button>
                         <button
-                          onClick={() => deleteTask(t.id)}
+                          onClick={(e) => { e.stopPropagation(); deleteTask(t.id); }}
                           className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
                           style={{ padding: isMobile ? '2px' : '6px' }}
                           title="Delete task"
@@ -1345,6 +1398,227 @@ export default function TasksPage() {
         entityType="task"
         onConfirm={handleBulkDelete}
       />
+
+      {/* Preview Modal */}
+      {previewingTask && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: isMobile ? '16px' : '24px',
+          }}
+          onClick={() => setPreviewingTask(null)}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--panel)',
+              borderRadius: 'var(--radius-card)',
+              width: '100%',
+              maxWidth: '500px',
+              maxHeight: '80vh',
+              overflow: 'auto',
+              border: '1px solid var(--border)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              padding: isMobile ? '16px' : '20px',
+              borderBottom: '1px solid var(--border)',
+            }}>
+              <div style={{ flex: 1, paddingRight: '12px' }}>
+                <h2 style={{
+                  fontSize: isMobile ? '16px' : '18px',
+                  fontWeight: '600',
+                  color: 'var(--text)',
+                  margin: 0,
+                  wordBreak: 'break-word',
+                }}>
+                  {previewingTask.title}
+                </h2>
+                {previewingTask.courseId && (
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    {courses.find(c => c.id === previewingTask.courseId)?.code || courses.find(c => c.id === previewingTask.courseId)?.name}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setPreviewingTask(null)}
+                style={{
+                  padding: '4px',
+                  color: 'var(--text-muted)',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  borderRadius: '4px',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div style={{ padding: isMobile ? '16px' : '20px' }}>
+              {/* Status & Importance */}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                {previewingTask.status === 'done' && (
+                  <span style={{
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    color: 'var(--success)',
+                  }}>
+                    Completed
+                  </span>
+                )}
+                {previewingTask.importance && (
+                  <span style={{
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: previewingTask.importance === 'high' ? 'rgba(239, 68, 68, 0.1)' :
+                      previewingTask.importance === 'medium' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                    color: previewingTask.importance === 'high' ? 'var(--danger)' :
+                      previewingTask.importance === 'medium' ? 'var(--warning)' : 'var(--text-muted)',
+                  }}>
+                    {previewingTask.importance.charAt(0).toUpperCase() + previewingTask.importance.slice(1)} Priority
+                  </span>
+                )}
+                {previewingTask.workingOn && (
+                  <span style={{
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    color: 'var(--success)',
+                  }}>
+                    Working On
+                  </span>
+                )}
+              </div>
+
+              {/* Due Date */}
+              {previewingTask.dueAt && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Due Date</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>
+                    {formatDate(previewingTask.dueAt)}
+                    {(() => {
+                      const dueDate = new Date(previewingTask.dueAt);
+                      const hours = dueDate.getHours();
+                      const minutes = dueDate.getMinutes();
+                      if (!(hours === 23 && minutes === 59)) {
+                        return ` at ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                      }
+                      return '';
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* Recurring Pattern */}
+              {previewingTask.isRecurring && previewingTask.recurringPattern && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Recurring</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>
+                    {getRecurrenceText(previewingTask.recurringPattern)}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {previewingTask.notes && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Notes</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
+                    {previewingTask.notes}
+                  </div>
+                </div>
+              )}
+
+              {/* Tags */}
+              {previewingTask.tags && previewingTask.tags.length > 0 && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Tags</div>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {previewingTask.tags.map((tag: string) => (
+                      <span key={tag} style={{
+                        fontSize: '12px',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        backgroundColor: 'var(--panel-2)',
+                        color: 'var(--text-muted)',
+                      }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Links */}
+              {previewingTask.links && previewingTask.links.length > 0 && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Links</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {previewingTask.links.map((link: { label: string; url: string }, i: number) => (
+                      <a
+                        key={i}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: '14px',
+                          color: 'var(--link)',
+                          textDecoration: 'underline',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {link.label || link.url}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              padding: isMobile ? '16px' : '20px',
+              borderTop: '1px solid var(--border)',
+            }}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setPreviewingTask(null);
+                  startEdit(previewingTask);
+                }}
+                style={{ flex: 1 }}
+              >
+                <Edit2 size={16} />
+                Edit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -41,11 +41,14 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
   const getPreviewText = (): string => {
     let freq = '';
     switch (value.recurrenceType) {
+      case 'daily':
+        freq = 'every day';
+        break;
       case 'weekly':
         freq = 'every week';
         break;
       case 'monthly':
-        freq = 'every 30 days';
+        freq = 'every month';
         break;
       case 'custom':
         freq = `every ${value.customIntervalDays} days`;
@@ -98,8 +101,9 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
           value={value.recurrenceType}
           onChange={(e) => handleChange({ recurrenceType: e.target.value as any })}
           options={[
+            { value: 'daily', label: 'Daily' },
             { value: 'weekly', label: 'Weekly' },
-            { value: 'monthly', label: 'Monthly (every 30 days)' },
+            { value: 'monthly', label: 'Monthly' },
             { value: 'custom', label: 'Custom interval' },
           ]}
         />
