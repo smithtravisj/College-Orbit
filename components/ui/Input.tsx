@@ -44,11 +44,41 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   helperText?: string;
   labelClassName?: string;
   labelStyle?: React.CSSProperties;
+  autoExpand?: boolean;
+  maxHeight?: number;
 }
 
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, helperText, className = '', labelClassName = 'text-sm', labelStyle = {}, style, ...props }, ref) => {
+  ({ label, error, helperText, className = '', labelClassName = 'text-sm', labelStyle = {}, style, autoExpand, maxHeight = 200, onChange, ...props }, ref) => {
     const isMobile = useIsMobile();
+    const internalRef = React.useRef<HTMLTextAreaElement>(null);
+    const textareaRef = (ref as React.RefObject<HTMLTextAreaElement>) || internalRef;
+
+    const adjustHeight = React.useCallback(() => {
+      const textarea = textareaRef.current;
+      if (textarea && autoExpand) {
+        // Reset height to auto to get the correct scrollHeight
+        textarea.style.height = 'auto';
+        // Set height to scrollHeight, but cap at maxHeight
+        const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+        textarea.style.height = `${newHeight}px`;
+      }
+    }, [autoExpand, maxHeight, textareaRef]);
+
+    // Adjust height on mount and when value changes
+    React.useEffect(() => {
+      adjustHeight();
+    }, [props.value, adjustHeight]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      if (onChange) {
+        onChange(e);
+      }
+      if (autoExpand) {
+        adjustHeight();
+      }
+    };
+
     return (
       <div className="w-full">
         {label && (
@@ -58,9 +88,10 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           </label>
         )}
         <textarea
-          ref={ref}
+          ref={textareaRef}
           className={`w-full bg-[var(--panel-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-muted)] rounded-[var(--radius-control)] transition-colors focus:outline-none disabled:bg-[var(--panel)] disabled:text-[var(--text-disabled)] disabled:cursor-not-allowed resize-none ${error ? 'border-[var(--danger)]' : ''} ${className}`}
-          style={{ padding: '10px 12px', minHeight: isMobile ? '64px' : '96px', ...style }}
+          style={{ padding: '10px 12px', minHeight: isMobile ? '64px' : '96px', overflowY: autoExpand ? 'auto' : undefined, ...style }}
+          onChange={handleChange}
           {...props}
         />
         {error && <p className="text-xs text-[var(--danger)] mt-1">{error}</p>}

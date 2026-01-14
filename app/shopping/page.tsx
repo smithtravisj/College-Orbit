@@ -221,11 +221,12 @@ export default function ShoppingPage() {
   const TabIcon = TAB_CONFIG[activeTab].icon;
 
   const copyAllToClipboard = () => {
-    const pantryItems = shoppingItems.filter((item) => item.listType === 'pantry');
+    // Use filteredItems instead of all pantry items to respect current filters
+    const itemsToCopy = filteredItems;
 
     // Group by category
-    const grouped: Record<string, typeof pantryItems> = {};
-    pantryItems.forEach((item) => {
+    const grouped: Record<string, typeof itemsToCopy> = {};
+    itemsToCopy.forEach((item) => {
       if (!grouped[item.category]) grouped[item.category] = [];
       grouped[item.category].push(item);
     });
@@ -317,7 +318,25 @@ export default function ShoppingPage() {
         title="Things to Buy"
         subtitle="Manage your shopping lists and pantry inventory"
         actions={
-          <Button variant="secondary" size="md" onClick={() => { resetForm(); setShowForm(!showForm); }}>
+          <Button variant="secondary" size="md" onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              if (editingId || !showForm) {
+                setEditingId(null);
+                setFormData({
+                  name: '',
+                  quantity: '',
+                  unit: '',
+                  category: categoryFilter || '',
+                  notes: '',
+                  priority: '',
+                  price: '',
+                  perishable: perishableFilter === 'perishable' ? true : perishableFilter === 'non-perishable' ? false : false,
+                });
+                setShowForm(true);
+              } else {
+                setShowForm(false);
+              }
+            }}>
             <Plus size={18} />
             <span style={{ marginLeft: '6px' }}>Add Item</span>
           </Button>
@@ -448,6 +467,8 @@ export default function ShoppingPage() {
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                         placeholder="Storage, expiration..."
+                        autoExpand
+                        maxHeight={200}
                       />
                       <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', height: 'var(--input-height)' }}>
                         <input
@@ -470,6 +491,8 @@ export default function ShoppingPage() {
                           activeTab === 'wishlist' ? 'Where to buy, links, notes...' :
                           'Brand preferences, store location, etc.'
                         }
+                        autoExpand
+                        maxHeight={200}
                       />
 
                       {/* Pantry-specific fields - desktop only */}
@@ -643,7 +666,15 @@ export default function ShoppingPage() {
                                 </div>
                               )}
                               {item.notes && (
-                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                <div style={{
+                                  fontSize: '11px',
+                                  color: 'var(--text-muted)',
+                                  marginTop: '2px',
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical',
+                                  overflow: 'hidden',
+                                }}>
                                   {item.notes}
                                 </div>
                               )}

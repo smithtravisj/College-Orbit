@@ -244,9 +244,11 @@ const useAppStore = create<AppStore>((set, get) => ({
       });
 
       // Parse JSON fields if they're strings
-      const savedVisiblePages = typeof rawSettings?.visiblePages === 'string'
+      const rawSavedVisiblePages = typeof rawSettings?.visiblePages === 'string'
         ? JSON.parse(rawSettings.visiblePages)
         : rawSettings?.visiblePages;
+      // Migrate "Deadlines" to "Assignments"
+      const savedVisiblePages = rawSavedVisiblePages?.map((p: string) => p === 'Deadlines' ? 'Assignments' : p);
       const savedVisibleDashboardCards = typeof rawSettings?.visibleDashboardCards === 'string'
         ? JSON.parse(rawSettings.visibleDashboardCards)
         : rawSettings?.visibleDashboardCards;
@@ -1963,8 +1965,10 @@ const useAppStore = create<AppStore>((set, get) => ({
           title: taskData.title,
           courseId: taskData.courseId || null,
           notes: taskData.notes,
+          tags: taskData.tags || [],
           links: taskData.links || [],
           dueTime: recurringData.dueTime,
+          importance: taskData.importance || null,
         },
       };
 
@@ -2081,7 +2085,9 @@ const useAppStore = create<AppStore>((set, get) => ({
           title: deadlineData.title,
           courseId: deadlineData.courseId || null,
           notes: deadlineData.notes,
+          tags: deadlineData.tags || [],
           links: deadlineData.links || [],
+          effort: deadlineData.effort || null,
         },
       };
 
@@ -2207,6 +2213,7 @@ const useAppStore = create<AppStore>((set, get) => ({
           title: examData.title,
           courseId: examData.courseId || null,
           notes: examData.notes,
+          tags: examData.tags || [],
           links: examData.links || [],
           location: examData.location || null,
           examAt: templateExamAt,

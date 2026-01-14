@@ -11,7 +11,7 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, MapPin, Check } from 'lucide-react';
+import { Plus, Trash2, Edit2, MapPin, Check, X } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import TagInput from '@/components/notes/TagInput';
@@ -48,6 +48,7 @@ export default function ExamsPage() {
   const [courseFilter, setCourseFilter] = useState('');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [formError, setFormError] = useState('');
+  const [previewingExam, setPreviewingExam] = useState<any>(null);
 
   // Bulk selection state
   const bulkSelect = useBulkSelect();
@@ -424,7 +425,16 @@ export default function ExamsPage() {
         title="Exams"
         subtitle="Schedule and track your exams"
         actions={
-          <Button variant="secondary" size="md" onClick={() => setShowForm(!showForm)}>
+          <Button variant="secondary" size="md" onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              if (editingId || !showForm) {
+                setEditingId(null);
+                setFormData({ title: '', courseId: courseFilter || '', examDate: '', examTime: '', location: '', notes: '', tags: Array.from(selectedTags), links: [{ label: '', url: '' }] });
+                setShowForm(true);
+              } else {
+                setShowForm(false);
+              }
+            }}>
             <Plus size={18} />
             Schedule Exam
           </Button>
@@ -649,7 +659,9 @@ export default function ExamsPage() {
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder="Add study tips, topics to review, etc."
-                    style={isMobile ? { minHeight: '52px', height: '52px', padding: '8px 10px' } : { minHeight: '60px', height: '60px' }}
+                    autoExpand
+                    maxHeight={200}
+                    style={isMobile ? { minHeight: '52px', padding: '8px 10px' } : { minHeight: '60px' }}
                   />
                   <div style={{ marginTop: isMobile ? '-8px' : '-4px' }}>
                     <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: isMobile ? '4px' : '6px' }}>Tags</label>
@@ -772,6 +784,7 @@ export default function ExamsPage() {
                         opacity: hidingExams.has(exam.id) ? 0.5 : 1,
                         transition: 'opacity 0.3s ease, background-color 0.2s ease',
                         backgroundColor: isSelected ? 'var(--nav-active)' : undefined,
+                        cursor: 'pointer',
                       }}
                       className="first:pt-0 last:pb-0 flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0"
                       onContextMenu={(e) => bulkSelect.handleContextMenu(e, exam.id)}
@@ -781,6 +794,8 @@ export default function ExamsPage() {
                       onClick={() => {
                         if (bulkSelect.isSelecting) {
                           bulkSelect.toggleSelection(exam.id);
+                        } else {
+                          setPreviewingExam(exam);
                         }
                       }}
                     >
@@ -821,7 +836,15 @@ export default function ExamsPage() {
                           )}
                         </div>
                         {exam.notes && (
-                          <div style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          <div style={{
+                            fontSize: isMobile ? '11px' : '12px',
+                            color: 'var(--text-muted)',
+                            marginTop: '2px',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                          }}>
                             {exam.notes}
                           </div>
                         )}
@@ -871,6 +894,7 @@ export default function ExamsPage() {
                                 rel="noopener noreferrer"
                                 style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--link)', width: 'fit-content' }}
                                 className="hover:text-blue-400"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 {link.label}
                               </a>
@@ -880,7 +904,7 @@ export default function ExamsPage() {
                       </div>
                       <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '12px' }}>
                         <button
-                          onClick={() => startEdit(exam)}
+                          onClick={(e) => { e.stopPropagation(); startEdit(exam); }}
                           className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
                           style={{ padding: isMobile ? '2px' : '6px' }}
                           title="Edit exam"
@@ -888,7 +912,7 @@ export default function ExamsPage() {
                           <Edit2 size={isMobile ? 14 : 20} />
                         </button>
                         <button
-                          onClick={() => deleteExam(exam.id)}
+                          onClick={(e) => { e.stopPropagation(); deleteExam(exam.id); }}
                           className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
                           style={{ padding: isMobile ? '2px' : '6px' }}
                           title="Delete exam"
@@ -979,6 +1003,202 @@ export default function ExamsPage() {
         entityType="exam"
         onConfirm={handleBulkDelete}
       />
+
+      {/* Preview Modal */}
+      {previewingExam && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: isMobile ? '16px' : '24px',
+          }}
+          onClick={() => setPreviewingExam(null)}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--panel)',
+              borderRadius: 'var(--radius-card)',
+              width: '100%',
+              maxWidth: '500px',
+              maxHeight: '80vh',
+              overflow: 'auto',
+              border: '1px solid var(--border)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              padding: isMobile ? '16px' : '20px',
+              borderBottom: '1px solid var(--border)',
+            }}>
+              <div style={{ flex: 1, paddingRight: '12px' }}>
+                <h2 style={{
+                  fontSize: isMobile ? '16px' : '18px',
+                  fontWeight: '600',
+                  color: 'var(--text)',
+                  margin: 0,
+                  wordBreak: 'break-word',
+                }}>
+                  {previewingExam.title}
+                </h2>
+                {previewingExam.courseId && (
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    {courses.find(c => c.id === previewingExam.courseId)?.code || courses.find(c => c.id === previewingExam.courseId)?.name}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setPreviewingExam(null)}
+                style={{
+                  padding: '4px',
+                  color: 'var(--text-muted)',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  borderRadius: '4px',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div style={{ padding: isMobile ? '16px' : '20px' }}>
+              {/* Status */}
+              {(previewingExam.status === 'completed' || previewingExam.status === 'cancelled') && (
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                  <span style={{
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: previewingExam.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                    color: previewingExam.status === 'completed' ? 'var(--success)' : 'var(--text-muted)',
+                  }}>
+                    {previewingExam.status.charAt(0).toUpperCase() + previewingExam.status.slice(1)}
+                  </span>
+                </div>
+              )}
+
+              {/* Date & Time */}
+              {previewingExam.examAt && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Date & Time</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>
+                    {formatDate(previewingExam.examAt)}
+                    {(() => {
+                      const examDate = new Date(previewingExam.examAt);
+                      const hours = examDate.getHours();
+                      const minutes = examDate.getMinutes();
+                      if (hours !== 0 || minutes !== 0) {
+                        return ` at ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                      }
+                      return '';
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* Location */}
+              {previewingExam.location && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Location</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <MapPin size={14} />
+                    {previewingExam.location}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {previewingExam.notes && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Notes</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
+                    {previewingExam.notes}
+                  </div>
+                </div>
+              )}
+
+              {/* Tags */}
+              {previewingExam.tags && previewingExam.tags.length > 0 && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Tags</div>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {previewingExam.tags.map((tag: string) => (
+                      <span key={tag} style={{
+                        fontSize: '12px',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        backgroundColor: 'var(--panel-2)',
+                        color: 'var(--text-muted)',
+                      }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Links */}
+              {previewingExam.links && previewingExam.links.length > 0 && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Links</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {previewingExam.links.map((link: { label: string; url: string }, i: number) => (
+                      <a
+                        key={i}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: '14px',
+                          color: 'var(--link)',
+                          textDecoration: 'underline',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {link.label || link.url}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              padding: isMobile ? '16px' : '20px',
+              borderTop: '1px solid var(--border)',
+            }}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setPreviewingExam(null);
+                  startEdit(previewingExam);
+                }}
+                style={{ flex: 1 }}
+              >
+                <Edit2 size={16} />
+                Edit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

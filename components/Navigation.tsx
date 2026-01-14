@@ -31,7 +31,7 @@ export const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/tasks', label: 'Tasks', icon: CheckSquare },
-  { href: '/deadlines', label: 'Deadlines', icon: Clock },
+  { href: '/deadlines', label: 'Assignments', icon: Clock },
   { href: '/exams', label: 'Exams', icon: FileText },
   { href: '/notes', label: 'Notes', icon: StickyNote },
   { href: '/courses', label: 'Courses', icon: BookOpen },
@@ -48,8 +48,11 @@ export default function Navigation() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const university = useAppStore((state) => state.settings.university);
-  const visiblePages = useAppStore((state) => state.settings.visiblePages || DEFAULT_VISIBLE_PAGES);
-  const visiblePagesOrder = useAppStore((state) => state.settings.visiblePagesOrder);
+  const rawVisiblePages = useAppStore((state) => state.settings.visiblePages || DEFAULT_VISIBLE_PAGES);
+  const rawVisiblePagesOrder = useAppStore((state) => state.settings.visiblePagesOrder);
+  // Migrate "Deadlines" to "Assignments"
+  const visiblePages = rawVisiblePages.map((p: string) => p === 'Deadlines' ? 'Assignments' : p);
+  const visiblePagesOrder = rawVisiblePagesOrder ? (rawVisiblePagesOrder as string[]).map((p: string) => p === 'Deadlines' ? 'Assignments' : p) : rawVisiblePagesOrder;
   const [isAdmin, setIsAdmin] = useState(false);
 
   // Sort NAV_ITEMS according to visiblePagesOrder if it exists

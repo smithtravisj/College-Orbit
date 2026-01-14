@@ -111,7 +111,8 @@ export default function SettingsPage() {
     setUniversity(settings.university || null);
     setSelectedTheme(settings.theme || 'dark');
     // Merge saved visible pages with any new pages added to defaults
-    const savedVisiblePages = settings.visiblePages || [];
+    // Migrate "Deadlines" to "Assignments"
+    const savedVisiblePages = (settings.visiblePages || []).map((p: string) => p === 'Deadlines' ? 'Assignments' : p);
     const mergedVisiblePages = savedVisiblePages.length > 0
       ? [...new Set([...savedVisiblePages, ...DEFAULT_VISIBLE_PAGES.filter(p => !savedVisiblePages.includes(p))])]
       : DEFAULT_VISIBLE_PAGES;
@@ -134,10 +135,12 @@ export default function SettingsPage() {
       const order = typeof settings.visiblePagesOrder === 'string'
         ? JSON.parse(settings.visiblePagesOrder)
         : settings.visiblePagesOrder;
+      // Migrate "Deadlines" to "Assignments"
+      const migratedOrder = order.map((p: string) => p === 'Deadlines' ? 'Assignments' : p);
       // Add any new pages that aren't in the saved order (excluding Settings)
       const allPages = Object.values(PAGES).filter(p => p !== 'Settings');
-      const newPages = allPages.filter(p => !order.includes(p));
-      setVisiblePagesOrder([...order, ...newPages]);
+      const newPages = allPages.filter(p => !migratedOrder.includes(p));
+      setVisiblePagesOrder([...migratedOrder, ...newPages]);
     } else {
       setVisiblePagesOrder(Object.values(PAGES).filter(p => p !== 'Settings'));
     }

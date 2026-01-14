@@ -63,6 +63,9 @@ export async function generateRecurringExamInstances(
     const daysOfMonth = (pattern.daysOfMonth as number[]) || [];
 
     switch (pattern.recurrenceType) {
+      case 'daily':
+        intervalDays = 1;
+        break;
       case 'weekly':
         intervalDays = 7;
         break;
