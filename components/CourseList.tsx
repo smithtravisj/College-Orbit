@@ -4,7 +4,8 @@ import { useState } from 'react';
 import useAppStore from '@/lib/store';
 import Card from '@/components/ui/Card';
 import ConfirmationModal from '@/components/ConfirmationModal';
-import { Edit2, Trash2, Check } from 'lucide-react';
+import FilePreviewModal from '@/components/FilePreviewModal';
+import { Edit2, Trash2, Check, FileIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { Course } from '@/types';
 
@@ -51,6 +52,7 @@ export default function CourseList({
     courseId: '',
     courseName: '',
   });
+  const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
 
   if (courses.length === 0) {
     return null;
@@ -128,9 +130,9 @@ export default function CourseList({
                   </div>
                 )}
 
-                {course.links && course.links.length > 0 && (
+                {((course.links && course.links.length > 0) || (course.files && course.files.length > 0)) && (
                   <div className="flex flex-col" style={{ gap: '0px' }}>
-                    {course.links.map((link, idx) => (
+                    {course.links && course.links.map((link, idx) => (
                       <a
                         key={idx}
                         href={link.url}
@@ -141,6 +143,18 @@ export default function CourseList({
                       >
                         {link.label}
                       </a>
+                    ))}
+                    {course.files && course.files.map((file: { name: string; url: string; size: number }, fileIndex: number) => (
+                      <button
+                        key={`${fileIndex}-${file.name}`}
+                        type="button"
+                        style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--link)', width: 'fit-content', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        className="hover:text-blue-400"
+                        onClick={(e) => { e.stopPropagation(); setPreviewingFile({ file, allFiles: course.files || [], index: fileIndex }); }}
+                      >
+                        <FileIcon size={12} style={{ flexShrink: 0 }} />
+                        {file.name}
+                      </button>
                     ))}
                   </div>
                 )}
@@ -201,6 +215,15 @@ export default function CourseList({
             courseName: '',
           });
         }}
+      />
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        file={previewingFile?.file ?? null}
+        files={previewingFile?.allFiles}
+        currentIndex={previewingFile?.index ?? 0}
+        onClose={() => setPreviewingFile(null)}
+        onNavigate={(file, index) => setPreviewingFile(prev => prev ? { ...prev, file, index } : null)}
       />
     </>
   );

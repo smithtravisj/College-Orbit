@@ -4,12 +4,12 @@ import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 're
 import useAppStore from '@/lib/store';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import FileUpload from '@/components/ui/FileUpload';
 import DaysDropdown from '@/components/DaysDropdown';
 import TimePicker from '@/components/TimePicker';
 import CalendarPicker from '@/components/CalendarPicker';
+import FilePreviewModal from '@/components/FilePreviewModal';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Upload, X, FileIcon } from 'lucide-react';
 
 interface CourseFormProps {
   courseId?: string;
@@ -26,6 +26,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
   const { courses, settings, addCourse, updateCourse } = useAppStore();
   const course = courses.find((c) => c.id === courseId);
   const formRef = useRef<HTMLFormElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useImperativeHandle(ref, () => ({
     submit: () => {
@@ -44,6 +45,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
     files: [] as Array<{ name: string; url: string; size: number }>,
     colorTag: '',
   });
+  const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
 
   useEffect(() => {
     if (course) {
@@ -80,6 +82,33 @@ const CourseFormComponent = forwardRef(function CourseForm(
     const endTotal = endH * 60 + endM;
     const duration = endTotal - startTotal;
     return duration > 0 ? duration : 60;
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
+
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i];
+      if (file.size > 10 * 1024 * 1024) continue; // 10MB limit
+
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      try {
+        const response = await fetch('/api/files', {
+          method: 'POST',
+          body: formDataUpload,
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setForm(prev => ({ ...prev, files: [...(prev.files || []), data.file] }));
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+      }
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -344,37 +373,106 @@ const CourseFormComponent = forwardRef(function CourseForm(
         </Button>
       </div>
 
-      <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
-        <label className={isMobile ? 'block text-sm font-medium text-[var(--text)]' : 'block text-lg font-medium text-[var(--text)]'} style={{ marginBottom: '8px' }}>Files</label>
-        <FileUpload
-          files={form.files}
-          onChange={(files) => setForm({ ...form, files })}
-        />
-      </div>
+      {/* File list display */}
+      {form.files && form.files.length > 0 && (
+        <div style={{ paddingTop: isMobile ? '4px' : '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {form.files.map((file, index) => (
+            <div
+              key={index}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: isMobile ? '4px 8px' : '6px 10px',
+                backgroundColor: 'var(--panel-2)',
+                borderRadius: 'var(--radius-control)',
+                border: '1px solid var(--border)',
+                fontSize: isMobile ? '0.7rem' : '0.8rem',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setPreviewingFile({ file, allFiles: form.files, index })}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', flexShrink: 0 }}
+                title="Preview file"
+              >
+                <FileIcon size={14} />
+              </button>
+              <input
+                type="text"
+                value={file.name}
+                onChange={(e) => {
+                  const newFiles = [...form.files];
+                  newFiles[index] = { ...newFiles[index], name: e.target.value };
+                  setForm({ ...form, files: newFiles });
+                }}
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  color: 'var(--text)',
+                  fontSize: 'inherit',
+                  padding: 0,
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, files: form.files.filter((_, i) => i !== index) })}
+                style={{ background: 'none', border: 'none', padding: '2px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {!hideSubmitButton && (
-        <div className="flex gap-3" style={{ paddingTop: isMobile ? '6px' : '8px' }}>
-          <Button
-            variant="primary"
-            size="md"
-            type="submit"
-            style={{
-              backgroundColor: 'var(--button-secondary)',
-              color: settings.theme === 'light' ? '#000000' : 'white',
-              borderWidth: '1px',
-              borderStyle: 'solid',
-              borderColor: 'var(--border)',
-              paddingLeft: '16px',
-              paddingRight: '16px'
-            }}
-          >
-            {courseId ? 'Update' : 'Add'} Course
-          </Button>
-          <Button variant="secondary" size="md" type="button" onClick={onClose}>
-            Cancel
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: isMobile ? '6px' : '8px' }}>
+          <div className="flex gap-3">
+            <Button
+              variant="primary"
+              size="md"
+              type="submit"
+              style={{
+                backgroundColor: 'var(--button-secondary)',
+                color: settings.theme === 'light' ? '#000000' : 'white',
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                borderColor: 'var(--border)',
+                paddingLeft: '16px',
+                paddingRight: '16px'
+              }}
+            >
+              {courseId ? 'Update' : 'Add'} Course
+            </Button>
+            <Button variant="secondary" size="md" type="button" onClick={onClose}>
+              Cancel
+            </Button>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            onChange={handleFileUpload}
+            style={{ display: 'none' }}
+          />
+          <Button variant="secondary" size="md" type="button" onClick={() => fileInputRef.current?.click()}>
+            <Upload size={16} />
+            Add Files
           </Button>
         </div>
       )}
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        file={previewingFile?.file ?? null}
+        files={previewingFile?.allFiles}
+        currentIndex={previewingFile?.index ?? 0}
+        onClose={() => setPreviewingFile(null)}
+        onNavigate={(file, index) => setPreviewingFile(prev => prev ? { ...prev, file, index } : null)}
+      />
     </form>
   );
 });
