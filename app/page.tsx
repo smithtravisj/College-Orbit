@@ -824,7 +824,7 @@ function Dashboard() {
 
           {/* Second row - Today's Tasks & Quick Links */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.TODAY_TASKS) && (
-          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.TODAY_TASKS, visibleDashboardCards) + ' lg:flex')} style={{ minHeight: '300px', order: 2 }} data-tour="today-tasks">
+          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.TODAY_TASKS, visibleDashboardCards) + ' lg:flex')} style={{ minHeight: isMobile ? 'auto' : '300px', order: 2 }} data-tour="today-tasks">
             {renderCard(
               DASHBOARD_CARDS.TODAY_TASKS,
               'Today\'s Tasks',
@@ -1093,7 +1093,7 @@ function Dashboard() {
 
           {/* Quick Links */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.QUICK_LINKS) && (
-          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.QUICK_LINKS, visibleDashboardCards) + ' lg:flex')} style={{ minHeight: '300px', order: 3 }}>
+          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.QUICK_LINKS, visibleDashboardCards) + ' lg:flex')} style={{ minHeight: isMobile ? 'auto' : '300px', order: 3 }}>
             {renderCard(
               DASHBOARD_CARDS.QUICK_LINKS,
               'Quick Links',
@@ -1130,8 +1130,8 @@ function Dashboard() {
           </div>
           )}
 
-          {/* Upcoming This Week - Full Width */}
-          {visibleDashboardCards.includes(DASHBOARD_CARDS.UPCOMING_WEEK) && (
+          {/* Upcoming This Week - Full Width (desktop only) */}
+          {!isMobile && visibleDashboardCards.includes(DASHBOARD_CARDS.UPCOMING_WEEK) && (
           <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.UPCOMING_WEEK, visibleDashboardCards) + ' lg:flex')} style={{ position: 'relative', minHeight: '300px', order: 1 }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column' }}>
             {renderCard(

@@ -25,6 +25,8 @@ export function FloatingMenuButton() {
       className={styles.fab}
       style={{
         backgroundColor: buttonColor,
+        backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.15) 100%)',
+        boxShadow: `0 3px 12px ${buttonColor}60`,
         pointerEvents: 'auto',
       }}
       aria-label="Open menu"

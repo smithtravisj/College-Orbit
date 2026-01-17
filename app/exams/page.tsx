@@ -488,7 +488,7 @@ export default function ExamsPage() {
               Your upcoming exams and assessments.
             </p>
           </div>
-          <Button variant="secondary" size="md" style={{ marginTop: isMobile ? '0' : '8px' }} onClick={() => {
+          <Button variant="secondary" size="md" style={{ marginTop: isMobile ? '12px' : '8px' }} onClick={() => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               if (editingId || !showForm) {
                 setEditingId(null);
@@ -499,7 +499,7 @@ export default function ExamsPage() {
               }
             }}>
             <Plus size={18} />
-            Schedule Exam
+            {isMobile ? 'Exam' : 'Schedule Exam'}
           </Button>
         </div>
       </div>

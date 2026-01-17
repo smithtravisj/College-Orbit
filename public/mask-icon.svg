@@ -1,4 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
-  <rect width="192" height="192" rx="44" fill="black"/>
-  <path fill="white" d="M64 48C62.9 48 62 48.9 62 50V142C62 143.1 62.9 144 64 144H128C129.1 144 130 143.1 130 142V50C130 48.9 129.1 48 128 48H64ZM96 60H120V132H96V60Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Orbit ring (ellipse) -->
+  <ellipse cx="128" cy="128" rx="90" ry="32" stroke="black" stroke-width="4" fill="none" transform="rotate(-15, 128, 128)"/>
+
+  <!-- Planet -->
+  <circle cx="128" cy="128" r="42" fill="black"/>
+
+  <!-- Moon -->
+  <circle cx="195" cy="85" r="14" fill="black"/>
 </svg>
