@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import useAppStore from '@/lib/store';
 import { getQuickLinks } from '@/lib/quickLinks';
 import { TOOLS_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
-import PageHeader from '@/components/PageHeader';
+import { getCollegeColorPalette } from '@/lib/collegeColors';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select } from '@/components/ui/Input';
@@ -49,6 +49,7 @@ interface FormCourse {
 export default function ToolsPage() {
   const isMobile = useIsMobile();
   const { settings, updateSettings } = useAppStore();
+  const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
   const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [formCourses, setFormCourses] = useState<FormCourse[]>([
@@ -797,8 +798,39 @@ export default function ToolsPage() {
 
   return (
     <>
-      <PageHeader title="Tools" subtitle="Useful utilities for your semester" />
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? 'clamp(12px, 4%, 24px)' : '24px' }}>
+      {/* Tools Header */}
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+        <div>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            {/* Subtle glow behind title */}
+            <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
+                }}
+              />
+            </div>
+            <h1
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                fontSize: isMobile ? '26px' : '34px',
+                fontWeight: 700,
+                color: 'var(--text)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Tools
+            </h1>
+          </div>
+          <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
+            Useful utilities for your semester.
+          </p>
+        </div>
+      </div>
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingTop: '0', position: 'relative', zIndex: 1 }}>
         <div className="grid grid-cols-1 gap-[var(--grid-gap)]">
           {toolsCardsOrder.map((cardId: string) => renderCard(cardId))}
         </div>

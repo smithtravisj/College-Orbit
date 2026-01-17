@@ -43,7 +43,7 @@ interface AppStore {
   // Initialization
   initializeStore: () => Promise<void>;
   loadFromDatabase: () => Promise<void>;
-  loadFromStorage: () => void;
+  loadFromStorage: () => boolean;
   setUserId: (userId: string) => void;
   getStorageKey: () => string;
   invalidateCalendarCache: () => void;
@@ -186,57 +186,50 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   initializeStore: async () => {
-    set({ loading: true });
-    try {
-      // Always load fresh settings from database to ensure we have the latest onboarding state
-      await get().loadFromDatabase();
-    } catch (error) {
-      console.error('Failed to initialize store:', error);
-      // Fallback to localStorage only
-      get().loadFromStorage();
-    } finally {
+    // Step 1: Load from localStorage immediately for instant UI
+    const hasLocalData = get().loadFromStorage();
+
+    if (hasLocalData) {
+      // We have cached data, show UI immediately
       set({ loading: false });
+
+      // Step 2: Fetch fresh data in the background (don't await)
+      get().loadFromDatabase().catch((error) => {
+        console.error('Background refresh failed:', error);
+      });
+    } else {
+      // No cached data, must wait for API
+      set({ loading: true });
+      try {
+        await get().loadFromDatabase();
+      } catch (error) {
+        console.error('Failed to initialize store:', error);
+      } finally {
+        set({ loading: false });
+      }
     }
   },
 
   loadFromDatabase: async () => {
     try {
-      const [coursesRes, deadlinesRes, tasksRes, examsRes, notesRes, foldersRes, settingsRes, excludedDatesRes, gpaRes, recurringPatternsRes, recurringDeadlinePatternsRes, recurringExamPatternsRes, shoppingRes, calendarEventsRes] = await Promise.all([
-        fetch('/api/courses'),
-        fetch('/api/deadlines'),
-        fetch('/api/tasks'),
-        fetch('/api/exams'),
-        fetch('/api/notes'),
-        fetch('/api/folders'),
-        fetch('/api/settings'),
-        fetch('/api/excluded-dates'),
-        fetch('/api/gpa-entries'),
-        fetch('/api/recurring-patterns'),
-        fetch('/api/recurring-deadline-patterns'),
-        fetch('/api/recurring-exam-patterns'),
-        fetch('/api/shopping'),
-        fetch('/api/calendar-events'),
-      ]);
+      // Single API call to fetch all data
+      const response = await fetch('/api/init');
 
-      const coursesData = await coursesRes.json();
-      const deadlinesData = await deadlinesRes.json();
-      const tasksData = await tasksRes.json();
-      const examsData = await examsRes.json();
-      const notesData = await notesRes.json();
-      const foldersData = await foldersRes.json();
-      const settingsData = await settingsRes.json();
-      const excludedDatesData = await excludedDatesRes.json();
-      const gpaData = await gpaRes.json();
-      const recurringPatternsData = await recurringPatternsRes.json();
-      const recurringDeadlinePatternsData = await recurringDeadlinePatternsRes.json();
-      const recurringExamPatternsData = await recurringExamPatternsRes.json();
-      const shoppingData = await shoppingRes.json();
-      const calendarEventsData = await calendarEventsRes.json();
+      // If not authenticated, silently return (user is on login page or session expired)
+      if (response.status === 401) {
+        return;
+      }
 
-      // Extract userId from settings response
-      const userId = settingsData.userId;
+      if (!response.ok) {
+        throw new Error(`Failed to fetch initial data: ${response.status}`);
+      }
 
-      const rawSettings = settingsData.settings || DEFAULT_SETTINGS;
+      const data = await response.json();
+
+      // Extract userId from response
+      const userId = data.userId;
+
+      const rawSettings = data.settings || DEFAULT_SETTINGS;
 
       console.log('[Store] Loaded settings from DB:', {
         hasCompletedOnboarding: rawSettings?.hasCompletedOnboarding,
@@ -266,20 +259,20 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       const newData = {
         userId: userId || null,
-        courses: coursesData.courses || [],
-        deadlines: deadlinesData.deadlines || [],
-        tasks: tasksData.tasks || [],
-        exams: examsData.exams || [],
-        notes: notesData.notes || [],
-        folders: foldersData.folders || [],
+        courses: data.courses || [],
+        deadlines: data.deadlines || [],
+        tasks: data.tasks || [],
+        exams: data.exams || [],
+        notes: data.notes || [],
+        folders: data.folders || [],
         settings: parsedSettings,
-        excludedDates: excludedDatesData.excludedDates || [],
-        gpaEntries: gpaData.entries || [],
-        recurringPatterns: recurringPatternsData.patterns || [],
-        recurringDeadlinePatterns: recurringDeadlinePatternsData.patterns || [],
-        recurringExamPatterns: recurringExamPatternsData.patterns || [],
-        shoppingItems: shoppingData.items || [],
-        calendarEvents: calendarEventsData.events || [],
+        excludedDates: data.excludedDates || [],
+        gpaEntries: data.gpaEntries || [],
+        recurringPatterns: data.recurringPatterns || [],
+        recurringDeadlinePatterns: data.recurringDeadlinePatterns || [],
+        recurringExamPatterns: data.recurringExamPatterns || [],
+        shoppingItems: data.shoppingItems || [],
+        calendarEvents: data.calendarEvents || [],
       };
 
       set(newData);
@@ -311,7 +304,7 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   loadFromStorage: () => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return false;
 
     try {
       const storageKey = get().getStorageKey();
@@ -329,6 +322,11 @@ const useAppStore = create<AppStore>((set, get) => ({
           settings: settings,
           excludedDates: data.excludedDates || [],
           gpaEntries: data.gpaEntries || [],
+          recurringPatterns: data.recurringPatterns || [],
+          recurringDeadlinePatterns: data.recurringDeadlinePatterns || [],
+          recurringExamPatterns: data.recurringExamPatterns || [],
+          shoppingItems: data.shoppingItems || [],
+          calendarEvents: data.calendarEvents || [],
         });
         // Apply college colors based on loaded settings
         const theme = settings.theme || 'dark';
@@ -339,9 +337,12 @@ const useAppStore = create<AppStore>((set, get) => ({
         applyColorPalette(palette);
         // Store theme in localStorage for loading screen
         localStorage.setItem('app-theme', theme);
+        return true;
       }
+      return false;
     } catch (error) {
       console.error('[loadFromStorage] Failed:', error);
+      return false;
     }
   },
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { useBulkSelect } from '@/hooks/useBulkSelect';
-import PageHeader from '@/components/PageHeader';
+import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -22,6 +22,9 @@ import {
 
 export default function CoursesPage() {
   const isMobile = useIsMobile();
+  const university = useAppStore((state) => state.settings.university);
+  const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const colorPalette = getCollegeColorPalette(university || null, theme);
   const [mounted, setMounted] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -230,25 +233,53 @@ export default function CoursesPage() {
 
   return (
     <>
-      <PageHeader
-        title="Courses"
-        subtitle="Manage your classes"
-        actions={
-          !isMobile && !isAdding && !editingId && (
-            <Button variant="secondary" size="md" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setIsAdding(true); }}>
+      {/* Courses Header */}
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              {/* Subtle glow behind title */}
+              <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
+                  }}
+                />
+              </div>
+              <h1
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  fontSize: isMobile ? '26px' : '34px',
+                  fontWeight: 700,
+                  color: 'var(--text)',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                Courses
+              </h1>
+            </div>
+            <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
+              Your classes and schedules.
+            </p>
+          </div>
+          {!isMobile && !isAdding && !editingId && (
+            <Button variant="secondary" size="md" style={{ marginTop: '8px' }} onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setIsAdding(true); }}>
               <Plus size={18} />
               New Course
             </Button>
-          )
-        }
-      />
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
-        <div className="grid grid-cols-12 gap-[var(--grid-gap)]">
+          )}
+        </div>
+      </div>
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
+        <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ position: 'relative', zIndex: 1 }}>
           {/* Filters sidebar - 3 columns (desktop only) */}
-          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', display: isMobile ? 'none' : 'block', position: 'sticky', top: '107px', alignSelf: 'start' }}>
-            <Card>
-              <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: '16px' }}>Filters</h3>
-              <div style={{ marginBottom: '20px' }}>
+          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', display: isMobile ? 'none' : 'block', position: 'sticky', top: '24px', alignSelf: 'start' }}>
+            <Card noAccent>
+              <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: '14px' }}>Filters</h3>
+              <div style={{ marginBottom: '14px' }}>
                 <Input
                   label="Search"
                   value={searchQuery}
@@ -256,7 +287,7 @@ export default function CoursesPage() {
                   placeholder="Search courses..."
                 />
               </div>
-              <div className="space-y-2" style={{ marginBottom: '16px' }}>
+              <div className="space-y-1" style={{ marginBottom: '14px' }}>
                 {[
                   { value: 'all', label: 'All Courses' },
                   ...uniqueTerms.map((term) => ({ value: term, label: term })),
@@ -269,7 +300,12 @@ export default function CoursesPage() {
                         ? 'text-[var(--text)]'
                         : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                     }`}
-                    style={{ padding: '12px 16px', backgroundColor: termFilter === f.value ? 'var(--nav-active)' : 'transparent' }}
+                    style={{
+                      padding: '8px 14px',
+                      backgroundColor: termFilter === f.value ? 'var(--nav-active)' : 'transparent',
+                      backgroundImage: termFilter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                      boxShadow: termFilter === f.value ? `0 0 10px ${colorPalette.accent}80` : 'none',
+                    }}
                   >
                     {f.label}
                   </button>
@@ -277,7 +313,7 @@ export default function CoursesPage() {
               </div>
 
               <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
-                <label className="flex items-center gap-4 cursor-pointer" style={{ padding: '8px 16px' }}>
+                <label className="flex items-center gap-4 cursor-pointer" style={{ padding: '8px 14px' }}>
                   <input
                     type="checkbox"
                     checked={showEnded}
@@ -331,7 +367,13 @@ export default function CoursesPage() {
                           ? 'text-[var(--text)]'
                           : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                       }`}
-                      style={{ padding: isMobile ? '8px 12px' : '12px 16px', fontSize: isMobile ? '13px' : '14px', backgroundColor: termFilter === f.value ? 'var(--nav-active)' : 'transparent' }}
+                      style={{
+                        padding: isMobile ? '8px 12px' : '12px 16px',
+                        fontSize: isMobile ? '13px' : '14px',
+                        backgroundColor: termFilter === f.value ? 'var(--nav-active)' : 'transparent',
+                        backgroundImage: termFilter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                        boxShadow: termFilter === f.value ? `0 0 10px ${colorPalette.accent}80` : 'none',
+                      }}
                     >
                       {f.label}
                     </button>

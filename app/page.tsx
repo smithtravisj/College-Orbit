@@ -10,7 +10,7 @@ import { getQuickLinks } from '@/lib/quickLinks';
 import { getDashboardCardSpan } from '@/lib/dashboardLayout';
 import { DASHBOARD_CARDS, DEFAULT_VISIBLE_DASHBOARD_CARDS } from '@/lib/customizationConstants';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import PageHeader from '@/components/PageHeader';
+import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
@@ -38,6 +38,7 @@ export default function HomePage() {
 }
 
 function Dashboard() {
+  const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -48,6 +49,11 @@ function Dashboard() {
   const [toggledTasks, setToggledTasks] = useState<Set<string>>(new Set());
   const [hidingDeadlines, setHidingDeadlines] = useState<Set<string>>(new Set());
   const [toggledDeadlines, setToggledDeadlines] = useState<Set<string>>(new Set());
+
+  // Get college color palette
+  const university = useAppStore((state) => state.settings.university);
+  const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const colorPalette = getCollegeColorPalette(university || null, theme);
   const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>(() => {
     // Load from localStorage on initial render
     if (typeof window !== 'undefined') {
@@ -145,7 +151,11 @@ function Dashboard() {
       hasCompletedOnboarding: settings.hasCompletedOnboarding,
       userId: useAppStore.getState().userId,
     });
-    if (mounted && !settings.hasCompletedOnboarding) {
+
+    // Show onboarding if:
+    // 1. Mounted
+    // 2. hasCompletedOnboarding is explicitly false (not undefined)
+    if (mounted && settings.hasCompletedOnboarding === false) {
       // Small delay to ensure DOM is fully rendered and IDs are available
       console.log('[Dashboard] Showing onboarding tour');
       setTimeout(() => {
@@ -411,14 +421,15 @@ function Dashboard() {
   // Helper function to get card wrapper classes based on device
   const getCardWrapperClasses = (baseSpanClass: string) => {
     // On mobile, don't apply h-full and min-h constraints to allow collapse
+    const animationClass = 'animate-fade-in-up';
     if (isMobile) {
-      return baseSpanClass;
+      return `${baseSpanClass} ${animationClass}`;
     }
-    return `${baseSpanClass} h-full min-h-[220px]`;
+    return `${baseSpanClass} h-full min-h-[160px] ${animationClass}`;
   };
 
   // Helper function to render card with appropriate component based on device
-  const renderCard = (cardId: string, title: string, children: React.ReactNode, className?: string, subtitle?: string) => {
+  const renderCard = (cardId: string, title: string, children: React.ReactNode, className?: string, subtitle?: string, variant: 'primary' | 'secondary' = 'primary') => {
     // Check if card is collapsed in database
     const isCollapsed = (settings.dashboardCardsCollapsedState || []).includes(cardId);
 
@@ -433,6 +444,7 @@ function Dashboard() {
           className={mobileClassName}
           initialOpen={!isCollapsed}
           onChange={(isOpen) => handleCardCollapseChange(cardId, isOpen)}
+          variant={variant}
         >
           {children}
         </CollapsibleCard>
@@ -440,7 +452,7 @@ function Dashboard() {
     }
 
     return (
-      <Card title={title} className={className}>
+      <Card title={title} className={className} variant={variant}>
         {children}
       </Card>
     );
@@ -453,9 +465,39 @@ function Dashboard() {
         onComplete={() => setShowOnboarding(false)}
       />
 
-      <PageHeader title="Dashboard" subtitle="Welcome back. Here's your schedule and tasks for today." />
-      <div className="mx-auto w-full max-w-[1400px] min-h-[calc(100vh-var(--header-h))] flex flex-col" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
-        <div className={`grid grid-cols-12 ${!isMobile ? 'flex-1' : ''}`} style={{ gap: isMobile ? '16px' : 'var(--grid-gap)' }}>
+      {/* Dashboard Header */}
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          {/* Subtle glow behind title - contained */}
+          <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
+              }}
+            />
+          </div>
+          <h1
+            style={{
+              position: 'relative',
+              zIndex: 1,
+              fontSize: isMobile ? '26px' : '34px',
+              fontWeight: 700,
+              color: 'var(--text)',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Dashboard
+          </h1>
+        </div>
+        <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
+          Welcome back{session?.user?.name ? `, ${session.user.name.split(' ')[0]}` : ''}. Here's your schedule and tasks for today.
+        </p>
+      </div>
+
+      <div className="mx-auto w-full max-w-[1400px] flex flex-col" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
+        <div className={`grid grid-cols-12 ${!isMobile ? 'flex-1' : ''}`} style={{ gap: isMobile ? '16px' : 'var(--grid-gap)', alignContent: 'start', position: 'relative', zIndex: 1 }}>
           {/* Top row - 3 cards */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.NEXT_CLASS) && (
           <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.NEXT_CLASS, visibleDashboardCards))} data-tour="next-class">
@@ -681,7 +723,7 @@ function Dashboard() {
                             appearance: 'none',
                             width: '16px',
                             height: '16px',
-                            border: d.status === 'done' ? 'none' : '2px solid var(--border)',
+                            border: d.status === 'done' ? 'none' : '2px solid var(--text-muted)',
                             borderRadius: '3px',
                             backgroundColor: d.status === 'done' ? 'var(--button-secondary)' : 'transparent',
                             cursor: 'pointer',
@@ -760,21 +802,19 @@ function Dashboard() {
               <div className="space-y-0">
                 <div className="flex items-center justify-between border-b border-[var(--border)] first:pt-0" style={{ paddingTop: isMobile ? '8px' : '12px', paddingBottom: isMobile ? '8px' : '12px' }}>
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Classes remaining</div>
-                  <div className="text-base font-semibold tabular-nums" style={{ color: settings.theme === 'light' ? '#000000' : 'white', filter: 'brightness(1.3) saturate(1.1)' }}>{classesLeft}</div>
+                  <div className="text-base tabular-nums text-[var(--text)]" style={{ fontWeight: classesLeft > 0 ? 700 : 500, marginRight: '8px' }}>{classesLeft}</div>
                 </div>
                 <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: isMobile ? '8px' : '12px', paddingBottom: isMobile ? '8px' : '12px' }}>
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Due soon</div>
-                  <div className="text-base font-semibold tabular-nums text-[var(--text)]">{dueSoon.length}</div>
+                  <div className="text-base tabular-nums text-[var(--text)]" style={{ fontWeight: dueSoon.length > 0 ? 700 : 500, marginRight: '8px' }}>{dueSoon.length}</div>
                 </div>
                 <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: isMobile ? '8px' : '12px', paddingBottom: isMobile ? '8px' : '12px' }}>
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Overdue</div>
-                  <div className={`text-base font-semibold tabular-nums ${overdueCount > 0 ? 'text-[var(--danger)]' : 'text-[var(--text)]'}`}>
-                    {overdueCount}
-                  </div>
+                  <div className="text-base tabular-nums" style={{ fontWeight: overdueCount > 0 ? 700 : 500, color: overdueCount > 0 ? 'var(--danger)' : 'var(--text)', marginRight: '8px' }}>{overdueCount}</div>
                 </div>
                 <div className="flex items-center justify-between last:pb-0" style={{ paddingTop: isMobile ? '8px' : '12px', paddingBottom: isMobile ? '8px' : '12px' }}>
                   <div className="text-sm text-[var(--muted)] leading-relaxed">Tasks today</div>
-                  <div className="text-base font-semibold tabular-nums text-[var(--text)]">{todayTasks.length}</div>
+                  <div className="text-base tabular-nums text-[var(--text)]" style={{ fontWeight: todayTasks.length > 0 ? 700 : 500, marginRight: '8px' }}>{todayTasks.length}</div>
                 </div>
               </div>,
               'h-full flex flex-col'
@@ -784,7 +824,7 @@ function Dashboard() {
 
           {/* Second row - Today's Tasks & Quick Links */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.TODAY_TASKS) && (
-          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.TODAY_TASKS, visibleDashboardCards) + ' lg:flex')} data-tour="today-tasks">
+          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.TODAY_TASKS, visibleDashboardCards) + ' lg:flex')} style={{ minHeight: '300px', order: 2 }} data-tour="today-tasks">
             {renderCard(
               DASHBOARD_CARDS.TODAY_TASKS,
               'Today\'s Tasks',
@@ -833,7 +873,7 @@ function Dashboard() {
                           appearance: 'none',
                           width: '16px',
                           height: '16px',
-                          border: t.status === 'done' ? 'none' : '2px solid var(--border)',
+                          border: t.status === 'done' ? 'none' : '2px solid var(--text-muted)',
                           borderRadius: '3px',
                           backgroundColor: t.status === 'done' ? 'var(--button-secondary)' : 'transparent',
                           cursor: 'pointer',
@@ -1053,7 +1093,7 @@ function Dashboard() {
 
           {/* Quick Links */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.QUICK_LINKS) && (
-          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.QUICK_LINKS, visibleDashboardCards) + ' lg:flex')}>
+          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.QUICK_LINKS, visibleDashboardCards) + ' lg:flex')} style={{ minHeight: '300px', order: 3 }}>
             {renderCard(
               DASHBOARD_CARDS.QUICK_LINKS,
               'Quick Links',
@@ -1092,7 +1132,8 @@ function Dashboard() {
 
           {/* Upcoming This Week - Full Width */}
           {visibleDashboardCards.includes(DASHBOARD_CARDS.UPCOMING_WEEK) && (
-          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.UPCOMING_WEEK, visibleDashboardCards) + ' lg:flex')}>
+          <div className={getCardWrapperClasses(getDashboardCardSpan(DASHBOARD_CARDS.UPCOMING_WEEK, visibleDashboardCards) + ' lg:flex')} style={{ position: 'relative', minHeight: '300px', order: 1 }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column' }}>
             {renderCard(
               DASHBOARD_CARDS.UPCOMING_WEEK,
               'Upcoming This Week',
@@ -1197,7 +1238,7 @@ function Dashboard() {
                 const hasAnyItems = daysList.some((day) => day.items.length > 0);
 
                 return hasAnyItems ? (
-                  <div style={{ padding: '0 -24px' }}>
+                  <div className="flex-1 overflow-y-auto" style={{ padding: '0 -24px' }}>
                     {daysList.map(({ dateKey, date, items }) => {
                       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -1247,6 +1288,7 @@ function Dashboard() {
               'h-full flex flex-col w-full',
               'Your schedule for the next 7 days'
             )}
+            </div>
           </div>
           )}
         </div>

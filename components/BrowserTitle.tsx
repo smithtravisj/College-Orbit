@@ -8,40 +8,40 @@ export default function BrowserTitle() {
 
   useEffect(() => {
     const titles: Record<string, string> = {
-      'Brigham Young University': 'BYU Survival Tool',
-      'Brigham Young University Idaho': 'BYUI Survival Tool',
-      'Brigham Young University Hawaii': 'BYUH Survival Tool',
-      'North Lincoln High School': 'NLHS Survival Tool',
-      'UNC Chapel Hill': 'UNC Survival Tool',
-      'Utah State University': 'USU Survival Tool',
-      'Utah Valley University': 'UVU Survival Tool',
-      'Arizona State University': 'ASU Survival Tool',
-      'University of Central Florida': 'UCF Survival Tool',
-      'Ohio State University': 'OSU Survival Tool',
-      'University of Texas at Austin': 'College Survival Tool',
+      'Brigham Young University': 'BYU Orbit',
+      'Brigham Young University Idaho': 'BYUI Orbit',
+      'Brigham Young University Hawaii': 'BYUH Orbit',
+      'North Lincoln High School': 'NLHS Orbit',
+      'UNC Chapel Hill': 'UNC Orbit',
+      'Utah State University': 'USU Orbit',
+      'Utah Valley University': 'UVU Orbit',
+      'Arizona State University': 'ASU Orbit',
+      'University of Central Florida': 'UCF Orbit',
+      'Ohio State University': 'OSU Orbit',
+      'University of Texas at Austin': 'College Orbit',
     };
 
-    const newTitle = university && titles[university] ? titles[university] : 'College Survival Tool';
+    const newTitle = university && titles[university] ? titles[university] : 'College Orbit';
     document.title = newTitle;
   }, [university]);
 
   // Monitor document title changes to correct them immediately if Next.js resets them
   useEffect(() => {
     const titles: Record<string, string> = {
-      'Brigham Young University': 'BYU Survival Tool',
-      'Brigham Young University Idaho': 'BYUI Survival Tool',
-      'Brigham Young University Hawaii': 'BYUH Survival Tool',
-      'North Lincoln High School': 'NLHS Survival Tool',
-      'UNC Chapel Hill': 'UNC Survival Tool',
-      'Utah State University': 'USU Survival Tool',
-      'Utah Valley University': 'UVU Survival Tool',
-      'Arizona State University': 'ASU Survival Tool',
-      'University of Central Florida': 'UCF Survival Tool',
-      'Ohio State University': 'OSU Survival Tool',
-      'University of Texas at Austin': 'College Survival Tool',
+      'Brigham Young University': 'BYU Orbit',
+      'Brigham Young University Idaho': 'BYUI Orbit',
+      'Brigham Young University Hawaii': 'BYUH Orbit',
+      'North Lincoln High School': 'NLHS Orbit',
+      'UNC Chapel Hill': 'UNC Orbit',
+      'Utah State University': 'USU Orbit',
+      'Utah Valley University': 'UVU Orbit',
+      'Arizona State University': 'ASU Orbit',
+      'University of Central Florida': 'UCF Orbit',
+      'Ohio State University': 'OSU Orbit',
+      'University of Texas at Austin': 'College Orbit',
     };
 
-    const expectedTitle = university && titles[university] ? titles[university] : 'College Survival Tool';
+    const expectedTitle = university && titles[university] ? titles[university] : 'College Orbit';
 
     // Check every 100ms if the title has been reset and correct it
     const interval = setInterval(() => {

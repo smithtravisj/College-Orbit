@@ -297,16 +297,17 @@ export default function FolderModal({ isOpen, onClose, editingFolderId, courses 
                 fontSize: '14px',
                 transition: 'background-color 150ms ease',
                 color: 'var(--text-muted)',
-                border: 'none',
-                background: 'transparent',
+                border: '1px solid var(--border)',
+                background: 'rgba(255,255,255,0.03)',
+                backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 opacity: loading ? 0.5 : 1,
               }}
               onMouseEnter={(e) => {
-                if (!loading) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                if (!loading) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)';
               }}
             >
               Cancel

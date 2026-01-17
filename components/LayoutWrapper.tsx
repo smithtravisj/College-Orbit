@@ -10,6 +10,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAnalyticsPageView } from '@/lib/useAnalytics';
 import useAppStore from '@/lib/store';
 import styles from './LayoutWrapper.module.css';
+import BackgroundDecoration from './BackgroundDecoration';
 
 export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -94,6 +95,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   if (isMobile) {
     return (
       <>
+        <BackgroundDecoration />
         <MobileHeader />
         <Navigation />
         <FloatingMenuButton />
@@ -104,9 +106,10 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
     );
   }
 
-  // Desktop layout with sidebar - UNCHANGED
+  // Desktop layout with sidebar
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '264px 1fr', gap: 0, minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 0, minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
+      <BackgroundDecoration />
       <Navigation />
       <main style={{ minWidth: 0 }}>
         {children}

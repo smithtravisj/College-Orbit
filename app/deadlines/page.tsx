@@ -5,7 +5,7 @@ import useAppStore from '@/lib/store';
 import { formatDate, isOverdue } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useBulkSelect } from '@/hooks/useBulkSelect';
-import PageHeader from '@/components/PageHeader';
+import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
@@ -75,6 +75,9 @@ function getRecurrenceText(pattern: any): string {
 export default function DeadlinesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [mounted, setMounted] = useState(false);
+  const university = useAppStore((state) => state.settings.university);
+  const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const colorPalette = getCollegeColorPalette(university || null, theme);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [hidingDeadlines, setHidingDeadlines] = useState<Set<string>>(new Set());
@@ -713,11 +716,39 @@ export default function DeadlinesPage() {
 
   return (
     <>
-      <PageHeader
-        title="Assignments"
-        subtitle="Track your assignments and deadlines"
-        actions={
-          <Button variant="secondary" size="md" onClick={() => {
+      {/* Assignments Header */}
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              {/* Subtle glow behind title */}
+              <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
+                  }}
+                />
+              </div>
+              <h1
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  fontSize: isMobile ? '26px' : '34px',
+                  fontWeight: 700,
+                  color: 'var(--text)',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                Assignments
+              </h1>
+            </div>
+            <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
+              Your assignments and deadlines.
+            </p>
+          </div>
+          <Button variant="secondary" size="md" style={{ marginTop: isMobile ? '0' : '8px' }} onClick={() => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               if (editingId || !showForm) {
                 setEditingId(null);
@@ -752,12 +783,12 @@ export default function DeadlinesPage() {
             <Plus size={18} />
             New Assignment
           </Button>
-        }
-      />
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
-        <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ gap: isMobile ? '16px' : undefined, overflow: 'visible' }}>
+        </div>
+      </div>
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', overflow: 'visible', position: 'relative', zIndex: 1 }}>
+        <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ gap: isMobile ? '16px' : undefined, overflow: 'visible', position: 'relative', zIndex: 1 }}>
           {/* Filters sidebar - 3 columns */}
-          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : '107px', alignSelf: 'start' }}>
+          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : '24px', alignSelf: 'start' }}>
             {isMobile ? (
               <CollapsibleCard
                 id="deadlines-filters"
@@ -820,7 +851,7 @@ export default function DeadlinesPage() {
                     </div>
                   </div>
                 )}
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {[
                     { value: 'all', label: 'All' },
                     { value: 'working-on', label: 'Working On' },
@@ -836,7 +867,13 @@ export default function DeadlinesPage() {
                           ? 'text-[var(--text)]'
                           : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                       }`}
-                      style={{ padding: isMobile ? '8px 12px' : '12px 16px', backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent', fontSize: isMobile ? '13px' : '14px' }}
+                      style={{
+                        padding: isMobile ? '8px 12px' : '12px 16px',
+                        backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent',
+                        backgroundImage: filter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                        boxShadow: filter === f.value ? `0 0 10px ${colorPalette.accent}80` : 'none',
+                        fontSize: isMobile ? '13px' : '14px',
+                      }}
                     >
                       {f.label}
                     </button>
@@ -844,9 +881,9 @@ export default function DeadlinesPage() {
                 </div>
               </CollapsibleCard>
             ) : (
-              <Card>
-                <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: '16px' }}>Filters</h3>
-                <div style={{ marginBottom: '20px' }}>
+              <Card noAccent>
+                <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: isMobile ? '10px' : '12px' }}>Filters</h3>
+                <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
                   <Input
                     label="Search"
                     value={searchQuery}
@@ -854,7 +891,7 @@ export default function DeadlinesPage() {
                     placeholder="Search assignments..."
                   />
                 </div>
-                <div style={{ marginBottom: '20px' }}>
+                <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
                   <Select
                     label="Course"
                     value={courseFilter}
@@ -862,7 +899,7 @@ export default function DeadlinesPage() {
                     options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
                   />
                 </div>
-                <div style={{ marginBottom: '20px' }}>
+                <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
                   <Select
                     label="Effort"
                     value={effortFilter}
@@ -876,8 +913,8 @@ export default function DeadlinesPage() {
                   />
                 </div>
                 {allTags.length > 0 && (
-                  <div style={{ marginBottom: '20px' }}>
-                    <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Tags</label>
+                  <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
+                    <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px' }}>Tags</label>
                     <div className="space-y-1">
                       {allTags.map((tag) => (
                         <label key={tag} className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)] hover:text-[var(--text)]">
@@ -901,7 +938,7 @@ export default function DeadlinesPage() {
                     </div>
                   </div>
                 )}
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {[
                     { value: 'all', label: 'All' },
                     { value: 'working-on', label: 'Working On' },
@@ -913,17 +950,23 @@ export default function DeadlinesPage() {
                       key={f.value}
                       onClick={() => setFilter(f.value)}
                       className={`w-full text-left rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
-                      filter === f.value
-                        ? 'text-[var(--text)]'
-                        : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
-                    }`}
-                    style={{ padding: isMobile ? '8px 12px' : '12px 16px', backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent', fontSize: isMobile ? '13px' : '14px' }}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-            </Card>
+                        filter === f.value
+                          ? 'text-[var(--text)]'
+                          : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
+                      }`}
+                      style={{
+                        padding: isMobile ? '8px 12px' : '8px 14px',
+                        backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent',
+                        backgroundImage: filter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                        boxShadow: filter === f.value ? `0 0 10px ${colorPalette.accent}80` : 'none',
+                        fontSize: isMobile ? '13px' : '14px',
+                      }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </Card>
             )}
           </div>
 
@@ -1228,7 +1271,7 @@ export default function DeadlinesPage() {
                         backgroundColor: isSelected ? 'var(--nav-active)' : undefined,
                         cursor: 'pointer',
                       }}
-                      className="first:pt-0 last:pb-0 flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0"
+                      className="first:pt-0 last:pb-0 flex items-center group/deadline hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0"
                       onContextMenu={(e) => bulkSelect.handleContextMenu(e, d.id)}
                       onTouchStart={() => bulkSelect.handleLongPressStart(d.id)}
                       onTouchEnd={bulkSelect.handleLongPressEnd}
@@ -1425,7 +1468,7 @@ export default function DeadlinesPage() {
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '12px' }}>
+                      <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover/deadline:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '12px' }}>
                         <button
                           onClick={(e) => { e.stopPropagation(); updateDeadline(d.id, { workingOn: !d.workingOn }); }}
                           className={`rounded-[var(--radius-control)] transition-colors hover:bg-white/5 ${d.workingOn ? 'text-[var(--success)]' : 'text-[var(--muted)] hover:text-[var(--success)]'}`}

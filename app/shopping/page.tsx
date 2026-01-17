@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import PageHeader from '@/components/PageHeader';
+import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
@@ -30,6 +30,9 @@ const STORAGE_KEY = 'shopping-active-tab';
 
 export default function ShoppingPage() {
   const isMobile = useIsMobile();
+  const university = useAppStore((state) => state.settings.university);
+  const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const colorPalette = getCollegeColorPalette(university || null, theme);
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<ShoppingListType>(() => {
     // Initialize from localStorage if available (client-side only)
@@ -266,7 +269,7 @@ export default function ShoppingPage() {
 
   const filtersContent = (
     <>
-      <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+      <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
         <Input
           label="Search"
           value={searchQuery}
@@ -274,7 +277,7 @@ export default function ShoppingPage() {
           placeholder="Search items..."
         />
       </div>
-      <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+      <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
         <Select
           label="Category"
           value={categoryFilter}
@@ -286,7 +289,7 @@ export default function ShoppingPage() {
         />
       </div>
       {activeTab === 'pantry' && (
-        <div style={{ marginBottom: checkedCount > 0 ? (isMobile ? '12px' : '20px') : 0 }}>
+        <div style={{ marginBottom: checkedCount > 0 ? (isMobile ? '12px' : '14px') : 0 }}>
           <Select
             label="Perishable"
             value={perishableFilter}
@@ -314,36 +317,66 @@ export default function ShoppingPage() {
 
   return (
     <>
-      <PageHeader
-        title="Things to Buy"
-        subtitle="Manage your shopping lists and pantry inventory"
-        actions={
-          <Button variant="secondary" size="md" onClick={() => {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              if (editingId || !showForm) {
-                setEditingId(null);
-                setFormData({
-                  name: '',
-                  quantity: '',
-                  unit: '',
-                  category: categoryFilter || '',
-                  notes: '',
-                  priority: '',
-                  price: '',
-                  perishable: perishableFilter === 'perishable' ? true : perishableFilter === 'non-perishable' ? false : false,
-                });
-                setShowForm(true);
-              } else {
-                setShowForm(false);
-              }
-            }}>
-            <Plus size={18} />
-            <span style={{ marginLeft: '6px' }}>Add Item</span>
-          </Button>
-        }
-      />
+      {/* Shopping Header */}
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              {/* Subtle glow behind title */}
+              <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
+                  }}
+                />
+              </div>
+              <h1
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  fontSize: isMobile ? '26px' : '34px',
+                  fontWeight: 700,
+                  color: 'var(--text)',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                Things to Buy
+              </h1>
+            </div>
+            <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
+              Your shopping lists and pantry inventory.
+            </p>
+          </div>
+          {!isMobile && (
+            <Button variant="secondary" size="md" style={{ marginTop: '8px' }} onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (editingId || !showForm) {
+                  setEditingId(null);
+                  setFormData({
+                    name: '',
+                    quantity: '',
+                    unit: '',
+                    category: categoryFilter || '',
+                    notes: '',
+                    priority: '',
+                    price: '',
+                    perishable: perishableFilter === 'perishable' ? true : perishableFilter === 'non-perishable' ? false : false,
+                  });
+                  setShowForm(true);
+                } else {
+                  setShowForm(false);
+                }
+              }}>
+              <Plus size={18} />
+              <span style={{ marginLeft: '6px' }}>Add Item</span>
+            </Button>
+          )}
+        </div>
+      </div>
 
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
         {/* Tab Navigation */}
         <div className="flex gap-2 mb-4" style={{ marginBottom: isMobile ? '12px' : '20px' }}>
           {TAB_ORDER.map((tab) => {
@@ -357,7 +390,9 @@ export default function ShoppingPage() {
                 style={{
                   padding: isMobile ? '8px 12px' : '10px 16px',
                   fontSize: isMobile ? '12px' : '14px',
-                  backgroundColor: isActive ? 'var(--button-secondary)' : 'transparent',
+                  backgroundColor: isActive ? 'var(--nav-active)' : 'transparent',
+                  backgroundImage: isActive ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                  boxShadow: isActive ? `0 0 10px ${colorPalette.accent}80` : 'none',
                   color: isActive ? 'var(--text)' : 'var(--text-muted)',
                 }}
               >
@@ -368,9 +403,9 @@ export default function ShoppingPage() {
           })}
         </div>
 
-        <div className="grid grid-cols-12 gap-[var(--grid-gap)]">
+        <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ position: 'relative', zIndex: 1 }}>
           {/* Sidebar - 3 columns */}
-          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : '107px', alignSelf: 'start', marginBottom: isMobile ? '8px' : undefined }}>
+          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : '24px', alignSelf: 'start', marginBottom: isMobile ? '8px' : undefined }}>
             {isMobile ? (
               <CollapsibleCard
                 id="shopping-filters"
@@ -381,8 +416,8 @@ export default function ShoppingPage() {
                 {filtersContent}
               </CollapsibleCard>
             ) : (
-              <Card>
-                <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: '16px' }}>
+              <Card noAccent>
+                <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: '14px' }}>
                   Filters
                 </h3>
                 {filtersContent}
@@ -584,7 +619,7 @@ export default function ShoppingPage() {
                         {groupedItems[category].map((item, index) => (
                           <div
                             key={item.id}
-                            className="flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors"
+                            className="flex items-center group/item hover:bg-[var(--panel-2)] rounded transition-colors"
                             style={{
                               padding: isMobile ? '10px 8px' : '12px 16px',
                               opacity: (item.checked && activeTab !== 'pantry') ? 0.6 : 1,
@@ -681,9 +716,9 @@ export default function ShoppingPage() {
                             </div>
 
                             {/* Actions */}
-                            <div className="flex items-center gap-2" style={{ opacity: isMobile ? 1 : 0, transition: 'opacity 0.2s' }}>
+                            <div className="flex items-center gap-2 lg:opacity-0 lg:group-hover/item:opacity-100" style={{ opacity: isMobile ? 1 : undefined, transition: 'opacity 0.2s' }}>
                               <button
-                                onClick={() => startEdit(item)}
+                                onClick={(e) => { e.stopPropagation(); startEdit(item); }}
                                 className="text-[var(--text-muted)] hover:text-[var(--edit-hover)]"
                                 style={{ padding: '4px' }}
                                 aria-label="Edit item"
@@ -691,7 +726,7 @@ export default function ShoppingPage() {
                                 <Edit2 size={isMobile ? 16 : 18} />
                               </button>
                               <button
-                                onClick={() => deleteShoppingItem(item.id)}
+                                onClick={(e) => { e.stopPropagation(); deleteShoppingItem(item.id); }}
                                 className="text-[var(--text-muted)] hover:text-[var(--danger)]"
                                 style={{ padding: '4px' }}
                                 aria-label="Delete item"
@@ -720,7 +755,7 @@ export default function ShoppingPage() {
 
       {/* CSS for hover effects */}
       <style jsx>{`
-        .group:hover .flex.items-center.gap-2 {
+        .group\\/item:hover .flex.items-center.gap-2 {
           opacity: 1 !important;
         }
       `}</style>

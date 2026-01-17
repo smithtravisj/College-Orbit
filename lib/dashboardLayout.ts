@@ -9,8 +9,7 @@
  */
 const DASHBOARD_ROWS = {
   row1: ['nextClass', 'dueSoon', 'overview'],
-  row2: ['todayTasks', 'dashboard_quickLinks'],
-  row3: ['upcomingWeek'],
+  row2: ['todayTasks', 'dashboard_quickLinks', 'upcomingWeek'],
 } as const;
 
 /**

@@ -38,6 +38,7 @@
 
 .driver-popover-next-btn {
   background-color: var(--accent) !important;
+  background-image: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%) !important;
   color: white !important;
   border: none !important;
   border-radius: var(--radius-control) !important;
@@ -49,6 +50,7 @@
   text-align: center !important;
   height: auto !important;
   min-height: 36px !important;
+  box-shadow: 0 0 10px var(--accent) !important;
 }
 
 .driver-popover-next-btn:hover {

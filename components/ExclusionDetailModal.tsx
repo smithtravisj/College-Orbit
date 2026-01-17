@@ -219,9 +219,10 @@ export default function ExclusionDetailModal({
             onClick={onClose}
             style={{
               padding: '8px 16px',
-              backgroundColor: 'var(--accent)',
-              color: 'white',
-              border: 'none',
+              backgroundColor: 'var(--button-secondary)',
+              backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
               borderRadius: 'var(--radius-control)',
               cursor: 'pointer',
               fontSize: '0.875rem',

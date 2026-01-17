@@ -118,6 +118,8 @@ export default function FolderTree({
           borderRadius: '8px',
           cursor: 'pointer',
           backgroundColor: selectedFolderId === null ? 'var(--accent)' : 'transparent',
+          backgroundImage: selectedFolderId === null ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+          boxShadow: selectedFolderId === null ? '0 0 8px var(--accent)' : 'none',
           color: selectedFolderId === null ? selectedTextColor : 'var(--text-muted)',
           transition: 'all 150ms ease',
         }}
@@ -186,6 +188,8 @@ export default function FolderTree({
               borderRadius: '8px',
               cursor: 'pointer',
               backgroundColor: isSelected ? 'var(--accent)' : 'transparent',
+              backgroundImage: isSelected ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+              boxShadow: isSelected ? '0 0 8px var(--accent)' : 'none',
               color: isSelected ? selectedTextColor : 'var(--text-muted)',
               transition: 'all 150ms ease',
             }}
@@ -395,18 +399,19 @@ export default function FolderTree({
                     borderRadius: '8px',
                     fontWeight: '500',
                     fontSize: '14px',
-                    border: 'none',
-                    background: 'transparent',
+                    border: '1px solid var(--border)',
+                    background: 'rgba(255,255,255,0.03)',
+                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                     color: 'var(--text-muted)',
                     cursor: loading ? 'not-allowed' : 'pointer',
                     opacity: loading ? 0.5 : 1,
                     transition: 'background-color 150ms ease',
                   }}
                   onMouseEnter={(e) => {
-                    if (!loading) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                    if (!loading) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)';
                   }}
                 >
                   Cancel

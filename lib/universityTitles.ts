@@ -1,21 +1,21 @@
 // Map universities to their app titles
 export const universityTitles: Record<string, string> = {
-  'Arizona State University': 'ASU Survival Tool',
-  'Brigham Young University': 'BYU Survival Tool',
-  'Brigham Young University Hawaii': 'BYUH Survival Tool',
-  'Brigham Young University Idaho': 'BYUI Survival Tool',
-  'North Lincoln High School': 'NLHS Survival Tool',
-  'Ohio State University': 'OSU Survival Tool',
-  'UNC Chapel Hill': 'UNC Survival Tool',
-  'University of Central Florida': 'UCF Survival Tool',
-  'University of Texas at Austin': 'College Survival Tool',
-  'Utah State University': 'USU Survival Tool',
-  'Utah Valley University': 'UVU Survival Tool',
+  'Arizona State University': 'ASU Orbit',
+  'Brigham Young University': 'BYU Orbit',
+  'Brigham Young University Hawaii': 'BYUH Orbit',
+  'Brigham Young University Idaho': 'BYUI Orbit',
+  'North Lincoln High School': 'NLHS Orbit',
+  'Ohio State University': 'OSU Orbit',
+  'UNC Chapel Hill': 'UNC Orbit',
+  'University of Central Florida': 'UCF Orbit',
+  'University of Texas at Austin': 'College Orbit',
+  'Utah State University': 'USU Orbit',
+  'Utah Valley University': 'UVU Orbit',
 };
 
 export function getAppTitle(university: string | null | undefined): string {
   if (!university || !universityTitles[university]) {
-    return 'College Survival Tool';
+    return 'College Orbit';
   }
   return universityTitles[university];
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { Note } from '@/types';
-import PageHeader from '@/components/PageHeader';
+import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input, { Select } from '@/components/ui/Input';
@@ -17,6 +17,9 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 
 export default function NotesPage() {
   const isMobile = useIsMobile();
+  const university = useAppStore((state) => state.settings.university);
+  const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const colorPalette = getCollegeColorPalette(university || null, theme);
   const [mounted, setMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
@@ -177,13 +180,42 @@ export default function NotesPage() {
 
   return (
     <>
-      <PageHeader
-        title="Notes"
-        subtitle="Organize your study notes with rich text formatting"
-        actions={
+      {/* Notes Header */}
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              {/* Subtle glow behind title */}
+              <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
+                  }}
+                />
+              </div>
+              <h1
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  fontSize: isMobile ? '26px' : '34px',
+                  fontWeight: 700,
+                  color: 'var(--text)',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                Notes
+              </h1>
+            </div>
+            <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
+              Your study notes and resources.
+            </p>
+          </div>
           <Button
             variant="secondary"
             size="md"
+            style={{ marginTop: isMobile ? '0' : '8px' }}
             onClick={() => {
               resetForm();
               setShowForm(!showForm);
@@ -192,15 +224,15 @@ export default function NotesPage() {
             <Plus size={18} />
             New Note
           </Button>
-        }
-      />
+        </div>
+      </div>
 
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
-        <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ overflow: 'visible' }}>
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', overflow: 'visible', position: 'relative', zIndex: 1 }}>
+        <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
           {/* Sidebar - 3 columns */}
-          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', display: isMobile ? 'none' : 'block', position: 'sticky', top: '107px', alignSelf: 'start' }}>
-            <Card>
-              <div style={{ marginBottom: '20px' }}>
+          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', display: isMobile ? 'none' : 'block', position: 'sticky', top: '24px', alignSelf: 'start' }}>
+            <Card noAccent>
+              <div style={{ marginBottom: '14px' }}>
                 <Input
                   label="Search notes"
                   value={searchQuery}
@@ -234,7 +266,7 @@ export default function NotesPage() {
 
               {/* Tag filter dropdown */}
               {allTags.length > 0 && (
-                <div style={{ marginTop: '20px', position: 'relative' }}>
+                <div style={{ marginTop: '14px', position: 'relative' }}>
                   <button
                     type="button"
                     onClick={() => setShowTagsDropdown(!showTagsDropdown)}
@@ -282,7 +314,7 @@ export default function NotesPage() {
                 initialOpen={!(settings.dashboardCardsCollapsedState || []).includes('notes-filters')}
                 onChange={handleFiltersCollapseChange}
               >
-                <div style={{ marginBottom: isMobile ? '16px' : '20px' }}>
+                <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
                   <Input
                     label="Search notes"
                     value={searchQuery}
@@ -292,7 +324,7 @@ export default function NotesPage() {
                 </div>
 
                 {/* Folder filter dropdown */}
-                <div style={{ marginBottom: isMobile ? '0' : '0', position: 'relative' }}>
+                <div style={{ marginBottom: '0', position: 'relative' }}>
                   <button
                     type="button"
                     onClick={() => setShowFoldersDropdown(!showFoldersDropdown)}
@@ -316,7 +348,7 @@ export default function NotesPage() {
 
                 {/* Tag filter dropdown */}
                 {allTags.length > 0 && (
-                  <div style={{ marginTop: isMobile ? '12px' : '20px', position: 'relative' }}>
+                  <div style={{ marginTop: isMobile ? '12px' : '14px', position: 'relative' }}>
                     <button
                       type="button"
                       onClick={() => setShowTagsDropdown(!showTagsDropdown)}
@@ -357,7 +389,7 @@ export default function NotesPage() {
           )}
 
           {/* Main content - 9 columns */}
-          <div className="col-span-12 lg:col-span-9" style={{ overflow: 'visible', height: 'fit-content', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="col-span-12 lg:col-span-9" style={{ overflow: 'visible', height: 'fit-content', display: 'flex', flexDirection: 'column', gap: '4px', position: 'relative', zIndex: 1 }}>
             {/* Form */}
             {showForm && (
               <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
@@ -821,17 +853,18 @@ export default function NotesPage() {
                     borderRadius: '8px',
                     fontWeight: '500',
                     fontSize: isMobile ? '13px' : '14px',
-                    border: 'none',
-                    background: 'transparent',
+                    border: '1px solid var(--border)',
+                    background: 'rgba(255,255,255,0.03)',
+                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                     color: 'var(--text-muted)',
                     cursor: 'pointer',
                     transition: 'background-color 150ms ease',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)';
                   }}
                 >
                   Cancel

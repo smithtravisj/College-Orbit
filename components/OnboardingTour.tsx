@@ -52,7 +52,7 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
     const baseSteps = [
       {
         popover: {
-          title: 'Welcome to Your College Survival Tool!',
+          title: 'Welcome to College Orbit!',
           description: 'This app helps you manage your courses, assignments, tasks, notes, exams, and more—all in one place. Let\'s take a quick tour to show you around!',
         }
       },
@@ -225,7 +225,7 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
     const finalStep = {
       popover: {
         title: 'You\'re All Set!',
-        description: 'You now know the basics of your College Survival Tool. Start by adding your courses, and everything else will fall into place. Good luck this semester!',
+        description: 'You now know the basics of College Orbit. Start by adding your courses, and everything else will fall into place. Good luck this semester!',
       }
     };
 

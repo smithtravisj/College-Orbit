@@ -75,7 +75,7 @@ export default function CourseList({
               transition: 'background-color 0.2s ease',
               backgroundColor: isSelected ? 'var(--nav-active)' : undefined,
             }}
-            className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0"
+            className="first:pt-0 last:pb-0 flex items-center gap-4 group/course hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0"
             onContextMenu={(e) => onContextMenu?.(e, course.id)}
             onTouchStart={() => onLongPressStart?.(course.id)}
             onTouchEnd={onLongPressEnd}
@@ -161,7 +161,7 @@ export default function CourseList({
               </div>
             </div>
 
-            <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '6px' }}>
+            <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover/course:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '6px' }}>
               {!isMobile && (
                 <button
                   onClick={() => onEdit(course.id)}

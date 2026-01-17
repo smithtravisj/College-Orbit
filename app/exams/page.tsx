@@ -5,7 +5,7 @@ import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useBulkSelect } from '@/hooks/useBulkSelect';
 import { formatDate } from '@/lib/utils';
-import PageHeader from '@/components/PageHeader';
+import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
@@ -28,6 +28,9 @@ import {
 
 export default function ExamsPage() {
   const isMobile = useIsMobile();
+  const university = useAppStore((state) => state.settings.university);
+  const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const colorPalette = getCollegeColorPalette(university || null, theme);
   const [mounted, setMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -453,11 +456,39 @@ export default function ExamsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Exams"
-        subtitle="Schedule and track your exams"
-        actions={
-          <Button variant="secondary" size="md" onClick={() => {
+      {/* Exams Header */}
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              {/* Subtle glow behind title */}
+              <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
+                  }}
+                />
+              </div>
+              <h1
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  fontSize: isMobile ? '26px' : '34px',
+                  fontWeight: 700,
+                  color: 'var(--text)',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                Exams
+              </h1>
+            </div>
+            <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
+              Your upcoming exams and assessments.
+            </p>
+          </div>
+          <Button variant="secondary" size="md" style={{ marginTop: isMobile ? '0' : '8px' }} onClick={() => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               if (editingId || !showForm) {
                 setEditingId(null);
@@ -470,12 +501,12 @@ export default function ExamsPage() {
             <Plus size={18} />
             Schedule Exam
           </Button>
-        }
-      />
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
-        <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ gap: isMobile ? '16px' : undefined, overflow: 'visible' }}>
+        </div>
+      </div>
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', overflow: 'visible', position: 'relative', zIndex: 1 }}>
+        <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ gap: isMobile ? '16px' : undefined, overflow: 'visible', position: 'relative', zIndex: 1 }}>
           {/* Filters sidebar - 3 columns */}
-          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : '107px', alignSelf: 'start' }}>
+          <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : '24px', alignSelf: 'start' }}>
             {isMobile ? (
               <CollapsibleCard
                 id="exams-filters"
@@ -483,7 +514,7 @@ export default function ExamsPage() {
                 initialOpen={!(settings.dashboardCardsCollapsedState || []).includes('exams-filters')}
                 onChange={handleFiltersCollapseChange}
               >
-                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+                <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
                   <Input
                     label="Search"
                     value={searchQuery}
@@ -491,7 +522,7 @@ export default function ExamsPage() {
                     placeholder="Search exams..."
                   />
                 </div>
-                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+                <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
                   <Select
                     label="Course"
                     value={courseFilter}
@@ -499,7 +530,7 @@ export default function ExamsPage() {
                     options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {[
                     { value: 'all', label: 'All' },
                     { value: 'upcoming', label: 'Upcoming' },
@@ -513,14 +544,20 @@ export default function ExamsPage() {
                           ? 'text-[var(--text)]'
                           : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                       }`}
-                      style={{ padding: isMobile ? '8px 12px' : '12px 16px', backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent', fontSize: isMobile ? '13px' : '14px' }}
+                      style={{
+                        padding: isMobile ? '8px 12px' : '8px 14px',
+                        backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent',
+                        backgroundImage: filter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                        boxShadow: filter === f.value ? `0 0 10px ${colorPalette.accent}80` : 'none',
+                        fontSize: isMobile ? '13px' : '14px'
+                      }}
                     >
                       {f.label}
                     </button>
                   ))}
                 </div>
                 {allTags.length > 0 && (
-                  <div style={{ marginTop: isMobile ? '12px' : '20px' }}>
+                  <div style={{ marginTop: isMobile ? '12px' : '14px' }}>
                     <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Tags</label>
                     <div className="space-y-1">
                       {allTags.map((tag) => (
@@ -547,9 +584,9 @@ export default function ExamsPage() {
                 )}
               </CollapsibleCard>
             ) : (
-              <Card>
-                <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: isMobile ? '10px' : '16px' }}>Filters</h3>
-                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+              <Card noAccent>
+                <h3 className="text-lg font-semibold text-[var(--text)]" style={{ marginBottom: '14px' }}>Filters</h3>
+                <div style={{ marginBottom: '14px' }}>
                   <Input
                     label="Search"
                     value={searchQuery}
@@ -557,7 +594,7 @@ export default function ExamsPage() {
                     placeholder="Search exams..."
                   />
                 </div>
-                <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
+                <div style={{ marginBottom: '14px' }}>
                   <Select
                     label="Course"
                     value={courseFilter}
@@ -565,7 +602,7 @@ export default function ExamsPage() {
                     options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {[
                     { value: 'all', label: 'All' },
                     { value: 'upcoming', label: 'Upcoming' },
@@ -579,14 +616,20 @@ export default function ExamsPage() {
                           ? 'text-[var(--text)]'
                           : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                       }`}
-                      style={{ padding: isMobile ? '8px 12px' : '12px 16px', backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent', fontSize: isMobile ? '13px' : '14px' }}
+                      style={{
+                        padding: '8px 14px',
+                        backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent',
+                        backgroundImage: filter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                        boxShadow: filter === f.value ? `0 0 10px ${colorPalette.accent}80` : 'none',
+                        fontSize: '14px'
+                      }}
                     >
                       {f.label}
                     </button>
                   ))}
                 </div>
                 {allTags.length > 0 && (
-                  <div style={{ marginTop: isMobile ? '12px' : '20px' }}>
+                  <div style={{ marginTop: '14px' }}>
                     <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Tags</label>
                     <div className="space-y-1">
                       {allTags.map((tag) => (
@@ -616,7 +659,7 @@ export default function ExamsPage() {
           </div>
 
           {/* Exams list - 9 columns */}
-          <div className="col-span-12 lg:col-span-9" style={{ overflow: 'visible', height: 'fit-content', display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '24px' }}>
+          <div className="col-span-12 lg:col-span-9" style={{ overflow: 'visible', height: 'fit-content', display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '24px', position: 'relative', zIndex: 1 }}>
 
             {/* Add Exam Form */}
             {showForm && (
@@ -831,7 +874,7 @@ export default function ExamsPage() {
                         backgroundColor: isSelected ? 'var(--nav-active)' : undefined,
                         cursor: 'pointer',
                       }}
-                      className="first:pt-0 last:pb-0 flex items-center group hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0"
+                      className="first:pt-0 last:pb-0 flex items-center group/exam hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0"
                       onContextMenu={(e) => bulkSelect.handleContextMenu(e, exam.id)}
                       onTouchStart={() => bulkSelect.handleLongPressStart(exam.id)}
                       onTouchEnd={bulkSelect.handleLongPressEnd}
@@ -947,7 +990,7 @@ export default function ExamsPage() {
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '12px' }}>
+                      <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover/exam:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '12px' }}>
                         <button
                           onClick={(e) => { e.stopPropagation(); startEdit(exam); }}
                           className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"

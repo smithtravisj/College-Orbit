@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import useAppStore from '@/lib/store';
-import PageHeader from '@/components/PageHeader';
+import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { Download, Upload, Trash2, Monitor } from 'lucide-react';
@@ -98,6 +98,7 @@ export default function SettingsPage() {
   const [isMacDesktop, setIsMacDesktop] = useState(false);
 
   const { settings, updateSettings, exportData, importData, deleteAllData } = useAppStore();
+  const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
 
   // Check if running on Mac desktop browser
   useEffect(() => {
@@ -255,7 +256,7 @@ export default function SettingsPage() {
   const handleExport = async () => {
     try {
       const data = await exportData();
-      const filename = `byu-survival-tool-backup-${new Date().toISOString().split('T')[0]}.json`;
+      const filename = `college-orbit-backup-${new Date().toISOString().split('T')[0]}.json`;
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -668,65 +669,69 @@ export default function SettingsPage() {
           -moz-appearance: textfield;
         }
       `}</style>
-      <PageHeader title="Settings" subtitle="Customize your experience" />
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
+      {/* Settings Header */}
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+        <div>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            {/* Subtle glow behind title */}
+            <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
+                }}
+              />
+            </div>
+            <h1
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                fontSize: isMobile ? '26px' : '34px',
+                fontWeight: 700,
+                color: 'var(--text)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Settings
+            </h1>
+          </div>
+          <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
+            Customize your experience.
+          </p>
+        </div>
+      </div>
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
         {/* Admin Requests Card (Admin Only) - Full Width */}
         {isAdmin && (
           <div style={{ marginBottom: '24px', gridColumn: '1 / -1' }}>
             <Card title="Admin Requests">
               {/* Tab Navigation */}
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
-                <button
-                  onClick={() => setAdminTab('college')}
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: '14px',
-                    fontWeight: adminTab === 'college' ? '600' : '400',
-                    color: adminTab === 'college' ? 'var(--text)' : 'var(--text-muted)',
-                    border: 'none',
-                    borderBottom: adminTab === 'college' ? '2px solid var(--text)' : 'none',
-                    backgroundColor: 'transparent',
-                    cursor: 'pointer',
-                    marginBottom: '-12px',
-                    paddingBottom: '20px',
-                  }}
-                >
-                  College Requests
-                </button>
-                <button
-                  onClick={() => setAdminTab('issues')}
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: '14px',
-                    fontWeight: adminTab === 'issues' ? '600' : '400',
-                    color: adminTab === 'issues' ? 'var(--text)' : 'var(--text-muted)',
-                    border: 'none',
-                    borderBottom: adminTab === 'issues' ? '2px solid var(--text)' : 'none',
-                    backgroundColor: 'transparent',
-                    cursor: 'pointer',
-                    marginBottom: '-12px',
-                    paddingBottom: '20px',
-                  }}
-                >
-                  Issue Reports
-                </button>
-                <button
-                  onClick={() => setAdminTab('features')}
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: '14px',
-                    fontWeight: adminTab === 'features' ? '600' : '400',
-                    color: adminTab === 'features' ? 'var(--text)' : 'var(--text-muted)',
-                    border: 'none',
-                    borderBottom: adminTab === 'features' ? '2px solid var(--text)' : 'none',
-                    backgroundColor: 'transparent',
-                    cursor: 'pointer',
-                    marginBottom: '-12px',
-                    paddingBottom: '20px',
-                  }}
-                >
-                  Feature Requests
-                </button>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                {[
+                  { id: 'college', label: 'College Requests' },
+                  { id: 'issues', label: 'Issue Reports' },
+                  { id: 'features', label: 'Feature Requests' },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setAdminTab(tab.id as 'college' | 'issues' | 'features')}
+                    className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
+                      adminTab === tab.id ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                    }`}
+                    style={{
+                      padding: '8px 14px',
+                      fontSize: '14px',
+                      border: 'none',
+                      backgroundColor: adminTab === tab.id ? 'var(--nav-active)' : 'transparent',
+                      backgroundImage: adminTab === tab.id ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                      boxShadow: adminTab === tab.id ? `0 0 10px ${colorPalette.accent}80` : undefined,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
 
               {/* College Requests Tab */}
@@ -988,7 +993,7 @@ export default function SettingsPage() {
                     Download the native Mac app for a better desktop experience. The app runs in its own window without browser tabs or address bar.
                   </p>
                   <a
-                    href="/downloads/College-Survival-Tool.zip"
+                    href="/downloads/College-Orbit.zip"
                     download
                     className="inline-flex items-center gap-2 font-medium text-sm transition-all duration-150"
                     style={{
@@ -1267,8 +1272,8 @@ export default function SettingsPage() {
                 )}
               </div>
 
-              {/* Exam Reminders */}
-              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', marginTop: '16px' }}>
+              {/* Exam Reminders - Hidden for now */}
+              {false && <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', marginTop: '16px' }}>
                 <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
                   Exam Reminders
                 </label>
@@ -1365,6 +1370,7 @@ export default function SettingsPage() {
                             padding: isMobile ? '4px 8px' : '6px 12px',
                             fontSize: isMobile ? '11px' : '12px',
                             backgroundColor: removeButtonColor,
+                            backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
@@ -1373,6 +1379,7 @@ export default function SettingsPage() {
                             display: 'flex',
                             alignItems: 'center',
                             whiteSpace: 'nowrap',
+                            boxShadow: '0 0 10px rgba(220, 38, 38, 0.35)',
                           }}
                         >
                           Remove
@@ -1400,7 +1407,7 @@ export default function SettingsPage() {
                 >
                   + Add Reminder
                 </Button>
-              </div>
+              </div>}
             </div>
           </Card>
 
@@ -1410,10 +1417,6 @@ export default function SettingsPage() {
             <div style={{
               display: 'flex',
               gap: '8px',
-              padding: '4px',
-              backgroundColor: 'var(--panel-2)',
-              borderRadius: '8px',
-              border: '1px solid var(--border)',
               marginBottom: '24px',
             }}>
               {[
@@ -1424,17 +1427,17 @@ export default function SettingsPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveCustomizationTab(tab.id as 'pages' | 'dashboard' | 'tools')}
+                  className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
+                    activeCustomizationTab === tab.id ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                  }`}
                   style={{
-                    flex: 1,
-                    padding: '8px 12px',
-                    backgroundColor: activeCustomizationTab === tab.id ? 'var(--accent)' : 'transparent',
-                    color: activeCustomizationTab === tab.id ? (settings.theme === 'light' ? '#000000' : 'white') : (settings.theme === 'light' ? '#000000' : 'var(--text)'),
+                    padding: '8px 14px',
+                    backgroundColor: activeCustomizationTab === tab.id ? 'var(--nav-active)' : 'transparent',
+                    backgroundImage: activeCustomizationTab === tab.id ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                    boxShadow: activeCustomizationTab === tab.id ? `0 0 10px ${colorPalette.accent}80` : undefined,
                     border: 'none',
-                    borderRadius: '6px',
                     cursor: 'pointer',
                     fontSize: '13px',
-                    fontWeight: activeCustomizationTab === tab.id ? '600' : '500',
-                    transition: 'all 0.2s',
                   }}
                 >
                   {tab.label}
@@ -1948,11 +1951,11 @@ export default function SettingsPage() {
                   Permanently delete all your data. This action cannot be undone.
                 </p>
                 <div style={{ display: 'flex', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
-                  <Button size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAllData} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                  <Button size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAllData} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)', backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' }}>
                     <Trash2 size={18} />
                     Delete All Data
                   </Button>
-                  <Button size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAccount} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                  <Button size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAccount} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)', backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' }}>
                     <Trash2 size={18} />
                     Delete Account
                   </Button>
@@ -1995,7 +1998,7 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div className="space-y-3 text-sm border-b border-[var(--border)]" style={{ paddingBottom: '18px' }}>
                 <div>
-                  <p className="font-semibold text-[var(--text)]">College Survival Tool</p>
+                  <p className="font-semibold text-[var(--text)]">College Orbit</p>
                   <p className="text-[var(--text-muted)]">v1.1</p>
                 </div>
                 <p className="text-[var(--text-secondary)]">
@@ -2017,19 +2020,11 @@ export default function SettingsPage() {
                   size={isMobile ? 'sm' : 'lg'}
                   onClick={async () => {
                     try {
-                      // Update settings in database
-                      const response = await fetch('/api/settings', {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ hasCompletedOnboarding: false }),
-                      });
+                      // Update settings through store (updates both local state and database)
+                      await updateSettings({ hasCompletedOnboarding: false });
 
-                      if (response.ok) {
-                        // Wait a moment for the update to persist, then redirect
-                        setTimeout(() => {
-                          window.location.href = '/';
-                        }, 200);
-                      }
+                      // Redirect to dashboard to start the tutorial
+                      window.location.href = '/';
                     } catch (error) {
                       console.error('Failed to restart tutorial:', error);
                     }
@@ -2060,7 +2055,7 @@ export default function SettingsPage() {
                   className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
                   style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
                 >
-                  collegesurvivaltool@protonmail.com
+                  collegeorbit@protonmail.com
                 </button>
               </div>
             </div>
@@ -2102,6 +2097,7 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: 'var(--panel-2)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                   border: '1px solid var(--border)',
                   color: 'var(--text)',
                   borderRadius: '6px',
@@ -2117,12 +2113,14 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: '#660000',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                   color: 'white',
                   border: '1px solid #660000',
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
                 }}
               >
                 Delete All
@@ -2166,6 +2164,7 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: 'var(--panel-2)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                   border: '1px solid var(--border)',
                   color: 'var(--text)',
                   borderRadius: '6px',
@@ -2181,12 +2180,14 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: '#660000',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                   color: 'white',
                   border: '1px solid #660000',
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
                 }}
               >
                 Delete Account
@@ -2233,6 +2234,7 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: 'var(--panel-2)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                   border: '1px solid var(--border)',
                   color: 'var(--text)',
                   borderRadius: '6px',
@@ -2248,12 +2250,14 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: '#660000',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                   color: 'white',
                   border: '1px solid #660000',
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
                 }}
               >
                 Reject Request
@@ -2300,6 +2304,7 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: 'var(--panel-2)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                   border: '1px solid var(--border)',
                   color: 'var(--text)',
                   borderRadius: '6px',
@@ -2315,12 +2320,14 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: '#660000',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                   color: 'white',
                   border: '1px solid #660000',
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
                 }}
               >
                 Reject Report
@@ -2383,6 +2390,7 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: 'var(--panel-2)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                   border: '1px solid var(--border)',
                   color: 'var(--text)',
                   borderRadius: '6px',
@@ -2421,12 +2429,14 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                   color: 'white',
                   border: `1px solid ${selectedTheme === 'light' ? 'var(--danger)' : '#660000'}`,
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
                 }}
               >
                 Reject
@@ -2473,6 +2483,7 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: 'var(--panel-2)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                   border: '1px solid var(--border)',
                   color: 'var(--text)',
                   borderRadius: '6px',
@@ -2488,12 +2499,14 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: '#660000',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                   color: 'white',
                   border: '1px solid #660000',
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
                 }}
               >
                 Reject Request
@@ -2556,6 +2569,7 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: 'var(--panel-2)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                   border: '1px solid var(--border)',
                   color: 'var(--text)',
                   borderRadius: '6px',
@@ -2594,12 +2608,14 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                   color: 'white',
                   border: `1px solid ${selectedTheme === 'light' ? 'var(--danger)' : '#660000'}`,
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
                 }}
               >
                 Reject
@@ -2638,7 +2654,7 @@ export default function SettingsPage() {
               This will open your default email app to send a message to:
             </p>
             <p style={{ color: 'var(--text)', marginBottom: '24px', fontSize: '14px', fontWeight: '500' }}>
-              collegesurvivaltool@protonmail.com
+              collegeorbit@protonmail.com
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button
@@ -2646,6 +2662,7 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: 'var(--panel-2)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                   border: '1px solid var(--border)',
                   color: 'var(--text)',
                   borderRadius: '6px',
@@ -2658,12 +2675,13 @@ export default function SettingsPage() {
               </button>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText('collegesurvivaltool@protonmail.com');
+                  navigator.clipboard.writeText('collegeorbit@protonmail.com');
                   setShowEmailConfirm(false);
                 }}
                 style={{
                   padding: '8px 16px',
                   backgroundColor: 'var(--panel-2)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                   border: '1px solid var(--border)',
                   color: 'var(--text)',
                   borderRadius: '6px',
@@ -2676,7 +2694,7 @@ export default function SettingsPage() {
               </button>
               <button
                 onClick={() => {
-                  window.location.href = 'mailto:collegesurvivaltool@protonmail.com';
+                  window.location.href = 'mailto:collegeorbit@protonmail.com';
                   setShowEmailConfirm(false);
                 }}
                 style={{
