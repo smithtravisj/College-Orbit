@@ -349,30 +349,28 @@ export default function ShoppingPage() {
               Your shopping lists and pantry inventory.
             </p>
           </div>
-          {!isMobile && (
-            <Button variant="secondary" size="md" style={{ marginTop: '8px' }} onClick={() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                if (editingId || !showForm) {
-                  setEditingId(null);
-                  setFormData({
-                    name: '',
-                    quantity: '',
-                    unit: '',
-                    category: categoryFilter || '',
-                    notes: '',
-                    priority: '',
-                    price: '',
-                    perishable: perishableFilter === 'perishable' ? true : perishableFilter === 'non-perishable' ? false : false,
-                  });
-                  setShowForm(true);
-                } else {
-                  setShowForm(false);
-                }
-              }}>
-              <Plus size={18} />
-              <span style={{ marginLeft: '6px' }}>Add Item</span>
-            </Button>
-          )}
+          <Button variant="secondary" size="md" style={{ marginTop: isMobile ? '12px' : '8px' }} onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              if (editingId || !showForm) {
+                setEditingId(null);
+                setFormData({
+                  name: '',
+                  quantity: '',
+                  unit: '',
+                  category: categoryFilter || '',
+                  notes: '',
+                  priority: '',
+                  price: '',
+                  perishable: perishableFilter === 'perishable' ? true : perishableFilter === 'non-perishable' ? false : false,
+                });
+                setShowForm(true);
+              } else {
+                setShowForm(false);
+              }
+            }}>
+            <Plus size={18} />
+            {isMobile ? 'Item' : 'Add Item'}
+          </Button>
         </div>
       </div>
 
@@ -494,55 +492,30 @@ export default function ShoppingPage() {
                     </div>
                   )}
 
-                  {/* Notes and Perishable row for pantry on mobile */}
-                  {isMobile && activeTab === 'pantry' ? (
-                    <div className="grid grid-cols-2 gap-2" style={{ alignItems: 'end' }}>
-                      <Textarea
-                        label="Notes"
-                        value={formData.notes}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        placeholder="Storage, expiration..."
-                        autoExpand
-                        maxHeight={200}
-                      />
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', height: 'var(--input-height)' }}>
-                        <input
-                          type="checkbox"
-                          checked={formData.perishable}
-                          onChange={(e) => setFormData({ ...formData, perishable: e.target.checked })}
-                          style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                        />
-                        <span style={{ fontSize: '12px', color: 'var(--text)' }}>Perishable</span>
-                      </label>
-                    </div>
-                  ) : (
-                    <>
-                      <Textarea
-                        label="Notes"
-                        value={formData.notes}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        placeholder={
-                          activeTab === 'pantry' ? 'Storage location, expiration date, etc.' :
-                          activeTab === 'wishlist' ? 'Where to buy, links, notes...' :
-                          'Brand preferences, store location, etc.'
-                        }
-                        autoExpand
-                        maxHeight={200}
-                      />
+                  <Textarea
+                    label="Notes"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    placeholder={
+                      activeTab === 'pantry' ? (isMobile ? 'Storage, expiration...' : 'Storage location, expiration date, etc.') :
+                      activeTab === 'wishlist' ? 'Where to buy, links, notes...' :
+                      'Brand preferences, store location, etc.'
+                    }
+                    autoExpand
+                    maxHeight={200}
+                  />
 
-                      {/* Pantry-specific fields - desktop only */}
-                      {activeTab === 'pantry' && (
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                          <input
-                            type="checkbox"
-                            checked={formData.perishable}
-                            onChange={(e) => setFormData({ ...formData, perishable: e.target.checked })}
-                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                          />
-                          <span style={{ fontSize: '14px', color: 'var(--text)' }}>Perishable</span>
-                        </label>
-                      )}
-                    </>
+                  {/* Pantry-specific perishable checkbox */}
+                  {activeTab === 'pantry' && (
+                    <label style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '10px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.perishable}
+                        onChange={(e) => setFormData({ ...formData, perishable: e.target.checked })}
+                        style={{ width: isMobile ? '16px' : '18px', height: isMobile ? '16px' : '18px', cursor: 'pointer' }}
+                      />
+                      <span style={{ fontSize: isMobile ? '12px' : '14px', color: 'var(--text)' }}>Perishable</span>
+                    </label>
                   )}
 
                   <div className="flex gap-3" style={{ marginTop: isMobile ? '4px' : '4px' }}>

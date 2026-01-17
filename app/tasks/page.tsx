@@ -805,7 +805,7 @@ export default function TasksPage() {
               Your tasks and to-dos.
             </p>
           </div>
-          <Button variant="secondary" size="md" style={{ marginTop: isMobile ? '0' : '8px' }} onClick={() => {
+          <Button variant="secondary" size="md" style={{ marginTop: isMobile ? '12px' : '8px' }} onClick={() => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               if (editingId || !showForm) {
                 setEditingId(null);

@@ -316,6 +316,10 @@ export default function Navigation() {
                   key={item.href}
                   href={item.href}
                   className={`${styles.drawerLink} ${isActive ? styles.active : ''}`}
+                  style={isActive ? {
+                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                    boxShadow: `0 0 10px ${colorPalette.accent}BF`,
+                  } : undefined}
                 >
                   <Icon size={20} />
                   <span>{item.label}</span>
@@ -330,6 +334,10 @@ export default function Navigation() {
                   key={item.href}
                   href={item.href}
                   className={`${styles.drawerLink} ${isActive ? styles.active : ''}`}
+                  style={isActive ? {
+                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                    boxShadow: `0 0 10px ${colorPalette.accent}BF`,
+                  } : undefined}
                 >
                   <Icon size={20} />
                   <span>{item.label}</span>
@@ -341,7 +349,14 @@ export default function Navigation() {
           {/* Drawer footer with profile/logout */}
           {session?.user && (
             <div className={styles.drawerFooter} style={{ position: 'relative', zIndex: 1 }}>
-              <Link href="/profile" className={`${styles.drawerLink} ${pathname === '/profile' ? styles.active : ''}`}>
+              <Link
+                href="/profile"
+                className={`${styles.drawerLink} ${pathname === '/profile' ? styles.active : ''}`}
+                style={pathname === '/profile' ? {
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                  boxShadow: `0 0 10px ${colorPalette.accent}BF`,
+                } : undefined}
+              >
                 <User size={20} />
                 <span>Profile</span>
               </Link>

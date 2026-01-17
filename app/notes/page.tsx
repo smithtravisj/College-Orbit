@@ -215,14 +215,14 @@ export default function NotesPage() {
           <Button
             variant="secondary"
             size="md"
-            style={{ marginTop: isMobile ? '0' : '8px' }}
+            style={{ marginTop: isMobile ? '12px' : '8px' }}
             onClick={() => {
               resetForm();
               setShowForm(!showForm);
             }}
           >
             <Plus size={18} />
-            New Note
+            {isMobile ? 'Note' : 'New Note'}
           </Button>
         </div>
       </div>

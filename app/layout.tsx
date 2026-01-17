@@ -20,8 +20,8 @@ export const metadata: Metadata = {
   title: 'College Orbit',
   description: 'A personal, privacy-first college dashboard',
   icons: {
-    icon: '/apple-touch-icon-copy.svg',
-    apple: '/apple-touch-icon.png',
+    icon: '/favicon.svg',
+    apple: '/apple-touch-icon-copy.svg',
   },
   manifest: '/manifest.json',
 };

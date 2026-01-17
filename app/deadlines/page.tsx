@@ -748,7 +748,7 @@ export default function DeadlinesPage() {
               Your assignments and deadlines.
             </p>
           </div>
-          <Button variant="secondary" size="md" style={{ marginTop: isMobile ? '0' : '8px' }} onClick={() => {
+          <Button variant="secondary" size="md" style={{ marginTop: isMobile ? '12px' : '8px' }} onClick={() => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               if (editingId || !showForm) {
                 setEditingId(null);
@@ -781,7 +781,7 @@ export default function DeadlinesPage() {
               }
             }}>
             <Plus size={18} />
-            New Assignment
+            {isMobile ? 'New' : 'New Assignment'}
           </Button>
         </div>
       </div>
