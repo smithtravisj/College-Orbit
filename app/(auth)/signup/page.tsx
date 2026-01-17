@@ -246,11 +246,11 @@ export default function SignupPage() {
 
       {/* Card */}
       <div style={{
-        background: 'var(--panel)',
-        border: `1px solid ${collegeButtonColor ? collegeButtonColor + '30' : 'var(--border)'}`,
+        background: '#18181b',
+        border: `1px solid ${collegeButtonColor ? collegeButtonColor + '30' : '#27272a'}`,
         borderRadius: '20px',
         padding: '22px',
-        boxShadow: `0 4px 24px rgba(0, 0, 0, 0.12), 0 0 48px ${collegeButtonColor ? collegeButtonColor + '20' : 'rgba(99, 102, 241, 0.08)'}`,
+        boxShadow: `0 4px 24px rgba(0, 0, 0, 0.3), 0 0 48px ${collegeButtonColor ? collegeButtonColor + '20' : 'rgba(99, 102, 241, 0.08)'}`,
         animation: 'fadeInUp 0.6s ease-out 0.1s backwards',
         transition: 'border-color 0.3s, box-shadow 0.3s',
         position: 'relative',
