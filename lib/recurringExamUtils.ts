@@ -217,15 +217,29 @@ export async function generateRecurringExamInstances(
 
 /**
  * Generate instances for all active recurring exam patterns for a user
+ * Only regenerates if instances haven't been generated in the last hour
  */
 export async function generateAllUserRecurringExamInstances(
   userId: string,
   windowDays: number = 60
 ): Promise<void> {
   try {
+    // Only fetch patterns that need regeneration (lastGenerated is null or older than 1 hour)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
     const patterns = await prisma.recurringExamPattern.findMany({
-      where: { userId, isActive: true },
+      where: {
+        userId,
+        isActive: true,
+        NOT: {
+          lastGenerated: { gte: oneHourAgo },
+        },
+      },
     });
+
+    if (patterns.length === 0) {
+      return; // Nothing to generate
+    }
 
     console.log(`[generateAllUserRecurringExamInstances] Generating for ${patterns.length} patterns for user ${userId}`);
 

@@ -422,7 +422,7 @@ export default function CalendarContent() {
       </div>
 
       <div style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', overflow: 'visible', position: 'relative', zIndex: 1 }}>
-        <div style={{
+        <div className="animate-fade-in-up" style={{
           position: 'relative',
           zIndex: 1,
           borderRadius: '16px',
