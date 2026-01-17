@@ -118,12 +118,12 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
     );
   }
 
-  // Desktop layout with sidebar
+  // Desktop layout with floating sidebar
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 0, minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
       <BackgroundDecoration />
       <Navigation />
-      <main style={{ minWidth: 0 }}>
+      <main style={{ marginLeft: '224px', minWidth: 0 }}>
         {children}
       </main>
     </div>

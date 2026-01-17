@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -59,6 +59,39 @@ export default function Navigation() {
   const visiblePages = rawVisiblePages.map((p: string) => p === 'Deadlines' ? 'Assignments' : p);
   const visiblePagesOrder = rawVisiblePagesOrder ? (rawVisiblePagesOrder as string[]).map((p: string) => p === 'Deadlines' ? 'Assignments' : p) : rawVisiblePagesOrder;
   const [isAdmin, setIsAdmin] = useState(false);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const titleContainerRef = useRef<HTMLDivElement>(null);
+  const [titleFontSize, setTitleFontSize] = useState(32);
+
+  // Auto-scale title font size to fit container
+  const calculateTitleSize = useCallback(() => {
+    if (!titleRef.current || !titleContainerRef.current) return;
+
+    const title = titleRef.current;
+    // Nav is 200px wide with 16px padding on each side = 168px available
+    const containerWidth = 168;
+
+    // Start with max font size and scale down if needed
+    let fontSize = 36;
+    title.style.fontSize = `${fontSize}px`;
+
+    while (title.scrollWidth > containerWidth && fontSize > 18) {
+      fontSize -= 1;
+      title.style.fontSize = `${fontSize}px`;
+    }
+
+    setTitleFontSize(fontSize);
+  }, []);
+
+  useEffect(() => {
+    // Delay calculation to ensure DOM is ready
+    const timer = setTimeout(calculateTitleSize, 50);
+    window.addEventListener('resize', calculateTitleSize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', calculateTitleSize);
+    };
+  }, [calculateTitleSize, university]);
 
   // Sort NAV_ITEMS according to visiblePagesOrder if it exists
   const sortedNavItems = (() => {
@@ -168,16 +201,25 @@ export default function Navigation() {
 
   return (
     <>
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar - Floating */}
       <nav
-        className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)]"
+        className="hidden md:flex flex-col overflow-y-auto bg-[var(--panel)]"
         style={{
+          position: 'fixed',
+          top: '16px',
+          left: '16px',
+          bottom: '16px',
+          width: '200px',
           padding: '20px 16px',
+          borderRadius: '16px',
+          border: '1px solid var(--border)',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+          zIndex: 50,
         }}
         data-tour="navigation"
       >
-        <div style={{ marginBottom: '16px', position: 'relative', zIndex: 1 }}>
-          <h1 className="font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px', fontSize: '28px' }}>{getAppTitle(university)}</h1>
+        <div ref={titleContainerRef} style={{ marginBottom: '16px', position: 'relative', zIndex: 1 }}>
+          <h1 ref={titleRef} className="font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px', fontSize: `${titleFontSize}px`, whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: '100%' }}>{getAppTitle(university)}</h1>
           {session?.user && (
             <div className="mt-3 text-sm text-[var(--text-muted)] truncate" style={{ paddingLeft: '20px' }}>
               {session.user.name || session.user.email}
