@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Download, FileText, ZoomIn, ZoomOut, RotateCw, RotateCcw, Maximize, Minimize, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import mammoth from 'mammoth';
+import * as XLSX from 'xlsx';
+import { marked } from 'marked';
+import JSZip from 'jszip';
 
 interface FileItem {
   name: string;
@@ -24,6 +27,12 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
   const [textContent, setTextContent] = useState<string | null>(null);
   const [docxHtml, setDocxHtml] = useState<string | null>(null);
   const [docxLoading, setDocxLoading] = useState(false);
+  const [xlsxHtml, setXlsxHtml] = useState<string | null>(null);
+  const [xlsxLoading, setXlsxLoading] = useState(false);
+  const [csvData, setCsvData] = useState<string[][] | null>(null);
+  const [markdownHtml, setMarkdownHtml] = useState<string | null>(null);
+  const [pptxSlides, setPptxSlides] = useState<string[] | null>(null);
+  const [pptxLoading, setPptxLoading] = useState(false);
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -100,6 +109,125 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
     }
   }, [file]);
 
+  // Load xlsx content
+  useEffect(() => {
+    if (!file) return;
+    const mimeType = getMimeType(file.url);
+    if (mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+      setXlsxLoading(true);
+      setXlsxHtml(null);
+      try {
+        const base64Data = file.url.split(',')[1];
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const workbook = XLSX.read(bytes, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const html = XLSX.utils.sheet_to_html(firstSheet, { editable: false });
+        setXlsxHtml(html);
+        setXlsxLoading(false);
+      } catch {
+        setXlsxHtml(null);
+        setXlsxLoading(false);
+      }
+    } else {
+      setXlsxHtml(null);
+    }
+  }, [file]);
+
+  // Load CSV content
+  useEffect(() => {
+    if (!file) return;
+    const mimeType = getMimeType(file.url);
+    if (mimeType === 'text/csv' || mimeType === 'application/csv') {
+      try {
+        const base64Data = file.url.split(',')[1];
+        const text = atob(base64Data);
+        const rows = parseCSV(text);
+        setCsvData(rows);
+      } catch {
+        setCsvData(null);
+      }
+    } else {
+      setCsvData(null);
+    }
+  }, [file]);
+
+  // Load markdown content
+  useEffect(() => {
+    if (!file) return;
+    const mimeType = getMimeType(file.url);
+    const isMarkdown = mimeType === 'text/markdown' || mimeType === 'text/x-markdown' || file.name.toLowerCase().endsWith('.md');
+    if (isMarkdown) {
+      try {
+        const base64Data = file.url.split(',')[1];
+        const text = atob(base64Data);
+        const html = marked(text, { gfm: true, breaks: true }) as string;
+        setMarkdownHtml(html);
+      } catch {
+        setMarkdownHtml(null);
+      }
+    } else {
+      setMarkdownHtml(null);
+    }
+  }, [file]);
+
+  // Load PPTX content (text extraction)
+  useEffect(() => {
+    if (!file) return;
+    const mimeType = getMimeType(file.url);
+    if (mimeType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
+      setPptxLoading(true);
+      setPptxSlides(null);
+
+      const loadPptx = async () => {
+        try {
+          const base64Data = file.url.split(',')[1];
+          const binaryString = atob(base64Data);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+
+          const zip = await JSZip.loadAsync(bytes);
+          const slides: string[] = [];
+
+          // Find all slide files
+          const slideFiles = Object.keys(zip.files)
+            .filter(name => name.match(/^ppt\/slides\/slide\d+\.xml$/))
+            .sort((a, b) => {
+              const numA = parseInt(a.match(/slide(\d+)/)?.[1] || '0');
+              const numB = parseInt(b.match(/slide(\d+)/)?.[1] || '0');
+              return numA - numB;
+            });
+
+          for (const slideFile of slideFiles) {
+            const content = await zip.files[slideFile].async('text');
+            // Extract text from <a:t> tags
+            const textMatches = content.match(/<a:t>([^<]*)<\/a:t>/g) || [];
+            const slideText = textMatches
+              .map(match => match.replace(/<\/?a:t>/g, ''))
+              .filter(text => text.trim())
+              .join('\n');
+            slides.push(slideText || '(No text content)');
+          }
+
+          setPptxSlides(slides.length > 0 ? slides : ['No slides found']);
+          setPptxLoading(false);
+        } catch {
+          setPptxSlides(null);
+          setPptxLoading(false);
+        }
+      };
+
+      loadPptx();
+    } else {
+      setPptxSlides(null);
+    }
+  }, [file]);
+
   const zoomStep = 0.25;
   const zoomIn = useCallback(() => setScale(s => Math.min(4, +(s + zoomStep).toFixed(2))), [zoomStep]);
   const zoomOut = useCallback(() => setScale(s => Math.max(0.25, +(s - zoomStep).toFixed(2))), [zoomStep]);
@@ -161,7 +289,7 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
   if (!file) return null;
 
   const mimeType = getMimeType(file.url);
-  const fileType = getFileType(mimeType);
+  const fileType = getFileType(mimeType, file.name);
   const isImage = fileType === 'image';
   const showNav = files && files.length > 1;
 
@@ -396,6 +524,189 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
           </div>
         )}
 
+        {fileType === 'xlsx' && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            overflow: 'auto',
+            backgroundColor: '#525659',
+            padding: '20px',
+          }}>
+            {xlsxLoading && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#fff' }}>
+                Loading spreadsheet...
+              </div>
+            )}
+            {!xlsxLoading && xlsxHtml && (
+              <div
+                dangerouslySetInnerHTML={{ __html: xlsxHtml }}
+                className="xlsx-preview"
+                style={{
+                  backgroundColor: '#fff',
+                  padding: '20px',
+                  borderRadius: '4px',
+                  fontSize: `${13 * scale}px`,
+                  transform: `scale(${scale})`,
+                  transformOrigin: 'top left',
+                }}
+              />
+            )}
+            {!xlsxLoading && !xlsxHtml && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#fff' }}>
+                <FileText size={64} style={{ marginBottom: '16px', opacity: 0.5 }} />
+                <p>Could not load spreadsheet</p>
+              </div>
+            )}
+            <style>{`
+              .xlsx-preview table { border-collapse: collapse; width: 100%; }
+              .xlsx-preview th, .xlsx-preview td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+              .xlsx-preview th { background-color: #f5f5f5; font-weight: bold; }
+              .xlsx-preview tr:nth-child(even) { background-color: #fafafa; }
+              .xlsx-preview tr:hover { background-color: #f0f0f0; }
+            `}</style>
+          </div>
+        )}
+
+        {fileType === 'csv' && csvData && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            overflow: 'auto',
+            backgroundColor: '#525659',
+            padding: '20px',
+          }}>
+            <div style={{
+              backgroundColor: '#fff',
+              padding: '20px',
+              borderRadius: '4px',
+              fontSize: `${13 * scale}px`,
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+            }}>
+              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                <tbody>
+                  {csvData.map((row, rowIndex) => (
+                    <tr key={rowIndex} style={{ backgroundColor: rowIndex === 0 ? '#f5f5f5' : rowIndex % 2 === 0 ? '#fafafa' : '#fff' }}>
+                      {row.map((cell, cellIndex) => (
+                        rowIndex === 0 ? (
+                          <th key={cellIndex} style={{ border: '1px solid #ddd', padding: '8px 12px', textAlign: 'left', fontWeight: 'bold' }}>{cell}</th>
+                        ) : (
+                          <td key={cellIndex} style={{ border: '1px solid #ddd', padding: '8px 12px', textAlign: 'left' }}>{cell}</td>
+                        )
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {fileType === 'markdown' && markdownHtml && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            overflow: 'auto',
+            backgroundColor: '#525659',
+            padding: '20px',
+          }}>
+            <div
+              dangerouslySetInnerHTML={{ __html: markdownHtml }}
+              className="markdown-preview"
+              style={{
+                maxWidth: '816px',
+                minHeight: '100%',
+                margin: '0 auto',
+                padding: '40px 48px',
+                backgroundColor: '#fff',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                color: '#333',
+                fontSize: `${15 * scale}px`,
+                lineHeight: '1.6',
+                transform: `scale(${scale})`,
+                transformOrigin: 'top center',
+              }}
+            />
+            <style>{`
+              .markdown-preview h1 { font-size: 2em; font-weight: bold; margin: 0.67em 0; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+              .markdown-preview h2 { font-size: 1.5em; font-weight: bold; margin: 0.83em 0; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+              .markdown-preview h3 { font-size: 1.25em; font-weight: bold; margin: 1em 0; }
+              .markdown-preview h4 { font-size: 1em; font-weight: bold; margin: 1.33em 0; }
+              .markdown-preview h5 { font-size: 0.875em; font-weight: bold; margin: 1.67em 0; }
+              .markdown-preview h6 { font-size: 0.85em; font-weight: bold; margin: 2.33em 0; color: #666; }
+              .markdown-preview p { margin: 1em 0; }
+              .markdown-preview strong, .markdown-preview b { font-weight: bold; }
+              .markdown-preview em, .markdown-preview i { font-style: italic; }
+              .markdown-preview ul, .markdown-preview ol { margin: 1em 0; padding-left: 2em; }
+              .markdown-preview li { margin: 0.25em 0; }
+              .markdown-preview table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+              .markdown-preview th, .markdown-preview td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+              .markdown-preview th { background-color: #f5f5f5; font-weight: bold; }
+              .markdown-preview a { color: #0066cc; text-decoration: underline; }
+              .markdown-preview blockquote { margin: 1em 0; padding: 0.5em 1em; border-left: 4px solid #ddd; color: #666; background: #f9f9f9; }
+              .markdown-preview pre { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 6px; overflow-x: auto; margin: 1em 0; }
+              .markdown-preview code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.9em; }
+              .markdown-preview p code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; }
+              .markdown-preview hr { border: none; border-top: 1px solid #eee; margin: 2em 0; }
+              .markdown-preview img { max-width: 100%; height: auto; }
+            `}</style>
+          </div>
+        )}
+
+        {fileType === 'pptx' && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            overflow: 'auto',
+            backgroundColor: '#2d2d2d',
+            padding: '20px',
+          }}>
+            {pptxLoading && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#fff' }}>
+                Loading presentation...
+              </div>
+            )}
+            {!pptxLoading && pptxSlides && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '800px', margin: '0 auto' }}>
+                {pptxSlides.map((slideText, index) => (
+                  <div key={index} style={{
+                    backgroundColor: '#fff',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                    overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      backgroundColor: '#4a5568',
+                      color: '#fff',
+                      padding: '8px 16px',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                    }}>
+                      Slide {index + 1}
+                    </div>
+                    <div style={{
+                      padding: '24px',
+                      minHeight: '120px',
+                      whiteSpace: 'pre-wrap',
+                      fontSize: '14px',
+                      lineHeight: '1.6',
+                      color: '#333',
+                    }}>
+                      {slideText}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {!pptxLoading && !pptxSlides && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#fff' }}>
+                <FileText size={64} style={{ marginBottom: '16px', opacity: 0.5 }} />
+                <p>Could not load presentation</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {fileType === 'unknown' && (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)' }}>
             <FileText size={64} style={{ marginBottom: '16px', opacity: 0.5 }} />
@@ -444,6 +755,108 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
 
       {/* Docx toolbar */}
       {fileType === 'docx' && !docxLoading && docxHtml && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          padding: '12px',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          flexShrink: 0,
+        }}>
+          <IconButton onClick={zoomOut} title="Zoom out (-)"><ZoomOut size={18} /></IconButton>
+          <span style={{ color: '#fff', fontSize: '13px', minWidth: '50px', textAlign: 'center' }}>{Math.round(scale * 100)}%</span>
+          <IconButton onClick={zoomIn} title="Zoom in (+)"><ZoomIn size={18} /></IconButton>
+          <div style={{ width: '1px', height: '20px', backgroundColor: 'rgba(255,255,255,0.2)', margin: '0 8px' }} />
+          <button
+            onClick={() => setScale(1)}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: scale === 1 ? 'rgba(255,255,255,0.1)' : 'var(--primary, #3b82f6)',
+              border: 'none',
+              borderRadius: '6px',
+              color: '#fff',
+              fontSize: '12px',
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            Reset
+          </button>
+        </div>
+      )}
+
+      {/* XLSX toolbar */}
+      {fileType === 'xlsx' && !xlsxLoading && xlsxHtml && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          padding: '12px',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          flexShrink: 0,
+        }}>
+          <IconButton onClick={zoomOut} title="Zoom out (-)"><ZoomOut size={18} /></IconButton>
+          <span style={{ color: '#fff', fontSize: '13px', minWidth: '50px', textAlign: 'center' }}>{Math.round(scale * 100)}%</span>
+          <IconButton onClick={zoomIn} title="Zoom in (+)"><ZoomIn size={18} /></IconButton>
+          <div style={{ width: '1px', height: '20px', backgroundColor: 'rgba(255,255,255,0.2)', margin: '0 8px' }} />
+          <button
+            onClick={() => setScale(1)}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: scale === 1 ? 'rgba(255,255,255,0.1)' : 'var(--primary, #3b82f6)',
+              border: 'none',
+              borderRadius: '6px',
+              color: '#fff',
+              fontSize: '12px',
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            Reset
+          </button>
+        </div>
+      )}
+
+      {/* CSV toolbar */}
+      {fileType === 'csv' && csvData && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          padding: '12px',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          flexShrink: 0,
+        }}>
+          <IconButton onClick={zoomOut} title="Zoom out (-)"><ZoomOut size={18} /></IconButton>
+          <span style={{ color: '#fff', fontSize: '13px', minWidth: '50px', textAlign: 'center' }}>{Math.round(scale * 100)}%</span>
+          <IconButton onClick={zoomIn} title="Zoom in (+)"><ZoomIn size={18} /></IconButton>
+          <div style={{ width: '1px', height: '20px', backgroundColor: 'rgba(255,255,255,0.2)', margin: '0 8px' }} />
+          <button
+            onClick={() => setScale(1)}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: scale === 1 ? 'rgba(255,255,255,0.1)' : 'var(--primary, #3b82f6)',
+              border: 'none',
+              borderRadius: '6px',
+              color: '#fff',
+              fontSize: '12px',
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            Reset
+          </button>
+        </div>
+      )}
+
+      {/* Markdown toolbar */}
+      {fileType === 'markdown' && markdownHtml && (
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -536,12 +949,18 @@ function getMimeType(url: string): string {
   return match?.[1] || 'application/octet-stream';
 }
 
-function getFileType(mime: string): 'image' | 'video' | 'audio' | 'pdf' | 'text' | 'docx' | 'unknown' {
+function getFileType(mime: string, fileName?: string): 'image' | 'video' | 'audio' | 'pdf' | 'text' | 'docx' | 'xlsx' | 'pptx' | 'markdown' | 'csv' | 'unknown' {
   if (mime.startsWith('image/')) return 'image';
   if (mime.startsWith('video/')) return 'video';
   if (mime.startsWith('audio/')) return 'audio';
   if (mime === 'application/pdf') return 'pdf';
   if (mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx';
+  if (mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') return 'xlsx';
+  if (mime === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') return 'pptx';
+  if (mime === 'text/csv' || mime === 'application/csv') return 'csv';
+  if (mime === 'text/markdown' || mime === 'text/x-markdown') return 'markdown';
+  // Check file extension for markdown files (browsers often report as text/plain)
+  if (fileName && fileName.toLowerCase().endsWith('.md')) return 'markdown';
   if (mime.startsWith('text/') || ['application/json', 'application/javascript', 'application/xml'].includes(mime)) return 'text';
   return 'unknown';
 }
@@ -550,4 +969,49 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function parseCSV(text: string): string[][] {
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentField = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (inQuotes) {
+      if (char === '"' && nextChar === '"') {
+        currentField += '"';
+        i++;
+      } else if (char === '"') {
+        inQuotes = false;
+      } else {
+        currentField += char;
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+      } else if (char === ',') {
+        currentRow.push(currentField);
+        currentField = '';
+      } else if (char === '\n' || (char === '\r' && nextChar === '\n')) {
+        currentRow.push(currentField);
+        rows.push(currentRow);
+        currentRow = [];
+        currentField = '';
+        if (char === '\r') i++;
+      } else if (char !== '\r') {
+        currentField += char;
+      }
+    }
+  }
+
+  if (currentField || currentRow.length > 0) {
+    currentRow.push(currentField);
+    rows.push(currentRow);
+  }
+
+  return rows;
 }
