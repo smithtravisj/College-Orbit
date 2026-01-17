@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import useAppStore from '@/lib/store';
 import { getAppTitle } from '@/lib/universityTitles';
+import { getCollegeColorPalette } from '@/lib/collegeColors';
 import NotificationBell from '@/components/NotificationBell';
 import { DEFAULT_VISIBLE_PAGES } from '@/lib/customizationConstants';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -48,6 +49,10 @@ export default function Navigation() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const university = useAppStore((state) => state.settings.university);
+  const theme = useAppStore((state) => state.settings.theme) || 'dark';
+
+  // Get college color palette for theming
+  const colorPalette = getCollegeColorPalette(university || null, theme);
   const rawVisiblePages = useAppStore((state) => state.settings.visiblePages || DEFAULT_VISIBLE_PAGES);
   const rawVisiblePagesOrder = useAppStore((state) => state.settings.visiblePagesOrder);
   // Migrate "Deadlines" to "Assignments"
@@ -163,17 +168,23 @@ export default function Navigation() {
 
   return (
     <>
-      {/* Desktop Sidebar - UNCHANGED */}
-      <nav className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)]" style={{ padding: '20px 16px' }} data-tour="navigation">
-        <div style={{ marginBottom: '16px' }}>
-          <h1 className="font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px', fontSize: university === 'Brigham Young University Hawaii' ? '22px' : university === 'Brigham Young University Idaho' ? '23px' : (university === 'Brigham Young University' || university === 'UNC Chapel Hill' || university === 'Utah State University' || university === 'Utah Valley University' || university === 'Arizona State University' || university === 'University of Central Florida' || university === 'Ohio State University') ? '24px' : '21px' }}>{getAppTitle(university)}</h1>
+      {/* Desktop Sidebar */}
+      <nav
+        className="hidden md:flex flex-col h-screen sticky top-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--panel)]"
+        style={{
+          padding: '20px 16px',
+        }}
+        data-tour="navigation"
+      >
+        <div style={{ marginBottom: '16px', position: 'relative', zIndex: 1 }}>
+          <h1 className="font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px', fontSize: '28px' }}>{getAppTitle(university)}</h1>
           {session?.user && (
             <div className="mt-3 text-sm text-[var(--text-muted)] truncate" style={{ paddingLeft: '20px' }}>
               {session.user.name || session.user.email}
             </div>
           )}
         </div>
-        <div className="space-y-3 flex-1">
+        <div className="space-y-3 flex-1" style={{ position: 'relative', zIndex: 1 }}>
           {sortedNavItems.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -183,14 +194,23 @@ export default function Navigation() {
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
                 data-tour={item.label === 'Settings' ? 'settings-link' : item.label === 'Courses' ? 'courses-link' : undefined}
-                className={`relative flex items-center gap-3 h-12 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
+                className={`nav-link-hover relative flex items-center gap-2.5 h-11 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   isActive
                     ? 'text-[var(--text)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
-                style={{ padding: '0 12px', backgroundColor: isActive ? 'var(--nav-active)' : 'transparent' }}
+                style={{
+                  padding: '0 11px',
+                  backgroundColor: isActive ? 'var(--nav-active)' : 'transparent',
+                  backgroundImage: isActive
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                    : 'none',
+                  boxShadow: isActive
+                    ? `0 0 10px ${colorPalette.accent}BF`
+                    : undefined,
+                }}
               >
-                <Icon size={22} className="h-[22px] w-[22px] opacity-80 group-hover:opacity-100 flex-shrink-0" />
+                <Icon size={20} className="h-[20px] w-[20px] opacity-80 group-hover:opacity-100 flex-shrink-0" />
                 <span className="truncate">{item.label}</span>
               </Link>
             );
@@ -203,14 +223,23 @@ export default function Navigation() {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
-                className={`relative flex items-center gap-3 h-12 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
+                className={`nav-link-hover relative flex items-center gap-2.5 h-11 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   isActive
                     ? 'text-[var(--text)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
-                style={{ padding: '0 12px', backgroundColor: isActive ? 'var(--nav-active)' : 'transparent' }}
+                style={{
+                  padding: '0 11px',
+                  backgroundColor: isActive ? 'var(--nav-active)' : 'transparent',
+                  backgroundImage: isActive
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                    : 'none',
+                  boxShadow: isActive
+                    ? `0 0 10px ${colorPalette.accent}BF`
+                    : undefined,
+                }}
               >
-                <Icon size={22} className="h-[22px] w-[22px] opacity-80 group-hover:opacity-100 flex-shrink-0" />
+                <Icon size={20} className="h-[20px] w-[20px] opacity-80 group-hover:opacity-100 flex-shrink-0" />
                 <span className="truncate">{item.label}</span>
               </Link>
             );
@@ -219,26 +248,39 @@ export default function Navigation() {
 
         {/* Profile and Logout */}
         {session?.user && (
-          <div className="mt-4 space-y-2">
+          <div className="mt-4 space-y-2" style={{ position: 'relative', zIndex: 1 }}>
             <div className="flex items-center justify-between">
               <Link
                 href="/profile"
-                className="flex items-center gap-3 flex-1 h-12 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5"
-                style={{ padding: '0 12px' }}
+                className={`nav-link-hover flex items-center gap-2.5 flex-1 h-11 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
+                  pathname === '/profile'
+                    ? 'text-[var(--text)]'
+                    : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
+                }`}
+                style={{
+                  padding: '0 11px',
+                  backgroundColor: pathname === '/profile' ? 'var(--nav-active)' : 'transparent',
+                  backgroundImage: pathname === '/profile'
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                    : 'none',
+                  boxShadow: pathname === '/profile'
+                    ? `0 0 10px ${colorPalette.accent}BF`
+                    : undefined,
+                }}
               >
-                <User size={22} className="opacity-80" />
+                <User size={20} className="opacity-80 group-hover:opacity-100" />
                 <span>Profile</span>
               </Link>
-              <div style={{ paddingRight: '8px' }}>
+              <div style={{ paddingLeft: '9px', paddingRight: '6px' }}>
                 <NotificationBell />
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 w-full h-12 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5"
-              style={{ padding: '0 12px' }}
+              className="nav-link-hover flex items-center gap-2.5 w-full h-11 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 text-[var(--muted)] hover:text-[var(--text)] group"
+              style={{ padding: '0 11px' }}
             >
-              <LogOut size={22} className="opacity-80" />
+              <LogOut size={20} className="opacity-80 group-hover:opacity-100" />
               <span>Log Out</span>
             </button>
           </div>
@@ -252,7 +294,7 @@ export default function Navigation() {
       {isMobile && (
         <div ref={drawerRef} className={styles.drawer} data-open={isDrawerOpen ? 'true' : 'false'}>
           {/* Drawer header with title and notification */}
-          <div className={styles.drawerHeader}>
+          <div className={styles.drawerHeader} style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0' }}>
               <h2 className={styles.drawerTitle}>{getAppTitle(university)}</h2>
               <div style={{ paddingRight: '4px' }}>
@@ -265,7 +307,7 @@ export default function Navigation() {
           </div>
 
           {/* Navigation links */}
-          <nav className={styles.drawerNav}>
+          <nav className={styles.drawerNav} style={{ position: 'relative', zIndex: 1 }}>
             {sortedNavItems.filter(item => (visiblePages.includes(item.label) || item.label === 'Settings') && item.label !== 'Tools').map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -298,8 +340,8 @@ export default function Navigation() {
 
           {/* Drawer footer with profile/logout */}
           {session?.user && (
-            <div className={styles.drawerFooter}>
-              <Link href="/profile" className={styles.drawerLink}>
+            <div className={styles.drawerFooter} style={{ position: 'relative', zIndex: 1 }}>
+              <Link href="/profile" className={`${styles.drawerLink} ${pathname === '/profile' ? styles.active : ''}`}>
                 <User size={20} />
                 <span>Profile</span>
               </Link>

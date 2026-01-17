@@ -260,6 +260,7 @@ export default function GradeTrackerTable({
             gap: '8px',
             padding: '10px 16px',
             backgroundColor: 'var(--panel-2)',
+            backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
             border: '1px solid var(--border)',
             borderRadius: '8px',
             color: 'var(--text)',
@@ -357,6 +358,7 @@ export default function GradeTrackerTable({
               style={{
                 padding: '10px 16px',
                 backgroundColor: 'var(--panel)',
+                backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                 color: 'var(--text)',
                 border: '1px solid var(--border)',
                 borderRadius: '4px',
@@ -410,6 +412,7 @@ export default function GradeTrackerTable({
                 style={{
                   padding: '10px 16px',
                   backgroundColor: 'var(--panel-2)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                   color: 'var(--text)',
                   border: '1px solid var(--border)',
                   borderRadius: '6px',

@@ -4,15 +4,18 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
-import PageHeader from '@/components/PageHeader';
+import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 export default function ProfilePage() {
   const { data: session, update: updateSession } = useSession();
   const router = useRouter();
+  const isMobile = useIsMobile();
   const { settings } = useAppStore();
+  const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -78,8 +81,39 @@ export default function ProfilePage() {
 
   return (
     <>
-      <PageHeader title="Profile" subtitle="Manage your account information" />
-      <div className="mx-auto w-full max-w-[768px]" style={{ padding: 'clamp(12px, 4%, 24px)' }}>
+      {/* Profile Header */}
+      <div className="mx-auto w-full max-w-[768px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+        <div>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            {/* Subtle glow behind title */}
+            <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
+                }}
+              />
+            </div>
+            <h1
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                fontSize: isMobile ? '26px' : '34px',
+                fontWeight: 700,
+                color: 'var(--text)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Profile
+            </h1>
+          </div>
+          <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
+            Manage your account information.
+          </p>
+        </div>
+      </div>
+      <div className="mx-auto w-full max-w-[768px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
         <div className="w-full grid grid-cols-1 gap-[var(--grid-gap)]">
           <Card title="Account Information">
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

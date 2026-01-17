@@ -1,6 +1,6 @@
-# BYU Survival Tool
+# College Orbit
 
-A personal, privacy-first BYU dashboard web app for managing deadlines, schedule, checklists, and quick actions.
+A personal, privacy-first college dashboard web app for managing deadlines, schedule, checklists, and quick actions.
 
 ## Features
 
@@ -31,7 +31,7 @@ A personal, privacy-first BYU dashboard web app for managing deadlines, schedule
 
 1. Clone or navigate to the project directory:
 ```bash
-cd "BYU Survival Tool"
+cd "College Orbit"
 ```
 
 2. Install dependencies:
@@ -85,7 +85,7 @@ Deploy the `./out` directory to any static hosting (Netlify, GitHub Pages, etc.)
 ## Project Structure
 
 ```
-BYU Survival Tool/
+College Orbit/
 ├── app/                    # Next.js app directory
 │   ├── layout.tsx         # Root layout
 │   ├── page.tsx           # Dashboard page

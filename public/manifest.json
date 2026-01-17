@@ -1,6 +1,6 @@
 {
-  "name": "College Survival Tool",
-  "short_name": "College Survival",
+  "name": "College Orbit",
+  "short_name": "Orbit",
   "description": "A personal, privacy-first college dashboard",
   "start_url": "/",
   "scope": "/",

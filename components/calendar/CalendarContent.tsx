@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import PageHeader from '@/components/PageHeader';
+import { getCollegeColorPalette } from '@/lib/collegeColors';
 import CalendarMonthView from './CalendarMonthView';
 import CalendarDayView from './CalendarDayView';
 import CalendarWeekView from './CalendarWeekView';
@@ -32,6 +32,9 @@ export default function CalendarContent() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const isMobile = useIsMobile();
+  const university = useAppStore((state) => state.settings.university);
+  const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const colorPalette = getCollegeColorPalette(university || null, theme);
 
   const [view, setView] = useState<ViewType>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -387,16 +390,47 @@ export default function CalendarContent() {
 
   return (
     <>
-      <PageHeader
-        title="Calendar"
-        subtitle="View your courses, tasks, deadlines, and exams"
-      />
-      <div style={{ padding: 'clamp(12px, 4%, 24px)', overflow: 'visible' }}>
+      {/* Calendar Header */}
+      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          {/* Subtle glow behind title */}
+          <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
+              }}
+            />
+          </div>
+          <h1
+            style={{
+              position: 'relative',
+              zIndex: 1,
+              fontSize: isMobile ? '26px' : '34px',
+              fontWeight: 700,
+              color: 'var(--text)',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Calendar
+          </h1>
+        </div>
+        <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
+          Your schedule at a glance.
+        </p>
+      </div>
+
+      <div style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', overflow: 'visible', position: 'relative', zIndex: 1 }}>
         <div style={{
+          position: 'relative',
+          zIndex: 1,
           borderRadius: '16px',
           border: '1px solid var(--border)',
+          borderLeftWidth: '3px',
+          borderLeftColor: `${colorPalette.accent}55`,
           backgroundColor: 'var(--panel)',
-          boxShadow: 'var(--shadow-sm)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
           display: 'flex',
           flexDirection: 'column',
           ...(isMobile ? { minHeight: 'calc(100vh - 140px)' } : { height: 'calc(100vh - 140px)', overflow: 'hidden' }),
@@ -498,7 +532,9 @@ export default function CalendarContent() {
                 fontWeight: 500,
                 color: 'white',
                 backgroundColor: 'var(--accent)',
-                border: '1px solid #183e6a',
+                backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                border: 'none',
+                boxShadow: `0 0 10px ${colorPalette.accent}80`,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 marginLeft: '12px',
@@ -527,8 +563,10 @@ export default function CalendarContent() {
                     transition: 'all 0.2s',
                     padding: '6px 12px',
                     backgroundColor: view === v ? 'var(--accent)' : 'transparent',
+                    backgroundImage: view === v ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
                     color: view === v ? 'white' : 'var(--muted)',
                     border: view === v ? 'none' : '1px solid var(--border)',
+                    boxShadow: view === v ? `0 0 10px ${colorPalette.accent}80` : 'none',
                     cursor: 'pointer',
                   }}
                   onMouseEnter={(e) => {

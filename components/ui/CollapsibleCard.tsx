@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import React from 'react';
+import useAppStore from '@/lib/store';
+import { getCollegeColorPalette } from '@/lib/collegeColors';
 
 interface CollapsibleCardProps {
   id: string;
@@ -14,6 +16,7 @@ interface CollapsibleCardProps {
   className?: string;
   onChange?: (isOpen: boolean) => void;
   initialOpen?: boolean;
+  variant?: 'primary' | 'secondary';
 }
 
 const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
@@ -26,9 +29,14 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   className = '',
   onChange,
   initialOpen = true,
+  variant = 'primary',
 }) => {
   const [isOpen, setIsOpen] = useState(initialOpen);
   const [mounted, setMounted] = useState(false);
+  const university = useAppStore((state) => state.settings.university);
+  const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const colorPalette = getCollegeColorPalette(university || null, theme);
+  const isPrimary = variant === 'primary';
 
   // Load state from database (via initialOpen prop)
   useEffect(() => {
@@ -51,18 +59,26 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
 
   return (
     <div
-      className={`rounded-[16px] border border-[var(--border)] bg-[var(--panel)] shadow-[var(--shadow-sm)] transition-colors w-full flex flex-col ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${!isOpen ? 'cursor-pointer' : ''} ${className}`}
-      style={{ position: 'relative', overflow: 'visible' }}
+      className={`card-hover rounded-[16px] border transition-all duration-300 w-full flex flex-col ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${!isOpen ? 'cursor-pointer' : ''} ${className}`}
+      style={{
+        position: 'relative',
+        overflow: 'visible',
+        background: 'var(--panel)',
+        borderColor: 'var(--border)',
+        borderLeftWidth: '3px',
+        borderLeftColor: `${colorPalette.accent}55`,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+      }}
       onClick={() => !isOpen && handleToggle()}
     >
       {/* Inner content wrapper */}
-      <div className="flex flex-col" style={{ padding: isOpen ? '24px' : '8px 24px 12px 24px', overflow: 'visible' }}>
+      <div className="flex flex-col" style={{ padding: isOpen ? (isPrimary ? '24px' : '18px 20px') : '8px 24px 12px 24px', overflow: 'visible' }}>
         {/* Header block */}
         {title && (
           <div className="flex items-start justify-between gap-4" style={{ marginBottom: isOpen ? '16px' : '0px', paddingTop: isOpen ? '0px' : '8px' }}>
-            <div className="space-y-2 flex-1">
-              <h3 className="text-lg md:text-xl font-semibold leading-[1.25] text-[var(--text)]">{title}</h3>
-              {subtitle && isOpen && <p className="text-sm leading-[1.8] text-[var(--muted)]">{subtitle}</p>}
+            <div className="space-y-1 flex-1">
+              <h3 className="font-bold leading-[1.25] text-[var(--text)]" style={{ fontSize: '17px' }}>{title}</h3>
+              {subtitle && isOpen && <p className="leading-[1.6]" style={{ fontSize: '12px', color: 'var(--text-muted)', opacity: 0.7 }}>{subtitle}</p>}
             </div>
             <div className="flex items-center gap-2">
               {action && <div>{action}</div>}

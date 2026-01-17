@@ -17,7 +17,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'College Survival Tool',
+  title: 'College Orbit',
   description: 'A personal, privacy-first college dashboard',
   icons: {
     icon: '/apple-touch-icon-copy.svg',
@@ -37,7 +37,7 @@ export default function RootLayout({
         <meta name="color-scheme" content="dark" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-        <meta name="apple-mobile-web-app-title" content="College Survival" />
+        <meta name="apple-mobile-web-app-title" content="College Orbit" />
         <meta name="theme-color" content="#0b0f14" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />

@@ -226,6 +226,7 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
 
       <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
         <Button
+          variant="secondary"
           type="button"
           onClick={onClose}
           style={{

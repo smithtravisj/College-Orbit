@@ -5,4 +5,4 @@ Disallow: /login
 Disallow: /signup
 Disallow: /reset-password
 Disallow: /forgot-password
-Sitemap: https://collegesurvivaltool.com/sitemap.xml
+Sitemap: https://collegeorbit.app/sitemap.xml

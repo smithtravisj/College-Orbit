@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import Card from '@/components/ui/Card';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -40,20 +39,136 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div>
-      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>
-          College Survival Tool
+    <div style={{ position: 'relative' }}>
+      {/* Floating decorative elements */}
+      <div style={{
+        position: 'absolute',
+        top: '-60px',
+        left: '-80px',
+        width: '150px',
+        height: '150px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%)',
+        pointerEvents: 'none',
+        animation: 'float 6s ease-in-out infinite',
+        zIndex: 0,
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '-40px',
+        right: '-60px',
+        width: '120px',
+        height: '120px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(168, 85, 247, 0.22) 0%, transparent 70%)',
+        pointerEvents: 'none',
+        animation: 'float 8s ease-in-out infinite reverse',
+        zIndex: 0,
+      }} />
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        right: '-100px',
+        width: '80px',
+        height: '80px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)',
+        pointerEvents: 'none',
+        animation: 'float 7s ease-in-out infinite',
+        zIndex: 0,
+      }} />
+
+      {/* Main content */}
+      <div style={{
+        textAlign: 'center',
+        marginBottom: '24px',
+        animation: 'fadeInUp 0.6s ease-out',
+        position: 'relative',
+        zIndex: 1,
+      }}>
+        {/* Orbit Icon */}
+        <div style={{ marginBottom: '12px' }}>
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 64 64"
+            fill="none"
+            style={{ margin: '0 auto' }}
+          >
+            <circle cx="32" cy="32" r="12" fill="url(#planetGradient)" />
+            <ellipse
+              cx="32"
+              cy="32"
+              rx="28"
+              ry="10"
+              stroke="url(#orbitGradient)"
+              strokeWidth="2"
+              fill="none"
+              style={{ transform: 'rotate(-20deg)', transformOrigin: 'center' }}
+            />
+            <circle cx="54" cy="28" r="4" fill="url(#moonGradient)" />
+            <defs>
+              <linearGradient id="planetGradient" x1="20" y1="20" x2="44" y2="44">
+                <stop offset="0%" stopColor="#6366f1" />
+                <stop offset="100%" stopColor="#8b5cf6" />
+              </linearGradient>
+              <linearGradient id="orbitGradient" x1="4" y1="32" x2="60" y2="32">
+                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
+                <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#6366f1" stopOpacity="0.3" />
+              </linearGradient>
+              <linearGradient id="moonGradient" x1="50" y1="24" x2="58" y2="32">
+                <stop offset="0%" stopColor="#a78bfa" />
+                <stop offset="100%" stopColor="#c4b5fd" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+
+        <h1 style={{
+          fontSize: '42px',
+          fontWeight: 700,
+          color: 'var(--text)',
+          marginBottom: '8px',
+          letterSpacing: '-0.02em',
+        }}>
+          College Orbit
         </h1>
-        <p style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px' }}>Reset your password</p>
+        <p style={{
+          color: 'var(--text-muted)',
+          fontSize: '15px',
+          letterSpacing: '0.01em',
+        }}>
+          Stay organized. Stay on track.
+        </p>
       </div>
 
-      <Card>
+      {/* Card */}
+      <div style={{
+        background: 'var(--panel)',
+        border: '1px solid var(--border)',
+        borderRadius: '20px',
+        padding: '24px',
+        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), 0 0 48px rgba(99, 102, 241, 0.08)',
+        animation: 'fadeInUp 0.6s ease-out 0.1s backwards',
+        position: 'relative',
+        zIndex: 1,
+      }}>
+        <p style={{
+          color: 'var(--text)',
+          marginBottom: '18px',
+          fontSize: '17px',
+          fontWeight: 500,
+          textAlign: 'center',
+        }}>
+          Reset your password
+        </p>
+
         {submitted ? (
           <div>
-            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>✉️</div>
-              <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ fontSize: '48px', marginBottom: '12px' }}>✉️</div>
+              <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)', marginBottom: '10px' }}>
                 Check your email
               </h2>
               <p style={{ color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.6' }}>
@@ -61,10 +176,17 @@ export default function ForgotPasswordPage() {
               </p>
             </div>
 
-            <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid var(--border)' }}>
+            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
               <Link
                 href="/login"
-                style={{ display: 'block', textAlign: 'center', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, filter: 'brightness(1.6)' }}
+                style={{
+                  display: 'block',
+                  textAlign: 'center',
+                  color: '#8b5cf6',
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                  transition: 'color 0.2s',
+                }}
               >
                 Back to sign in
               </Link>
@@ -73,13 +195,18 @@ export default function ForgotPasswordPage() {
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {error && (
-              <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '8px', padding: '12px' }}>
+              <div style={{
+                backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                border: '1px solid rgba(220, 38, 38, 0.2)',
+                borderRadius: '12px',
+                padding: '12px 16px',
+              }}>
                 <p style={{ fontSize: '14px', color: 'rgb(239, 68, 68)' }}>{error}</p>
               </div>
             )}
 
             <div>
-              <label style={{ display: 'block', fontSize: '15px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '8px' }}>
                 Email
               </label>
               <Input
@@ -91,13 +218,19 @@ export default function ForgotPasswordPage() {
               />
             </div>
 
-            <div style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+            <div style={{ paddingTop: '8px' }}>
               <Button
                 type="submit"
                 variant="primary"
                 size="lg"
                 disabled={loading}
-                style={{ width: '100%' }}
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                  border: 'none',
+                  boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                }}
               >
                 {loading ? 'Sending...' : 'Send Reset Link'}
               </Button>
@@ -105,18 +238,68 @@ export default function ForgotPasswordPage() {
           </form>
         )}
 
-        <div style={{ textAlign: 'center', marginTop: '20px' }}>
-          <p style={{ fontSize: '14px', color: 'var(--text)' }}>
+        <div style={{ textAlign: 'center', marginTop: '18px' }}>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
             Remember your password?{' '}
             <Link
               href="/login"
-              style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, filter: 'brightness(1.6)' }}
+              style={{
+                color: '#8b5cf6',
+                textDecoration: 'none',
+                fontWeight: 600,
+                transition: 'color 0.2s',
+              }}
             >
               Sign in
             </Link>
           </p>
         </div>
-      </Card>
+      </div>
+
+      <div style={{
+        textAlign: 'center',
+        marginTop: '20px',
+        animation: 'fadeInUp 0.6s ease-out 0.2s backwards',
+        position: 'relative',
+        zIndex: 1,
+      }}>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+          Questions?{' '}
+          <a
+            href="mailto:collegeorbit@protonmail.com"
+            style={{
+              color: '#8b5cf6',
+              textDecoration: 'none',
+              fontWeight: 500,
+              transition: 'color 0.2s',
+            }}
+          >
+            collegeorbit@protonmail.com
+          </a>
+        </p>
+      </div>
+
+      {/* Keyframe animations */}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-20px);
+          }
+        }
+      `}</style>
     </div>
   );
 }

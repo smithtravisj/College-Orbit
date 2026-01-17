@@ -16,10 +16,10 @@ export default function PrivacyPage() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Last Updated: January 9, 2025
+                Last Updated: January 16, 2026
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                At College Survival Tool, your privacy is our priority. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our service. We believe in transparency and give you full control over your data.
+                At College Orbit, your privacy is our priority. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our service. We believe in transparency and give you full control over your data.
               </p>
             </div>
           </div>
@@ -41,7 +41,15 @@ export default function PrivacyPage() {
                 Academic Data
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We store all academic data you create: courses with meeting times and links, deadlines with priority and effort levels, tasks with checklists and importance markers, exams with locations, notes with rich text content and folders, GPA entries, excluded dates (holidays/breaks), custom calendar events, and recurring patterns for tasks, deadlines, and exams. This data is entirely user-generated and belongs to you. We do not analyze or process this data beyond providing it back to you.
+                We store all academic data you create: courses with meeting times and links, assignments with priority and effort levels, tasks with checklists and importance markers, exams with locations, notes with rich text content and folders, GPA entries, excluded dates (holidays/breaks), custom calendar events, and recurring patterns for tasks, assignments, and exams. This data is entirely user-generated and belongs to you. We do not analyze or process this data beyond providing it back to you.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                File Attachments
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                You may attach files to notes and courses. Files are stored securely on our servers and are limited to 5MB each. Supported file types include images (JPEG, PNG, GIF, WebP, HEIC/HEIF), documents (PDF, DOCX, XLSX, CSV, PPTX, Markdown, TXT), and other common formats. HEIC/HEIF images are automatically converted to JPEG format for broader compatibility. File attachments belong to you and are deleted when you remove them or delete your account.
               </p>
             </div>
             <div>
@@ -100,7 +108,7 @@ export default function PrivacyPage() {
           <div className="space-y-3">
             <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
               <li>
-                <span className="font-medium" style={{ color: 'var(--text)' }}>Provide the Service</span>: We use your information to create and maintain your account, store your academic data, and deliver the core functionality of the College Survival Tool.
+                <span className="font-medium" style={{ color: 'var(--text)' }}>Provide the Service</span>: We use your information to create and maintain your account, store your academic data, and deliver the core functionality of the College Orbit.
               </li>
               <li>
                 <span className="font-medium" style={{ color: 'var(--text)' }}>Personalization</span>: We use your selected school to provide school-specific branding, course information, and relevant features.
@@ -140,7 +148,7 @@ export default function PrivacyPage() {
                 Authentication & Access Control
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We use industry-standard authentication through NextAuth to protect your account. Passwords are hashed and never stored in plain text. Only authorized personnel can access user data, and admin access is logged.
+                We use industry-standard authentication through NextAuth with secure credentials-based login (email and password). Passwords are hashed using bcrypt with a secure salt and are never stored in plain text. Only authorized personnel can access user data, and admin access is logged.
               </p>
             </div>
             <div>
@@ -170,12 +178,21 @@ export default function PrivacyPage() {
             </p>
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Email Service Provider
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                We use Resend, a third-party email service, to send password reset emails and other transactional communications. When you request a password reset, your email address is shared with Resend solely to deliver that message. Resend is bound by their privacy policy and processes your email address only as necessary to deliver messages on our behalf.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
                 Limited Sharing
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
                 Your information may be shared only in the following circumstances:
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <li>With our email service provider (Resend) to send password reset and transactional emails</li>
                 <li>With service providers who help us operate the platform (hosting, databases) under confidentiality agreements</li>
                 <li>When required by law or legal process</li>
                 <li>To protect against fraud, security threats, or illegal activity</li>
@@ -239,7 +256,7 @@ export default function PrivacyPage() {
                 Session Cookies
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We use session cookies to keep you logged in while using the service. These cookies expire when you close your browser.
+                We use secure JWT (JSON Web Token) session cookies to keep you logged in while using the service. These sessions are valid for up to 30 days, after which you will need to log in again.
               </p>
             </div>
             <div>
@@ -265,7 +282,7 @@ export default function PrivacyPage() {
         <Card title="Children's Privacy">
           <div className="space-y-4">
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              College Survival Tool is intended for users 13 years of age and older. We do not knowingly collect personal information from children under 13. If we learn that we have collected information from a child under 13, we will promptly delete such information and terminate the child's account.
+              College Orbit is intended for users 13 years of age and older. We do not knowingly collect personal information from children under 13. If we learn that we have collected information from a child under 13, we will promptly delete such information and terminate the child's account.
             </p>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               If you are a parent or guardian and believe your child has provided information to us, please contact us immediately at the email address provided in the Contact section.
@@ -284,6 +301,21 @@ export default function PrivacyPage() {
             </p>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               Your continued use of the service after changes become effective means you accept the updated Privacy Policy.
+            </p>
+          </div>
+        </Card>
+
+        {/* Contact Us */}
+        <Card title="Contact Us">
+          <div className="space-y-4">
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              If you have any questions, concerns, or requests regarding this Privacy Policy or how we handle your personal information, please contact us at:
+            </p>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              <a href="mailto:collegeorbit@protonmail.com" className="text-[var(--primary)] hover:underline">collegeorbit@protonmail.com</a>
+            </p>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              We will respond to your inquiry within a reasonable timeframe and work to address your concerns.
             </p>
           </div>
         </Card>

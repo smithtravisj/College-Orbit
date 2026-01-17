@@ -8,7 +8,7 @@ export default function TermsPage() {
     <>
       <PageHeader
         title="Terms of Service"
-        subtitle="Legal agreement for using the College Survival Tool"
+        subtitle="Legal agreement for using the College Orbit"
       />
       <div className="mx-auto w-full max-w-[900px] flex flex-col gap-6" style={{ padding: 'clamp(16px, 5%, 40px)' }}>
         {/* Acceptance of Terms */}
@@ -16,10 +16,10 @@ export default function TermsPage() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Effective Date: January 9, 2025
+                Effective Date: January 16, 2026
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                These Terms of Service ("Terms") govern your use of the College Survival Tool website and services ("Service"). By creating an account and using the Service, you agree to be legally bound by these Terms. If you do not agree to these Terms, please do not use the Service.
+                These Terms of Service ("Terms") govern your use of the College Orbit website and services ("Service"). By creating an account and using the Service, you agree to be legally bound by these Terms. If you do not agree to these Terms, please do not use the Service.
               </p>
             </div>
             <div>
@@ -37,7 +37,7 @@ export default function TermsPage() {
         <Card title="Description of Service">
           <div className="space-y-4">
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              College Survival Tool is an educational productivity platform designed to help students manage their academic and personal lives. The Service provides features for organizing courses, tracking deadlines, managing tasks, maintaining a calendar, calculating GPA, managing shopping lists, and organizing academic information.
+              College Orbit is an educational productivity platform designed to help students manage their academic and personal lives. The Service provides features for organizing courses, tracking deadlines, managing tasks, maintaining a calendar, calculating GPA, managing shopping lists, and organizing academic information.
             </p>
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
@@ -45,12 +45,12 @@ export default function TermsPage() {
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <li>Personal task management with importance levels and checklists</li>
-                <li>Deadline tracking with priority and effort markers</li>
-                <li>Recurring tasks, deadlines, and exams with flexible scheduling</li>
+                <li>Assignment tracking with priority and effort markers</li>
+                <li>Recurring tasks, assignments, and exams with flexible scheduling</li>
                 <li>Course and calendar organization with meeting schedules</li>
                 <li>Custom calendar events for personal scheduling</li>
                 <li>Exam tracking with customizable reminders</li>
-                <li>Rich text note-taking with folder organization</li>
+                <li>Rich text note-taking with folder organization and file attachments (up to 5MB per file)</li>
                 <li>GPA calculation and tracking</li>
                 <li>Shopping lists (grocery, wishlist, and pantry inventory)</li>
                 <li>Pomodoro productivity timer</li>
@@ -136,7 +136,7 @@ export default function TermsPage() {
                 Ownership
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                You retain full ownership of all content, data, and information you create in the Service (courses, tasks, deadlines, notes, shopping lists, calendar events, etc.). We do not claim ownership of your data.
+                You retain full ownership of all content, data, and information you create in the Service (courses, tasks, assignments, notes, file attachments, shopping lists, calendar events, etc.). We do not claim ownership of your data.
               </p>
             </div>
             <div>
@@ -155,6 +155,44 @@ export default function TermsPage() {
                 You are responsible for the accuracy, completeness, and legality of all data you input. You should maintain regular backups of your data. We are not responsible for data loss if you do not keep backups.
               </p>
             </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                File Uploads
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                You may attach files to notes and courses. Files are limited to 5MB each and are stored securely. Supported formats include images (JPEG, PNG, GIF, WebP, HEIC/HEIF), documents (PDF, DOCX, XLSX, CSV, PPTX, Markdown, TXT), and other common file types. HEIC/HEIF images are automatically converted to JPEG for compatibility.
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Service Limits */}
+        <Card title="Service Limits">
+          <div className="space-y-4">
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Rate Limiting
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                To ensure fair usage and protect our infrastructure, API requests are limited to 100 requests per minute per endpoint. Excessive requests may result in temporary throttling.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                File Size Limits
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Individual file uploads are limited to 5MB. Files exceeding this limit will be rejected.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Session Duration
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Login sessions are valid for up to 30 days. After this period, you will need to log in again to continue using the Service.
+              </p>
+            </div>
           </div>
         </Card>
 
@@ -166,7 +204,7 @@ export default function TermsPage() {
                 Service Ownership
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We own all intellectual property rights to the College Survival Tool Service, including the website, software, design, and content (except for your user-generated data). You may not reproduce, distribute, or transmit any of this material without our permission.
+                We own all intellectual property rights to the College Orbit Service, including the website, software, design, and content (except for your user-generated data). You may not reproduce, distribute, or transmit any of this material without our permission.
               </p>
             </div>
             <div>
@@ -174,7 +212,7 @@ export default function TermsPage() {
                 Trademarks
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                "College Survival Tool" and related logos are trademarks. School names and logos (universities, high schools, etc.) are trademarks of their respective institutions and are used with permission. You may not use these trademarks without authorization.
+                "College Orbit" and related logos are trademarks. School names and logos (universities, high schools, etc.) are trademarks of their respective institutions and are used with permission. You may not use these trademarks without authorization.
               </p>
             </div>
             <div>
@@ -191,6 +229,14 @@ export default function TermsPage() {
         {/* Third-Party Services */}
         <Card title="Third-Party Services">
           <div className="space-y-4">
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Email Services
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                We use Resend, a third-party email service provider, to send password reset emails and other transactional communications. Resend processes your email address solely to deliver these messages and is bound by their privacy policy and our data processing agreement.
+              </p>
+            </div>
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
                 External Services
@@ -222,7 +268,7 @@ export default function TermsPage() {
         <Card title="Disclaimers & Limitations of Liability">
           <div className="space-y-4">
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              IMPORTANT: College Survival Tool is a personal productivity aid. You are ultimately responsible for managing your academic obligations. Always verify deadlines and course information with official university sources. We are NOT liable for missed deadlines, lost grades, or academic consequences.
+              IMPORTANT: College Orbit is a personal productivity aid. You are ultimately responsible for managing your academic obligations. Always verify deadlines and course information with official university sources. We are NOT liable for missed deadlines, lost grades, or academic consequences.
             </p>
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
@@ -263,7 +309,7 @@ export default function TermsPage() {
         <Card title="Indemnification">
           <div className="space-y-4">
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              You agree to defend, indemnify, and hold harmless College Survival Tool, its operators, and employees from any claims, damages, losses, or expenses (including legal fees) arising from:
+              You agree to defend, indemnify, and hold harmless College Orbit, its operators, and employees from any claims, damages, losses, or expenses (including legal fees) arising from:
             </p>
             <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
               <li>Your use of the Service</li>
@@ -335,7 +381,7 @@ export default function TermsPage() {
                 Entire Agreement
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                These Terms, along with our Privacy Policy, constitute the entire agreement between you and College Survival Tool regarding the Service.
+                These Terms, along with our Privacy Policy, constitute the entire agreement between you and College Orbit regarding the Service.
               </p>
             </div>
             <div>

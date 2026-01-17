@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 import crypto from 'crypto';
 
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-const FROM_NAME = process.env.RESEND_FROM_NAME || 'BYU Survival Tool';
+const FROM_NAME = process.env.RESEND_FROM_NAME || 'College Orbit';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 // Create Resend instance only if API key is available
@@ -80,7 +80,7 @@ export async function sendPasswordResetEmail({
                 <td style="padding: 20px 40px 40px 40px; color: #4a5568; font-size: 16px; line-height: 1.6;">
                   <p style="margin: 0 0 20px 0;">Hi ${displayName},</p>
                   <p style="margin: 0 0 20px 0;">
-                    We received a request to reset your password for College Survival Tool.
+                    We received a request to reset your password for College Orbit.
                     Click the button below to set a new password:
                   </p>
 
@@ -119,7 +119,7 @@ export async function sendPasswordResetEmail({
                 <td style="padding: 20px 40px; background-color: #f7fafc; border-top: 1px solid #e2e8f0;
                            text-align: center; color: #718096; font-size: 13px; border-radius: 0 0 8px 8px;">
                   <p style="margin: 0;">
-                    College Survival Tool &copy; ${new Date().getFullYear()}
+                    College Orbit &copy; ${new Date().getFullYear()}
                   </p>
                 </td>
               </tr>
@@ -134,7 +134,7 @@ export async function sendPasswordResetEmail({
   const textContent = `
 Hi ${displayName},
 
-We received a request to reset your password for College Survival Tool. Click the link below to set a new password:
+We received a request to reset your password for College Orbit. Click the link below to set a new password:
 
 ${resetUrl}
 
@@ -142,7 +142,7 @@ This link will expire in 1 hour.
 
 If you didn't request a password reset, you can safely ignore this email. Your password won't be changed.
 
-College Survival Tool © ${new Date().getFullYear()}
+College Orbit © ${new Date().getFullYear()}
   `.trim();
 
   try {
@@ -224,7 +224,7 @@ export async function sendPasswordChangedEmail({
                 <td style="padding: 20px 40px 40px 40px; color: #4a5568; font-size: 16px; line-height: 1.6;">
                   <p style="margin: 0 0 20px 0;">Hi ${displayName},</p>
                   <p style="margin: 0 0 20px 0;">
-                    This is a confirmation that your password for College Survival Tool has been successfully changed.
+                    This is a confirmation that your password for College Orbit has been successfully changed.
                   </p>
 
                   <p style="margin: 20px 0 0 0; font-size: 14px; color: #718096;">
@@ -238,7 +238,7 @@ export async function sendPasswordChangedEmail({
                 <td style="padding: 20px 40px; background-color: #f7fafc; border-top: 1px solid #e2e8f0;
                            text-align: center; color: #718096; font-size: 13px; border-radius: 0 0 8px 8px;">
                   <p style="margin: 0;">
-                    College Survival Tool &copy; ${new Date().getFullYear()}
+                    College Orbit &copy; ${new Date().getFullYear()}
                   </p>
                 </td>
               </tr>
@@ -253,11 +253,11 @@ export async function sendPasswordChangedEmail({
   const textContent = `
 Hi ${displayName},
 
-This is a confirmation that your password for College Survival Tool has been successfully changed.
+This is a confirmation that your password for College Orbit has been successfully changed.
 
 If you didn't make this change, please contact us immediately.
 
-College Survival Tool © ${new Date().getFullYear()}
+College Orbit © ${new Date().getFullYear()}
   `.trim();
 
   try {

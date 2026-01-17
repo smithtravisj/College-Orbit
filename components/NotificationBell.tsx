@@ -206,7 +206,7 @@ export default function NotificationBell() {
           e.currentTarget.style.color = 'var(--text-muted)';
         }}
       >
-        <Bell size={22} />
+        <Bell size={20} />
         {unreadCount > 0 && (
           <span
             style={{

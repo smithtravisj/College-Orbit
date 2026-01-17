@@ -7,7 +7,7 @@ import {
   CheckSquare,
   Clock,
   BookOpen,
-  Bell,
+  ShoppingCart,
   BarChart3,
   FileText,
   CalendarDays,
@@ -20,66 +20,66 @@ import {
 const coreFeatures = [
   {
     icon: Calendar,
-    title: 'Class Schedule',
-    description: 'See your classes with meeting times, locations, and quick links to course resources.',
+    title: 'Course Management',
+    description: 'Track your classes with meeting times, locations, instructor info, and quick links to syllabi and resources.',
   },
   {
     icon: CheckSquare,
-    title: 'Tasks & Deadlines',
-    description: 'Track assignments and due dates. Sorted so the important stuff is always visible.',
-  },
-  {
-    icon: BookOpen,
-    title: 'Exam Tracking',
-    description: 'Keep your exams organized with dates, locations, and study notes.',
+    title: 'Tasks & Assignments',
+    description: 'Manage tasks and assignments with priorities, tags, file attachments, and automatic recurring schedules.',
   },
   {
     icon: CalendarDays,
     title: 'Weekly Calendar',
-    description: 'View your entire week at a glance. Classes, exams, and deadlines all in one place.',
+    description: 'See your entire week at a glance. Classes, exams, assignments, and tasks all in one unified view.',
+  },
+  {
+    icon: BookOpen,
+    title: 'Exam Tracker',
+    description: 'Never miss an exam. Track dates, times, locations, and add study notes for each test.',
   },
 ];
 
 const secondaryFeatures = [
   {
-    icon: FileText,
-    title: 'Notes',
-    description: 'Capture ideas and study notes. Organize by course or keep them freeform.',
+    icon: Target,
+    title: 'Due Soon Dashboard',
+    description: 'See everything coming up this week on your personalized dashboard at a glance.',
   },
   {
-    icon: Clock,
-    title: 'Pomodoro Timer',
-    description: 'Built-in focus timer with customizable work and break intervals.',
+    icon: Repeat,
+    title: 'Recurring Items',
+    description: 'Set up weekly readings, regular assignments, or daily tasks that repeat automatically.',
+  },
+  {
+    icon: FileText,
+    title: 'Rich Notes',
+    description: 'Full-featured note editor with folders, formatting, and file previews for PDFs, images, and documents.',
   },
   {
     icon: BarChart3,
     title: 'GPA Calculator',
-    description: 'Track your grades across semesters and see where your GPA is heading.',
+    description: 'Track grades across semesters with what-if projections to plan your academic path.',
   },
   {
-    icon: Bell,
-    title: 'Reminders',
-    description: 'Get notified about upcoming exams and deadlines before they sneak up.',
-  },
-  {
-    icon: Repeat,
-    title: 'Recurring Tasks',
-    description: 'Set up weekly readings or regular assignments that repeat automatically.',
+    icon: Clock,
+    title: 'Pomodoro Timer',
+    description: 'Built-in focus timer with customizable work and break intervals to boost productivity.',
   },
   {
     icon: LinkIcon,
     title: 'Quick Links',
-    description: 'One-click access to Canvas, email, registration, and other school resources.',
+    description: 'One-click access to Canvas, email, registration, and your school\'s most-used resources.',
   },
   {
-    icon: Target,
-    title: 'Due Soon',
-    description: 'See everything coming up in the next week at a glance.',
+    icon: ShoppingCart,
+    title: 'Shopping List',
+    description: 'Keep track of textbooks, supplies, and everything else you need for the semester.',
   },
   {
     icon: Palette,
-    title: 'School Colors',
-    description: 'Personalize with your university\'s colors. BYU, Utah, and more supported.',
+    title: 'University Themes',
+    description: 'Personalize with your school\'s colors. BYU, Utah State, ASU, and more supported.',
   },
 ];
 
@@ -97,11 +97,12 @@ export default function LandingPage() {
           min-height: 100vh;
           background: #0a0e13;
           position: relative;
+          overflow-x: hidden;
         }
 
         /* Background gradient orbs */
         .bg-orb {
-          position: fixed;
+          position: absolute;
           border-radius: 50%;
           filter: blur(80px);
           pointer-events: none;
@@ -113,7 +114,7 @@ export default function LandingPage() {
           height: 600px;
           top: -200px;
           left: -100px;
-          background: radial-gradient(circle, rgba(148, 163, 184, 0.08) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
         }
 
         .bg-orb-2 {
@@ -121,7 +122,7 @@ export default function LandingPage() {
           height: 500px;
           bottom: 20%;
           right: -150px;
-          background: radial-gradient(circle, rgba(148, 163, 184, 0.06) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(139, 92, 246, 0.10) 0%, transparent 70%);
         }
 
         .landing-header {
@@ -134,6 +135,12 @@ export default function LandingPage() {
           justify-content: space-between;
           align-items: center;
           z-index: 10;
+        }
+
+        .site-brand {
+          display: flex;
+          align-items: center;
+          gap: 12px;
         }
 
         .site-name {
@@ -164,16 +171,18 @@ export default function LandingPage() {
         .header-get-started {
           font-size: 14px;
           font-weight: 600;
-          color: #0f172a;
-          background: #e2e8f0;
+          color: white;
+          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
           padding: 10px 20px;
           border-radius: 8px;
           text-decoration: none;
           transition: all 0.2s ease;
+          box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
         }
 
         .header-get-started:hover {
-          background: #f1f5f9;
+          box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+          transform: translateY(-1px);
         }
 
         .hero-section {
@@ -194,7 +203,7 @@ export default function LandingPage() {
           left: 0;
           right: 0;
           height: 100%;
-          background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(148, 163, 184, 0.06) 0%, transparent 60%);
+          background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
           pointer-events: none;
         }
 
@@ -209,12 +218,12 @@ export default function LandingPage() {
           align-items: center;
           gap: 10px;
           padding: 8px 18px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(99, 102, 241, 0.1);
+          border: 1px solid rgba(99, 102, 241, 0.2);
           border-radius: 100px;
           font-size: 14px;
           font-weight: 500;
-          color: #94a3b8;
+          color: #a5b4fc;
           margin-bottom: 28px;
           opacity: ${mounted ? 1 : 0};
           transform: translateY(${mounted ? '0' : '12px'});
@@ -234,7 +243,7 @@ export default function LandingPage() {
         }
 
         .hero-title span {
-          background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+          background: linear-gradient(135deg, #a5b4fc 0%, #8b5cf6 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -275,20 +284,20 @@ export default function LandingPage() {
           align-items: center;
           gap: 10px;
           padding: 16px 32px;
-          background: #e2e8f0;
-          color: #0f172a;
+          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+          color: white;
           font-size: 16px;
           font-weight: 600;
           border-radius: 12px;
           text-decoration: none;
           transition: all 0.25s ease;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
         }
 
         .btn-primary:hover {
           transform: translateY(-2px);
-          background: #f1f5f9;
-          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+          background: linear-gradient(135deg, #7c7ff7 0%, #9d6ff9 100%);
+          box-shadow: 0 8px 30px rgba(99, 102, 241, 0.45);
         }
 
         .btn-secondary {
@@ -296,19 +305,19 @@ export default function LandingPage() {
           align-items: center;
           gap: 10px;
           padding: 16px 32px;
-          background: rgba(255, 255, 255, 0.03);
+          background: rgba(99, 102, 241, 0.08);
           color: #e2e8f0;
           font-size: 16px;
           font-weight: 600;
           border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(99, 102, 241, 0.2);
           text-decoration: none;
           transition: all 0.25s ease;
         }
 
         .btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.08);
-          border-color: rgba(255, 255, 255, 0.2);
+          background: rgba(99, 102, 241, 0.15);
+          border-color: rgba(99, 102, 241, 0.35);
           transform: translateY(-2px);
         }
 
@@ -427,10 +436,10 @@ export default function LandingPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(255, 255, 255, 0.06);
+          background: rgba(99, 102, 241, 0.12);
           border-radius: 12px;
           margin-bottom: 18px;
-          color: #94a3b8;
+          color: #a5b4fc;
         }
 
         .feature-title {
@@ -447,23 +456,45 @@ export default function LandingPage() {
         }
 
         .footer-section {
-          padding: 32px 24px;
+          padding: 40px 24px;
           text-align: center;
           position: relative;
           z-index: 1;
           border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .footer-text {
-          font-size: 14px;
-          color: #475569;
+        .footer-content {
+          max-width: 600px;
+          margin: 0 auto;
+        }
+
+        .footer-contact {
+          margin-bottom: 20px;
+        }
+
+        .footer-contact-label {
+          font-size: 13px;
+          color: #64748b;
+          margin-bottom: 6px;
+        }
+
+        .footer-contact-email {
+          font-size: 15px;
+          color: #a5b4fc;
+          text-decoration: none;
+          font-weight: 500;
+          transition: color 0.2s ease;
+        }
+
+        .footer-contact-email:hover {
+          color: #c4b5fd;
         }
 
         .footer-links {
           display: flex;
           gap: 28px;
           justify-content: center;
-          margin-top: 14px;
+          margin-top: 16px;
         }
 
         .footer-link {
@@ -475,6 +506,12 @@ export default function LandingPage() {
 
         .footer-link:hover {
           color: #e2e8f0;
+        }
+
+        .footer-copyright {
+          font-size: 12px;
+          color: #475569;
+          margin-top: 20px;
         }
 
         @media (max-width: 640px) {
@@ -647,15 +684,15 @@ export default function LandingPage() {
           }
 
           .bg-orb-1 {
-            background: radial-gradient(circle, rgba(100, 116, 139, 0.08) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.10) 0%, transparent 70%);
           }
 
           .bg-orb-2 {
-            background: radial-gradient(circle, rgba(100, 116, 139, 0.06) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
           }
 
           .hero-section::before {
-            background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(100, 116, 139, 0.06) 0%, transparent 60%);
+            background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99, 102, 241, 0.06) 0%, transparent 60%);
           }
 
           .site-name {
@@ -671,18 +708,19 @@ export default function LandingPage() {
           }
 
           .header-get-started {
-            color: #f8fafc;
-            background: #1e293b;
+            color: white;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
           }
 
           .header-get-started:hover {
-            background: #334155;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
           }
 
           .hero-badge {
-            background: rgba(0, 0, 0, 0.05);
-            border-color: rgba(0, 0, 0, 0.1);
-            color: #64748b;
+            background: rgba(99, 102, 241, 0.08);
+            border-color: rgba(99, 102, 241, 0.15);
+            color: #6366f1;
           }
 
           .hero-title {
@@ -690,7 +728,7 @@ export default function LandingPage() {
           }
 
           .hero-title span {
-            background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -705,7 +743,7 @@ export default function LandingPage() {
           }
 
           .features-section::before {
-            background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.06), transparent);
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.08), transparent);
           }
 
           .features-title {
@@ -717,23 +755,23 @@ export default function LandingPage() {
           }
 
           .feature-card {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
-            border-color: rgba(0, 0, 0, 0.08);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+            border-color: rgba(99, 102, 241, 0.1);
           }
 
           .feature-card:hover {
-            border-color: rgba(0, 0, 0, 0.12);
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+            border-color: rgba(99, 102, 241, 0.2);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.9) 100%);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.12);
           }
 
           .feature-card::before {
-            background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.06), transparent);
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
           }
 
           .feature-icon {
-            background: rgba(0, 0, 0, 0.05);
-            color: #64748b;
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
           }
 
           .feature-title {
@@ -753,29 +791,37 @@ export default function LandingPage() {
           }
 
           .btn-primary {
-            background: #1e293b;
-            color: #f8fafc;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25);
           }
 
           .btn-primary:hover {
-            background: #334155;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg, #7c7ff7 0%, #9d6ff9 100%);
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.35);
           }
 
           .btn-secondary {
-            background: rgba(0, 0, 0, 0.03);
+            background: rgba(99, 102, 241, 0.06);
             color: #1e293b;
-            border-color: rgba(0, 0, 0, 0.1);
+            border-color: rgba(99, 102, 241, 0.15);
           }
 
           .btn-secondary:hover {
-            background: rgba(0, 0, 0, 0.06);
-            border-color: rgba(0, 0, 0, 0.15);
+            background: rgba(99, 102, 241, 0.12);
+            border-color: rgba(99, 102, 241, 0.25);
           }
 
           .footer-section {
-            border-top-color: rgba(0, 0, 0, 0.06);
+            border-top-color: rgba(99, 102, 241, 0.08);
+          }
+
+          .footer-contact-email {
+            color: #6366f1;
+          }
+
+          .footer-contact-email:hover {
+            color: #8b5cf6;
           }
 
           .footer-link {
@@ -794,7 +840,38 @@ export default function LandingPage() {
 
       {/* Header */}
       <header className="landing-header">
-        <span className="site-name">College Survival Tool</span>
+        <div className="site-brand">
+          <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
+            <circle cx="32" cy="32" r="12" fill="url(#landingPlanetGradient)" />
+            <ellipse
+              cx="32"
+              cy="32"
+              rx="28"
+              ry="10"
+              stroke="url(#landingOrbitGradient)"
+              strokeWidth="2"
+              fill="none"
+              style={{ transform: 'rotate(-20deg)', transformOrigin: 'center' }}
+            />
+            <circle cx="54" cy="28" r="4" fill="url(#landingMoonGradient)" />
+            <defs>
+              <linearGradient id="landingPlanetGradient" x1="20" y1="20" x2="44" y2="44">
+                <stop offset="0%" stopColor="#6366f1" />
+                <stop offset="100%" stopColor="#8b5cf6" />
+              </linearGradient>
+              <linearGradient id="landingOrbitGradient" x1="4" y1="32" x2="60" y2="32">
+                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
+                <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#6366f1" stopOpacity="0.3" />
+              </linearGradient>
+              <linearGradient id="landingMoonGradient" x1="50" y1="24" x2="58" y2="32">
+                <stop offset="0%" stopColor="#a78bfa" />
+                <stop offset="100%" stopColor="#c4b5fd" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <span className="site-name">College Orbit</span>
+        </div>
         <nav className="header-nav">
           <Link href="/login" className="header-sign-in">Sign In</Link>
           <Link href="/signup" className="header-get-started">Get Started</Link>
@@ -805,15 +882,15 @@ export default function LandingPage() {
       <section className="hero-section">
         <div className="hero-content">
           <div className="hero-badge">
-            Designed for college students
+            Your college command center
           </div>
 
           <h1 className="hero-title">
-            Your College Life,<br /><span>Simplified</span>
+            Keep Everything<br /><span>In Orbit</span>
           </h1>
 
           <p className="hero-subtitle">
-            Track classes, manage deadlines, and stay on top of your semester with a dashboard that keeps everything in one place. Free to use.
+            Classes, assignments, exams, and tasks all revolving around one central dashboard. Stay organized without the chaos. Free to use.
           </p>
         </div>
       </section>
@@ -870,9 +947,18 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="footer-section">
-        <div className="footer-links">
-          <Link href="/privacy" className="footer-link">Privacy</Link>
-          <Link href="/terms" className="footer-link">Terms</Link>
+        <div className="footer-content">
+          <div className="footer-contact">
+            <p className="footer-contact-label">Questions or feedback?</p>
+            <a href="mailto:collegeorbit@protonmail.com" className="footer-contact-email">
+              collegeorbit@protonmail.com
+            </a>
+          </div>
+          <div className="footer-links">
+            <Link href="/privacy" className="footer-link">Privacy</Link>
+            <Link href="/terms" className="footer-link">Terms</Link>
+          </div>
+          <p className="footer-copyright">© {new Date().getFullYear()} College Orbit</p>
         </div>
       </footer>
     </div>
