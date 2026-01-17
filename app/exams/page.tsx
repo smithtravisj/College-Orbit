@@ -53,6 +53,7 @@ export default function ExamsPage() {
   // Bulk selection state
   const bulkSelect = useBulkSelect();
   const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
+  const [showDeleteAllPast, setShowDeleteAllPast] = useState(false);
 
   const { courses, exams, settings, addExam, updateExam, deleteExam, bulkUpdateExams, bulkDeleteExams, initializeStore } = useAppStore();
 
@@ -366,7 +367,38 @@ export default function ExamsPage() {
     bulkSelect.clearSelection();
   };
 
+  // Delete all past exams - ONLY deletes exams that are in the past or not scheduled
+  const handleDeleteAllPast = async () => {
+    try {
+      const now = new Date();
+      const pastExamIds = exams
+        .filter((exam) => {
+          if (!exam.examAt) return false;
+          const examTime = new Date(exam.examAt);
+          return examTime <= now || exam.status !== 'scheduled';
+        })
+        .map((exam) => exam.id);
+      if (pastExamIds.length > 0) {
+        await bulkDeleteExams(pastExamIds);
+        // Remove any selected tags that no longer exist in remaining items
+        const remainingExams = exams.filter((e) => !pastExamIds.includes(e.id));
+        const remainingTags = new Set(remainingExams.flatMap((e) => e.tags || []));
+        setSelectedTags((prev) => new Set([...prev].filter((tag) => remainingTags.has(tag))));
+        // Switch to 'upcoming' filter since past items were deleted
+        setFilter('upcoming');
+      }
+    } finally {
+      setShowDeleteAllPast(false);
+    }
+  };
+
   const now = new Date();
+
+  const pastExamsCount = exams.filter((exam) => {
+    if (!exam.examAt) return false;
+    const examTime = new Date(exam.examAt);
+    return examTime <= now || exam.status !== 'scheduled';
+  }).length;
   const filtered = exams
     .filter((exam) => {
       // Always include toggled exams (keep them visible after status change)
@@ -764,6 +796,19 @@ export default function ExamsPage() {
           {/* Exams List */}
           {filtered.length > 0 ? (
             <Card>
+              {/* Delete All Past Button */}
+              {filter === 'past' && pastExamsCount > 0 && (
+                <div style={{ marginBottom: '8px' }}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowDeleteAllPast(true)}
+                  >
+                    <Trash2 size={14} />
+                    <span style={{ marginLeft: '6px' }}>Delete All Past</span>
+                  </Button>
+                </div>
+              )}
               <div className="divide-y divide-[var(--border)]" style={{ display: 'flex', flexDirection: 'column' }}>
                 {filtered.map((exam) => {
                   const course = courses.find((c) => c.id === exam.courseId);
@@ -1003,6 +1048,43 @@ export default function ExamsPage() {
         entityType="exam"
         onConfirm={handleBulkDelete}
       />
+
+      {/* Delete All Past Modal */}
+      {showDeleteAllPast && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
+          <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+            <div style={{ padding: '24px' }}>
+              <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Delete All Past Exams</h2>
+              <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                Are you sure you want to delete {pastExamsCount} past exam{pastExamsCount !== 1 ? 's' : ''}? This action cannot be undone.
+              </p>
+              <div className="flex gap-3 justify-end" style={{ marginTop: '24px' }}>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => setShowDeleteAllPast(false)}
+                  style={{ paddingLeft: '16px', paddingRight: '16px' }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={handleDeleteAllPast}
+                  style={{
+                    backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
+                    color: 'white',
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
+                  }}
+                >
+                  Delete All
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Preview Modal */}
       {previewingExam && (

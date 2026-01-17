@@ -118,6 +118,11 @@ export async function PATCH(
           }
           return { label, url: l.url };
         }) : existingDeadline.links,
+        files: 'files' in data ? (data.files || []).filter((f: any) => f.url).map((f: any) => ({
+          name: f.name,
+          url: f.url,
+          size: f.size || 0,
+        })) : (existingDeadline.files as any) || [],
         status: 'status' in data ? data.status : existingDeadline.status,
         workingOn: 'workingOn' in data ? data.workingOn : existingDeadline.workingOn,
       },

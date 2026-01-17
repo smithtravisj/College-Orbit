@@ -75,6 +75,7 @@ export async function PATCH(
         endDate: data.endDate !== undefined ? (data.endDate ? new Date(data.endDate) : null) : existingCourse.endDate,
         meetingTimes: data.meetingTimes ?? existingCourse.meetingTimes,
         links: data.links ?? existingCourse.links,
+        files: data.files ?? (existingCourse.files as any) ?? [],
         colorTag: data.colorTag ?? existingCourse.colorTag,
       },
     });

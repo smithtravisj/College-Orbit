@@ -15,6 +15,11 @@ export interface Course {
     label: string;
     url: string;
   }>;
+  files?: Array<{
+    name: string;
+    url: string;
+    size: number;
+  }>;
   colorTag?: string;
 }
 
@@ -30,6 +35,11 @@ export interface Deadline {
   links: Array<{
     label: string;
     url: string;
+  }>;
+  files?: Array<{
+    name: string;
+    url: string;
+    size: number;
   }>;
   status: 'open' | 'done';
   workingOn: boolean;
@@ -58,6 +68,11 @@ export interface Task {
   links: Array<{
     label: string;
     url: string;
+  }>;
+  files?: Array<{
+    name: string;
+    url: string;
+    size: number;
   }>;
   status: 'open' | 'done';
   workingOn: boolean;

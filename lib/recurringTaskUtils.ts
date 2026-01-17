@@ -170,10 +170,17 @@ export async function generateRecurringInstances(
       // Check if instance already exists (using in-memory set for performance)
       const instanceDateStr = currentDate.toISOString();
       if (!existingDates.has(instanceDateStr)) {
-        // Create due date with the specified time
+        // Create due date with the specified time in local timezone
         const [hours, minutes] = (template.dueTime || '23:59').split(':').map(Number);
-        const dueAt = new Date(currentDate);
-        dueAt.setHours(hours, minutes, 0, 0);
+        const dueAt = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth(),
+          currentDate.getDate(),
+          hours,
+          minutes,
+          0,
+          0
+        );
 
         instances.push({
           userId,

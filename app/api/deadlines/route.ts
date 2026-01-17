@@ -188,6 +188,11 @@ export const POST = withRateLimit(async function(req: NextRequest) {
           label: l.label || new URL(l.url).hostname,
           url: l.url,
         })),
+        files: (data.files || []).filter((f: any) => f.url).map((f: any) => ({
+          name: f.name,
+          url: f.url,
+          size: f.size || 0,
+        })),
         status: data.status || 'open',
         isRecurring: false,
       },
