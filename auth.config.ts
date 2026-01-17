@@ -83,41 +83,41 @@ export const authConfig: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (!token) {
-        return null as any;
+      if (!token || !session.user) {
+        return session;
       }
 
-      if (token && session.user) {
-        session.user.id = token.id as string;
+      session.user.id = token.id as string;
 
-        // Fetch fresh user data from database to ensure updates are reflected
-        try {
-          const freshUser = await prisma.user.findUnique({
-            where: { id: token.id as string },
-            select: { name: true, email: true, isAdmin: true, lastLogin: true, sessionInvalidatedAt: true },
-          });
+      // Fetch fresh user data from database to ensure updates are reflected
+      try {
+        const freshUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { name: true, email: true, isAdmin: true, lastLogin: true, sessionInvalidatedAt: true },
+        });
 
-          if (freshUser) {
-            // Check if session was invalidated after token was created
-            if (freshUser.sessionInvalidatedAt && token.iat) {
-              const tokenCreatedAt = new Date((token.iat as number) * 1000);
-              if (freshUser.sessionInvalidatedAt > tokenCreatedAt) {
-                // Token was created before session invalidation - reject it
-                return null as any;
-              }
+        if (freshUser) {
+          // Check if session was invalidated after token was created
+          if (freshUser.sessionInvalidatedAt && token.iat) {
+            const tokenCreatedAt = new Date((token.iat as number) * 1000);
+            if (freshUser.sessionInvalidatedAt > tokenCreatedAt) {
+              // Token was created before session invalidation - mark session as invalid
+              (session as any).invalidated = true;
+              return session;
             }
-
-            session.user.name = freshUser.name;
-            session.user.email = freshUser.email;
-            token.name = freshUser.name;
-            token.email = freshUser.email;
-            (session.user as any).isAdmin = freshUser.isAdmin;
-            (session.user as any).lastLogin = freshUser.lastLogin?.toISOString() || null;
           }
-        } catch (error) {
-          console.error('Error fetching fresh user data in session:', error);
+
+          session.user.name = freshUser.name;
+          session.user.email = freshUser.email;
+          token.name = freshUser.name;
+          token.email = freshUser.email;
+          (session.user as any).isAdmin = freshUser.isAdmin;
+          (session.user as any).lastLogin = freshUser.lastLogin?.toISOString() || null;
         }
+      } catch (error) {
+        console.error('Error fetching fresh user data in session:', error);
       }
+
       return session;
     },
   },
