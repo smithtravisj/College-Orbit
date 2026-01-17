@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { Shield } from 'lucide-react';
 
 export default function AccountPage() {
   const { data: session, update: updateSession } = useSession();
@@ -23,6 +24,14 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [logoutLoading, setLogoutLoading] = useState(false);
+  const [securitySuccess, setSecuritySuccess] = useState('');
+
+  useEffect(() => {
+    // Refresh session on mount to get latest data (including lastLogin)
+    updateSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (session?.user) {
@@ -77,6 +86,55 @@ export default function AccountPage() {
       setError('An error occurred. Please try again.');
       setLoading(false);
     }
+  };
+
+  const handleLogoutAllSessions = async () => {
+    setLogoutLoading(true);
+    setSecuritySuccess('');
+
+    try {
+      const response = await fetch('/api/user/sessions', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        setLogoutLoading(false);
+        return;
+      }
+
+      setSecuritySuccess('All sessions have been logged out. You will be redirected to login.');
+      setLogoutLoading(false);
+
+      // Sign out the current session after a brief delay
+      setTimeout(() => {
+        signOut({ callbackUrl: '/login' });
+      }, 2000);
+    } catch (err) {
+      setLogoutLoading(false);
+    }
+  };
+
+  const formatLastLogin = (dateStr: string | null | undefined) => {
+    if (!dateStr) return 'Never';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+      hour: 'numeric',
+      minute: '2-digit',
+    });
   };
 
   return (
@@ -210,6 +268,51 @@ export default function AccountPage() {
                 </Button>
               </div>
             </form>
+          </Card>
+
+          {/* Security Section */}
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+              <Shield size={20} className="text-[var(--text)]" />
+              <h2 className="text-lg font-semibold text-[var(--text)]">Security</h2>
+            </div>
+
+            {securitySuccess && (
+              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3" style={{ marginBottom: '16px' }}>
+                <p className="text-sm text-green-500">{securitySuccess}</p>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]">Last Login</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    {formatLastLogin((session?.user as any)?.lastLogin)}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Log Out of All Sessions</p>
+                <p className="text-xs text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                  This will log you out of all devices and browsers, including this one.
+                </p>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={handleLogoutAllSessions}
+                  disabled={logoutLoading}
+                  style={{
+                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                    borderColor: 'rgba(220, 38, 38, 0.3)',
+                    color: 'var(--danger)',
+                  }}
+                >
+                  {logoutLoading ? 'Logging out...' : 'Log Out All Sessions'}
+                </Button>
+              </div>
+            </div>
           </Card>
         </div>
       </div>
