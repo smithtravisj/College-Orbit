@@ -3,6 +3,7 @@
 import React, { useRef, useState } from 'react';
 import { Upload, X, File, Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import Button from '@/components/ui/Button';
 
 interface FileItem {
   name: string;
@@ -233,42 +234,20 @@ export default function FileUpload({ files = [], onChange, maxFiles = 10, maxSiz
 
       {/* Upload button when no label provided */}
       {!label && (
-        <button
+        <Button
+          variant="secondary"
+          size={isMobile ? 'sm' : 'md'}
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading || files.length >= maxFiles}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: isMobile ? '4px 8px' : '6px 12px',
-            backgroundColor: 'var(--panel-2)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-control)',
-            color: 'var(--text-muted)',
-            fontSize: isMobile ? '0.7rem' : '0.8rem',
-            cursor: uploading || files.length >= maxFiles ? 'not-allowed' : 'pointer',
-            opacity: uploading || files.length >= maxFiles ? 0.5 : 1,
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            if (!uploading && files.length < maxFiles) {
-              e.currentTarget.style.borderColor = 'var(--border-hover)';
-              e.currentTarget.style.color = 'var(--text)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'var(--border)';
-            e.currentTarget.style.color = 'var(--text-muted)';
-          }}
         >
           {uploading ? (
-            <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+            <Loader2 size={isMobile ? 14 : 16} style={{ animation: 'spin 1s linear infinite' }} />
           ) : (
-            <Upload size={14} />
+            <Upload size={isMobile ? 14 : 16} />
           )}
           {uploading ? 'Uploading...' : 'Add Files'}
-        </button>
+        </Button>
       )}
 
       {/* Error message */}

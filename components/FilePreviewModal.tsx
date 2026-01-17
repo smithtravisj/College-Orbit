@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Download, FileText, ZoomIn, ZoomOut, RotateCw, RotateCcw, Maximize, Minimize, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import mammoth from 'mammoth';
 
 interface FileItem {
   name: string;
@@ -21,6 +22,8 @@ interface FilePreviewModalProps {
 export default function FilePreviewModal({ file, files, currentIndex = 0, onClose, onNavigate }: FilePreviewModalProps) {
   const isMobile = useIsMobile();
   const [textContent, setTextContent] = useState<string | null>(null);
+  const [docxHtml, setDocxHtml] = useState<string | null>(null);
+  const [docxLoading, setDocxLoading] = useState(false);
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -62,6 +65,38 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
       }
     } else {
       setTextContent(null);
+    }
+  }, [file]);
+
+  // Load docx content
+  useEffect(() => {
+    if (!file) return;
+    const mimeType = getMimeType(file.url);
+    if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      setDocxLoading(true);
+      setDocxHtml(null);
+      try {
+        const base64Data = file.url.split(',')[1];
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        mammoth.convertToHtml({ arrayBuffer: bytes.buffer })
+          .then((result) => {
+            setDocxHtml(result.value);
+            setDocxLoading(false);
+          })
+          .catch(() => {
+            setDocxHtml(null);
+            setDocxLoading(false);
+          });
+      } catch {
+        setDocxHtml(null);
+        setDocxLoading(false);
+      }
+    } else {
+      setDocxHtml(null);
     }
   }, [file]);
 
@@ -298,6 +333,69 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
           </pre>
         )}
 
+        {fileType === 'docx' && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            overflow: 'auto',
+            backgroundColor: '#525659',
+            padding: '20px',
+          }}>
+            {docxLoading && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#fff' }}>
+                Loading document...
+              </div>
+            )}
+            {!docxLoading && docxHtml && (
+              <div
+                dangerouslySetInnerHTML={{ __html: docxHtml }}
+                className="docx-preview"
+                style={{
+                  maxWidth: '816px',
+                  minHeight: '1056px',
+                  margin: '0 auto',
+                  padding: '72px 72px',
+                  backgroundColor: '#fff',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                  color: '#333',
+                  fontSize: `${14 * scale}px`,
+                  lineHeight: '1.6',
+                  transform: `scale(${scale})`,
+                  transformOrigin: 'top center',
+                }}
+              />
+            )}
+            {!docxLoading && !docxHtml && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#fff' }}>
+                <FileText size={64} style={{ marginBottom: '16px', opacity: 0.5 }} />
+                <p>Could not load document</p>
+              </div>
+            )}
+            <style>{`
+              .docx-preview h1 { font-size: 2em; font-weight: bold; margin: 0.67em 0; }
+              .docx-preview h2 { font-size: 1.5em; font-weight: bold; margin: 0.83em 0; }
+              .docx-preview h3 { font-size: 1.17em; font-weight: bold; margin: 1em 0; }
+              .docx-preview h4 { font-size: 1em; font-weight: bold; margin: 1.33em 0; }
+              .docx-preview h5 { font-size: 0.83em; font-weight: bold; margin: 1.67em 0; }
+              .docx-preview h6 { font-size: 0.67em; font-weight: bold; margin: 2.33em 0; }
+              .docx-preview p { margin: 1em 0; }
+              .docx-preview strong, .docx-preview b { font-weight: bold; }
+              .docx-preview em, .docx-preview i { font-style: italic; }
+              .docx-preview u { text-decoration: underline; }
+              .docx-preview ul, .docx-preview ol { margin: 1em 0; padding-left: 2em; }
+              .docx-preview li { margin: 0.5em 0; }
+              .docx-preview table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+              .docx-preview th, .docx-preview td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+              .docx-preview th { background-color: #f5f5f5; font-weight: bold; }
+              .docx-preview a { color: #0066cc; text-decoration: underline; }
+              .docx-preview img { max-width: 100%; height: auto; }
+              .docx-preview blockquote { margin: 1em 0; padding-left: 1em; border-left: 3px solid #ccc; color: #666; }
+              .docx-preview pre, .docx-preview code { font-family: monospace; background: #f5f5f5; padding: 2px 4px; border-radius: 3px; }
+              .docx-preview pre { padding: 12px; overflow-x: auto; }
+            `}</style>
+          </div>
+        )}
+
         {fileType === 'unknown' && (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)' }}>
             <FileText size={64} style={{ marginBottom: '16px', opacity: 0.5 }} />
@@ -331,6 +429,40 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
             style={{
               padding: '6px 12px',
               backgroundColor: scale === 1 && rotation === 0 ? 'rgba(255,255,255,0.1)' : 'var(--primary, #3b82f6)',
+              border: 'none',
+              borderRadius: '6px',
+              color: '#fff',
+              fontSize: '12px',
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            Reset
+          </button>
+        </div>
+      )}
+
+      {/* Docx toolbar */}
+      {fileType === 'docx' && !docxLoading && docxHtml && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          padding: '12px',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          flexShrink: 0,
+        }}>
+          <IconButton onClick={zoomOut} title="Zoom out (-)"><ZoomOut size={18} /></IconButton>
+          <span style={{ color: '#fff', fontSize: '13px', minWidth: '50px', textAlign: 'center' }}>{Math.round(scale * 100)}%</span>
+          <IconButton onClick={zoomIn} title="Zoom in (+)"><ZoomIn size={18} /></IconButton>
+          <div style={{ width: '1px', height: '20px', backgroundColor: 'rgba(255,255,255,0.2)', margin: '0 8px' }} />
+          <button
+            onClick={() => setScale(1)}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: scale === 1 ? 'rgba(255,255,255,0.1)' : 'var(--primary, #3b82f6)',
               border: 'none',
               borderRadius: '6px',
               color: '#fff',
@@ -404,11 +536,12 @@ function getMimeType(url: string): string {
   return match?.[1] || 'application/octet-stream';
 }
 
-function getFileType(mime: string): 'image' | 'video' | 'audio' | 'pdf' | 'text' | 'unknown' {
+function getFileType(mime: string): 'image' | 'video' | 'audio' | 'pdf' | 'text' | 'docx' | 'unknown' {
   if (mime.startsWith('image/')) return 'image';
   if (mime.startsWith('video/')) return 'video';
   if (mime.startsWith('audio/')) return 'audio';
   if (mime === 'application/pdf') return 'pdf';
+  if (mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx';
   if (mime.startsWith('text/') || ['application/json', 'application/javascript', 'application/xml'].includes(mime)) return 'text';
   return 'unknown';
 }

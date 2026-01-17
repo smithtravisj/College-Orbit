@@ -235,7 +235,7 @@ export default function CoursesPage() {
         subtitle="Manage your classes"
         actions={
           !isMobile && !isAdding && !editingId && (
-            <Button variant="secondary" size="md" onClick={() => setIsAdding(true)}>
+            <Button variant="secondary" size="md" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setIsAdding(true); }}>
               <Plus size={18} />
               New Course
             </Button>
@@ -408,7 +408,7 @@ export default function CoursesPage() {
                 action={
                   termFilter !== 'all'
                     ? { label: 'View all courses', onClick: () => handleTermFilterChange('all') }
-                    : { label: 'Add Course', onClick: () => setIsAdding(true) }
+                    : { label: 'Add Course', onClick: () => { window.scrollTo({ top: 0, behavior: 'smooth' }); setIsAdding(true); } }
                 }
               />
             )}
