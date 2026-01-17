@@ -11,7 +11,7 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X, Upload, FileIcon } from 'lucide-react';
+import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X, Upload, FileIcon, ChevronDown } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import RecurrenceSelector from '@/components/RecurrenceSelector';
@@ -114,6 +114,7 @@ export default function TasksPage() {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [previewingTask, setPreviewingTask] = useState<any>(null);
   const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
 
   // Bulk selection state
   const bulkSelect = useBulkSelect();
@@ -1122,135 +1123,167 @@ export default function TasksPage() {
                   />
                 )}
 
-                {/* Notes and Tags */}
-                <div className="flex flex-col gap-2" style={{ paddingTop: isMobile ? '4px' : '8px' }}>
-                  <Textarea
-                    label="Notes"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="Add any additional notes..."
-                    autoExpand
-                    maxHeight={200}
-                    style={isMobile ? { minHeight: '52px', padding: '8px 10px' } : { minHeight: '60px' }}
+                {/* More Options Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowMoreOptions(!showMoreOptions)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'none',
+                    border: 'none',
+                    padding: '10px 0',
+                    cursor: 'pointer',
+                    color: 'var(--text)',
+                    fontSize: isMobile ? '14px' : '14px',
+                    fontWeight: 500,
+                  }}
+                >
+                  <ChevronDown
+                    size={18}
+                    style={{
+                      transform: showMoreOptions ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s ease',
+                    }}
                   />
-                  <div style={{ marginTop: isMobile ? '-8px' : '-4px' }}>
-                    <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: isMobile ? '4px' : '6px' }}>Tags</label>
-                    <TagInput
-                      tags={formData.tags}
-                      onTagsChange={(tags) => setFormData({ ...formData, tags })}
-                      allAvailableTags={allTags}
-                      placeholder="Add tag..."
-                    />
-                  </div>
-                </div>
+                  More options
+                </button>
 
-                {/* Links */}
-                <div style={{ marginTop: isMobile ? '8px' : '10px' }}>
-                  <label className="block font-semibold text-[var(--text)]" style={{ fontSize: isMobile ? '15px' : '18px', marginBottom: isMobile ? '4px' : '8px' }}>Links</label>
-                  <div className={isMobile ? 'space-y-2' : 'space-y-3'}>
-                    {formData.links.map((link, idx) => (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
-                        <Input
-                          label={idx === 0 ? 'Label' : ''}
-                          type="text"
-                          value={link.label}
-                          onChange={(e) => {
-                            const newLinks = [...formData.links];
-                            newLinks[idx].label = e.target.value;
-                            setFormData({ ...formData, links: newLinks });
-                          }}
-                          placeholder="e.g., Canvas"
-                          className="w-32"
-                          labelClassName={isMobile ? 'text-xs' : 'text-sm'}
+                {/* More Options Section */}
+                {showMoreOptions && (
+                  <>
+                    {/* Notes and Tags */}
+                    <div className="flex flex-col gap-2" style={{ paddingTop: isMobile ? '4px' : '8px' }}>
+                      <Textarea
+                        label="Notes"
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        placeholder="Add any additional notes..."
+                        autoExpand
+                        maxHeight={200}
+                        style={isMobile ? { minHeight: '52px', padding: '8px 10px' } : { minHeight: '60px' }}
+                      />
+                      <div style={{ marginTop: isMobile ? '-8px' : '-4px' }}>
+                        <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: isMobile ? '4px' : '6px' }}>Tags</label>
+                        <TagInput
+                          tags={formData.tags}
+                          onTagsChange={(tags) => setFormData({ ...formData, tags })}
+                          allAvailableTags={allTags}
+                          placeholder="Add tag..."
                         />
-                        <Input
-                          label={idx === 0 ? 'URL' : ''}
-                          type="text"
-                          value={link.url}
-                          onChange={(e) => {
-                            const newLinks = [...formData.links];
-                            newLinks[idx].url = e.target.value;
-                            setFormData({ ...formData, links: newLinks });
-                          }}
-                          placeholder="example.com or https://..."
-                          className="flex-1"
-                          labelClassName={isMobile ? 'text-xs' : 'text-sm'}
-                        />
-                        <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%' }}>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                links: formData.links.filter((_, i) => i !== idx),
-                              });
+                      </div>
+                    </div>
+
+                    {/* Links */}
+                    <div style={{ marginTop: isMobile ? '8px' : '10px' }}>
+                      <label className="block font-semibold text-[var(--text)]" style={{ fontSize: isMobile ? '15px' : '18px', marginBottom: isMobile ? '4px' : '8px' }}>Links</label>
+                      <div className={isMobile ? 'space-y-2' : 'space-y-3'}>
+                        {formData.links.map((link, idx) => (
+                          <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
+                            <Input
+                              label={idx === 0 ? 'Label' : ''}
+                              type="text"
+                              value={link.label}
+                              onChange={(e) => {
+                                const newLinks = [...formData.links];
+                                newLinks[idx].label = e.target.value;
+                                setFormData({ ...formData, links: newLinks });
+                              }}
+                              placeholder="e.g., Canvas"
+                              className="w-32"
+                              labelClassName={isMobile ? 'text-xs' : 'text-sm'}
+                            />
+                            <Input
+                              label={idx === 0 ? 'URL' : ''}
+                              type="text"
+                              value={link.url}
+                              onChange={(e) => {
+                                const newLinks = [...formData.links];
+                                newLinks[idx].url = e.target.value;
+                                setFormData({ ...formData, links: newLinks });
+                              }}
+                              placeholder="example.com or https://..."
+                              className="flex-1"
+                              labelClassName={isMobile ? 'text-xs' : 'text-sm'}
+                            />
+                            <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%' }}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setFormData({
+                                    ...formData,
+                                    links: formData.links.filter((_, i) => i !== idx),
+                                  });
+                                }}
+                                className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                                style={{ padding: isMobile ? '4px' : '6px', marginTop: idx === 0 ? (isMobile ? '20px' : '28px') : '0px' }}
+                                title="Remove link"
+                              >
+                                <Trash2 size={isMobile ? 18 : 20} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <Button variant="secondary" size={isMobile ? 'sm' : 'sm'} type="button" onClick={() => {
+                        setFormData({
+                          ...formData,
+                          links: [...formData.links, { label: '', url: '' }],
+                        });
+                      }} style={{ marginTop: isMobile ? '4px' : '8px', marginBottom: isMobile ? '8px' : '8px', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
+                        <Plus size={isMobile ? 12 : 16} />
+                        Add Link
+                      </Button>
+                    </div>
+
+                    {/* File list display */}
+                    {formData.files && formData.files.length > 0 && (
+                      <div style={{ paddingTop: isMobile ? '4px' : '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {formData.files.map((file, index) => (
+                          <div
+                            key={index}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: isMobile ? '4px 8px' : '6px 10px',
+                              backgroundColor: 'var(--panel-2)',
+                              borderRadius: 'var(--radius-control)',
+                              border: '1px solid var(--border)',
+                              fontSize: isMobile ? '0.7rem' : '0.8rem',
                             }}
-                            className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
-                            style={{ padding: isMobile ? '4px' : '6px', marginTop: idx === 0 ? (isMobile ? '20px' : '28px') : '0px' }}
-                            title="Remove link"
                           >
-                            <Trash2 size={isMobile ? 18 : 20} />
-                          </button>
-                        </div>
+                            <input
+                              type="text"
+                              value={file.name}
+                              onChange={(e) => {
+                                const newFiles = [...formData.files];
+                                newFiles[index] = { ...newFiles[index], name: e.target.value };
+                                setFormData({ ...formData, files: newFiles });
+                              }}
+                              style={{
+                                flex: 1,
+                                background: 'transparent',
+                                border: 'none',
+                                outline: 'none',
+                                color: 'var(--text)',
+                                fontSize: 'inherit',
+                                padding: 0,
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setFormData({ ...formData, files: formData.files.filter((_, i) => i !== index) })}
+                              style={{ background: 'none', border: 'none', padding: '2px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  <Button variant="secondary" size={isMobile ? 'sm' : 'sm'} type="button" onClick={() => {
-                    setFormData({
-                      ...formData,
-                      links: [...formData.links, { label: '', url: '' }],
-                    });
-                  }} style={{ marginTop: isMobile ? '4px' : '8px', marginBottom: isMobile ? '8px' : '8px', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
-                    <Plus size={isMobile ? 12 : 16} />
-                    Add Link
-                  </Button>
-                </div>
-
-                {/* File list display */}
-                {formData.files && formData.files.length > 0 && (
-                  <div style={{ paddingTop: isMobile ? '4px' : '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {formData.files.map((file, index) => (
-                      <div
-                        key={index}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          padding: isMobile ? '4px 8px' : '6px 10px',
-                          backgroundColor: 'var(--panel-2)',
-                          borderRadius: 'var(--radius-control)',
-                          border: '1px solid var(--border)',
-                          fontSize: isMobile ? '0.7rem' : '0.8rem',
-                        }}
-                      >
-                        <input
-                          type="text"
-                          value={file.name}
-                          onChange={(e) => {
-                            const newFiles = [...formData.files];
-                            newFiles[index] = { ...newFiles[index], name: e.target.value };
-                            setFormData({ ...formData, files: newFiles });
-                          }}
-                          style={{
-                            flex: 1,
-                            background: 'transparent',
-                            border: 'none',
-                            outline: 'none',
-                            color: 'var(--text)',
-                            fontSize: 'inherit',
-                            padding: 0,
-                          }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setFormData({ ...formData, files: formData.files.filter((_, i) => i !== index) })}
-                          style={{ background: 'none', border: 'none', padding: '2px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 )}
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: isMobile ? '6px' : '8px' }}>

@@ -12,6 +12,7 @@ import FileUpload from '@/components/ui/FileUpload';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import CourseForm from '@/components/CourseForm';
+import { ChevronDown } from 'lucide-react';
 
 interface EventDetailModalProps {
   isOpen: boolean;
@@ -703,10 +704,12 @@ interface TaskDeadlineFormProps {
 
 function TaskDeadlineForm({ formData, setFormData, courses }: TaskDeadlineFormProps) {
   const isMobile = useIsMobile();
+  const [showMore, setShowMore] = useState(false);
   if (!formData) return null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
+      {/* Always visible fields */}
       <div>
         <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
           Title
@@ -755,81 +758,113 @@ function TaskDeadlineForm({ formData, setFormData, courses }: TaskDeadlineFormPr
         </div>
       </div>
 
-      <div>
-        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
-          Notes
-        </p>
-        <Textarea
-          value={formData.notes}
-          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-          style={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}
+      {/* More Options Toggle */}
+      <button
+        type="button"
+        onClick={() => setShowMore(!showMore)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          background: 'none',
+          border: 'none',
+          padding: '10px 0',
+          cursor: 'pointer',
+          color: 'var(--text)',
+          fontSize: isMobile ? '14px' : '14px',
+          fontWeight: 500,
+        }}
+      >
+        <ChevronDown
+          size={18}
+          style={{
+            transform: showMore ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s ease',
+          }}
         />
-      </div>
+        More options
+      </button>
 
-      <div>
-        <p style={{ fontSize: isMobile ? '0.75rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 6px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
-          Links
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
-          {formData.links.map((link: any, index: number) => (
-            <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '6px', paddingBottom: isMobile ? '6px' : '8px', borderBottom: '1px solid var(--border)' }}>
-              <p style={{ fontSize: isMobile ? '0.6rem' : '0.65rem', color: 'var(--text-muted)', margin: 0, fontWeight: 500, ...(isMobile && { paddingLeft: '6px' }) }}>
-                Label
-              </p>
-              <Input
-                value={link.label}
-                onChange={(e) => {
-                  const newLinks = [...formData.links];
-                  newLinks[index].label = e.target.value;
-                  setFormData({ ...formData, links: newLinks });
-                }}
-                style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '8px 12px' }}
-              />
-              <p style={{ fontSize: isMobile ? '0.6rem' : '0.65rem', color: 'var(--text-muted)', margin: 0, fontWeight: 500, ...(isMobile && { paddingLeft: '6px' }) }}>
-                URL
-              </p>
-              <Input
-                value={link.url}
-                onChange={(e) => {
-                  const newLinks = [...formData.links];
-                  newLinks[index].url = e.target.value;
-                  setFormData({ ...formData, links: newLinks });
-                }}
-                style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '8px 12px' }}
-              />
+      {/* More Options Section */}
+      {showMore && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
+          <div>
+            <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
+              Notes
+            </p>
+            <Textarea
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              style={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}
+            />
+          </div>
+
+          <div>
+            <p style={{ fontSize: isMobile ? '0.75rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 6px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
+              Links
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
+              {formData.links.map((link: any, index: number) => (
+                <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '6px', paddingBottom: isMobile ? '6px' : '8px', borderBottom: '1px solid var(--border)' }}>
+                  <p style={{ fontSize: isMobile ? '0.6rem' : '0.65rem', color: 'var(--text-muted)', margin: 0, fontWeight: 500, ...(isMobile && { paddingLeft: '6px' }) }}>
+                    Label
+                  </p>
+                  <Input
+                    value={link.label}
+                    onChange={(e) => {
+                      const newLinks = [...formData.links];
+                      newLinks[index].label = e.target.value;
+                      setFormData({ ...formData, links: newLinks });
+                    }}
+                    style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '8px 12px' }}
+                  />
+                  <p style={{ fontSize: isMobile ? '0.6rem' : '0.65rem', color: 'var(--text-muted)', margin: 0, fontWeight: 500, ...(isMobile && { paddingLeft: '6px' }) }}>
+                    URL
+                  </p>
+                  <Input
+                    value={link.url}
+                    onChange={(e) => {
+                      const newLinks = [...formData.links];
+                      newLinks[index].url = e.target.value;
+                      setFormData({ ...formData, links: newLinks });
+                    }}
+                    style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '8px 12px' }}
+                  />
+                  <Button
+                    variant="secondary"
+                    size={isMobile ? 'sm' : 'sm'}
+                    onClick={() => {
+                      const newLinks = formData.links.filter((_: any, i: number) => i !== index);
+                      setFormData({ ...formData, links: newLinks });
+                    }}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
               <Button
                 variant="secondary"
                 size={isMobile ? 'sm' : 'sm'}
                 onClick={() => {
-                  const newLinks = formData.links.filter((_: any, i: number) => i !== index);
-                  setFormData({ ...formData, links: newLinks });
+                  setFormData({ ...formData, links: [...formData.links, { label: '', url: '' }] });
                 }}
               >
-                Remove
+                Add Link
               </Button>
             </div>
-          ))}
-          <Button
-            variant="secondary"
-            size={isMobile ? 'sm' : 'sm'}
-            onClick={() => {
-              setFormData({ ...formData, links: [...formData.links, { label: '', url: '' }] });
-            }}
-          >
-            Add Link
-          </Button>
-        </div>
-      </div>
+          </div>
 
-      <div>
-        <p style={{ fontSize: isMobile ? '0.75rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 6px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
-          Files
-        </p>
-        <FileUpload
-          files={formData.files || []}
-          onChange={(files) => setFormData({ ...formData, files })}
-        />
-      </div>
+          <div>
+            <p style={{ fontSize: isMobile ? '0.75rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 6px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
+              Files
+            </p>
+            <FileUpload
+              files={formData.files || []}
+              onChange={(files) => setFormData({ ...formData, files })}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -874,10 +909,12 @@ function getDurationMinutes(start: string, end: string): number {
 
 function CalendarEventForm({ formData, setFormData }: CalendarEventFormProps) {
   const isMobile = useIsMobile();
+  const [showMore, setShowMore] = useState(false);
   if (!formData) return null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
+      {/* Always visible fields */}
       <div>
         <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
           Title
@@ -898,17 +935,6 @@ function CalendarEventForm({ formData, setFormData }: CalendarEventFormProps) {
           onChange={(date) => setFormData({ ...formData, date })}
         />
       </div>
-
-      {/* All Day Toggle */}
-      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-        <input
-          type="checkbox"
-          checked={formData.allDay}
-          onChange={(e) => setFormData({ ...formData, allDay: e.target.checked })}
-          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-        />
-        <span style={{ fontSize: '14px', color: 'var(--text)' }}>All day</span>
-      </label>
 
       {/* Time Pickers (only if not all day) */}
       {!formData.allDay && (
@@ -937,55 +963,98 @@ function CalendarEventForm({ formData, setFormData }: CalendarEventFormProps) {
         </div>
       )}
 
-      <div>
-        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
-          Location (Optional)
-        </p>
-        <Input
-          value={formData.location}
-          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-          placeholder="Where is it?"
-          style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '10px 12px' }}
+      {/* More Options Toggle */}
+      <button
+        type="button"
+        onClick={() => setShowMore(!showMore)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          background: 'none',
+          border: 'none',
+          padding: '10px 0',
+          cursor: 'pointer',
+          color: 'var(--text)',
+          fontSize: isMobile ? '14px' : '14px',
+          fontWeight: 500,
+        }}
+      >
+        <ChevronDown
+          size={18}
+          style={{
+            transform: showMore ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s ease',
+          }}
         />
-      </div>
+        More options
+      </button>
 
-      <div>
-        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
-          Description (Optional)
-        </p>
-        <Textarea
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          placeholder="Add details..."
-          style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '10px 12px' }}
-        />
-      </div>
-
-      {/* Color Picker */}
-      <div>
-        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0', fontWeight: 600 }}>
-          Color
-        </p>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {EVENT_COLORS.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              onClick={() => setFormData({ ...formData, color: c.value })}
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: c.value,
-                border: formData.color === c.value ? '3px solid var(--text)' : '2px solid transparent',
-                cursor: 'pointer',
-                transition: 'transform 0.1s',
-              }}
-              title={c.label}
+      {/* More Options Section */}
+      {showMore && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
+          {/* All Day Toggle */}
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={formData.allDay}
+              onChange={(e) => setFormData({ ...formData, allDay: e.target.checked })}
+              style={{ width: '18px', height: '18px', cursor: 'pointer' }}
             />
-          ))}
+            <span style={{ fontSize: '14px', color: 'var(--text)' }}>All day event</span>
+          </label>
+
+          <div>
+            <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
+              Location (Optional)
+            </p>
+            <Input
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              placeholder="Where is it?"
+              style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '10px 12px' }}
+            />
+          </div>
+
+          <div>
+            <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
+              Description (Optional)
+            </p>
+            <Textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Add details..."
+              style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '10px 12px' }}
+            />
+          </div>
+
+          {/* Color Picker */}
+          <div>
+            <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0', fontWeight: 600 }}>
+              Color
+            </p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {EVENT_COLORS.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, color: c.value })}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    backgroundColor: c.value,
+                    border: formData.color === c.value ? '3px solid var(--text)' : '2px solid transparent',
+                    cursor: 'pointer',
+                    transition: 'transform 0.1s',
+                  }}
+                  title={c.label}
+                />
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
