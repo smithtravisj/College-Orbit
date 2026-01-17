@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Download, Upload, Trash2, Monitor } from 'lucide-react';
+import { Monitor } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { DASHBOARD_CARDS, TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
@@ -69,12 +69,7 @@ export default function SettingsPage() {
   const [showFeatureModal, setShowFeatureModal] = useState(false);
   const [deleteFeatureId, setDeleteFeatureId] = useState<string | null>(null);
   const [showDeleteFeatureConfirm, setShowDeleteFeatureConfirm] = useState(false);
-  const [exportMessage, setExportMessage] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
-  const [importMessage, setImportMessage] = useState('');
-  const [deleteMessage, setDeleteMessage] = useState('');
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
   const [showDeleteRequestConfirm, setShowDeleteRequestConfirm] = useState(false);
   const [deleteRequestId, setDeleteRequestId] = useState<string | null>(null);
   const [showDeleteIssueConfirm, setShowDeleteIssueConfirm] = useState(false);
@@ -82,7 +77,6 @@ export default function SettingsPage() {
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<IssueReport | null>(null);
   const [showIssueModal, setShowIssueModal] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
   // Visibility customization state
@@ -97,7 +91,7 @@ export default function SettingsPage() {
   const [visibilityMessage, setVisibilityMessage] = useState('');
   const [isMacDesktop, setIsMacDesktop] = useState(false);
 
-  const { settings, updateSettings, exportData, importData, deleteAllData } = useAppStore();
+  const { settings, updateSettings } = useAppStore();
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
 
   // Check if running on Mac desktop browser
@@ -252,88 +246,6 @@ export default function SettingsPage() {
       </div>
     );
   }
-
-  const handleExport = async () => {
-    try {
-      const data = await exportData();
-      const filename = `college-orbit-backup-${new Date().toISOString().split('T')[0]}.json`;
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      setExportMessage('✓ Data exported successfully');
-      setTimeout(() => setExportMessage(''), 3000);
-    } catch (error) {
-      console.error('Export error:', error);
-      setExportMessage('✗ We couldn\'t export your data. Please try again.');
-      setTimeout(() => setExportMessage(''), 3000);
-    }
-  };
-
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const data = JSON.parse(e.target?.result as string);
-        await importData(data);
-        setImportMessage('✓ Data imported successfully!');
-        setTimeout(() => setImportMessage(''), 3000);
-      } catch (error) {
-        console.error('Import error:', error);
-        setImportMessage('✗ The file format isn\'t valid. Please make sure you\'re uploading a backup file exported from this app.');
-        setTimeout(() => setImportMessage(''), 3000);
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const handleDeleteAllData = () => {
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = async () => {
-    try {
-      await deleteAllData();
-      setShowDeleteConfirm(false);
-      setDeleteMessage('✓ All data deleted successfully');
-      setTimeout(() => setDeleteMessage(''), 3000);
-    } catch (error) {
-      setDeleteMessage('✗ We couldn\'t delete your data. Please try again.');
-      setTimeout(() => setDeleteMessage(''), 3000);
-    }
-  };
-
-  const handleDeleteAccount = () => {
-    setShowDeleteAccountConfirm(true);
-  };
-
-  const confirmDeleteAccount = async () => {
-    try {
-      const response = await fetch('/api/user/account', {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete account');
-      }
-
-      // Sign out and redirect
-      await signOut({ callbackUrl: '/' });
-    } catch (error) {
-      setDeleteMessage('✗ We couldn\'t delete your account. Please try again.');
-      setTimeout(() => setDeleteMessage(''), 3000);
-      setShowDeleteAccountConfirm(false);
-    }
-  };
 
   const handleSubmitCollegeRequest = async () => {
     if (!collegeRequestName.trim()) {
@@ -1891,108 +1803,6 @@ export default function SettingsPage() {
             </div>
           </Card>
 
-          {/* Data Management */}
-          <Card title="Data & Backup">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
-                  Export your data
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
-                  Download a backup of all your data as a JSON file
-                </p>
-                <Button size={isMobile ? 'sm' : 'lg'} onClick={handleExport} style={{ marginBottom: '16px', paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: 'var(--button-secondary)', color: settings.theme === 'light' ? '#000000' : 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
-                  <Download size={18} />
-                  Export Data
-                </Button>
-                {exportMessage && (
-                  <p className="text-sm text-[var(--success)]" style={{ marginTop: '8px' }}>{exportMessage}</p>
-                )}
-              </div>
-
-              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
-                  Import your data
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
-                  Restore data from a previous backup
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".json"
-                  onChange={handleImport}
-                  className="hidden"
-                />
-                <Button variant="secondary" size={isMobile ? 'sm' : 'lg'} onClick={() => fileInputRef.current?.click()} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
-                  <Upload size={18} />
-                  Import Data
-                </Button>
-                {importMessage && (
-                  <p style={{ marginTop: '8px', fontSize: '14px', color: importMessage.includes('✓') ? 'var(--success)' : 'var(--danger)' }}>{importMessage}</p>
-                )}
-              </div>
-            </div>
-          </Card>
-
-          {/* Privacy & Danger Zone */}
-          <Card title="Privacy">
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
-                  Your data is stored securely on our servers and associated with your account. We do not share your personal information with third parties or use it for marketing purposes. All data is private to your account.
-                </p>
-              </div>
-              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
-                <label className="block text-sm font-medium text-[var(--danger)]" style={{ marginBottom: '8px' }}>
-                  Danger Zone
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
-                  Permanently delete all your data. This action cannot be undone.
-                </p>
-                <div style={{ display: 'flex', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
-                  <Button size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAllData} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)', backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' }}>
-                    <Trash2 size={18} />
-                    Delete All Data
-                  </Button>
-                  <Button size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAccount} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)', backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' }}>
-                    <Trash2 size={18} />
-                    Delete Account
-                  </Button>
-                </div>
-                {deleteMessage && (
-                  <p style={{ marginTop: '8px', fontSize: '14px', color: deleteMessage.includes('✓') ? 'var(--success)' : 'var(--danger)' }}>{deleteMessage}</p>
-                )}
-              </div>
-              {/* Legal Section */}
-              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', marginTop: '16px' }}>
-                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
-                  Legal
-                </p>
-                <div className="flex flex-col gap-2">
-                  <a
-                    href="/privacy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
-                    style={{ textDecoration: 'none' }}
-                  >
-                    Privacy Policy
-                  </a>
-                  <a
-                    href="/terms"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
-                    style={{ textDecoration: 'none' }}
-                  >
-                    Terms of Service
-                  </a>
-                </div>
-              </div>
-            </div>
-          </Card>
-
           {/* About */}
           <Card title="About">
             <div className="space-y-4">
@@ -2005,7 +1815,7 @@ export default function SettingsPage() {
                   A personal, privacy-first dashboard for students to manage courses, deadlines, and tasks.
                 </p>
                 <p className="text-[var(--text-muted)] text-xs">
-                  All data is stored locally. No tracking, no ads, no third-party analytics.
+                  Your data is stored securely on our servers. We do not share your personal information with third parties.
                 </p>
               </div>
               {/* Onboarding Tour */}
@@ -2043,7 +1853,7 @@ export default function SettingsPage() {
                 </Button>
               </div>
               {/* Contact Section */}
-              <div style={{ paddingTop: '22px', borderTop: '1px solid var(--border)' }}>
+              <div style={{ paddingTop: '22px', paddingBottom: '6px', borderTop: '1px solid var(--border)' }}>
                 <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
                   Contact
                 </p>
@@ -2058,144 +1868,36 @@ export default function SettingsPage() {
                   collegeorbit@protonmail.com
                 </button>
               </div>
+              {/* Legal Section */}
+              <div style={{ paddingTop: '22px', borderTop: '1px solid var(--border)' }}>
+                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+                  Legal
+                </p>
+                <div className="flex flex-col gap-2">
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    Privacy Policy
+                  </a>
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    Terms of Service
+                  </a>
+                </div>
+              </div>
             </div>
           </Card>
         </div>
       </div>
-
-      {/* Delete confirmation modal */}
-      {showDeleteConfirm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'var(--panel)',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            padding: '24px',
-            maxWidth: '400px',
-            boxShadow: 'var(--shadow-lg)'
-          }}>
-            <h3 style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
-              Delete All Data?
-            </h3>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
-              This will permanently delete all your data including courses, tasks, and deadlines. This action cannot be undone.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: 'var(--panel-2)',
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#660000',
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                  color: 'white',
-                  border: '1px solid #660000',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
-                }}
-              >
-                Delete All
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete account confirmation modal */}
-      {showDeleteAccountConfirm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'var(--panel)',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            padding: '24px',
-            maxWidth: '400px',
-            boxShadow: 'var(--shadow-lg)'
-          }}>
-            <h3 style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
-              Delete Account?
-            </h3>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
-              This will permanently delete your account and all associated data. This action cannot be undone. You will be logged out immediately.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setShowDeleteAccountConfirm(false)}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: 'var(--panel-2)',
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeleteAccount}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#660000',
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                  color: 'white',
-                  border: '1px solid #660000',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
-                }}
-              >
-                Delete Account
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Delete college request confirmation modal */}
       {showDeleteRequestConfirm && (

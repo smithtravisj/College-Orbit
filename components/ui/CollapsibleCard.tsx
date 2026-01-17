@@ -59,7 +59,7 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
 
   return (
     <div
-      className={`card-hover rounded-[16px] border transition-all duration-300 w-full flex flex-col ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${!isOpen ? 'cursor-pointer' : ''} ${className}`}
+      className={`card-hover rounded-[16px] border transition-all duration-300 w-full flex flex-col animate-fade-in-up ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${!isOpen ? 'cursor-pointer' : ''} ${className}`}
       style={{
         position: 'relative',
         overflow: 'visible',

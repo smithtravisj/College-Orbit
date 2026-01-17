@@ -168,8 +168,16 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   getStorageKey: () => {
     const state = get();
+    // First check state, then check localStorage for userId
     if (state.userId) {
       return `byu-survival-tool-data-${state.userId}`;
+    }
+    // Try to get userId from localStorage (saved from previous session)
+    if (typeof window !== 'undefined') {
+      const savedUserId = localStorage.getItem('byu-survival-tool-userId');
+      if (savedUserId) {
+        return `byu-survival-tool-data-${savedUserId}`;
+      }
     }
     return 'byu-survival-tool-data'; // Fallback for when userId is not set
   },
@@ -287,6 +295,10 @@ const useAppStore = create<AppStore>((set, get) => ({
         applyColorPalette(palette);
         // Store theme in localStorage for loading screen
         localStorage.setItem('app-theme', theme);
+        // Store userId separately for storage key on next load
+        if (userId) {
+          localStorage.setItem('byu-survival-tool-userId', userId);
+        }
       }
 
       // Save fresh data to localStorage with user-specific key

@@ -226,16 +226,30 @@ export async function generateRecurringInstances(
 }
 
 /**
- * Generate instances for all active recurring patterns for a user
+ * Generate instances for all active recurring task patterns for a user
+ * Only regenerates if instances haven't been generated in the last hour
  */
 export async function generateAllUserRecurringInstances(
   userId: string,
   windowDays: number = 60
 ): Promise<void> {
   try {
+    // Only fetch patterns that need regeneration (lastGenerated is null or older than 1 hour)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
     const patterns = await prisma.recurringPattern.findMany({
-      where: { userId, isActive: true },
+      where: {
+        userId,
+        isActive: true,
+        NOT: {
+          lastGenerated: { gte: oneHourAgo },
+        },
+      },
     });
+
+    if (patterns.length === 0) {
+      return; // Nothing to generate
+    }
 
     console.log(`[generateAllUserRecurringInstances] Generating for ${patterns.length} patterns for user ${userId}`);
 

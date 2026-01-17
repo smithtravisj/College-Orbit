@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
@@ -9,13 +9,13 @@ import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Shield } from 'lucide-react';
+import { Shield, Download, Upload, Trash2 } from 'lucide-react';
 
 export default function AccountPage() {
   const { data: session, update: updateSession } = useSession();
   const router = useRouter();
   const isMobile = useIsMobile();
-  const { settings } = useAppStore();
+  const { settings, exportData, importData, deleteAllData } = useAppStore();
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -26,6 +26,13 @@ export default function AccountPage() {
   const [success, setSuccess] = useState('');
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [securitySuccess, setSecuritySuccess] = useState('');
+  const [exportMessage, setExportMessage] = useState('');
+  const [importMessage, setImportMessage] = useState('');
+  const [deleteMessage, setDeleteMessage] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Refresh session on mount to get latest data (including lastLogin)
@@ -114,6 +121,88 @@ export default function AccountPage() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const data = await exportData();
+      const filename = `college-orbit-backup-${new Date().toISOString().split('T')[0]}.json`;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setExportMessage('✓ Data exported successfully');
+      setTimeout(() => setExportMessage(''), 3000);
+    } catch (error) {
+      console.error('Export error:', error);
+      setExportMessage('✗ We couldn\'t export your data. Please try again.');
+      setTimeout(() => setExportMessage(''), 3000);
+    }
+  };
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+        await importData(data);
+        setImportMessage('✓ Data imported successfully!');
+        setTimeout(() => setImportMessage(''), 3000);
+      } catch (error) {
+        console.error('Import error:', error);
+        setImportMessage('✗ The file format isn\'t valid. Please make sure you\'re uploading a backup file exported from this app.');
+        setTimeout(() => setImportMessage(''), 3000);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleDeleteAllData = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await deleteAllData();
+      setShowDeleteConfirm(false);
+      setDeleteMessage('✓ All data deleted successfully');
+      setTimeout(() => setDeleteMessage(''), 3000);
+    } catch (error) {
+      setDeleteMessage('✗ We couldn\'t delete your data. Please try again.');
+      setTimeout(() => setDeleteMessage(''), 3000);
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    setShowDeleteAccountConfirm(true);
+  };
+
+  const confirmDeleteAccount = async () => {
+    try {
+      const response = await fetch('/api/user/account', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete account');
+      }
+
+      // Sign out and redirect
+      await signOut({ callbackUrl: '/' });
+    } catch (error) {
+      setDeleteMessage('✗ We couldn\'t delete your account. Please try again.');
+      setTimeout(() => setDeleteMessage(''), 3000);
+      setShowDeleteAccountConfirm(false);
+    }
+  };
+
   const formatLastLogin = (dateStr: string | null | undefined) => {
     if (!dateStr) return 'Never';
     const date = new Date(dateStr);
@@ -140,7 +229,7 @@ export default function AccountPage() {
   return (
     <>
       {/* Account Header */}
-      <div className="mx-auto w-full max-w-[768px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1200px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div>
           <div style={{ position: 'relative', display: 'inline-block' }}>
             {/* Subtle glow behind title */}
@@ -171,8 +260,8 @@ export default function AccountPage() {
           </p>
         </div>
       </div>
-      <div className="mx-auto w-full max-w-[768px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
-        <div className="w-full grid grid-cols-1 gap-[var(--grid-gap)]">
+      <div className="mx-auto w-full max-w-[1200px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-[var(--grid-gap)]">
           <Card title="Account Information">
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {error && (
@@ -270,8 +359,75 @@ export default function AccountPage() {
             </form>
           </Card>
 
-          {/* Security Section */}
-          <Card>
+          {/* Data & Backup */}
+          <Card title="Data & Backup">
+            <div className="space-y-4">
+              <div style={{ paddingBottom: '12px' }}>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
+                  Export your data
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Download a backup of all your data as a JSON file
+                </p>
+                <Button size={isMobile ? 'sm' : 'lg'} onClick={handleExport} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: 'var(--button-secondary)', color: settings.theme === 'light' ? '#000000' : 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                  <Download size={18} />
+                  Export Data
+                </Button>
+                {exportMessage && (
+                  <p className="text-sm text-[var(--success)]" style={{ marginTop: '8px' }}>{exportMessage}</p>
+                )}
+              </div>
+
+              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', paddingBottom: '12px' }}>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
+                  Import your data
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Restore data from a previous backup
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleImport}
+                  className="hidden"
+                />
+                <Button variant="secondary" size={isMobile ? 'sm' : 'lg'} onClick={() => fileInputRef.current?.click()} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
+                  <Upload size={18} />
+                  Import Data
+                </Button>
+                {importMessage && (
+                  <p style={{ marginTop: '8px', fontSize: '14px', color: importMessage.includes('✓') ? 'var(--success)' : 'var(--danger)' }}>{importMessage}</p>
+                )}
+              </div>
+
+              {/* Danger Zone */}
+              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
+                <label className="block text-sm font-medium text-[var(--danger)]" style={{ marginBottom: '8px' }}>
+                  Danger Zone
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Permanently delete your data or account. These actions cannot be undone.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
+                  <Button size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAllData} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)', backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' }}>
+                    <Trash2 size={18} />
+                    Delete All Data
+                  </Button>
+                  <Button size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAccount} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)', backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' }}>
+                    <Trash2 size={18} />
+                    Delete Account
+                  </Button>
+                </div>
+                {deleteMessage && (
+                  <p style={{ marginTop: '8px', fontSize: '14px', color: deleteMessage.includes('✓') ? 'var(--success)' : 'var(--danger)' }}>{deleteMessage}</p>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          {/* Security Section - Full Width */}
+          <Card className="md:col-span-2">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <Shield size={20} className="text-[var(--text)]" />
               <h2 className="text-lg font-semibold text-[var(--text)]">Security</h2>
@@ -299,14 +455,19 @@ export default function AccountPage() {
                   This will log you out of all devices and browsers, including this one.
                 </p>
                 <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={handleLogoutAllSessions}
+                  size={isMobile ? 'sm' : 'lg'}
+                  onClick={() => setShowLogoutConfirm(true)}
                   disabled={logoutLoading}
                   style={{
-                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                    borderColor: 'rgba(220, 38, 38, 0.3)',
-                    color: 'var(--danger)',
+                    paddingLeft: isMobile ? '12px' : '16px',
+                    paddingRight: isMobile ? '12px' : '16px',
+                    backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
+                    color: 'white',
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: 'var(--border)',
+                    boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)',
+                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                   }}
                 >
                   {logoutLoading ? 'Logging out...' : 'Log Out All Sessions'}
@@ -316,6 +477,210 @@ export default function AccountPage() {
           </Card>
         </div>
       </div>
+
+      {/* Delete all data confirmation modal */}
+      {showDeleteConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'var(--panel)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '24px',
+            maxWidth: '400px',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <h3 style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
+              Delete All Data?
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
+              This will permanently delete all your data including courses, tasks, and deadlines. This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#660000',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                  color: 'white',
+                  border: '1px solid #660000',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
+                }}
+              >
+                Delete All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete account confirmation modal */}
+      {showDeleteAccountConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'var(--panel)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '24px',
+            maxWidth: '400px',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <h3 style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
+              Delete Account?
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
+              This will permanently delete your account and all associated data. This action cannot be undone. You will be logged out immediately.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowDeleteAccountConfirm(false)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteAccount}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#660000',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                  color: 'white',
+                  border: '1px solid #660000',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
+                }}
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Logout all sessions confirmation modal */}
+      {showLogoutConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'var(--panel)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '24px',
+            maxWidth: '400px',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <h3 style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
+              Log Out All Sessions?
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
+              This will log you out of all devices and browsers, including this one. You will need to log in again.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  handleLogoutAllSessions();
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#660000',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                  color: 'white',
+                  border: '1px solid #660000',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
+                }}
+              >
+                Log Out All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
