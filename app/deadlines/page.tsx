@@ -11,7 +11,7 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X, Upload, FileIcon } from 'lucide-react';
+import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X, Upload, FileIcon, ChevronDown } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import RecurrenceSelector from '@/components/RecurrenceSelector';
@@ -112,6 +112,7 @@ export default function DeadlinesPage() {
   const [effortFilter, setEffortFilter] = useState('');
   const [previewingDeadline, setPreviewingDeadline] = useState<any>(null);
   const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
 
   // Bulk selection state
   const bulkSelect = useBulkSelect();
@@ -1062,6 +1063,35 @@ export default function DeadlinesPage() {
                   />
                 )}
 
+                {/* More Options Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowMoreOptions(!showMoreOptions)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'none',
+                    border: 'none',
+                    padding: '10px 0',
+                    cursor: 'pointer',
+                    color: 'var(--text)',
+                    fontSize: isMobile ? '14px' : '14px',
+                    fontWeight: 500,
+                  }}
+                >
+                  <ChevronDown
+                    size={18}
+                    style={{
+                      transform: showMoreOptions ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s ease',
+                    }}
+                  />
+                  More options
+                </button>
+
+                {showMoreOptions && (
+                <>
                 {/* Notes and Tags */}
                 <div className="flex flex-col gap-2" style={{ paddingTop: isMobile ? '4px' : '8px' }}>
                   <Textarea
@@ -1191,6 +1221,8 @@ export default function DeadlinesPage() {
                       </div>
                     ))}
                   </div>
+                )}
+                </>
                 )}
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: isMobile ? '6px' : '8px' }}>

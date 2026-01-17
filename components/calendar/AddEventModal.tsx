@@ -5,7 +5,7 @@ import Button from '@/components/ui/Button';
 import Input, { Textarea } from '@/components/ui/Input';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
-import { X } from 'lucide-react';
+import { X, ChevronDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface AddEventModalProps {
@@ -54,6 +54,7 @@ export default function AddEventModal({
   const [location, setLocation] = useState('');
   const [color, setColor] = useState<string>('#a855f7');
   const [saving, setSaving] = useState(false);
+  const [showMore, setShowMore] = useState(false);
 
   // Helper to convert Date to ISO string (YYYY-MM-DD)
   const dateToString = (d: Date): string => {
@@ -221,23 +222,12 @@ export default function AddEventModal({
               autoFocus
             />
 
-            {/* Date and All Day on same row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'end' }}>
-              <CalendarPicker
-                label="Date"
-                value={dateStr}
-                onChange={(d) => setDateStr(d)}
-              />
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', height: 'var(--input-height)', paddingBottom: '2px' }}>
-                <input
-                  type="checkbox"
-                  checked={allDay}
-                  onChange={(e) => setAllDay(e.target.checked)}
-                  style={{ width: isMobile ? '18px' : '16px', height: isMobile ? '18px' : '16px', cursor: 'pointer' }}
-                />
-                <span style={{ fontSize: isMobile ? '14px' : '13px', color: 'var(--text)', whiteSpace: 'nowrap' }}>All day</span>
-              </label>
-            </div>
+            {/* Date */}
+            <CalendarPicker
+              label="Date"
+              value={dateStr}
+              onChange={(d) => setDateStr(d)}
+            />
 
             {/* Time Pickers (only if not all day) */}
             {!allDay && (
@@ -247,46 +237,89 @@ export default function AddEventModal({
               </div>
             )}
 
-            <Input
-              label="Location (optional)"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Where is it?"
-            />
+            {/* More Options Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowMore(!showMore)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'none',
+                border: 'none',
+                padding: '10px 0',
+                cursor: 'pointer',
+                color: 'var(--text)',
+                fontSize: isMobile ? '14px' : '14px',
+                fontWeight: 500,
+              }}
+            >
+              <ChevronDown
+                size={18}
+                style={{
+                  transform: showMore ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease',
+                }}
+              />
+              More options
+            </button>
 
-            <Textarea
-              label="Description (optional)"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add details..."
-              style={!isMobile ? { minHeight: '60px', height: '60px' } : undefined}
-            />
-
-            {/* Color Picker */}
-            <div>
-              <label style={{ display: 'block', fontSize: isMobile ? '14px' : '13px', fontWeight: 500, color: 'var(--text)', marginBottom: isMobile ? '8px' : '6px' }}>
-                Color
-              </label>
-              <div style={{ display: 'flex', gap: isMobile ? '6px' : '6px', flexWrap: 'wrap' }}>
-                {EVENT_COLORS.map((c) => (
-                  <button
-                    key={c.value}
-                    type="button"
-                    onClick={() => setColor(c.value)}
-                    style={{
-                      width: isMobile ? '28px' : '24px',
-                      height: isMobile ? '28px' : '24px',
-                      borderRadius: '50%',
-                      backgroundColor: c.value,
-                      border: color === c.value ? '3px solid var(--text)' : '2px solid transparent',
-                      cursor: 'pointer',
-                      transition: 'transform 0.1s',
-                    }}
-                    title={c.label}
+            {/* More Options Section */}
+            {showMore && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '10px' }}>
+                {/* All Day Toggle */}
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={allDay}
+                    onChange={(e) => setAllDay(e.target.checked)}
+                    style={{ width: isMobile ? '18px' : '16px', height: isMobile ? '18px' : '16px', cursor: 'pointer' }}
                   />
-                ))}
+                  <span style={{ fontSize: isMobile ? '14px' : '13px', color: 'var(--text)' }}>All day event</span>
+                </label>
+
+                <Input
+                  label="Location (optional)"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Where is it?"
+                />
+
+                <Textarea
+                  label="Description (optional)"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Add details..."
+                  style={!isMobile ? { minHeight: '60px', height: '60px' } : undefined}
+                />
+
+                {/* Color Picker */}
+                <div>
+                  <label style={{ display: 'block', fontSize: isMobile ? '14px' : '13px', fontWeight: 500, color: 'var(--text)', marginBottom: isMobile ? '8px' : '6px' }}>
+                    Color
+                  </label>
+                  <div style={{ display: 'flex', gap: isMobile ? '6px' : '6px', flexWrap: 'wrap' }}>
+                    {EVENT_COLORS.map((c) => (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => setColor(c.value)}
+                        style={{
+                          width: isMobile ? '28px' : '24px',
+                          height: isMobile ? '28px' : '24px',
+                          borderRadius: '50%',
+                          backgroundColor: c.value,
+                          border: color === c.value ? '3px solid var(--text)' : '2px solid transparent',
+                          cursor: 'pointer',
+                          transition: 'transform 0.1s',
+                        }}
+                        title={c.label}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Actions */}
