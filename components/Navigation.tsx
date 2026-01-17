@@ -258,7 +258,7 @@ export default function Navigation() {
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
                 style={{
-                  padding: '0 11px',
+                  padding: '0 16px 0 11px',
                   backgroundColor: pathname === '/account' ? 'var(--nav-active)' : 'transparent',
                   backgroundImage: pathname === '/account'
                     ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
@@ -271,7 +271,7 @@ export default function Navigation() {
                 <User size={20} className="opacity-80 group-hover:opacity-100" />
                 <span>Account</span>
               </Link>
-              <div style={{ paddingLeft: '9px', paddingRight: '6px' }}>
+              <div style={{ paddingLeft: '9px', paddingRight: '2px' }}>
                 <NotificationBell />
               </div>
             </div>
