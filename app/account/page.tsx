@@ -10,7 +10,7 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
-export default function ProfilePage() {
+export default function AccountPage() {
   const { data: session, update: updateSession } = useSession();
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -58,12 +58,12 @@ export default function ProfilePage() {
 
       if (!response.ok) {
         const { error } = await response.json();
-        setError(error || 'Failed to update profile');
+        setError(error || 'Failed to update account');
         setLoading(false);
         return;
       }
 
-      setSuccess('Profile updated successfully!');
+      setSuccess('Account updated successfully!');
       setPassword('');
       setConfirmPassword('');
       setLoading(false);
@@ -81,7 +81,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      {/* Profile Header */}
+      {/* Account Header */}
       <div className="mx-auto w-full max-w-[768px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div>
           <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -105,7 +105,7 @@ export default function ProfilePage() {
                 letterSpacing: '-0.02em',
               }}
             >
-              Profile
+              Account
             </h1>
           </div>
           <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
