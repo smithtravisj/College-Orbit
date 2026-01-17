@@ -152,11 +152,11 @@ export function LoginForm() {
 
       {/* Card */}
       <div style={{
-        background: 'var(--panel)',
-        border: '1px solid var(--border)',
+        background: '#18181b',
+        border: '1px solid #27272a',
         borderRadius: '20px',
         padding: '24px',
-        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), 0 0 48px rgba(99, 102, 241, 0.08)',
+        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3), 0 0 48px rgba(99, 102, 241, 0.08)',
         animation: 'fadeInUp 0.6s ease-out 0.1s backwards',
         position: 'relative',
         zIndex: 1,
@@ -205,11 +205,10 @@ export function LoginForm() {
                 href="/forgot-password"
                 style={{
                   fontSize: '13px',
-                  color: 'var(--accent)',
+                  color: '#a1a1aa',
                   textDecoration: 'none',
-                  fontWeight: 600,
-                  filter: 'brightness(1.4)',
-                  transition: 'filter 0.2s',
+                  fontWeight: 500,
+                  transition: 'color 0.2s',
                 }}
               >
                 Forgot password?

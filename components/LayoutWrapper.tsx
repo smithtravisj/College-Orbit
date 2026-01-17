@@ -74,11 +74,23 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   if (isAuthPage) {
     // Full-width centered layout for login/signup
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px 16px', overflowY: 'auto', zIndex: 50 }}>
-        <div style={{ width: '100%', maxWidth: '550px' }}>
-          {children}
+      <>
+        <style>{`
+          :root {
+            --bg: #0a0a0b !important;
+            --panel: #111113 !important;
+            --panel-2: #0f0f11 !important;
+            --border: #252528 !important;
+            --text: #fafafa !important;
+            --text-muted: #a1a1aa !important;
+          }
+        `}</style>
+        <div style={{ minHeight: '100vh', width: '100%', backgroundColor: '#0a0a0b', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px 16px', overflowY: 'auto', zIndex: 50 }}>
+          <div style={{ width: '100%', maxWidth: '550px' }}>
+            {children}
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
