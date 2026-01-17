@@ -49,6 +49,7 @@ model Course {
   term          String
   meetingTimes  Json           @default("[]")
   links         Json           @default("[]")
+  files         Json           @default("[]")
   colorTag      String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -81,6 +82,7 @@ model Deadline {
   createdAt          DateTime                  @default(now())
   updatedAt          DateTime                  @updatedAt
   links              Json                      @default("[]")
+  files              Json                      @default("[]")
   instanceDate       DateTime?
   isRecurring        Boolean                   @default(false)
   recurringPatternId String?
@@ -111,6 +113,7 @@ model Task {
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
   links              Json              @default("[]")
+  files              Json              @default("[]")
   instanceDate       DateTime?
   isRecurring        Boolean           @default(false)
   recurringPatternId String?

@@ -6,9 +6,8 @@ export default function CalendarLegend() {
   const legendItems = [
     { color: getMonthViewColor({ type: 'course' } as any), label: 'Course' },
     { color: getMonthViewColor({ type: 'exam' } as any), label: 'Exam' },
-    { color: getMonthViewColor({ type: 'event' } as any), label: 'Event' },
     { color: getMonthViewColor({ type: 'task' } as any), label: 'Task' },
-    { color: getMonthViewColor({ type: 'deadline' } as any), label: 'Deadline' },
+    { color: getMonthViewColor({ type: 'deadline' } as any), label: 'Assignment' },
   ];
 
   return (
@@ -28,6 +27,20 @@ export default function CalendarLegend() {
           </span>
         </div>
       ))}
+      {/* Event with rainbow indicator */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div
+          style={{
+            width: '12px',
+            height: '12px',
+            borderRadius: '2px',
+            background: 'conic-gradient(#ff0000 0deg 30deg, #ff8000 30deg 60deg, #ffff00 60deg 90deg, #60cc00 90deg 120deg, #00bb00 120deg 150deg, #00bb60 150deg 180deg, #00cccc 180deg 210deg, #0080ff 210deg 240deg, #0000ff 240deg 270deg, #8000ff 270deg 300deg, #ff00ff 300deg 330deg, #ff0080 330deg 360deg)',
+          }}
+        />
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          Event
+        </span>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import useAppStore from '@/lib/store';
 import { formatDate, isOverdue } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -11,7 +11,7 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X, Upload, FileIcon } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import RecurrenceSelector from '@/components/RecurrenceSelector';
@@ -27,6 +27,7 @@ import {
   BulkDeleteModal,
 } from '@/components/BulkActionModals';
 import { RecurringDeadlineFormData } from '@/types';
+import FilePreviewModal from '@/components/FilePreviewModal';
 
 // Helper function to format recurring pattern as human-readable text
 function getRecurrenceText(pattern: any): string {
@@ -72,6 +73,7 @@ function getRecurrenceText(pattern: any): string {
 }
 
 export default function DeadlinesPage() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [mounted, setMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -86,6 +88,7 @@ export default function DeadlinesPage() {
     notes: '',
     tags: [] as string[],
     links: [{ label: '', url: '' }],
+    files: [] as Array<{ name: string; url: string; size: number }>,
     isRecurring: false,
     recurring: {
       isRecurring: false,
@@ -105,10 +108,13 @@ export default function DeadlinesPage() {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [effortFilter, setEffortFilter] = useState('');
   const [previewingDeadline, setPreviewingDeadline] = useState<any>(null);
+  const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
 
   // Bulk selection state
   const bulkSelect = useBulkSelect();
   const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
+  const [showDeleteAllCompleted, setShowDeleteAllCompleted] = useState(false);
+  const [hideRecurringCompleted, setHideRecurringCompleted] = useState(false);
 
   const { courses, deadlines, settings, addDeadline, updateDeadline, deleteDeadline, addRecurringDeadline, updateRecurringDeadlinePattern, bulkUpdateDeadlines, bulkDeleteDeadlines, initializeStore } = useAppStore();
   const isMobile = useIsMobile();
@@ -150,6 +156,13 @@ export default function DeadlinesPage() {
     setMounted(true);
   }, [initializeStore]);
 
+  // Reset hideRecurringCompleted when filter changes away from 'done'
+  useEffect(() => {
+    if (filter !== 'done') {
+      setHideRecurringCompleted(false);
+    }
+  }, [filter]);
+
   if (!mounted) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -157,6 +170,33 @@ export default function DeadlinesPage() {
       </div>
     );
   }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
+
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i];
+      if (file.size > 10 * 1024 * 1024) continue; // 10MB limit
+
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      try {
+        const response = await fetch('/api/files', {
+          method: 'POST',
+          body: formDataUpload,
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setFormData(prev => ({ ...prev, files: [...(prev.files || []), data.file] }));
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+      }
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -219,6 +259,7 @@ export default function DeadlinesPage() {
         notes: '',
         tags: [],
         links: [{ label: '', url: '' }],
+        files: [],
         isRecurring: false,
         recurring: {
           isRecurring: false,
@@ -288,6 +329,7 @@ export default function DeadlinesPage() {
           notes: formData.notes,
           tags: formData.tags,
           links,
+          files: formData.files,
         });
       }
       setEditingId(null);
@@ -302,6 +344,7 @@ export default function DeadlinesPage() {
         notes: formData.notes,
         tags: formData.tags,
         links,
+        files: formData.files,
         status: 'open',
         recurringPatternId: null,
         instanceDate: null,
@@ -319,6 +362,7 @@ export default function DeadlinesPage() {
       notes: '',
       tags: [],
       links: [{ label: '', url: '' }],
+      files: [],
       isRecurring: false,
       recurring: {
         isRecurring: false,
@@ -386,6 +430,7 @@ export default function DeadlinesPage() {
       notes: deadline.notes,
       tags: deadline.tags || [],
       links: deadline.links && deadline.links.length > 0 ? deadline.links : [{ label: '', url: '' }],
+      files: deadline.files || [],
       isRecurring: deadline.isRecurring || false,
       recurring: recurringData,
     });
@@ -403,6 +448,7 @@ export default function DeadlinesPage() {
       notes: '',
       tags: [],
       links: [{ label: '', url: '' }],
+      files: [],
       isRecurring: false,
       recurring: {
         isRecurring: false,
@@ -573,6 +619,28 @@ export default function DeadlinesPage() {
     bulkSelect.clearSelection();
   };
 
+  // Delete all completed assignments - ONLY deletes non-recurring assignments with status === 'done'
+  const handleDeleteAllCompleted = async () => {
+    try {
+      const completedIds = deadlines
+        .filter((d) => d.status === 'done' && !d.isRecurring && !d.recurringPatternId)
+        .map((d) => d.id);
+      if (completedIds.length > 0) {
+        await bulkDeleteDeadlines(completedIds);
+        // Remove any selected tags that no longer exist in remaining items
+        const remainingDeadlines = deadlines.filter((d) => !completedIds.includes(d.id));
+        const remainingTags = new Set(remainingDeadlines.flatMap((d) => d.tags || []));
+        setSelectedTags((prev) => new Set([...prev].filter((tag) => remainingTags.has(tag))));
+        // Hide recurring completed items from the done filter
+        setHideRecurringCompleted(true);
+      }
+    } finally {
+      setShowDeleteAllCompleted(false);
+    }
+  };
+
+  const completedCount = deadlines.filter((d) => d.status === 'done' && !d.isRecurring && !d.recurringPatternId).length;
+
   const filtered = deadlines
     .filter((d) => {
       // Always include toggled deadlines (keep them visible after status change)
@@ -589,7 +657,10 @@ export default function DeadlinesPage() {
         windowEnd.setDate(windowEnd.getDate() + settings.dueSoonWindowDays);
         return dueDate <= windowEnd && !isOverdue(d.dueAt);
       }
-      if (filter === 'done') return d.status === 'done';
+      if (filter === 'done') {
+        if (hideRecurringCompleted && (d.isRecurring || d.recurringPatternId)) return false;
+        return d.status === 'done';
+      }
       return d.status === 'open';
     })
     .filter((d) => {
@@ -659,6 +730,7 @@ export default function DeadlinesPage() {
                   notes: '',
                   tags: Array.from(selectedTags),
                   links: [{ label: '', url: '' }],
+                  files: [],
                   isRecurring: false,
                   recurring: {
                     isRecurring: false,
@@ -1030,25 +1102,86 @@ export default function DeadlinesPage() {
                     Add Link
                   </Button>
                 </div>
-                <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '6px' : '4px' }}>
-                  <Button
-                    variant="primary"
-                    size={isMobile ? 'sm' : 'md'}
-                    type="submit"
-                    style={{
-                      backgroundColor: 'var(--button-secondary)',
-                      color: settings.theme === 'light' ? '#000000' : 'white',
-                      borderWidth: '1px',
-                      borderStyle: 'solid',
-                      borderColor: 'var(--border)',
-                      paddingLeft: isMobile ? '10px' : '16px',
-                      paddingRight: isMobile ? '10px' : '16px'
-                    }}
-                  >
-                    {editingId ? 'Save Changes' : 'Add Assignment'}
-                  </Button>
-                  <Button variant="secondary" size={isMobile ? 'sm' : 'md'} type="button" onClick={cancelEdit}>
-                    Cancel
+
+                {/* File list display */}
+                {formData.files && formData.files.length > 0 && (
+                  <div style={{ paddingTop: isMobile ? '4px' : '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {formData.files.map((file, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: isMobile ? '4px 8px' : '6px 10px',
+                          backgroundColor: 'var(--panel-2)',
+                          borderRadius: 'var(--radius-control)',
+                          border: '1px solid var(--border)',
+                          fontSize: isMobile ? '0.7rem' : '0.8rem',
+                        }}
+                      >
+                        <input
+                          type="text"
+                          value={file.name}
+                          onChange={(e) => {
+                            const newFiles = [...formData.files];
+                            newFiles[index] = { ...newFiles[index], name: e.target.value };
+                            setFormData({ ...formData, files: newFiles });
+                          }}
+                          style={{
+                            flex: 1,
+                            background: 'transparent',
+                            border: 'none',
+                            outline: 'none',
+                            color: 'var(--text)',
+                            fontSize: 'inherit',
+                            padding: 0,
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, files: formData.files.filter((_, i) => i !== index) })}
+                          style={{ background: 'none', border: 'none', padding: '2px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: isMobile ? '6px' : '8px' }}>
+                  <div className={isMobile ? 'flex gap-2' : 'flex gap-3'}>
+                    <Button
+                      variant="primary"
+                      size={isMobile ? 'sm' : 'md'}
+                      type="submit"
+                      style={{
+                        backgroundColor: 'var(--button-secondary)',
+                        color: settings.theme === 'light' ? '#000000' : 'white',
+                        borderWidth: '1px',
+                        borderStyle: 'solid',
+                        borderColor: 'var(--border)',
+                        paddingLeft: isMobile ? '10px' : '16px',
+                        paddingRight: isMobile ? '10px' : '16px'
+                      }}
+                    >
+                      {editingId ? 'Save Changes' : 'Add Assignment'}
+                    </Button>
+                    <Button variant="secondary" size={isMobile ? 'sm' : 'md'} type="button" onClick={cancelEdit}>
+                      Cancel
+                    </Button>
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileUpload}
+                    style={{ display: 'none' }}
+                  />
+                  <Button variant="secondary" size={isMobile ? 'sm' : 'md'} type="button" onClick={() => fileInputRef.current?.click()}>
+                    <Upload size={isMobile ? 14 : 16} />
+                    Add Files
                   </Button>
                 </div>
               </form>
@@ -1059,6 +1192,19 @@ export default function DeadlinesPage() {
           {/* Deadlines List */}
           {filtered.length > 0 ? (
             <Card>
+              {/* Delete All Completed Button */}
+              {filter === 'done' && completedCount > 0 && (
+                <div style={{ marginBottom: '8px' }}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowDeleteAllCompleted(true)}
+                  >
+                    <Trash2 size={14} />
+                    <span style={{ marginLeft: '6px' }}>Delete All Completed</span>
+                  </Button>
+                </div>
+              )}
               <div className="space-y-4 divide-y divide-[var(--border)]">
                 {filtered.map((d) => {
                   const course = courses.find((c) => c.id === d.courseId);
@@ -1262,6 +1408,22 @@ export default function DeadlinesPage() {
                             ))}
                           </div>
                         )}
+                        {d.files && d.files.length > 0 && (
+                          <div className="flex flex-col" style={{ gap: '0px' }}>
+                            {d.files.map((file: any, fileIndex: number) => (
+                              <button
+                                key={`${fileIndex}-${file.name}`}
+                                type="button"
+                                style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--link)', width: 'fit-content', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                className="hover:text-blue-400"
+                                onClick={(e) => { e.stopPropagation(); setPreviewingFile({ file, allFiles: d.files || [], index: fileIndex }); }}
+                              >
+                                <FileIcon size={12} style={{ flexShrink: 0 }} />
+                                {file.name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '12px' }}>
                         <button
@@ -1373,6 +1535,43 @@ export default function DeadlinesPage() {
         entityType="deadline"
         onConfirm={handleBulkDelete}
       />
+
+      {/* Delete All Completed Modal */}
+      {showDeleteAllCompleted && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
+          <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+            <div style={{ padding: '24px' }}>
+              <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Delete All Completed Assignments</h2>
+              <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                Are you sure you want to delete {completedCount} completed assignment{completedCount !== 1 ? 's' : ''}? This action cannot be undone.
+              </p>
+              <div className="flex gap-3 justify-end" style={{ marginTop: '24px' }}>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => setShowDeleteAllCompleted(false)}
+                  style={{ paddingLeft: '16px', paddingRight: '16px' }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={handleDeleteAllCompleted}
+                  style={{
+                    backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
+                    color: 'white',
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
+                  }}
+                >
+                  Delete All
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Preview Modal */}
       {previewingDeadline && (
@@ -1570,6 +1769,36 @@ export default function DeadlinesPage() {
                   </div>
                 </div>
               )}
+
+              {/* Files */}
+              {previewingDeadline.files && previewingDeadline.files.length > 0 && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Files</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {previewingDeadline.files.map((file: { name: string; url: string; size: number }, i: number) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <FileIcon size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setPreviewingFile({ file, allFiles: previewingDeadline.files, index: i }); }}
+                          style={{
+                            fontSize: '14px',
+                            color: 'var(--link)',
+                            textDecoration: 'underline',
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {file.name}
+                        </button>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>({file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`})</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Footer */}
@@ -1579,6 +1808,44 @@ export default function DeadlinesPage() {
               padding: isMobile ? '16px' : '20px',
               borderTop: '1px solid var(--border)',
             }}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  const deadline = previewingDeadline;
+                  const isCurrentlyDone = deadline.status === 'done';
+                  // Add to toggledDeadlines to keep it visible
+                  setToggledDeadlines(prev => {
+                    const newSet = new Set(prev);
+                    if (newSet.has(deadline.id)) {
+                      newSet.delete(deadline.id);
+                    } else {
+                      newSet.add(deadline.id);
+                    }
+                    return newSet;
+                  });
+                  updateDeadline(deadline.id, {
+                    status: isCurrentlyDone ? 'open' : 'done',
+                  });
+                  // Only fade out when marking as done, not when unchecking
+                  if (!isCurrentlyDone) {
+                    setTimeout(() => {
+                      setHidingDeadlines(prev => new Set(prev).add(deadline.id));
+                    }, 50);
+                  } else {
+                    // Remove from hiding when unchecking
+                    setHidingDeadlines(prev => {
+                      const newSet = new Set(prev);
+                      newSet.delete(deadline.id);
+                      return newSet;
+                    });
+                  }
+                  setPreviewingDeadline(null);
+                }}
+                style={{ flex: 1 }}
+              >
+                <Check size={16} />
+                {previewingDeadline.status === 'done' ? 'Mark Incomplete' : 'Mark Complete'}
+              </Button>
               <Button
                 variant="secondary"
                 onClick={() => {
@@ -1594,6 +1861,15 @@ export default function DeadlinesPage() {
           </div>
         </div>
       )}
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        file={previewingFile?.file ?? null}
+        files={previewingFile?.allFiles}
+        currentIndex={previewingFile?.index ?? 0}
+        onClose={() => setPreviewingFile(null)}
+        onNavigate={(file, index) => setPreviewingFile(prev => prev ? { ...prev, file, index } : null)}
+      />
     </>
   );
 }

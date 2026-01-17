@@ -8,6 +8,7 @@ import { CalendarEvent } from '@/lib/calendarUtils';
 import useAppStore from '@/lib/store';
 import Button from '@/components/ui/Button';
 import Input, { Textarea, Select } from '@/components/ui/Input';
+import FileUpload from '@/components/ui/FileUpload';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import CourseForm from '@/components/CourseForm';
@@ -217,6 +218,7 @@ export default function EventDetailModal({
           dueTime: timeStr,
           notes: task.notes,
           links: task.links && task.links.length > 0 ? task.links : [{ label: '', url: '' }],
+          files: task.files || [],
         });
       } else if (event.type === 'deadline') {
         const deadline = fullData as Deadline;
@@ -237,6 +239,7 @@ export default function EventDetailModal({
           dueTime: timeStr,
           notes: deadline.notes,
           links: deadline.links && deadline.links.length > 0 ? deadline.links : [{ label: '', url: '' }],
+          files: deadline.files || [],
         });
       } else if (event.type === 'event') {
         const calEvent = fullData as CustomCalendarEvent;
@@ -303,9 +306,12 @@ export default function EventDetailModal({
           dueAt,
           notes: editFormData.notes,
           links,
+          files: editFormData.files || [],
         });
         setIsEditing(false);
         setEditFormData(null);
+        // Refresh calendar data to show updated task
+        onStatusChange?.();
       } else if (event.type === 'deadline') {
         const deadline = fullData as Deadline;
         let dueAt: string | null = null;
@@ -334,9 +340,12 @@ export default function EventDetailModal({
           dueAt,
           notes: editFormData.notes,
           links,
+          files: editFormData.files || [],
         });
         setIsEditing(false);
         setEditFormData(null);
+        // Refresh calendar data to show updated deadline
+        onStatusChange?.();
       } else if (event.type === 'event') {
         const calEvent = fullData as CustomCalendarEvent;
 
@@ -395,19 +404,23 @@ export default function EventDetailModal({
       // Use localStatus if set, otherwise use task's status
       const currentStatus = localStatus || task.status;
       const newStatus = currentStatus === 'done' ? 'open' : 'done';
-      setLocalStatus(newStatus);
       await updateTask(task.id, {
         status: newStatus,
       });
+      // Trigger status change callback and close modal
+      onStatusChange?.();
+      onClose();
     } else if (event.type === 'deadline' && 'status' in fullData) {
       const deadline = fullData as Deadline;
       // Use localStatus if set, otherwise use deadline's status
       const currentStatus = localStatus || deadline.status;
       const newStatus = currentStatus === 'done' ? 'open' : 'done';
-      setLocalStatus(newStatus);
       await updateDeadline(deadline.id, {
         status: newStatus,
       });
+      // Trigger status change callback and close modal
+      onStatusChange?.();
+      onClose();
     }
   };
 
@@ -701,7 +714,7 @@ function TaskDeadlineForm({ formData, setFormData, courses }: TaskDeadlineFormPr
         <Input
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', ...(isMobile && { paddingLeft: '12px' }) }}
+          style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '10px 12px' }}
         />
       </div>
 
@@ -770,7 +783,7 @@ function TaskDeadlineForm({ formData, setFormData, courses }: TaskDeadlineFormPr
                   newLinks[index].label = e.target.value;
                   setFormData({ ...formData, links: newLinks });
                 }}
-                style={{ fontSize: isMobile ? '0.7rem' : '0.75rem' }}
+                style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '8px 12px' }}
               />
               <p style={{ fontSize: isMobile ? '0.6rem' : '0.65rem', color: 'var(--text-muted)', margin: 0, fontWeight: 500, ...(isMobile && { paddingLeft: '6px' }) }}>
                 URL
@@ -782,7 +795,7 @@ function TaskDeadlineForm({ formData, setFormData, courses }: TaskDeadlineFormPr
                   newLinks[index].url = e.target.value;
                   setFormData({ ...formData, links: newLinks });
                 }}
-                style={{ fontSize: isMobile ? '0.7rem' : '0.75rem' }}
+                style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '8px 12px' }}
               />
               <Button
                 variant="secondary"
@@ -806,6 +819,16 @@ function TaskDeadlineForm({ formData, setFormData, courses }: TaskDeadlineFormPr
             Add Link
           </Button>
         </div>
+      </div>
+
+      <div>
+        <p style={{ fontSize: isMobile ? '0.75rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 6px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
+          Files
+        </p>
+        <FileUpload
+          files={formData.files || []}
+          onChange={(files) => setFormData({ ...formData, files })}
+        />
       </div>
     </div>
   );
@@ -1053,6 +1076,45 @@ function CourseContent({ event, course }: CourseContentProps) {
           </div>
         </div>
       )}
+
+      {course.files && course.files.length > 0 && (
+        <div>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+            Files
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
+            {course.files.map((file, index) => (
+              <a
+                key={`${index}-${file.name}`}
+                href={file.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={file.name}
+                style={{
+                  color: 'var(--link)',
+                  textDecoration: 'none',
+                  fontSize: '0.875rem',
+                  wordBreak: 'break-word',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.textDecoration = 'underline';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.textDecoration = 'none';
+                }}
+              >
+                {file.name}
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                  ({file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`})
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1188,6 +1250,45 @@ function TaskContent({ task, relatedCourse }: TaskContentProps) {
           </div>
         </div>
       )}
+
+      {task.files && task.files.length > 0 && (
+        <div>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+            Files
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
+            {task.files.map((file, index) => (
+              <a
+                key={`${index}-${file.name}`}
+                href={file.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={file.name}
+                style={{
+                  color: 'var(--link)',
+                  textDecoration: 'none',
+                  fontSize: '0.875rem',
+                  wordBreak: 'break-word',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.textDecoration = 'underline';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.textDecoration = 'none';
+                }}
+              >
+                {file.name}
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                  ({file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`})
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1268,6 +1369,45 @@ function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
                 }}
               >
                 {link.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {deadline.files && deadline.files.length > 0 && (
+        <div>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+            Files
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
+            {deadline.files.map((file, index) => (
+              <a
+                key={`${index}-${file.name}`}
+                href={file.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={file.name}
+                style={{
+                  color: 'var(--link)',
+                  textDecoration: 'none',
+                  fontSize: '0.875rem',
+                  wordBreak: 'break-word',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.textDecoration = 'underline';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.textDecoration = 'none';
+                }}
+              >
+                {file.name}
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                  ({file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`})
+                </span>
               </a>
             ))}
           </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 're
 import useAppStore from '@/lib/store';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import FileUpload from '@/components/ui/FileUpload';
 import DaysDropdown from '@/components/DaysDropdown';
 import TimePicker from '@/components/TimePicker';
 import CalendarPicker from '@/components/CalendarPicker';
@@ -40,6 +41,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
     endDate: '',
     meetingTimes: [{ days: ['Mon'], start: '', end: '', location: '' }],
     links: [{ label: '', url: '' }],
+    files: [] as Array<{ name: string; url: string; size: number }>,
     colorTag: '',
   });
 
@@ -53,6 +55,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
         endDate: course.endDate ? course.endDate.split('T')[0] : '',
         meetingTimes: course.meetingTimes || [{ days: ['Mon'], start: '', end: '', location: '' }],
         links: course.links || [{ label: '', url: '' }],
+        files: course.files || [],
         colorTag: course.colorTag || '',
       });
     }
@@ -95,6 +98,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
             ? l.url
             : `https://${l.url}`,
         })),
+      files: form.files,
       colorTag: form.colorTag,
     };
 
@@ -338,6 +342,14 @@ const CourseFormComponent = forwardRef(function CourseForm(
           <Plus size={16} />
           Add Link
         </Button>
+      </div>
+
+      <div style={{ paddingTop: isMobile ? '4px' : '12px' }}>
+        <label className={isMobile ? 'block text-sm font-medium text-[var(--text)]' : 'block text-lg font-medium text-[var(--text)]'} style={{ marginBottom: '8px' }}>Files</label>
+        <FileUpload
+          files={form.files}
+          onChange={(files) => setForm({ ...form, files })}
+        />
       </div>
 
       {!hideSubmitButton && (

@@ -49,6 +49,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         endDate: data.endDate ? new Date(data.endDate) : null,
         meetingTimes: data.meetingTimes || [],
         links: data.links || [],
+        files: data.files || [],
         colorTag: data.colorTag,
       },
     });

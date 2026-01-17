@@ -152,11 +152,20 @@ export async function generateRecurringExamInstances(
         if (template.examAt) {
           try {
             const timeDate = new Date(template.examAt);
+            // Use local time methods to preserve the intended time values
             const hours = timeDate.getHours();
             const minutes = timeDate.getMinutes();
 
-            const eventDate = new Date(currentDate);
-            eventDate.setHours(hours, minutes, 0, 0);
+            // Create date in local timezone
+            const eventDate = new Date(
+              currentDate.getFullYear(),
+              currentDate.getMonth(),
+              currentDate.getDate(),
+              hours,
+              minutes,
+              0,
+              0
+            );
             examAt = eventDate.toISOString();
           } catch (e) {
             // If template.examAt is invalid, treat as all-day

@@ -165,7 +165,7 @@ export default function CalendarMonthView({
                 transition: 'all 0.2s',
                 backgroundColor: isSelectedDate ? 'var(--accent-2)' : isCurrentMonth ? 'var(--panel)' : 'var(--bg)',
                 opacity: isCurrentMonth ? 1 : 0.5,
-                boxShadow: isTodayDate && !isSelectedDate ? '0 0 0 1px var(--accent)' : isSelectedDate ? '0 0 0 2px var(--accent)' : 'none',
+                boxShadow: isTodayDate && !isSelectedDate ? '0 0 0 1px var(--link)' : isSelectedDate ? '0 0 0 2px var(--accent)' : 'none',
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
@@ -198,7 +198,7 @@ export default function CalendarMonthView({
                   paddingRight: '0px',
                   paddingTop: '0px',
                   paddingBottom: '0px',
-                  color: isTodayDate ? 'var(--calendar-current-date-color)' : 'var(--text)',
+                  color: isTodayDate ? 'var(--link)' : 'var(--text)',
                   lineHeight: 1,
                 }}
               >
