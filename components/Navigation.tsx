@@ -246,30 +246,30 @@ export default function Navigation() {
           })}
         </div>
 
-        {/* Profile and Logout */}
+        {/* Account and Logout */}
         {session?.user && (
           <div className="mt-4 space-y-2" style={{ position: 'relative', zIndex: 1 }}>
             <div className="flex items-center justify-between">
               <Link
-                href="/profile"
+                href="/account"
                 className={`nav-link-hover flex items-center gap-2.5 flex-1 h-11 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
-                  pathname === '/profile'
+                  pathname === '/account'
                     ? 'text-[var(--text)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
                 style={{
                   padding: '0 11px',
-                  backgroundColor: pathname === '/profile' ? 'var(--nav-active)' : 'transparent',
-                  backgroundImage: pathname === '/profile'
+                  backgroundColor: pathname === '/account' ? 'var(--nav-active)' : 'transparent',
+                  backgroundImage: pathname === '/account'
                     ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
                     : 'none',
-                  boxShadow: pathname === '/profile'
+                  boxShadow: pathname === '/account'
                     ? `0 0 10px ${colorPalette.accent}BF`
                     : undefined,
                 }}
               >
                 <User size={20} className="opacity-80 group-hover:opacity-100" />
-                <span>Profile</span>
+                <span>Account</span>
               </Link>
               <div style={{ paddingLeft: '9px', paddingRight: '6px' }}>
                 <NotificationBell />
@@ -346,19 +346,19 @@ export default function Navigation() {
             })}
           </nav>
 
-          {/* Drawer footer with profile/logout */}
+          {/* Drawer footer with account/logout */}
           {session?.user && (
             <div className={styles.drawerFooter} style={{ position: 'relative', zIndex: 1 }}>
               <Link
-                href="/profile"
-                className={`${styles.drawerLink} ${pathname === '/profile' ? styles.active : ''}`}
-                style={pathname === '/profile' ? {
+                href="/account"
+                className={`${styles.drawerLink} ${pathname === '/account' ? styles.active : ''}`}
+                style={pathname === '/account' ? {
                   backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                   boxShadow: `0 0 10px ${colorPalette.accent}BF`,
                 } : undefined}
               >
                 <User size={20} />
-                <span>Profile</span>
+                <span>Account</span>
               </Link>
               <button onClick={handleLogout} className={styles.drawerLink}>
                 <LogOut size={20} />
