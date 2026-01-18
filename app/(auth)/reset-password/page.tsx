@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, Eye, EyeOff } from 'lucide-react';
@@ -19,6 +19,11 @@ function ResetPasswordContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  useEffect(() => {
+    setHasAnimated(true);
+  }, []);
 
   const passwordErrors: string[] = [];
   if (newPassword && newPassword.length < 8) {
@@ -321,7 +326,7 @@ function ResetPasswordContent() {
         borderRadius: '20px',
         padding: '24px',
         boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), 0 0 48px rgba(99, 102, 241, 0.08)',
-        animation: 'fadeInUp 0.6s ease-out 0.1s backwards',
+        animation: hasAnimated ? 'none' : 'fadeInUp 0.6s ease-out 0.1s backwards',
       }}>
         <p style={{
           color: 'var(--text)',
