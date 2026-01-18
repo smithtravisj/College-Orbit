@@ -62,13 +62,13 @@ export async function sendPasswordResetEmail({
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #0a0a0b;" bgcolor="#0a0a0b">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0a0a0b; padding: 40px 0;" bgcolor="#0a0a0b">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0a0a0b;" bgcolor="#0a0a0b">
         <tr>
-          <td align="center" bgcolor="#0a0a0b">
-            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #111113; border-radius: 20px; border: 1px solid #252528;">
+          <td align="center" style="padding: 40px 20px;" bgcolor="#0a0a0b">
+            <table width="560" cellpadding="0" cellspacing="0" border="0" style="background-color: #111113; border-radius: 20px; border: 1px solid #252528;" bgcolor="#111113">
               <!-- Header -->
               <tr>
-                <td style="padding: 40px 40px 20px 40px; text-align: center;">
+                <td style="padding: 40px 40px 20px 40px; text-align: center;" bgcolor="#111113">
                   <p style="margin: 0 0 8px 0; font-size: 14px; color: #8b5cf6; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">
                     College Orbit
                   </p>
@@ -210,13 +210,13 @@ export async function sendPasswordChangedEmail({
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #0a0a0b;" bgcolor="#0a0a0b">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0a0a0b; padding: 40px 0;" bgcolor="#0a0a0b">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0a0a0b;" bgcolor="#0a0a0b">
         <tr>
-          <td align="center" bgcolor="#0a0a0b">
-            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #111113; border-radius: 20px; border: 1px solid #252528;">
+          <td align="center" style="padding: 40px 20px;" bgcolor="#0a0a0b">
+            <table width="560" cellpadding="0" cellspacing="0" border="0" style="background-color: #111113; border-radius: 20px; border: 1px solid #252528;" bgcolor="#111113">
               <!-- Header -->
               <tr>
-                <td style="padding: 40px 40px 20px 40px; text-align: center;">
+                <td style="padding: 40px 40px 20px 40px; text-align: center;" bgcolor="#111113">
                   <p style="margin: 0 0 8px 0; font-size: 14px; color: #8b5cf6; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">
                     College Orbit
                   </p>
