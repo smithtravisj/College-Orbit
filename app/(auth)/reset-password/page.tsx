@@ -353,6 +353,8 @@ function ResetPasswordContent() {
               onChange={(e) => setNewPassword(e.target.value)}
               required
               placeholder="••••••••"
+              autoComplete="new-password"
+              name="new-password"
             />
             {passwordErrors.length > 0 && newPassword && (
               <div style={{ marginTop: '6px', fontSize: '13px', color: 'rgb(239, 68, 68)' }}>
@@ -373,6 +375,8 @@ function ResetPasswordContent() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               placeholder="••••••••"
+              autoComplete="new-password"
+              name="confirm-password"
             />
           </div>
 
