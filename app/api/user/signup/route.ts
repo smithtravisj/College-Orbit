@@ -3,6 +3,10 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { sendWelcomeEmail, sendWelcomeEmailDev } from '@/lib/email';
+
+// Send real emails only in production with verified domain
+const shouldSendRealEmail = !!process.env.RESEND_API_KEY && process.env.NODE_ENV === 'production';
 
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
@@ -58,6 +62,24 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         },
       },
     });
+
+    // Send welcome email (don't block signup if this fails)
+    try {
+      if (shouldSendRealEmail) {
+        await sendWelcomeEmail({
+          email: user.email,
+          name: user.name,
+        });
+      } else {
+        await sendWelcomeEmailDev({
+          email: user.email,
+          name: user.name,
+        });
+      }
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // Don't fail the signup - user account is already created
+    }
 
     return NextResponse.json(
       {
