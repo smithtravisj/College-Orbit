@@ -124,7 +124,7 @@ function ResetPasswordContent() {
       <div style={{
         textAlign: 'center',
         marginBottom: '24px',
-        animation: 'fadeInUp 0.6s ease-out',
+        animation: hasAnimated ? 'none' : 'fadeInUp 0.6s ease-out',
         position: 'relative',
         zIndex: 1,
       }}>
@@ -191,7 +191,7 @@ function ResetPasswordContent() {
       <div style={{
         textAlign: 'center',
         marginTop: '20px',
-        animation: 'fadeInUp 0.6s ease-out 0.2s backwards',
+        animation: hasAnimated ? 'none' : 'fadeInUp 0.6s ease-out 0.2s backwards',
         position: 'relative',
         zIndex: 1,
       }}>
@@ -243,7 +243,7 @@ function ResetPasswordContent() {
           borderRadius: '20px',
           padding: '24px',
           boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), 0 0 48px rgba(99, 102, 241, 0.08)',
-          animation: 'fadeInUp 0.6s ease-out 0.1s backwards',
+          animation: hasAnimated ? 'none' : 'fadeInUp 0.6s ease-out 0.1s backwards',
         }}>
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>❌</div>
