@@ -56,42 +56,22 @@ export async function sendPasswordResetEmail({
 
   const htmlContent = `
     <!DOCTYPE html>
-    <html>
+    <html style="margin: 0; padding: 0; background-color: #0a0a0b;">
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
-    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #0a0a0b;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0a0a0b; padding: 40px 0;">
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #0a0a0b;" bgcolor="#0a0a0b">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0a0a0b; padding: 40px 0;" bgcolor="#0a0a0b">
         <tr>
-          <td align="center">
-            <table width="600" cellpadding="0" cellspacing="0" style="background-color: #111113; border-radius: 20px; border: 1px solid #252528;">
-              <!-- Header with Logo -->
+          <td align="center" bgcolor="#0a0a0b">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #111113; border-radius: 20px; border: 1px solid #252528;">
+              <!-- Header -->
               <tr>
                 <td style="padding: 40px 40px 20px 40px; text-align: center;">
-                  <!-- Orbit Icon -->
-                  <div style="margin-bottom: 16px;">
-                    <svg width="48" height="48" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="32" cy="32" r="12" fill="url(#planetGrad)"/>
-                      <ellipse cx="32" cy="32" rx="28" ry="10" stroke="url(#orbitGrad)" stroke-width="2" fill="none" transform="rotate(-20 32 32)"/>
-                      <circle cx="54" cy="28" r="4" fill="url(#moonGrad)"/>
-                      <defs>
-                        <linearGradient id="planetGrad" x1="20" y1="20" x2="44" y2="44">
-                          <stop offset="0%" stop-color="#6366f1"/>
-                          <stop offset="100%" stop-color="#8b5cf6"/>
-                        </linearGradient>
-                        <linearGradient id="orbitGrad" x1="4" y1="32" x2="60" y2="32">
-                          <stop offset="0%" stop-color="#6366f1" stop-opacity="0.3"/>
-                          <stop offset="50%" stop-color="#8b5cf6" stop-opacity="0.8"/>
-                          <stop offset="100%" stop-color="#6366f1" stop-opacity="0.3"/>
-                        </linearGradient>
-                        <linearGradient id="moonGrad" x1="50" y1="24" x2="58" y2="32">
-                          <stop offset="0%" stop-color="#a78bfa"/>
-                          <stop offset="100%" stop-color="#c4b5fd"/>
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                  </div>
+                  <p style="margin: 0 0 8px 0; font-size: 14px; color: #8b5cf6; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">
+                    College Orbit
+                  </p>
                   <h1 style="margin: 0; color: #fafafa; font-size: 28px; font-weight: 700; letter-spacing: -0.02em;">
                     Reset Your Password
                   </h1>
@@ -224,49 +204,22 @@ export async function sendPasswordChangedEmail({
 
   const htmlContent = `
     <!DOCTYPE html>
-    <html>
+    <html style="margin: 0; padding: 0; background-color: #0a0a0b;">
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
-    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #0a0a0b;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0a0a0b; padding: 40px 0;">
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #0a0a0b;" bgcolor="#0a0a0b">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0a0a0b; padding: 40px 0;" bgcolor="#0a0a0b">
         <tr>
-          <td align="center">
-            <table width="600" cellpadding="0" cellspacing="0" style="background-color: #111113; border-radius: 20px; border: 1px solid #252528;">
-              <!-- Header with Logo -->
+          <td align="center" bgcolor="#0a0a0b">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #111113; border-radius: 20px; border: 1px solid #252528;">
+              <!-- Header -->
               <tr>
                 <td style="padding: 40px 40px 20px 40px; text-align: center;">
-                  <!-- Orbit Icon -->
-                  <div style="margin-bottom: 16px;">
-                    <svg width="48" height="48" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="32" cy="32" r="12" fill="url(#planetGrad2)"/>
-                      <ellipse cx="32" cy="32" rx="28" ry="10" stroke="url(#orbitGrad2)" stroke-width="2" fill="none" transform="rotate(-20 32 32)"/>
-                      <circle cx="54" cy="28" r="4" fill="url(#moonGrad2)"/>
-                      <defs>
-                        <linearGradient id="planetGrad2" x1="20" y1="20" x2="44" y2="44">
-                          <stop offset="0%" stop-color="#6366f1"/>
-                          <stop offset="100%" stop-color="#8b5cf6"/>
-                        </linearGradient>
-                        <linearGradient id="orbitGrad2" x1="4" y1="32" x2="60" y2="32">
-                          <stop offset="0%" stop-color="#6366f1" stop-opacity="0.3"/>
-                          <stop offset="50%" stop-color="#8b5cf6" stop-opacity="0.8"/>
-                          <stop offset="100%" stop-color="#6366f1" stop-opacity="0.3"/>
-                        </linearGradient>
-                        <linearGradient id="moonGrad2" x1="50" y1="24" x2="58" y2="32">
-                          <stop offset="0%" stop-color="#a78bfa"/>
-                          <stop offset="100%" stop-color="#c4b5fd"/>
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                  </div>
-                  <!-- Checkmark Icon -->
-                  <div style="margin-bottom: 16px;">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="12" r="10" stroke="#8b5cf6" stroke-width="2"/>
-                      <path d="M8 12l2.5 2.5L16 9" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </div>
+                  <p style="margin: 0 0 8px 0; font-size: 14px; color: #8b5cf6; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">
+                    College Orbit
+                  </p>
                   <h1 style="margin: 0; color: #fafafa; font-size: 28px; font-weight: 700; letter-spacing: -0.02em;">
                     Password Changed
                   </h1>
