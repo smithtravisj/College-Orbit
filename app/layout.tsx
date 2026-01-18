@@ -14,6 +14,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  viewportFit: 'cover',
 };
 
 export const metadata: Metadata = {
@@ -65,7 +66,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: '/favicon.svg',
-    apple: '/apple-touch-icon-copy.svg',
+    apple: '/apple-touch-icon.png',
   },
   manifest: '/manifest.json',
 };

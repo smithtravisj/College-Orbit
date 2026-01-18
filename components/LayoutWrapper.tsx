@@ -65,7 +65,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   // Landing page - full screen, no navigation
   if (isLandingPage) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
+      <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg)' }}>
         {children}
       </div>
     );
@@ -85,7 +85,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
             --text-muted: #a1a1aa !important;
           }
         `}</style>
-        <div style={{ minHeight: '100vh', width: '100%', backgroundColor: '#0a0a0b', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px 16px', overflowY: 'auto', zIndex: 50 }}>
+        <div style={{ minHeight: '100dvh', width: '100%', backgroundColor: '#0a0a0b', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px 16px', overflowY: 'auto', zIndex: 50 }}>
           <div style={{ width: '100%', maxWidth: '550px' }}>
             {children}
           </div>
@@ -97,7 +97,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   if (isPublicPage) {
     // Full-width layout for public pages (privacy, terms)
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
+      <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg)' }}>
         {children}
       </div>
     );
@@ -120,7 +120,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
 
   // Desktop layout with floating sidebar
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
+    <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg)' }}>
       <BackgroundDecoration />
       <Navigation />
       <main style={{ marginLeft: '224px', minWidth: 0 }}>
