@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import useAppStore from '@/lib/store';
 import { getQuickLinks } from '@/lib/quickLinks';
 import { TOOLS_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
-import { getCollegeColorPalette } from '@/lib/collegeColors';
+import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select } from '@/components/ui/Input';
@@ -53,6 +53,9 @@ export default function ToolsPage() {
   const { settings, updateSettings } = useAppStore();
   const subscription = useSubscription();
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
+  const accentColor = settings.useCustomTheme && settings.customColors
+    ? getCustomColorSetForTheme(settings.customColors as CustomColors, settings.theme || 'dark').accent
+    : colorPalette.accent;
   const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [formCourses, setFormCourses] = useState<FormCourse[]>([
@@ -896,7 +899,7 @@ export default function ToolsPage() {
                 style={{
                   width: '100%',
                   height: '100%',
-                  background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
+                  background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${accentColor}18 0%, transparent 70%)`,
                 }}
               />
             </div>

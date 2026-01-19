@@ -31,6 +31,8 @@ const PREMIUM_FEATURES = [
   'File attachments',
   'Recurring tasks, assignments & exams',
   'All Tools (GPA Calculator, Pomodoro, etc.)',
+  'Custom color themes',
+  'Visual effects customization',
 ];
 
 // Public pricing page for unauthenticated users

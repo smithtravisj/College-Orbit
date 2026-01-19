@@ -3,20 +3,26 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import useAppStore from '@/lib/store';
-import { getCollegeColorPalette } from '@/lib/collegeColors';
+import { getCollegeColorPalette, getDefaultCustomColors, getCustomColorSetForTheme, CustomColors, CustomColorSet } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import ColorPicker from '@/components/ui/ColorPicker';
+import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import { Monitor } from 'lucide-react';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { DASHBOARD_CARDS, TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
 export default function SettingsPage() {
   const isMobile = useIsMobile();
   const { data: session } = useSession();
+  const { isPremium, isLoading: isLoadingSubscription } = useSubscription();
   const [mounted, setMounted] = useState(false);
   const [dueSoonDays, setDueSoonDays] = useState<number | string>(7);
   const [university, setUniversity] = useState<string | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | 'system'>('dark');
+  const [useCustomTheme, setUseCustomTheme] = useState(false);
+  const [customColors, setCustomColors] = useState<CustomColors | null>(null);
   const [examReminders, setExamReminders] = useState<Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>>([]);
   const [collegeRequestName, setCollegeRequestName] = useState('');
   const [collegeRequestMessage, setCollegeRequestMessage] = useState('');
@@ -51,6 +57,12 @@ export default function SettingsPage() {
 
   const { settings, updateSettings } = useAppStore();
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
+  const accentColor = settings.useCustomTheme && settings.customColors
+    ? getCustomColorSetForTheme(settings.customColors as CustomColors, settings.theme || 'dark').accent
+    : colorPalette.accent;
+  const glowIntensity = settings.glowIntensity ?? 50;
+  const glowScale = glowIntensity / 50;
+  const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
 
   // Check if running on Mac desktop browser
   useEffect(() => {
@@ -59,6 +71,9 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
+    // Only run once on mount to initialize local state from store
+    if (mounted) return;
+
     // Store is already initialized globally by AppLoader
     setDueSoonDays(settings.dueSoonWindowDays);
     setUniversity(settings.university || null);
@@ -131,6 +146,15 @@ export default function SettingsPage() {
       ]);
     }
 
+    // Load custom theme settings
+    setUseCustomTheme(settings.useCustomTheme || false);
+    if (settings.customColors) {
+      setCustomColors(settings.customColors as CustomColors);
+    } else {
+      // Initialize with defaults based on university (includes both light and dark)
+      setCustomColors(getDefaultCustomColors(settings.university));
+    }
+
     // Load email preferences
     setEmailAnnouncements(settings.emailAnnouncements !== false);
     setEmailExamReminders(settings.emailExamReminders !== false);
@@ -142,7 +166,7 @@ export default function SettingsPage() {
     setNotifyAccountAlerts(settings.notifyAccountAlerts !== false);
 
     setMounted(true);
-  }, [settings]);
+  }, [settings, mounted]);
 
   // Update input value when state changes (but not if user is editing)
   useEffect(() => {
@@ -584,6 +608,228 @@ export default function SettingsPage() {
                 )}
               </div>
 
+              {/* Custom Theme Section */}
+              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+                  Custom Theme
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                  Create your own color theme
+                </p>
+
+                {/* Toggle between College Theme and Custom Theme */}
+                <div style={{
+                  display: 'flex',
+                  gap: '8px',
+                  padding: '4px',
+                  backgroundColor: 'var(--panel-2)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border)',
+                  marginBottom: '16px',
+                }}>
+                  <button
+                    onClick={() => {
+                      setUseCustomTheme(false);
+                      updateSettings({ useCustomTheme: false });
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '8px 16px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: !useCustomTheme ? 'var(--text)' : 'var(--text-muted)',
+                      backgroundColor: !useCustomTheme ? 'var(--panel)' : 'transparent',
+                      border: !useCustomTheme ? '1px solid var(--border)' : '1px solid transparent',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    College Theme
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!isPremium && !isLoadingSubscription) {
+                        // Show upgrade prompt for non-premium users
+                        return;
+                      }
+                      setUseCustomTheme(true);
+                      // Initialize custom colors with defaults if not set
+                      const colors = customColors || getDefaultCustomColors(university);
+                      setCustomColors(colors);
+                      updateSettings({ useCustomTheme: true, customColors: colors });
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '8px 16px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: useCustomTheme ? 'var(--text)' : 'var(--text-muted)',
+                      backgroundColor: useCustomTheme ? 'var(--panel)' : 'transparent',
+                      border: useCustomTheme ? '1px solid var(--border)' : '1px solid transparent',
+                      borderRadius: '6px',
+                      cursor: isPremium || isLoadingSubscription ? 'pointer' : 'not-allowed',
+                      transition: 'all 0.2s ease',
+                      opacity: !isPremium && !isLoadingSubscription ? 0.6 : 1,
+                    }}
+                  >
+                    Custom Theme
+                  </button>
+                </div>
+
+                {/* Show upgrade prompt for non-premium users */}
+                {!isPremium && !isLoadingSubscription && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <UpgradePrompt feature="Custom themes" />
+                  </div>
+                )}
+
+                {/* Color Pickers - only show for premium users with custom theme enabled */}
+                {isPremium && useCustomTheme && customColors && (() => {
+                  // Determine current theme mode for editing
+                  const currentThemeMode = selectedTheme === 'system'
+                    ? (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+                    : selectedTheme;
+                  const currentColorSet = currentThemeMode === 'light' ? customColors.light : customColors.dark;
+
+                  // Helper to update a color in the current theme
+                  const updateColor = (key: keyof CustomColorSet, value: string) => {
+                    const newColors = {
+                      ...customColors,
+                      [currentThemeMode]: {
+                        ...currentColorSet,
+                        [key]: value,
+                      },
+                    };
+                    setCustomColors(newColors);
+                    updateSettings({ customColors: newColors });
+                  };
+
+                  return (
+                  <div style={{ marginTop: '16px' }}>
+                    <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                      Editing colors for {currentThemeMode} mode
+                    </p>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                      gap: '16px',
+                    }}>
+                      <ColorPicker
+                        label="Primary / Buttons"
+                        value={currentColorSet.accent}
+                        onChange={(color) => updateColor('accent', color)}
+                      />
+                      <ColorPicker
+                        label="Links"
+                        value={currentColorSet.link}
+                        onChange={(color) => updateColor('link', color)}
+                      />
+                      <ColorPicker
+                        label="Success / Complete"
+                        value={currentColorSet.success}
+                        onChange={(color) => updateColor('success', color)}
+                      />
+                      <ColorPicker
+                        label="Warnings"
+                        value={currentColorSet.warning}
+                        onChange={(color) => updateColor('warning', color)}
+                      />
+                      <ColorPicker
+                        label="Errors / Delete"
+                        value={currentColorSet.danger}
+                        onChange={(color) => updateColor('danger', color)}
+                      />
+                    </div>
+
+                    {/* Reset to Defaults button */}
+                    <Button
+                      size={isMobile ? 'sm' : 'lg'}
+                      variant="secondary"
+                      onClick={() => {
+                        const defaultColors = getDefaultCustomColors(university);
+                        setCustomColors(defaultColors);
+                        updateSettings({ customColors: defaultColors });
+                      }}
+                      style={{
+                        marginTop: '16px',
+                        marginBottom: '16px',
+                        paddingLeft: isMobile ? '12px' : '16px',
+                        paddingRight: isMobile ? '12px' : '16px',
+                        boxShadow: 'none',
+                      }}
+                    >
+                      Reset to Defaults
+                    </Button>
+                  </div>
+                  );
+                })()}
+              </div>
+
+              {/* Gradient & Glow Intensity */}
+              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+                  Visual Effects
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Adjust gradient and glow intensity on buttons and UI elements
+                </p>
+
+                {/* Gradient Intensity */}
+                <div style={{ marginBottom: '16px', opacity: isPremium ? 1 : 0.5 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span className="text-sm text-[var(--text)]">Gradient Intensity</span>
+                    <span className="text-sm text-[var(--text-muted)]">{settings.gradientIntensity ?? 50}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={settings.gradientIntensity ?? 50}
+                    onChange={(e) => isPremium && updateSettings({ gradientIntensity: parseInt(e.target.value) })}
+                    disabled={!isPremium}
+                    style={{
+                      width: '100%',
+                      height: '6px',
+                      borderRadius: '3px',
+                      appearance: 'none',
+                      background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${settings.gradientIntensity ?? 50}%, var(--border) ${settings.gradientIntensity ?? 50}%, var(--border) 100%)`,
+                      cursor: isPremium ? 'pointer' : 'not-allowed',
+                    }}
+                  />
+                </div>
+
+                {/* Glow Intensity */}
+                <div style={{ opacity: isPremium ? 1 : 0.5, marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span className="text-sm text-[var(--text)]">Glow Intensity</span>
+                    <span className="text-sm text-[var(--text-muted)]">{settings.glowIntensity ?? 50}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={settings.glowIntensity ?? 50}
+                    onChange={(e) => isPremium && updateSettings({ glowIntensity: parseInt(e.target.value) })}
+                    disabled={!isPremium}
+                    style={{
+                      width: '100%',
+                      height: '6px',
+                      borderRadius: '3px',
+                      appearance: 'none',
+                      background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${settings.glowIntensity ?? 50}%, var(--border) ${settings.glowIntensity ?? 50}%, var(--border) 100%)`,
+                      cursor: isPremium ? 'pointer' : 'not-allowed',
+                    }}
+                  />
+                </div>
+
+                {!isPremium && !isLoadingSubscription && (
+                  <div style={{ marginTop: '16px', marginBottom: '16px' }}>
+                    <UpgradePrompt feature="Visual effects customization" />
+                  </div>
+                )}
+              </div>
+
               {/* Due Soon Window */}
               <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
                 <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
@@ -926,7 +1172,7 @@ export default function SettingsPage() {
                     padding: '8px 14px',
                     backgroundColor: activeCustomizationTab === tab.id ? 'var(--nav-active)' : 'transparent',
                     backgroundImage: activeCustomizationTab === tab.id ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
-                    boxShadow: activeCustomizationTab === tab.id ? `0 0 10px ${colorPalette.accent}80` : undefined,
+                    boxShadow: activeCustomizationTab === tab.id ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : undefined,
                     border: 'none',
                     cursor: 'pointer',
                     fontSize: '13px',

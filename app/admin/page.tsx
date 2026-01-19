@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
-import { collegeColorPalettes, collegeColorPalettesLight, getCollegeColorPalette } from '@/lib/collegeColors';
+import { collegeColorPalettes, collegeColorPalettesLight, getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { Crown, Shield, ExternalLink } from 'lucide-react';
@@ -102,6 +102,12 @@ export default function AdminPage() {
   const isMobile = useIsMobile();
   const settings = useAppStore((state) => state.settings);
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
+  const accentColor = settings.useCustomTheme && settings.customColors
+    ? getCustomColorSetForTheme(settings.customColors as CustomColors, settings.theme || 'dark').accent
+    : colorPalette.accent;
+  const glowIntensity = settings.glowIntensity ?? 50;
+  const glowScale = glowIntensity / 50;
+  const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
 
   // Main tab state
   const [activeTab, setActiveTab] = useState<'analytics' | 'management'>('management');
@@ -844,7 +850,7 @@ export default function AdminPage() {
                 border: 'none',
                 backgroundColor: activeTab === tab.id ? 'var(--nav-active)' : 'transparent',
                 backgroundImage: activeTab === tab.id ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
-                boxShadow: activeTab === tab.id ? `0 0 10px ${colorPalette.accent}80` : undefined,
+                boxShadow: activeTab === tab.id ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : undefined,
                 cursor: 'pointer',
               }}
             >
@@ -1392,7 +1398,7 @@ export default function AdminPage() {
                       border: 'none',
                       backgroundColor: adminTab === tab.id ? 'var(--nav-active)' : 'transparent',
                       backgroundImage: adminTab === tab.id ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
-                      boxShadow: adminTab === tab.id ? `0 0 10px ${colorPalette.accent}80` : undefined,
+                      boxShadow: adminTab === tab.id ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : undefined,
                       cursor: 'pointer',
                     }}
                   >
@@ -1698,7 +1704,7 @@ export default function AdminPage() {
                       cursor: grantPremiumLoading ? 'not-allowed' : 'pointer',
                       opacity: grantPremiumLoading ? 0.6 : 1,
                       whiteSpace: 'nowrap',
-                      boxShadow: `0 0 10px ${colorPalette.accent}80`,
+                      boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
                     }}
                   >
                     {grantPremiumLoading ? 'Granting...' : 'Grant Premium'}
@@ -1760,7 +1766,7 @@ export default function AdminPage() {
                       cursor: grantAdminLoading ? 'not-allowed' : 'pointer',
                       opacity: grantAdminLoading ? 0.6 : 1,
                       whiteSpace: 'nowrap',
-                      boxShadow: `0 0 10px ${colorPalette.accent}80`,
+                      boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
                     }}
                   >
                     {grantAdminLoading ? 'Granting...' : 'Grant Admin'}
@@ -1876,7 +1882,7 @@ export default function AdminPage() {
                       cursor: userLookupLoading ? 'not-allowed' : 'pointer',
                       opacity: userLookupLoading ? 0.6 : 1,
                       whiteSpace: 'nowrap',
-                      boxShadow: `0 0 10px ${colorPalette.accent}80`,
+                      boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
                     }}
                   >
                     {userLookupLoading ? 'Searching...' : 'Search'}
@@ -2072,7 +2078,7 @@ export default function AdminPage() {
                       cursor: announcementLoading ? 'not-allowed' : 'pointer',
                       opacity: announcementLoading ? 0.6 : 1,
                       whiteSpace: 'nowrap',
-                      boxShadow: `0 0 10px ${colorPalette.accent}80`,
+                      boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
                     }}
                   >
                     {announcementLoading ? 'Sending...' : 'Send'}

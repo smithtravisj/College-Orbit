@@ -19,6 +19,8 @@ const FEATURES = [
   'File attachments',
   'Recurring tasks, assignments & exams',
   'All Tools (GPA Calculator, Pomodoro, etc.)',
+  'Custom color themes',
+  'Visual effects customization',
 ];
 
 export default function CheckoutPage() {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { useBulkSelect } from '@/hooks/useBulkSelect';
-import { getCollegeColorPalette } from '@/lib/collegeColors';
+import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -28,7 +28,15 @@ export default function CoursesPage() {
   const subscription = useSubscription();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const useCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const customColors = useAppStore((state) => state.settings.customColors);
+  const glowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
   const colorPalette = getCollegeColorPalette(university || null, theme);
+  const accentColor = useCustomTheme && customColors
+    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
+    : colorPalette.accent;
+  const glowScale = glowIntensity / 50;
+  const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
   const [mounted, setMounted] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -328,7 +336,7 @@ export default function CoursesPage() {
                       padding: '8px 14px',
                       backgroundColor: termFilter === f.value ? 'var(--nav-active)' : 'transparent',
                       backgroundImage: termFilter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
-                      boxShadow: termFilter === f.value ? `0 0 10px ${colorPalette.accent}80` : 'none',
+                      boxShadow: termFilter === f.value ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
                     }}
                   >
                     {f.label}
@@ -396,7 +404,7 @@ export default function CoursesPage() {
                         fontSize: isMobile ? '13px' : '14px',
                         backgroundColor: termFilter === f.value ? 'var(--nav-active)' : 'transparent',
                         backgroundImage: termFilter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
-                        boxShadow: termFilter === f.value ? `0 0 10px ${colorPalette.accent}80` : 'none',
+                        boxShadow: termFilter === f.value ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
                       }}
                     >
                       {f.label}

@@ -94,6 +94,10 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.notifyAnnouncements !== undefined) updateData.notifyAnnouncements = data.notifyAnnouncements;
     if (data.notifyExamReminders !== undefined) updateData.notifyExamReminders = data.notifyExamReminders;
     if (data.notifyAccountAlerts !== undefined) updateData.notifyAccountAlerts = data.notifyAccountAlerts;
+    if (data.useCustomTheme !== undefined) updateData.useCustomTheme = data.useCustomTheme;
+    if (data.customColors !== undefined) updateData.customColors = data.customColors;
+    if (data.gradientIntensity !== undefined) updateData.gradientIntensity = data.gradientIntensity;
+    if (data.glowIntensity !== undefined) updateData.glowIntensity = data.glowIntensity;
 
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 

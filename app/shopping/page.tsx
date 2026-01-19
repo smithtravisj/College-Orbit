@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { getCollegeColorPalette } from '@/lib/collegeColors';
+import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
@@ -33,7 +33,15 @@ export default function ShoppingPage() {
   const isMobile = useIsMobile();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const useCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const customColors = useAppStore((state) => state.settings.customColors);
+  const glowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
   const colorPalette = getCollegeColorPalette(university || null, theme);
+  const accentColor = useCustomTheme && customColors
+    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
+    : colorPalette.accent;
+  const glowScale = glowIntensity / 50;
+  const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<ShoppingListType>(() => {
     // Initialize from localStorage if available (client-side only)
@@ -391,7 +399,7 @@ export default function ShoppingPage() {
                   fontSize: isMobile ? '12px' : '14px',
                   backgroundColor: isActive ? 'var(--nav-active)' : 'transparent',
                   backgroundImage: isActive ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
-                  boxShadow: isActive ? `0 0 10px ${colorPalette.accent}80` : 'none',
+                  boxShadow: isActive ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
                   color: isActive ? 'var(--text)' : 'var(--text-muted)',
                 }}
               >

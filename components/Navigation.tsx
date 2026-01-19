@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import useAppStore from '@/lib/store';
 import { getAppTitle } from '@/lib/universityTitles';
-import { getCollegeColorPalette } from '@/lib/collegeColors';
+import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import NotificationBell from '@/components/NotificationBell';
 import { DEFAULT_VISIBLE_PAGES } from '@/lib/customizationConstants';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -50,9 +50,30 @@ export default function Navigation() {
   const { data: session, status: sessionStatus } = useSession();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const useCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const customColors = useAppStore((state) => state.settings.customColors);
+  const gradientIntensity = useAppStore((state) => state.settings.gradientIntensity) ?? 50;
+  const glowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
 
   // Get college color palette for theming
   const colorPalette = getCollegeColorPalette(university || null, theme);
+
+  // Get accent color (custom or college)
+  const accentColor = useCustomTheme && customColors
+    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
+    : colorPalette.accent;
+
+  // Calculate intensity scales - use quadratic scaling so 50% = 1x, 100% = 4x
+  const gradientScale = Math.pow(gradientIntensity / 50, 2);
+  const glowScale = glowIntensity / 50;
+  const glowOpacity = Math.min(255, Math.round(0.75 * glowScale * 255)).toString(16).padStart(2, '0'); // BF at 50%, capped at FF
+
+  // Compute gradient values (0.08/0.12 at 50%, 0.32/0.48 at 100%)
+  const gradientLightOpacity = Math.round(0.08 * gradientScale * 100) / 100;
+  const gradientDarkOpacity = Math.round(0.12 * gradientScale * 100) / 100;
+  const activeGradient = gradientIntensity > 0
+    ? `linear-gradient(135deg, rgba(255,255,255,${gradientLightOpacity}) 0%, transparent 50%, rgba(0,0,0,${gradientDarkOpacity}) 100%)`
+    : 'none';
   const rawVisiblePages = useAppStore((state) => state.settings.visiblePages || DEFAULT_VISIBLE_PAGES);
   const rawVisiblePagesOrder = useAppStore((state) => state.settings.visiblePagesOrder);
   // Migrate "Deadlines" to "Assignments"
@@ -255,10 +276,10 @@ export default function Navigation() {
                   padding: '0 11px',
                   backgroundColor: isActive ? 'var(--nav-active)' : 'transparent',
                   backgroundImage: isActive
-                    ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                    ? activeGradient
                     : 'none',
                   boxShadow: isActive
-                    ? `0 0 10px ${colorPalette.accent}BF`
+                    ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`
                     : undefined,
                 }}
               >
@@ -284,10 +305,10 @@ export default function Navigation() {
                   padding: '0 11px',
                   backgroundColor: isActive ? 'var(--nav-active)' : 'transparent',
                   backgroundImage: isActive
-                    ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                    ? activeGradient
                     : 'none',
                   boxShadow: isActive
-                    ? `0 0 10px ${colorPalette.accent}BF`
+                    ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`
                     : undefined,
                 }}
               >
@@ -313,10 +334,10 @@ export default function Navigation() {
                   padding: '0 16px 0 11px',
                   backgroundColor: pathname === '/account' ? 'var(--nav-active)' : 'transparent',
                   backgroundImage: pathname === '/account'
-                    ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                    ? activeGradient
                     : 'none',
                   boxShadow: pathname === '/account'
-                    ? `0 0 10px ${colorPalette.accent}BF`
+                    ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`
                     : undefined,
                 }}
               >
@@ -369,8 +390,8 @@ export default function Navigation() {
                   href={item.href}
                   className={`${styles.drawerLink} ${isActive ? styles.active : ''}`}
                   style={isActive ? {
-                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                    boxShadow: `0 0 10px ${colorPalette.accent}BF`,
+                    backgroundImage: activeGradient,
+                    boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
                   } : undefined}
                 >
                   <Icon size={20} />
@@ -387,8 +408,8 @@ export default function Navigation() {
                   href={item.href}
                   className={`${styles.drawerLink} ${isActive ? styles.active : ''}`}
                   style={isActive ? {
-                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                    boxShadow: `0 0 10px ${colorPalette.accent}BF`,
+                    backgroundImage: activeGradient,
+                    boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
                   } : undefined}
                 >
                   <Icon size={20} />
@@ -405,8 +426,8 @@ export default function Navigation() {
                 href="/account"
                 className={`${styles.drawerLink} ${pathname === '/account' ? styles.active : ''}`}
                 style={pathname === '/account' ? {
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                  boxShadow: `0 0 10px ${colorPalette.accent}BF`,
+                  backgroundImage: activeGradient,
+                  boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
                 } : undefined}
               >
                 <User size={20} />

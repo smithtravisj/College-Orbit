@@ -113,6 +113,7 @@ export default function PremiumGate({ children, feature }: PremiumGateProps) {
                 'File uploads',
                 'Recurring items',
                 'All Tools',
+                'Custom themes',
               ].map((item) => (
                 <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1 }}>
                   <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'var(--text-muted)', flexShrink: 0 }} />

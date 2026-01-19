@@ -353,6 +353,10 @@ model Settings {
   notifyAnnouncements    Boolean  @default(true)
   notifyExamReminders    Boolean  @default(true)
   notifyAccountAlerts    Boolean  @default(true)
+  useCustomTheme         Boolean  @default(false)
+  customColors           Json?
+  gradientIntensity      Int      @default(50)
+  glowIntensity          Int      @default(50)
   user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
