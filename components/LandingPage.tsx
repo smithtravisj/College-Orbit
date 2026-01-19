@@ -21,7 +21,7 @@ const coreFeatures = [
   {
     icon: Calendar,
     title: 'Course Management',
-    description: 'Track your classes with meeting times, locations, instructor info, quick links, and auto-organized note folders.',
+    description: 'Track your classes with meeting times, locations, instructor info, and quick links to syllabi and resources.',
   },
   {
     icon: CheckSquare,
