@@ -24,8 +24,10 @@ export const GET = withRateLimit(async function(request: NextRequest) {
         folder: { select: { id: true, name: true } },
         task: { select: { id: true, title: true } },
         deadline: { select: { id: true, title: true } },
+        exam: { select: { id: true, title: true } },
         recurringTaskPattern: { select: { id: true, taskTemplate: true } },
         recurringDeadlinePattern: { select: { id: true, deadlineTemplate: true } },
+        recurringExamPattern: { select: { id: true, examTemplate: true } },
       },
       orderBy: [{ isPinned: 'desc' }, { updatedAt: 'desc' }],
     });
@@ -92,6 +94,18 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         return NextResponse.json({ error: 'Recurring assignment pattern not found' }, { status: 400 });
       }
     }
+    if (data.examId) {
+      const exam = await prisma.exam.findFirst({ where: { id: data.examId, userId: token.id } });
+      if (!exam) {
+        return NextResponse.json({ error: 'Exam not found' }, { status: 400 });
+      }
+    }
+    if (data.recurringExamPatternId) {
+      const pattern = await prisma.recurringExamPattern.findFirst({ where: { id: data.recurringExamPatternId, userId: token.id } });
+      if (!pattern) {
+        return NextResponse.json({ error: 'Recurring exam pattern not found' }, { status: 400 });
+      }
+    }
 
     // Extract plain text from rich text content for search
     const plainText = extractPlainText(data.content);
@@ -106,8 +120,10 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         courseId: data.courseId || null,
         taskId: data.taskId || null,
         deadlineId: data.deadlineId || null,
+        examId: data.examId || null,
         recurringTaskPatternId: data.recurringTaskPatternId || null,
         recurringDeadlinePatternId: data.recurringDeadlinePatternId || null,
+        recurringExamPatternId: data.recurringExamPatternId || null,
         tags: data.tags || [],
         isPinned: data.isPinned || false,
         links: (data.links || [])
@@ -122,8 +138,10 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         folder: { select: { id: true, name: true } },
         task: { select: { id: true, title: true } },
         deadline: { select: { id: true, title: true } },
+        exam: { select: { id: true, title: true } },
         recurringTaskPattern: { select: { id: true, taskTemplate: true } },
         recurringDeadlinePattern: { select: { id: true, deadlineTemplate: true } },
+        recurringExamPattern: { select: { id: true, examTemplate: true } },
       },
     });
 

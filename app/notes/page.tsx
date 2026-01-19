@@ -13,7 +13,7 @@ import RichTextEditor from '@/components/RichTextEditor';
 import FolderTree from '@/components/notes/FolderTree';
 import TagInput from '@/components/notes/TagInput';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
-import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown, Crown, Save } from 'lucide-react';
+import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown, Crown, Save, CheckSquare, FileText, BookOpen } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { FREE_TIER_LIMITS } from '@/lib/subscription';
@@ -50,14 +50,16 @@ export default function NotesPage() {
     courseId: '',
     taskId: '',
     deadlineId: '',
+    examId: '',
     recurringTaskPatternId: '',
     recurringDeadlinePatternId: '',
+    recurringExamPatternId: '',
     tags: [] as string[],
     links: [{ label: '', url: '' }],
   });
   const [nlpInput, setNlpInput] = useState('');
 
-  const { courses, notes, folders, tasks, deadlines, settings, addNote, updateNote, deleteNote, toggleNotePin, initializeStore, updateSettings } = useAppStore();
+  const { courses, notes, folders, tasks, deadlines, exams, settings, addNote, updateNote, deleteNote, toggleNotePin, initializeStore, updateSettings } = useAppStore();
 
   useEffect(() => {
     initializeStore();
@@ -113,8 +115,10 @@ export default function NotesPage() {
         courseId: formData.courseId || null,
         taskId: formData.taskId || null,
         deadlineId: formData.deadlineId || null,
+        examId: formData.examId || null,
         recurringTaskPatternId: formData.recurringTaskPatternId || null,
         recurringDeadlinePatternId: formData.recurringDeadlinePatternId || null,
+        recurringExamPatternId: formData.recurringExamPatternId || null,
         tags: formData.tags,
         links,
       });
@@ -129,8 +133,10 @@ export default function NotesPage() {
           courseId: formData.courseId || null,
           taskId: formData.taskId || null,
           deadlineId: formData.deadlineId || null,
+          examId: formData.examId || null,
           recurringTaskPatternId: formData.recurringTaskPatternId || null,
           recurringDeadlinePatternId: formData.recurringDeadlinePatternId || null,
+          recurringExamPatternId: formData.recurringExamPatternId || null,
           tags: formData.tags,
           isPinned: false,
           links,
@@ -159,8 +165,10 @@ export default function NotesPage() {
       courseId: note.courseId || '',
       taskId: note.taskId || '',
       deadlineId: note.deadlineId || '',
+      examId: note.examId || '',
       recurringTaskPatternId: note.recurringTaskPatternId || '',
       recurringDeadlinePatternId: note.recurringDeadlinePatternId || '',
+      recurringExamPatternId: note.recurringExamPatternId || '',
       tags: note.tags || [],
       links: note.links && note.links.length > 0 ? note.links : [{ label: '', url: '' }],
     });
@@ -177,8 +185,10 @@ export default function NotesPage() {
       courseId: '',
       taskId: '',
       deadlineId: '',
+      examId: '',
       recurringTaskPatternId: '',
       recurringDeadlinePatternId: '',
+      recurringExamPatternId: '',
       tags: [],
       links: [{ label: '', url: '' }],
     });
@@ -619,8 +629,8 @@ export default function NotesPage() {
                     />
                   </div>
 
-                  {/* Link to Task or Assignment */}
-                  <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 gap-4'}`} style={{ marginTop: isMobile ? '8px' : '16px' }}>
+                  {/* Link to Task, Assignment, or Exam */}
+                  <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-3 gap-4'}`} style={{ marginTop: isMobile ? '8px' : '16px' }}>
                     <Select
                       label="Link to Task"
                       value={formData.recurringTaskPatternId ? `pattern:${formData.recurringTaskPatternId}` : (formData.taskId ? `task:${formData.taskId}` : '')}
@@ -687,6 +697,44 @@ export default function NotesPage() {
                               const existing = patternMap.get(d.recurringPatternId!);
                               if (!existing || (d.dueAt && existing.dueAt && new Date(d.dueAt) < new Date(existing.dueAt))) {
                                 patternMap.set(d.recurringPatternId!, { title: d.title, dueAt: d.dueAt });
+                              }
+                            });
+                          const recurring = Array.from(patternMap.entries()).map(([patternId, { title }]) => ({
+                            value: `pattern:${patternId}`,
+                            label: `${title} (recurring)`,
+                          }));
+                          return [...nonRecurring, ...recurring];
+                        })(),
+                      ]}
+                    />
+                    <Select
+                      label="Link to Exam"
+                      value={formData.recurringExamPatternId ? `pattern:${formData.recurringExamPatternId}` : (formData.examId ? `exam:${formData.examId}` : '')}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (!val) {
+                          setFormData({ ...formData, examId: '', recurringExamPatternId: '' });
+                        } else if (val.startsWith('pattern:')) {
+                          setFormData({ ...formData, examId: '', recurringExamPatternId: val.replace('pattern:', '') });
+                        } else if (val.startsWith('exam:')) {
+                          setFormData({ ...formData, examId: val.replace('exam:', ''), recurringExamPatternId: '' });
+                        }
+                      }}
+                      options={[
+                        { value: '', label: 'No Exam' },
+                        ...(() => {
+                          // Get non-recurring exams
+                          const nonRecurring = exams
+                            .filter((e) => e.status === 'scheduled' && !e.recurringPatternId)
+                            .map((e) => ({ value: `exam:${e.id}`, label: e.title }));
+                          // Get one exam per recurring pattern (earliest scheduled instance)
+                          const patternMap = new Map<string, { title: string; examAt: string | null }>();
+                          exams
+                            .filter((e) => e.status === 'scheduled' && e.recurringPatternId)
+                            .forEach((e) => {
+                              const existing = patternMap.get(e.recurringPatternId!);
+                              if (!existing || (e.examAt && existing.examAt && new Date(e.examAt) < new Date(existing.examAt))) {
+                                patternMap.set(e.recurringPatternId!, { title: e.title, examAt: e.examAt });
                               }
                             });
                           const recurring = Array.from(patternMap.entries()).map(([patternId, { title }]) => ({
@@ -803,6 +851,57 @@ export default function NotesPage() {
                           {tag}
                         </span>
                       ))}
+                    </div>
+                  )}
+
+                  {/* Linked Items */}
+                  {(selectedNote.task || selectedNote.deadline || selectedNote.exam || selectedNote.recurringTaskPattern || selectedNote.recurringDeadlinePattern || selectedNote.recurringExamPattern) && (
+                    <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                      <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '8px' }}>Linked To</h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {(selectedNote.task || selectedNote.recurringTaskPattern) && (
+                          <Link
+                            href={`/tasks?task=${selectedNote.taskId || ''}`}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--link)', textDecoration: 'none' }}
+                            onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                            onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                          >
+                            <CheckSquare size={16} />
+                            <span>
+                              {selectedNote.task?.title || (selectedNote.recurringTaskPattern?.taskTemplate as any)?.title || 'Task'}
+                              {selectedNote.recurringTaskPattern && ' (recurring)'}
+                            </span>
+                          </Link>
+                        )}
+                        {(selectedNote.deadline || selectedNote.recurringDeadlinePattern) && (
+                          <Link
+                            href={`/deadlines?deadline=${selectedNote.deadlineId || ''}`}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--link)', textDecoration: 'none' }}
+                            onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                            onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                          >
+                            <FileText size={16} />
+                            <span>
+                              {selectedNote.deadline?.title || (selectedNote.recurringDeadlinePattern?.deadlineTemplate as any)?.title || 'Assignment'}
+                              {selectedNote.recurringDeadlinePattern && ' (recurring)'}
+                            </span>
+                          </Link>
+                        )}
+                        {(selectedNote.exam || selectedNote.recurringExamPattern) && (
+                          <Link
+                            href={`/exams?exam=${selectedNote.examId || ''}`}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--link)', textDecoration: 'none' }}
+                            onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                            onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                          >
+                            <BookOpen size={16} />
+                            <span>
+                              {selectedNote.exam?.title || (selectedNote.recurringExamPattern?.examTemplate as any)?.title || 'Exam'}
+                              {selectedNote.recurringExamPattern && ' (recurring)'}
+                            </span>
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   )}
 

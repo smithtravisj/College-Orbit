@@ -24,8 +24,10 @@ export async function GET(
         folder: { select: { id: true, name: true } },
         task: { select: { id: true, title: true } },
         deadline: { select: { id: true, title: true } },
+        exam: { select: { id: true, title: true } },
         recurringTaskPattern: { select: { id: true, taskTemplate: true } },
         recurringDeadlinePattern: { select: { id: true, deadlineTemplate: true } },
+        recurringExamPattern: { select: { id: true, examTemplate: true } },
       },
     });
 
@@ -80,8 +82,10 @@ export async function PATCH(
         courseId: 'courseId' in data ? data.courseId : existingNote.courseId,
         taskId: 'taskId' in data ? data.taskId : existingNote.taskId,
         deadlineId: 'deadlineId' in data ? data.deadlineId : existingNote.deadlineId,
+        examId: 'examId' in data ? data.examId : existingNote.examId,
         recurringTaskPatternId: 'recurringTaskPatternId' in data ? data.recurringTaskPatternId : existingNote.recurringTaskPatternId,
         recurringDeadlinePatternId: 'recurringDeadlinePatternId' in data ? data.recurringDeadlinePatternId : existingNote.recurringDeadlinePatternId,
+        recurringExamPatternId: 'recurringExamPatternId' in data ? data.recurringExamPatternId : existingNote.recurringExamPatternId,
         tags: 'tags' in data ? data.tags : existingNote.tags,
         isPinned: 'isPinned' in data ? data.isPinned : existingNote.isPinned,
         links:
@@ -99,8 +103,10 @@ export async function PATCH(
         folder: { select: { id: true, name: true } },
         task: { select: { id: true, title: true } },
         deadline: { select: { id: true, title: true } },
+        exam: { select: { id: true, title: true } },
         recurringTaskPattern: { select: { id: true, taskTemplate: true } },
         recurringDeadlinePattern: { select: { id: true, deadlineTemplate: true } },
+        recurringExamPattern: { select: { id: true, examTemplate: true } },
       },
     });
 
