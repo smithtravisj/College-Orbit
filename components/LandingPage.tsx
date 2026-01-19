@@ -21,22 +21,22 @@ const coreFeatures = [
   {
     icon: Calendar,
     title: 'Course Management',
-    description: 'Track your classes with meeting times, locations, instructor info, and quick links to syllabi and resources.',
+    description: 'Track your classes with meeting times, locations, color tags, and quick links to course resources.',
   },
   {
     icon: CheckSquare,
     title: 'Tasks & Assignments',
-    description: 'Manage tasks and assignments with priorities, tags, file attachments, linked notes, and automatic recurring schedules.',
+    description: 'Manage tasks and assignments with priorities, checklists, tags, and links to notes and files.',
   },
   {
     icon: CalendarDays,
-    title: 'Weekly Calendar',
-    description: 'See your entire week at a glance. Classes, exams, assignments, and tasks all in one unified view.',
+    title: 'Calendar',
+    description: 'See your schedule with month, week, and day views. Classes, exams, deadlines, and tasks in one place.',
   },
   {
     icon: BookOpen,
     title: 'Exam Tracker',
-    description: 'Never miss an exam. Track dates, times, locations, and add study notes for each test.',
+    description: 'Never miss an exam. Track dates, times, locations, and add notes for each test.',
   },
 ];
 
@@ -44,22 +44,22 @@ const secondaryFeatures = [
   {
     icon: Target,
     title: 'Due Soon Dashboard',
-    description: 'See everything coming up this week on your personalized dashboard at a glance.',
+    description: 'See upcoming deadlines, tasks, and exams on your personalized dashboard.',
   },
   {
     icon: Repeat,
     title: 'Recurring Items',
-    description: 'Set up weekly readings, regular assignments, or daily tasks that repeat automatically.',
+    description: 'Set up recurring tasks, assignments, or exams that repeat daily, weekly, or on custom schedules.',
   },
   {
     icon: FileText,
     title: 'Rich Notes',
-    description: 'Full-featured note editor with markdown support, folders by course, and direct links to tasks and assignments.',
+    description: 'Rich text editor with formatting, folders, course organization, and links to tasks and assignments.',
   },
   {
     icon: BarChart3,
     title: 'GPA Calculator',
-    description: 'Track grades across semesters with what-if projections to plan your academic path.',
+    description: 'Track your grades by semester and calculate your GPA automatically.',
   },
   {
     icon: Clock,
@@ -73,13 +73,13 @@ const secondaryFeatures = [
   },
   {
     icon: ShoppingCart,
-    title: 'Shopping List',
-    description: 'Keep track of textbooks, supplies, and everything else you need for the semester.',
+    title: 'Shopping Lists',
+    description: 'Track groceries, wishlists, and pantry items with categories and quantities.',
   },
   {
     icon: Palette,
     title: 'University Themes',
-    description: 'Personalize with your school\'s colors. BYU, Utah State, ASU, and more supported.',
+    description: 'Personalize with your school\'s colors or create your own custom theme.',
   },
 ];
 
