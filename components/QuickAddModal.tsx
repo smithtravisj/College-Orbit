@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { X, Sparkles } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import useAppStore from '@/lib/store';
@@ -42,8 +43,19 @@ const QUICK_INPUT_PLACEHOLDERS: Record<QuickAddType, string> = {
   shopping: 'e.g. 2 gallons milk',
 };
 
+// Map pathname to QuickAddType
+const getTypeFromPathname = (pathname: string): QuickAddType | null => {
+  if (pathname === '/tasks') return 'task';
+  if (pathname === '/deadlines') return 'assignment';
+  if (pathname === '/exams') return 'exam';
+  if (pathname === '/notes') return 'note';
+  if (pathname === '/courses') return 'course';
+  return null; // Return null for other pages to keep the last selected type
+};
+
 export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
   const isMobile = useIsMobile();
+  const pathname = usePathname();
   const [selectedType, setSelectedType] = useState<QuickAddType>('task');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [quickInput, setQuickInput] = useState('');
@@ -83,12 +95,17 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
     ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
     : getCollegeColorPalette(university, theme).accent;
 
-  // Reset form when modal opens
+  // Reset form and set type based on current page when modal opens
   useEffect(() => {
     if (isOpen) {
       resetForm();
+      // Set type based on current page, or keep last selected type for other pages
+      const pageType = getTypeFromPathname(pathname);
+      if (pageType) {
+        setSelectedType(pageType);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, pathname]);
 
   const resetForm = () => {
     setQuickInput('');
