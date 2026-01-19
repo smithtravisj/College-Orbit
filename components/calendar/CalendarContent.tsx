@@ -71,7 +71,17 @@ export default function CalendarContent() {
   const hasFilteredRef = useRef(false);
   const cacheLoadedRef = useRef(false);
 
-  const { courses, tasks, deadlines, exams, excludedDates, initializeStore } = useAppStore();
+  const { courses, tasks, deadlines, exams, excludedDates, calendarEvents: storeCalendarEvents, initializeStore } = useAppStore();
+
+  // Initialize calendar events from store immediately (store loads from localStorage on startup)
+  // This provides instant data while fresh data is fetched in the background
+  const storeEventsInitialized = useRef(false);
+  useEffect(() => {
+    if (storeCalendarEvents.length > 0 && !storeEventsInitialized.current) {
+      setCalendarEvents(storeCalendarEvents);
+      storeEventsInitialized.current = true;
+    }
+  }, [storeCalendarEvents]);
 
   // Load from localStorage cache and fetch fresh data in background
   useEffect(() => {
