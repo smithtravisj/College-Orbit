@@ -12,6 +12,7 @@ import { useAnalyticsPageView } from '@/lib/useAnalytics';
 import useAppStore from '@/lib/store';
 import styles from './LayoutWrapper.module.css';
 import BackgroundDecoration from './BackgroundDecoration';
+import KeyboardShortcutsProvider from './KeyboardShortcutsProvider';
 
 export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -114,7 +115,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   // Mobile layout with header
   if (isMobile) {
     return (
-      <>
+      <KeyboardShortcutsProvider>
         <BackgroundDecoration />
         <MobileHeader />
         <Navigation />
@@ -123,19 +124,21 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
         <main className={styles.mobileMain}>
           {children}
         </main>
-      </>
+      </KeyboardShortcutsProvider>
     );
   }
 
   // Desktop layout with floating sidebar
   return (
-    <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg)' }}>
-      <BackgroundDecoration />
-      <Navigation />
-      <QuickAddButton />
-      <main style={{ marginLeft: '224px', minWidth: 0 }}>
-        {children}
-      </main>
-    </div>
+    <KeyboardShortcutsProvider>
+      <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg)' }}>
+        <BackgroundDecoration />
+        <Navigation />
+        <QuickAddButton />
+        <main style={{ marginLeft: '224px', minWidth: 0 }}>
+          {children}
+        </main>
+      </div>
+    </KeyboardShortcutsProvider>
   );
 }
