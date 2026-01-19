@@ -1,6 +1,9 @@
+'use client';
+
 import React from 'react';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
@@ -14,23 +17,28 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = 'primary', size = 'md', disabled = false, loading = false, className = '', style, children, ...props }, ref) => {
     // Get settings - use a single selector to avoid multiple subscriptions
     const settings = useAppStore((state) => state.settings);
+    const { isPremium } = useSubscription();
 
     const theme = settings.theme || 'dark';
     const isLightMode = theme === 'light';
     const colorPalette = getCollegeColorPalette(settings.university || null, theme);
 
+    // Custom theme and visual effects are only active for premium users
+    const useCustomTheme = isPremium ? settings.useCustomTheme : false;
+    const customColors = isPremium ? settings.customColors : null;
+
     // Compute accent color (text color uses theme defaults)
     let accentColor = colorPalette.accent;
     const accentTextColor = isLightMode ? '#000000' : '#ffffff';
 
-    if (settings.useCustomTheme && settings.customColors) {
-      const colorSet = getCustomColorSetForTheme(settings.customColors as CustomColors, theme);
+    if (useCustomTheme && customColors) {
+      const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
       accentColor = colorSet.accent;
     }
 
-    // Get intensity settings (0-100, default 50)
-    const gradientIntensity = settings.gradientIntensity ?? 50;
-    const glowIntensity = settings.glowIntensity ?? 50;
+    // Get intensity settings (0-100, default 50) - only for premium users
+    const gradientIntensity = isPremium ? (settings.gradientIntensity ?? 50) : 50;
+    const glowIntensity = isPremium ? (settings.glowIntensity ?? 50) : 50;
 
     const baseStyles = 'inline-flex items-center justify-center gap-2 font-medium transition active:translate-y-[1px] disabled:opacity-50 disabled:pointer-events-none';
 

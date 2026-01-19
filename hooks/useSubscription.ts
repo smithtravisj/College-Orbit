@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import useAppStore from '@/lib/store';
 
 export interface ClientSubscriptionStatus {
   tier: 'trial' | 'free' | 'premium';
@@ -48,6 +49,14 @@ export function useSubscription(): ClientSubscriptionStatus & { refresh: () => P
   useEffect(() => {
     fetchStatus();
   }, [fetchStatus]);
+
+  // Sync premium status to store for color application logic
+  const setIsPremium = useAppStore((state) => state.setIsPremium);
+  useEffect(() => {
+    if (!status.isLoading) {
+      setIsPremium(status.isPremium);
+    }
+  }, [status.isPremium, status.isLoading, setIsPremium]);
 
   // Listen for subscription changes (e.g., after successful checkout)
   useEffect(() => {

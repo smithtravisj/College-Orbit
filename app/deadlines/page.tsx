@@ -80,9 +80,15 @@ export default function DeadlinesPage() {
   const [mounted, setMounted] = useState(false);
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
-  const useCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
-  const customColors = useAppStore((state) => state.settings.customColors);
-  const glowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
+  const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const savedCustomColors = useAppStore((state) => state.settings.customColors);
+  const savedGlowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
+
+  // Custom theme and visual effects are only active for premium users
+  const useCustomTheme = subscription.isPremium ? savedUseCustomTheme : false;
+  const customColors = subscription.isPremium ? savedCustomColors : null;
+  const glowIntensity = subscription.isPremium ? savedGlowIntensity : 50;
+
   const colorPalette = getCollegeColorPalette(university || null, theme);
   const accentColor = useCustomTheme && customColors
     ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent

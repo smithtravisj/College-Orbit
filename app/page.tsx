@@ -10,6 +10,7 @@ import { getQuickLinks } from '@/lib/quickLinks';
 import { getDashboardCardSpan } from '@/lib/dashboardLayout';
 import { DASHBOARD_CARDS, DEFAULT_VISIBLE_DASHBOARD_CARDS } from '@/lib/customizationConstants';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
@@ -85,7 +86,10 @@ function Dashboard() {
     links: [{ label: '', url: '' }],
   });
   const { courses, deadlines, tasks, exams, settings, excludedDates, calendarEvents, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone, updateDeadline, deleteDeadline } = useAppStore();
-  const visibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
+  const { isPremium } = useSubscription();
+  // Dashboard card visibility is only customizable for premium users - free users see defaults
+  const savedVisibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
+  const visibleDashboardCards = isPremium ? savedVisibleDashboardCards : DEFAULT_VISIBLE_DASHBOARD_CARDS;
   const isMobile = useIsMobile();
 
   // Handle card collapse state changes and save to database

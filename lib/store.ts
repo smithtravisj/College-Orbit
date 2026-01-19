@@ -43,8 +43,10 @@ interface AppStore {
   calendarEvents: CalendarEvent[];
   loading: boolean;
   userId: string | null;
+  isPremium: boolean; // Track premium status for color application
 
   // Initialization
+  setIsPremium: (isPremium: boolean) => void;
   initializeStore: () => Promise<void>;
   loadFromDatabase: () => Promise<void>;
   loadFromStorage: () => boolean;
@@ -165,6 +167,30 @@ const useAppStore = create<AppStore>((set, get) => ({
   calendarEvents: [],
   loading: false,
   userId: null,
+  isPremium: false,
+
+  setIsPremium: (isPremium: boolean) => {
+    const prevIsPremium = get().isPremium;
+    set({ isPremium });
+
+    // Re-apply colors when premium status changes
+    if (prevIsPremium !== isPremium && typeof window !== 'undefined') {
+      const { settings } = get();
+      const theme = settings.theme || 'dark';
+      const useCustomTheme = settings.useCustomTheme;
+      const customColors = settings.customColors;
+
+      // Only apply custom colors if premium AND custom theme enabled
+      if (isPremium && useCustomTheme && customColors) {
+        const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
+        applyCustomColors(colorSet, theme);
+      } else {
+        // Apply college colors (when not premium or custom theme disabled)
+        const palette = getCollegeColorPalette(settings.university || null, theme);
+        applyColorPalette(palette);
+      }
+    }
+  },
 
   setUserId: (userId: string) => {
     set({ userId });
@@ -261,10 +287,11 @@ const useAppStore = create<AppStore>((set, get) => ({
         ? JSON.parse(rawSettings.visibleToolsCards)
         : rawSettings?.visibleToolsCards;
 
-      // Merge saved settings with defaults to include new cards
+      // Use saved settings directly - don't merge with defaults for visiblePages
+      // as that would add back pages the user explicitly hid
       const parsedSettings = {
         ...rawSettings,
-        visiblePages: savedVisiblePages ? [...new Set([...DEFAULT_VISIBLE_PAGES, ...savedVisiblePages])] : DEFAULT_VISIBLE_PAGES,
+        visiblePages: savedVisiblePages || DEFAULT_VISIBLE_PAGES,
         visibleDashboardCards: savedVisibleDashboardCards ? [...new Set([...DEFAULT_VISIBLE_DASHBOARD_CARDS, ...savedVisibleDashboardCards])] : DEFAULT_VISIBLE_DASHBOARD_CARDS,
         visibleToolsCards: savedVisibleToolsCards ? [...new Set([...DEFAULT_VISIBLE_TOOLS_CARDS, ...savedVisibleToolsCards])] : DEFAULT_VISIBLE_TOOLS_CARDS,
       };
@@ -291,16 +318,18 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       // Apply colors based on loaded settings
       if (typeof window !== 'undefined') {
+        const { isPremium } = get();
         const theme = newData.settings?.theme || 'dark';
         const useCustomTheme = newData.settings?.useCustomTheme || false;
         const customColors = newData.settings?.customColors;
 
-        if (useCustomTheme && customColors) {
+        // Only apply custom colors if premium AND custom theme enabled
+        if (isPremium && useCustomTheme && customColors) {
           // Apply custom colors for the current theme
           const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
           applyCustomColors(colorSet, theme);
         } else {
-          // Apply college colors
+          // Apply college colors (when not premium or custom theme disabled)
           const palette = getCollegeColorPalette(
             newData.settings?.university || null,
             theme
@@ -355,16 +384,18 @@ const useAppStore = create<AppStore>((set, get) => ({
           calendarEvents: data.calendarEvents || [],
         });
         // Apply colors based on loaded settings
+        const { isPremium } = get();
         const theme = settings.theme || 'dark';
         const useCustomTheme = settings.useCustomTheme || false;
         const customColors = settings.customColors;
 
-        if (useCustomTheme && customColors) {
+        // Only apply custom colors if premium AND custom theme enabled
+        if (isPremium && useCustomTheme && customColors) {
           // Apply custom colors for the current theme
           const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
           applyCustomColors(colorSet, theme);
         } else {
-          // Apply college colors
+          // Apply college colors (when not premium or custom theme disabled)
           const palette = getCollegeColorPalette(
             settings.university || null,
             theme
@@ -1653,16 +1684,18 @@ const useAppStore = create<AppStore>((set, get) => ({
       if ((settings.university !== undefined || settings.theme !== undefined ||
            settings.useCustomTheme !== undefined || settings.customColors !== undefined) && typeof window !== 'undefined') {
         const currentState = get().settings;
+        const { isPremium } = get();
         const newTheme = settings.theme !== undefined ? settings.theme : (currentState.theme || 'dark');
         const newUseCustomTheme = settings.useCustomTheme !== undefined ? settings.useCustomTheme : (currentState.useCustomTheme || false);
         const newCustomColors = settings.customColors !== undefined ? settings.customColors : currentState.customColors;
 
-        if (newUseCustomTheme && newCustomColors) {
+        // Only apply custom colors if premium AND custom theme enabled
+        if (isPremium && newUseCustomTheme && newCustomColors) {
           // Apply custom colors for the current theme
           const colorSet = getCustomColorSetForTheme(newCustomColors as CustomColors, newTheme);
           applyCustomColors(colorSet, newTheme);
         } else {
-          // Apply college colors
+          // Apply college colors (when not premium or custom theme disabled)
           const palette = getCollegeColorPalette(
             settings.university !== undefined ? settings.university : (currentState.university || null),
             newTheme
