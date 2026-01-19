@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData, ShoppingItem, ShoppingListType, CalendarEvent } from '@/types';
-import { applyColorPalette, getCollegeColorPalette, applyCustomColors, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { applyColorPalette, getCollegeColorPalette, applyCustomColors, getCustomColorSetForTheme, CustomColors, setDatabaseColleges, DatabaseCollege } from '@/lib/collegeColors';
 import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
 const DEFAULT_SETTINGS: Settings = {
@@ -41,6 +41,7 @@ interface AppStore {
   recurringExamPatterns: RecurringExamPattern[];
   shoppingItems: ShoppingItem[];
   calendarEvents: CalendarEvent[];
+  colleges: DatabaseCollege[];
   loading: boolean;
   userId: string | null;
   isPremium: boolean; // Track premium status for color application
@@ -48,6 +49,7 @@ interface AppStore {
   // Initialization
   setIsPremium: (isPremium: boolean) => void;
   initializeStore: () => Promise<void>;
+  fetchColleges: () => Promise<void>;
   loadFromDatabase: () => Promise<void>;
   loadFromStorage: () => boolean;
   setUserId: (userId: string) => void;
@@ -193,9 +195,25 @@ const useAppStore = create<AppStore>((set, get) => ({
   recurringExamPatterns: [],
   shoppingItems: [],
   calendarEvents: [],
+  colleges: [],
   loading: false,
   userId: null,
   isPremium: false,
+
+  fetchColleges: async () => {
+    try {
+      const response = await fetch('/api/colleges');
+      if (response.ok) {
+        const data = await response.json();
+        const colleges = data.colleges || [];
+        set({ colleges });
+        // Update the global database colleges for color palette generation
+        setDatabaseColleges(colleges);
+      }
+    } catch (error) {
+      console.error('Error fetching colleges:', error);
+    }
+  },
 
   setIsPremium: (isPremium: boolean) => {
     const prevIsPremium = get().isPremium;
@@ -261,6 +279,9 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   initializeStore: async () => {
+    // Fetch colleges early for color palette support
+    await get().fetchColleges();
+
     // Step 1: Load from localStorage immediately for instant UI
     const hasLocalData = get().loadFromStorage();
 

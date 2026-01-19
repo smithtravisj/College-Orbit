@@ -146,9 +146,23 @@ export const universityLinks: Record<string, Array<{ label: string; url: string 
   ],
 };
 
+import { getDatabaseCollege } from './collegeColors';
+
 export function getQuickLinks(university: string | null | undefined): Array<{ label: string; url: string }> {
-  if (!university || !universityLinks[university]) {
+  if (!university) {
     return [];
   }
-  return universityLinks[university];
+
+  // Check database colleges first
+  const dbCollege = getDatabaseCollege(university);
+  if (dbCollege && dbCollege.quickLinks && dbCollege.quickLinks.length > 0) {
+    return dbCollege.quickLinks;
+  }
+
+  // Fallback to hardcoded links
+  if (universityLinks[university]) {
+    return universityLinks[university];
+  }
+
+  return [];
 }

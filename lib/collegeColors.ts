@@ -3,6 +3,45 @@
  * Each college has a complete color theme that controls the entire app appearance
  */
 
+/**
+ * Database college interface - matches the API response
+ */
+export interface DatabaseCollege {
+  id?: string;
+  fullName: string;
+  acronym: string;
+  darkAccent: string;
+  darkLink: string;
+  lightAccent: string;
+  lightLink: string;
+  quickLinks: Array<{ label: string; url: string }>;
+}
+
+// Global cache for database colleges
+let databaseColleges: DatabaseCollege[] = [];
+
+/**
+ * Set the database colleges cache
+ * Called by the store after fetching colleges from API
+ */
+export function setDatabaseColleges(colleges: DatabaseCollege[]): void {
+  databaseColleges = colleges;
+}
+
+/**
+ * Get a database college by name
+ */
+export function getDatabaseCollege(collegeName: string): DatabaseCollege | undefined {
+  return databaseColleges.find(c => c.fullName === collegeName);
+}
+
+/**
+ * Get all database colleges
+ */
+export function getAllDatabaseColleges(): DatabaseCollege[] {
+  return databaseColleges;
+}
+
 export interface ColorPalette {
   // Backgrounds
   bg: string;
@@ -138,6 +177,59 @@ export const byuColorPalette: ColorPalette = {
   editHover: "#6ab2ff", // Bright link color for better visibility
   sliderThumb: "#9a9a9a",
 };
+
+/**
+ * Generate a full ColorPalette from database college colors
+ * Uses the 4 stored colors to create a complete palette based on the default template
+ */
+export function generatePaletteFromDbColors(
+  accentColor: string,
+  linkColor: string,
+  theme: 'light' | 'dark'
+): ColorPalette {
+  const isLight = theme === 'light';
+  const basePalette = isLight ? defaultLightPalette : defaultColorPalette;
+
+  // Generate hover color (slightly darker/lighter)
+  const accentHover = adjustColorBrightness(accentColor, isLight ? -10 : -15);
+
+  return {
+    ...basePalette,
+    // Override accent colors
+    accent: accentColor,
+    accentHover: accentHover,
+    accent2: `${accentColor}26`, // 15% opacity
+    ring: `${accentColor}59`, // 35% opacity
+    buttonSecondary: accentColor,
+    navActive: accentColor,
+    borderActive: accentColor,
+    brandPrimary: accentColor,
+    focusRing: `0 0 0 3px ${accentColor}4d`, // 30% opacity
+    todayBg: `${accentColor}1f`, // 12% opacity
+    weekViewTodayDateColor: linkColor,
+    calendarCurrentDateColor: linkColor,
+    editHover: linkColor,
+    // Override link color
+    link: linkColor,
+  };
+}
+
+/**
+ * Helper function to adjust color brightness
+ * Positive amount lightens, negative darkens
+ */
+function adjustColorBrightness(hex: string, amount: number): string {
+  // Remove # if present
+  hex = hex.replace('#', '');
+
+  // Parse RGB values
+  const r = Math.max(0, Math.min(255, parseInt(hex.substring(0, 2), 16) + amount));
+  const g = Math.max(0, Math.min(255, parseInt(hex.substring(2, 4), 16) + amount));
+  const b = Math.max(0, Math.min(255, parseInt(hex.substring(4, 6), 16) + amount));
+
+  // Convert back to hex
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
 
 /**
  * Default/Neutral Color Palette - Dark greyish-blackish theme
@@ -1621,9 +1713,17 @@ export function getCollegeColorPalette(
     return isLight ? defaultLightPalette : defaultColorPalette;
   }
 
-  // Get appropriate palette based on theme
-  const darkPalette = collegeColorPalettes[collegeName] || byuColorPalette;
-  const lightPalette = collegeColorPalettesLight[collegeName] || byuLightPalette;
+  // Check database colleges first
+  const dbCollege = getDatabaseCollege(collegeName);
+  if (dbCollege) {
+    const accentColor = isLight ? dbCollege.lightAccent : dbCollege.darkAccent;
+    const linkColor = isLight ? dbCollege.lightLink : dbCollege.darkLink;
+    return generatePaletteFromDbColors(accentColor, linkColor, actualTheme as 'light' | 'dark');
+  }
+
+  // Fallback to hardcoded palettes
+  const darkPalette = collegeColorPalettes[collegeName] || defaultColorPalette;
+  const lightPalette = collegeColorPalettesLight[collegeName] || defaultLightPalette;
 
   return isLight ? lightPalette : darkPalette;
 }

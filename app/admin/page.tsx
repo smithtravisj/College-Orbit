@@ -8,7 +8,7 @@ import { collegeColorPalettes, collegeColorPalettesLight, getCollegeColorPalette
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Crown, Shield, ExternalLink } from 'lucide-react';
+import { Crown, Shield, ExternalLink, Plus, Trash2, GraduationCap } from 'lucide-react';
 
 // ==================== Types ====================
 interface AnalyticsData {
@@ -80,6 +80,23 @@ interface FeatureRequest {
   };
 }
 
+interface College {
+  id: string;
+  fullName: string;
+  acronym: string;
+  darkAccent: string;
+  darkLink: string;
+  lightAccent: string;
+  lightLink: string;
+  quickLinks: Array<{ label: string; url: string }>;
+  isActive: boolean;
+}
+
+interface QuickLinkInput {
+  label: string;
+  url: string;
+}
+
 // ==================== Color Palettes ====================
 const darkModeColors = [
   '#CC4400', '#1E40AF', '#065F46', '#7F1D1D', '#451A03',
@@ -116,7 +133,7 @@ export default function AdminPage() {
   const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
 
   // Main tab state
-  const [activeTab, setActiveTab] = useState<'analytics' | 'management'>('management');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'management' | 'addCollege'>('management');
 
   // Analytics state
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
@@ -182,6 +199,24 @@ export default function AdminPage() {
     createdAt: string;
   }>>([]);
   const [auditLogsLoading, setAuditLogsLoading] = useState(false);
+
+  // Add/Edit College state
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [addCollegeLoading, setAddCollegeLoading] = useState(false);
+  const [addCollegeMessage, setAddCollegeMessage] = useState('');
+  const [editingCollegeId, setEditingCollegeId] = useState<string | null>(null);
+  const [newCollegeName, setNewCollegeName] = useState('');
+  const [newCollegeAcronym, setNewCollegeAcronym] = useState('');
+  const [newCollegeDarkAccent, setNewCollegeDarkAccent] = useState('#002E5D');
+  const [newCollegeDarkLink, setNewCollegeDarkLink] = useState('#6ab2ff');
+  const [newCollegeLightAccent, setNewCollegeLightAccent] = useState('#6ab2ff');
+  const [newCollegeLightLink, setNewCollegeLightLink] = useState('#0035a8');
+  const [newCollegeQuickLinks, setNewCollegeQuickLinks] = useState<QuickLinkInput[]>([
+    { label: '', url: '' },
+  ]);
+  const [previewTheme, setPreviewTheme] = useState<'dark' | 'light'>('dark');
+  const [showDeleteCollegeConfirm, setShowDeleteCollegeConfirm] = useState(false);
+  const [deleteCollegeId, setDeleteCollegeId] = useState<string | null>(null);
 
   // Modals
   const [showDeleteRequestConfirm, setShowDeleteRequestConfirm] = useState(false);
@@ -323,6 +358,33 @@ export default function AdminPage() {
             setAuditLogs(auditData.logs);
           }
         }
+
+        // Fetch colleges (with cache)
+        // First load from cache for instant display
+        try {
+          const cached = localStorage.getItem('admin-colleges-cache');
+          if (cached) {
+            const { colleges: cachedColleges } = JSON.parse(cached);
+            if (cachedColleges) {
+              setColleges(cachedColleges);
+            }
+          }
+        } catch (e) {
+          // Ignore cache errors
+        }
+        // Then fetch fresh data
+        const collegesResponse = await fetch('/api/admin/colleges').catch(() => null);
+        if (collegesResponse?.ok) {
+          const collegesData = await collegesResponse.json();
+          if (collegesData.colleges) {
+            setColleges(collegesData.colleges);
+            // Update cache
+            localStorage.setItem('admin-colleges-cache', JSON.stringify({
+              colleges: collegesData.colleges,
+              timestamp: Date.now(),
+            }));
+          }
+        }
       } catch (error) {
         console.error('Error fetching admin data:', error);
       }
@@ -412,6 +474,211 @@ export default function AdminPage() {
       setGrantAdminMessage('Error: Failed to revoke admin');
       setTimeout(() => setGrantAdminMessage(''), 3000);
     }
+  };
+
+  // ==================== College Handler Functions ====================
+  const COLLEGES_CACHE_KEY = 'admin-colleges-cache';
+
+  const fetchColleges = async (skipCache = false) => {
+    // Load from cache first for instant display
+    if (!skipCache) {
+      try {
+        const cached = localStorage.getItem(COLLEGES_CACHE_KEY);
+        if (cached) {
+          const { colleges: cachedColleges, timestamp } = JSON.parse(cached);
+          // Use cache if less than 5 minutes old
+          if (Date.now() - timestamp < 5 * 60 * 1000) {
+            setColleges(cachedColleges);
+            // Still fetch fresh data in background
+            fetchColleges(true);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load colleges from cache:', e);
+      }
+    }
+
+    try {
+      const response = await fetch('/api/admin/colleges');
+      if (response.ok) {
+        const data = await response.json();
+        const collegesData = data.colleges || [];
+        setColleges(collegesData);
+        // Save to cache
+        localStorage.setItem(COLLEGES_CACHE_KEY, JSON.stringify({
+          colleges: collegesData,
+          timestamp: Date.now(),
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching colleges:', error);
+    }
+  };
+
+  // Reset form to default state
+  const resetCollegeForm = () => {
+    setEditingCollegeId(null);
+    setNewCollegeName('');
+    setNewCollegeAcronym('');
+    setNewCollegeDarkAccent('#002E5D');
+    setNewCollegeDarkLink('#6ab2ff');
+    setNewCollegeLightAccent('#6ab2ff');
+    setNewCollegeLightLink('#0035a8');
+    setNewCollegeQuickLinks([{ label: '', url: '' }]);
+  };
+
+  // Load a college into the form for editing
+  const loadCollegeForEdit = (college: College) => {
+    setEditingCollegeId(college.id);
+    setNewCollegeName(college.fullName);
+    setNewCollegeAcronym(college.acronym);
+    setNewCollegeDarkAccent(college.darkAccent);
+    setNewCollegeDarkLink(college.darkLink);
+    setNewCollegeLightAccent(college.lightAccent);
+    setNewCollegeLightLink(college.lightLink);
+    setNewCollegeQuickLinks(
+      college.quickLinks.length > 0
+        ? college.quickLinks.map(ql => ({ label: ql.label, url: ql.url }))
+        : [{ label: '', url: '' }]
+    );
+  };
+
+  const handleAddOrUpdateCollege = async () => {
+    if (!newCollegeName.trim() || !newCollegeAcronym.trim()) {
+      setAddCollegeMessage('Error: Name and acronym are required');
+      setTimeout(() => setAddCollegeMessage(''), 3000);
+      return;
+    }
+
+    setAddCollegeLoading(true);
+    setAddCollegeMessage('');
+
+    try {
+      // Filter out empty quick links
+      const validQuickLinks = newCollegeQuickLinks.filter(
+        link => link.label.trim() && link.url.trim()
+      );
+
+      const isEditing = !!editingCollegeId;
+      const response = await fetch('/api/admin/colleges', {
+        method: isEditing ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...(isEditing && { id: editingCollegeId }),
+          fullName: newCollegeName.trim(),
+          acronym: newCollegeAcronym.trim(),
+          darkAccent: newCollegeDarkAccent,
+          darkLink: newCollegeDarkLink,
+          lightAccent: newCollegeLightAccent,
+          lightLink: newCollegeLightLink,
+          quickLinks: validQuickLinks,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setAddCollegeMessage(isEditing ? 'College updated successfully!' : 'College added successfully!');
+        // Reset form
+        resetCollegeForm();
+        // Refresh colleges list
+        fetchColleges();
+        setTimeout(() => setAddCollegeMessage(''), 3000);
+      } else {
+        setAddCollegeMessage(`Error: ${data.error}`);
+        setTimeout(() => setAddCollegeMessage(''), 5000);
+      }
+    } catch (error) {
+      console.error('Error saving college:', error);
+      setAddCollegeMessage('Error: Failed to save college');
+      setTimeout(() => setAddCollegeMessage(''), 3000);
+    } finally {
+      setAddCollegeLoading(false);
+    }
+  };
+
+  // Toggle college active status
+  const handleToggleCollegeActive = async (college: College) => {
+    try {
+      const response = await fetch('/api/admin/colleges', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: college.id,
+          isActive: !college.isActive,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedColleges = colleges.map(c =>
+          c.id === college.id ? { ...c, isActive: !c.isActive } : c
+        );
+        setColleges(updatedColleges);
+        // Update cache
+        localStorage.setItem(COLLEGES_CACHE_KEY, JSON.stringify({
+          colleges: updatedColleges,
+          timestamp: Date.now(),
+        }));
+      } else {
+        alert('Failed to update college status');
+      }
+    } catch (error) {
+      console.error('Error updating college:', error);
+      alert('Failed to update college status');
+    }
+  };
+
+  // Confirm delete college
+  const confirmDeleteCollege = (collegeId: string) => {
+    setDeleteCollegeId(collegeId);
+    setShowDeleteCollegeConfirm(true);
+  };
+
+  const handleDeleteCollege = async () => {
+    if (!deleteCollegeId) return;
+
+    try {
+      const response = await fetch(`/api/admin/colleges?id=${deleteCollegeId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const updatedColleges = colleges.filter(c => c.id !== deleteCollegeId);
+        setColleges(updatedColleges);
+        // Update cache
+        localStorage.setItem(COLLEGES_CACHE_KEY, JSON.stringify({
+          colleges: updatedColleges,
+          timestamp: Date.now(),
+        }));
+        // If we were editing this college, reset the form
+        if (editingCollegeId === deleteCollegeId) {
+          resetCollegeForm();
+        }
+      } else {
+        alert('Failed to delete college');
+      }
+    } catch (error) {
+      console.error('Error deleting college:', error);
+      alert('Failed to delete college');
+    } finally {
+      setShowDeleteCollegeConfirm(false);
+      setDeleteCollegeId(null);
+    }
+  };
+
+  const addQuickLinkField = () => {
+    setNewCollegeQuickLinks([...newCollegeQuickLinks, { label: '', url: '' }]);
+  };
+
+  const removeQuickLinkField = (index: number) => {
+    setNewCollegeQuickLinks(newCollegeQuickLinks.filter((_, i) => i !== index));
+  };
+
+  const updateQuickLink = (index: number, field: 'label' | 'url', value: string) => {
+    const updated = [...newCollegeQuickLinks];
+    updated[index][field] = value;
+    setNewCollegeQuickLinks(updated);
   };
 
   // ==================== Handler Functions ====================
@@ -829,11 +1096,12 @@ export default function AdminPage() {
         <div style={{ display: 'flex', gap: '8px' }}>
           {[
             { id: 'management', label: 'Management' },
+            { id: 'addCollege', label: 'Add College' },
             { id: 'analytics', label: 'Analytics' },
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as 'analytics' | 'management')}
+              onClick={() => setActiveTab(tab.id as 'analytics' | 'management' | 'addCollege')}
               className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
                 activeTab === tab.id ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
@@ -872,7 +1140,7 @@ export default function AdminPage() {
         </div>
       ) : analytics && (
         <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
-          <div className="w-full" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--grid-gap)' }}>
+          <div className="w-full" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 'var(--grid-gap)' }}>
             {/* Summary Stats */}
             <Card title="Summary">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
@@ -1377,7 +1645,7 @@ export default function AdminPage() {
             {/* Admin Requests Card */}
             <Card title="Requests">
               {/* Tab Navigation */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
                 {[
                   { id: 'college', label: 'College Requests' },
                   { id: 'issues', label: 'Issue Reports' },
@@ -2166,7 +2434,1030 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* Add College Tab Content */}
+      {activeTab === 'addCollege' && (
+        <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 'var(--grid-gap)' }}>
+            {/* Form Section */}
+            <Card title={editingCollegeId ? 'Edit College' : 'Add New College'}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Editing indicator with clear button */}
+                {editingCollegeId && (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '10px 14px',
+                    backgroundColor: 'var(--panel-2)',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                  }}>
+                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                      Editing: <span style={{ color: 'var(--text)', fontWeight: '500' }}>{newCollegeName || 'College'}</span>
+                    </span>
+                    <button
+                      onClick={resetCollegeForm}
+                      style={{
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        backgroundColor: 'var(--panel)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '6px',
+                        color: 'var(--text)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      New College
+                    </button>
+                  </div>
+                )}
+
+                {/* College Name and Acronym */}
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                      College Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={newCollegeName}
+                      onChange={(e) => setNewCollegeName(e.target.value)}
+                      placeholder="e.g., Brigham Young University"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        fontSize: '14px',
+                        backgroundColor: 'var(--panel-2)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px',
+                        color: 'var(--text)',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                      Acronym
+                    </label>
+                    <input
+                      type="text"
+                      value={newCollegeAcronym}
+                      onChange={(e) => setNewCollegeAcronym(e.target.value.toUpperCase())}
+                      placeholder="e.g., BYU"
+                      maxLength={10}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        fontSize: '14px',
+                        backgroundColor: 'var(--panel-2)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px',
+                        color: 'var(--text)',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Dark Mode Colors */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                    Dark Mode Colors
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="color"
+                        value={newCollegeDarkAccent}
+                        onChange={(e) => setNewCollegeDarkAccent(e.target.value)}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          padding: '0',
+                          border: '2px solid var(--border)',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          backgroundColor: 'transparent',
+                          flexShrink: 0,
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text)', marginBottom: '4px' }}>Accent</div>
+                        <input
+                          type="text"
+                          value={newCollegeDarkAccent}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val.match(/^#[0-9A-Fa-f]{0,6}$/)) {
+                              setNewCollegeDarkAccent(val);
+                            }
+                          }}
+                          placeholder="#000000"
+                          style={{
+                            width: '70px',
+                            padding: '4px 6px',
+                            fontSize: '11px',
+                            backgroundColor: 'var(--panel-2)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '4px',
+                            color: 'var(--text)',
+                            outline: 'none',
+                            fontFamily: 'monospace',
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="color"
+                        value={newCollegeDarkLink}
+                        onChange={(e) => setNewCollegeDarkLink(e.target.value)}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          padding: '0',
+                          border: '2px solid var(--border)',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          backgroundColor: 'transparent',
+                          flexShrink: 0,
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text)', marginBottom: '4px' }}>Link</div>
+                        <input
+                          type="text"
+                          value={newCollegeDarkLink}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val.match(/^#[0-9A-Fa-f]{0,6}$/)) {
+                              setNewCollegeDarkLink(val);
+                            }
+                          }}
+                          placeholder="#000000"
+                          style={{
+                            width: '70px',
+                            padding: '4px 6px',
+                            fontSize: '11px',
+                            backgroundColor: 'var(--panel-2)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '4px',
+                            color: 'var(--text)',
+                            outline: 'none',
+                            fontFamily: 'monospace',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Light Mode Colors */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                    Light Mode Colors
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="color"
+                        value={newCollegeLightAccent}
+                        onChange={(e) => setNewCollegeLightAccent(e.target.value)}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          padding: '0',
+                          border: '2px solid var(--border)',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          backgroundColor: 'transparent',
+                          flexShrink: 0,
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text)', marginBottom: '4px' }}>Accent</div>
+                        <input
+                          type="text"
+                          value={newCollegeLightAccent}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val.match(/^#[0-9A-Fa-f]{0,6}$/)) {
+                              setNewCollegeLightAccent(val);
+                            }
+                          }}
+                          placeholder="#000000"
+                          style={{
+                            width: '70px',
+                            padding: '4px 6px',
+                            fontSize: '11px',
+                            backgroundColor: 'var(--panel-2)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '4px',
+                            color: 'var(--text)',
+                            outline: 'none',
+                            fontFamily: 'monospace',
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="color"
+                        value={newCollegeLightLink}
+                        onChange={(e) => setNewCollegeLightLink(e.target.value)}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          padding: '0',
+                          border: '2px solid var(--border)',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          backgroundColor: 'transparent',
+                          flexShrink: 0,
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text)', marginBottom: '4px' }}>Link</div>
+                        <input
+                          type="text"
+                          value={newCollegeLightLink}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val.match(/^#[0-9A-Fa-f]{0,6}$/)) {
+                              setNewCollegeLightLink(val);
+                            }
+                          }}
+                          placeholder="#000000"
+                          style={{
+                            width: '70px',
+                            padding: '4px 6px',
+                            fontSize: '11px',
+                            backgroundColor: 'var(--panel-2)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '4px',
+                            color: 'var(--text)',
+                            outline: 'none',
+                            fontFamily: 'monospace',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Links */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      Quick Links
+                    </label>
+                    <button
+                      onClick={addQuickLinkField}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '4px 10px',
+                        fontSize: '12px',
+                        backgroundColor: accentColor,
+                        backgroundImage: settings.theme === 'light'
+                          ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                          : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
+                      }}
+                    >
+                      <Plus size={14} />
+                      Add Link
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {newCollegeQuickLinks.map((link, index) => (
+                      <div key={index} style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '8px', alignItems: isMobile ? 'stretch' : 'center', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flex: isMobile ? undefined : 1 }}>
+                          <input
+                            type="text"
+                            value={link.label}
+                            onChange={(e) => updateQuickLink(index, 'label', e.target.value)}
+                            placeholder="Label"
+                            style={{
+                              flex: 1,
+                              padding: '8px 10px',
+                              fontSize: '13px',
+                              backgroundColor: 'var(--panel-2)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '6px',
+                              color: 'var(--text)',
+                              outline: 'none',
+                              minWidth: 0,
+                            }}
+                          />
+                          {isMobile && newCollegeQuickLinks.length > 1 && (
+                            <button
+                              onClick={() => removeQuickLinkField(index)}
+                              style={{
+                                padding: '6px',
+                                backgroundColor: 'var(--danger-bg)',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                color: 'var(--danger)',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          type="url"
+                          value={link.url}
+                          onChange={(e) => updateQuickLink(index, 'url', e.target.value)}
+                          placeholder="URL"
+                          style={{
+                            flex: isMobile ? undefined : 2,
+                            padding: '8px 10px',
+                            fontSize: '13px',
+                            backgroundColor: 'var(--panel-2)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '6px',
+                            color: 'var(--text)',
+                            outline: 'none',
+                            minWidth: 0,
+                          }}
+                        />
+                        {!isMobile && newCollegeQuickLinks.length > 1 && (
+                          <button
+                            onClick={() => removeQuickLinkField(index)}
+                            style={{
+                              padding: '6px',
+                              backgroundColor: 'var(--danger-bg)',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              color: 'var(--danger)',
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
+                  {/* Primary Action - Add or Update */}
+                  <button
+                    onClick={handleAddOrUpdateCollege}
+                    disabled={addCollegeLoading}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      backgroundColor: accentColor,
+                      backgroundImage: settings.theme === 'light'
+                        ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                        : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: addCollegeLoading ? 'not-allowed' : 'pointer',
+                      opacity: addCollegeLoading ? 0.7 : 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
+                    }}
+                  >
+                    <GraduationCap size={18} />
+                    {addCollegeLoading
+                      ? (editingCollegeId ? 'Updating...' : 'Adding...')
+                      : (editingCollegeId ? 'Update College' : 'Add College')}
+                  </button>
+
+                  {/* Secondary Actions - Only show when editing */}
+                  {editingCollegeId && (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {/* Toggle Active Status */}
+                      <button
+                        onClick={() => {
+                          const college = colleges.find(c => c.id === editingCollegeId);
+                          if (college) handleToggleCollegeActive(college);
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '10px 12px',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          backgroundColor: 'var(--panel-2)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '8px',
+                          color: 'var(--text)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {colleges.find(c => c.id === editingCollegeId)?.isActive ? 'Deactivate' : 'Activate'}
+                      </button>
+
+                      {/* Delete Button */}
+                      <button
+                        onClick={() => confirmDeleteCollege(editingCollegeId)}
+                        style={{
+                          flex: 1,
+                          padding: '10px 12px',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
+                          backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                          border: '1px solid #660000',
+                          borderRadius: '8px',
+                          color: selectedTheme === 'light' ? '#000000' : 'white',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)',
+                        }}
+                      >
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
+                    </div>
+                  )}
+
+                  {addCollegeMessage && (
+                    <p style={{
+                      fontSize: '13px',
+                      color: addCollegeMessage.startsWith('Error') ? 'var(--danger)' : 'var(--success)',
+                      margin: 0,
+                      textAlign: 'center',
+                    }}>
+                      {addCollegeMessage}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Card>
+
+            {/* Preview Section */}
+            <Card title="Site Preview">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Theme Toggle */}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => setPreviewTheme('dark')}
+                    style={{
+                      flex: 1,
+                      padding: '10px 16px',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      backgroundColor: previewTheme === 'dark' ? 'var(--accent)' : 'var(--panel-2)',
+                      backgroundImage: previewTheme === 'dark' ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                      border: '1px solid var(--border)',
+                      borderRadius: '8px',
+                      color: previewTheme === 'dark' ? 'white' : 'var(--text-muted)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    Dark Mode
+                  </button>
+                  <button
+                    onClick={() => setPreviewTheme('light')}
+                    style={{
+                      flex: 1,
+                      padding: '10px 16px',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      backgroundColor: previewTheme === 'light' ? 'var(--accent)' : 'var(--panel-2)',
+                      backgroundImage: previewTheme === 'light' ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                      border: '1px solid var(--border)',
+                      borderRadius: '8px',
+                      color: previewTheme === 'light' ? 'white' : 'var(--text-muted)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    Light Mode
+                  </button>
+                </div>
+
+                {/* Mini Site Preview */}
+                <div style={{
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  border: '1px solid var(--border)',
+                  backgroundColor: previewTheme === 'dark' ? '#0a0a0b' : '#fafafa',
+                  minHeight: '340px',
+                  display: 'flex',
+                }}>
+                  {/* Floating Sidebar */}
+                  <div style={{
+                    width: '120px',
+                    padding: '8px',
+                  }}>
+                    <div style={{
+                      backgroundColor: previewTheme === 'dark' ? '#111113' : '#ffffff',
+                      border: `1px solid ${previewTheme === 'dark' ? '#252528' : '#e5e5e5'}`,
+                      borderRadius: '10px',
+                      padding: '12px 8px',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      boxShadow: previewTheme === 'dark' ? '0 4px 24px rgba(0,0,0,0.2)' : '0 2px 12px rgba(0,0,0,0.06)',
+                    }}>
+                      {/* App Title */}
+                      <div style={{
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: previewTheme === 'dark' ? '#fafafa' : '#09090b',
+                        padding: '0 4px',
+                        marginBottom: '4px',
+                      }}>
+                        {newCollegeAcronym || 'XXX'} Orbit
+                      </div>
+                      {/* User name */}
+                      <div style={{
+                        fontSize: '9px',
+                        color: previewTheme === 'dark' ? '#a1a1aa' : '#71717a',
+                        padding: '0 4px',
+                        marginBottom: '12px',
+                      }}>
+                        John Doe
+                      </div>
+
+                      {/* Nav Items */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+                        {[
+                          { label: 'Dashboard', active: true },
+                          { label: 'Calendar', active: false },
+                          { label: 'Tasks', active: false },
+                          { label: 'Courses', active: false },
+                          { label: 'Settings', active: false },
+                        ].map((item) => (
+                          <div
+                            key={item.label}
+                            style={{
+                              padding: '8px 8px',
+                              borderRadius: '8px',
+                              fontSize: '10px',
+                              fontWeight: '500',
+                              backgroundColor: item.active
+                                ? (previewTheme === 'dark' ? newCollegeDarkAccent : newCollegeLightAccent)
+                                : 'transparent',
+                              backgroundImage: item.active
+                                ? 'linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                                : 'none',
+                              color: item.active
+                                ? 'white'
+                                : (previewTheme === 'dark' ? '#71717a' : '#a1a1aa'),
+                              boxShadow: item.active
+                                ? `0 0 12px ${previewTheme === 'dark' ? newCollegeDarkAccent : newCollegeLightAccent}40`
+                                : 'none',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                            }}
+                          >
+                            <div style={{
+                              width: '12px',
+                              height: '12px',
+                              borderRadius: '3px',
+                              backgroundColor: item.active ? 'rgba(255,255,255,0.3)' : (previewTheme === 'dark' ? '#3f3f46' : '#d4d4d8'),
+                            }} />
+                            {item.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Main Content Area */}
+                  <div style={{
+                    flex: 1,
+                    padding: '16px 16px 16px 8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    overflow: 'hidden',
+                  }}>
+                    {/* Page Header */}
+                    <div>
+                      <h2 style={{
+                        fontSize: '15px',
+                        fontWeight: '700',
+                        color: previewTheme === 'dark' ? '#fafafa' : '#09090b',
+                        margin: 0,
+                      }}>
+                        Dashboard
+                      </h2>
+                      <p style={{
+                        fontSize: '10px',
+                        color: previewTheme === 'dark' ? '#a1a1aa' : '#71717a',
+                        margin: '2px 0 0 0',
+                      }}>
+                        Welcome to {newCollegeName || 'Your College'}
+                      </p>
+                    </div>
+
+                    {/* Cards */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {/* Quick Links Card */}
+                      <div style={{
+                        backgroundColor: previewTheme === 'dark' ? '#111113' : '#ffffff',
+                        borderTop: `1px solid ${previewTheme === 'dark' ? '#252528' : '#e5e5e5'}`,
+                        borderRight: `1px solid ${previewTheme === 'dark' ? '#252528' : '#e5e5e5'}`,
+                        borderBottom: `1px solid ${previewTheme === 'dark' ? '#252528' : '#e5e5e5'}`,
+                        borderLeft: `3px solid ${previewTheme === 'dark' ? newCollegeDarkAccent : newCollegeLightAccent}55`,
+                        borderRadius: '10px',
+                        padding: '10px 12px',
+                        boxShadow: previewTheme === 'dark' ? '0 2px 8px rgba(0,0,0,0.15)' : '0 1px 4px rgba(0,0,0,0.04)',
+                      }}>
+                        <h3 style={{
+                          fontSize: '10px',
+                          fontWeight: '700',
+                          color: previewTheme === 'dark' ? '#fafafa' : '#09090b',
+                          margin: '0 0 6px 0',
+                        }}>
+                          Quick Links
+                        </h3>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+                          {(newCollegeQuickLinks.filter(l => l.label).length > 0
+                            ? newCollegeQuickLinks.filter(l => l.label).slice(0, 4)
+                            : [{ label: 'Home' }, { label: 'Portal' }, { label: 'Library' }, { label: 'Email' }]
+                          ).map((link, i) => (
+                            <div
+                              key={i}
+                              style={{
+                                fontSize: '8px',
+                                fontWeight: '500',
+                                color: previewTheme === 'dark' ? '#fafafa' : '#09090b',
+                                backgroundColor: previewTheme === 'dark' ? '#1a1a1c' : '#f4f4f5',
+                                padding: '6px 8px',
+                                borderRadius: '8px',
+                                textAlign: 'center',
+                                border: `1.5px solid ${previewTheme === 'dark' ? '#252528' : '#e5e5e5'}`,
+                              }}
+                            >
+                              {link.label}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Tasks Card with Links */}
+                      <div style={{
+                        backgroundColor: previewTheme === 'dark' ? '#111113' : '#ffffff',
+                        borderTop: `1px solid ${previewTheme === 'dark' ? '#252528' : '#e5e5e5'}`,
+                        borderRight: `1px solid ${previewTheme === 'dark' ? '#252528' : '#e5e5e5'}`,
+                        borderBottom: `1px solid ${previewTheme === 'dark' ? '#252528' : '#e5e5e5'}`,
+                        borderLeft: `3px solid ${previewTheme === 'dark' ? newCollegeDarkAccent : newCollegeLightAccent}55`,
+                        borderRadius: '10px',
+                        padding: '10px 12px',
+                        boxShadow: previewTheme === 'dark' ? '0 2px 8px rgba(0,0,0,0.15)' : '0 1px 4px rgba(0,0,0,0.04)',
+                      }}>
+                        <h3 style={{
+                          fontSize: '10px',
+                          fontWeight: '700',
+                          color: previewTheme === 'dark' ? '#fafafa' : '#09090b',
+                          margin: '0 0 6px 0',
+                        }}>
+                          Today&apos;s Tasks
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{
+                              width: '10px',
+                              height: '10px',
+                              borderRadius: '3px',
+                              border: `1.5px solid ${previewTheme === 'dark' ? '#3f3f46' : '#d4d4d8'}`,
+                            }} />
+                            <span style={{ fontSize: '9px', color: previewTheme === 'dark' ? '#fafafa' : '#09090b' }}>
+                              Complete homework -
+                            </span>
+                            <span style={{
+                              fontSize: '9px',
+                              color: previewTheme === 'dark' ? newCollegeDarkLink : newCollegeLightLink,
+                              cursor: 'pointer',
+                            }}>
+                              View Details
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{
+                              width: '10px',
+                              height: '10px',
+                              borderRadius: '3px',
+                              border: `1.5px solid ${previewTheme === 'dark' ? '#3f3f46' : '#d4d4d8'}`,
+                            }} />
+                            <span style={{ fontSize: '9px', color: previewTheme === 'dark' ? '#fafafa' : '#09090b' }}>
+                              Study for exam -
+                            </span>
+                            <span style={{
+                              fontSize: '9px',
+                              color: previewTheme === 'dark' ? newCollegeDarkLink : newCollegeLightLink,
+                              cursor: 'pointer',
+                            }}>
+                              Open Notes
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Deadlines Card */}
+                      <div style={{
+                        backgroundColor: previewTheme === 'dark' ? '#111113' : '#ffffff',
+                        borderTop: `1px solid ${previewTheme === 'dark' ? '#252528' : '#e5e5e5'}`,
+                        borderRight: `1px solid ${previewTheme === 'dark' ? '#252528' : '#e5e5e5'}`,
+                        borderBottom: `1px solid ${previewTheme === 'dark' ? '#252528' : '#e5e5e5'}`,
+                        borderLeft: `3px solid ${previewTheme === 'dark' ? newCollegeDarkAccent : newCollegeLightAccent}55`,
+                        borderRadius: '10px',
+                        padding: '10px 12px',
+                        boxShadow: previewTheme === 'dark' ? '0 2px 8px rgba(0,0,0,0.15)' : '0 1px 4px rgba(0,0,0,0.04)',
+                      }}>
+                        <h3 style={{
+                          fontSize: '10px',
+                          fontWeight: '700',
+                          color: previewTheme === 'dark' ? '#fafafa' : '#09090b',
+                          margin: '0 0 6px 0',
+                        }}>
+                          Upcoming Deadlines
+                        </h3>
+                        <div style={{ fontSize: '9px', color: previewTheme === 'dark' ? '#a1a1aa' : '#71717a' }}>
+                          Project Due · Jan 25 ·{' '}
+                          <span style={{ color: previewTheme === 'dark' ? newCollegeDarkLink : newCollegeLightLink, cursor: 'pointer' }}>
+                            View Assignment
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Color Legend */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    padding: '12px',
+                    borderRadius: '8px',
+                    backgroundColor: previewTheme === 'dark' ? 'var(--panel-2)' : 'var(--panel)',
+                    border: `2px solid ${previewTheme === 'dark' ? 'var(--accent)' : 'var(--border)'}`,
+                  }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>Dark Theme</div>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '6px',
+                          backgroundColor: newCollegeDarkAccent,
+                          boxShadow: `0 0 8px ${newCollegeDarkAccent}60`,
+                        }} />
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Accent</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '6px',
+                          backgroundColor: newCollegeDarkLink,
+                        }} />
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Link</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: '12px',
+                    borderRadius: '8px',
+                    backgroundColor: previewTheme === 'light' ? 'var(--panel-2)' : 'var(--panel)',
+                    border: `2px solid ${previewTheme === 'light' ? 'var(--accent)' : 'var(--border)'}`,
+                  }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>Light Theme</div>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '6px',
+                          backgroundColor: newCollegeLightAccent,
+                          boxShadow: `0 0 8px ${newCollegeLightAccent}60`,
+                        }} />
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Accent</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '6px',
+                          backgroundColor: newCollegeLightLink,
+                        }} />
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Link</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Existing Colleges List - Full Width */}
+            {colleges.length > 0 && (
+              <div style={{ gridColumn: isMobile ? '1' : '1 / -1' }}>
+                <Card title={`All Colleges (${colleges.length})`}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: '12px' }}>
+                    {colleges.map((college) => (
+                      <div
+                        key={college.id}
+                        onClick={() => {
+                          setActiveTab('addCollege');
+                          loadCollegeForEdit(college);
+                        }}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '14px 16px',
+                          backgroundColor: 'var(--panel-2)',
+                          borderRadius: '10px',
+                          border: '1px solid var(--border)',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          opacity: college.isActive ? 1 : 0.6,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--panel)';
+                          e.currentTarget.style.borderColor = 'var(--border-hover)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                          e.currentTarget.style.borderColor = 'var(--border)';
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                          <div
+                            style={{
+                              width: '40px',
+                              height: '40px',
+                              borderRadius: '10px',
+                              background: `linear-gradient(135deg, ${college.darkAccent}, ${college.lightAccent})`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <GraduationCap size={20} style={{ color: 'white' }} />
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text)' }}>
+                                {college.acronym}
+                              </span>
+                              {!college.isActive && (
+                                <span style={{
+                                  fontSize: '10px',
+                                  padding: '2px 6px',
+                                  backgroundColor: 'var(--warning-bg)',
+                                  color: 'var(--warning)',
+                                  borderRadius: '4px',
+                                  fontWeight: '500',
+                                }}>
+                                  Inactive
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {college.fullName}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                          {/* Color swatches */}
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            <div
+                              style={{
+                                width: '18px',
+                                height: '18px',
+                                borderRadius: '4px',
+                                backgroundColor: college.darkAccent,
+                                border: '1px solid var(--border)',
+                              }}
+                              title={`Dark: ${college.darkAccent}`}
+                            />
+                            <div
+                              style={{
+                                width: '18px',
+                                height: '18px',
+                                borderRadius: '4px',
+                                backgroundColor: college.lightAccent,
+                                border: '1px solid var(--border)',
+                              }}
+                              title={`Light: ${college.lightAccent}`}
+                            />
+                          </div>
+                          {/* Quick Links count */}
+                          <span style={{
+                            fontSize: '11px',
+                            color: 'var(--text-muted)',
+                            backgroundColor: 'var(--panel)',
+                            padding: '3px 8px',
+                            borderRadius: '4px',
+                          }}>
+                            {college.quickLinks?.length || 0} links
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ==================== Modals ==================== */}
+
+      {/* Delete college confirmation modal */}
+      {showDeleteCollegeConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'var(--panel)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '24px',
+            maxWidth: '400px',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <h3 style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
+              Delete College?
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
+              This will permanently delete this college and remove it from all users. This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowDeleteCollegeConfirm(false);
+                  setDeleteCollegeId(null);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteCollege}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                  color: selectedTheme === 'light' ? '#000000' : 'white',
+                  border: '1px solid #660000',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete college request confirmation modal */}
       {showDeleteRequestConfirm && (

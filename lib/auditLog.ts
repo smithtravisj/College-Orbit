@@ -11,7 +11,10 @@ export type AuditAction =
   | 'resolve_issue_report'
   | 'reject_issue_report'
   | 'implement_feature_request'
-  | 'reject_feature_request';
+  | 'reject_feature_request'
+  | 'add_college'
+  | 'update_college'
+  | 'delete_college';
 
 interface LogAuditParams {
   adminId: string;
@@ -60,6 +63,9 @@ export function getActionLabel(action: string): string {
     reject_issue_report: 'Rejected Issue Report',
     implement_feature_request: 'Implemented Feature Request',
     reject_feature_request: 'Rejected Feature Request',
+    add_college: 'Added College',
+    update_college: 'Updated College',
+    delete_college: 'Deleted College',
   };
   return labels[action] || action;
 }

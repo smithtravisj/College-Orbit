@@ -1,4 +1,6 @@
-// Map universities to their app titles
+import { getDatabaseCollege } from './collegeColors';
+
+// Map universities to their app titles (legacy/fallback)
 export const universityTitles: Record<string, string> = {
   'Arizona State University': 'ASU Orbit',
   'Brigham Young University': 'BYU Orbit',
@@ -14,8 +16,20 @@ export const universityTitles: Record<string, string> = {
 };
 
 export function getAppTitle(university: string | null | undefined): string {
-  if (!university || !universityTitles[university]) {
+  if (!university) {
     return 'College Orbit';
   }
-  return universityTitles[university];
+
+  // Check database colleges first
+  const dbCollege = getDatabaseCollege(university);
+  if (dbCollege && dbCollege.acronym) {
+    return `${dbCollege.acronym} Orbit`;
+  }
+
+  // Fallback to hardcoded titles
+  if (universityTitles[university]) {
+    return universityTitles[university];
+  }
+
+  return 'College Orbit';
 }

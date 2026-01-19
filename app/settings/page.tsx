@@ -26,6 +26,7 @@ export default function SettingsPage() {
   const [collegeRequestName, setCollegeRequestName] = useState('');
   const [collegeRequestMessage, setCollegeRequestMessage] = useState('');
   const [collegeRequestLoading, setCollegeRequestLoading] = useState(false);
+  const [collegesList, setCollegesList] = useState<Array<{ fullName: string; acronym: string }>>([]);
   const [issueDescription, setIssueDescription] = useState('');
   const [issueReportMessage, setIssueReportMessage] = useState('');
   const [issueReportLoading, setIssueReportLoading] = useState(false);
@@ -76,6 +77,23 @@ export default function SettingsPage() {
   useEffect(() => {
     const isMac = typeof window !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
     setIsMacDesktop(isMac);
+  }, []);
+
+  // Fetch colleges list from API (database is source of truth)
+  useEffect(() => {
+    const fetchColleges = async () => {
+      try {
+        const response = await fetch('/api/colleges');
+        if (response.ok) {
+          const data = await response.json();
+          // Use database colleges directly (already filtered by isActive)
+          setCollegesList(data.colleges || []);
+        }
+      } catch (error) {
+        console.error('Error fetching colleges:', error);
+      }
+    };
+    fetchColleges();
   }, []);
 
   useEffect(() => {
@@ -486,17 +504,11 @@ export default function SettingsPage() {
                 }}
               >
                 <option value="">Select a University</option>
-                <option value="Arizona State University">Arizona State University</option>
-                <option value="Brigham Young University">Brigham Young University</option>
-                <option value="Brigham Young University Hawaii">Brigham Young University Hawaii</option>
-                <option value="Brigham Young University Idaho">Brigham Young University Idaho</option>
-                <option value="North Lincoln High School">North Lincoln High School</option>
-                <option value="Ohio State University">Ohio State University</option>
-                <option value="UNC Chapel Hill">UNC Chapel Hill</option>
-                <option value="University of Central Florida">University of Central Florida</option>
-                <option value="University of Texas at Austin">University of Texas at Austin</option>
-                <option value="Utah State University">Utah State University</option>
-                <option value="Utah Valley University">Utah Valley University</option>
+                {collegesList.map((college) => (
+                  <option key={college.fullName} value={college.fullName}>
+                    {college.fullName}
+                  </option>
+                ))}
               </select>
               <div style={{ marginTop: '12px' }}>
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>
