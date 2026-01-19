@@ -567,6 +567,7 @@ export default function AccountPage() {
                       <li>• Calendar & Shopping pages</li>
                       <li>• All Tools (GPA, Pomodoro, etc.)</li>
                       <li>• File uploads & recurring items</li>
+                      <li>• Custom themes & visual effects</li>
                     </ul>
                   </div>
                 )}

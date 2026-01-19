@@ -5,7 +5,7 @@ import useAppStore from '@/lib/store';
 import { formatDate, isOverdue } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useBulkSelect } from '@/hooks/useBulkSelect';
-import { getCollegeColorPalette } from '@/lib/collegeColors';
+import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
@@ -80,7 +80,15 @@ export default function DeadlinesPage() {
   const [mounted, setMounted] = useState(false);
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const useCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const customColors = useAppStore((state) => state.settings.customColors);
+  const glowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
   const colorPalette = getCollegeColorPalette(university || null, theme);
+  const accentColor = useCustomTheme && customColors
+    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
+    : colorPalette.accent;
+  const glowScale = glowIntensity / 50;
+  const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
   const [showForm, setShowForm] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState<'recurring' | 'files'>('recurring');
@@ -877,7 +885,7 @@ export default function DeadlinesPage() {
                         padding: isMobile ? '8px 12px' : '12px 16px',
                         backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent',
                         backgroundImage: filter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
-                        boxShadow: filter === f.value ? `0 0 10px ${colorPalette.accent}80` : 'none',
+                        boxShadow: filter === f.value ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
                         fontSize: isMobile ? '13px' : '14px',
                       }}
                     >
@@ -964,7 +972,7 @@ export default function DeadlinesPage() {
                         padding: isMobile ? '8px 12px' : '8px 14px',
                         backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent',
                         backgroundImage: filter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
-                        boxShadow: filter === f.value ? `0 0 10px ${colorPalette.accent}80` : 'none',
+                        boxShadow: filter === f.value ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
                         fontSize: isMobile ? '13px' : '14px',
                       }}
                     >

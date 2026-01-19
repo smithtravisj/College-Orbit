@@ -32,7 +32,7 @@ export default function UpgradePrompt({ feature, compact = false }: UpgradePromp
           className="flex items-center justify-center w-10 h-10 rounded-lg"
           style={{ background: 'var(--accent)15' }}
         >
-          <Crown size={20} className="text-[var(--accent)]" />
+          <Crown size={20} className="text-white" />
         </div>
         <div>
           <p className="text-sm font-medium text-[var(--text)]">

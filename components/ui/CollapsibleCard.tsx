@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import React from 'react';
 import useAppStore from '@/lib/store';
-import { getCollegeColorPalette } from '@/lib/collegeColors';
+import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 
 interface CollapsibleCardProps {
   id: string;
@@ -35,7 +35,12 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
   const [mounted, setMounted] = useState(false);
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const useCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const customColors = useAppStore((state) => state.settings.customColors);
   const colorPalette = getCollegeColorPalette(university || null, theme);
+  const accentColor = useCustomTheme && customColors
+    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
+    : colorPalette.accent;
   const isPrimary = variant === 'primary';
 
   // Load state from database (via initialOpen prop)
@@ -66,7 +71,7 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
         background: 'var(--panel)',
         borderColor: 'var(--border)',
         borderLeftWidth: '3px',
-        borderLeftColor: `${colorPalette.accent}55`,
+        borderLeftColor: `${accentColor}55`,
         boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
       }}
       onClick={() => !isOpen && handleToggle()}

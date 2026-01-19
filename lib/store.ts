@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData, ShoppingItem, ShoppingListType, CalendarEvent } from '@/types';
-import { applyColorPalette, getCollegeColorPalette } from '@/lib/collegeColors';
+import { applyColorPalette, getCollegeColorPalette, applyCustomColors, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
 const DEFAULT_SETTINGS: Settings = {
@@ -19,6 +19,10 @@ const DEFAULT_SETTINGS: Settings = {
     { enabled: true, value: 1, unit: 'days' },
     { enabled: true, value: 3, unit: 'hours' }
   ],
+  useCustomTheme: false,
+  customColors: null,
+  gradientIntensity: 50,
+  glowIntensity: 50,
 };
 
 interface AppStore {
@@ -285,14 +289,24 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       set(newData);
 
-      // Apply college colors based on loaded settings
+      // Apply colors based on loaded settings
       if (typeof window !== 'undefined') {
         const theme = newData.settings?.theme || 'dark';
-        const palette = getCollegeColorPalette(
-          newData.settings?.university || null,
-          theme
-        );
-        applyColorPalette(palette);
+        const useCustomTheme = newData.settings?.useCustomTheme || false;
+        const customColors = newData.settings?.customColors;
+
+        if (useCustomTheme && customColors) {
+          // Apply custom colors for the current theme
+          const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
+          applyCustomColors(colorSet, theme);
+        } else {
+          // Apply college colors
+          const palette = getCollegeColorPalette(
+            newData.settings?.university || null,
+            theme
+          );
+          applyColorPalette(palette);
+        }
         // Store theme in localStorage for loading screen
         localStorage.setItem('app-theme', theme);
         // Store userId separately for storage key on next load
@@ -340,13 +354,23 @@ const useAppStore = create<AppStore>((set, get) => ({
           shoppingItems: data.shoppingItems || [],
           calendarEvents: data.calendarEvents || [],
         });
-        // Apply college colors based on loaded settings
+        // Apply colors based on loaded settings
         const theme = settings.theme || 'dark';
-        const palette = getCollegeColorPalette(
-          settings.university || null,
-          theme
-        );
-        applyColorPalette(palette);
+        const useCustomTheme = settings.useCustomTheme || false;
+        const customColors = settings.customColors;
+
+        if (useCustomTheme && customColors) {
+          // Apply custom colors for the current theme
+          const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
+          applyCustomColors(colorSet, theme);
+        } else {
+          // Apply college colors
+          const palette = getCollegeColorPalette(
+            settings.university || null,
+            theme
+          );
+          applyColorPalette(palette);
+        }
         // Store theme in localStorage for loading screen
         localStorage.setItem('app-theme', theme);
         return true;
@@ -1625,15 +1649,26 @@ const useAppStore = create<AppStore>((set, get) => ({
         settings: { ...state.settings, ...settings },
       }));
 
-      // Apply colors if college or theme changed
-      if ((settings.university !== undefined || settings.theme !== undefined) && typeof window !== 'undefined') {
+      // Apply colors if college, theme, or custom theme settings changed
+      if ((settings.university !== undefined || settings.theme !== undefined ||
+           settings.useCustomTheme !== undefined || settings.customColors !== undefined) && typeof window !== 'undefined') {
         const currentState = get().settings;
         const newTheme = settings.theme !== undefined ? settings.theme : (currentState.theme || 'dark');
-        const palette = getCollegeColorPalette(
-          settings.university !== undefined ? settings.university : (currentState.university || null),
-          newTheme
-        );
-        applyColorPalette(palette);
+        const newUseCustomTheme = settings.useCustomTheme !== undefined ? settings.useCustomTheme : (currentState.useCustomTheme || false);
+        const newCustomColors = settings.customColors !== undefined ? settings.customColors : currentState.customColors;
+
+        if (newUseCustomTheme && newCustomColors) {
+          // Apply custom colors for the current theme
+          const colorSet = getCustomColorSetForTheme(newCustomColors as CustomColors, newTheme);
+          applyCustomColors(colorSet, newTheme);
+        } else {
+          // Apply college colors
+          const palette = getCollegeColorPalette(
+            settings.university !== undefined ? settings.university : (currentState.university || null),
+            newTheme
+          );
+          applyColorPalette(palette);
+        }
         // Store theme in localStorage for loading screen to access
         localStorage.setItem('app-theme', newTheme);
       }

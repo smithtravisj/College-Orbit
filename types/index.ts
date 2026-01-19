@@ -241,6 +241,21 @@ export interface Folder {
   updatedAt: string; // ISO datetime
 }
 
+export interface CustomColorSet {
+  accent: string;
+  accentHover: string;
+  accentText: string;
+  link: string;
+  success: string;
+  warning: string;
+  danger: string;
+}
+
+export interface CustomColors {
+  light: CustomColorSet;
+  dark: CustomColorSet;
+}
+
 export interface Settings {
   dueSoonWindowDays: number;
   weekStartsOn: 'Sun' | 'Mon';
@@ -267,6 +282,10 @@ export interface Settings {
   notifyAnnouncements?: boolean;
   notifyExamReminders?: boolean;
   notifyAccountAlerts?: boolean;
+  useCustomTheme?: boolean;
+  customColors?: CustomColors | null;
+  gradientIntensity?: number; // 0-100, controls gradient intensity on buttons, nav, filters
+  glowIntensity?: number; // 0-100, controls glow effect intensity on buttons
 }
 
 export interface ExcludedDate {

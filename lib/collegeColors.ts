@@ -1610,3 +1610,194 @@ export function getCollegeColor(
   const palette = getCollegeColorPalette(collegeName || null, theme);
   return palette.accent;
 }
+
+/**
+ * Custom color set for a single theme mode
+ */
+export interface CustomColorSet {
+  accent: string;
+  accentHover: string;
+  accentText: string;
+  link: string;
+  success: string;
+  warning: string;
+  danger: string;
+}
+
+/**
+ * Custom colors interface with separate light and dark mode colors
+ */
+export interface CustomColors {
+  light: CustomColorSet;
+  dark: CustomColorSet;
+}
+
+/**
+ * Default custom colors for dark mode
+ */
+export const DEFAULT_CUSTOM_COLORS_DARK: CustomColorSet = {
+  accent: '#3b82f6',
+  accentHover: '#2563eb',
+  accentText: '#ffffff',
+  link: '#60a5fa',
+  success: '#57ab5a',
+  warning: '#c69026',
+  danger: '#e5534b',
+};
+
+/**
+ * Default custom colors for light mode
+ */
+export const DEFAULT_CUSTOM_COLORS_LIGHT: CustomColorSet = {
+  accent: '#3b82f6',
+  accentHover: '#2563eb',
+  accentText: '#000000',
+  link: '#2563eb',
+  success: '#16a34a',
+  warning: '#d97706',
+  danger: '#dc2626',
+};
+
+/**
+ * Get default custom colors for both light and dark modes
+ * If a college is provided, uses that college's colors as the base
+ */
+export function getDefaultCustomColors(collegeName?: string | null): CustomColors {
+  if (collegeName) {
+    const darkPalette = getCollegeColorPalette(collegeName, 'dark');
+    const lightPalette = getCollegeColorPalette(collegeName, 'light');
+    return {
+      dark: {
+        accent: darkPalette.accent,
+        accentHover: darkPalette.accentHover,
+        accentText: '#ffffff',
+        link: darkPalette.link,
+        success: darkPalette.success,
+        warning: darkPalette.warning,
+        danger: darkPalette.danger,
+      },
+      light: {
+        accent: lightPalette.accent,
+        accentHover: lightPalette.accentHover,
+        accentText: '#000000',
+        link: lightPalette.link,
+        success: lightPalette.success,
+        warning: lightPalette.warning,
+        danger: lightPalette.danger,
+      },
+    };
+  }
+
+  return {
+    dark: DEFAULT_CUSTOM_COLORS_DARK,
+    light: DEFAULT_CUSTOM_COLORS_LIGHT,
+  };
+}
+
+/**
+ * Get the custom color set for the current theme
+ * Handles both old flat format and new light/dark format
+ */
+export function getCustomColorSetForTheme(
+  customColors: CustomColors | CustomColorSet | any,
+  theme: 'light' | 'dark' | 'system'
+): CustomColorSet {
+  let actualTheme = theme;
+  if (theme === 'system' && typeof window !== 'undefined') {
+    actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+  }
+
+  // Handle new format with light/dark separation
+  if (customColors.light && customColors.dark) {
+    const colorSet = actualTheme === 'light' ? customColors.light : customColors.dark;
+    // Ensure accentText is always present (for data saved before this field existed)
+    return {
+      ...colorSet,
+      accentText: colorSet.accentText || (actualTheme === 'light' ? '#000000' : '#ffffff'),
+    };
+  }
+
+  // Handle old flat format (migrate on the fly)
+  if (customColors.accent) {
+    return {
+      accent: customColors.accent,
+      accentHover: customColors.accentHover || customColors.accent,
+      accentText: customColors.accentText || (actualTheme === 'light' ? '#000000' : '#ffffff'),
+      link: customColors.link || customColors.accent,
+      success: customColors.success || DEFAULT_CUSTOM_COLORS_DARK.success,
+      warning: customColors.warning || DEFAULT_CUSTOM_COLORS_DARK.warning,
+      danger: customColors.danger || DEFAULT_CUSTOM_COLORS_DARK.danger,
+    };
+  }
+
+  // Fallback to defaults
+  return actualTheme === 'light' ? DEFAULT_CUSTOM_COLORS_LIGHT : DEFAULT_CUSTOM_COLORS_DARK;
+}
+
+/**
+ * Apply custom colors on top of the base palette
+ * Takes custom color set and merges it with the default palette for the current theme
+ */
+export function applyCustomColors(
+  customColorSet: CustomColorSet,
+  theme: 'light' | 'dark' | 'system' = 'dark'
+): void {
+  // First get the base palette (default, no college)
+  const basePalette = getCollegeColorPalette(null, theme);
+
+  // Create a modified palette with custom colors
+  const customPalette: ColorPalette = {
+    ...basePalette,
+    // Override accent colors
+    accent: customColorSet.accent,
+    accentHover: customColorSet.accentHover,
+    accent2: `${customColorSet.accent}26`, // 15% opacity
+    ring: `${customColorSet.accent}59`, // 35% opacity
+    buttonSecondary: customColorSet.accent,
+    navActive: customColorSet.accent,
+    borderActive: customColorSet.accent,
+    brandPrimary: customColorSet.accent,
+    focusRing: `0 0 0 3px ${customColorSet.accent}4d`, // 30% opacity
+    todayBg: `${customColorSet.accent}1f`, // 12% opacity
+    weekViewTodayDateColor: customColorSet.accent,
+    calendarCurrentDateColor: customColorSet.accent,
+    editHover: customColorSet.accent,
+    // Override link color
+    link: customColorSet.link,
+    // Override semantic colors
+    success: customColorSet.success,
+    warning: customColorSet.warning,
+    danger: customColorSet.danger,
+    dangerHover: adjustColor(customColorSet.danger, -15), // Slightly darker for hover
+    successBg: `${customColorSet.success}1a`, // 10% opacity
+    warningBg: `${customColorSet.warning}1a`, // 10% opacity
+    dangerBg: `${customColorSet.danger}1a`, // 10% opacity
+  };
+
+  // Apply the custom palette
+  applyColorPalette(customPalette);
+
+  // Also set the custom accent text color as a CSS variable
+  if (typeof document !== 'undefined') {
+    document.documentElement.style.setProperty('--accent-text', customColorSet.accentText);
+  }
+}
+
+/**
+ * Helper function to adjust color brightness
+ * Positive amount lightens, negative darkens
+ */
+function adjustColor(hex: string, amount: number): string {
+  // Remove # if present
+  hex = hex.replace('#', '');
+
+  // Parse RGB values
+  const r = Math.max(0, Math.min(255, parseInt(hex.substring(0, 2), 16) + amount));
+  const g = Math.max(0, Math.min(255, parseInt(hex.substring(2, 4), 16) + amount));
+  const b = Math.max(0, Math.min(255, parseInt(hex.substring(4, 6), 16) + amount));
+
+  // Convert back to hex
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}

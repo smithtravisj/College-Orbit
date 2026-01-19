@@ -3,7 +3,7 @@
 import React from 'react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import useAppStore from '@/lib/store';
-import { getCollegeColorPalette } from '@/lib/collegeColors';
+import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 
 interface CardProps {
   title?: string;
@@ -29,7 +29,14 @@ const Card: React.FC<CardProps> = ({
   const isMobile = useIsMobile();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const useCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const customColors = useAppStore((state) => state.settings.customColors);
   const colorPalette = getCollegeColorPalette(university || null, theme);
+
+  // Use custom accent color if custom theme is enabled
+  const accentColor = useCustomTheme && customColors
+    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
+    : colorPalette.accent;
 
   const isPrimary = variant === 'primary';
 
@@ -42,7 +49,7 @@ const Card: React.FC<CardProps> = ({
         background: 'var(--panel)',
         borderColor: 'var(--border)',
         borderLeftWidth: noAccent ? '1px' : '3px',
-        borderLeftColor: noAccent ? 'var(--border)' : `${colorPalette.accent}55`,
+        borderLeftColor: noAccent ? 'var(--border)' : `${accentColor}55`,
         boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
       }}
     >

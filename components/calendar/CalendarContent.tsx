@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { getCollegeColorPalette } from '@/lib/collegeColors';
+import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import CalendarMonthView from './CalendarMonthView';
 import CalendarDayView from './CalendarDayView';
 import CalendarWeekView from './CalendarWeekView';
@@ -34,7 +34,15 @@ export default function CalendarContent() {
   const isMobile = useIsMobile();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const useCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const customColors = useAppStore((state) => state.settings.customColors);
+  const glowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
   const colorPalette = getCollegeColorPalette(university || null, theme);
+  const accentColor = useCustomTheme && customColors
+    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
+    : colorPalette.accent;
+  const glowScale = glowIntensity / 50;
+  const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
 
   const [view, setView] = useState<ViewType>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -399,7 +407,7 @@ export default function CalendarContent() {
               style={{
                 width: '100%',
                 height: '100%',
-                background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
+                background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${accentColor}18 0%, transparent 70%)`,
               }}
             />
           </div>
@@ -428,7 +436,7 @@ export default function CalendarContent() {
           borderRadius: '16px',
           border: '1px solid var(--border)',
           borderLeftWidth: '3px',
-          borderLeftColor: `${colorPalette.accent}55`,
+          borderLeftColor: `${accentColor}55`,
           backgroundColor: 'var(--panel)',
           boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
           display: 'flex',
@@ -534,7 +542,7 @@ export default function CalendarContent() {
                 backgroundColor: 'var(--accent)',
                 backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                 border: 'none',
-                boxShadow: `0 0 10px ${colorPalette.accent}80`,
+                boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 marginLeft: '12px',
@@ -566,7 +574,7 @@ export default function CalendarContent() {
                     backgroundImage: view === v ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
                     color: view === v ? 'white' : 'var(--muted)',
                     border: view === v ? 'none' : '1px solid var(--border)',
-                    boxShadow: view === v ? `0 0 10px ${colorPalette.accent}80` : 'none',
+                    boxShadow: view === v ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
                     cursor: 'pointer',
                   }}
                   onMouseEnter={(e) => {

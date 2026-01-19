@@ -512,6 +512,7 @@ export async function sendSubscriptionStartedEmail({
                     <li style="margin-bottom: 8px;">File attachments</li>
                     <li style="margin-bottom: 8px;">Recurring tasks, assignments & exams</li>
                     <li style="margin-bottom: 8px;">All Tools (GPA Calculator, Pomodoro, etc.)</li>
+                    <li style="margin-bottom: 8px;">Custom color themes & visual effects</li>
                   </ul>
 
                   <!-- CTA Button -->
@@ -563,6 +564,7 @@ You now have access to:
 - File attachments
 - Recurring tasks, assignments & exams
 - All Tools (GPA Calculator, Pomodoro, etc.)
+- Custom color themes & visual effects
 
 Go to your dashboard: ${APP_URL}/dashboard
 
