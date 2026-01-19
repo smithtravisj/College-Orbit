@@ -76,14 +76,23 @@ export default function Navigation() {
   // Calculate intensity scales - use quadratic scaling so 50% = 1x, 100% = 4x
   const gradientScale = Math.pow(gradientIntensity / 50, 2);
   const glowScale = glowIntensity / 50;
-  const glowOpacity = Math.min(255, Math.round(0.75 * glowScale * 255)).toString(16).padStart(2, '0'); // BF at 50%, capped at FF
+  const isLightMode = theme === 'light';
+  // Reduce glow intensity when no college is selected (default theme)
+  const noCollegeSelected = !university;
+  const glowReduction = noCollegeSelected ? 0.5 : 1;
+  const glowOpacity = isLightMode
+    ? Math.min(255, Math.round(0.6 * glowScale * glowReduction * 255)).toString(16).padStart(2, '0')
+    : Math.min(255, Math.round(0.25 * glowScale * glowReduction * 255)).toString(16).padStart(2, '0');
+  const glowSpread = (12 + (glowIntensity / 100) * 8) * glowReduction;
 
   // Compute gradient values (0.08/0.12 at 50%, 0.32/0.48 at 100%)
   const gradientLightOpacity = Math.round(0.08 * gradientScale * 100) / 100;
   const gradientDarkOpacity = Math.round(0.12 * gradientScale * 100) / 100;
+  const gradient = `linear-gradient(135deg, rgba(255,255,255,${gradientLightOpacity}) 0%, transparent 50%, rgba(0,0,0,${gradientDarkOpacity}) 100%)`;
+  const darkOverlay = 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2))';
   const activeGradient = gradientIntensity > 0
-    ? `linear-gradient(135deg, rgba(255,255,255,${gradientLightOpacity}) 0%, transparent 50%, rgba(0,0,0,${gradientDarkOpacity}) 100%)`
-    : 'none';
+    ? (isLightMode ? gradient : `${darkOverlay}, ${gradient}`)
+    : (isLightMode ? 'none' : darkOverlay);
   const savedVisiblePages = useAppStore((state) => state.settings.visiblePages || DEFAULT_VISIBLE_PAGES);
   const savedVisiblePagesOrder = useAppStore((state) => state.settings.visiblePagesOrder);
 
@@ -280,7 +289,7 @@ export default function Navigation() {
           padding: '20px 16px',
           borderRadius: '16px',
           border: '1px solid var(--border)',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+          boxShadow: isLightMode ? '0 2px 12px rgba(0,0,0,0.06)' : '0 4px 24px rgba(0,0,0,0.2)',
           zIndex: 50,
         }}
         data-tour="navigation"
@@ -310,12 +319,12 @@ export default function Navigation() {
                 }`}
                 style={{
                   padding: '0 11px',
-                  backgroundColor: isActive ? 'var(--nav-active)' : 'transparent',
+                  backgroundColor: isActive ? accentColor : 'transparent',
                   backgroundImage: isActive
                     ? activeGradient
                     : 'none',
                   boxShadow: isActive
-                    ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`
+                    ? `0 0 ${glowSpread}px ${accentColor}${glowOpacity}, 0 3px 12px ${accentColor}40`
                     : undefined,
                 }}
               >
@@ -339,12 +348,12 @@ export default function Navigation() {
                 }`}
                 style={{
                   padding: '0 11px',
-                  backgroundColor: isActive ? 'var(--nav-active)' : 'transparent',
+                  backgroundColor: isActive ? accentColor : 'transparent',
                   backgroundImage: isActive
                     ? activeGradient
                     : 'none',
                   boxShadow: isActive
-                    ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`
+                    ? `0 0 ${glowSpread}px ${accentColor}${glowOpacity}, 0 3px 12px ${accentColor}40`
                     : undefined,
                 }}
               >
@@ -368,12 +377,12 @@ export default function Navigation() {
                 }`}
                 style={{
                   padding: '0 16px 0 11px',
-                  backgroundColor: pathname === '/account' ? 'var(--nav-active)' : 'transparent',
+                  backgroundColor: pathname === '/account' ? accentColor : 'transparent',
                   backgroundImage: pathname === '/account'
                     ? activeGradient
                     : 'none',
                   boxShadow: pathname === '/account'
-                    ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`
+                    ? `0 0 ${glowSpread}px ${accentColor}${glowOpacity}, 0 3px 12px ${accentColor}40`
                     : undefined,
                 }}
               >

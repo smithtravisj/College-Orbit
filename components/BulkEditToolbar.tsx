@@ -181,11 +181,6 @@ export default function BulkEditToolbar({
             style={{
               flexShrink: 0,
               padding: isMobile ? '6px 10px' : '8px 14px',
-              backgroundColor: 'var(--button-secondary)',
-              color: 'white',
-              borderWidth: '1px',
-              borderStyle: 'solid',
-              borderColor: 'var(--border)',
             }}
           >
             <Check size={isMobile ? 14 : 16} />

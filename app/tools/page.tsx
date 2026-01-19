@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import useAppStore from '@/lib/store';
 import { getQuickLinks } from '@/lib/quickLinks';
 import { TOOLS_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
-import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select } from '@/components/ui/Input';
@@ -52,13 +51,6 @@ export default function ToolsPage() {
   const isMobile = useIsMobile();
   const { settings, updateSettings } = useAppStore();
   const subscription = useSubscription();
-  const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
-  // Custom theme is only active for premium users
-  const useCustomTheme = subscription.isPremium ? settings.useCustomTheme : false;
-  const customColors = subscription.isPremium ? settings.customColors : null;
-  const accentColor = useCustomTheme && customColors
-    ? getCustomColorSetForTheme(customColors as CustomColors, settings.theme || 'dark').accent
-    : colorPalette.accent;
   const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [formCourses, setFormCourses] = useState<FormCourse[]>([
@@ -543,7 +535,7 @@ export default function ToolsPage() {
       case TOOLS_CARDS.WHAT_IF_PROJECTOR:
         return visibleToolsCards.includes(cardId) && (
           <CollapsibleCard key={cardId} id="whatif-projector" title="What-If GPA Projector" subtitle="See how future grades impact your GPA">
-            <WhatIfProjector theme={settings.theme} />
+            <WhatIfProjector />
           </CollapsibleCard>
         );
       case TOOLS_CARDS.GPA_CALCULATOR:
@@ -656,7 +648,7 @@ export default function ToolsPage() {
                   Add Row
                 </Button>
 
-                <Button size={isMobile ? 'sm' : 'lg'} onClick={calculateGPA} style={{ backgroundColor: 'var(--button-secondary)', color: settings.theme === 'light' ? '#000000' : 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
+                <Button size={isMobile ? 'sm' : 'lg'} onClick={calculateGPA} style={{ paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}>
                   Calculate GPA
                 </Button>
               </div>
@@ -664,7 +656,7 @@ export default function ToolsPage() {
               {gpaResult !== null && (
                 <div className="rounded-[16px] bg-[var(--accent-bg)] border border-[var(--accent)] text-center" style={{ marginTop: isMobile ? '12px' : '24px', padding: isMobile ? '12px' : '16px' }}>
                   <div className="text-sm text-[var(--text-muted)]" style={{ marginBottom: isMobile ? '4px' : '8px', fontSize: isMobile ? '12px' : '14px' }}>Your GPA</div>
-                  <div className="font-bold" style={{ fontSize: isMobile ? '28px' : '32px', color: settings.theme === 'light' ? '#2563eb' : '#7fa8ff' }}>
+                  <div className="font-bold" style={{ fontSize: isMobile ? '28px' : '32px', color: 'var(--link)' }}>
                     {gpaResult}
                   </div>
                 </div>
@@ -899,30 +891,16 @@ export default function ToolsPage() {
       {/* Tools Header */}
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div>
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            {/* Subtle glow behind title */}
-            <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-              <div
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${accentColor}18 0%, transparent 70%)`,
-                }}
-              />
-            </div>
-            <h1
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                fontSize: isMobile ? '26px' : '34px',
-                fontWeight: 700,
-                color: 'var(--text)',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Tools
-            </h1>
-          </div>
+          <h1
+            style={{
+              fontSize: isMobile ? '26px' : '34px',
+              fontWeight: 700,
+              color: 'var(--text)',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Tools
+          </h1>
           <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
             Useful utilities for your semester.
           </p>

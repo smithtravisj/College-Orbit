@@ -159,16 +159,16 @@ export const defaultColorPalette: ColorPalette = {
   borderActive: "#404040",
   borderStrong: "rgba(255, 255, 255, 0.12)",
 
-  accent: "#4a4a4a",
-  accentHover: "#3a3a3a",
-  accent2: "rgba(74, 74, 74, 0.15)",
-  ring: "rgba(74, 74, 74, 0.35)",
+  accent: "#6d28d9",
+  accentHover: "#5b21b6",
+  accent2: "rgba(109, 40, 217, 0.15)",
+  ring: "rgba(109, 40, 217, 0.35)",
 
   buttonSecondary: "#2d2d2d",
 
-  navActive: "#2d2d2d",
+  navActive: "#6d28d9",
 
-  link: "#0ea5e9",
+  link: "#a78bfa",
 
   calendarNoSchool: "#d1d5db",
   calendarCancelled: "#d1d5db",
@@ -182,21 +182,21 @@ export const defaultColorPalette: ColorPalette = {
   warningBg: "rgba(198, 144, 38, 0.1)",
   dangerBg: "rgba(229, 83, 75, 0.1)",
 
-  brandPrimary: "#5a5a5a",
+  brandPrimary: "#7c3aed",
 
   shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.3)",
   shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.4)",
   shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.5)",
 
-  focusRing: "0 0 0 3px rgba(74, 74, 74, 0.3)",
+  focusRing: "0 0 0 3px rgba(124, 58, 237, 0.3)",
 
-  todayBg: "rgba(74, 74, 74, 0.12)",
+  todayBg: "rgba(124, 58, 237, 0.12)",
 
   weekViewTodayDateColor: "#e8e8e8",
 
-  calendarCurrentDateColor: "#f0f1f3",
+  calendarCurrentDateColor: "#7c3aed",
 
-  editHover: "#0ea5e9", // Bright link color for better visibility
+  editHover: "#a78bfa",
   sliderThumb: "#9a9a9a",
 };
 
@@ -837,14 +837,14 @@ export const defaultLightPalette: ColorPalette = {
   borderActive: "#f0f1f3",
   borderStrong: "rgba(0, 0, 0, 0.16)",
 
-  accent: "#f0f1f3",
-  accentHover: "#e0e1e3",
-  accent2: "rgba(240, 241, 243, 0.15)",
-  ring: "rgba(240, 241, 243, 0.35)",
+  accent: "#a78bfa",
+  accentHover: "#8b5cf6",
+  accent2: "rgba(124, 58, 237, 0.15)",
+  ring: "rgba(124, 58, 237, 0.35)",
 
   buttonSecondary: "#f0f1f3",
-  navActive: "#f0f1f3",
-  link: "#0065cc",
+  navActive: "rgba(139, 92, 246, 0.25)",
+  link: "#6d28d9",
 
 
   calendarNoSchool: "#d1d5db",
@@ -859,17 +859,17 @@ export const defaultLightPalette: ColorPalette = {
   warningBg: "rgba(217, 119, 6, 0.1)",
   dangerBg: "rgba(220, 38, 38, 0.1)",
 
-  brandPrimary: "#0065cc",
+  brandPrimary: "#a78bfa",
 
   shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
   shadowMd: "0 4px 8px 0 rgba(0, 0, 0, 0.08)",
   shadowLg: "0 8px 16px 0 rgba(0, 0, 0, 0.1)",
 
-  focusRing: "0 0 0 3px rgba(240, 241, 243, 0.3)",
-  todayBg: "rgba(240, 241, 243, 0.12)",
-  weekViewTodayDateColor: "#0ea5e9",
-  calendarCurrentDateColor: "#f0f1f3",
-  editHover: "#f0f1f3", // Uses accent in light mode
+  focusRing: "0 0 0 3px rgba(167, 139, 250, 0.3)",
+  todayBg: "rgba(167, 139, 250, 0.12)",
+  weekViewTodayDateColor: "#a78bfa",
+  calendarCurrentDateColor: "#a78bfa",
+  editHover: "#8b5cf6",
   sliderThumb: "#bbbbbb",
 };
 
@@ -1666,10 +1666,10 @@ export interface CustomColors {
  * Default custom colors for dark mode
  */
 export const DEFAULT_CUSTOM_COLORS_DARK: CustomColorSet = {
-  accent: '#3b82f6',
-  accentHover: '#2563eb',
+  accent: '#7c3aed',
+  accentHover: '#6d28d9',
   accentText: '#ffffff',
-  link: '#60a5fa',
+  link: '#a78bfa',
   success: '#57ab5a',
   warning: '#c69026',
   danger: '#e5534b',
@@ -1679,10 +1679,10 @@ export const DEFAULT_CUSTOM_COLORS_DARK: CustomColorSet = {
  * Default custom colors for light mode
  */
 export const DEFAULT_CUSTOM_COLORS_LIGHT: CustomColorSet = {
-  accent: '#3b82f6',
-  accentHover: '#2563eb',
-  accentText: '#000000',
-  link: '#2563eb',
+  accent: '#7c3aed',
+  accentHover: '#6d28d9',
+  accentText: '#ffffff',
+  link: '#6d28d9',
   success: '#16a34a',
   warning: '#d97706',
   danger: '#dc2626',
@@ -1793,7 +1793,7 @@ export function applyCustomColors(
     todayBg: `${customColorSet.accent}1f`, // 12% opacity
     weekViewTodayDateColor: customColorSet.accent,
     calendarCurrentDateColor: customColorSet.accent,
-    editHover: customColorSet.accent,
+    editHover: customColorSet.link, // Match link color for consistency
     // Override link color
     link: customColorSet.link,
     // Override semantic colors

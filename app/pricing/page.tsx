@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useSubscription } from '@/hooks/useSubscription';
 import { Check, Crown, Loader2, ArrowLeft } from 'lucide-react';
 import Button from '@/components/ui/Button';
@@ -34,41 +35,29 @@ const PREMIUM_FEATURES = [
   'Custom color themes',
   'Visual effects customization',
   'Page & Card visibility customization',
+  'Smart form filling',
 ];
 
 // Public pricing page for unauthenticated users
 function PublicPricingPage() {
+  const router = useRouter();
   const [premiumHover, setPremiumHover] = useState(false);
   const isMobile = useIsMobile();
-  const colorPalette = getCollegeColorPalette(null, 'dark');
-  const mutedText = '#9ca3af';
+  // Orbit purple branding colors (no college selected)
+  const accentColor = '#7c3aed';
+  const linkColor = '#8b5cf6';
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', padding: isMobile ? '20px' : '40px 24px' }}>
-      {/* Back link */}
-      <div className="mx-auto w-full max-w-[1200px]" style={{ marginBottom: '16px' }}>
-        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>
-          <ArrowLeft size={14} />
-          Back to Home
-        </Link>
-      </div>
-
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {/* Page Header */}
-      <div className="mx-auto w-full max-w-[1200px]" style={{ position: 'relative', zIndex: 1, marginBottom: '24px' }}>
-        <div style={{ position: 'relative', display: 'inline-block' }}>
-          <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
-              }}
-            />
-          </div>
+      <div className="w-full max-w-[1200px]" style={{ padding: isMobile ? '0px 20px 8px' : '0px 24px 12px', position: 'relative', zIndex: 1 }}>
+        <button onClick={() => router.back()} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)', marginTop: '22px', marginBottom: '8px', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+          <ArrowLeft size={14} />
+          Back
+        </button>
+        <div style={{ marginTop: '-8px' }}>
           <h1
             style={{
-              position: 'relative',
-              zIndex: 1,
               fontSize: isMobile ? '26px' : '34px',
               fontWeight: 700,
               color: 'var(--text)',
@@ -77,33 +66,33 @@ function PublicPricingPage() {
           >
             Pricing
           </h1>
+          <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
+            Start with a 14-day free trial. No credit card required.
+          </p>
         </div>
-        <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-          Start with a 14-day free trial. No credit card required.
-        </p>
       </div>
 
       {/* Content */}
-      <div className="mx-auto w-full max-w-[1200px]">
+      <div className="w-full max-w-[1200px]" style={{ padding: isMobile ? '12px 20px 24px' : '12px 24px 24px' }}>
         {/* Pricing Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '16px' : '24px', marginBottom: '32px' }}>
           {/* Free Plan */}
-          <Card>
+          <Card noAccent>
             <div style={{ padding: isMobile ? '4px' : '8px' }}>
               <h2 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: 700, color: 'var(--text)', marginBottom: '8px' }}>
                 Free
               </h2>
               <p style={{ fontSize: isMobile ? '28px' : '32px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>
                 $0
-                <span style={{ fontSize: '14px', fontWeight: 400, color: mutedText }}> /forever</span>
+                <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--text-muted)' }}> /forever</span>
               </p>
-              <p style={{ fontSize: '13px', color: mutedText, marginBottom: '20px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
                 Perfect for getting started
               </p>
 
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: '20px' }}>
                 {FREE_FEATURES.map((feature) => (
-                  <li key={feature} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: mutedText, marginBottom: '10px' }}>
+                  <li key={feature} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '10px' }}>
                     <Check size={16} style={{ color: 'var(--success)', flexShrink: 0, marginTop: '2px' }} />
                     {feature}
                   </li>
@@ -119,7 +108,7 @@ function PublicPricingPage() {
             style={{
               background: 'var(--panel)',
               borderRadius: '16px',
-              border: `2px solid ${colorPalette.accent}`,
+              border: `2px solid ${accentColor}`,
               padding: isMobile ? '20px' : '24px',
               position: 'relative',
               transition: 'transform 0.2s ease, box-shadow 0.2s ease',
@@ -138,7 +127,7 @@ function PublicPricingPage() {
                 fontSize: '11px',
                 fontWeight: 600,
                 borderRadius: '20px',
-                background: colorPalette.accent,
+                background: accentColor,
                 color: '#fff',
                 letterSpacing: '0.5px',
               }}
@@ -154,9 +143,9 @@ function PublicPricingPage() {
 
               <p style={{ fontSize: isMobile ? '28px' : '32px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>
                 $5
-                <span style={{ fontSize: '14px', fontWeight: 400, color: mutedText }}> /month</span>
+                <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--text-muted)' }}> /month</span>
               </p>
-              <p style={{ fontSize: '13px', color: mutedText, marginBottom: '20px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
                 or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$40/year</span>{' '}
                 <span style={{ color: 'var(--success)' }}>(save 33%)</span>
               </p>
@@ -170,7 +159,7 @@ function PublicPricingPage() {
                       alignItems: 'flex-start',
                       gap: '10px',
                       fontSize: '13px',
-                      color: feature.startsWith('Everything') ? 'var(--text)' : mutedText,
+                      color: feature.startsWith('Everything') ? 'var(--text)' : 'var(--text-muted)',
                       fontWeight: feature.startsWith('Everything') ? 500 : 400,
                       marginBottom: '10px',
                     }}
@@ -185,6 +174,10 @@ function PublicPricingPage() {
                 <Button
                   variant="primary"
                   className="w-full"
+                  style={{
+                    background: `linear-gradient(135deg, #8b5cf6 0%, ${accentColor} 50%, #6d28d9 100%)`,
+                    boxShadow: `0 0 20px ${accentColor}60, 0 4px 12px rgba(0,0,0,0.3)`,
+                  }}
                 >
                   <Crown size={18} />
                   Start Free Trial
@@ -198,7 +191,7 @@ function PublicPricingPage() {
         <div style={{ textAlign: 'center' }}>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
             Questions? Contact us at{' '}
-            <a href="mailto:collegeorbit@protonmail.com" style={{ color: colorPalette.link, textDecoration: 'none' }}>
+            <a href="mailto:collegeorbit@protonmail.com" style={{ color: linkColor, textDecoration: 'none' }}>
               collegeorbit@protonmail.com
             </a>
           </p>
@@ -213,6 +206,7 @@ function PublicPricingPage() {
 
 // Authenticated pricing page (original)
 function AuthenticatedPricingPage() {
+  const router = useRouter();
   const { isPremium, isTrialing, tier, isLoading: subLoading } = useSubscription();
   const [premiumHover, setPremiumHover] = useState(false);
   const isMobile = useIsMobile();
@@ -231,22 +225,14 @@ function AuthenticatedPricingPage() {
   return (
     <>
       {/* Page Header */}
-      <div className="mx-auto w-full max-w-[1200px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
-        <div style={{ position: 'relative', display: 'inline-block' }}>
-          {/* Subtle glow behind title */}
-          <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
-              }}
-            />
-          </div>
+      <div className="mx-auto w-full max-w-[1200px]" style={{ padding: isMobile ? '0px 20px 8px' : '0px 24px 12px', position: 'relative', zIndex: 1 }}>
+        <button onClick={() => router.back()} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)', marginTop: '22px', marginBottom: '8px', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+          <ArrowLeft size={14} />
+          Back
+        </button>
+        <div style={{ marginTop: '-8px' }}>
           <h1
             style={{
-              position: 'relative',
-              zIndex: 1,
               fontSize: isMobile ? '26px' : '34px',
               fontWeight: 700,
               color: 'var(--text)',
@@ -255,14 +241,14 @@ function AuthenticatedPricingPage() {
           >
             Pricing
           </h1>
+          <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
+            {isTrialing
+              ? 'Subscribe before your trial ends to keep all premium features.'
+              : isPremium
+              ? 'Manage your subscription below.'
+              : 'Choose a plan to unlock all features.'}
+          </p>
         </div>
-        <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-          {isTrialing
-            ? 'Subscribe before your trial ends to keep all premium features.'
-            : isPremium
-            ? 'Manage your subscription below.'
-            : 'Choose a plan to unlock all features.'}
-        </p>
       </div>
 
       {/* Content */}

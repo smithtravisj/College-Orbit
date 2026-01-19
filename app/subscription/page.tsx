@@ -140,29 +140,16 @@ export default function SubscriptionPage() {
     return (
       <>
         <div className="mx-auto w-full max-w-[800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-              <div
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
-                }}
-              />
-            </div>
-            <h1
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                fontSize: isMobile ? '26px' : '34px',
-                fontWeight: 700,
-                color: 'var(--text)',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Subscription
-            </h1>
-          </div>
+          <h1
+            style={{
+              fontSize: isMobile ? '26px' : '34px',
+              fontWeight: 700,
+              color: 'var(--text)',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Subscription
+          </h1>
           <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
             You don&apos;t have an active subscription.
           </p>
@@ -205,29 +192,16 @@ export default function SubscriptionPage() {
           Back to Account
         </Link>
         <div style={{ marginTop: '-12px' }}>
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-              <div
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
-                }}
-              />
-            </div>
-            <h1
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                fontSize: isMobile ? '26px' : '34px',
-                fontWeight: 700,
-                color: 'var(--text)',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Manage Subscription
-            </h1>
-          </div>
+          <h1
+            style={{
+              fontSize: isMobile ? '26px' : '34px',
+              fontWeight: 700,
+              color: 'var(--text)',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Manage Subscription
+          </h1>
           <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
             View and manage your Premium subscription.
           </p>

@@ -49,6 +49,7 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
     ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
     : colorPalette.accent;
   const isPrimary = variant === 'primary';
+  const isLightMode = theme === 'light';
 
   // Load state from database (via initialOpen prop)
   useEffect(() => {
@@ -79,7 +80,7 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
         borderColor: 'var(--border)',
         borderLeftWidth: '3px',
         borderLeftColor: `${accentColor}55`,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        boxShadow: isLightMode ? '0 1px 4px rgba(0,0,0,0.04)' : '0 2px 8px rgba(0,0,0,0.15)',
       }}
       onClick={() => !isOpen && handleToggle()}
     >

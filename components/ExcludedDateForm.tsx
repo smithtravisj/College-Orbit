@@ -49,7 +49,7 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
     appearance: 'none' as const,
     WebkitAppearance: 'none' as const,
     MozAppearance: 'none' as const,
-    backgroundColor: isChecked ? 'var(--button-secondary)' : 'var(--panel-2)',
+    backgroundColor: isChecked ? 'var(--accent)' : 'var(--panel-2)',
     backgroundImage: isChecked ? "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E\")" : 'none',
     backgroundRepeat: 'no-repeat' as const,
     backgroundPosition: 'center',
@@ -241,9 +241,6 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
           type="submit"
           disabled={isSubmitting}
           style={{
-            backgroundColor: 'var(--button-secondary)',
-            color: settings.theme === 'light' ? '#000000' : '#ffffff',
-            border: '1px solid var(--border)',
             padding: '8px 20px',
           }}
         >

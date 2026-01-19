@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
-import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -17,9 +16,8 @@ export default function AccountPage() {
   const { data: session, update: updateSession } = useSession();
   const router = useRouter();
   const isMobile = useIsMobile();
-  const { settings, exportData, importData, deleteAllData } = useAppStore();
+  const { exportData, importData, deleteAllData } = useAppStore();
   const subscription = useSubscription();
-  const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -236,30 +234,16 @@ export default function AccountPage() {
       {/* Account Header */}
       <div className="mx-auto w-full max-w-[1200px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div>
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            {/* Subtle glow behind title */}
-            <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-              <div
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
-                }}
-              />
-            </div>
-            <h1
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                fontSize: isMobile ? '26px' : '34px',
-                fontWeight: 700,
-                color: 'var(--text)',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Account
-            </h1>
-          </div>
+          <h1
+            style={{
+              fontSize: isMobile ? '26px' : '34px',
+              fontWeight: 700,
+              color: 'var(--text)',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Account
+          </h1>
           <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
             Manage your account information.
           </p>
@@ -398,13 +382,6 @@ export default function AccountPage() {
                   size="lg"
                   disabled={loading}
                   className="w-full"
-                  style={{
-                    backgroundColor: 'var(--button-secondary)',
-                    color: settings.theme === 'light' ? '#000000' : 'white',
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: 'var(--border)'
-                  }}
                 >
                   {loading ? 'Saving Changes...' : 'Save Changes'}
                 </Button>
@@ -422,7 +399,7 @@ export default function AccountPage() {
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Download a backup of all your data as a JSON file
                 </p>
-                <Button size={isMobile ? 'sm' : 'lg'} onClick={handleExport} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: 'var(--button-secondary)', color: settings.theme === 'light' ? '#000000' : 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
+                <Button size={isMobile ? 'sm' : 'lg'} onClick={handleExport} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
                   <Download size={18} />
                   Export Data
                 </Button>
@@ -463,11 +440,11 @@ export default function AccountPage() {
                   Permanently delete your data or account. These actions cannot be undone.
                 </p>
                 <div style={{ display: 'flex', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
-                  <Button size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAllData} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)', backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' }}>
+                  <Button variant="danger" size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAllData} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
                     <Trash2 size={18} />
                     Delete All Data
                   </Button>
-                  <Button size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAccount} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000', color: 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)', boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)', backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' }}>
+                  <Button variant="danger" size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAccount} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
                     <Trash2 size={18} />
                     Delete Account
                   </Button>
@@ -548,7 +525,7 @@ export default function AccountPage() {
                         </Button>
                       </Link>
                     ) : (
-                      <Link href="/checkout" className="block">
+                      <Link href="/pricing" className="block">
                         <Button variant="primary" size="lg" className="w-full">
                           <Crown size={18} />
                           {subscription.isTrialing ? 'Subscribe Now' : 'Upgrade to Premium'}
@@ -607,16 +584,10 @@ export default function AccountPage() {
                   size={isMobile ? 'sm' : 'lg'}
                   onClick={() => setShowLogoutConfirm(true)}
                   disabled={logoutLoading}
+                  variant="danger"
                   style={{
                     paddingLeft: isMobile ? '12px' : '16px',
                     paddingRight: isMobile ? '12px' : '16px',
-                    backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
-                    color: 'white',
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: 'var(--border)',
-                    boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)',
-                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                   }}
                 >
                   {logoutLoading ? 'Logging out...' : 'Log Out All Sessions'}

@@ -26,6 +26,8 @@ import {
   BulkChangeLocationModal,
   BulkDeleteModal,
 } from '@/components/BulkActionModals';
+import NaturalLanguageInput from '@/components/NaturalLanguageInput';
+import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
 
 export default function ExamsPage() {
   const isMobile = useIsMobile();
@@ -69,6 +71,7 @@ export default function ExamsPage() {
   const [formError, setFormError] = useState('');
   const [previewingExam, setPreviewingExam] = useState<any>(null);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [nlpInput, setNlpInput] = useState('');
 
   // Bulk selection state
   const bulkSelect = useBulkSelect();
@@ -250,8 +253,37 @@ export default function ExamsPage() {
 
   const cancelEdit = () => {
     setEditingId(null);
+    setNlpInput('');
     setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', tags: [], links: [{ label: '', url: '' }] });
     setShowForm(false);
+  };
+
+  // Handle NLP input change
+  const handleNlpInputChange = (value: string) => {
+    setNlpInput(value);
+
+    if (!value.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        title: '',
+        courseId: '',
+        location: '',
+        examDate: '',
+        examTime: '',
+      }));
+      return;
+    }
+
+    const parsed = parseNaturalLanguage(value, { courses, itemType: 'exam' });
+
+    setFormData(prev => ({
+      ...prev,
+      title: parsed.title || '',
+      courseId: parsed.courseId || '',
+      location: parsed.location || '',
+      examDate: parsed.date || '',
+      examTime: parsed.time || '',
+    }));
   };
 
   const getDateSearchStrings = (examAt: string | null | undefined): string[] => {
@@ -477,30 +509,16 @@ export default function ExamsPage() {
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              {/* Subtle glow behind title */}
-              <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-                <div
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
-                  }}
-                />
-              </div>
-              <h1
-                style={{
-                  position: 'relative',
-                  zIndex: 1,
-                  fontSize: isMobile ? '26px' : '34px',
-                  fontWeight: 700,
-                  color: 'var(--text)',
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                Exams
-              </h1>
-            </div>
+            <h1
+              style={{
+                fontSize: isMobile ? '26px' : '34px',
+                fontWeight: 700,
+                color: 'var(--text)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Exams
+            </h1>
             <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
               Your upcoming exams and assessments.
             </p>
@@ -509,6 +527,7 @@ export default function ExamsPage() {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               if (editingId || !showForm) {
                 setEditingId(null);
+                setNlpInput('');
                 setFormData({ title: '', courseId: courseFilter || '', examDate: '', examTime: '', location: '', notes: '', tags: Array.from(selectedTags), links: [{ label: '', url: '' }] });
                 setShowForm(true);
               } else {
@@ -563,8 +582,12 @@ export default function ExamsPage() {
                       }`}
                       style={{
                         padding: isMobile ? '8px 12px' : '8px 14px',
-                        backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent',
-                        backgroundImage: filter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                        backgroundColor: filter === f.value ? 'var(--accent)' : 'transparent',
+                        backgroundImage: filter === f.value
+                          ? (theme === 'light'
+                            ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                            : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)')
+                          : 'none',
                         boxShadow: filter === f.value ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
                         fontSize: isMobile ? '13px' : '14px'
                       }}
@@ -635,8 +658,12 @@ export default function ExamsPage() {
                       }`}
                       style={{
                         padding: '8px 14px',
-                        backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent',
-                        backgroundImage: filter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                        backgroundColor: filter === f.value ? 'var(--accent)' : 'transparent',
+                        backgroundImage: filter === f.value
+                          ? (theme === 'light'
+                            ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                            : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)')
+                          : 'none',
                         boxShadow: filter === f.value ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
                         fontSize: '14px'
                       }}
@@ -683,6 +710,15 @@ export default function ExamsPage() {
             <div style={{ overflow: 'visible' }}>
               <Card>
                 <form onSubmit={handleSubmit} className={isMobile ? 'space-y-2' : 'space-y-3'} style={{ overflow: 'visible' }}>
+                {/* Natural Language Input - only for new exams (premium feature) */}
+                {!editingId && isPremium && (
+                  <NaturalLanguageInput
+                    value={nlpInput}
+                    onChange={handleNlpInputChange}
+                    placeholder={NLP_PLACEHOLDERS.exam}
+                    autoFocus
+                  />
+                )}
                 {formError && (
                   <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '8px', padding: '8px' }}>
                     <p style={{ fontSize: '13px', color: 'rgb(239, 68, 68)', margin: 0 }}>{formError}</p>
@@ -864,11 +900,6 @@ export default function ExamsPage() {
                     size={isMobile ? 'sm' : 'md'}
                     type="submit"
                     style={{
-                      backgroundColor: 'var(--button-secondary)',
-                      color: settings.theme === 'light' ? '#000000' : 'white',
-                      borderWidth: '1px',
-                      borderStyle: 'solid',
-                      borderColor: 'var(--border)',
                       paddingLeft: isMobile ? '10px' : '16px',
                       paddingRight: isMobile ? '10px' : '16px'
                     }}

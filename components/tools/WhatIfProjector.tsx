@@ -6,7 +6,6 @@ import { Select } from '@/components/ui/Input';
 
 interface WhatIfProjectorProps {
   entries?: GpaEntry[];
-  theme?: string;
 }
 
 const gradePoints: { [key: string]: number } = {
@@ -72,7 +71,7 @@ const getGradePoints = (grade: string): number => {
   return 0;
 };
 
-export default function WhatIfProjector({ entries: providedEntries, theme = 'dark' }: WhatIfProjectorProps) {
+export default function WhatIfProjector({ entries: providedEntries }: WhatIfProjectorProps) {
   const [entries, setEntries] = useState<GpaEntry[]>(providedEntries || []);
   const [loading, setLoading] = useState(!providedEntries);
 
@@ -248,13 +247,13 @@ export default function WhatIfProjector({ entries: providedEntries, theme = 'dar
             <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px' }}>
               Projected Cumulative GPA
             </div>
-            <div style={{ fontSize: '28px', fontWeight: 'bold', color: deltaPercentage ? (theme === 'light' ? '#2563eb' : '#7fa8ff') : 'var(--text)', marginBottom: '8px' }}>
+            <div style={{ fontSize: '28px', fontWeight: 'bold', color: deltaPercentage ? 'var(--link)' : 'var(--text)', marginBottom: '8px' }}>
               {projectedCumulativeGPA.toFixed(2)}
             </div>
             <div
               style={{
                 fontSize: '13px',
-                color: deltaPercentage ? (theme === 'light' ? '#2563eb' : '#7fa8ff') : 'var(--text-muted)',
+                color: deltaPercentage ? 'var(--link)' : 'var(--text-muted)',
               }}
             >
               {deltaPercentage ? '+' : '-'}{delta.toFixed(2)} from current ({originalCumulativeGPA.toFixed(2)})

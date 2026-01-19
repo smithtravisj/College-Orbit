@@ -54,8 +54,13 @@ export function QuickAddButton() {
   const iconColor = theme === 'light' ? '#000000' : 'white';
 
   // Calculate glow intensity (0-100 scale mapped to opacity and spread)
-  const glowOpacity = Math.round((glowIntensity / 100) * 0.6 * 255).toString(16).padStart(2, '0');
-  const glowSpread = 12 + (glowIntensity / 100) * 8;
+  // Reduce glow intensity when no college is selected (default theme)
+  const noCollegeSelected = !university;
+  const glowReduction = noCollegeSelected ? 0.5 : 1;
+  const glowOpacity = theme === 'light'
+    ? Math.round((glowIntensity / 100) * 0.6 * glowReduction * 255).toString(16).padStart(2, '0')
+    : Math.round((glowIntensity / 100) * 0.25 * glowReduction * 255).toString(16).padStart(2, '0');
+  const glowSpread = (12 + (glowIntensity / 100) * 8) * glowReduction;
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -80,8 +85,10 @@ export function QuickAddButton() {
         className={getButtonClass()}
         style={{
           backgroundColor: buttonColor,
-          backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.15) 100%)',
-          boxShadow: `0 0 ${glowSpread}px ${buttonColor}${glowOpacity}, 0 3px 12px ${buttonColor}60`,
+          backgroundImage: theme === 'light'
+            ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+            : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+          boxShadow: `0 0 ${glowSpread}px ${buttonColor}${glowOpacity}, 0 3px 12px ${buttonColor}40`,
           pointerEvents: 'auto',
         }}
         aria-label="Quick add"

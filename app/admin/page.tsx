@@ -808,29 +808,16 @@ export default function AdminPage() {
       {/* Admin Header */}
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div>
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-              <div
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${accentColor}18 0%, transparent 70%)`,
-                }}
-              />
-            </div>
-            <h1
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                fontSize: isMobile ? '26px' : '34px',
-                fontWeight: 700,
-                color: 'var(--text)',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Admin
-            </h1>
-          </div>
+          <h1
+            style={{
+              fontSize: isMobile ? '26px' : '34px',
+              fontWeight: 700,
+              color: 'var(--text)',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Admin
+          </h1>
           <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
             Manage your application.
           </p>
@@ -854,8 +841,12 @@ export default function AdminPage() {
                 padding: '10px 18px',
                 fontSize: '14px',
                 border: 'none',
-                backgroundColor: activeTab === tab.id ? 'var(--nav-active)' : 'transparent',
-                backgroundImage: activeTab === tab.id ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                backgroundColor: activeTab === tab.id ? 'var(--accent)' : 'transparent',
+                backgroundImage: activeTab === tab.id
+                  ? (settings.theme === 'light'
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                    : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)')
+                  : 'none',
                 boxShadow: activeTab === tab.id ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : undefined,
                 cursor: 'pointer',
               }}
