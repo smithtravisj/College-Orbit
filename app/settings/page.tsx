@@ -53,6 +53,12 @@ export default function SettingsPage() {
   const [notifyExamReminders, setNotifyExamReminders] = useState(true);
   const [notifyAccountAlerts, setNotifyAccountAlerts] = useState(true);
 
+  // Local state for sliders (smooth UI while debouncing API calls)
+  const [localGradientIntensity, setLocalGradientIntensity] = useState(50);
+  const [localGlowIntensity, setLocalGlowIntensity] = useState(50);
+  const gradientDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const glowDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const { settings, updateSettings } = useAppStore();
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
 
@@ -132,6 +138,10 @@ export default function SettingsPage() {
     setNotifyExamReminders(settings.notifyExamReminders !== false);
     setNotifyAccountAlerts(settings.notifyAccountAlerts !== false);
 
+    // Load visual effects sliders
+    setLocalGradientIntensity(settings.gradientIntensity ?? 50);
+    setLocalGlowIntensity(settings.glowIntensity ?? 50);
+
     setMounted(true);
   }, [settings, mounted]);
 
@@ -149,6 +159,27 @@ export default function SettingsPage() {
       </div>
     );
   }
+
+  // Debounced slider handlers for smooth UI
+  const handleGradientChange = (value: number) => {
+    setLocalGradientIntensity(value);
+    if (gradientDebounceRef.current) {
+      clearTimeout(gradientDebounceRef.current);
+    }
+    gradientDebounceRef.current = setTimeout(() => {
+      updateSettings({ gradientIntensity: value });
+    }, 150);
+  };
+
+  const handleGlowChange = (value: number) => {
+    setLocalGlowIntensity(value);
+    if (glowDebounceRef.current) {
+      clearTimeout(glowDebounceRef.current);
+    }
+    glowDebounceRef.current = setTimeout(() => {
+      updateSettings({ glowIntensity: value });
+    }, 150);
+  };
 
   const handleSubmitCollegeRequest = async () => {
     if (!collegeRequestName.trim()) {
@@ -677,21 +708,21 @@ export default function SettingsPage() {
               <div style={{ marginBottom: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span className="text-sm text-[var(--text)]">Gradient Intensity</span>
-                  <span className="text-sm text-[var(--text-muted)]">{settings.gradientIntensity ?? 50}%</span>
+                  <span className="text-sm text-[var(--text-muted)]">{localGradientIntensity}%</span>
                 </div>
                 <input
                   type="range"
                   min="0"
                   max="100"
-                  value={settings.gradientIntensity ?? 50}
-                  onChange={(e) => isPremium && updateSettings({ gradientIntensity: parseInt(e.target.value) })}
+                  value={localGradientIntensity}
+                  onChange={(e) => isPremium && handleGradientChange(parseInt(e.target.value))}
                   disabled={!isPremium}
                   style={{
                     width: '100%',
                     height: '6px',
                     borderRadius: '3px',
                     appearance: 'none',
-                    background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${settings.gradientIntensity ?? 50}%, var(--border) ${settings.gradientIntensity ?? 50}%, var(--border) 100%)`,
+                    background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${localGradientIntensity}%, var(--border) ${localGradientIntensity}%, var(--border) 100%)`,
                     cursor: isPremium ? 'pointer' : 'not-allowed',
                   }}
                 />
@@ -699,21 +730,21 @@ export default function SettingsPage() {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span className="text-sm text-[var(--text)]">Glow Intensity</span>
-                  <span className="text-sm text-[var(--text-muted)]">{settings.glowIntensity ?? 50}%</span>
+                  <span className="text-sm text-[var(--text-muted)]">{localGlowIntensity}%</span>
                 </div>
                 <input
                   type="range"
                   min="0"
                   max="100"
-                  value={settings.glowIntensity ?? 50}
-                  onChange={(e) => isPremium && updateSettings({ glowIntensity: parseInt(e.target.value) })}
+                  value={localGlowIntensity}
+                  onChange={(e) => isPremium && handleGlowChange(parseInt(e.target.value))}
                   disabled={!isPremium}
                   style={{
                     width: '100%',
                     height: '6px',
                     borderRadius: '3px',
                     appearance: 'none',
-                    background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${settings.glowIntensity ?? 50}%, var(--border) ${settings.glowIntensity ?? 50}%, var(--border) 100%)`,
+                    background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${localGlowIntensity}%, var(--border) ${localGlowIntensity}%, var(--border) 100%)`,
                     cursor: isPremium ? 'pointer' : 'not-allowed',
                   }}
                 />
