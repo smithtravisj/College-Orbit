@@ -1,19 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { QuickAddModal } from './QuickAddModal';
+import { useKeyboardShortcutsContext } from './KeyboardShortcutsProvider';
 import styles from './QuickAddButton.module.css';
 
 export function QuickAddButton() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { setQuickAddHandler, setEscapeHandler } = useKeyboardShortcutsContext();
+
+  // Register Cmd+K handler to open modal
+  const openModal = useCallback(() => setIsModalOpen(true), []);
+  const closeModal = useCallback(() => setIsModalOpen(false), []);
+
+  useEffect(() => {
+    setQuickAddHandler(openModal);
+    return () => setQuickAddHandler(() => {});
+  }, [setQuickAddHandler, openModal]);
+
+  // Register Escape handler when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      setEscapeHandler(closeModal);
+      return () => setEscapeHandler(null);
+    }
+    return undefined;
+  }, [isModalOpen, setEscapeHandler, closeModal]);
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  const showFullButton = ['/', '/dashboard', '/calendar', '/tools', '/settings', '/admin', '/account'].includes(pathname);
   const bottomRightPages = ['/tasks', '/deadlines', '/exams', '/notes', '/courses', '/shopping'];
   const isBottomRight = bottomRightPages.includes(pathname);
   const university = useAppStore((state) => state.settings.university) || null;
@@ -43,15 +62,15 @@ export function QuickAddButton() {
     setIsModalOpen(true);
   };
 
-  // On desktop, show label only on dashboard/calendar; otherwise just the plus icon
-  const showLabel = !isMobile && showFullButton;
+  // On desktop, always show the full label
+  const showLabel = !isMobile;
 
   // Determine which style class to use
   const getButtonClass = () => {
     if (isMobile) return styles.fab;
-    if (showLabel) return styles.fabDesktop;
-    if (isBottomRight) return styles.fabBottomRight;
-    return styles.fab;
+    // On desktop, always use pill-shaped button with label
+    if (isBottomRight) return styles.fabDesktopBottomRight;
+    return styles.fabDesktop;
   };
 
   return (

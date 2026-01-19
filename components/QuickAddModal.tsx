@@ -8,6 +8,7 @@ import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from 
 import CalendarPicker from './CalendarPicker';
 import TimePicker from './TimePicker';
 import { ShoppingListType, GROCERY_CATEGORIES, WISHLIST_CATEGORIES, PANTRY_CATEGORIES, Course } from '@/types';
+import { useModalShortcuts } from '@/hooks/useKeyboardShortcuts';
 import styles from './QuickAddModal.module.css';
 
 type QuickAddType = 'task' | 'assignment' | 'exam' | 'note' | 'course' | 'shopping';
@@ -893,6 +894,17 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
         return false;
     }
   };
+
+  // Keyboard shortcuts for modal
+  useModalShortcuts({
+    isOpen,
+    onClose,
+    onSubmit: () => {
+      if (canSubmit() && !isSubmitting) {
+        handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+      }
+    },
+  });
 
   if (!isOpen) return null;
 
