@@ -9,6 +9,7 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
+import PremiumGate from '@/components/subscription/PremiumGate';
 import { Plus, Trash2, Edit2, ShoppingCart, Heart, Package, Check, Copy } from 'lucide-react';
 import {
   ShoppingListType,
@@ -316,7 +317,7 @@ export default function ShoppingPage() {
   );
 
   return (
-    <>
+    <PremiumGate feature="Shopping">
       {/* Shopping Header */}
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -732,6 +733,6 @@ export default function ShoppingPage() {
           opacity: 1 !important;
         }
       `}</style>
-    </>
+    </PremiumGate>
   );
 }

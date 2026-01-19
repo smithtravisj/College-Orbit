@@ -10,48 +10,10 @@ import { Monitor } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { DASHBOARD_CARDS, TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
-interface CollegeRequest {
-  id: string;
-  collegeName: string;
-  status: string;
-  createdAt: string;
-  user: {
-    email: string;
-    name: string | null;
-  };
-}
-
-interface IssueReport {
-  id: string;
-  description: string;
-  status: string;
-  createdAt: string;
-  user: {
-    email: string;
-    name: string | null;
-  };
-}
-
-interface FeatureRequest {
-  id: string;
-  description: string;
-  status: string;
-  createdAt: string;
-  user: {
-    email: string;
-    name: string | null;
-  };
-}
-
 export default function SettingsPage() {
   const isMobile = useIsMobile();
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [collegeRequests, setCollegeRequests] = useState<CollegeRequest[]>([]);
-  const [issueReports, setIssueReports] = useState<IssueReport[]>([]);
-  const [featureRequests, setFeatureRequests] = useState<FeatureRequest[]>([]);
-  const [adminTab, setAdminTab] = useState<'college' | 'issues' | 'features'>('college');
   const [dueSoonDays, setDueSoonDays] = useState<number | string>(7);
   const [university, setUniversity] = useState<string | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | 'system'>('dark');
@@ -65,18 +27,8 @@ export default function SettingsPage() {
   const [featureDescription, setFeatureDescription] = useState('');
   const [featureRequestMessage, setFeatureRequestMessage] = useState('');
   const [featureRequestLoading, setFeatureRequestLoading] = useState(false);
-  const [selectedFeature, setSelectedFeature] = useState<FeatureRequest | null>(null);
-  const [showFeatureModal, setShowFeatureModal] = useState(false);
-  const [deleteFeatureId, setDeleteFeatureId] = useState<string | null>(null);
-  const [showDeleteFeatureConfirm, setShowDeleteFeatureConfirm] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
-  const [showDeleteRequestConfirm, setShowDeleteRequestConfirm] = useState(false);
-  const [deleteRequestId, setDeleteRequestId] = useState<string | null>(null);
-  const [showDeleteIssueConfirm, setShowDeleteIssueConfirm] = useState(false);
-  const [deleteIssueId, setDeleteIssueId] = useState<string | null>(null);
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
-  const [selectedIssue, setSelectedIssue] = useState<IssueReport | null>(null);
-  const [showIssueModal, setShowIssueModal] = useState(false);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
   // Visibility customization state
@@ -90,6 +42,12 @@ export default function SettingsPage() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [visibilityMessage, setVisibilityMessage] = useState('');
   const [isMacDesktop, setIsMacDesktop] = useState(false);
+  const [emailAnnouncements, setEmailAnnouncements] = useState(true);
+  const [emailExamReminders, setEmailExamReminders] = useState(true);
+  const [emailAccountAlerts, setEmailAccountAlerts] = useState(true);
+  const [notifyAnnouncements, setNotifyAnnouncements] = useState(true);
+  const [notifyExamReminders, setNotifyExamReminders] = useState(true);
+  const [notifyAccountAlerts, setNotifyAccountAlerts] = useState(true);
 
   const { settings, updateSettings } = useAppStore();
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
@@ -172,65 +130,19 @@ export default function SettingsPage() {
         { enabled: true, value: 3, unit: 'hours' }   // 3 hours
       ]);
     }
+
+    // Load email preferences
+    setEmailAnnouncements(settings.emailAnnouncements !== false);
+    setEmailExamReminders(settings.emailExamReminders !== false);
+    setEmailAccountAlerts(settings.emailAccountAlerts !== false);
+
+    // Load in-app notification preferences
+    setNotifyAnnouncements(settings.notifyAnnouncements !== false);
+    setNotifyExamReminders(settings.notifyExamReminders !== false);
+    setNotifyAccountAlerts(settings.notifyAccountAlerts !== false);
+
     setMounted(true);
   }, [settings]);
-
-  // Fetch college requests and issue reports if user is admin
-  useEffect(() => {
-    if (!mounted || !session?.user?.id) return;
-
-    const fetchAdminData = async () => {
-      try {
-        const collegeResponse = await fetch('/api/admin/college-requests').catch(() => null);
-        const issuesResponse = await fetch('/api/admin/issue-reports').catch(() => null);
-        const featuresResponse = await fetch('/api/admin/feature-requests').catch(() => null);
-
-        // If any endpoint returns 403, user is not admin
-        if (!collegeResponse || !issuesResponse || !featuresResponse ||
-            collegeResponse.status === 403 || issuesResponse.status === 403 || featuresResponse.status === 403) {
-          setIsAdmin(false);
-          return;
-        }
-
-        // If we get here, user is likely an admin - set it to true
-        setIsAdmin(true);
-
-        // Load each data type independently so one failure doesn't prevent the card from showing
-        if (collegeResponse.ok) {
-          const collegeData = await collegeResponse.json();
-          setCollegeRequests(collegeData.requests);
-        }
-        if (issuesResponse.ok) {
-          const issuesData = await issuesResponse.json();
-          setIssueReports(issuesData.reports);
-        }
-        if (featuresResponse.ok) {
-          const featuresData = await featuresResponse.json();
-          setFeatureRequests(featuresData.requests);
-        }
-      } catch (error) {
-        console.error('Failed to fetch admin data:', error);
-      }
-    };
-
-    // Initial fetch
-    fetchAdminData();
-
-    // Set up polling for real-time updates (every 5 seconds)
-    const interval = setInterval(fetchAdminData, 5000);
-
-    // Listen for notification refresh events to immediately update admin data
-    const handleRefresh = () => {
-      fetchAdminData();
-    };
-
-    window.addEventListener('notification-refresh', handleRefresh);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('notification-refresh', handleRefresh);
-    };
-  }, [mounted, session?.user?.id]);
 
   // Update input value when state changes (but not if user is editing)
   useEffect(() => {
@@ -290,61 +202,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleMarkAsAdded = async (requestId: string) => {
-    try {
-      const response = await fetch('/api/admin/college-requests', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requestId, status: 'added' }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        console.error('Failed to mark as added:', data);
-        alert('We couldn\'t update this request. Please try again.');
-        return;
-      }
-
-      setCollegeRequests(collegeRequests.filter(req => req.id !== requestId));
-    } catch (error) {
-      console.error('Error marking as added:', error);
-      alert('We couldn\'t update this request. Please try again.');
-    }
-  };
-
-  const handleDeleteRequest = (requestId: string) => {
-    setDeleteRequestId(requestId);
-    setShowDeleteRequestConfirm(true);
-  };
-
-  const confirmDeleteRequest = async () => {
-    if (!deleteRequestId) return;
-
-    try {
-      const response = await fetch('/api/admin/college-requests', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requestId: deleteRequestId, status: 'rejected' }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        console.error('Failed to reject request:', data);
-        alert('We couldn\'t update this request. Please try again.');
-        setShowDeleteRequestConfirm(false);
-        return;
-      }
-
-      setCollegeRequests(collegeRequests.filter(req => req.id !== deleteRequestId));
-      setShowDeleteRequestConfirm(false);
-      setDeleteRequestId(null);
-    } catch (error) {
-      console.error('Error rejecting request:', error);
-      alert('We couldn\'t update this request. Please try again.');
-      setShowDeleteRequestConfirm(false);
-    }
-  };
-
   const handleSubmitIssueReport = async () => {
     if (!issueDescription.trim()) {
       setIssueReportMessage('Please enter a description');
@@ -397,61 +254,6 @@ export default function SettingsPage() {
       setIssueReportMessage('✗ We couldn\'t save your report. Please try again.');
       setIssueReportLoading(false);
       setTimeout(() => setIssueReportMessage(''), 3000);
-    }
-  };
-
-  const handleMarkIssueFixed = async (reportId: string) => {
-    try {
-      const response = await fetch('/api/admin/issue-reports', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reportId, status: 'fixed' }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        console.error('Failed to mark as fixed:', data);
-        alert('We couldn\'t update this issue. Please try again.');
-        return;
-      }
-
-      setIssueReports(issueReports.filter(report => report.id !== reportId));
-    } catch (error) {
-      console.error('Error marking as fixed:', error);
-      alert('We couldn\'t update this issue. Please try again.');
-    }
-  };
-
-  const handleDeleteIssue = (reportId: string) => {
-    setDeleteIssueId(reportId);
-    setShowDeleteIssueConfirm(true);
-  };
-
-  const confirmDeleteIssue = async () => {
-    if (!deleteIssueId) return;
-
-    try {
-      const response = await fetch('/api/admin/issue-reports', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reportId: deleteIssueId, status: 'rejected' }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        console.error('Failed to reject report:', data);
-        alert('We couldn\'t update this issue. Please try again.');
-        setShowDeleteIssueConfirm(false);
-        return;
-      }
-
-      setIssueReports(issueReports.filter(report => report.id !== deleteIssueId));
-      setShowDeleteIssueConfirm(false);
-      setDeleteIssueId(null);
-    } catch (error) {
-      console.error('Error rejecting report:', error);
-      alert('We couldn\'t update this issue. Please try again.');
-      setShowDeleteIssueConfirm(false);
     }
   };
 
@@ -510,61 +312,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleMarkFeatureImplemented = async (requestId: string) => {
-    try {
-      const response = await fetch('/api/admin/feature-requests', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requestId, status: 'implemented' }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        console.error('Failed to mark as implemented:', data);
-        alert('We couldn\'t update this feature request. Please try again.');
-        return;
-      }
-
-      setFeatureRequests(featureRequests.filter(request => request.id !== requestId));
-    } catch (error) {
-      console.error('Error marking as implemented:', error);
-      alert('We couldn\'t update this feature request. Please try again.');
-    }
-  };
-
-  const handleDeleteFeature = (requestId: string) => {
-    setDeleteFeatureId(requestId);
-    setShowDeleteFeatureConfirm(true);
-  };
-
-  const confirmDeleteFeature = async () => {
-    if (!deleteFeatureId) return;
-
-    try {
-      const response = await fetch('/api/admin/feature-requests', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requestId: deleteFeatureId, status: 'rejected' }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        console.error('Failed to reject request:', data);
-        alert('We couldn\'t update this feature request. Please try again.');
-        setShowDeleteFeatureConfirm(false);
-        return;
-      }
-
-      setFeatureRequests(featureRequests.filter(request => request.id !== deleteFeatureId));
-      setShowDeleteFeatureConfirm(false);
-      setDeleteFeatureId(null);
-    } catch (error) {
-      console.error('Error rejecting request:', error);
-      alert('We couldn\'t update this feature request. Please try again.');
-      setShowDeleteFeatureConfirm(false);
-    }
-  };
-
   // Theme-specific colors for remove buttons
   const isDarkMode = selectedTheme === 'dark' || selectedTheme === 'system';
   const removeButtonColor = isDarkMode ? '#660000' : '#e63946';
@@ -614,287 +361,6 @@ export default function SettingsPage() {
         </div>
       </div>
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
-        {/* Admin Requests Card (Admin Only) - Full Width */}
-        {isAdmin && (
-          <div style={{ marginBottom: '24px', gridColumn: '1 / -1' }}>
-            <Card title="Admin Requests">
-              {/* Tab Navigation */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                {[
-                  { id: 'college', label: 'College Requests' },
-                  { id: 'issues', label: 'Issue Reports' },
-                  { id: 'features', label: 'Feature Requests' },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setAdminTab(tab.id as 'college' | 'issues' | 'features')}
-                    className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
-                      adminTab === tab.id ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
-                    }`}
-                    style={{
-                      padding: '8px 14px',
-                      fontSize: '14px',
-                      border: 'none',
-                      backgroundColor: adminTab === tab.id ? 'var(--nav-active)' : 'transparent',
-                      backgroundImage: adminTab === tab.id ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
-                      boxShadow: adminTab === tab.id ? `0 0 10px ${colorPalette.accent}80` : undefined,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* College Requests Tab */}
-              {adminTab === 'college' && (
-                <>
-                  {collegeRequests.length === 0 ? (
-                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>No pending college requests</p>
-                  ) : (
-                    <div className="space-y-6">
-                    {collegeRequests.map((request) => (
-                      <div
-                        key={request.id}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: '12px',
-                          backgroundColor: 'var(--panel-2)',
-                          borderRadius: '6px',
-                          border: '1px solid var(--border)',
-                          marginBottom: '12px',
-                        }}
-                      >
-                        <div>
-                          <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px' }}>
-                            {request.collegeName}
-                          </p>
-                          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                            Requested by {request.user.name || request.user.email} • Status: {request.status}
-                          </p>
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          {request.status !== 'added' && (
-                            <button
-                              onClick={() => handleMarkAsAdded(request.id)}
-                              style={{
-                                padding: '6px 12px',
-                                fontSize: '14px',
-                                backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                fontWeight: '500',
-                              }}
-                            >
-                              Mark Added
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeleteRequest(request.id)}
-                            style={{
-                              padding: '6px 12px',
-                              fontSize: '14px',
-                              backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontWeight: '500',
-                            }}
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Issue Reports Tab */}
-              {adminTab === 'issues' && (
-                <>
-                  {issueReports.length === 0 ? (
-                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>No pending issue reports</p>
-                  ) : (
-                    <div className="space-y-6">
-                    {issueReports.map((report) => (
-                      <div
-                        key={report.id}
-                        onClick={() => {
-                          setSelectedIssue(report);
-                          setShowIssueModal(true);
-                        }}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          marginBottom: '12px',
-                          alignItems: 'center',
-                          padding: '12px',
-                          backgroundColor: 'var(--panel-2)',
-                          borderRadius: '6px',
-                          border: '1px solid var(--border)',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--panel-3)';
-                          e.currentTarget.style.borderColor = 'var(--text-muted)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--panel-2)';
-                          e.currentTarget.style.borderColor = 'var(--border)';
-                        }}
-                      >
-                        <div style={{ flex: 1 }}>
-                          <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px', wordBreak: 'break-word' }}>
-                            {report.description.length > 80 ? report.description.substring(0, 80) + '...' : report.description}
-                          </p>
-                          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                            Reported by {report.user.name || report.user.email} • Status: {report.status}
-                          </p>
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px', marginLeft: '12px', flexShrink: 0 }}>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMarkIssueFixed(report.id);
-                            }}
-                            style={{
-                              padding: '6px 12px',
-                              fontSize: '14px',
-                              backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontWeight: '500',
-                            }}
-                          >
-                            Mark Fixed
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteIssue(report.id);
-                            }}
-                            style={{
-                              padding: '6px 12px',
-                              fontSize: '14px',
-                              backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontWeight: '500',
-                            }}
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Feature Requests Tab */}
-              {adminTab === 'features' && (
-                <>
-                  {featureRequests.length === 0 ? (
-                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>No pending feature requests</p>
-                  ) : (
-                    <div className="space-y-6">
-                    {featureRequests.map((request) => (
-                      <div
-                        key={request.id}
-                        onClick={() => {
-                          setSelectedFeature(request);
-                          setShowFeatureModal(true);
-                        }}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: '12px',
-                          backgroundColor: 'var(--panel-2)',
-                          borderRadius: '6px',
-                          border: '1px solid var(--border)',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          marginBottom: '12px',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--panel-3)';
-                          e.currentTarget.style.borderColor = 'var(--text-muted)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--panel-2)';
-                          e.currentTarget.style.borderColor = 'var(--border)';
-                        }}
-                      >
-                        <div style={{ flex: 1 }}>
-                          <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px', wordBreak: 'break-word' }}>
-                            {request.description.length > 80 ? request.description.substring(0, 80) + '...' : request.description}
-                          </p>
-                          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                            Requested by {request.user.name || request.user.email} • Status: {request.status}
-                          </p>
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px', marginLeft: '12px', flexShrink: 0 }}>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMarkFeatureImplemented(request.id);
-                            }}
-                            style={{
-                              padding: '6px 12px',
-                              fontSize: '14px',
-                              backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontWeight: '500',
-                            }}
-                          >
-                            Mark Implemented
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteFeature(request.id);
-                            }}
-                            style={{
-                              padding: '6px 12px',
-                              fontSize: '14px',
-                              backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontWeight: '500',
-                            }}
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </Card>
-          </div>
-        )}
-
         {/* Desktop App - Hidden for now, uncomment when ready to release */}
         {false && isMacDesktop && (
           <div style={{ marginBottom: '24px' }}>
@@ -1320,6 +786,120 @@ export default function SettingsPage() {
                   + Add Reminder
                 </Button>
               </div>}
+            </div>
+          </Card>
+
+          {/* Notification Preferences */}
+          <Card title="Notification Preferences">
+            <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px' }}>
+              Email Notifications
+            </p>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+              Choose which emails you want to receive from College Orbit.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                <div>
+                  <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Announcements</p>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Updates and news from College Orbit</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={emailAnnouncements}
+                  onChange={async (e) => {
+                    setEmailAnnouncements(e.target.checked);
+                    await updateSettings({ emailAnnouncements: e.target.checked });
+                  }}
+                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                />
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                <div>
+                  <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Exam Reminders</p>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before your upcoming exams</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={emailExamReminders}
+                  onChange={async (e) => {
+                    setEmailExamReminders(e.target.checked);
+                    await updateSettings({ emailExamReminders: e.target.checked });
+                  }}
+                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                />
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                <div>
+                  <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Account Alerts</p>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Password changes, subscription updates, and security alerts</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={emailAccountAlerts}
+                  onChange={async (e) => {
+                    setEmailAccountAlerts(e.target.checked);
+                    await updateSettings({ emailAccountAlerts: e.target.checked });
+                  }}
+                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                />
+              </label>
+            </div>
+
+            {/* In-App Notification Preferences */}
+            <div style={{ borderTop: '1px solid var(--border)', marginTop: '20px', paddingTop: '20px' }}>
+              <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px' }}>
+                In-App Notifications
+              </p>
+              <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                Choose which in-app notifications you want to receive.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <div>
+                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Announcements</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Updates and news from College Orbit</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notifyAnnouncements}
+                    onChange={async (e) => {
+                      setNotifyAnnouncements(e.target.checked);
+                      await updateSettings({ notifyAnnouncements: e.target.checked });
+                    }}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                  />
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <div>
+                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Exam Reminders</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before your upcoming exams</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notifyExamReminders}
+                    onChange={async (e) => {
+                      setNotifyExamReminders(e.target.checked);
+                      await updateSettings({ notifyExamReminders: e.target.checked });
+                    }}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                  />
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <div>
+                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Account Alerts</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Subscription updates, payment alerts, and security notifications</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notifyAccountAlerts}
+                    onChange={async (e) => {
+                      setNotifyAccountAlerts(e.target.checked);
+                      await updateSettings({ notifyAccountAlerts: e.target.checked });
+                    }}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                  />
+                </label>
+              </div>
             </div>
           </Card>
 
@@ -1898,434 +1478,6 @@ export default function SettingsPage() {
           </Card>
         </div>
       </div>
-
-      {/* Delete college request confirmation modal */}
-      {showDeleteRequestConfirm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'var(--panel)',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            padding: '24px',
-            maxWidth: '400px',
-            boxShadow: 'var(--shadow-lg)'
-          }}>
-            <h3 style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
-              Reject Request?
-            </h3>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
-              This will mark the college request as rejected. The user will be notified of the rejection.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => {
-                  setShowDeleteRequestConfirm(false);
-                  setDeleteRequestId(null);
-                }}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: 'var(--panel-2)',
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeleteRequest}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#660000',
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                  color: 'white',
-                  border: '1px solid #660000',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
-                }}
-              >
-                Reject Request
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete issue report confirmation modal */}
-      {showDeleteIssueConfirm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'var(--panel)',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            padding: '24px',
-            maxWidth: '400px',
-            boxShadow: 'var(--shadow-lg)'
-          }}>
-            <h3 style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
-              Reject Report?
-            </h3>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
-              This will mark the issue report as rejected. The user will be notified that their report was reviewed and closed.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => {
-                  setShowDeleteIssueConfirm(false);
-                  setDeleteIssueId(null);
-                }}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: 'var(--panel-2)',
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeleteIssue}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#660000',
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                  color: 'white',
-                  border: '1px solid #660000',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
-                }}
-              >
-                Reject Report
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* View issue report modal */}
-      {showIssueModal && selectedIssue && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'var(--panel)',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            padding: '24px',
-            maxWidth: '600px',
-            maxHeight: '80vh',
-            overflowY: 'auto',
-            boxShadow: 'var(--shadow-lg)'
-          }}>
-            <h3 style={{ color: 'var(--text)', marginBottom: '12px', fontSize: '18px', fontWeight: '600' }}>
-              Issue Report
-            </h3>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '12px' }}>
-              Reported by {selectedIssue.user.name || selectedIssue.user.email}
-            </p>
-            <div style={{
-              backgroundColor: 'var(--panel-2)',
-              border: '1px solid var(--border)',
-              borderRadius: '6px',
-              padding: '12px',
-              marginBottom: '20px',
-              minHeight: '100px',
-              maxHeight: '300px',
-              overflowY: 'auto',
-            }}>
-              <p style={{ color: 'var(--text)', fontSize: '14px', lineHeight: '1.5', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                {selectedIssue.description}
-              </p>
-            </div>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => {
-                  setShowIssueModal(false);
-                  setSelectedIssue(null);
-                }}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: 'var(--panel-2)',
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  handleMarkIssueFixed(selectedIssue.id);
-                  setShowIssueModal(false);
-                  setSelectedIssue(null);
-                }}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
-                  color: 'white',
-                  border: `1px solid ${selectedTheme === 'light' ? 'var(--success)' : '#063d1d'}`,
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
-              >
-                Mark Fixed
-              </button>
-              <button
-                onClick={() => {
-                  handleDeleteIssue(selectedIssue.id);
-                  setShowIssueModal(false);
-                  setSelectedIssue(null);
-                }}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                  color: 'white',
-                  border: `1px solid ${selectedTheme === 'light' ? 'var(--danger)' : '#660000'}`,
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
-                }}
-              >
-                Reject
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete feature request confirmation modal */}
-      {showDeleteFeatureConfirm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'var(--panel)',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            padding: '24px',
-            maxWidth: '400px',
-            boxShadow: 'var(--shadow-lg)'
-          }}>
-            <h3 style={{ color: 'var(--text)', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
-              Reject Request?
-            </h3>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
-              This will mark the feature request as rejected. The user will be notified that their request was reviewed and closed.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => {
-                  setShowDeleteFeatureConfirm(false);
-                  setDeleteFeatureId(null);
-                }}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: 'var(--panel-2)',
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeleteFeature}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#660000',
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                  color: 'white',
-                  border: '1px solid #660000',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
-                }}
-              >
-                Reject Request
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* View feature request modal */}
-      {showFeatureModal && selectedFeature && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'var(--panel)',
-            border: '1px solid var(--border)',
-            borderRadius: '12px',
-            padding: '24px',
-            maxWidth: '600px',
-            maxHeight: '80vh',
-            overflowY: 'auto',
-            boxShadow: 'var(--shadow-lg)'
-          }}>
-            <h3 style={{ color: 'var(--text)', marginBottom: '12px', fontSize: '18px', fontWeight: '600' }}>
-              Feature Request
-            </h3>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '12px' }}>
-              Requested by {selectedFeature.user.name || selectedFeature.user.email}
-            </p>
-            <div style={{
-              backgroundColor: 'var(--panel-2)',
-              border: '1px solid var(--border)',
-              borderRadius: '6px',
-              padding: '12px',
-              marginBottom: '20px',
-              minHeight: '100px',
-              maxHeight: '300px',
-              overflowY: 'auto',
-            }}>
-              <p style={{ color: 'var(--text)', fontSize: '14px', lineHeight: '1.5', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                {selectedFeature.description}
-              </p>
-            </div>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => {
-                  setShowFeatureModal(false);
-                  setSelectedFeature(null);
-                }}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: 'var(--panel-2)',
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  handleMarkFeatureImplemented(selectedFeature.id);
-                  setShowFeatureModal(false);
-                  setSelectedFeature(null);
-                }}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
-                  color: 'white',
-                  border: `1px solid ${selectedTheme === 'light' ? 'var(--success)' : '#063d1d'}`,
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
-                }}
-              >
-                Mark Implemented
-              </button>
-              <button
-                onClick={() => {
-                  handleDeleteFeature(selectedFeature.id);
-                  setShowFeatureModal(false);
-                  setSelectedFeature(null);
-                }}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
-                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                  color: 'white',
-                  border: `1px solid ${selectedTheme === 'light' ? 'var(--danger)' : '#660000'}`,
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)'
-                }}
-              >
-                Reject
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Email confirmation modal */}
       {showEmailConfirm && (

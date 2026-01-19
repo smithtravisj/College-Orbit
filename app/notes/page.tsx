@@ -12,11 +12,15 @@ import RichTextEditor from '@/components/RichTextEditor';
 import FolderTree from '@/components/notes/FolderTree';
 import TagInput from '@/components/notes/TagInput';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
-import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown, Crown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useSubscription } from '@/hooks/useSubscription';
+import { FREE_TIER_LIMITS } from '@/lib/subscription';
+import Link from 'next/link';
 
 export default function NotesPage() {
   const isMobile = useIsMobile();
+  const subscription = useSubscription();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
   const colorPalette = getCollegeColorPalette(university || null, theme);
@@ -30,6 +34,7 @@ export default function NotesPage() {
   const [showFoldersDropdown, setShowFoldersDropdown] = useState(true);
   const [showTagsDropdown, setShowTagsDropdown] = useState(false);
   const [deleteConfirmNote, setDeleteConfirmNote] = useState<string | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     content: { type: 'doc', content: [] },
@@ -77,15 +82,23 @@ export default function NotesPage() {
       setEditingId(null);
       setSelectedNoteId(null);
     } else {
-      await addNote({
-        title: formData.title,
-        content: formData.content,
-        folderId: formData.folderId || null,
-        courseId: formData.courseId || null,
-        tags: formData.tags,
-        isPinned: false,
-        links,
-      });
+      try {
+        await addNote({
+          title: formData.title,
+          content: formData.content,
+          folderId: formData.folderId || null,
+          courseId: formData.courseId || null,
+          tags: formData.tags,
+          isPinned: false,
+          links,
+        });
+      } catch (error: any) {
+        if (error.code === 'LIMIT_REACHED' || error.upgradeRequired) {
+          setShowUpgradeModal(true);
+          return;
+        }
+        throw error;
+      }
     }
 
     resetForm();
@@ -117,6 +130,25 @@ export default function NotesPage() {
       tags: [],
       links: [{ label: '', url: '' }],
     });
+  };
+
+  // Check limit before opening new note form
+  const handleNewNote = () => {
+    // If premium or trialing, always allow
+    if (subscription.isPremium) {
+      resetForm();
+      setShowForm(true);
+      return;
+    }
+
+    // Check if at limit
+    if (notes.length >= FREE_TIER_LIMITS.maxNotes) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    resetForm();
+    setShowForm(true);
   };
 
   const handleFiltersCollapseChange = (isOpen: boolean) => {
@@ -175,8 +207,9 @@ export default function NotesPage() {
 
   // Light mode detection for delete button
   const isLightMode = settings.theme === 'light';
-  const deleteButtonBgColor = isLightMode ? '#e63946' : '#660000';
-  const deleteButtonTextColor = isLightMode ? 'white' : 'var(--text)';
+  const deleteButtonBgColor = isLightMode ? 'var(--danger)' : '#660000';
+  const deleteButtonTextColor = 'white';
+  const deleteButtonGlow = isLightMode ? '0 0 10px rgba(229, 83, 75, 0.4)' : '0 0 10px rgba(102, 0, 0, 0.6)';
 
   return (
     <>
@@ -217,8 +250,11 @@ export default function NotesPage() {
             size="md"
             style={{ marginTop: isMobile ? '12px' : '8px' }}
             onClick={() => {
-              resetForm();
-              setShowForm(!showForm);
+              if (showForm) {
+                setShowForm(false);
+              } else {
+                handleNewNote();
+              }
             }}
           >
             <Plus size={18} />
@@ -804,7 +840,7 @@ export default function NotesPage() {
                     ? 'No notes match your filters. Try adjusting your search.'
                     : 'Create your first note to get started'
                 }
-                action={{ label: 'Create Note', onClick: () => { resetForm(); setShowForm(true); } }}
+                action={{ label: 'Create Note', onClick: handleNewNote }}
               />
             )}
           </div>
@@ -879,6 +915,8 @@ export default function NotesPage() {
                     fontSize: isMobile ? '13px' : '14px',
                     border: 'none',
                     backgroundColor: deleteButtonBgColor,
+                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                    boxShadow: deleteButtonGlow,
                     color: deleteButtonTextColor,
                     cursor: 'pointer',
                     transition: 'opacity 150ms ease',
@@ -891,6 +929,101 @@ export default function NotesPage() {
                   }}
                 >
                   Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: isMobile ? 'flex-end' : 'center',
+              justifyContent: 'center',
+              zIndex: 50,
+            }}
+            onClick={() => setShowUpgradeModal(false)}
+          >
+            <div
+              style={{
+                backgroundColor: 'var(--panel)',
+                borderRadius: isMobile ? '12px 12px 0 0' : '12px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                maxWidth: isMobile ? '100%' : '420px',
+                width: isMobile ? '100%' : '100%',
+                margin: isMobile ? 0 : '0 16px',
+                padding: isMobile ? '24px 20px' : '28px',
+                textAlign: 'center',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  background: `linear-gradient(135deg, ${colorPalette.accent}30 0%, ${colorPalette.accent}10 100%)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                }}
+              >
+                <Crown size={28} style={{ color: 'var(--text)' }} />
+              </div>
+              <h3 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: '600', color: 'var(--text)', margin: '0 0 8px 0' }}>
+                Note Limit Reached
+              </h3>
+              <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', margin: '0 0 24px 0', lineHeight: 1.5 }}>
+                You&apos;ve reached the free tier limit. Upgrade to Premium for unlimited notes and more features.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Link href="/pricing" style={{ textDecoration: 'none' }}>
+                  <button
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '12px 16px' : '12px 20px',
+                      borderRadius: '10px',
+                      fontWeight: '600',
+                      fontSize: isMobile ? '14px' : '15px',
+                      border: '1px solid var(--border)',
+                      backgroundColor: colorPalette.accent,
+                      backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <Crown size={18} />
+                    Upgrade to Premium
+                  </button>
+                </Link>
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '10px 16px' : '10px 20px',
+                    borderRadius: '10px',
+                    fontWeight: '500',
+                    fontSize: isMobile ? '13px' : '14px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(255,255,255,0.03)',
+                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Maybe Later
                 </button>
               </div>
             </div>

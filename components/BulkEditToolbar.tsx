@@ -2,7 +2,6 @@
 
 import { X, FolderOpen, Tag, Gauge, Calendar, Clock, Link, CheckCircle, Trash2, MapPin, Check } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import useAppStore from '@/lib/store';
 import Button from '@/components/ui/Button';
 
 export type EntityType = 'task' | 'deadline' | 'exam' | 'course';
@@ -55,7 +54,6 @@ export default function BulkEditToolbar({
   onSelectAll,
 }: BulkEditToolbarProps) {
   const isMobile = useIsMobile();
-  const { settings } = useAppStore();
   const availableActions = actionConfig[entityType];
 
   return (
@@ -162,18 +160,13 @@ export default function BulkEditToolbar({
 
           {/* Delete button */}
           <Button
-            variant="secondary"
+            variant="danger"
             size="sm"
             onClick={() => onAction('delete')}
             style={{
               flexShrink: 0,
               marginLeft: isMobile ? '4px' : '8px',
               padding: isMobile ? '6px 8px' : '8px 12px',
-              backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
-              color: 'white',
-              borderWidth: '1px',
-              borderStyle: 'solid',
-              borderColor: 'var(--border)',
             }}
           >
             <Trash2 size={isMobile ? 14 : 16} />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -42,12 +42,12 @@ export const NAV_ITEMS = [
 ];
 
 export const ADMIN_NAV_ITEMS = [
-  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/admin', label: 'Admin', icon: BarChart3 },
 ];
 
 export default function Navigation() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
 
@@ -59,6 +59,15 @@ export default function Navigation() {
   const visiblePages = rawVisiblePages.map((p: string) => p === 'Deadlines' ? 'Assignments' : p);
   const visiblePagesOrder = rawVisiblePagesOrder ? (rawVisiblePagesOrder as string[]).map((p: string) => p === 'Deadlines' ? 'Assignments' : p) : rawVisiblePagesOrder;
   const [isAdmin, setIsAdmin] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted on client to enable localStorage check (useLayoutEffect runs before paint)
+  useLayoutEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Check localStorage directly after mount for instant display
+  const showAdminNav = isAdmin || (mounted && localStorage.getItem('isAdmin') === 'true');
   const titleRef = useRef<HTMLHeadingElement>(null);
   const titleContainerRef = useRef<HTMLDivElement>(null);
   const [titleFontSize, setTitleFontSize] = useState(32);
@@ -126,28 +135,29 @@ export default function Navigation() {
     });
   })();
 
-  // Check if user is admin
+  // Clear admin status when user logs out, validate in background for logged-in users
   useEffect(() => {
-    if (!session?.user?.id) {
+    if (sessionStatus === 'unauthenticated') {
       setIsAdmin(false);
+      localStorage.removeItem('isAdmin');
       return;
     }
 
-    const checkAdmin = async () => {
-      try {
-        const response = await fetch('/api/analytics/data').catch(() => null);
-        if (response && response.status !== 403) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
-      } catch {
-        setIsAdmin(false);
-      }
-    };
-
-    checkAdmin();
-  }, [session?.user?.id]);
+    // Validate admin status when authenticated
+    if (sessionStatus === 'authenticated') {
+      fetch('/api/analytics/data')
+        .then(response => {
+          if (response.status === 403) {
+            setIsAdmin(false);
+            localStorage.removeItem('isAdmin');
+          } else if (response.ok) {
+            setIsAdmin(true);
+            localStorage.setItem('isAdmin', 'true');
+          }
+        })
+        .catch(() => {});
+    }
+  }, [sessionStatus]);
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/login' });
@@ -257,7 +267,7 @@ export default function Navigation() {
               </Link>
             );
           })}
-          {isAdmin && ADMIN_NAV_ITEMS.map((item) => {
+          {showAdminNav && ADMIN_NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
@@ -368,7 +378,7 @@ export default function Navigation() {
                 </Link>
               );
             })}
-            {isAdmin && ADMIN_NAV_ITEMS.filter(item => item.label !== 'Analytics').map((item) => {
+            {showAdminNav && ADMIN_NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
               return (

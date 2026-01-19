@@ -260,6 +260,15 @@ export default function LandingPage() {
           transition: opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s;
         }
 
+        .hero-trial-note {
+          font-size: 14px;
+          color: #64748b;
+          margin-top: 24px;
+          opacity: ${mounted ? 1 : 0};
+          transform: translateY(${mounted ? '0' : '20px'});
+          transition: opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s;
+        }
+
         .bottom-cta {
           margin-top: 64px;
           text-align: center;
@@ -557,6 +566,11 @@ export default function LandingPage() {
             line-height: 1.5;
           }
 
+          .hero-trial-note {
+            font-size: 12px;
+            margin-top: 16px;
+          }
+
           .features-section {
             padding: 20px 16px 40px;
           }
@@ -738,6 +752,10 @@ export default function LandingPage() {
             color: #64748b;
           }
 
+          .hero-trial-note {
+            color: #94a3b8;
+          }
+
           .features-section {
             background: linear-gradient(180deg, transparent 0%, rgba(241, 245, 249, 0.8) 100%);
           }
@@ -874,7 +892,7 @@ export default function LandingPage() {
         </div>
         <nav className="header-nav">
           <Link href="/login" className="header-sign-in">Sign In</Link>
-          <Link href="/signup" className="header-get-started">Get Started</Link>
+          <Link href="/signup" className="header-get-started">Start Free Trial</Link>
         </nav>
       </header>
 
@@ -882,7 +900,7 @@ export default function LandingPage() {
       <section className="hero-section">
         <div className="hero-content">
           <div className="hero-badge">
-            Your college command center
+            Designed for college students
           </div>
 
           <h1 className="hero-title">
@@ -890,7 +908,11 @@ export default function LandingPage() {
           </h1>
 
           <p className="hero-subtitle">
-            Classes, assignments, exams, and tasks all revolving around one central dashboard. Stay organized without the chaos. Free to use.
+            Classes, assignments, exams, and tasks all revolving around one central dashboard. Stay organized without the chaos.
+          </p>
+
+          <p className="hero-trial-note">
+            14-day free trial • No credit card required
           </p>
         </div>
       </section>
@@ -935,10 +957,10 @@ export default function LandingPage() {
             <p className="bottom-cta-text">Ready to get organized?</p>
             <div className="cta-buttons">
               <Link href="/signup" className="btn-primary">
-                Start organizing for free
+                Start your free trial
               </Link>
-              <Link href="/login" className="btn-secondary">
-                Sign In
+              <Link href="/pricing" className="btn-secondary">
+                View Pricing
               </Link>
             </div>
           </div>
@@ -955,6 +977,7 @@ export default function LandingPage() {
             </a>
           </div>
           <div className="footer-links">
+            <Link href="/pricing" className="footer-link">Pricing</Link>
             <Link href="/privacy" className="footer-link">Privacy</Link>
             <Link href="/terms" className="footer-link">Terms</Link>
           </div>

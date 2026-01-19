@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { generateAllUserRecurringDeadlineInstances } from '@/lib/recurringDeadlineUtils';
 import { generateRecurringDeadlineInstances } from '@/lib/recurringDeadlineUtils';
+import { checkPremiumAccess } from '@/lib/subscription';
 
 // GET all deadlines for authenticated user
 export const GET = withRateLimit(async function(request: NextRequest) {
@@ -132,6 +133,15 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     // Check if this is a recurring deadline
     if (data.recurring) {
+      // Recurring deadlines require premium
+      const premiumCheck = await checkPremiumAccess(token.id);
+      if (!premiumCheck.allowed) {
+        return NextResponse.json(
+          { error: 'premium_required', message: 'Recurring assignments are a Premium feature. Upgrade to create recurring assignments.' },
+          { status: 403 }
+        );
+      }
+
       const pattern = await prisma.recurringDeadlinePattern.create({
         data: {
           userId: token.id,

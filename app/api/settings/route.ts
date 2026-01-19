@@ -33,6 +33,12 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
         hasCompletedOnboarding: false,
         selectedGradeSemester: 'all',
         courseTermFilter: 'all',
+        emailAnnouncements: true,
+        emailExamReminders: true,
+        emailAccountAlerts: true,
+        notifyAnnouncements: true,
+        notifyExamReminders: true,
+        notifyAccountAlerts: true,
       },
     };
 
@@ -82,6 +88,12 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.dashboardCardsCollapsedState !== undefined) updateData.dashboardCardsCollapsedState = data.dashboardCardsCollapsedState;
     if (data.hiddenQuickLinks !== undefined) updateData.hiddenQuickLinks = data.hiddenQuickLinks;
     if (data.courseTermFilter !== undefined) updateData.courseTermFilter = data.courseTermFilter;
+    if (data.emailAnnouncements !== undefined) updateData.emailAnnouncements = data.emailAnnouncements;
+    if (data.emailExamReminders !== undefined) updateData.emailExamReminders = data.emailExamReminders;
+    if (data.emailAccountAlerts !== undefined) updateData.emailAccountAlerts = data.emailAccountAlerts;
+    if (data.notifyAnnouncements !== undefined) updateData.notifyAnnouncements = data.notifyAnnouncements;
+    if (data.notifyExamReminders !== undefined) updateData.notifyExamReminders = data.notifyExamReminders;
+    if (data.notifyAccountAlerts !== undefined) updateData.notifyAccountAlerts = data.notifyAccountAlerts;
 
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 

@@ -19,6 +19,18 @@ model User {
   isAdmin                   Boolean                    @default(false)
   lastLogin                 DateTime?
   sessionInvalidatedAt      DateTime?
+
+  // Subscription fields
+  subscriptionTier          String                     @default("trial")
+  subscriptionStatus        String                     @default("trialing")
+  trialStartedAt            DateTime                   @default(now())
+  trialEndsAt               DateTime?
+  stripeCustomerId          String?                    @unique
+  stripeSubscriptionId      String?                    @unique
+  subscriptionPlan          String?
+  subscriptionExpiresAt     DateTime?
+  lifetimePremium           Boolean                    @default(false)
+
   collegeRequests           CollegeRequest[]
   courses                   Course[]
   customQuickLinks          CustomQuickLink[]
@@ -41,6 +53,8 @@ model User {
   calendarEvents            CalendarEvent[]
 
   @@index([email])
+  @@index([subscriptionTier])
+  @@index([stripeCustomerId])
 }
 
 model Course {
@@ -333,6 +347,12 @@ model Settings {
   dashboardCardsCollapsedState Json? @default("[]")
   hiddenQuickLinks       Json?    @default("{}")
   courseTermFilter       String   @default("all")
+  emailAnnouncements     Boolean  @default(true)
+  emailExamReminders     Boolean  @default(true)
+  emailAccountAlerts     Boolean  @default(true)
+  notifyAnnouncements    Boolean  @default(true)
+  notifyExamReminders    Boolean  @default(true)
+  notifyAccountAlerts    Boolean  @default(true)
   user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -505,4 +525,19 @@ model CalendarEvent {
 
   @@index([userId])
   @@index([startAt])
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  adminId      String
+  adminEmail   String
+  action       String   // grant_premium, revoke_premium, grant_admin, revoke_admin, send_announcement, approve_college_request, reject_college_request, approve_issue_report, reject_issue_report, approve_feature_request, reject_feature_request
+  targetUserId String?
+  targetEmail  String?
+  details      Json?    // Additional context (announcement title, request details, etc.)
+  createdAt    DateTime @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@index([createdAt])
 }

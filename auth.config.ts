@@ -93,7 +93,16 @@ export const authConfig: NextAuthOptions = {
       try {
         const freshUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { name: true, email: true, isAdmin: true, lastLogin: true, sessionInvalidatedAt: true },
+          select: {
+            name: true,
+            email: true,
+            isAdmin: true,
+            lastLogin: true,
+            sessionInvalidatedAt: true,
+            subscriptionTier: true,
+            trialEndsAt: true,
+            lifetimePremium: true,
+          },
         });
 
         if (freshUser) {
@@ -113,6 +122,31 @@ export const authConfig: NextAuthOptions = {
           token.email = freshUser.email;
           (session.user as any).isAdmin = freshUser.isAdmin;
           (session.user as any).lastLogin = freshUser.lastLogin?.toISOString() || null;
+
+          // Auto-grant lifetime premium to admins if they don't have it
+          if (freshUser.isAdmin && !freshUser.lifetimePremium) {
+            prisma.user.update({
+              where: { id: token.id as string },
+              data: {
+                lifetimePremium: true,
+                subscriptionTier: 'premium',
+                subscriptionStatus: 'active',
+              },
+            }).catch((err) => console.error('Failed to grant admin lifetime premium:', err));
+            // Update local variable for isPremium calculation
+            freshUser.lifetimePremium = true;
+          }
+
+          // Add subscription info to session
+          (session.user as any).subscriptionTier = freshUser.subscriptionTier;
+          // Calculate isPremium: lifetime, active subscription, or active trial
+          const isPremium =
+            freshUser.lifetimePremium ||
+            freshUser.subscriptionTier === 'premium' ||
+            (freshUser.subscriptionTier === 'trial' &&
+              freshUser.trialEndsAt &&
+              new Date() < freshUser.trialEndsAt);
+          (session.user as any).isPremium = isPremium;
         }
       } catch (error) {
         console.error('Error fetching fresh user data in session:', error);

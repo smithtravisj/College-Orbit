@@ -33,7 +33,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const variantStyles = {
       primary: `bg-[var(--accent)] ${isLightMode ? 'text-black' : 'text-white'} hover:brightness-110 active:translate-y-[1px]`,
       secondary: 'bg-white/5 text-[var(--text)] hover:bg-white/8 border border-[var(--border)] active:translate-y-[1px]',
-      danger: 'bg-[var(--danger)] text-white hover:brightness-110 active:translate-y-[1px]',
+      danger: `${isLightMode ? 'bg-[var(--danger)]' : 'bg-[#660000]'} text-white hover:brightness-110 active:translate-y-[1px]`,
       ghost: 'bg-transparent hover:bg-white/5 text-[var(--muted)] hover:text-[var(--text)] active:translate-y-[1px]',
     };
 
@@ -43,12 +43,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         return {
           backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
           boxShadow: `0 0 10px ${colorPalette.accent}80`,
+          border: '1px solid var(--border)',
         };
       }
       if (variant === 'danger') {
         return {
           backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-          boxShadow: '0 0 10px rgba(220, 38, 38, 0.5)',
+          boxShadow: isLightMode
+            ? '0 0 10px rgba(229, 83, 75, 0.4)' // Light theme: brighter red glow
+            : '0 0 10px rgba(102, 0, 0, 0.6)', // Dark theme: darker red glow matching #660000
         };
       }
       if (variant === 'secondary') {

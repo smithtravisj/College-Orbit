@@ -11,7 +11,9 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X, Upload, FileIcon, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X, Upload, FileIcon, ChevronDown, Crown } from 'lucide-react';
+import { useSubscription } from '@/hooks/useSubscription';
+import Link from 'next/link';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import RecurrenceSelector from '@/components/RecurrenceSelector';
@@ -74,11 +76,14 @@ function getRecurrenceText(pattern: any): string {
 
 export default function DeadlinesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const subscription = useSubscription();
   const [mounted, setMounted] = useState(false);
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
   const colorPalette = getCollegeColorPalette(university || null, theme);
   const [showForm, setShowForm] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState<'recurring' | 'files'>('recurring');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [hidingDeadlines, setHidingDeadlines] = useState<Set<string>>(new Set());
   const [toggledDeadlines, setToggledDeadlines] = useState<Set<string>>(new Set());
@@ -1047,7 +1052,15 @@ export default function DeadlinesPage() {
                     <input
                       type="checkbox"
                       checked={formData.isRecurring}
-                      onChange={(e) => setFormData({ ...formData, isRecurring: e.target.checked, recurring: { ...formData.recurring, isRecurring: e.target.checked } })}
+                      onChange={(e) => {
+                        // If trying to enable recurring and not premium, show upgrade modal
+                        if (e.target.checked && !subscription.isPremium) {
+                          setUpgradeFeature('recurring');
+                          setShowUpgradeModal(true);
+                          return;
+                        }
+                        setFormData({ ...formData, isRecurring: e.target.checked, recurring: { ...formData.recurring, isRecurring: e.target.checked } });
+                      }}
                       style={{ width: isMobile ? '14px' : '16px', height: isMobile ? '14px' : '16px', cursor: 'pointer' }}
                     />
                     <Repeat size={isMobile ? 14 : 16} />
@@ -1254,7 +1267,14 @@ export default function DeadlinesPage() {
                     onChange={handleFileUpload}
                     style={{ display: 'none' }}
                   />
-                  <Button variant="secondary" size={isMobile ? 'sm' : 'md'} type="button" onClick={() => fileInputRef.current?.click()}>
+                  <Button variant="secondary" size={isMobile ? 'sm' : 'md'} type="button" onClick={() => {
+                    if (!subscription.isPremium) {
+                      setUpgradeFeature('files');
+                      setShowUpgradeModal(true);
+                      return;
+                    }
+                    fileInputRef.current?.click();
+                  }}>
                     <Upload size={isMobile ? 14 : 16} />
                     Add Files
                   </Button>
@@ -1945,6 +1965,103 @@ export default function DeadlinesPage() {
         onClose={() => setPreviewingFile(null)}
         onNavigate={(file, index) => setPreviewingFile(prev => prev ? { ...prev, file, index } : null)}
       />
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: isMobile ? 'flex-end' : 'center',
+              justifyContent: 'center',
+              zIndex: 50,
+            }}
+            onClick={() => setShowUpgradeModal(false)}
+          >
+            <div
+              style={{
+                backgroundColor: 'var(--panel)',
+                borderRadius: isMobile ? '12px 12px 0 0' : '12px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                maxWidth: isMobile ? '100%' : '420px',
+                width: isMobile ? '100%' : '100%',
+                margin: isMobile ? 0 : '0 16px',
+                padding: isMobile ? '24px 20px' : '28px',
+                textAlign: 'center',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  background: `linear-gradient(135deg, ${colorPalette.accent}30 0%, ${colorPalette.accent}10 100%)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                }}
+              >
+                <Crown size={28} style={{ color: 'var(--text)' }} />
+              </div>
+              <h3 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: 700, color: 'var(--text)', marginBottom: '8px' }}>
+                {upgradeFeature === 'recurring' ? 'Recurring Assignments' : 'File Uploads'} is a Premium Feature
+              </h3>
+              <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
+                {upgradeFeature === 'recurring'
+                  ? 'Upgrade to Premium to create recurring assignments and automate your workflow.'
+                  : 'Upgrade to Premium to attach files to your assignments and keep everything organized.'}
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <Link href="/pricing" onClick={() => setShowUpgradeModal(false)}>
+                  <button
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '12px 16px' : '12px 20px',
+                      borderRadius: '10px',
+                      fontWeight: '600',
+                      fontSize: isMobile ? '14px' : '15px',
+                      border: '1px solid var(--border)',
+                      backgroundColor: colorPalette.accent,
+                      backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <Crown size={18} />
+                    Upgrade to Premium
+                  </button>
+                </Link>
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '10px 16px' : '10px 20px',
+                    borderRadius: '10px',
+                    fontWeight: '500',
+                    fontSize: isMobile ? '13px' : '14px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(255,255,255,0.03)',
+                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Maybe Later
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }

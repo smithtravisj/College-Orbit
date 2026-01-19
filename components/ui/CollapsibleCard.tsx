@@ -78,7 +78,7 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
           <div className="flex items-start justify-between gap-4" style={{ marginBottom: isOpen ? '16px' : '0px', paddingTop: isOpen ? '0px' : '8px' }}>
             <div className="space-y-1 flex-1">
               <h3 className="font-bold leading-[1.25] text-[var(--text)]" style={{ fontSize: '17px' }}>{title}</h3>
-              {subtitle && isOpen && <p className="leading-[1.6]" style={{ fontSize: '12px', color: 'var(--text-muted)', opacity: 0.7 }}>{subtitle}</p>}
+              {subtitle && isOpen && <p className="leading-[1.6]" style={{ fontSize: '12px', color: theme === 'light' ? 'var(--text-muted)' : 'rgba(255, 255, 255, 0.6)' }}>{subtitle}</p>}
             </div>
             <div className="flex items-center gap-2">
               {action && <div>{action}</div>}

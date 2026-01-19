@@ -107,6 +107,15 @@ export const DELETE = withRateLimit(async function(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const notificationId = searchParams.get('id');
+    const deleteAll = searchParams.get('all') === 'true';
+
+    // Delete all notifications
+    if (deleteAll) {
+      await prisma.notification.deleteMany({
+        where: { userId: session.user.id },
+      });
+      return NextResponse.json({ success: true, message: 'All notifications deleted' });
+    }
 
     if (!notificationId) {
       return NextResponse.json({ error: 'Missing notification id' }, { status: 400 });

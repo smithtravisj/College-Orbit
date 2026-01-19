@@ -12,7 +12,10 @@ import FileUpload from '@/components/ui/FileUpload';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import CourseForm from '@/components/CourseForm';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Crown } from 'lucide-react';
+import { useSubscription } from '@/hooks/useSubscription';
+import { getCollegeColorPalette } from '@/lib/collegeColors';
+import Link from 'next/link';
 
 interface EventDetailModalProps {
   isOpen: boolean;
@@ -80,13 +83,16 @@ export default function EventDetailModal({
   onStatusChange,
 }: EventDetailModalProps) {
   const isMobile = useIsMobile();
+  const subscription = useSubscription();
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
   const courseFormRef = useRef<{ submit: () => void }>(null);
-  const { updateTask, updateDeadline, updateCourse, updateCalendarEvent } = useAppStore();
+  const { updateTask, updateDeadline, updateCourse, updateCalendarEvent, settings } = useAppStore();
+  const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState<any>(null);
   const [localStatus, setLocalStatus] = useState<string | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -601,6 +607,8 @@ export default function EventDetailModal({
                 formData={editFormData}
                 setFormData={setEditFormData}
                 courses={courses}
+                isPremium={subscription.isPremium}
+                onShowUpgradeModal={() => setShowUpgradeModal(true)}
               />
             )
           ) : event.type === 'course' && 'meetingTimes' in fullData ? (
@@ -690,6 +698,101 @@ export default function EventDetailModal({
           )}
         </div>
       </div>
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: isMobile ? 'flex-end' : 'center',
+              justifyContent: 'center',
+              zIndex: 60,
+            }}
+            onClick={() => setShowUpgradeModal(false)}
+          >
+            <div
+              style={{
+                backgroundColor: 'var(--panel)',
+                borderRadius: isMobile ? '12px 12px 0 0' : '12px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                maxWidth: isMobile ? '100%' : '420px',
+                width: isMobile ? '100%' : '100%',
+                margin: isMobile ? 0 : '0 16px',
+                padding: isMobile ? '24px 20px' : '28px',
+                textAlign: 'center',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  background: `linear-gradient(135deg, ${colorPalette.accent}30 0%, ${colorPalette.accent}10 100%)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                }}
+              >
+                <Crown size={28} style={{ color: 'var(--text)' }} />
+              </div>
+              <h3 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: 700, color: 'var(--text)', marginBottom: '8px' }}>
+                File Uploads is a Premium Feature
+              </h3>
+              <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
+                Upgrade to Premium to attach files and keep everything organized.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <Link href="/pricing" onClick={() => setShowUpgradeModal(false)}>
+                  <button
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '12px 16px' : '12px 20px',
+                      borderRadius: '10px',
+                      fontWeight: '600',
+                      fontSize: isMobile ? '14px' : '15px',
+                      border: '1px solid var(--border)',
+                      backgroundColor: colorPalette.accent,
+                      backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <Crown size={18} />
+                    Upgrade to Premium
+                  </button>
+                </Link>
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '10px 16px' : '10px 20px',
+                    borderRadius: '10px',
+                    fontWeight: '500',
+                    fontSize: isMobile ? '13px' : '14px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(255,255,255,0.03)',
+                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Maybe Later
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -700,9 +803,11 @@ interface TaskDeadlineFormProps {
   formData: any;
   setFormData: (data: any) => void;
   courses: Course[];
+  isPremium?: boolean;
+  onShowUpgradeModal?: () => void;
 }
 
-function TaskDeadlineForm({ formData, setFormData, courses }: TaskDeadlineFormProps) {
+function TaskDeadlineForm({ formData, setFormData, courses, isPremium, onShowUpgradeModal }: TaskDeadlineFormProps) {
   const isMobile = useIsMobile();
   const [showMore, setShowMore] = useState(false);
   if (!formData) return null;
@@ -858,10 +963,17 @@ function TaskDeadlineForm({ formData, setFormData, courses }: TaskDeadlineFormPr
             <p style={{ fontSize: isMobile ? '0.75rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 6px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
               Files
             </p>
-            <FileUpload
-              files={formData.files || []}
-              onChange={(files) => setFormData({ ...formData, files })}
-            />
+            {isPremium ? (
+              <FileUpload
+                files={formData.files || []}
+                onChange={(files) => setFormData({ ...formData, files })}
+              />
+            ) : (
+              <Button variant="secondary" size={isMobile ? 'sm' : 'md'} type="button" onClick={onShowUpgradeModal}>
+                <Crown size={isMobile ? 14 : 16} />
+                Upgrade to Add Files
+              </Button>
+            )}
           </div>
         </div>
       )}

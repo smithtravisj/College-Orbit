@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authConfig } from '@/auth.config';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { checkFeatureLimit } from '@/lib/subscription';
 
 // GET all courses for authenticated user
 export const GET = withRateLimit(async function(_request: NextRequest) {
@@ -35,6 +36,15 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
+    }
+
+    // Check courses limit for free users
+    const limitCheck = await checkFeatureLimit(session.user.id, 'courses');
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { error: 'limit_reached', message: limitCheck.message },
+        { status: 403 }
+      );
     }
 
     const data = await req.json();

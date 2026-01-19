@@ -42,12 +42,17 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Calculate trial end date (14 days from now)
+    const trialEndsAt = new Date();
+    trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+
+    // Create user with trial subscription
     const user = await prisma.user.create({
       data: {
         email,
         name: name || null,
         passwordHash,
+        trialEndsAt,
         settings: {
           create: {
             dueSoonWindowDays: 7,
@@ -62,6 +67,26 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         },
       },
     });
+
+    // Create trial started notification
+    try {
+      const trialEndFormatted = trialEndsAt.toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      });
+      await prisma.notification.create({
+        data: {
+          userId: user.id,
+          title: 'Welcome to your 14-day Premium Trial!',
+          message: `Enjoy full access to all premium features. Your trial ends on ${trialEndFormatted}.`,
+          type: 'trial_started',
+        },
+      });
+    } catch (notificationError) {
+      console.error('Failed to create trial notification:', notificationError);
+      // Don't fail signup if notification fails
+    }
 
     // Send welcome email (don't block signup if this fails)
     try {

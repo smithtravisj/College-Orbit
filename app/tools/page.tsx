@@ -12,8 +12,10 @@ import PomodoroTimer from '@/components/tools/PomodoroTimer';
 import GradeTracker from '@/components/tools/GradeTracker';
 import WhatIfProjector from '@/components/tools/WhatIfProjector';
 import GpaTrendChart from '@/components/tools/GpaTrendChart';
-import { Plus, Trash2, X, Pencil } from 'lucide-react';
+import { Plus, Trash2, X, Pencil, Lock, Crown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useSubscription } from '@/hooks/useSubscription';
+import Link from 'next/link';
 
 interface Course {
   id: string;
@@ -49,6 +51,7 @@ interface FormCourse {
 export default function ToolsPage() {
   const isMobile = useIsMobile();
   const { settings, updateSettings } = useAppStore();
+  const subscription = useSubscription();
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
   const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -421,8 +424,93 @@ export default function ToolsPage() {
     await updateSettings({ hiddenQuickLinks: newHidden });
   };
 
+  // Locked card for premium tools
+  const renderLockedCard = (cardId: string, title: string, subtitle: string) => {
+    return visibleToolsCards.includes(cardId) && (
+      <CollapsibleCard key={cardId} id={`locked-${cardId}`} title={title} subtitle={subtitle}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: isMobile ? '24px 16px' : '40px 24px',
+          textAlign: 'center',
+          gap: '16px',
+        }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            backgroundColor: 'var(--accent)15',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Lock size={28} style={{ color: 'var(--accent)' }} />
+          </div>
+          <div>
+            <h3 style={{
+              fontSize: isMobile ? '16px' : '18px',
+              fontWeight: 600,
+              color: 'var(--text)',
+              marginBottom: '8px',
+            }}>
+              Premium Feature
+            </h3>
+            <p style={{
+              fontSize: isMobile ? '13px' : '14px',
+              color: 'var(--text-muted)',
+              maxWidth: '300px',
+              lineHeight: 1.5,
+            }}>
+              Upgrade to Premium to unlock {title} and other powerful tools.
+            </p>
+          </div>
+          <Link href="/pricing">
+            <button style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: isMobile ? '10px 20px' : '12px 24px',
+              backgroundColor: 'var(--accent)',
+              color: 'white',
+              border: '1px solid var(--border)',
+              borderRadius: '10px',
+              fontSize: isMobile ? '14px' : '15px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'opacity 0.2s',
+            }}>
+              <Crown size={18} />
+              Upgrade to Premium
+            </button>
+          </Link>
+        </div>
+      </CollapsibleCard>
+    );
+  };
+
   // Map card IDs to their rendering components
   const renderCard = (cardId: string) => {
+    // Premium tools (all except Quick Links)
+    const isPremiumTool = cardId !== TOOLS_CARDS.QUICK_LINKS;
+
+    // Check if user has premium access
+    if (isPremiumTool && !subscription.isPremium && !subscription.isLoading) {
+      switch (cardId) {
+        case TOOLS_CARDS.POMODORO_TIMER:
+          return renderLockedCard(cardId, 'Pomodoro Timer', 'Focus sessions for productive study');
+        case TOOLS_CARDS.GRADE_TRACKER:
+          return renderLockedCard(cardId, 'Grade Tracker', 'Track your grades and GPA by semester');
+        case TOOLS_CARDS.GPA_TREND_CHART:
+          return renderLockedCard(cardId, 'GPA Trend', 'Visualize your academic progress');
+        case TOOLS_CARDS.WHAT_IF_PROJECTOR:
+          return renderLockedCard(cardId, 'What-If GPA Projector', 'See how future grades impact your GPA');
+        case TOOLS_CARDS.GPA_CALCULATOR:
+          return renderLockedCard(cardId, 'GPA Calculator', 'Calculate your GPA from individual courses');
+      }
+    }
+
     switch (cardId) {
       case TOOLS_CARDS.POMODORO_TIMER:
         return visibleToolsCards.includes(cardId) && (
@@ -830,9 +918,78 @@ export default function ToolsPage() {
           </p>
         </div>
       </div>
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingTop: '0', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1400px]" style={{ paddingLeft: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingRight: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingBottom: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingTop: '0', position: 'relative', zIndex: 1 }}>
         <div className="grid grid-cols-1 gap-[var(--grid-gap)]">
-          {toolsCardsOrder.map((cardId: string) => renderCard(cardId))}
+          {subscription.isPremium ? (
+            // Premium users see all tools
+            toolsCardsOrder.map((cardId: string) => renderCard(cardId))
+          ) : (
+            // Free users see only Quick Links + Premium info card
+            <>
+              {renderCard(TOOLS_CARDS.QUICK_LINKS)}
+
+              {/* Premium Tools Info Card - floating over background */}
+              <div style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: isMobile ? '40px 0' : '60px 0' }}>
+                <div style={{ maxWidth: '600px', width: '100%', textAlign: 'center' }}>
+                  <div style={{ marginBottom: '24px' }}>
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '80px',
+                        height: '80px',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, var(--panel-2) 0%, var(--panel) 100%)',
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      <Lock size={36} className="text-[var(--text-muted)]" />
+                    </div>
+                  </div>
+
+                  <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, color: 'var(--text)', marginBottom: '12px' }}>
+                    Premium Tools
+                  </h2>
+
+                  <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginBottom: '32px', maxWidth: '400px', margin: '0 auto 32px', lineHeight: 1.6 }}>
+                    Upgrade to Premium to unlock powerful study tools including GPA Calculator, Grade Tracker, Pomodoro Timer, and more.
+                  </p>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <Link href="/pricing">
+                      <Button variant="primary" size="lg" style={{ minWidth: '200px' }}>
+                        <Crown size={18} />
+                        View Plans
+                      </Button>
+                    </Link>
+                  </div>
+
+                  <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                    Your data is safely stored and will be accessible once you subscribe.
+                  </p>
+
+                  <div style={{ marginTop: '48px', paddingTop: '32px', borderTop: '1px solid var(--border)' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '16px' }}>Premium tools include:</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', maxWidth: '360px', margin: '0 auto', textAlign: 'left' }}>
+                      {[
+                        'GPA Calculator',
+                        'Grade Tracker',
+                        'GPA Trend Chart',
+                        'What-If GPA Projector',
+                        'Pomodoro Timer',
+                      ].map((item) => (
+                        <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>
+                          <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.5)', flexShrink: 0 }} />
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

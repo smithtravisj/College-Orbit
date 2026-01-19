@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, X, Check, Clock, AlertCircle } from 'lucide-react';
+import { Bell, X, Check, Clock, AlertCircle, Crown, CreditCard, Megaphone, Gift, Shield } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import useAppStore from '@/lib/store';
 
 interface Notification {
   id: string;
@@ -17,11 +16,11 @@ interface Notification {
 
 export default function NotificationBell() {
   const isMobile = useIsMobile();
-  const { settings } = useAppStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownOffset, setDropdownOffset] = useState({ left: 0, top: 0 });
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -103,7 +102,7 @@ export default function NotificationBell() {
       cancelAnimationFrame(frame);
       window.removeEventListener('resize', calculatePosition);
     };
-  }, [showDropdown]);
+  }, [showDropdown, notifications.length]);
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
@@ -160,6 +159,21 @@ export default function NotificationBell() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    try {
+      const response = await fetch('/api/notifications?all=true', {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setNotifications([]);
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      console.error('Failed to delete all notifications:', error);
+    }
+  };
+
   const getTimeAgo = (createdAt: string) => {
     const date = new Date(createdAt);
     const now = new Date();
@@ -172,16 +186,54 @@ export default function NotificationBell() {
   };
 
   const getNotificationIcon = (type: string) => {
-    if (type === 'college_request_approved' || type === 'issue_report_resolved' || type === 'feature_request_implemented') {
-      return <Check size={18} style={{ color: '#10b981' }} />;
+    // Trial & Premium notifications
+    if (type === 'trial_started') {
+      return <Gift size={18} style={{ color: '#8b5cf6' }} />;
     }
+    if (type === 'trial_ending_soon') {
+      return <Clock size={18} style={{ color: '#f59e0b' }} />;
+    }
+    if (type === 'trial_ended') {
+      return <Crown size={18} style={{ color: '#6b7280' }} />;
+    }
+    if (type === 'subscription_active') {
+      return <Crown size={18} style={{ color: '#f59e0b' }} />;
+    }
+    if (type === 'admin_granted') {
+      return <Shield size={18} style={{ color: '#10b981' }} />;
+    }
+    if (type === 'admin_revoked') {
+      return <Shield size={18} style={{ color: '#6b7280' }} />;
+    }
+    if (type === 'subscription_canceled') {
+      return <Crown size={18} style={{ color: '#6b7280' }} />;
+    }
+    // Payment notifications
+    if (type === 'payment_failed') {
+      return <CreditCard size={18} style={{ color: '#ef4444' }} />;
+    }
+    // Exam reminder
     if (type === 'exam_reminder') {
       return <AlertCircle size={18} style={{ color: '#ef4444' }} />;
     }
+    // Announcement notifications
+    if (type === 'announcement') {
+      return <Megaphone size={18} style={{ color: '#8b5cf6' }} />;
+    }
+    // Request approved/resolved/implemented
+    if (type === 'college_request_approved' || type === 'issue_report_resolved' || type === 'issue_report_fixed' || type === 'feature_request_implemented') {
+      return <Check size={18} style={{ color: '#10b981' }} />;
+    }
+    // Request rejected
+    if (type === 'college_request_rejected' || type === 'issue_report_rejected' || type === 'feature_request_rejected') {
+      return <X size={18} style={{ color: '#ef4444' }} />;
+    }
+    // Request pending/submitted
     if (type === 'college_request_pending' || type === 'issue_report_pending' || type === 'feature_request_pending' || type === 'feature_request' || type === 'issue_report' || type === 'college_request_submitted' || type === 'issue_report_submitted' || type === 'feature_request_submitted') {
       return <Clock size={18} style={{ color: '#f59e0b' }} />;
     }
-    return <X size={18} style={{ color: '#ef4444' }} />;
+    // Default
+    return <Bell size={18} style={{ color: '#6b7280' }} />;
   };
 
   return (
@@ -286,29 +338,52 @@ export default function NotificationBell() {
               <h3 style={{ margin: 0, fontSize: isMobile ? '13px' : '14px', fontWeight: '600', color: 'var(--text)' }}>
                 Notifications
               </h3>
-              {unreadCount > 0 && (
-                <button
-                  onClick={handleMarkAllAsRead}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--accent)',
-                    cursor: 'pointer',
-                    fontSize: isMobile ? '11px' : '12px',
-                    fontWeight: '500',
-                    transition: 'opacity 0.2s ease',
-                    ...(settings.theme === 'dark' && { filter: 'brightness(1.6)' }),
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = '0.8';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = '1';
-                  }}
-                >
-                  Mark all as read
-                </button>
-              )}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleMarkAllAsRead}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--link)',
+                      cursor: 'pointer',
+                      fontSize: isMobile ? '11px' : '12px',
+                      fontWeight: '500',
+                      transition: 'opacity 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '0.8';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                    }}
+                  >
+                    Mark all as read
+                  </button>
+                )}
+                {notifications.length > 0 && (
+                  <button
+                    onClick={handleDeleteAll}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--danger)',
+                      cursor: 'pointer',
+                      fontSize: isMobile ? '11px' : '12px',
+                      fontWeight: '500',
+                      transition: 'opacity 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '0.8';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                    }}
+                  >
+                    Delete all
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Notifications List */}
@@ -346,19 +421,38 @@ export default function NotificationBell() {
                           flex: 1,
                           cursor: 'pointer',
                         }}
-                        onClick={() => !notification.read && handleMarkAsRead(notification.id)}
+                        onClick={() => {
+                          // Toggle expansion
+                          setExpandedIds(prev => {
+                            const newSet = new Set(prev);
+                            if (newSet.has(notification.id)) {
+                              newSet.delete(notification.id);
+                            } else {
+                              newSet.add(notification.id);
+                            }
+                            return newSet;
+                          });
+                          // Mark as read if unread
+                          if (!notification.read) {
+                            handleMarkAsRead(notification.id);
+                          }
+                        }}
                       >
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                           <div style={{ marginTop: '2px' }}>
                             {getNotificationIcon(notification.type)}
                           </div>
-                          <div style={{ flex: 1 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
                             <p
                               style={{
                                 margin: '0 0 4px 0',
                                 fontSize: isMobile ? '14px' : '15px',
                                 fontWeight: notification.read ? '400' : '600',
                                 color: 'var(--text)',
+                                overflow: expandedIds.has(notification.id) ? 'visible' : 'hidden',
+                                textOverflow: expandedIds.has(notification.id) ? 'clip' : 'ellipsis',
+                                whiteSpace: expandedIds.has(notification.id) ? 'normal' : 'nowrap',
+                                wordBreak: expandedIds.has(notification.id) ? 'break-word' : 'normal',
                               }}
                             >
                               {notification.title}
@@ -369,11 +463,12 @@ export default function NotificationBell() {
                                 fontSize: isMobile ? '12px' : '14px',
                                 color: 'var(--text-muted)',
                                 lineHeight: '1.4',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
+                                overflow: expandedIds.has(notification.id) ? 'visible' : 'hidden',
+                                textOverflow: expandedIds.has(notification.id) ? 'clip' : 'ellipsis',
+                                display: expandedIds.has(notification.id) ? 'block' : '-webkit-box',
+                                WebkitLineClamp: expandedIds.has(notification.id) ? undefined : 2,
+                                WebkitBoxOrient: 'vertical' as const,
+                                wordBreak: 'break-word',
                               }}
                             >
                               {notification.message}

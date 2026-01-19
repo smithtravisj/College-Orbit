@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import convert from 'heic-convert';
+import { checkPremiumAccess } from '@/lib/subscription';
 
 // POST - Upload a file (converts to base64 data URL)
 export async function POST(request: NextRequest) {
@@ -12,6 +13,15 @@ export async function POST(request: NextRequest) {
 
     if (!token?.id) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
+    }
+
+    // File uploads require premium
+    const premiumCheck = await checkPremiumAccess(token.id);
+    if (!premiumCheck.allowed) {
+      return NextResponse.json(
+        { error: 'premium_required', message: 'File uploads are a Premium feature. Upgrade to upload files.' },
+        { status: 403 }
+      );
     }
 
     const formData = await request.formData();

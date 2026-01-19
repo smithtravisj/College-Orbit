@@ -15,6 +15,11 @@ export const DELETE = withRateLimit(async function(_req: NextRequest) {
 
     const userId = session.user.id;
 
+    // Delete analytics events (not cascade-deleted since no relation)
+    await prisma.analyticsEvent.deleteMany({
+      where: { userId },
+    });
+
     // Delete user (cascades to all related data)
     await prisma.user.delete({
       where: { id: userId },
