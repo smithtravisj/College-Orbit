@@ -30,6 +30,7 @@ interface CalendarWeekViewProps {
   onTimeSlotClick?: (date: Date, time?: string, allDay?: boolean) => void;
   onEventUpdate?: (updatedEvent: CustomCalendarEvent) => void;
   onStatusChange?: () => void;
+  onEventReschedule?: (eventType: string, eventId: string, newDate: Date, allDay: boolean) => void;
 }
 
 const HOUR_HEIGHT = 60; // pixels
@@ -48,8 +49,10 @@ export default function CalendarWeekView({
   calendarEvents = [],
   onEventUpdate,
   onStatusChange,
+  onEventReschedule,
 }: CalendarWeekViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const dayColumnRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedExclusion, setSelectedExclusion] = useState<ExcludedDate | null>(null);
   const [popupState, setPopupState] = useState<{
@@ -59,6 +62,8 @@ export default function CalendarWeekView({
     hasExclusion?: boolean;
   } | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [draggedEvent, setDraggedEvent] = useState<CalendarEvent | null>(null);
+  const [dropIndicator, setDropIndicator] = useState<{ dateStr: string; top: number; isAllDay: boolean } | null>(null);
 
   // Update current time every minute
   useEffect(() => {
@@ -141,6 +146,105 @@ export default function CalendarWeekView({
 
   const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 
+  // Drag and drop helpers
+  const isDraggable = (event: CalendarEvent) => {
+    // Only tasks, deadlines, exams, and calendar events are draggable (not courses)
+    return event.type !== 'course';
+  };
+
+  const handleDragStart = (e: React.DragEvent, event: CalendarEvent) => {
+    if (!isDraggable(event)) {
+      e.preventDefault();
+      return;
+    }
+    setDraggedEvent(event);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', JSON.stringify({ type: event.type, id: event.id }));
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5';
+    }
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    setDraggedEvent(null);
+    setDropIndicator(null);
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1';
+    }
+  };
+
+  const handleTimeGridDragOver = (e: React.DragEvent, dateStr: string) => {
+    if (!draggedEvent) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    const columnRef = dayColumnRefs.current.get(dateStr);
+    if (!columnRef) return;
+
+    const rect = columnRef.getBoundingClientRect();
+    const y = e.clientY - rect.top - 8; // Account for padding
+    // Snap to 15-minute intervals
+    const totalMinutes = Math.round((y / HOUR_HEIGHT) * 60 / 15) * 15;
+    const snappedY = (totalMinutes / 60) * HOUR_HEIGHT + 8;
+
+    setDropIndicator({ dateStr, top: snappedY, isAllDay: false });
+  };
+
+  const handleTimeGridDrop = (e: React.DragEvent, dateStr: string, targetDate: Date) => {
+    e.preventDefault();
+    if (!draggedEvent || !onEventReschedule) return;
+
+    const columnRef = dayColumnRefs.current.get(dateStr);
+    if (!columnRef) return;
+
+    const rect = columnRef.getBoundingClientRect();
+    const y = e.clientY - rect.top - 8;
+    // Snap to 15-minute intervals
+    const totalMinutes = Math.round((y / HOUR_HEIGHT) * 60 / 15) * 15;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    // Create new date with the dropped time
+    const newDate = new Date(targetDate);
+    newDate.setHours(hours, minutes, 0, 0);
+
+    onEventReschedule(draggedEvent.type, draggedEvent.id, newDate, false);
+    setDraggedEvent(null);
+    setDropIndicator(null);
+  };
+
+  const handleAllDayDragOver = (e: React.DragEvent, dateStr: string) => {
+    if (!draggedEvent) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDropIndicator({ dateStr, top: 0, isAllDay: true });
+  };
+
+  const handleAllDayDrop = (e: React.DragEvent, targetDate: Date) => {
+    e.preventDefault();
+    if (!draggedEvent || !onEventReschedule) return;
+
+    // Create new date at end of day (all-day event)
+    const newDate = new Date(targetDate);
+    newDate.setHours(23, 59, 0, 0);
+
+    onEventReschedule(draggedEvent.type, draggedEvent.id, newDate, true);
+    setDraggedEvent(null);
+    setDropIndicator(null);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (
+      e.clientX < rect.left ||
+      e.clientX > rect.right ||
+      e.clientY < rect.top ||
+      e.clientY > rect.bottom
+    ) {
+      setDropIndicator(null);
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--panel)', overflow: 'hidden' }}>
       {/* Day headers */}
@@ -173,7 +277,7 @@ export default function CalendarWeekView({
               }}
             >
               <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>{dayName}</div>
-              <div style={{ fontSize: '1.125rem', fontWeight: 600, color: isTodayDate ? 'var(--calendar-current-date-color)' : 'var(--text)' }}>
+              <div style={{ fontSize: '1.125rem', fontWeight: 600, color: isTodayDate ? 'var(--link)' : 'var(--text)' }}>
                 {day.getDate()}
               </div>
             </div>
@@ -239,9 +343,13 @@ export default function CalendarWeekView({
                 flexDirection: 'column',
                 gap: '2px',
                 minHeight: allDayEvents.length > 0 || exclusionType ? '32px' : '24px',
-                backgroundColor: isTodayDate ? 'var(--today-bg)' : undefined,
+                backgroundColor: dropIndicator?.isAllDay && dropIndicator?.dateStr === dateStr ? 'var(--accent-2)' : isTodayDate ? 'var(--today-bg)' : undefined,
                 overflow: 'hidden',
+                transition: 'background-color 0.15s',
               }}
+              onDragOver={(e) => handleAllDayDragOver(e, dateStr)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleAllDayDrop(e, day)}
             >
               {exclusionType && (() => {
                 let markerColor = getEventColor({ courseId: exclusionCourseId } as any);
@@ -287,9 +395,13 @@ export default function CalendarWeekView({
               })()}
               {visibleEvents.map((event, idx) => {
                 const color = getEventColor(event);
+                const canDrag = isDraggable(event);
                 return (
                   <div
                     key={`${dateStr}-allday-${event.id}-${idx}`}
+                    draggable={canDrag}
+                    onDragStart={(e) => handleDragStart(e, event)}
+                    onDragEnd={handleDragEnd}
                     style={{
                       fontSize: '0.7rem',
                       paddingLeft: '6px',
@@ -304,7 +416,7 @@ export default function CalendarWeekView({
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       lineHeight: 1,
-                      cursor: 'pointer',
+                      cursor: canDrag ? 'grab' : 'pointer',
                       flexShrink: 0,
                     }}
                     title={event.title}
@@ -383,12 +495,18 @@ export default function CalendarWeekView({
             return (
               <div
                 key={dateStr}
+                ref={(el) => {
+                  if (el) dayColumnRefs.current.set(dateStr, el);
+                }}
                 style={{
                   position: 'relative',
                   borderRight: '1px solid var(--border)',
                   backgroundColor: isTodayDate ? 'var(--today-bg)' : 'var(--panel)',
                   paddingRight: isLastDay ? '8px' : undefined,
                 }}
+                onDragOver={(e) => handleTimeGridDragOver(e, dateStr)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleTimeGridDrop(e, dateStr, day)}
               >
                 {/* Hour grid lines */}
                 {hours.map((hour) => (
@@ -443,6 +561,39 @@ export default function CalendarWeekView({
                     </div>
                   );
                 })()}
+
+                {/* Drop indicator line */}
+                {dropIndicator && !dropIndicator.isAllDay && dropIndicator.dateStr === dateStr && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      right: 0,
+                      top: `${dropIndicator.top}px`,
+                      zIndex: 25,
+                      pointerEvents: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '10px',
+                        height: '10px',
+                        borderRadius: '50%',
+                        backgroundColor: 'var(--accent)',
+                        marginLeft: '-5px',
+                      }}
+                    />
+                    <div
+                      style={{
+                        flex: 1,
+                        height: '2px',
+                        backgroundColor: 'var(--accent)',
+                      }}
+                    />
+                  </div>
+                )}
 
                 {/* Course events */}
                 {courseEvents.map((event) => {
@@ -533,6 +684,7 @@ export default function CalendarWeekView({
                     const minHeight = 30; // Minimum height ~30 minutes
                     const height = Math.max(baseHeight, minHeight);
                     const color = getEventColor(event);
+                    const canDrag = isDraggable(event);
 
                     // Check if there are any other events overlapping this one in time
                     const eventStart = parseInt(event.time.split(':')[0]) * 60 + parseInt(event.time.split(':')[1]);
@@ -557,6 +709,9 @@ export default function CalendarWeekView({
                     return (
                       <div
                         key={`${dateStr}-timed-${event.id}`}
+                        draggable={canDrag}
+                        onDragStart={(e) => handleDragStart(e, event)}
+                        onDragEnd={handleDragEnd}
                         style={{
                           position: 'absolute',
                           left: `calc(${eventLeft}% + 3px)`,
@@ -565,7 +720,7 @@ export default function CalendarWeekView({
                           fontSize: '0.75rem',
                           padding: '4px 6px',
                           overflow: 'hidden',
-                          cursor: 'pointer',
+                          cursor: canDrag ? 'grab' : 'pointer',
                           transition: 'opacity 0.2s',
                           zIndex: 9,
                           top: `${top}px`,

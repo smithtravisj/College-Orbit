@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
@@ -17,8 +18,17 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   const [minutes, setMinutes] = useState<string>('');
   const [isPM, setIsPM] = useState(true);
   const [inputValue, setInputValue] = useState<string>('');
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const isUpdatingFromParent = useRef(false);
+
+  // Track client-side mounting
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Convert 24-hour to 12-hour format for display
   const convert24To12 = (h: string): { hours12: string; isPM: boolean } => {
@@ -156,6 +166,17 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
     }
   };
 
+  // Calculate dropdown position when opening
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+      });
+    }
+  }, [isOpen]);
+
   // Close dropdown on Escape key or click outside
   useEffect(() => {
     if (!isOpen) return;
@@ -167,7 +188,10 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
     };
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isOutsideContainer = containerRef.current && !containerRef.current.contains(target);
+      const isOutsideDropdown = dropdownRef.current && !dropdownRef.current.contains(target);
+      if (isOutsideContainer && isOutsideDropdown) {
         setIsOpen(false);
       }
     };
@@ -295,12 +319,22 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
         </label>
       )}
       <input
+        ref={inputRef}
         type="text"
         value={inputValue}
         onChange={handleInputChange}
         onBlur={handleInputBlur}
         onKeyDown={handleInputKeyDown}
-        onFocus={() => setIsOpen(true)}
+        onFocus={() => {
+          if (inputRef.current) {
+            const rect = inputRef.current.getBoundingClientRect();
+            setDropdownPosition({
+              top: rect.bottom + 4,
+              left: rect.left,
+            });
+          }
+          setIsOpen(true);
+        }}
         placeholder={isMobile ? 'e.g. 2:30pm' : 'e.g. 2:30pm, 14:30'}
         className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--border-hover)]"
         style={{
@@ -311,12 +345,19 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
         }}
       />
 
-      {isOpen && (
+      {mounted && isOpen && createPortal(
         <div
+          ref={dropdownRef}
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
-          className="absolute top-full left-0 bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg"
-          style={{ marginTop: '4px', minWidth: '180px', zIndex: 9999 }}
+          className="bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] shadow-lg"
+          style={{
+            position: 'fixed',
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            minWidth: '180px',
+            zIndex: 99999,
+          }}
         >
           <div style={{ padding: '16px' }}>
             <div className="flex items-center gap-4 justify-center">
@@ -418,7 +459,8 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

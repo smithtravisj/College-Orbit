@@ -404,6 +404,86 @@ export default function CalendarContent() {
     }
   };
 
+  const handleEventReschedule = async (eventType: string, eventId: string, newDate: Date, allDay: boolean) => {
+    // Calculate the new date/time
+    let finalDate = newDate;
+    if (allDay) {
+      finalDate = new Date(newDate);
+      finalDate.setHours(23, 59, 0, 0);
+    }
+    const newDateISO = finalDate.toISOString();
+
+    // Optimistic update - update UI immediately
+    if (eventType === 'task') {
+      setAllTaskInstances((prev) =>
+        prev.map((task) => (task.id === eventId ? { ...task, dueAt: newDateISO } : task))
+      );
+      setFilteredTasks((prev) =>
+        prev.map((task) => (task.id === eventId ? { ...task, dueAt: newDateISO } : task))
+      );
+    } else if (eventType === 'deadline') {
+      setAllDeadlineInstances((prev) =>
+        prev.map((deadline) => (deadline.id === eventId ? { ...deadline, dueAt: newDateISO } : deadline))
+      );
+      setFilteredDeadlines((prev) =>
+        prev.map((deadline) => (deadline.id === eventId ? { ...deadline, dueAt: newDateISO } : deadline))
+      );
+    } else if (eventType === 'exam') {
+      setAllExamInstances((prev) =>
+        prev.map((exam) => (exam.id === eventId ? { ...exam, examAt: newDateISO } : exam))
+      );
+      setFilteredExams((prev) =>
+        prev.map((exam) => (exam.id === eventId ? { ...exam, examAt: newDateISO } : exam))
+      );
+    } else if (eventType === 'event') {
+      setCalendarEvents((prev) =>
+        prev.map((event) => (event.id === eventId ? { ...event, startAt: newDateISO, allDay } : event))
+      );
+    }
+
+    // Clear cache
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('calendarCache');
+    }
+
+    // Make API call in background
+    try {
+      let apiUrl = '';
+      let body: Record<string, any> = {};
+
+      if (eventType === 'task') {
+        apiUrl = `/api/tasks/${eventId}`;
+        body = { dueAt: newDateISO };
+      } else if (eventType === 'deadline') {
+        apiUrl = `/api/deadlines/${eventId}`;
+        body = { dueAt: newDateISO };
+      } else if (eventType === 'exam') {
+        apiUrl = `/api/exams/${eventId}`;
+        body = { examAt: newDateISO };
+      } else if (eventType === 'event') {
+        apiUrl = `/api/calendar-events/${eventId}`;
+        body = { startAt: newDateISO, allDay };
+      } else {
+        console.warn('Unknown event type:', eventType);
+        return;
+      }
+
+      const response = await fetch(apiUrl, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to reschedule event');
+        // Could revert optimistic update here if needed
+      }
+    } catch (error) {
+      console.error('Error rescheduling event:', error);
+      // Could revert optimistic update here if needed
+    }
+  };
+
   return (
     <>
       {/* Calendar Header */}
@@ -642,6 +722,7 @@ export default function CalendarContent() {
                     onTimeSlotClick={handleTimeSlotClick}
                     onEventUpdate={handleEventUpdate}
                     onStatusChange={handleStatusChange}
+                    onEventReschedule={handleEventReschedule}
                   />
                 </div>
               </>
@@ -679,6 +760,7 @@ export default function CalendarContent() {
                     onTimeSlotClick={handleTimeSlotClick}
                     onEventUpdate={handleEventUpdate}
                     onStatusChange={handleStatusChange}
+                    onEventReschedule={handleEventReschedule}
                   />
                 )}
                 {view === 'day' && (
@@ -695,6 +777,7 @@ export default function CalendarContent() {
                     onTimeSlotClick={handleTimeSlotClick}
                     onEventUpdate={handleEventUpdate}
                     onStatusChange={handleStatusChange}
+                    onEventReschedule={handleEventReschedule}
                   />
                 )}
               </>
