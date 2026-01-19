@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -12,7 +13,8 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, MapPin, Check, X, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Edit2, MapPin, Check, X, ChevronDown, StickyNote } from 'lucide-react';
+import Link from 'next/link';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import TagInput from '@/components/notes/TagInput';
@@ -78,7 +80,10 @@ export default function ExamsPage() {
   const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
   const [showDeleteAllPast, setShowDeleteAllPast] = useState(false);
 
-  const { courses, exams, settings, addExam, updateExam, deleteExam, bulkUpdateExams, bulkDeleteExams, initializeStore } = useAppStore();
+  const { courses, exams, notes, settings, addExam, updateExam, deleteExam, bulkUpdateExams, bulkDeleteExams, initializeStore } = useAppStore();
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   // Handle filters card collapse state changes and save to database
   const handleFiltersCollapseChange = (isOpen: boolean) => {
@@ -116,6 +121,19 @@ export default function ExamsPage() {
     initializeStore();
     setMounted(true);
   }, [initializeStore]);
+
+  // Check for exam ID in URL params to open preview modal
+  useEffect(() => {
+    const examId = searchParams.get('exam');
+    if (examId && mounted && exams.length > 0) {
+      const exam = exams.find((e) => e.id === examId);
+      if (exam) {
+        setPreviewingExam(exam);
+        // Clear the URL parameter to prevent reopening on close
+        router.replace('/exams', { scroll: false });
+      }
+    }
+  }, [searchParams, mounted, exams, router]);
 
   if (!mounted) {
     return (
@@ -458,6 +476,7 @@ export default function ExamsPage() {
         return true;
       }
 
+      if (!exam.examAt) return filter === 'all';
       const examTime = new Date(exam.examAt);
       if (filter === 'upcoming') return examTime > now && exam.status === 'scheduled';
       if (filter === 'past') return examTime <= now || exam.status !== 'scheduled';
@@ -492,8 +511,8 @@ export default function ExamsPage() {
       );
     })
     .sort((a, b) => {
-      const aTime = new Date(a.examAt).getTime();
-      const bTime = new Date(b.examAt).getTime();
+      const aTime = a.examAt ? new Date(a.examAt).getTime() : 0;
+      const bTime = b.examAt ? new Date(b.examAt).getTime() : 0;
 
       // For upcoming exams: ascending (soonest first)
       if (filter === 'upcoming') {
@@ -1001,6 +1020,12 @@ export default function ExamsPage() {
                               {exam.status}
                             </span>
                           )}
+                          {notes.some(n => n.examId === exam.id || (exam.recurringPatternId && n.recurringExamPatternId === exam.recurringPatternId)) && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: '600', color: 'var(--link)', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
+                              <StickyNote size={10} />
+                              Note
+                            </span>
+                          )}
                         </div>
                         {exam.notes && (
                           <div style={{
@@ -1379,6 +1404,63 @@ export default function ExamsPage() {
                   </div>
                 </div>
               )}
+
+              {/* Related Notes */}
+              {(() => {
+                const relatedNotes = notes.filter(n =>
+                  (previewingExam.courseId && n.courseId === previewingExam.courseId) ||
+                  n.examId === previewingExam.id ||
+                  (previewingExam.recurringPatternId && n.recurringExamPatternId === previewingExam.recurringPatternId)
+                );
+                if (relatedNotes.length === 0) return null;
+                return (
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '8px' }}>Related Notes</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {relatedNotes.slice(0, 3).map((note) => (
+                        <Link
+                          key={note.id}
+                          href={`/notes?note=${note.id}`}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '8px 12px',
+                            backgroundColor: 'var(--panel-2)',
+                            borderRadius: '6px',
+                            textDecoration: 'none',
+                            transition: 'background-color 150ms ease',
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--nav-active)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
+                        >
+                          <StickyNote size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                          <span style={{ fontSize: '13px', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {note.title}
+                          </span>
+                        </Link>
+                      ))}
+                      {relatedNotes.length > 3 && (
+                        <Link
+                          href={previewingExam.courseId ? `/notes?courseId=${previewingExam.courseId}` : '/notes'}
+                          style={{
+                            fontSize: '12px',
+                            color: 'var(--link)',
+                            textDecoration: 'none',
+                            padding: '4px 0',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          View all {relatedNotes.length} related notes →
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Footer */}

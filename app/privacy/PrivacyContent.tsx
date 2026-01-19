@@ -16,7 +16,7 @@ export default function PrivacyContent() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Last Updated: January 16, 2026
+                Last Updated: January 19, 2026
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 At College Orbit, your privacy is our priority. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our service. We believe in transparency and give you full control over your data.
@@ -41,7 +41,7 @@ export default function PrivacyContent() {
                 Academic Data
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We store all academic data you create: courses with meeting times and links, assignments with priority and effort levels, tasks with checklists and importance markers, exams with locations, notes with rich text content and folders, GPA entries, excluded dates (holidays/breaks), custom calendar events, and recurring patterns for tasks, assignments, and exams. This data is entirely user-generated and belongs to you. We do not analyze or process this data beyond providing it back to you.
+                We store all academic data you create: courses with meeting times and links, assignments with priority and effort levels, tasks with checklists and importance markers, exams with locations, notes with rich text content (which can be linked to courses, tasks, assignments, and exams) and organized in folders, GPA entries, excluded dates (holidays/breaks), custom calendar events, and recurring patterns for tasks, assignments, and exams. This data is entirely user-generated and belongs to you. We do not analyze or process this data beyond providing it back to you.
               </p>
             </div>
             <div>
@@ -65,7 +65,7 @@ export default function PrivacyContent() {
                 Settings and Preferences
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We store your app settings including theme preferences (light/dark/system), visibility customizations for dashboard cards and pages, page ordering, notification preferences, exam reminder settings, Pomodoro timer duration preferences, course filter preferences, quick link visibility, dashboard card collapsed states, and other configuration choices you make. These settings are synchronized across your devices when you're logged in.
+                We store your app settings including theme preferences (light/dark/system with optional custom color themes), visibility customizations for dashboard cards and pages, page ordering, notification preferences, exam reminder settings, Pomodoro timer duration preferences, course filter preferences, quick link visibility, dashboard card collapsed states, visual effects preferences (gradient and glow intensity), and other configuration choices you make. These settings are synchronized across your devices when you're logged in.
               </p>
             </div>
             <div>

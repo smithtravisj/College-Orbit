@@ -13,7 +13,7 @@ import RichTextEditor from '@/components/RichTextEditor';
 import FolderTree from '@/components/notes/FolderTree';
 import TagInput from '@/components/notes/TagInput';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
-import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown, Crown, Save, CheckSquare, FileText, BookOpen } from 'lucide-react';
+import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown, Crown, Save, CheckSquare, FileText, Clock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { FREE_TIER_LIMITS } from '@/lib/subscription';
@@ -880,7 +880,7 @@ export default function NotesPage() {
                             onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
                             onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
                           >
-                            <FileText size={16} />
+                            <Clock size={16} />
                             <span>
                               {selectedNote.deadline?.title || (selectedNote.recurringDeadlinePattern?.deadlineTemplate as any)?.title || 'Assignment'}
                               {selectedNote.recurringDeadlinePattern && ' (recurring)'}
@@ -894,7 +894,7 @@ export default function NotesPage() {
                             onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
                             onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
                           >
-                            <BookOpen size={16} />
+                            <FileText size={16} />
                             <span>
                               {selectedNote.exam?.title || (selectedNote.recurringExamPattern?.examTemplate as any)?.title || 'Exam'}
                               {selectedNote.recurringExamPattern && ' (recurring)'}
@@ -920,7 +920,8 @@ export default function NotesPage() {
                       </div>
                     )}
                     <RichTextEditor
-                      value={detailViewContent || { type: 'doc', content: [] }}
+                      key={selectedNoteId}
+                      value={detailViewContent || selectedNote?.content || { type: 'doc', content: [] }}
                       onChange={(content) => {
                         setDetailViewContent(content);
                         setHasUnsavedChanges(true);

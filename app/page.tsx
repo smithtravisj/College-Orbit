@@ -1140,6 +1140,7 @@ function Dashboard() {
                   // Get exams for this day
                   const examsOnDay = exams
                     .filter((exam) => {
+                      if (!exam.examAt) return false;
                       const examDate = new Date(exam.examAt);
                       examDate.setHours(0, 0, 0, 0);
                       return examDate.getTime() === date.getTime();
@@ -1154,7 +1155,7 @@ function Dashboard() {
                         courseName: course?.name || '',
                         examAt: exam.examAt,
                         location: exam.location,
-                        time: new Date(exam.examAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+                        time: exam.examAt ? new Date(exam.examAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : '',
                       };
                     });
 

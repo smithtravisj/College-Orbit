@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { formatDate, isOverdue } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -11,7 +12,7 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X, Upload, FileIcon, ChevronDown, Crown, FileText } from 'lucide-react';
+import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X, Upload, FileIcon, ChevronDown, Crown, StickyNote } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import Link from 'next/link';
 import CalendarPicker from '@/components/CalendarPicker';
@@ -79,6 +80,8 @@ function getRecurrenceText(pattern: any): string {
 export default function DeadlinesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subscription = useSubscription();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
@@ -181,6 +184,19 @@ export default function DeadlinesPage() {
     initializeStore();
     setMounted(true);
   }, [initializeStore]);
+
+  // Check for deadline ID in URL params to open preview modal
+  useEffect(() => {
+    const deadlineId = searchParams.get('deadline');
+    if (deadlineId && mounted && deadlines.length > 0) {
+      const deadline = deadlines.find((d) => d.id === deadlineId);
+      if (deadline) {
+        setPreviewingDeadline(deadline);
+        // Clear the URL parameter to prevent reopening on close
+        router.replace('/deadlines', { scroll: false });
+      }
+    }
+  }, [searchParams, mounted, deadlines, router]);
 
   // Reset hideRecurringCompleted when filter changes away from 'done'
   useEffect(() => {
@@ -1476,7 +1492,7 @@ export default function DeadlinesPage() {
                           {isOverdueDeadline && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                           {notes.some(n => n.deadlineId === d.id || (d.recurringPatternId && n.recurringDeadlinePatternId === d.recurringPatternId)) && (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: '600', color: 'var(--link)', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
-                              <FileText size={10} />
+                              <StickyNote size={10} />
                               Note
                             </span>
                           )}
@@ -1976,7 +1992,7 @@ export default function DeadlinesPage() {
                           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--nav-active)'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
                         >
-                          <FileText size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                          <StickyNote size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                           <span style={{ fontSize: '13px', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {note.title}
                           </span>
