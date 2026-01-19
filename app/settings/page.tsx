@@ -23,7 +23,6 @@ export default function SettingsPage() {
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | 'system'>('dark');
   const [useCustomTheme, setUseCustomTheme] = useState(false);
   const [customColors, setCustomColors] = useState<CustomColors | null>(null);
-  const [examReminders, setExamReminders] = useState<Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>>([]);
   const [collegeRequestName, setCollegeRequestName] = useState('');
   const [collegeRequestMessage, setCollegeRequestMessage] = useState('');
   const [collegeRequestLoading, setCollegeRequestLoading] = useState(false);
@@ -33,7 +32,6 @@ export default function SettingsPage() {
   const [featureDescription, setFeatureDescription] = useState('');
   const [featureRequestMessage, setFeatureRequestMessage] = useState('');
   const [featureRequestLoading, setFeatureRequestLoading] = useState(false);
-  const [saveMessage, setSaveMessage] = useState('');
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
@@ -113,39 +111,6 @@ export default function SettingsPage() {
       setVisiblePagesOrder([...migratedOrder, ...newPages]);
     } else {
       setVisiblePagesOrder(Object.values(PAGES).filter(p => p !== 'Settings'));
-    }
-
-    // Load exam reminders from settings
-    if (settings.examReminders) {
-      try {
-        const parsed = typeof settings.examReminders === 'string'
-          ? JSON.parse(settings.examReminders)
-          : settings.examReminders;
-        // Convert old format (hours) to new format (value + unit) if needed
-        const converted = Array.isArray(parsed) ? parsed.map((r: any) => {
-          if ('value' in r && 'unit' in r) {
-            return r;
-          }
-          // Old format with hours field
-          const hours = r.hours || 0;
-          if (hours === 168) return { enabled: r.enabled, value: 7, unit: 'days' };
-          if (hours === 24) return { enabled: r.enabled, value: 1, unit: 'days' };
-          if (hours === 3) return { enabled: r.enabled, value: 3, unit: 'hours' };
-          // Convert arbitrary hours to days or hours
-          if (hours >= 24) return { enabled: r.enabled, value: Math.round(hours / 24), unit: 'days' };
-          return { enabled: r.enabled, value: hours, unit: 'hours' };
-        }) : [];
-        setExamReminders(converted);
-      } catch {
-        setExamReminders([]);
-      }
-    } else {
-      // Default reminders: 7 days, 1 day, 3 hours
-      setExamReminders([
-        { enabled: true, value: 7, unit: 'days' },   // 7 days
-        { enabled: true, value: 1, unit: 'days' },   // 1 day
-        { enabled: true, value: 3, unit: 'hours' }   // 3 hours
-      ]);
     }
 
     // Load custom theme settings
@@ -338,10 +303,6 @@ export default function SettingsPage() {
     }
   };
 
-  // Theme-specific colors for remove buttons
-  const isDarkMode = selectedTheme === 'dark' || selectedTheme === 'system';
-  const removeButtonColor = isDarkMode ? '#660000' : '#e63946';
-
   return (
     <>
       <style>{`
@@ -432,432 +393,105 @@ export default function SettingsPage() {
               ⚠️ You are not logged in. Settings will be saved to your browser only.
             </div>
           )}
-          {/* University & Due Soon Window */}
-          <Card title="Appearance">
-            <div className="space-y-5">
-              {/* Theme Selector */}
-              <div>
-                <label className="block text-sm font-medium text-[var(--text)]"
-                       style={{ marginBottom: '8px' }}>
-                  Theme
-                </label>
-                <p className="text-sm text-[var(--text-muted)]"
-                   style={{ marginBottom: '12px' }}>
-                  Choose your preferred color scheme
-                </p>
-                <div style={{
-                  display: 'flex',
-                  gap: '8px',
-                  padding: '4px',
-                  backgroundColor: 'var(--panel-2)',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border)',
-                }}>
-                  {(['light', 'dark', 'system'] as const).map((themeOption) => (
-                    <button
-                      key={themeOption}
-                      onClick={() => {
-                        setSelectedTheme(themeOption);
-                        updateSettings({ theme: themeOption });
-                      }}
-                      style={{
-                        flex: 1,
-                        padding: '8px 16px',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        color: selectedTheme === themeOption
-                          ? 'var(--text)'
-                          : 'var(--text-muted)',
-                        backgroundColor: selectedTheme === themeOption
-                          ? 'var(--panel)'
-                          : 'transparent',
-                        border: selectedTheme === themeOption
-                          ? '1px solid var(--border)'
-                          : '1px solid transparent',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        if (selectedTheme !== themeOption) {
-                          e.currentTarget.style.backgroundColor = 'var(--panel-2)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (selectedTheme !== themeOption) {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }
-                      }}
-                    >
-                      {themeOption.charAt(0).toUpperCase() + themeOption.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Divider */}
+          {/* General Settings */}
+          <Card title="General">
+            {/* Theme */}
+            <div style={{ marginBottom: '20px' }}>
+              <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Theme</p>
               <div style={{
-                borderTop: '1px solid var(--border)',
-                marginTop: '24px',
-                marginBottom: '24px'
-              }} />
-
-              {/* University Picker */}
-              <div>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
-                  University
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                  Select your university to customize the app
-                </p>
-                <select
-                  value={university || ''}
-                  onChange={(e) => {
-                    const newUniversity = e.target.value || null;
-                    setUniversity(newUniversity);
-                    updateSettings({ university: newUniversity });
-                  }}
-                  style={{
-                    width: '100%',
-                    height: '44px',
-                    padding: '8px 12px 8px 12px',
-                    fontSize: '16px',
-                    lineHeight: '28px',
-                    fontFamily: 'inherit',
-                    backgroundColor: 'var(--panel-2)',
-                    color: 'var(--text)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '6px',
-                    boxSizing: 'border-box',
-                    cursor: 'pointer',
-                    transition: 'none',
-                    appearance: 'none',
-                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${selectedTheme === 'light' ? '%23666666' : 'white'}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 16px center',
-                    backgroundSize: '18px',
-                    paddingRight: '36px'
-                  }}
-                >
-                  <option value="">Select a University</option>
-                  <option value="Arizona State University">Arizona State University</option>
-                  <option value="Brigham Young University">Brigham Young University</option>
-                  <option value="Brigham Young University Hawaii">Brigham Young University Hawaii</option>
-                  <option value="Brigham Young University Idaho">Brigham Young University Idaho</option>
-                  <option value="North Lincoln High School">North Lincoln High School</option>
-                  <option value="Ohio State University">Ohio State University</option>
-                  <option value="UNC Chapel Hill">UNC Chapel Hill</option>
-                  <option value="University of Central Florida">University of Central Florida</option>
-                  <option value="University of Texas at Austin">University of Texas at Austin</option>
-                  <option value="Utah State University">Utah State University</option>
-                  <option value="Utah Valley University">Utah Valley University</option>
-                </select>
-              </div>
-
-              {/* Request a University */}
-              <div style={{ paddingTop: '16px', paddingBottom: '16px' }}>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
-                  Request a University
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                  Don't see your university? Request it to be added
-                </p>
-                <input
-                  type="text"
-                  value={collegeRequestName}
-                  onChange={(e) => setCollegeRequestName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleSubmitCollegeRequest();
-                    }
-                  }}
-                  placeholder="Enter university name"
-                  maxLength={100}
-                  style={{
-                    width: '100%',
-                    height: '40px',
-                    padding: '8px 12px',
-                    fontSize: '16px',
-                    fontFamily: 'inherit',
-                    backgroundColor: 'var(--panel-2)',
-                    color: 'var(--text)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '6px',
-                    boxSizing: 'border-box',
-                    marginBottom: '12px'
-                  }}
-                  disabled={collegeRequestLoading}
-                />
-                <Button
-                  size={isMobile ? 'sm' : 'lg'}
-                  onClick={handleSubmitCollegeRequest}
-                  disabled={collegeRequestLoading}
-                  style={{
-                    paddingLeft: isMobile ? '12px' : '16px',
-                    paddingRight: isMobile ? '12px' : '16px',
-                    backgroundColor: 'var(--button-secondary)',
-                    color: settings.theme === 'light' ? '#000000' : 'white',
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: 'var(--border)',
-                    opacity: collegeRequestLoading ? 0.6 : 1
-                  }}
-                >
-                  {collegeRequestLoading ? 'Submitting...' : 'Request University'}
-                </Button>
-                {collegeRequestMessage && (
-                  <p style={{ marginTop: '8px', fontSize: '14px', color: collegeRequestMessage.includes('✗') ? 'var(--danger)' : 'var(--success)' }}>{collegeRequestMessage}</p>
-                )}
-              </div>
-
-              {/* Custom Theme Section */}
-              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
-                  Custom Theme
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                  Create your own color theme
-                </p>
-
-                {/* Toggle between College Theme and Custom Theme */}
-                <div style={{
-                  display: 'flex',
-                  gap: '8px',
-                  padding: '4px',
-                  backgroundColor: 'var(--panel-2)',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border)',
-                  marginBottom: '16px',
-                }}>
+                display: 'flex',
+                gap: '8px',
+                padding: '4px',
+                backgroundColor: 'var(--panel-2)',
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+              }}>
+                {(['light', 'dark', 'system'] as const).map((themeOption) => (
                   <button
+                    key={themeOption}
                     onClick={() => {
-                      setUseCustomTheme(false);
-                      updateSettings({ useCustomTheme: false });
+                      setSelectedTheme(themeOption);
+                      updateSettings({ theme: themeOption });
                     }}
                     style={{
                       flex: 1,
                       padding: '8px 16px',
                       fontSize: '14px',
                       fontWeight: '500',
-                      // Show as selected when: not using custom theme OR not premium (effective state)
-                      color: !effectiveUseCustomTheme ? 'var(--text)' : 'var(--text-muted)',
-                      backgroundColor: !effectiveUseCustomTheme ? 'var(--panel)' : 'transparent',
-                      border: !effectiveUseCustomTheme ? '1px solid var(--border)' : '1px solid transparent',
+                      color: selectedTheme === themeOption ? 'var(--text)' : 'var(--text-muted)',
+                      backgroundColor: selectedTheme === themeOption ? 'var(--panel)' : 'transparent',
+                      border: selectedTheme === themeOption ? '1px solid var(--border)' : '1px solid transparent',
                       borderRadius: '6px',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                     }}
                   >
-                    College Theme
+                    {themeOption.charAt(0).toUpperCase() + themeOption.slice(1)}
                   </button>
-                  <button
-                    onClick={() => {
-                      if (!isPremium && !isLoadingSubscription) {
-                        // Show upgrade prompt for non-premium users
-                        return;
+                ))}
+              </div>
+            </div>
+
+            {/* University */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
+              <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>University</p>
+              <select
+                value={university || ''}
+                onChange={(e) => {
+                  const newUniversity = e.target.value || null;
+                  setUniversity(newUniversity);
+                  updateSettings({ university: newUniversity });
+                }}
+                style={{
+                  width: '100%',
+                  height: '44px',
+                  padding: '8px 12px',
+                  fontSize: '16px',
+                  fontFamily: 'inherit',
+                  backgroundColor: 'var(--panel-2)',
+                  color: 'var(--text)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${selectedTheme === 'light' ? '%23666666' : 'white'}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 16px center',
+                  backgroundSize: '18px',
+                  paddingRight: '36px',
+                }}
+              >
+                <option value="">Select a University</option>
+                <option value="Arizona State University">Arizona State University</option>
+                <option value="Brigham Young University">Brigham Young University</option>
+                <option value="Brigham Young University Hawaii">Brigham Young University Hawaii</option>
+                <option value="Brigham Young University Idaho">Brigham Young University Idaho</option>
+                <option value="North Lincoln High School">North Lincoln High School</option>
+                <option value="Ohio State University">Ohio State University</option>
+                <option value="UNC Chapel Hill">UNC Chapel Hill</option>
+                <option value="University of Central Florida">University of Central Florida</option>
+                <option value="University of Texas at Austin">University of Texas at Austin</option>
+                <option value="Utah State University">Utah State University</option>
+                <option value="Utah Valley University">Utah Valley University</option>
+              </select>
+              <div style={{ marginTop: '12px' }}>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>
+                  Don't see yours? Request it to be added
+                </p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    value={collegeRequestName}
+                    onChange={(e) => setCollegeRequestName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSubmitCollegeRequest();
                       }
-                      setUseCustomTheme(true);
-                      // Initialize custom colors with defaults if not set
-                      const colors = customColors || getDefaultCustomColors(university);
-                      setCustomColors(colors);
-                      updateSettings({ useCustomTheme: true, customColors: colors });
                     }}
+                    placeholder="University name"
+                    maxLength={100}
                     style={{
                       flex: 1,
-                      padding: '8px 16px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      // Only show as selected when premium AND using custom theme
-                      color: effectiveUseCustomTheme ? 'var(--text)' : 'var(--text-muted)',
-                      backgroundColor: effectiveUseCustomTheme ? 'var(--panel)' : 'transparent',
-                      border: effectiveUseCustomTheme ? '1px solid var(--border)' : '1px solid transparent',
-                      borderRadius: '6px',
-                      cursor: isPremium || isLoadingSubscription ? 'pointer' : 'not-allowed',
-                      transition: 'all 0.2s ease',
-                      opacity: !isPremium && !isLoadingSubscription ? 0.6 : 1,
-                    }}
-                  >
-                    Custom Theme
-                  </button>
-                </div>
-
-                {/* Show upgrade prompt for non-premium users */}
-                {!isPremium && !isLoadingSubscription && (
-                  <div style={{ marginBottom: '16px' }}>
-                    <UpgradePrompt feature="Custom themes" />
-                  </div>
-                )}
-
-                {/* Color Pickers - only show for premium users with custom theme enabled */}
-                {isPremium && useCustomTheme && customColors && (() => {
-                  // Determine current theme mode for editing
-                  const currentThemeMode = selectedTheme === 'system'
-                    ? (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-                    : selectedTheme;
-                  const currentColorSet = currentThemeMode === 'light' ? customColors.light : customColors.dark;
-
-                  // Helper to update a color in the current theme
-                  const updateColor = (key: keyof CustomColorSet, value: string) => {
-                    const newColors = {
-                      ...customColors,
-                      [currentThemeMode]: {
-                        ...currentColorSet,
-                        [key]: value,
-                      },
-                    };
-                    setCustomColors(newColors);
-                    updateSettings({ customColors: newColors });
-                  };
-
-                  return (
-                  <div style={{ marginTop: '16px' }}>
-                    <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                      Editing colors for {currentThemeMode} mode
-                    </p>
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-                      gap: '16px',
-                    }}>
-                      <ColorPicker
-                        label="Primary / Buttons"
-                        value={currentColorSet.accent}
-                        onChange={(color) => updateColor('accent', color)}
-                      />
-                      <ColorPicker
-                        label="Links"
-                        value={currentColorSet.link}
-                        onChange={(color) => updateColor('link', color)}
-                      />
-                      <ColorPicker
-                        label="Success / Complete"
-                        value={currentColorSet.success}
-                        onChange={(color) => updateColor('success', color)}
-                      />
-                      <ColorPicker
-                        label="Warnings"
-                        value={currentColorSet.warning}
-                        onChange={(color) => updateColor('warning', color)}
-                      />
-                      <ColorPicker
-                        label="Errors / Delete"
-                        value={currentColorSet.danger}
-                        onChange={(color) => updateColor('danger', color)}
-                      />
-                    </div>
-
-                    {/* Reset to Defaults button */}
-                    <Button
-                      size={isMobile ? 'sm' : 'lg'}
-                      variant="secondary"
-                      onClick={() => {
-                        const defaultColors = getDefaultCustomColors(university);
-                        setCustomColors(defaultColors);
-                        updateSettings({ customColors: defaultColors });
-                      }}
-                      style={{
-                        marginTop: '16px',
-                        marginBottom: '16px',
-                        paddingLeft: isMobile ? '12px' : '16px',
-                        paddingRight: isMobile ? '12px' : '16px',
-                        boxShadow: 'none',
-                      }}
-                    >
-                      Reset to Defaults
-                    </Button>
-                  </div>
-                  );
-                })()}
-              </div>
-
-              {/* Gradient & Glow Intensity */}
-              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
-                  Visual Effects
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
-                  Adjust gradient and glow intensity on buttons and UI elements
-                </p>
-
-                {/* Gradient Intensity */}
-                <div style={{ marginBottom: '16px', opacity: isPremium ? 1 : 0.5 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span className="text-sm text-[var(--text)]">Gradient Intensity</span>
-                    <span className="text-sm text-[var(--text-muted)]">{settings.gradientIntensity ?? 50}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={settings.gradientIntensity ?? 50}
-                    onChange={(e) => isPremium && updateSettings({ gradientIntensity: parseInt(e.target.value) })}
-                    disabled={!isPremium}
-                    style={{
-                      width: '100%',
-                      height: '6px',
-                      borderRadius: '3px',
-                      appearance: 'none',
-                      background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${settings.gradientIntensity ?? 50}%, var(--border) ${settings.gradientIntensity ?? 50}%, var(--border) 100%)`,
-                      cursor: isPremium ? 'pointer' : 'not-allowed',
-                    }}
-                  />
-                </div>
-
-                {/* Glow Intensity */}
-                <div style={{ opacity: isPremium ? 1 : 0.5, marginBottom: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span className="text-sm text-[var(--text)]">Glow Intensity</span>
-                    <span className="text-sm text-[var(--text-muted)]">{settings.glowIntensity ?? 50}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={settings.glowIntensity ?? 50}
-                    onChange={(e) => isPremium && updateSettings({ glowIntensity: parseInt(e.target.value) })}
-                    disabled={!isPremium}
-                    style={{
-                      width: '100%',
-                      height: '6px',
-                      borderRadius: '3px',
-                      appearance: 'none',
-                      background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${settings.glowIntensity ?? 50}%, var(--border) ${settings.glowIntensity ?? 50}%, var(--border) 100%)`,
-                      cursor: isPremium ? 'pointer' : 'not-allowed',
-                    }}
-                  />
-                </div>
-
-                {!isPremium && !isLoadingSubscription && (
-                  <div style={{ marginTop: '16px', marginBottom: '16px' }}>
-                    <UpgradePrompt feature="Visual effects customization" />
-                  </div>
-                )}
-              </div>
-
-              {/* Due Soon Window */}
-              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
-                  Due Soon Window
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                  Show deadlines within this many days
-                </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <input
-                    ref={dueSoonInputRef}
-                    type="text"
-                    inputMode="numeric"
-                    defaultValue={dueSoonDays}
-                    onKeyUp={(e) => {
-                      const inputValue = e.currentTarget.value;
-                      setDueSoonDays(inputValue);
-                      const val = parseInt(inputValue);
-                      if (!isNaN(val) && val >= 1 && val <= 30) {
-                        updateSettings({ dueSoonWindowDays: val });
-                      }
-                    }}
-                    style={{
-                      width: '96px',
                       height: '40px',
                       padding: '8px 12px',
                       fontSize: '16px',
@@ -866,289 +500,223 @@ export default function SettingsPage() {
                       color: 'var(--text)',
                       border: '1px solid var(--border)',
                       borderRadius: '6px',
-                      boxSizing: 'border-box'
                     }}
+                    disabled={collegeRequestLoading}
                   />
-                  <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>days</span>
+                  <Button
+                    size="sm"
+                    onClick={handleSubmitCollegeRequest}
+                    disabled={collegeRequestLoading}
+                    style={{
+                      backgroundColor: 'var(--button-secondary)',
+                      color: settings.theme === 'light' ? '#000000' : 'white',
+                      borderWidth: '1px',
+                      borderStyle: 'solid',
+                      borderColor: 'var(--border)',
+                      opacity: collegeRequestLoading ? 0.6 : 1
+                    }}
+                  >
+                    {collegeRequestLoading ? '...' : 'Request'}
+                  </Button>
                 </div>
-                <Button size={isMobile ? 'sm' : 'lg'} onClick={async () => {
-                  const inputValue = dueSoonInputRef.current?.value || '';
-                  const val = parseInt(inputValue);
-                  if (!inputValue) {
-                    setSaveMessage('Please enter a value');
-                    setTimeout(() => setSaveMessage(''), 3000);
-                    return;
-                  }
-                  if (!isNaN(val) && val >= 1 && val <= 30) {
-                    try {
-                      await updateSettings({ dueSoonWindowDays: val });
-                      setSaveMessage('Saved successfully!');
-                      setTimeout(() => setSaveMessage(''), 3000);
-                    } catch (error) {
-                      setSaveMessage('Error saving: ' + (error instanceof Error ? error.message : 'Unknown error'));
-                      setTimeout(() => setSaveMessage(''), 3000);
-                    }
-                  } else {
-                    setSaveMessage('Please enter a number between 1 and 30');
-                    setTimeout(() => setSaveMessage(''), 3000);
-                  }
-                }} style={{ marginTop: '16px', paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px', backgroundColor: 'var(--button-secondary)', color: settings.theme === 'light' ? '#000000' : 'white', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border)' }}>
-                  Save
-                </Button>
-                {saveMessage && (
-                  <p style={{ marginTop: '8px', fontSize: '14px', color: saveMessage.includes('Error') ? 'var(--danger)' : 'var(--success)' }}>{saveMessage}</p>
+                {collegeRequestMessage && (
+                  <p style={{ marginTop: '8px', fontSize: '14px', color: collegeRequestMessage.includes('✗') ? 'var(--danger)' : 'var(--success)' }}>{collegeRequestMessage}</p>
                 )}
               </div>
+            </div>
 
-              {/* Exam Reminders - Hidden for now */}
-              {false && <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', marginTop: '16px' }}>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
-                  Exam Reminders
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                  Set when you want to receive study reminders before exams
-                </p>
-                <div className="space-y-3" style={{ marginBottom: '16px' }}>
-                  {examReminders.map((reminder, idx) => {
-                    return (
-                      <div key={idx} style={{ display: 'grid', gridTemplateColumns: isMobile ? '24px 1fr auto' : '24px 1fr auto', gap: isMobile ? '8px' : '12px', alignItems: isMobile ? 'start' : 'start', padding: isMobile ? '10px' : '12px', backgroundColor: 'var(--panel-2)', borderRadius: '6px' }}>
-                        <input
-                          type="checkbox"
-                          checked={reminder.enabled}
-                          onChange={(e) => {
-                            const newReminders = [...examReminders];
-                            newReminders[idx].enabled = e.target.checked;
-                            setExamReminders(newReminders);
-                            updateSettings({ examReminders: newReminders });
-                          }}
-                          style={{
-                            width: '18px',
-                            height: '18px',
-                            cursor: 'pointer',
-                            marginTop: '2px',
-                          }}
-                        />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '4px' : '8px' }}>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            value={reminder.value === 0 ? '' : reminder.value}
-                            onChange={(e) => {
-                              const newReminders = [...examReminders];
-                              const val = e.target.value.trim();
-                              if (val === '') {
-                                // If field is cleared, disable the reminder
-                                newReminders[idx].enabled = false;
-                                newReminders[idx].value = 1; // Reset to default
-                              } else {
-                                const num = parseInt(val);
-                                if (!isNaN(num) && num > 0) {
-                                  newReminders[idx].value = num;
-                                }
-                              }
-                              setExamReminders(newReminders);
-                              updateSettings({ examReminders: newReminders });
-                            }}
-                            style={{
-                              width: isMobile ? '40px' : '60px',
-                              height: isMobile ? '28px' : '32px',
-                              padding: '6px 8px',
-                              fontSize: isMobile ? '12px' : '14px',
-                              backgroundColor: 'var(--panel)',
-                              color: 'var(--text)',
-                              border: '1px solid var(--border)',
-                              borderRadius: '4px',
-                              boxSizing: 'border-box',
-                            }}
-                          />
-                          <select
-                            value={reminder.unit}
-                            onChange={(e) => {
-                              const newReminders = [...examReminders];
-                              newReminders[idx].unit = e.target.value as 'hours' | 'days';
-                              setExamReminders(newReminders);
-                              updateSettings({ examReminders: newReminders });
-                            }}
-                            style={{
-                              height: isMobile ? '28px' : '32px',
-                              padding: '6px 8px',
-                              fontSize: isMobile ? '12px' : '14px',
-                              backgroundColor: 'var(--panel)',
-                              color: 'var(--text)',
-                              border: '1px solid var(--border)',
-                              borderRadius: '4px',
-                              boxSizing: 'border-box',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <option value="hours">hours</option>
-                            <option value="days">days</option>
-                          </select>
-                          <span style={{ fontSize: isMobile ? '12px' : '13px', color: 'var(--text-muted)' }}>
-                            before
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            const newReminders = examReminders.filter((_, i) => i !== idx);
-                            setExamReminders(newReminders);
-                            updateSettings({ examReminders: newReminders });
-                          }}
-                          style={{
-                            padding: isMobile ? '4px 8px' : '6px 12px',
-                            fontSize: isMobile ? '11px' : '12px',
-                            backgroundColor: removeButtonColor,
-                            backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            height: isMobile ? '28px' : '32px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            whiteSpace: 'nowrap',
-                            boxShadow: '0 0 10px rgba(220, 38, 38, 0.35)',
-                          }}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    const newReminders = [...examReminders, { enabled: true, value: 1, unit: 'days' as const }];
-                    setExamReminders(newReminders);
-                    updateSettings({ examReminders: newReminders });
+            {/* Due Soon Window */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+              <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Due Soon Window</p>
+              <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                Show deadlines within this many days
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <input
+                  ref={dueSoonInputRef}
+                  type="text"
+                  inputMode="numeric"
+                  defaultValue={dueSoonDays}
+                  onKeyUp={(e) => {
+                    const inputValue = e.currentTarget.value;
+                    setDueSoonDays(inputValue);
+                    const val = parseInt(inputValue);
+                    if (!isNaN(val) && val >= 1 && val <= 30) {
+                      updateSettings({ dueSoonWindowDays: val });
+                    }
                   }}
                   style={{
-                    paddingLeft: '16px',
-                    paddingRight: '16px',
-                    backgroundColor: 'var(--button-secondary)',
-                    color: settings.theme === 'light' ? '#000000' : 'white',
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: 'var(--border)',
+                    width: '80px',
+                    height: '40px',
+                    padding: '8px 12px',
+                    fontSize: '16px',
+                    fontFamily: 'inherit',
+                    backgroundColor: 'var(--panel-2)',
+                    color: 'var(--text)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
                   }}
-                >
-                  + Add Reminder
-                </Button>
-              </div>}
+                />
+                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>days</span>
+              </div>
             </div>
           </Card>
 
-          {/* Notification Preferences */}
-          <Card title="Notification Preferences">
-            <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px' }}>
-              Email Notifications
-            </p>
-            <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-              Choose which emails you want to receive from College Orbit.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
-                <div>
-                  <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Announcements</p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Updates and news from College Orbit</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={emailAnnouncements}
-                  onChange={async (e) => {
-                    setEmailAnnouncements(e.target.checked);
-                    await updateSettings({ emailAnnouncements: e.target.checked });
+          {/* Appearance (Premium) - Custom Theme + Visual Effects */}
+          <Card title="Appearance">
+            {!isPremium && !isLoadingSubscription && (
+              <div style={{ marginBottom: '16px' }}>
+                <UpgradePrompt feature="Custom themes and visual effects" />
+              </div>
+            )}
+
+            {/* Custom Theme Toggle */}
+            <div style={{ marginBottom: '20px' }}>
+              <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Color Theme</p>
+              <div style={{
+                display: 'flex',
+                gap: '8px',
+                padding: '4px',
+                backgroundColor: 'var(--panel-2)',
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+                opacity: isPremium ? 1 : 0.5,
+              }}>
+                <button
+                  onClick={() => {
+                    if (!isPremium) return;
+                    setUseCustomTheme(false);
+                    updateSettings({ useCustomTheme: false });
                   }}
-                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                />
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
-                <div>
-                  <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Exam Reminders</p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before your upcoming exams</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={emailExamReminders}
-                  onChange={async (e) => {
-                    setEmailExamReminders(e.target.checked);
-                    await updateSettings({ emailExamReminders: e.target.checked });
+                  style={{
+                    flex: 1,
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: !effectiveUseCustomTheme ? 'var(--text)' : 'var(--text-muted)',
+                    backgroundColor: !effectiveUseCustomTheme ? 'var(--panel)' : 'transparent',
+                    border: !effectiveUseCustomTheme ? '1px solid var(--border)' : '1px solid transparent',
+                    borderRadius: '6px',
+                    cursor: isPremium ? 'pointer' : 'not-allowed',
                   }}
-                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                />
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
-                <div>
-                  <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Account Alerts</p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Password changes, subscription updates, and security alerts</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={emailAccountAlerts}
-                  onChange={async (e) => {
-                    setEmailAccountAlerts(e.target.checked);
-                    await updateSettings({ emailAccountAlerts: e.target.checked });
+                >
+                  College Theme
+                </button>
+                <button
+                  onClick={() => {
+                    if (!isPremium) return;
+                    setUseCustomTheme(true);
+                    const colors = customColors || getDefaultCustomColors(university);
+                    setCustomColors(colors);
+                    updateSettings({ useCustomTheme: true, customColors: colors });
                   }}
-                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                />
-              </label>
+                  style={{
+                    flex: 1,
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: effectiveUseCustomTheme ? 'var(--text)' : 'var(--text-muted)',
+                    backgroundColor: effectiveUseCustomTheme ? 'var(--panel)' : 'transparent',
+                    border: effectiveUseCustomTheme ? '1px solid var(--border)' : '1px solid transparent',
+                    borderRadius: '6px',
+                    cursor: isPremium ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  Custom Theme
+                </button>
+              </div>
             </div>
 
-            {/* In-App Notification Preferences */}
-            <div style={{ borderTop: '1px solid var(--border)', marginTop: '20px', paddingTop: '20px' }}>
-              <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px' }}>
-                In-App Notifications
-              </p>
-              <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                Choose which in-app notifications you want to receive.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
-                  <div>
-                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Announcements</p>
-                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Updates and news from College Orbit</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifyAnnouncements}
-                    onChange={async (e) => {
-                      setNotifyAnnouncements(e.target.checked);
-                      await updateSettings({ notifyAnnouncements: e.target.checked });
-                    }}
-                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                  />
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
-                  <div>
-                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Exam Reminders</p>
-                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before your upcoming exams</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifyExamReminders}
-                    onChange={async (e) => {
-                      setNotifyExamReminders(e.target.checked);
-                      await updateSettings({ notifyExamReminders: e.target.checked });
-                    }}
-                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                  />
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
-                  <div>
-                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Account Alerts</p>
-                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Subscription updates, payment alerts, and security notifications</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifyAccountAlerts}
-                    onChange={async (e) => {
-                      setNotifyAccountAlerts(e.target.checked);
-                      await updateSettings({ notifyAccountAlerts: e.target.checked });
-                    }}
-                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                  />
-                </label>
+            {/* Color Pickers */}
+            {isPremium && useCustomTheme && customColors && (() => {
+              const currentThemeMode = selectedTheme === 'system'
+                ? (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+                : selectedTheme;
+              const currentColorSet = currentThemeMode === 'light' ? customColors.light : customColors.dark;
+
+              const updateColor = (key: keyof CustomColorSet, value: string) => {
+                const newColors = {
+                  ...customColors,
+                  [currentThemeMode]: { ...currentColorSet, [key]: value },
+                };
+                setCustomColors(newColors);
+                updateSettings({ customColors: newColors });
+              };
+
+              return (
+              <div style={{ marginBottom: '20px' }}>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                  Editing colors for {currentThemeMode} mode
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '12px' }}>
+                  <ColorPicker label="Primary" value={currentColorSet.accent} onChange={(color) => updateColor('accent', color)} />
+                  <ColorPicker label="Links" value={currentColorSet.link} onChange={(color) => updateColor('link', color)} />
+                  <ColorPicker label="Success" value={currentColorSet.success} onChange={(color) => updateColor('success', color)} />
+                  <ColorPicker label="Warning" value={currentColorSet.warning} onChange={(color) => updateColor('warning', color)} />
+                  <ColorPicker label="Danger" value={currentColorSet.danger} onChange={(color) => updateColor('danger', color)} />
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    const defaultColors = getDefaultCustomColors(university);
+                    setCustomColors(defaultColors);
+                    updateSettings({ customColors: defaultColors });
+                  }}
+                  style={{ marginTop: '12px', boxShadow: 'none' }}
+                >
+                  Reset Colors
+                </Button>
+              </div>
+              );
+            })()}
+
+            {/* Visual Effects */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', opacity: isPremium ? 1 : 0.5 }}>
+              <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>Visual Effects</p>
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span className="text-sm text-[var(--text)]">Gradient Intensity</span>
+                  <span className="text-sm text-[var(--text-muted)]">{settings.gradientIntensity ?? 50}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={settings.gradientIntensity ?? 50}
+                  onChange={(e) => isPremium && updateSettings({ gradientIntensity: parseInt(e.target.value) })}
+                  disabled={!isPremium}
+                  style={{
+                    width: '100%',
+                    height: '6px',
+                    borderRadius: '3px',
+                    appearance: 'none',
+                    background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${settings.gradientIntensity ?? 50}%, var(--border) ${settings.gradientIntensity ?? 50}%, var(--border) 100%)`,
+                    cursor: isPremium ? 'pointer' : 'not-allowed',
+                  }}
+                />
+              </div>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span className="text-sm text-[var(--text)]">Glow Intensity</span>
+                  <span className="text-sm text-[var(--text-muted)]">{settings.glowIntensity ?? 50}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={settings.glowIntensity ?? 50}
+                  onChange={(e) => isPremium && updateSettings({ glowIntensity: parseInt(e.target.value) })}
+                  disabled={!isPremium}
+                  style={{
+                    width: '100%',
+                    height: '6px',
+                    borderRadius: '3px',
+                    appearance: 'none',
+                    background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${settings.glowIntensity ?? 50}%, var(--border) ${settings.glowIntensity ?? 50}%, var(--border) 100%)`,
+                    cursor: isPremium ? 'pointer' : 'not-allowed',
+                  }}
+                />
               </div>
             </div>
           </Card>
@@ -1628,6 +1196,120 @@ export default function SettingsPage() {
             )}
           </Card>
 
+          {/* Notification Preferences */}
+          <Card title="Notification Preferences">
+            <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px' }}>
+              Email Notifications
+            </p>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+              Choose which emails you want to receive from College Orbit.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                <div>
+                  <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Announcements</p>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Updates and news from College Orbit</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={emailAnnouncements}
+                  onChange={async (e) => {
+                    setEmailAnnouncements(e.target.checked);
+                    await updateSettings({ emailAnnouncements: e.target.checked });
+                  }}
+                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                />
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                <div>
+                  <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Exam Reminders</p>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before your upcoming exams</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={emailExamReminders}
+                  onChange={async (e) => {
+                    setEmailExamReminders(e.target.checked);
+                    await updateSettings({ emailExamReminders: e.target.checked });
+                  }}
+                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                />
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                <div>
+                  <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Account Alerts</p>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Password changes, subscription updates, and security alerts</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={emailAccountAlerts}
+                  onChange={async (e) => {
+                    setEmailAccountAlerts(e.target.checked);
+                    await updateSettings({ emailAccountAlerts: e.target.checked });
+                  }}
+                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                />
+              </label>
+            </div>
+
+            {/* In-App Notification Preferences */}
+            <div style={{ borderTop: '1px solid var(--border)', marginTop: '20px', paddingTop: '20px' }}>
+              <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px' }}>
+                In-App Notifications
+              </p>
+              <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                Choose which in-app notifications you want to receive.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <div>
+                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Announcements</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Updates and news from College Orbit</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notifyAnnouncements}
+                    onChange={async (e) => {
+                      setNotifyAnnouncements(e.target.checked);
+                      await updateSettings({ notifyAnnouncements: e.target.checked });
+                    }}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                  />
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <div>
+                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Exam Reminders</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before your upcoming exams</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notifyExamReminders}
+                    onChange={async (e) => {
+                      setNotifyExamReminders(e.target.checked);
+                      await updateSettings({ notifyExamReminders: e.target.checked });
+                    }}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                  />
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <div>
+                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Account Alerts</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Subscription updates, payment alerts, and security notifications</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notifyAccountAlerts}
+                    onChange={async (e) => {
+                      setNotifyAccountAlerts(e.target.checked);
+                      await updateSettings({ notifyAccountAlerts: e.target.checked });
+                    }}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                  />
+                </label>
+              </div>
+            </div>
+          </Card>
+
           {/* Report an Issue & Request a Feature/Change */}
           <Card title="Feedback">
             <div className="space-y-4">
@@ -1655,7 +1337,7 @@ export default function SettingsPage() {
                     border: '1px solid var(--border)',
                     borderRadius: '6px',
                     boxSizing: 'border-box',
-                    marginBottom: '8px',
+                    marginBottom: '0',
                     resize: 'vertical',
                   }}
                   disabled={featureRequestLoading}
@@ -1713,7 +1395,7 @@ export default function SettingsPage() {
                     border: '1px solid var(--border)',
                     borderRadius: '6px',
                     boxSizing: 'border-box',
-                    marginBottom: '8px',
+                    marginBottom: '0',
                     resize: 'vertical',
                   }}
                   disabled={issueReportLoading}
