@@ -55,7 +55,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const variantStyles = {
-      primary: `bg-[var(--accent)] hover:brightness-110 active:translate-y-[1px]`,
+      primary: `hover:brightness-110 active:translate-y-[1px]`,
       secondary: 'bg-white/5 text-[var(--text)] hover:bg-white/8 border border-[var(--border)] active:translate-y-[1px]',
       danger: `${isLightMode ? 'bg-[var(--danger)]' : 'bg-[#660000]'} text-white hover:brightness-110 active:translate-y-[1px]`,
       ghost: 'bg-transparent hover:bg-white/5 text-[var(--muted)] hover:text-[var(--text)] active:translate-y-[1px]',
@@ -65,19 +65,28 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // Intensity 0 = none, 50 = default, 100 = max
     const gradientScale = Math.pow(gradientIntensity / 50, 2); // quadratic: 50% = 1x, 100% = 4x
     const glowScale = glowIntensity / 50; // 0-2 multiplier
+    // Reduce glow intensity when no college is selected (default theme)
+    const noCollegeSelected = !settings.university;
+    const glowReduction = noCollegeSelected ? 0.5 : 1; // 50% less glow when no college selected
 
     const gradientStyle = (() => {
+      // Use subtler values in dark mode
       const lightOpacity = Math.round(0.08 * gradientScale * 100) / 100;
       const darkOpacity = Math.round(0.12 * gradientScale * 100) / 100;
       const secondaryLightOpacity = Math.round(0.04 * gradientScale * 100) / 100;
       const secondaryDarkOpacity = Math.round(0.06 * gradientScale * 100) / 100;
-      const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
+      const glowOpacity = isLightMode
+        ? Math.min(255, Math.round(0.5 * glowScale * glowReduction * 255)).toString(16).padStart(2, '0')
+        : Math.min(255, Math.round(0.2 * glowScale * glowReduction * 255)).toString(16).padStart(2, '0');
 
       if (variant === 'primary') {
+        const gradient = `linear-gradient(135deg, rgba(255,255,255,${lightOpacity}) 0%, transparent 50%, rgba(0,0,0,${darkOpacity}) 100%)`;
+        const darkOverlay = 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2))';
         return {
+          backgroundColor: accentColor,
           backgroundImage: gradientIntensity > 0
-            ? `linear-gradient(135deg, rgba(255,255,255,${lightOpacity}) 0%, transparent 50%, rgba(0,0,0,${darkOpacity}) 100%)`
-            : 'none',
+            ? (isLightMode ? gradient : `${darkOverlay}, ${gradient}`)
+            : (isLightMode ? 'none' : darkOverlay),
           boxShadow: glowIntensity > 0 ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
           border: '1px solid var(--border)',
           color: accentTextColor,

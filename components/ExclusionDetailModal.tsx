@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ExcludedDate, Course } from '@/types';
 import { getEventColor } from '@/lib/calendarUtils';
 
@@ -35,6 +36,7 @@ export default function ExclusionDetailModal({
   }, [isOpen, onClose]);
 
   if (!isOpen || !exclusion) return null;
+  if (typeof document === 'undefined') return null;
 
   const isHoliday = !exclusion.courseId;
   const course = exclusion.courseId
@@ -53,7 +55,7 @@ export default function ExclusionDetailModal({
     });
   };
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -64,7 +66,7 @@ export default function ExclusionDetailModal({
           right: 0,
           bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 1000,
+          zIndex: 9999,
         }}
         onClick={onClose}
       />
@@ -83,7 +85,7 @@ export default function ExclusionDetailModal({
           minWidth: '320px',
           maxWidth: '450px',
           width: '90%',
-          zIndex: 1001,
+          zIndex: 10000,
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
           overflow: 'hidden',
         }}
@@ -219,9 +221,9 @@ export default function ExclusionDetailModal({
             onClick={onClose}
             style={{
               padding: '8px 16px',
-              backgroundColor: 'var(--button-secondary)',
-              backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
-              color: 'var(--text)',
+              backgroundColor: 'var(--accent)',
+              backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+              color: 'white',
               border: '1px solid var(--border)',
               borderRadius: 'var(--radius-control)',
               cursor: 'pointer',
@@ -233,6 +235,7 @@ export default function ExclusionDetailModal({
           </button>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

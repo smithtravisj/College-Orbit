@@ -1,5 +1,6 @@
 'use client';
 
+import { createPortal } from 'react-dom';
 import Button from '@/components/ui/Button';
 
 interface ConfirmationModalProps {
@@ -24,9 +25,10 @@ export default function ConfirmationModal({
   isDangerous = false,
 }: ConfirmationModalProps) {
   if (!isOpen) return null;
+  if (typeof document === 'undefined') return null;
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  return createPortal(
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
       <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-2">{title}</h2>
@@ -60,6 +62,7 @@ export default function ConfirmationModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

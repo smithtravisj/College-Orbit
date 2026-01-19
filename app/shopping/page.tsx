@@ -12,6 +12,8 @@ import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 import PremiumGate from '@/components/subscription/PremiumGate';
 import { Plus, Trash2, Edit2, ShoppingCart, Heart, Package, Check, Copy } from 'lucide-react';
+import NaturalLanguageInput from '@/components/NaturalLanguageInput';
+import { parseNaturalLanguage, NLP_SHOPPING_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
 import {
   ShoppingListType,
   ShoppingItem,
@@ -77,6 +79,7 @@ export default function ShoppingPage() {
     price: '',
     perishable: false,
   });
+  const [nlpInput, setNlpInput] = useState('');
 
   const {
     shoppingItems,
@@ -110,6 +113,42 @@ export default function ShoppingPage() {
     }).catch(err => console.error('[Shopping] Failed to save filters collapse state:', err));
   };
 
+  // Handle NLP input changes
+  const handleNlpInputChange = (value: string) => {
+    setNlpInput(value);
+
+    if (!value.trim()) {
+      setFormData({
+        name: '',
+        quantity: '',
+        unit: '',
+        category: categoryFilter || '',
+        notes: '',
+        priority: '',
+        price: '',
+        perishable: perishableFilter === 'perishable' ? true : perishableFilter === 'non-perishable' ? false : false,
+      });
+      return;
+    }
+
+    const parsed = parseNaturalLanguage(value, {
+      itemType: 'shopping',
+      shoppingListType: activeTab,
+    });
+
+    // Update form fields from parsing - always update name, other fields update when detected
+    setFormData({
+      name: parsed.title,
+      quantity: parsed.quantity > 1 ? parsed.quantity : '',
+      unit: parsed.unit || '',
+      category: parsed.category || categoryFilter || '',
+      notes: parsed.shoppingNotes || '',
+      priority: (parsed.priority || '') as '' | 'low' | 'medium' | 'high',
+      price: parsed.price ? parsed.price.toString() : '',
+      perishable: perishableFilter === 'perishable' ? true : perishableFilter === 'non-perishable' ? false : false,
+    });
+  };
+
   useEffect(() => {
     initializeStore();
     setMounted(true);
@@ -134,6 +173,7 @@ export default function ShoppingPage() {
       price: '',
       perishable: false,
     });
+    setNlpInput('');
     setCategoryFilter('');
     setPerishableFilter('');
     setShowForm(false);
@@ -200,6 +240,7 @@ export default function ShoppingPage() {
 
   const resetForm = () => {
     setEditingId(null);
+    setNlpInput('');
     setFormData({
       name: '',
       quantity: '',
@@ -338,30 +379,16 @@ export default function ShoppingPage() {
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              {/* Subtle glow behind title */}
-              <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-                <div
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
-                  }}
-                />
-              </div>
-              <h1
-                style={{
-                  position: 'relative',
-                  zIndex: 1,
-                  fontSize: isMobile ? '26px' : '34px',
-                  fontWeight: 700,
-                  color: 'var(--text)',
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                Things to Buy
-              </h1>
-            </div>
+            <h1
+              style={{
+                fontSize: isMobile ? '26px' : '34px',
+                fontWeight: 700,
+                color: 'var(--text)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Things to Buy
+            </h1>
             <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
               Your shopping lists and pantry inventory.
             </p>
@@ -370,6 +397,7 @@ export default function ShoppingPage() {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               if (editingId || !showForm) {
                 setEditingId(null);
+                setNlpInput('');
                 setFormData({
                   name: '',
                   quantity: '',
@@ -405,8 +433,12 @@ export default function ShoppingPage() {
                 style={{
                   padding: isMobile ? '8px 12px' : '10px 16px',
                   fontSize: isMobile ? '12px' : '14px',
-                  backgroundColor: isActive ? 'var(--nav-active)' : 'transparent',
-                  backgroundImage: isActive ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                  backgroundColor: isActive ? 'var(--accent)' : 'transparent',
+                  backgroundImage: isActive
+                    ? (theme === 'light'
+                      ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                      : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)')
+                    : 'none',
                   boxShadow: isActive ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
                   color: isActive ? 'var(--text)' : 'var(--text-muted)',
                 }}
@@ -446,6 +478,15 @@ export default function ShoppingPage() {
             {showForm && (
               <Card>
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '16px' }}>
+                  {/* Natural Language Input - only for new items (premium feature) */}
+                  {!editingId && isPremium && (
+                    <NaturalLanguageInput
+                      value={nlpInput}
+                      onChange={handleNlpInputChange}
+                      placeholder={NLP_SHOPPING_PLACEHOLDERS[activeTab]}
+                      autoFocus
+                    />
+                  )}
                   <Input
                     label="Item Name"
                     value={formData.name}

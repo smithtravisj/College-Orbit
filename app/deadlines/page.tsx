@@ -30,6 +30,8 @@ import {
 } from '@/components/BulkActionModals';
 import { RecurringDeadlineFormData } from '@/types';
 import FilePreviewModal from '@/components/FilePreviewModal';
+import NaturalLanguageInput from '@/components/NaturalLanguageInput';
+import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
 
 // Helper function to format recurring pattern as human-readable text
 function getRecurrenceText(pattern: any): string {
@@ -132,6 +134,7 @@ export default function DeadlinesPage() {
   const [previewingDeadline, setPreviewingDeadline] = useState<any>(null);
   const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [nlpInput, setNlpInput] = useState('');
 
   // Bulk selection state
   const bulkSelect = useBulkSelect();
@@ -462,6 +465,7 @@ export default function DeadlinesPage() {
 
   const cancelEdit = () => {
     setEditingId(null);
+    setNlpInput('');
     setFormData({
       title: '',
       courseId: '',
@@ -486,6 +490,34 @@ export default function DeadlinesPage() {
       },
     });
     setShowForm(false);
+  };
+
+  // Handle NLP input change
+  const handleNlpInputChange = (value: string) => {
+    setNlpInput(value);
+
+    if (!value.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        title: '',
+        courseId: '',
+        effort: '',
+        dueDate: '',
+        dueTime: '',
+      }));
+      return;
+    }
+
+    const parsed = parseNaturalLanguage(value, { courses, itemType: 'assignment' });
+
+    setFormData(prev => ({
+      ...prev,
+      title: parsed.title || '',
+      courseId: parsed.courseId || '',
+      effort: parsed.effort || '',
+      dueDate: parsed.date || '',
+      dueTime: parsed.time || '',
+    }));
   };
 
   const getDateSearchStrings = (dueAt: string | null | undefined): string[] => {
@@ -740,30 +772,16 @@ export default function DeadlinesPage() {
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              {/* Subtle glow behind title */}
-              <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-                <div
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
-                  }}
-                />
-              </div>
-              <h1
-                style={{
-                  position: 'relative',
-                  zIndex: 1,
-                  fontSize: isMobile ? '26px' : '34px',
-                  fontWeight: 700,
-                  color: 'var(--text)',
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                Assignments
-              </h1>
-            </div>
+            <h1
+              style={{
+                fontSize: isMobile ? '26px' : '34px',
+                fontWeight: 700,
+                color: 'var(--text)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Assignments
+            </h1>
             <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
               Your assignments and deadlines.
             </p>
@@ -772,6 +790,7 @@ export default function DeadlinesPage() {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               if (editingId || !showForm) {
                 setEditingId(null);
+                setNlpInput('');
                 setFormData({
                   title: '',
                   courseId: courseFilter || '',
@@ -889,8 +908,12 @@ export default function DeadlinesPage() {
                       }`}
                       style={{
                         padding: isMobile ? '8px 12px' : '12px 16px',
-                        backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent',
-                        backgroundImage: filter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                        backgroundColor: filter === f.value ? 'var(--accent)' : 'transparent',
+                        backgroundImage: filter === f.value
+                          ? (theme === 'light'
+                            ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                            : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)')
+                          : 'none',
                         boxShadow: filter === f.value ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
                         fontSize: isMobile ? '13px' : '14px',
                       }}
@@ -976,8 +999,12 @@ export default function DeadlinesPage() {
                       }`}
                       style={{
                         padding: isMobile ? '8px 12px' : '8px 14px',
-                        backgroundColor: filter === f.value ? 'var(--nav-active)' : 'transparent',
-                        backgroundImage: filter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                        backgroundColor: filter === f.value ? 'var(--accent)' : 'transparent',
+                        backgroundImage: filter === f.value
+                          ? (theme === 'light'
+                            ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                            : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)')
+                          : 'none',
                         boxShadow: filter === f.value ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
                         fontSize: isMobile ? '13px' : '14px',
                       }}
@@ -998,6 +1025,15 @@ export default function DeadlinesPage() {
             <div style={{ overflow: 'visible' }}>
               <Card>
                 <form onSubmit={handleSubmit} className={isMobile ? 'space-y-2' : 'space-y-3'} style={{ overflow: 'visible' }}>
+                {/* Natural Language Input - only for new assignments (premium feature) */}
+                {!editingId && subscription.isPremium && (
+                  <NaturalLanguageInput
+                    value={nlpInput}
+                    onChange={handleNlpInputChange}
+                    placeholder={NLP_PLACEHOLDERS.assignment}
+                    autoFocus
+                  />
+                )}
                 <div style={{ paddingBottom: isMobile ? '0px' : '4px' }}>
                   <Input
                     label="Assignment title"
@@ -1259,11 +1295,6 @@ export default function DeadlinesPage() {
                       size={isMobile ? 'sm' : 'md'}
                       type="submit"
                       style={{
-                        backgroundColor: 'var(--button-secondary)',
-                        color: settings.theme === 'light' ? '#000000' : 'white',
-                        borderWidth: '1px',
-                        borderStyle: 'solid',
-                        borderColor: 'var(--border)',
                         paddingLeft: isMobile ? '10px' : '16px',
                         paddingRight: isMobile ? '10px' : '16px'
                       }}
@@ -1991,7 +2022,7 @@ export default function DeadlinesPage() {
               display: 'flex',
               alignItems: isMobile ? 'flex-end' : 'center',
               justifyContent: 'center',
-              zIndex: 50,
+              zIndex: 9999,
             }}
             onClick={() => setShowUpgradeModal(false)}
           >

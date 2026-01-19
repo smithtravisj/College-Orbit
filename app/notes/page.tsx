@@ -17,6 +17,8 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { FREE_TIER_LIMITS } from '@/lib/subscription';
 import Link from 'next/link';
+import NaturalLanguageInput from '@/components/NaturalLanguageInput';
+import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
 
 export default function NotesPage() {
   const isMobile = useIsMobile();
@@ -43,6 +45,7 @@ export default function NotesPage() {
     tags: [] as string[],
     links: [{ label: '', url: '' }],
   });
+  const [nlpInput, setNlpInput] = useState('');
 
   const { courses, notes, folders, settings, addNote, updateNote, deleteNote, toggleNotePin, initializeStore, updateSettings } = useAppStore();
 
@@ -122,6 +125,7 @@ export default function NotesPage() {
 
   const resetForm = () => {
     setEditingId(null);
+    setNlpInput('');
     setFormData({
       title: '',
       content: { type: 'doc', content: [] },
@@ -130,6 +134,30 @@ export default function NotesPage() {
       tags: [],
       links: [{ label: '', url: '' }],
     });
+  };
+
+  // Handle NLP input change
+  const handleNlpInputChange = (value: string) => {
+    setNlpInput(value);
+
+    if (!value.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        title: '',
+        courseId: '',
+        folderId: '',
+      }));
+      return;
+    }
+
+    const parsed = parseNaturalLanguage(value, { courses, folders, itemType: 'note' });
+
+    setFormData(prev => ({
+      ...prev,
+      title: parsed.title || '',
+      courseId: parsed.courseId || '',
+      folderId: parsed.folderId || '',
+    }));
   };
 
   // Check limit before opening new note form
@@ -217,30 +245,16 @@ export default function NotesPage() {
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              {/* Subtle glow behind title */}
-              <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-                <div
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
-                  }}
-                />
-              </div>
-              <h1
-                style={{
-                  position: 'relative',
-                  zIndex: 1,
-                  fontSize: isMobile ? '26px' : '34px',
-                  fontWeight: 700,
-                  color: 'var(--text)',
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                Notes
-              </h1>
-            </div>
+            <h1
+              style={{
+                fontSize: isMobile ? '26px' : '34px',
+                fontWeight: 700,
+                color: 'var(--text)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Notes
+            </h1>
             <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
               Your study notes and resources.
             </p>
@@ -431,6 +445,15 @@ export default function NotesPage() {
               <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
                 <Card>
                   <form onSubmit={handleSubmit} className={isMobile ? 'space-y-2' : 'space-y-5'}>
+                  {/* Natural Language Input - only for new notes (premium feature) */}
+                  {!editingId && subscription.isPremium && (
+                    <NaturalLanguageInput
+                      value={nlpInput}
+                      onChange={handleNlpInputChange}
+                      placeholder={NLP_PLACEHOLDERS.note}
+                      autoFocus
+                    />
+                  )}
                   <Input
                     label="Title"
                     value={formData.title}
@@ -659,7 +682,7 @@ export default function NotesPage() {
                                           const isLightMode = settings?.theme === 'light';
                                           const tagColor = hasCollege
                                             ? (isLightMode ? 'var(--accent)' : 'var(--calendar-current-date-color)')
-                                            : '#539bf5';
+                                            : 'var(--link)';
                                           return (
                                             <span key={tag} style={{ fontSize: isMobile ? '10px' : '12px', color: tagColor }}>
                                               #{tag}
@@ -682,7 +705,7 @@ export default function NotesPage() {
                                       toggleNotePin(note.id);
                                     }}
                                     style={{ padding: isMobile ? '4px' : '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.color = '#539bf5'}
+                                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--link)'}
                                     onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
                                     title="Unpin note"
                                   >
@@ -772,7 +795,7 @@ export default function NotesPage() {
                                           const isLightMode = settings?.theme === 'light';
                                           const tagColor = hasCollege
                                             ? (isLightMode ? 'var(--accent)' : 'var(--calendar-current-date-color)')
-                                            : '#539bf5';
+                                            : 'var(--link)';
                                           return (
                                             <span key={tag} style={{ fontSize: isMobile ? '10px' : '12px', color: tagColor }}>
                                               #{tag}
@@ -795,7 +818,7 @@ export default function NotesPage() {
                                       toggleNotePin(note.id);
                                     }}
                                     style={{ padding: isMobile ? '4px' : '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', transition: 'color 150ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.color = '#539bf5'}
+                                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--link)'}
                                     onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
                                     title="Pin note"
                                   >
@@ -858,7 +881,7 @@ export default function NotesPage() {
               display: 'flex',
               alignItems: isMobile ? 'flex-end' : 'center',
               justifyContent: 'center',
-              zIndex: 50,
+              zIndex: 9999,
             }}
             onClick={() => setDeleteConfirmNote(null)}
           >
@@ -947,7 +970,7 @@ export default function NotesPage() {
               display: 'flex',
               alignItems: isMobile ? 'flex-end' : 'center',
               justifyContent: 'center',
-              zIndex: 50,
+              zIndex: 9999,
             }}
             onClick={() => setShowUpgradeModal(false)}
           >

@@ -35,6 +35,7 @@ export default function CalendarContent() {
   const isMobile = useIsMobile();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const isLightMode = theme === 'light';
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
   const savedGlowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
@@ -498,30 +499,16 @@ export default function CalendarContent() {
     <>
       {/* Calendar Header */}
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
-        <div style={{ position: 'relative', display: 'inline-block' }}>
-          {/* Subtle glow behind title */}
-          <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${accentColor}18 0%, transparent 70%)`,
-              }}
-            />
-          </div>
-          <h1
-            style={{
-              position: 'relative',
-              zIndex: 1,
-              fontSize: isMobile ? '26px' : '34px',
-              fontWeight: 700,
-              color: 'var(--text)',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            Calendar
-          </h1>
-        </div>
+        <h1
+          style={{
+            fontSize: isMobile ? '26px' : '34px',
+            fontWeight: 700,
+            color: 'var(--text)',
+            letterSpacing: '-0.02em',
+          }}
+        >
+          Calendar
+        </h1>
         <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
           Your schedule at a glance.
         </p>
@@ -536,7 +523,7 @@ export default function CalendarContent() {
           borderLeftWidth: '3px',
           borderLeftColor: `${accentColor}55`,
           backgroundColor: 'var(--panel)',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+          boxShadow: isLightMode ? '0 1px 4px rgba(0,0,0,0.04)' : '0 2px 8px rgba(0,0,0,0.15)',
           display: 'flex',
           flexDirection: 'column',
           ...(isMobile ? { minHeight: 'calc(100vh - 140px)' } : { height: 'calc(100vh - 140px)', overflow: 'hidden' }),

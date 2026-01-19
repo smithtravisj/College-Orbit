@@ -13,6 +13,8 @@ import { Plus, Trash2, Upload, X, FileIcon, ChevronDown, Crown } from 'lucide-re
 import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Link from 'next/link';
+import NaturalLanguageInput from '@/components/NaturalLanguageInput';
+import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
 
 interface CourseFormProps {
   courseId?: string;
@@ -53,6 +55,31 @@ const CourseFormComponent = forwardRef(function CourseForm(
   });
   const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
   const [showMore, setShowMore] = useState(false);
+  const [nlpInput, setNlpInput] = useState('');
+
+  // Handle NLP input change (only for new courses)
+  const handleNlpInputChange = (value: string) => {
+    setNlpInput(value);
+
+    if (!value.trim()) {
+      setForm(prev => ({
+        ...prev,
+        code: '',
+        name: '',
+        term: '',
+      }));
+      return;
+    }
+
+    const parsed = parseNaturalLanguage(value, { itemType: 'course' });
+
+    setForm(prev => ({
+      ...prev,
+      code: parsed.courseCode || '',
+      name: parsed.courseName || '',
+      term: parsed.term || '',
+    }));
+  };
 
   useEffect(() => {
     if (course) {
@@ -159,6 +186,15 @@ const CourseFormComponent = forwardRef(function CourseForm(
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className={isMobile ? 'space-y-2' : 'space-y-4'}>
+      {/* Natural Language Input - only for new courses (premium feature) */}
+      {!courseId && subscription.isPremium && (
+        <NaturalLanguageInput
+          value={nlpInput}
+          onChange={handleNlpInputChange}
+          placeholder={NLP_PLACEHOLDERS.course}
+          autoFocus
+        />
+      )}
       {/* Code, Name row - Always visible */}
       <div className="grid grid-cols-2 gap-3">
         <Input
@@ -440,11 +476,6 @@ const CourseFormComponent = forwardRef(function CourseForm(
               size="md"
               type="submit"
               style={{
-                backgroundColor: 'var(--button-secondary)',
-                color: settings.theme === 'light' ? '#000000' : 'white',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--border)',
                 paddingLeft: '16px',
                 paddingRight: '16px'
               }}
@@ -495,7 +526,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
               display: 'flex',
               alignItems: isMobile ? 'flex-end' : 'center',
               justifyContent: 'center',
-              zIndex: 50,
+              zIndex: 9999,
             }}
             onClick={() => setShowUpgradeModal(false)}
           >

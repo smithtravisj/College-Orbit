@@ -360,6 +360,26 @@
     border-radius: 16px;
   }
 
+  /* Quick Input - smaller on mobile */
+  .quickInputContainer {
+    padding: 0 12px 6px;
+  }
+
+  .quickInputWrapper {
+    padding: 5px 8px;
+    gap: 5px;
+    border-radius: 6px;
+  }
+
+  .quickInput {
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .quickInput::placeholder {
+    font-size: 11px;
+  }
+
   .form {
     padding: 8px 0;
   }

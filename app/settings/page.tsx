@@ -356,30 +356,16 @@ export default function SettingsPage() {
       {/* Settings Header */}
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div>
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            {/* Subtle glow behind title */}
-            <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-              <div
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
-                }}
-              />
-            </div>
-            <h1
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                fontSize: isMobile ? '26px' : '34px',
-                fontWeight: 700,
-                color: 'var(--text)',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Settings
-            </h1>
-          </div>
+          <h1
+            style={{
+              fontSize: isMobile ? '26px' : '34px',
+              fontWeight: 700,
+              color: 'var(--text)',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Settings
+          </h1>
           <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
             Customize your experience.
           </p>
@@ -545,14 +531,6 @@ export default function SettingsPage() {
                     size="sm"
                     onClick={handleSubmitCollegeRequest}
                     disabled={collegeRequestLoading}
-                    style={{
-                      backgroundColor: 'var(--button-secondary)',
-                      color: settings.theme === 'light' ? '#000000' : 'white',
-                      borderWidth: '1px',
-                      borderStyle: 'solid',
-                      borderColor: 'var(--border)',
-                      opacity: collegeRequestLoading ? 0.6 : 1
-                    }}
                   >
                     {collegeRequestLoading ? '...' : 'Request'}
                   </Button>
@@ -789,8 +767,12 @@ export default function SettingsPage() {
                   }`}
                   style={{
                     padding: '8px 14px',
-                    backgroundColor: activeCustomizationTab === tab.id ? 'var(--nav-active)' : 'transparent',
-                    backgroundImage: activeCustomizationTab === tab.id ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+                    backgroundColor: activeCustomizationTab === tab.id ? 'var(--accent)' : 'transparent',
+                    backgroundImage: activeCustomizationTab === tab.id
+                      ? (settings.theme === 'light'
+                        ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                        : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)')
+                      : 'none',
                     boxShadow: activeCustomizationTab === tab.id ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : undefined,
                     border: 'none',
                     cursor: isPremium ? 'pointer' : 'not-allowed',
@@ -1210,13 +1192,6 @@ export default function SettingsPage() {
                 marginTop: '24px',
                 paddingLeft: isMobile ? '12px' : '16px',
                 paddingRight: isMobile ? '12px' : '16px',
-                backgroundColor: 'var(--button-secondary)',
-                color: settings.theme === 'light' ? '#000000' : 'white',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--border)',
-                opacity: isPremium ? 1 : 0.5,
-                cursor: isPremium ? 'pointer' : 'not-allowed',
               }}
             >
               Save Visibility Settings
@@ -1390,12 +1365,6 @@ export default function SettingsPage() {
                   style={{
                     paddingLeft: isMobile ? '12px' : '16px',
                     paddingRight: isMobile ? '12px' : '16px',
-                    backgroundColor: 'var(--button-secondary)',
-                    color: settings.theme === 'light' ? '#000000' : 'white',
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: 'var(--border)',
-                    opacity: featureRequestLoading ? 0.6 : 1,
                     marginBottom: '20px'
                   }}
                 >
@@ -1448,12 +1417,6 @@ export default function SettingsPage() {
                   style={{
                     paddingLeft: isMobile ? '12px' : '16px',
                     paddingRight: isMobile ? '12px' : '16px',
-                    backgroundColor: 'var(--button-secondary)',
-                    color: settings.theme === 'light' ? '#000000' : 'white',
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: 'var(--border)',
-                    opacity: issueReportLoading ? 0.6 : 1
                   }}
                 >
                   {issueReportLoading ? 'Submitting...' : 'Report Issue'}
@@ -1504,11 +1467,6 @@ export default function SettingsPage() {
                   style={{
                     paddingLeft: isMobile ? '12px' : '16px',
                     paddingRight: isMobile ? '12px' : '16px',
-                    backgroundColor: 'var(--button-secondary)',
-                    color: settings.theme === 'light' ? '#000000' : 'white',
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: 'var(--border)',
                   }}
                 >
                   Restart Tutorial

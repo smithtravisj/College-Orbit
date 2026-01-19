@@ -31,6 +31,7 @@ const Card: React.FC<CardProps> = ({
   const { isPremium } = useSubscription();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const isLightMode = theme === 'light';
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
 
@@ -57,7 +58,7 @@ const Card: React.FC<CardProps> = ({
         borderColor: 'var(--border)',
         borderLeftWidth: noAccent ? '1px' : '3px',
         borderLeftColor: noAccent ? 'var(--border)' : `${accentColor}55`,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        boxShadow: isLightMode ? '0 1px 4px rgba(0,0,0,0.04)' : '0 2px 8px rgba(0,0,0,0.15)',
       }}
     >
       <div className="flex flex-col flex-1 min-h-0" style={{ padding: isMobile ? '14px' : isPrimary ? '24px 24px 20px 24px' : '18px 20px 16px 20px' }}>

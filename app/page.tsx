@@ -11,14 +11,13 @@ import { getDashboardCardSpan } from '@/lib/dashboardLayout';
 import { DASHBOARD_CARDS, DEFAULT_VISIBLE_DASHBOARD_CARDS } from '@/lib/customizationConstants';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
-import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 import Link from 'next/link';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import LandingPage from '@/components/LandingPage';
@@ -51,10 +50,6 @@ function Dashboard() {
   const [hidingDeadlines, setHidingDeadlines] = useState<Set<string>>(new Set());
   const [toggledDeadlines, setToggledDeadlines] = useState<Set<string>>(new Set());
 
-  // Get college color palette
-  const university = useAppStore((state) => state.settings.university);
-  const theme = useAppStore((state) => state.settings.theme) || 'dark';
-  const colorPalette = getCollegeColorPalette(university || null, theme);
   const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>(() => {
     // Load from localStorage on initial render
     if (typeof window !== 'undefined') {
@@ -471,30 +466,16 @@ function Dashboard() {
 
       {/* Dashboard Header */}
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
-        <div style={{ position: 'relative', display: 'inline-block' }}>
-          {/* Subtle glow behind title - contained */}
-          <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
-              }}
-            />
-          </div>
-          <h1
-            style={{
-              position: 'relative',
-              zIndex: 1,
-              fontSize: isMobile ? '26px' : '34px',
-              fontWeight: 700,
-              color: 'var(--text)',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            Dashboard
-          </h1>
-        </div>
+        <h1
+          style={{
+            fontSize: isMobile ? '26px' : '34px',
+            fontWeight: 700,
+            color: 'var(--text)',
+            letterSpacing: '-0.02em',
+          }}
+        >
+          Dashboard
+        </h1>
         <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
           Welcome back{session?.user?.name ? `, ${session.user.name.split(' ')[0]}` : ''}. Here's your schedule and tasks for today.
         </p>
@@ -665,11 +646,6 @@ function Dashboard() {
                         type="submit"
                         size="sm"
                         style={{
-                          backgroundColor: 'var(--button-secondary)',
-                          color: 'white',
-                          borderWidth: '1px',
-                          borderStyle: 'solid',
-                          borderColor: 'var(--border)',
                           paddingLeft: '24px',
                           paddingRight: '24px'
                         }}
@@ -952,21 +928,15 @@ function Dashboard() {
                     </div>
                   );
                 })}
-                <div style={{ paddingTop: '16px', display: 'flex', gap: '8px' }}>
-                  {!showTaskForm && (
-                    <Button variant="secondary" size="sm" onClick={() => setShowTaskForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '6px 12px', color: settings.theme === 'light' ? '#000000 !important' : 'var(--text)' }}>
-                      <Plus size={14} />
-                      Add Task
-                    </Button>
-                  )}
-                  {todayTasks.length > 5 && (
+                {todayTasks.length > 5 && (
+                  <div style={{ paddingTop: '16px' }}>
                     <Link href="/tasks" className="inline-flex">
                       <Button variant="secondary" size="sm">
                         View all →
                       </Button>
                     </Link>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             ) : (
               <EmptyState title="No tasks today" description="Add a task to get started" action={{ label: 'Add Task', onClick: () => setShowTaskForm(true) }} />
@@ -1071,11 +1041,6 @@ function Dashboard() {
                       type="submit"
                       size="sm"
                       style={{
-                        backgroundColor: 'var(--button-secondary)',
-                        color: settings.theme === 'light' ? '#000000' : 'white',
-                        borderWidth: '1px',
-                        borderStyle: 'solid',
-                        borderColor: 'var(--border)',
                         paddingLeft: '16px',
                         paddingRight: '16px'
                       }}

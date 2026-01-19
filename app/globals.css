@@ -25,13 +25,13 @@
   /* Borders */
   --border: rgba(255, 255, 255, 0.08);
   --border-hover: #444c56;
-  --border-active: #539bf5;
+  --border-active: #7c3aed;
   --border-strong: rgba(255, 255, 255, 0.12);
 
-  /* Accent */
-  --accent: #2563eb;
-  --accent-2: rgba(37, 99, 235, 0.15);
-  --ring: rgba(37, 99, 235, 0.35);
+  /* Accent - Orbit Purple */
+  --accent: #7c3aed;
+  --accent-2: rgba(124, 58, 237, 0.15);
+  --ring: rgba(124, 58, 237, 0.35);
 
   /* Semantic colors */
   --success: #57ab5a;
@@ -47,16 +47,32 @@
   --shadow-lg: 0 8px 16px 0 rgba(0, 0, 0, 0.5);
 
   /* Focus rings */
-  --focus-ring: 0 0 0 3px rgba(83, 155, 245, 0.3);
+  --focus-ring: 0 0 0 3px rgba(124, 58, 237, 0.3);
 
   /* Today background highlight */
-  --today-bg: rgba(37, 99, 235, 0.12);
+  --today-bg: rgba(124, 58, 237, 0.12);
 
   /* Week view today date color */
-  --week-view-today-date-color: #2563eb;
+  --week-view-today-date-color: #7c3aed;
 
-  /* Link color */
-  --link: #2563eb;
+  /* Link color - Brighter purple for dark mode */
+  --link: #a78bfa;
+
+  /* Navigation - Accent color for active states */
+  --nav-active: var(--accent);
+  --button-secondary: #2d2d2d;
+
+  /* Brand */
+  --brand-primary: #7c3aed;
+
+  /* Edit hover */
+  --edit-hover: #a78bfa;
+
+  /* Calendar current date */
+  --calendar-current-date-color: #7c3aed;
+
+  /* Accent hover */
+  --accent-hover: #6d28d9;
 
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Folder, Edit2, Trash2 } from 'lucide-react';
 import { Folder as FolderType } from '@/types/index';
 import useAppStore from '@/lib/store';
@@ -26,6 +27,47 @@ export default function FolderTree({
   const [editingName, setEditingName] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Calculate position with boundary checking
+  const getMenuPosition = (x: number, y: number) => {
+    const menuWidth = 180;
+    const menuHeight = 84; // Approximate height of 2 menu items
+    const padding = 8;
+
+    // Check right boundary
+    if (x + menuWidth + padding > window.innerWidth) {
+      x = window.innerWidth - menuWidth - padding;
+    }
+
+    // Check bottom boundary
+    if (y + menuHeight + padding > window.innerHeight) {
+      y = window.innerHeight - menuHeight - padding;
+    }
+
+    // Check left boundary
+    if (x < padding) {
+      x = padding;
+    }
+
+    // Check top boundary
+    if (y < padding) {
+      y = padding;
+    }
+
+    return { x, y };
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, folderId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const pos = getMenuPosition(e.clientX, e.clientY);
+    setContextMenu({ folderId, x: pos.x, y: pos.y });
+  };
 
   const handleDeleteFolder = async (folderId: string) => {
     setDeleteConfirm(folderId);
@@ -118,7 +160,11 @@ export default function FolderTree({
           borderRadius: '8px',
           cursor: 'pointer',
           backgroundColor: selectedFolderId === null ? 'var(--accent)' : 'transparent',
-          backgroundImage: selectedFolderId === null ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+          backgroundImage: selectedFolderId === null
+            ? (isLightMode
+                ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                : 'linear-gradient(135deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.25) 100%)')
+            : 'none',
           boxShadow: selectedFolderId === null ? '0 0 8px var(--accent)' : 'none',
           color: selectedFolderId === null ? selectedTextColor : 'var(--text-muted)',
           transition: 'all 150ms ease',
@@ -188,7 +234,11 @@ export default function FolderTree({
               borderRadius: '8px',
               cursor: 'pointer',
               backgroundColor: isSelected ? 'var(--accent)' : 'transparent',
-              backgroundImage: isSelected ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
+              backgroundImage: isSelected
+                ? (isLightMode
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                    : 'linear-gradient(135deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.25) 100%)')
+                : 'none',
               boxShadow: isSelected ? '0 0 8px var(--accent)' : 'none',
               color: isSelected ? selectedTextColor : 'var(--text-muted)',
               transition: 'all 150ms ease',
@@ -206,10 +256,7 @@ export default function FolderTree({
               }
             }}
             onClick={() => onSelectFolder(folder.id)}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              setContextMenu({ folderId: folder.id, x: e.clientX, y: e.clientY });
-            }}
+            onContextMenu={(e) => handleContextMenu(e, folder.id)}
           >
             <Folder size={isMobile ? 14 : 16} style={{ flexShrink: 0 }} />
             <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: isMobile ? '12px' : '14px', fontWeight: '500' }}>
@@ -276,27 +323,27 @@ export default function FolderTree({
       )}
 
 
-      {/* Context Menu */}
-      {contextMenu && (
+      {/* Context Menu - rendered via portal to avoid positioning issues */}
+      {mounted && contextMenu && createPortal(
         <>
           <div
             style={{
               position: 'fixed',
               inset: 0,
-              zIndex: 40,
+              zIndex: 9998,
             }}
             onClick={() => setContextMenu(null)}
           />
           <div
             style={{
               position: 'fixed',
-              top: `${contextMenu.y}px`,
-              left: `${contextMenu.x}px`,
+              top: contextMenu.y,
+              left: contextMenu.x,
               backgroundColor: 'var(--panel)',
               border: '1px solid var(--border)',
               borderRadius: '8px',
               boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-              zIndex: 50,
+              zIndex: 9999,
               minWidth: '180px',
             }}
           >
@@ -353,100 +400,100 @@ export default function FolderTree({
               Delete
             </button>
           </div>
-        </>
+        </>,
+        document.body
       )}
 
-      {/* Delete Confirmation Modal */}
-      {deleteConfirm && (
-        <>
+      {/* Delete Confirmation Modal - rendered via portal */}
+      {mounted && deleteConfirm && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9998,
+          }}
+          onClick={() => !loading && setDeleteConfirm(null)}
+        >
           <div
             style={{
-              position: 'fixed',
-              inset: 0,
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 50,
+              backgroundColor: 'var(--panel)',
+              borderRadius: '8px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+              maxWidth: '400px',
+              width: '100%',
+              margin: '0 16px',
+              padding: '24px',
             }}
-            onClick={() => !loading && setDeleteConfirm(null)}
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              style={{
-                backgroundColor: 'var(--panel)',
-                borderRadius: '8px',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                maxWidth: '400px',
-                width: '100%',
-                margin: '0 16px',
-                padding: '24px',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text)', margin: '0 0 12px 0' }}>
-                Delete folder?
-              </h3>
-              <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '0 0 24px 0' }}>
-                This will delete the folder. Notes in it will become unfiled.
-              </p>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  onClick={() => !loading && setDeleteConfirm(null)}
-                  disabled={loading}
-                  style={{
-                    flex: 1,
-                    padding: '8px 16px',
-                    borderRadius: '8px',
-                    fontWeight: '500',
-                    fontSize: '14px',
-                    border: '1px solid var(--border)',
-                    background: 'rgba(255,255,255,0.03)',
-                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
-                    color: 'var(--text-muted)',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    opacity: loading ? 0.5 : 1,
-                    transition: 'background-color 150ms ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!loading) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)';
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  disabled={loading}
-                  style={{
-                    flex: 1,
-                    padding: '8px 16px',
-                    borderRadius: '8px',
-                    fontWeight: '500',
-                    fontSize: '14px',
-                    border: 'none',
-                    backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
-                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                    boxShadow: settings.theme === 'light' ? '0 0 10px rgba(229, 83, 75, 0.4)' : '0 0 10px rgba(102, 0, 0, 0.6)',
-                    color: 'white',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    opacity: loading ? 0.5 : 1,
-                    transition: 'opacity 150ms ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!loading) e.currentTarget.style.opacity = '0.9';
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!loading) e.currentTarget.style.opacity = '1';
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text)', margin: '0 0 12px 0' }}>
+              Delete folder?
+            </h3>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '0 0 24px 0' }}>
+              This will delete the folder. Notes in it will become unfiled.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => !loading && setDeleteConfirm(null)}
+                disabled={loading}
+                style={{
+                  flex: 1,
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontWeight: '500',
+                  fontSize: '14px',
+                  border: '1px solid var(--border)',
+                  background: 'rgba(255,255,255,0.03)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
+                  color: 'var(--text-muted)',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.5 : 1,
+                  transition: 'background-color 150ms ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)';
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={loading}
+                style={{
+                  flex: 1,
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontWeight: '500',
+                  fontSize: '14px',
+                  border: 'none',
+                  backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                  boxShadow: settings.theme === 'light' ? '0 0 10px rgba(229, 83, 75, 0.4)' : '0 0 10px rgba(102, 0, 0, 0.6)',
+                  color: 'white',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.5 : 1,
+                  transition: 'opacity 150ms ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) e.currentTarget.style.opacity = '0.9';
+                }}
+                onMouseLeave={(e) => {
+                  if (!loading) e.currentTarget.style.opacity = '1';
+                }}
+              >
+                Delete
+              </button>
             </div>
           </div>
-        </>
+        </div>,
+        document.body
       )}
     </div>
   );

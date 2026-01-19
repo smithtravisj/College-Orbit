@@ -9,7 +9,6 @@ import Card from '@/components/ui/Card';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import Link from 'next/link';
 
 const FEATURES = [
   'Full Calendar view',
@@ -22,6 +21,7 @@ const FEATURES = [
   'Custom color themes',
   'Visual effects customization',
   'Page & Card visibility customization',
+  'Smart form filling',
 ];
 
 export default function CheckoutPage() {
@@ -90,34 +90,21 @@ export default function CheckoutPage() {
     <>
       {/* Page Header */}
       <div className="mx-auto w-full max-w-[900px]" style={{ padding: isMobile ? '0px 20px 8px' : '0px 24px 12px', position: 'relative', zIndex: 1 }}>
-        <Link href="/pricing" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)', marginTop: '22px', marginBottom: '0px', textDecoration: 'none' }}>
+        <button onClick={() => router.back()} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)', marginTop: '22px', marginBottom: '8px', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
           <ArrowLeft size={14} />
-          Back to Pricing
-        </Link>
-        <div style={{ marginTop: '-12px' }}>
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <div style={{ position: 'absolute', inset: '-20px -30px', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-              <div
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
-                }}
-              />
-            </div>
-            <h1
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                fontSize: isMobile ? '26px' : '34px',
-                fontWeight: 700,
-                color: 'var(--text)',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Checkout
-            </h1>
-          </div>
+          Back
+        </button>
+        <div style={{ marginTop: '-8px' }}>
+          <h1
+            style={{
+              fontSize: isMobile ? '26px' : '34px',
+              fontWeight: 700,
+              color: 'var(--text)',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Checkout
+          </h1>
           <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
             {subscription.isTrialing ? 'Subscribe before your trial ends.' : 'Upgrade to Premium today.'}
           </p>

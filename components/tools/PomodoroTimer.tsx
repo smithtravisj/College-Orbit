@@ -400,10 +400,8 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
   const isDarkMode = theme === 'dark' || theme === 'system';
   const hasCollegeSelected = settings?.university;
 
-  // For work session: use college color if selected, else use default blue
-  const accentColor = hasCollegeSelected
-    ? 'var(--accent)'
-    : (isDarkMode ? '#5b9fff' : '#3b82f6');
+  // For work session: use accent color (college color or orbit purple)
+  const accentColor = 'var(--accent)';
 
   // Apply lightening filter when using college color in dark mode
   const accentStyle = hasCollegeSelected && isDarkMode

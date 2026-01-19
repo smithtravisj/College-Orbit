@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Button from '@/components/ui/Button';
 import Input, { Textarea } from '@/components/ui/Input';
 import CalendarPicker from '@/components/CalendarPicker';
@@ -155,8 +156,9 @@ export default function AddEventModal({
   };
 
   if (!isOpen) return null;
+  if (typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <div
       style={{
         position: 'fixed',
@@ -165,7 +167,7 @@ export default function AddEventModal({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 1000,
+        zIndex: 9999,
         padding: isMobile ? '16px' : '24px',
       }}
       onClick={(e) => {
@@ -333,6 +335,7 @@ export default function AddEventModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

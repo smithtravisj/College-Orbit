@@ -113,7 +113,7 @@ export default function FolderModal({ isOpen, onClose, editingFolderId, courses 
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 50,
+        zIndex: 9999,
       }}
       onClick={onClose}
     >

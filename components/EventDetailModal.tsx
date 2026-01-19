@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Course, Task, Deadline, Exam, CalendarEvent as CustomCalendarEvent } from '@/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -459,7 +460,10 @@ export default function EventDetailModal({
     }
   };
 
-  return (
+  // Use portal to render modal at document body level to avoid stacking context issues
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div
       style={{
         position: 'fixed',
@@ -468,7 +472,7 @@ export default function EventDetailModal({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 50,
+        zIndex: 9999,
         padding: '16px',
       }}
       onClick={handleBackdropClick}
@@ -644,10 +648,6 @@ export default function EventDetailModal({
                 size={isMobile ? 'sm' : 'md'}
                 onClick={handleSaveClick}
                 style={{
-                  backgroundColor: 'var(--button-secondary)',
-                  borderWidth: '1px',
-                  borderStyle: 'solid',
-                  borderColor: 'var(--border)',
                   paddingLeft: isMobile ? '12px' : '16px',
                   paddingRight: isMobile ? '12px' : '16px',
                 }}
@@ -669,10 +669,6 @@ export default function EventDetailModal({
                 size={isMobile ? 'sm' : 'md'}
                 onClick={handleEditToggle}
                 style={{
-                  backgroundColor: 'var(--button-secondary)',
-                  borderWidth: '1px',
-                  borderStyle: 'solid',
-                  borderColor: 'var(--border)',
                   paddingLeft: isMobile ? '12px' : '16px',
                   paddingRight: isMobile ? '12px' : '16px',
                 }}
@@ -684,10 +680,6 @@ export default function EventDetailModal({
                 size={isMobile ? 'sm' : 'md'}
                 onClick={handleDoneAndClose}
                 style={{
-                  backgroundColor: 'var(--button-secondary)',
-                  borderWidth: '1px',
-                  borderStyle: 'solid',
-                  borderColor: 'var(--border)',
                   paddingLeft: isMobile ? '12px' : '16px',
                   paddingRight: isMobile ? '12px' : '16px',
                 }}
@@ -710,7 +702,7 @@ export default function EventDetailModal({
               display: 'flex',
               alignItems: isMobile ? 'flex-end' : 'center',
               justifyContent: 'center',
-              zIndex: 60,
+              zIndex: 10000,
             }}
             onClick={() => setShowUpgradeModal(false)}
           >
@@ -793,7 +785,8 @@ export default function EventDetailModal({
           </div>
         </>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
 

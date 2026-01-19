@@ -69,11 +69,6 @@ export function BulkChangeCourseModal({
               size="md"
               onClick={handleConfirm}
               style={{
-                backgroundColor: 'var(--button-secondary)',
-                color: 'white',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--border)',
                 paddingLeft: '16px',
                 paddingRight: '16px',
               }}
@@ -156,11 +151,6 @@ export function BulkChangeTagsModal({
               size="md"
               onClick={handleConfirm}
               style={{
-                backgroundColor: 'var(--button-secondary)',
-                color: 'white',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--border)',
                 paddingLeft: '16px',
                 paddingRight: '16px',
               }}
@@ -237,11 +227,6 @@ export function BulkChangePriorityModal({
               size="md"
               onClick={handleConfirm}
               style={{
-                backgroundColor: 'var(--button-secondary)',
-                color: 'white',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--border)',
                 paddingLeft: '16px',
                 paddingRight: '16px',
               }}
@@ -310,11 +295,6 @@ export function BulkChangeDateModal({ isOpen, onClose, selectedCount, onConfirm 
               onClick={handleConfirm}
               disabled={!date}
               style={{
-                backgroundColor: 'var(--button-secondary)',
-                color: 'white',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--border)',
                 paddingLeft: '16px',
                 paddingRight: '16px',
               }}
@@ -383,11 +363,6 @@ export function BulkChangeTimeModal({ isOpen, onClose, selectedCount, onConfirm 
               onClick={handleConfirm}
               disabled={!time}
               style={{
-                backgroundColor: 'var(--button-secondary)',
-                color: 'white',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--border)',
                 paddingLeft: '16px',
                 paddingRight: '16px',
               }}
@@ -458,11 +433,6 @@ export function BulkAddLinkModal({ isOpen, onClose, selectedCount, onConfirm }: 
               onClick={handleConfirm}
               disabled={!url.trim()}
               style={{
-                backgroundColor: 'var(--button-secondary)',
-                color: 'white',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--border)',
                 paddingLeft: '16px',
                 paddingRight: '16px',
               }}
@@ -526,11 +496,6 @@ export function BulkChangeLocationModal({
               size="md"
               onClick={handleConfirm}
               style={{
-                backgroundColor: 'var(--button-secondary)',
-                color: 'white',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--border)',
                 paddingLeft: '16px',
                 paddingRight: '16px',
               }}
@@ -614,11 +579,6 @@ export function BulkChangeTermModal({
               size="md"
               onClick={handleConfirm}
               style={{
-                backgroundColor: 'var(--button-secondary)',
-                color: 'white',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--border)',
                 paddingLeft: '16px',
                 paddingRight: '16px',
               }}

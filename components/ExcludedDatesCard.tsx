@@ -109,9 +109,6 @@ export default function ExcludedDatesCard() {
           onClick={() => setShowForm(!showForm)}
           size={isMobile ? 'sm' : 'md'}
           style={{
-            backgroundColor: 'var(--button-secondary)',
-            color: settings.theme === 'light' ? '#000000' : '#ffffff',
-            border: '1px solid var(--border)',
             padding: isMobile ? '6px 12px' : '8px 16px',
             display: 'flex',
             alignItems: 'center',
