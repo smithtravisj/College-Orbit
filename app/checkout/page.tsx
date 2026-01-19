@@ -21,6 +21,7 @@ const FEATURES = [
   'All Tools (GPA Calculator, Pomodoro, etc.)',
   'Custom color themes',
   'Visual effects customization',
+  'Page & Card visibility customization',
 ];
 
 export default function CheckoutPage() {

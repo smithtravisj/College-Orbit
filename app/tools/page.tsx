@@ -53,8 +53,11 @@ export default function ToolsPage() {
   const { settings, updateSettings } = useAppStore();
   const subscription = useSubscription();
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
-  const accentColor = settings.useCustomTheme && settings.customColors
-    ? getCustomColorSetForTheme(settings.customColors as CustomColors, settings.theme || 'dark').accent
+  // Custom theme is only active for premium users
+  const useCustomTheme = subscription.isPremium ? settings.useCustomTheme : false;
+  const customColors = subscription.isPremium ? settings.customColors : null;
+  const accentColor = useCustomTheme && customColors
+    ? getCustomColorSetForTheme(customColors as CustomColors, settings.theme || 'dark').accent
     : colorPalette.accent;
   const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -75,14 +78,18 @@ export default function ToolsPage() {
     message: string;
     onConfirm: () => void;
   } | null>(null);
-  const visibleToolsCards = settings.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS;
 
-  // Get the tools cards order from settings, or use the default
-  const toolsCardsOrder = settings.toolsCardsOrder
+  // Tools card visibility is only customizable for premium users - free users see defaults
+  const savedVisibleToolsCards = settings.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS;
+  const visibleToolsCards = subscription.isPremium ? savedVisibleToolsCards : DEFAULT_VISIBLE_TOOLS_CARDS;
+
+  // Get the tools cards order from settings, or use the default (only applies to premium users)
+  const savedToolsCardsOrder = settings.toolsCardsOrder
     ? (typeof settings.toolsCardsOrder === 'string'
         ? JSON.parse(settings.toolsCardsOrder)
         : settings.toolsCardsOrder)
     : Object.values(TOOLS_CARDS);
+  const toolsCardsOrder = subscription.isPremium ? savedToolsCardsOrder : Object.values(TOOLS_CARDS);
 
   const gradePoints: { [key: string]: number } = {
     'A': 4.0,

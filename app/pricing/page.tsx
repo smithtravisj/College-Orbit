@@ -33,6 +33,7 @@ const PREMIUM_FEATURES = [
   'All Tools (GPA Calculator, Pomodoro, etc.)',
   'Custom color themes',
   'Visual effects customization',
+  'Page & Card visibility customization',
 ];
 
 // Public pricing page for unauthenticated users

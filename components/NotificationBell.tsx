@@ -319,7 +319,8 @@ export default function NotificationBell() {
               borderRadius: '20px',
               boxShadow: 'var(--shadow-lg)',
               maxHeight: isMobile ? '400px' : '500px',
-              overflow: 'auto',
+              overflowY: 'auto',
+              overflowX: 'hidden',
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
               zIndex: 2147483647,
@@ -442,17 +443,20 @@ export default function NotificationBell() {
                           <div style={{ marginTop: '2px' }}>
                             {getNotificationIcon(notification.type)}
                           </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                             <p
                               style={{
                                 margin: '0 0 4px 0',
                                 fontSize: isMobile ? '14px' : '15px',
                                 fontWeight: notification.read ? '400' : '600',
                                 color: 'var(--text)',
+                                lineHeight: '1.3',
                                 overflow: expandedIds.has(notification.id) ? 'visible' : 'hidden',
                                 textOverflow: expandedIds.has(notification.id) ? 'clip' : 'ellipsis',
-                                whiteSpace: expandedIds.has(notification.id) ? 'normal' : 'nowrap',
-                                wordBreak: expandedIds.has(notification.id) ? 'break-word' : 'normal',
+                                display: expandedIds.has(notification.id) ? 'block' : '-webkit-box',
+                                WebkitLineClamp: expandedIds.has(notification.id) ? undefined : 2,
+                                WebkitBoxOrient: 'vertical' as const,
+                                wordBreak: 'break-word',
                               }}
                             >
                               {notification.title}

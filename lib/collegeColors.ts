@@ -73,6 +73,9 @@ export interface ColorPalette {
 
   // Edit button hover color (light mode link color in dark mode for better visibility)
   editHover: string;
+
+  // Slider thumb color
+  sliderThumb: string;
 }
 
 /**
@@ -133,6 +136,7 @@ export const byuColorPalette: ColorPalette = {
   calendarCurrentDateColor: "#6ab2ff",
 
   editHover: "#6ab2ff", // Bright link color for better visibility
+  sliderThumb: "#9a9a9a",
 };
 
 /**
@@ -193,6 +197,7 @@ export const defaultColorPalette: ColorPalette = {
   calendarCurrentDateColor: "#f0f1f3",
 
   editHover: "#0ea5e9", // Bright link color for better visibility
+  sliderThumb: "#9a9a9a",
 };
 
 /**
@@ -254,6 +259,7 @@ export const byuhColorPalette: ColorPalette = {
   calendarCurrentDateColor: "#f5a6b4",
 
   editHover: "#f5a6b4", // Bright link color for better visibility
+  sliderThumb: "#9a9a9a",
 };
 
 /**
@@ -316,6 +322,7 @@ export const byuidColorPalette: ColorPalette = {
   calendarCurrentDateColor: "#7bbaff",
 
   editHover: "#7bbaff", // Bright link color for better visibility
+  sliderThumb: "#9a9a9a",
 };
 
 /**
@@ -378,6 +385,7 @@ export const uvuColorPalette: ColorPalette = {
   calendarCurrentDateColor: "#7cc49a",
 
   editHover: "#7cc49a", // Bright link color for better visibility
+  sliderThumb: "#9a9a9a",
 };
 
 /**
@@ -440,6 +448,7 @@ export const usuColorPalette: ColorPalette = {
   calendarCurrentDateColor: "#8ac8ff",
 
   editHover: "#8ac8ff", // Bright link color for better visibility
+  sliderThumb: "#9a9a9a",
 };
 
 /**
@@ -502,6 +511,7 @@ export const uncColorPalette: ColorPalette = {
   calendarCurrentDateColor: "#82ccff",
 
   editHover: "#82ccff", // Bright link color for better visibility
+  sliderThumb: "#9a9a9a",
 };
 
 /**
@@ -563,6 +573,7 @@ export const asuColorPalette: ColorPalette = {
   calendarCurrentDateColor: "#ff8fa3",
 
   editHover: "#ff8fa3", // Bright link color for better visibility
+  sliderThumb: "#9a9a9a",
 };
 
 /**
@@ -624,6 +635,7 @@ export const ucfColorPalette: ColorPalette = {
   calendarCurrentDateColor: "#ffc857",
 
   editHover: "#ffc857", // Bright link color for better visibility
+  sliderThumb: "#9a9a9a",
 };
 
 /**
@@ -683,6 +695,7 @@ export const osuColorPalette: ColorPalette = {
   calendarCurrentDateColor: "#ff6b7a",
 
   editHover: "#ff6b7a", // Bright link color for better visibility
+  sliderThumb: "#9a9a9a",
 };
 
 /**
@@ -743,6 +756,7 @@ export const nlhsColorPalette: ColorPalette = {
   calendarCurrentDateColor: "#6ab2ff",
 
   editHover: "#6ab2ff", // Bright link color for better visibility
+  sliderThumb: "#9a9a9a",
 };
 
 /**
@@ -801,6 +815,7 @@ export const byuLightPalette: ColorPalette = {
   weekViewTodayDateColor: "#0ea5e9",
   calendarCurrentDateColor: "#6ab2ff",
   editHover: "#6ab2ff", // Uses accent in light mode
+  sliderThumb: "#bbbbbb",
 };
 
 /**
@@ -855,6 +870,7 @@ export const defaultLightPalette: ColorPalette = {
   weekViewTodayDateColor: "#0ea5e9",
   calendarCurrentDateColor: "#f0f1f3",
   editHover: "#f0f1f3", // Uses accent in light mode
+  sliderThumb: "#bbbbbb",
 };
 
 /**
@@ -909,6 +925,7 @@ export const byuhLightPalette: ColorPalette = {
   weekViewTodayDateColor: "#0ea5e9",
   calendarCurrentDateColor: "#f5a6b4",
   editHover: "#f5a6b4", // Uses accent in light mode
+  sliderThumb: "#bbbbbb",
 };
 
 /**
@@ -963,6 +980,7 @@ export const byuidLightPalette: ColorPalette = {
   weekViewTodayDateColor: "#0ea5e9",
   calendarCurrentDateColor: "#7bbaff",
   editHover: "#7bbaff", // Uses accent in light mode
+  sliderThumb: "#bbbbbb",
 };
 
 /**
@@ -1017,6 +1035,7 @@ export const uvuLightPalette: ColorPalette = {
   weekViewTodayDateColor: "#0ea5e9",
   calendarCurrentDateColor: "#7cc49a",
   editHover: "#7cc49a", // Uses accent in light mode
+  sliderThumb: "#bbbbbb",
 };
 
 /**
@@ -1071,6 +1090,7 @@ export const usuLightPalette: ColorPalette = {
   weekViewTodayDateColor: "#0ea5e9",
   calendarCurrentDateColor: "#8ac8ff",
   editHover: "#8ac8ff", // Uses accent in light mode
+  sliderThumb: "#bbbbbb",
 };
 
 /**
@@ -1125,6 +1145,7 @@ export const uncLightPalette: ColorPalette = {
   weekViewTodayDateColor: "#007FAE",
   calendarCurrentDateColor: "#82ccff",
   editHover: "#82ccff", // Uses accent in light mode
+  sliderThumb: "#bbbbbb",
 };
 
 /**
@@ -1179,6 +1200,7 @@ export const asuLightPalette: ColorPalette = {
   weekViewTodayDateColor: "#8C1D40",
   calendarCurrentDateColor: "#ff90b3",
   editHover: "#ff90b3", // Uses accent in light mode
+  sliderThumb: "#bbbbbb",
 };
 
 /**
@@ -1233,6 +1255,7 @@ export const ucfLightPalette: ColorPalette = {
   weekViewTodayDateColor: "#b69317",
   calendarCurrentDateColor: "#fedf8c",
   editHover: "#fedf8c", // Uses accent in light mode
+  sliderThumb: "#bbbbbb",
 };
 
 /**
@@ -1286,6 +1309,7 @@ export const osuLightPalette: ColorPalette = {
   weekViewTodayDateColor: "#7a0b22",
   calendarCurrentDateColor: "#db7d88",
   editHover: "#db7d88", // Uses accent in light mode
+  sliderThumb: "#bbbbbb",
 };
 
 /**
@@ -1339,6 +1363,7 @@ export const nlhsLightPalette: ColorPalette = {
   weekViewTodayDateColor: "#64a7f0",
   calendarCurrentDateColor: "#64a7f0",
   editHover: "#64a7f0", // Uses accent in light mode
+  sliderThumb: "#9a9a9a",
 };
 
 /**
@@ -1398,6 +1423,7 @@ export const utaColorPalette: ColorPalette = {
   calendarCurrentDateColor: "#ff9d42",
 
   editHover: "#ff9d42", // Bright link color for better visibility
+  sliderThumb: "#9a9a9a",
 };
 
 /**
@@ -1451,6 +1477,7 @@ export const utaLightPalette: ColorPalette = {
   weekViewTodayDateColor: "#bf5700",
   calendarCurrentDateColor: "#fab368",
   editHover: "#fab368", // Uses accent in light mode
+  sliderThumb: "#9a9a9a",
 };
 
 /**
@@ -1564,6 +1591,9 @@ export function applyColorPalette(palette: ColorPalette): void {
 
   // Edit button hover color
   root.style.setProperty("--edit-hover", palette.editHover);
+
+  // Slider thumb color
+  root.style.setProperty("--slider-thumb", palette.sliderThumb);
 }
 
 /**

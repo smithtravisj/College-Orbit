@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useSubscription } from '@/hooks/useSubscription';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 
@@ -27,10 +28,16 @@ const Card: React.FC<CardProps> = ({
   noAccent = false,
 }) => {
   const isMobile = useIsMobile();
+  const { isPremium } = useSubscription();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
-  const useCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
-  const customColors = useAppStore((state) => state.settings.customColors);
+  const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const savedCustomColors = useAppStore((state) => state.settings.customColors);
+
+  // Custom theme only applies for premium users
+  const useCustomTheme = isPremium ? savedUseCustomTheme : false;
+  const customColors = isPremium ? savedCustomColors : null;
+
   const colorPalette = getCollegeColorPalette(university || null, theme);
 
   // Use custom accent color if custom theme is enabled

@@ -3,12 +3,18 @@
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { useSubscription } from '@/hooks/useSubscription';
 
 export default function BackgroundDecoration() {
   const university = useAppStore((state) => state.settings.university);
   const themeSetting = useAppStore((state) => state.settings.theme) || 'dark';
-  const useCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
-  const customColors = useAppStore((state) => state.settings.customColors);
+  const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const savedCustomColors = useAppStore((state) => state.settings.customColors);
+
+  // Custom theme is only active for premium users
+  const { isPremium } = useSubscription();
+  const useCustomTheme = isPremium ? savedUseCustomTheme : false;
+  const customColors = isPremium ? savedCustomColors : null;
 
   // Resolve 'system' theme to actual theme
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');

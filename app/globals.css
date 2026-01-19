@@ -474,6 +474,35 @@ select:disabled {
   opacity: 0.5;
 }
 
+/* Range slider thumb */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--slider-thumb, #9a9a9a);
+  cursor: pointer;
+  border: none;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--slider-thumb, #9a9a9a);
+  cursor: pointer;
+  border: none;
+}
+
+input[type="range"]:disabled::-webkit-slider-thumb {
+  cursor: not-allowed;
+}
+
+input[type="range"]:disabled::-moz-range-thumb {
+  cursor: not-allowed;
+}
+
 /* Toast styles */
 .toast-container {
   position: fixed;

@@ -5,6 +5,7 @@ import { ChevronDown } from 'lucide-react';
 import React from 'react';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface CollapsibleCardProps {
   id: string;
@@ -33,10 +34,16 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(initialOpen);
   const [mounted, setMounted] = useState(false);
+  const { isPremium } = useSubscription();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
-  const useCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
-  const customColors = useAppStore((state) => state.settings.customColors);
+  const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const savedCustomColors = useAppStore((state) => state.settings.customColors);
+
+  // Custom theme only applies for premium users
+  const useCustomTheme = isPremium ? savedUseCustomTheme : false;
+  const customColors = isPremium ? savedCustomColors : null;
+
   const colorPalette = getCollegeColorPalette(university || null, theme);
   const accentColor = useCustomTheme && customColors
     ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent

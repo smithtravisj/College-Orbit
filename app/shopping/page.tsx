@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
@@ -31,11 +32,18 @@ const STORAGE_KEY = 'shopping-active-tab';
 
 export default function ShoppingPage() {
   const isMobile = useIsMobile();
+  const { isPremium } = useSubscription();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
-  const useCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
-  const customColors = useAppStore((state) => state.settings.customColors);
-  const glowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
+  const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const savedCustomColors = useAppStore((state) => state.settings.customColors);
+  const savedGlowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
+
+  // Custom theme and visual effects are only active for premium users
+  const useCustomTheme = isPremium ? savedUseCustomTheme : false;
+  const customColors = isPremium ? savedCustomColors : null;
+  const glowIntensity = isPremium ? savedGlowIntensity : 50;
+
   const colorPalette = getCollegeColorPalette(university || null, theme);
   const accentColor = useCustomTheme && customColors
     ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent

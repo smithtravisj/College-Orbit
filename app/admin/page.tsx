@@ -7,6 +7,7 @@ import Card from '@/components/ui/Card';
 import { collegeColorPalettes, collegeColorPalettesLight, getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useSubscription } from '@/hooks/useSubscription';
 import { Crown, Shield, ExternalLink } from 'lucide-react';
 
 // ==================== Types ====================
@@ -100,12 +101,17 @@ export default function AdminPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const isMobile = useIsMobile();
+  const { isPremium } = useSubscription();
   const settings = useAppStore((state) => state.settings);
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
-  const accentColor = settings.useCustomTheme && settings.customColors
-    ? getCustomColorSetForTheme(settings.customColors as CustomColors, settings.theme || 'dark').accent
+
+  // Custom theme and visual effects only apply for premium users
+  const useCustomTheme = isPremium ? settings.useCustomTheme : false;
+  const customColors = isPremium ? settings.customColors : null;
+  const accentColor = useCustomTheme && customColors
+    ? getCustomColorSetForTheme(customColors as CustomColors, settings.theme || 'dark').accent
     : colorPalette.accent;
-  const glowIntensity = settings.glowIntensity ?? 50;
+  const glowIntensity = isPremium ? (settings.glowIntensity ?? 50) : 50;
   const glowScale = glowIntensity / 50;
   const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
 
@@ -808,7 +814,7 @@ export default function AdminPage() {
                 style={{
                   width: '100%',
                   height: '100%',
-                  background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${colorPalette.accent}18 0%, transparent 70%)`,
+                  background: `radial-gradient(ellipse 100% 100% at 50% 50%, ${accentColor}18 0%, transparent 70%)`,
                 }}
               />
             </div>
@@ -1445,7 +1451,7 @@ export default function AdminPage() {
                                 fontSize: '14px',
                                 backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
                                 backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                                color: 'white',
+                                color: selectedTheme === 'light' ? '#000000' : 'white',
                                 border: 'none',
                                 borderRadius: '8px',
                                 cursor: 'pointer',
@@ -1462,7 +1468,7 @@ export default function AdminPage() {
                               fontSize: '14px',
                               backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                               backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                              color: 'white',
+                              color: selectedTheme === 'light' ? '#000000' : 'white',
                               border: 'none',
                               borderRadius: '8px',
                               cursor: 'pointer',
@@ -1533,7 +1539,7 @@ export default function AdminPage() {
                               fontSize: '14px',
                               backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
                               backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                              color: 'white',
+                              color: selectedTheme === 'light' ? '#000000' : 'white',
                               border: 'none',
                               borderRadius: '8px',
                               cursor: 'pointer',
@@ -1552,7 +1558,7 @@ export default function AdminPage() {
                               fontSize: '14px',
                               backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                               backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                              color: 'white',
+                              color: selectedTheme === 'light' ? '#000000' : 'white',
                               border: 'none',
                               borderRadius: '8px',
                               cursor: 'pointer',
@@ -1623,7 +1629,7 @@ export default function AdminPage() {
                               fontSize: '14px',
                               backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
                               backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                              color: 'white',
+                              color: selectedTheme === 'light' ? '#000000' : 'white',
                               border: 'none',
                               borderRadius: '8px',
                               cursor: 'pointer',
@@ -1642,7 +1648,7 @@ export default function AdminPage() {
                               fontSize: '14px',
                               backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                               backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                              color: 'white',
+                              color: selectedTheme === 'light' ? '#000000' : 'white',
                               border: 'none',
                               borderRadius: '8px',
                               cursor: 'pointer',
@@ -1667,7 +1673,7 @@ export default function AdminPage() {
                   Grant a user lifetime premium access. They will receive a notification and have permanent premium access.
                 </p>
                 <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: '12px' }}>
-                  {!isMobile && <Crown size={24} style={{ color: 'white', flexShrink: 0 }} />}
+                  {!isMobile && <Crown size={24} style={{ color: selectedTheme === 'light' ? '#000000' : 'white', flexShrink: 0 }} />}
                   <input
                     type="text"
                     value={grantPremiumInput}
@@ -1696,9 +1702,9 @@ export default function AdminPage() {
                       padding: '10px 20px',
                       fontSize: '14px',
                       fontWeight: '500',
-                      backgroundColor: colorPalette.accent,
+                      backgroundColor: accentColor,
                       backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                      color: 'white',
+                      color: selectedTheme === 'light' ? '#000000' : 'white',
                       border: '1px solid var(--border)',
                       borderRadius: '8px',
                       cursor: grantPremiumLoading ? 'not-allowed' : 'pointer',
@@ -1729,7 +1735,7 @@ export default function AdminPage() {
                   Grant a user admin access. They will receive a notification and have access to the Admin panel. Admins automatically receive lifetime premium.
                 </p>
                 <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: '12px' }}>
-                  {!isMobile && <Shield size={24} style={{ color: 'white', flexShrink: 0 }} />}
+                  {!isMobile && <Shield size={24} style={{ color: selectedTheme === 'light' ? '#000000' : 'white', flexShrink: 0 }} />}
                   <input
                     type="text"
                     value={grantAdminInput}
@@ -1758,9 +1764,9 @@ export default function AdminPage() {
                       padding: '10px 20px',
                       fontSize: '14px',
                       fontWeight: '500',
-                      backgroundColor: colorPalette.accent,
+                      backgroundColor: accentColor,
                       backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                      color: 'white',
+                      color: selectedTheme === 'light' ? '#000000' : 'white',
                       border: '1px solid var(--border)',
                       borderRadius: '8px',
                       cursor: grantAdminLoading ? 'not-allowed' : 'pointer',
@@ -1820,7 +1826,7 @@ export default function AdminPage() {
                               fontWeight: '500',
                               backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                               backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                              color: 'white',
+                              color: selectedTheme === 'light' ? '#000000' : 'white',
                               border: 'none',
                               borderRadius: '6px',
                               cursor: 'pointer',
@@ -1874,9 +1880,9 @@ export default function AdminPage() {
                       padding: '10px 20px',
                       fontSize: '14px',
                       fontWeight: '500',
-                      backgroundColor: colorPalette.accent,
+                      backgroundColor: accentColor,
                       backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                      color: 'white',
+                      color: selectedTheme === 'light' ? '#000000' : 'white',
                       border: '1px solid var(--border)',
                       borderRadius: '8px',
                       cursor: userLookupLoading ? 'not-allowed' : 'pointer',
@@ -1963,7 +1969,7 @@ export default function AdminPage() {
                             fontWeight: '500',
                             backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                             backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                            color: 'white',
+                            color: selectedTheme === 'light' ? '#000000' : 'white',
                             border: 'none',
                             borderRadius: '8px',
                             cursor: revokeLoading ? 'not-allowed' : 'pointer',
@@ -1984,7 +1990,7 @@ export default function AdminPage() {
                             fontWeight: '500',
                             backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                             backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                            color: 'white',
+                            color: selectedTheme === 'light' ? '#000000' : 'white',
                             border: 'none',
                             borderRadius: '8px',
                             cursor: revokeAdminLoading ? 'not-allowed' : 'pointer',
@@ -2070,9 +2076,9 @@ export default function AdminPage() {
                       padding: '10px 20px',
                       fontSize: '14px',
                       fontWeight: '500',
-                      backgroundColor: colorPalette.accent,
+                      backgroundColor: accentColor,
                       backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                      color: 'white',
+                      color: selectedTheme === 'light' ? '#000000' : 'white',
                       border: '1px solid var(--border)',
                       borderRadius: '8px',
                       cursor: announcementLoading ? 'not-allowed' : 'pointer',
@@ -2223,9 +2229,9 @@ export default function AdminPage() {
                 onClick={confirmDeleteRequest}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#660000',
+                  backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                   backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                  color: 'white',
+                  color: selectedTheme === 'light' ? '#000000' : 'white',
                   border: '1px solid #660000',
                   borderRadius: '6px',
                   cursor: 'pointer',
@@ -2293,9 +2299,9 @@ export default function AdminPage() {
                 onClick={confirmDeleteIssue}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#660000',
+                  backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                   backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                  color: 'white',
+                  color: selectedTheme === 'light' ? '#000000' : 'white',
                   border: '1px solid #660000',
                   borderRadius: '6px',
                   cursor: 'pointer',
@@ -2384,7 +2390,7 @@ export default function AdminPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
-                  color: 'white',
+                  color: selectedTheme === 'light' ? '#000000' : 'white',
                   border: `1px solid ${selectedTheme === 'light' ? 'var(--success)' : '#063d1d'}`,
                   borderRadius: '6px',
                   cursor: 'pointer',
@@ -2404,7 +2410,7 @@ export default function AdminPage() {
                   padding: '8px 16px',
                   backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                   backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                  color: 'white',
+                  color: selectedTheme === 'light' ? '#000000' : 'white',
                   border: `1px solid ${selectedTheme === 'light' ? 'var(--danger)' : '#660000'}`,
                   borderRadius: '6px',
                   cursor: 'pointer',
@@ -2472,9 +2478,9 @@ export default function AdminPage() {
                 onClick={confirmDeleteFeature}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#660000',
+                  backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                   backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                  color: 'white',
+                  color: selectedTheme === 'light' ? '#000000' : 'white',
                   border: '1px solid #660000',
                   borderRadius: '6px',
                   cursor: 'pointer',
@@ -2563,7 +2569,7 @@ export default function AdminPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: selectedTheme === 'light' ? 'var(--success)' : '#063d1d',
-                  color: 'white',
+                  color: selectedTheme === 'light' ? '#000000' : 'white',
                   border: `1px solid ${selectedTheme === 'light' ? 'var(--success)' : '#063d1d'}`,
                   borderRadius: '6px',
                   cursor: 'pointer',
@@ -2583,7 +2589,7 @@ export default function AdminPage() {
                   padding: '8px 16px',
                   backgroundColor: selectedTheme === 'light' ? 'var(--danger)' : '#660000',
                   backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                  color: 'white',
+                  color: selectedTheme === 'light' ? '#000000' : 'white',
                   border: `1px solid ${selectedTheme === 'light' ? 'var(--danger)' : '#660000'}`,
                   borderRadius: '6px',
                   cursor: 'pointer',

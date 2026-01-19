@@ -6,10 +6,11 @@ import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import useAppStore from '@/lib/store';
 import { getAppTitle } from '@/lib/universityTitles';
-import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors, applyColorPalette, applyCustomColors } from '@/lib/collegeColors';
 import NotificationBell from '@/components/NotificationBell';
 import { DEFAULT_VISIBLE_PAGES } from '@/lib/customizationConstants';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useMobileNav } from '@/context/MobileNavContext';
 import {
   Home,
@@ -50,10 +51,19 @@ export default function Navigation() {
   const { data: session, status: sessionStatus } = useSession();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
-  const useCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
-  const customColors = useAppStore((state) => state.settings.customColors);
-  const gradientIntensity = useAppStore((state) => state.settings.gradientIntensity) ?? 50;
-  const glowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
+  const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const savedCustomColors = useAppStore((state) => state.settings.customColors);
+  const savedGradientIntensity = useAppStore((state) => state.settings.gradientIntensity) ?? 50;
+  const savedGlowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
+
+  // Check premium status - premium features use defaults when not premium
+  const { isPremium } = useSubscription();
+
+  // Custom theme and visual effects are only active for premium users
+  const useCustomTheme = isPremium ? savedUseCustomTheme : false;
+  const customColors = isPremium ? savedCustomColors : null;
+  const gradientIntensity = isPremium ? savedGradientIntensity : 50;
+  const glowIntensity = isPremium ? savedGlowIntensity : 50;
 
   // Get college color palette for theming
   const colorPalette = getCollegeColorPalette(university || null, theme);
@@ -74,8 +84,13 @@ export default function Navigation() {
   const activeGradient = gradientIntensity > 0
     ? `linear-gradient(135deg, rgba(255,255,255,${gradientLightOpacity}) 0%, transparent 50%, rgba(0,0,0,${gradientDarkOpacity}) 100%)`
     : 'none';
-  const rawVisiblePages = useAppStore((state) => state.settings.visiblePages || DEFAULT_VISIBLE_PAGES);
-  const rawVisiblePagesOrder = useAppStore((state) => state.settings.visiblePagesOrder);
+  const savedVisiblePages = useAppStore((state) => state.settings.visiblePages || DEFAULT_VISIBLE_PAGES);
+  const savedVisiblePagesOrder = useAppStore((state) => state.settings.visiblePagesOrder);
+
+  // Page visibility is only customizable for premium users - free users see defaults
+  const rawVisiblePages = isPremium ? savedVisiblePages : DEFAULT_VISIBLE_PAGES;
+  const rawVisiblePagesOrder = isPremium ? savedVisiblePagesOrder : null;
+
   // Migrate "Deadlines" to "Assignments"
   const visiblePages = rawVisiblePages.map((p: string) => p === 'Deadlines' ? 'Assignments' : p);
   const visiblePagesOrder = rawVisiblePagesOrder ? (rawVisiblePagesOrder as string[]).map((p: string) => p === 'Deadlines' ? 'Assignments' : p) : rawVisiblePagesOrder;
@@ -86,6 +101,27 @@ export default function Navigation() {
   useLayoutEffect(() => {
     setMounted(true);
   }, []);
+
+  // Re-apply colors when premium status changes to ensure correct theme is applied
+  // We use the saved values and isPremium directly to avoid stale closures
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Determine effective values based on premium status
+    const effectiveUseCustomTheme = isPremium && savedUseCustomTheme;
+    const effectiveCustomColors = isPremium ? savedCustomColors : null;
+
+    if (effectiveUseCustomTheme && effectiveCustomColors) {
+      // Apply custom colors for the current theme
+      const colorSet = getCustomColorSetForTheme(effectiveCustomColors as CustomColors, theme);
+      applyCustomColors(colorSet, theme);
+    } else {
+      // Apply college colors (this includes when user is not premium)
+      // Calculate fresh palette to avoid stale references
+      const freshPalette = getCollegeColorPalette(university || null, theme);
+      applyColorPalette(freshPalette);
+    }
+  }, [isPremium, savedUseCustomTheme, savedCustomColors, theme, university]);
 
   // Check localStorage directly after mount for instant display
   const showAdminNav = isAdmin || (mounted && localStorage.getItem('isAdmin') === 'true');
