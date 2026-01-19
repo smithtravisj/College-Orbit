@@ -647,10 +647,10 @@ export default function AccountPage() {
                 onClick={confirmDelete}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#660000',
+                  backgroundColor: 'var(--delete-button)',
                   backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                   color: 'white',
-                  border: '1px solid #660000',
+                  border: '1px solid var(--delete-button)',
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',
@@ -714,10 +714,10 @@ export default function AccountPage() {
                 onClick={confirmDeleteAccount}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#660000',
+                  backgroundColor: 'var(--delete-button)',
                   backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                   color: 'white',
-                  border: '1px solid #660000',
+                  border: '1px solid var(--delete-button)',
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',
@@ -784,10 +784,10 @@ export default function AccountPage() {
                 }}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: '#660000',
+                  backgroundColor: 'var(--delete-button)',
                   backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
                   color: 'white',
-                  border: '1px solid #660000',
+                  border: '1px solid var(--delete-button)',
                   borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '14px',

@@ -682,6 +682,7 @@ export default function SettingsPage() {
                   <ColorPicker label="Success" value={currentColorSet.success} onChange={(color) => updateColor('success', color)} />
                   <ColorPicker label="Warning" value={currentColorSet.warning} onChange={(color) => updateColor('warning', color)} />
                   <ColorPicker label="Danger" value={currentColorSet.danger} onChange={(color) => updateColor('danger', color)} />
+                  <ColorPicker label="Delete Buttons" value={currentColorSet.deleteButton || (currentThemeMode === 'light' ? '#dc2626' : '#660000')} onChange={(color) => updateColor('deleteButton', color)} />
                 </div>
                 <Button
                   size="sm"
