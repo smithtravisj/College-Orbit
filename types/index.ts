@@ -201,7 +201,7 @@ export interface Exam {
   id: string;
   title: string;
   courseId: string | null;
-  examAt: string; // ISO datetime
+  examAt: string | null; // ISO datetime
   location: string | null;
   notes: string;
   tags: string[];

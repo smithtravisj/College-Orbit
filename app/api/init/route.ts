@@ -51,6 +51,16 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
       }),
       prisma.note.findMany({
         where: { userId },
+        include: {
+          course: { select: { id: true, code: true, name: true } },
+          folder: { select: { id: true, name: true } },
+          task: { select: { id: true, title: true } },
+          deadline: { select: { id: true, title: true } },
+          exam: { select: { id: true, title: true } },
+          recurringTaskPattern: { select: { id: true, taskTemplate: true } },
+          recurringDeadlinePattern: { select: { id: true, deadlineTemplate: true } },
+          recurringExamPattern: { select: { id: true, examTemplate: true } },
+        },
         orderBy: { updatedAt: 'desc' },
       }),
       prisma.folder.findMany({
