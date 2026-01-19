@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Download, FileText, ZoomIn, ZoomOut, RotateCw, RotateCcw, Maximize, Minimize, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import mammoth from 'mammoth';
-import * as XLSX from 'xlsx';
 import { marked } from 'marked';
-import JSZip from 'jszip';
+
+// Heavy dependencies are dynamically imported when needed
+// mammoth - for .docx files
+// xlsx - for .xlsx files
+// jszip - for .pptx files
 
 interface FileItem {
   name: string;
@@ -24,6 +27,7 @@ interface FilePreviewModalProps {
 
 export default function FilePreviewModal({ file, files, currentIndex = 0, onClose, onNavigate }: FilePreviewModalProps) {
   const isMobile = useIsMobile();
+  const [mounted, setMounted] = useState(false);
   const [textContent, setTextContent] = useState<string | null>(null);
   const [docxHtml, setDocxHtml] = useState<string | null>(null);
   const [docxLoading, setDocxLoading] = useState(false);
@@ -43,6 +47,11 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
 
   const hasPrev = files && files.length > 1 && currentIndex > 0;
   const hasNext = files && files.length > 1 && currentIndex < files.length - 1;
+
+  // Mount state for portal SSR compatibility
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Reset when file changes
   useEffect(() => {
@@ -77,61 +86,67 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
     }
   }, [file]);
 
-  // Load docx content
+  // Load docx content (mammoth loaded on demand)
   useEffect(() => {
     if (!file) return;
     const mimeType = getMimeType(file.url);
     if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       setDocxLoading(true);
       setDocxHtml(null);
-      try {
-        const base64Data = file.url.split(',')[1];
-        const binaryString = atob(base64Data);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
+
+      const loadDocx = async () => {
+        try {
+          const mammoth = await import('mammoth');
+          const base64Data = file.url.split(',')[1];
+          const binaryString = atob(base64Data);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          const result = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer });
+          setDocxHtml(result.value);
+          setDocxLoading(false);
+        } catch {
+          setDocxHtml(null);
+          setDocxLoading(false);
         }
-        mammoth.convertToHtml({ arrayBuffer: bytes.buffer })
-          .then((result) => {
-            setDocxHtml(result.value);
-            setDocxLoading(false);
-          })
-          .catch(() => {
-            setDocxHtml(null);
-            setDocxLoading(false);
-          });
-      } catch {
-        setDocxHtml(null);
-        setDocxLoading(false);
-      }
+      };
+
+      loadDocx();
     } else {
       setDocxHtml(null);
     }
   }, [file]);
 
-  // Load xlsx content
+  // Load xlsx content (xlsx loaded on demand)
   useEffect(() => {
     if (!file) return;
     const mimeType = getMimeType(file.url);
     if (mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
       setXlsxLoading(true);
       setXlsxHtml(null);
-      try {
-        const base64Data = file.url.split(',')[1];
-        const binaryString = atob(base64Data);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
+
+      const loadXlsx = async () => {
+        try {
+          const XLSX = await import('xlsx');
+          const base64Data = file.url.split(',')[1];
+          const binaryString = atob(base64Data);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          const workbook = XLSX.read(bytes, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const html = XLSX.utils.sheet_to_html(firstSheet, { editable: false });
+          setXlsxHtml(html);
+          setXlsxLoading(false);
+        } catch {
+          setXlsxHtml(null);
+          setXlsxLoading(false);
         }
-        const workbook = XLSX.read(bytes, { type: 'array' });
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const html = XLSX.utils.sheet_to_html(firstSheet, { editable: false });
-        setXlsxHtml(html);
-        setXlsxLoading(false);
-      } catch {
-        setXlsxHtml(null);
-        setXlsxLoading(false);
-      }
+      };
+
+      loadXlsx();
     } else {
       setXlsxHtml(null);
     }
@@ -174,7 +189,7 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
     }
   }, [file]);
 
-  // Load PPTX content (text extraction)
+  // Load PPTX content (jszip loaded on demand)
   useEffect(() => {
     if (!file) return;
     const mimeType = getMimeType(file.url);
@@ -184,6 +199,7 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
 
       const loadPptx = async () => {
         try {
+          const JSZip = (await import('jszip')).default;
           const base64Data = file.url.split(',')[1];
           const binaryString = atob(base64Data);
           const bytes = new Uint8Array(binaryString.length);
@@ -286,7 +302,7 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
     }
   };
 
-  if (!file) return null;
+  if (!file || !mounted) return null;
 
   const mimeType = getMimeType(file.url);
   const fileType = getFileType(mimeType, file.name);
@@ -304,7 +320,7 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
   // When rotation is 90 or 270, width and height swap
   const isRotatedSideways = Math.abs(rotation % 180) === 90;
 
-  return (
+  const modalContent = (
     <div
       style={{
         position: 'fixed',
@@ -313,7 +329,7 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 1000,
+        zIndex: 9999,
         padding: isMobile ? '16px' : '32px',
       }}
       onClick={onClose}
@@ -891,6 +907,8 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
 function IconButton({ onClick, title, children }: { onClick: () => void; title: string; children: React.ReactNode }) {

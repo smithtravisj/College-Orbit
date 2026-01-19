@@ -20,7 +20,7 @@ interface CollapsibleCardProps {
   variant?: 'primary' | 'secondary';
 }
 
-const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
+const CollapsibleCard: React.FC<CollapsibleCardProps> = React.memo(({
   id,
   title,
   subtitle,
@@ -145,6 +145,8 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = ({
       </div>
     </div>
   );
-};
+});
+
+CollapsibleCard.displayName = 'CollapsibleCard';
 
 export default CollapsibleCard;

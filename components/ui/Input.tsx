@@ -10,7 +10,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   labelStyle?: React.CSSProperties;
 }
 
-const Input = React.forwardRef<HTMLInputElement, InputProps>(
+const Input = React.memo(React.forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, helperText, className = '', labelClassName = 'text-sm', labelStyle = {}, ...props }, ref) => {
     return (
       <div className="w-full">
@@ -31,7 +31,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       </div>
     );
   }
-);
+));
 
 Input.displayName = 'Input';
 
@@ -48,7 +48,7 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   maxHeight?: number;
 }
 
-export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+export const Textarea = React.memo(React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ label, error, helperText, className = '', labelClassName = 'text-sm', labelStyle = {}, style, autoExpand, maxHeight = 200, onChange, ...props }, ref) => {
     const isMobile = useIsMobile();
     const internalRef = React.useRef<HTMLTextAreaElement>(null);
@@ -99,7 +99,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       </div>
     );
   }
-);
+));
 
 Textarea.displayName = 'Textarea';
 
@@ -113,7 +113,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   labelStyle?: React.CSSProperties;
 }
 
-export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
+export const Select = React.memo(React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, error, helperText, options, className = '', labelClassName = 'text-sm', labelStyle = {}, ...props }, ref) => {
     const isMultiple = (props as any).multiple;
     const { settings } = useAppStore();
@@ -160,6 +160,6 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       </div>
     );
   }
-);
+));
 
 Select.displayName = 'Select';

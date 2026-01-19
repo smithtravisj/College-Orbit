@@ -17,7 +17,7 @@ interface CardProps {
   noAccent?: boolean;
 }
 
-const Card: React.FC<CardProps> = ({
+const Card: React.FC<CardProps> = React.memo(({
   title,
   subtitle,
   action,
@@ -77,6 +77,8 @@ const Card: React.FC<CardProps> = ({
       </div>
     </div>
   );
-};
+});
+
+Card.displayName = 'Card';
 
 export default Card;

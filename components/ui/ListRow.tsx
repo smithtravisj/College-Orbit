@@ -9,7 +9,7 @@ interface ListRowProps {
   className?: string;
 }
 
-const ListRow = React.forwardRef<HTMLDivElement, ListRowProps>(
+const ListRow = React.memo(React.forwardRef<HTMLDivElement, ListRowProps>(
   ({ title, subtitle, metadata, actions, onClick, className = '' }, ref) => {
     return (
       <div
@@ -40,7 +40,7 @@ const ListRow = React.forwardRef<HTMLDivElement, ListRowProps>(
       </div>
     );
   }
-);
+));
 
 ListRow.displayName = 'ListRow';
 

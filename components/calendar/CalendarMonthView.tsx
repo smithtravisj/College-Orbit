@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent } from '@/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
@@ -13,7 +13,12 @@ import {
   CalendarEvent,
 } from '@/lib/calendarUtils';
 import { isToday } from '@/lib/utils';
-import EventDetailModal from '@/components/EventDetailModal';
+import dynamic from 'next/dynamic';
+
+// Lazy load heavy modal - only needed when user clicks an event
+const EventDetailModal = dynamic(() => import('@/components/EventDetailModal'), {
+  ssr: false,
+});
 import ExclusionDetailModal from '@/components/ExclusionDetailModal';
 
 interface CalendarMonthViewProps {
@@ -33,7 +38,7 @@ interface CalendarMonthViewProps {
   onStatusChange?: () => void;
 }
 
-export default function CalendarMonthView({
+const CalendarMonthView = React.memo(function CalendarMonthView({
   year,
   month,
   courses,
@@ -647,4 +652,8 @@ export default function CalendarMonthView({
       />
     </div>
   );
-}
+});
+
+CalendarMonthView.displayName = 'CalendarMonthView';
+
+export default CalendarMonthView;

@@ -25,7 +25,7 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function FileUpload({ files = [], onChange, maxFiles = 10, maxSizeMB = 10, label }: FileUploadProps) {
+const FileUpload = React.memo(function FileUpload({ files = [], onChange, maxFiles = 10, maxSizeMB = 10, label }: FileUploadProps) {
   const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -265,4 +265,8 @@ export default function FileUpload({ files = [], onChange, maxFiles = 10, maxSiz
       `}</style>
     </div>
   );
-}
+});
+
+FileUpload.displayName = 'FileUpload';
+
+export default FileUpload;
