@@ -212,11 +212,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
           if (!title.trim()) return;
           let dueAt: string | null = null;
           if (dueDate) {
-            if (dueTime) {
-              dueAt = `${dueDate}T${dueTime}:00`;
-            } else {
-              dueAt = `${dueDate}T23:59:59`;
-            }
+            const timeStr = dueTime || '23:59';
+            dueAt = new Date(`${dueDate}T${timeStr}`).toISOString();
           }
           await addTask({
             title: title.trim(),
@@ -241,11 +238,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
           if (!title.trim()) return;
           let dueAt: string | null = null;
           if (dueDate) {
-            if (dueTime) {
-              dueAt = `${dueDate}T${dueTime}:00`;
-            } else {
-              dueAt = `${dueDate}T23:59:59`;
-            }
+            const timeStr = dueTime || '23:59';
+            dueAt = new Date(`${dueDate}T${timeStr}`).toISOString();
           }
           await addDeadline({
             title: title.trim(),
@@ -267,12 +261,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
         }
         case 'exam': {
           if (!title.trim() || !dueDate) return;
-          let examAt: string;
-          if (dueTime) {
-            examAt = `${dueDate}T${dueTime}:00`;
-          } else {
-            examAt = `${dueDate}T12:00:00`;
-          }
+          const timeStr = dueTime || '12:00';
+          const examAt = new Date(`${dueDate}T${timeStr}`).toISOString();
           await addExam({
             title: title.trim(),
             courseId: courseId || null,
