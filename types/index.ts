@@ -210,6 +210,8 @@ export interface Exam {
     url: string;
   }>;
   status: 'scheduled' | 'completed' | 'cancelled';
+  isRecurring?: boolean;
+  recurringPatternId?: string | null;
   createdAt: string; // ISO datetime
 }
 
@@ -222,8 +224,10 @@ export interface Note {
   courseId: string | null;
   taskId: string | null;
   deadlineId: string | null;
+  examId: string | null;
   recurringTaskPatternId: string | null;
   recurringDeadlinePatternId: string | null;
+  recurringExamPatternId: string | null;
   tags: string[];
   isPinned: boolean;
   links: Array<{
@@ -232,6 +236,15 @@ export interface Note {
   }>;
   createdAt: string; // ISO datetime
   updatedAt: string; // ISO datetime
+  // Optional included relations from API
+  task?: { id: string; title: string } | null;
+  deadline?: { id: string; title: string } | null;
+  exam?: { id: string; title: string } | null;
+  recurringTaskPattern?: { id: string; taskTemplate: any } | null;
+  recurringDeadlinePattern?: { id: string; deadlineTemplate: any } | null;
+  recurringExamPattern?: { id: string; examTemplate: any } | null;
+  course?: { id: string; code: string; name: string } | null;
+  folder?: { id: string; name: string } | null;
 }
 
 export interface Folder {

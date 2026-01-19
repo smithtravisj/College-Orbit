@@ -212,6 +212,7 @@ model RecurringExamPattern {
   updatedAt       DateTime  @updatedAt
   isActive        Boolean   @default(true)
   exams           Exam[]
+  linkedNotes     Note[]
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -239,6 +240,7 @@ model Exam {
   user               User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   reminders          ExamReminder[]
   notifications      Notification[]
+  linkedNotes        Note[]
 
   @@index([userId])
   @@index([courseId])
@@ -271,8 +273,10 @@ model Note {
   courseId                    String?
   taskId                      String?
   deadlineId                  String?
+  examId                      String?
   recurringTaskPatternId      String?
   recurringDeadlinePatternId  String?
+  recurringExamPatternId      String?
   tags                        Json                      @default("[]")
   isPinned                    Boolean                   @default(false)
   links                       Json                      @default("[]")
@@ -282,8 +286,10 @@ model Note {
   folder                      Folder?                   @relation(fields: [folderId], references: [id])
   task                        Task?                     @relation(fields: [taskId], references: [id], onDelete: SetNull)
   deadline                    Deadline?                 @relation(fields: [deadlineId], references: [id], onDelete: SetNull)
+  exam                        Exam?                     @relation(fields: [examId], references: [id], onDelete: SetNull)
   recurringTaskPattern        RecurringPattern?         @relation(fields: [recurringTaskPatternId], references: [id], onDelete: SetNull)
   recurringDeadlinePattern    RecurringDeadlinePattern? @relation(fields: [recurringDeadlinePatternId], references: [id], onDelete: SetNull)
+  recurringExamPattern        RecurringExamPattern?     @relation(fields: [recurringExamPatternId], references: [id], onDelete: SetNull)
   user                        User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -291,8 +297,10 @@ model Note {
   @@index([courseId])
   @@index([taskId])
   @@index([deadlineId])
+  @@index([examId])
   @@index([recurringTaskPatternId])
   @@index([recurringDeadlinePatternId])
+  @@index([recurringExamPatternId])
   @@index([isPinned])
 }
 
