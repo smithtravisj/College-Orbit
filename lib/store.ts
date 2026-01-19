@@ -173,6 +173,15 @@ const useAppStore = create<AppStore>((set, get) => ({
     const prevIsPremium = get().isPremium;
     set({ isPremium });
 
+    // Cache premium status in localStorage for faster loading on refresh
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('app-isPremium', isPremium ? 'true' : 'false');
+      } catch (e) {
+        console.warn('Failed to cache premium status:', e);
+      }
+    }
+
     // Re-apply colors when premium status changes
     if (prevIsPremium !== isPremium && typeof window !== 'undefined') {
       const { settings } = get();
@@ -367,6 +376,10 @@ const useAppStore = create<AppStore>((set, get) => ({
       if (stored) {
         const data: AppData = JSON.parse(stored);
         const settings = data.settings || DEFAULT_SETTINGS;
+
+        // Read cached premium status from localStorage for immediate color application
+        const cachedIsPremium = localStorage.getItem('app-isPremium') === 'true';
+
         set({
           courses: data.courses || [],
           deadlines: data.deadlines || [],
@@ -382,15 +395,16 @@ const useAppStore = create<AppStore>((set, get) => ({
           recurringExamPatterns: data.recurringExamPatterns || [],
           shoppingItems: data.shoppingItems || [],
           calendarEvents: data.calendarEvents || [],
+          isPremium: cachedIsPremium, // Set cached premium status
         });
-        // Apply colors based on loaded settings
-        const { isPremium } = get();
+
+        // Apply colors based on loaded settings using cached premium status
         const theme = settings.theme || 'dark';
         const useCustomTheme = settings.useCustomTheme || false;
         const customColors = settings.customColors;
 
         // Only apply custom colors if premium AND custom theme enabled
-        if (isPremium && useCustomTheme && customColors) {
+        if (cachedIsPremium && useCustomTheme && customColors) {
           // Apply custom colors for the current theme
           const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
           applyCustomColors(colorSet, theme);
@@ -1704,6 +1718,14 @@ const useAppStore = create<AppStore>((set, get) => ({
         }
         // Store theme in localStorage for loading screen to access
         localStorage.setItem('app-theme', newTheme);
+
+        // Cache custom theme settings for faster load on refresh
+        if (settings.useCustomTheme !== undefined) {
+          localStorage.setItem('app-useCustomTheme', newUseCustomTheme ? 'true' : 'false');
+        }
+        if (settings.customColors !== undefined && newCustomColors) {
+          localStorage.setItem('app-customColors', JSON.stringify(newCustomColors));
+        }
       }
 
       // Update localStorage with new settings

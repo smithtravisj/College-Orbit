@@ -88,6 +88,29 @@ export const POST = withRateLimit(async function(req: NextRequest) {
       // Don't fail signup if notification fails
     }
 
+    // Notify all admins about new user signup
+    try {
+      const admins = await prisma.user.findMany({
+        where: { isAdmin: true },
+        select: { id: true },
+      });
+
+      if (admins.length > 0) {
+        const userDisplay = user.name || user.email;
+        await prisma.notification.createMany({
+          data: admins.map((admin) => ({
+            userId: admin.id,
+            title: 'New User Signup',
+            message: `${userDisplay} just created an account${university ? ` (${university})` : ''}.`,
+            type: 'new_user_signup',
+          })),
+        });
+      }
+    } catch (adminNotificationError) {
+      console.error('Failed to notify admins:', adminNotificationError);
+      // Don't fail signup if admin notification fails
+    }
+
     // Send welcome email (don't block signup if this fails)
     try {
       if (shouldSendRealEmail) {

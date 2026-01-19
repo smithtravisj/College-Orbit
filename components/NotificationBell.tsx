@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, X, Check, Clock, AlertCircle, Crown, CreditCard, Megaphone, Gift, Shield } from 'lucide-react';
+import { Bell, X, Check, Clock, AlertCircle, Crown, CreditCard, Megaphone, Gift, Shield, UserPlus } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface Notification {
@@ -207,6 +207,10 @@ export default function NotificationBell() {
     }
     if (type === 'subscription_canceled') {
       return <Crown size={18} style={{ color: '#6b7280' }} />;
+    }
+    // Admin notifications
+    if (type === 'new_user_signup') {
+      return <UserPlus size={18} style={{ color: '#10b981' }} />;
     }
     // Payment notifications
     if (type === 'payment_failed') {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
-import { getCollegeColorPalette, applyColorPalette } from '@/lib/collegeColors';
+import { getCollegeColorPalette, applyColorPalette, applyCustomColors, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 
 export default function AppLoader({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -13,6 +13,24 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
       console.log('[AppLoader] Init: storedTheme =', storedTheme);
       const result = storedTheme === 'light';
       console.log('[AppLoader] Init: isLightMode =', result);
+
+      // Apply cached colors immediately to prevent flicker
+      const cachedIsPremium = localStorage.getItem('app-isPremium') === 'true';
+      const cachedUseCustomTheme = localStorage.getItem('app-useCustomTheme') === 'true';
+      const cachedCustomColorsStr = localStorage.getItem('app-customColors');
+
+      if (cachedIsPremium && cachedUseCustomTheme && cachedCustomColorsStr) {
+        try {
+          const customColors = JSON.parse(cachedCustomColorsStr);
+          const theme = (storedTheme || 'dark') as 'light' | 'dark' | 'system';
+          const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
+          applyCustomColors(colorSet, theme);
+          console.log('[AppLoader] Applied cached custom colors');
+        } catch (e) {
+          console.warn('[AppLoader] Failed to parse cached custom colors:', e);
+        }
+      }
+
       return result;
     }
     return false;
