@@ -16,9 +16,15 @@ export interface ClientSubscriptionStatus {
   isLoading: boolean;
 }
 
-const defaultStatus: ClientSubscriptionStatus = {
+// Read cached premium status from localStorage for faster initial load
+const getCachedPremiumStatus = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem('app-isPremium') === 'true';
+};
+
+const getDefaultStatus = (): ClientSubscriptionStatus => ({
   tier: 'free',
-  isPremium: false,
+  isPremium: getCachedPremiumStatus(), // Use cached value for instant display
   isTrialing: false,
   isLifetimePremium: false,
   trialDaysRemaining: null,
@@ -27,10 +33,10 @@ const defaultStatus: ClientSubscriptionStatus = {
   expiresAt: null,
   status: 'none',
   isLoading: true,
-};
+});
 
 export function useSubscription(): ClientSubscriptionStatus & { refresh: () => Promise<void> } {
-  const [status, setStatus] = useState<ClientSubscriptionStatus>(defaultStatus);
+  const [status, setStatus] = useState<ClientSubscriptionStatus>(getDefaultStatus);
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -39,10 +45,10 @@ export function useSubscription(): ClientSubscriptionStatus & { refresh: () => P
         const data = await res.json();
         setStatus({ ...data, isLoading: false });
       } else {
-        setStatus({ ...defaultStatus, isLoading: false });
+        setStatus({ ...getDefaultStatus(), isLoading: false });
       }
     } catch {
-      setStatus({ ...defaultStatus, isLoading: false });
+      setStatus({ ...getDefaultStatus(), isLoading: false });
     }
   }, []);
 
