@@ -22,6 +22,10 @@ export const GET = withRateLimit(async function(request: NextRequest) {
       include: {
         course: { select: { id: true, code: true, name: true } },
         folder: { select: { id: true, name: true } },
+        task: { select: { id: true, title: true } },
+        deadline: { select: { id: true, title: true } },
+        recurringTaskPattern: { select: { id: true, taskTemplate: true } },
+        recurringDeadlinePattern: { select: { id: true, deadlineTemplate: true } },
       },
       orderBy: [{ isPinned: 'desc' }, { updatedAt: 'desc' }],
     });
@@ -63,6 +67,32 @@ export const POST = withRateLimit(async function(req: NextRequest) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
 
+    // Validate foreign key references exist
+    if (data.taskId) {
+      const task = await prisma.task.findFirst({ where: { id: data.taskId, userId: token.id } });
+      if (!task) {
+        return NextResponse.json({ error: 'Task not found' }, { status: 400 });
+      }
+    }
+    if (data.deadlineId) {
+      const deadline = await prisma.deadline.findFirst({ where: { id: data.deadlineId, userId: token.id } });
+      if (!deadline) {
+        return NextResponse.json({ error: 'Assignment not found' }, { status: 400 });
+      }
+    }
+    if (data.recurringTaskPatternId) {
+      const pattern = await prisma.recurringPattern.findFirst({ where: { id: data.recurringTaskPatternId, userId: token.id } });
+      if (!pattern) {
+        return NextResponse.json({ error: 'Recurring task pattern not found' }, { status: 400 });
+      }
+    }
+    if (data.recurringDeadlinePatternId) {
+      const pattern = await prisma.recurringDeadlinePattern.findFirst({ where: { id: data.recurringDeadlinePatternId, userId: token.id } });
+      if (!pattern) {
+        return NextResponse.json({ error: 'Recurring assignment pattern not found' }, { status: 400 });
+      }
+    }
+
     // Extract plain text from rich text content for search
     const plainText = extractPlainText(data.content);
 
@@ -74,6 +104,10 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         plainText,
         folderId: data.folderId || null,
         courseId: data.courseId || null,
+        taskId: data.taskId || null,
+        deadlineId: data.deadlineId || null,
+        recurringTaskPatternId: data.recurringTaskPatternId || null,
+        recurringDeadlinePatternId: data.recurringDeadlinePatternId || null,
         tags: data.tags || [],
         isPinned: data.isPinned || false,
         links: (data.links || [])
@@ -86,6 +120,10 @@ export const POST = withRateLimit(async function(req: NextRequest) {
       include: {
         course: { select: { id: true, code: true, name: true } },
         folder: { select: { id: true, name: true } },
+        task: { select: { id: true, title: true } },
+        deadline: { select: { id: true, title: true } },
+        recurringTaskPattern: { select: { id: true, taskTemplate: true } },
+        recurringDeadlinePattern: { select: { id: true, deadlineTemplate: true } },
       },
     });
 

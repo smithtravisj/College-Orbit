@@ -5,7 +5,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import CharacterCount from '@tiptap/extension-character-count';
 import Placeholder from '@tiptap/extension-placeholder';
-import { Bold, Italic, Link as LinkIcon, Heading1, Heading2, List, ListOrdered, X } from 'lucide-react';
+import { Bold, Italic, Link as LinkIcon, Heading1, Heading2, List, ListOrdered, X, Code, Quote, Info } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import styles from './RichTextEditor.module.css';
 
@@ -26,6 +26,7 @@ export default function RichTextEditor({
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [showMarkdownHints, setShowMarkdownHints] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -175,11 +176,81 @@ export default function RichTextEditor({
             title="Ordered List"
             onToolbarChange={() => setUpdateCount(c => c + 1)}
           />
+          <div className="w-px bg-[var(--border)]" />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+            active={editor.isActive('codeBlock')}
+            icon={<Code size={18} />}
+            title="Code Block"
+            onToolbarChange={() => setUpdateCount(c => c + 1)}
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            active={editor.isActive('blockquote')}
+            icon={<Quote size={18} />}
+            title="Quote"
+            onToolbarChange={() => setUpdateCount(c => c + 1)}
+          />
+          <div className="w-px bg-[var(--border)]" />
+          <button
+            onClick={() => setShowMarkdownHints(!showMarkdownHints)}
+            title="Markdown shortcuts"
+            style={{
+              padding: '6px',
+              backgroundColor: showMarkdownHints ? 'var(--accent)' : 'transparent',
+              color: showMarkdownHints ? 'white' : 'var(--text-muted)',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              transition: 'all 150ms ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              outline: 'none',
+            }}
+            onMouseEnter={(e) => {
+              if (!showMarkdownHints) {
+                e.currentTarget.style.color = 'var(--text)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!showMarkdownHints) {
+                e.currentTarget.style.color = 'var(--text-muted)';
+              }
+            }}
+            type="button"
+          >
+            <Info size={18} />
+          </button>
+        </div>
+      )}
+
+      {/* Markdown Hints */}
+      {showMarkdownHints && (
+        <div style={{
+          padding: '12px 16px',
+          backgroundColor: 'var(--panel-2)',
+          borderRadius: '8px',
+          border: '1px solid var(--border)',
+          fontSize: '12px',
+          color: 'var(--text-muted)',
+        }}>
+          <div style={{ fontWeight: '600', color: 'var(--text)', marginBottom: '8px' }}>Markdown Shortcuts</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '4px 16px' }}>
+            <div><code style={{ backgroundColor: 'var(--panel)', padding: '2px 4px', borderRadius: '3px' }}>**bold**</code> Bold text</div>
+            <div><code style={{ backgroundColor: 'var(--panel)', padding: '2px 4px', borderRadius: '3px' }}>*italic*</code> Italic text</div>
+            <div><code style={{ backgroundColor: 'var(--panel)', padding: '2px 4px', borderRadius: '3px' }}># Heading</code> Heading 1</div>
+            <div><code style={{ backgroundColor: 'var(--panel)', padding: '2px 4px', borderRadius: '3px' }}>## Heading</code> Heading 2</div>
+            <div><code style={{ backgroundColor: 'var(--panel)', padding: '2px 4px', borderRadius: '3px' }}>- item</code> Bullet list</div>
+            <div><code style={{ backgroundColor: 'var(--panel)', padding: '2px 4px', borderRadius: '3px' }}>1. item</code> Numbered list</div>
+            <div><code style={{ backgroundColor: 'var(--panel)', padding: '2px 4px', borderRadius: '3px' }}>{'>'}  quote</code> Blockquote</div>
+            <div><code style={{ backgroundColor: 'var(--panel)', padding: '2px 4px', borderRadius: '3px' }}>```code```</code> Code block</div>
+          </div>
         </div>
       )}
 
       {/* Editor */}
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minHeight: '50px', border: '1px solid var(--border)', borderRadius: '8px', backgroundColor: 'var(--panel-1)', boxSizing: 'border-box' }}>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minHeight: '50px', border: '1px solid var(--border)', borderRadius: '8px', backgroundColor: 'var(--panel-2)', boxSizing: 'border-box' }}>
         {editor && editor.isEmpty && !isFocused && (
           <div
             style={{

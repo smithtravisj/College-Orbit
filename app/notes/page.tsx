@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { Note } from '@/types';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
@@ -12,7 +13,7 @@ import RichTextEditor from '@/components/RichTextEditor';
 import FolderTree from '@/components/notes/FolderTree';
 import TagInput from '@/components/notes/TagInput';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
-import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown, Crown } from 'lucide-react';
+import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown, Crown, Save } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { FREE_TIER_LIMITS } from '@/lib/subscription';
@@ -23,6 +24,7 @@ import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguagePar
 export default function NotesPage() {
   const isMobile = useIsMobile();
   const subscription = useSubscription();
+  const searchParams = useSearchParams();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
   const colorPalette = getCollegeColorPalette(university || null, theme);
@@ -32,27 +34,57 @@ export default function NotesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [showFoldersDropdown, setShowFoldersDropdown] = useState(true);
+  const [showCoursesDropdown, setShowCoursesDropdown] = useState(false);
   const [showTagsDropdown, setShowTagsDropdown] = useState(false);
   const [deleteConfirmNote, setDeleteConfirmNote] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [detailViewContent, setDetailViewContent] = useState<any>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     content: { type: 'doc', content: [] },
     folderId: '',
     courseId: '',
+    taskId: '',
+    deadlineId: '',
+    recurringTaskPatternId: '',
+    recurringDeadlinePatternId: '',
     tags: [] as string[],
     links: [{ label: '', url: '' }],
   });
   const [nlpInput, setNlpInput] = useState('');
 
-  const { courses, notes, folders, settings, addNote, updateNote, deleteNote, toggleNotePin, initializeStore, updateSettings } = useAppStore();
+  const { courses, notes, folders, tasks, deadlines, settings, addNote, updateNote, deleteNote, toggleNotePin, initializeStore, updateSettings } = useAppStore();
 
   useEffect(() => {
     initializeStore();
     setMounted(true);
   }, [initializeStore]);
+
+  // Check for noteId in URL params to open a specific note
+  useEffect(() => {
+    const noteId = searchParams.get('note');
+    if (noteId && mounted && notes.length > 0) {
+      const noteExists = notes.some((n) => n.id === noteId);
+      if (noteExists) {
+        setSelectedNoteId(noteId);
+      }
+    }
+  }, [searchParams, mounted, notes]);
+
+  // Sync detail view content when selected note changes
+  useEffect(() => {
+    if (selectedNoteId) {
+      const note = notes.find((n) => n.id === selectedNoteId);
+      if (note) {
+        setDetailViewContent(note.content || { type: 'doc', content: [] });
+        setHasUnsavedChanges(false);
+      }
+    }
+  }, [selectedNoteId, notes]);
 
   if (!mounted) {
     return (
@@ -79,6 +111,10 @@ export default function NotesPage() {
         content: formData.content,
         folderId: formData.folderId || null,
         courseId: formData.courseId || null,
+        taskId: formData.taskId || null,
+        deadlineId: formData.deadlineId || null,
+        recurringTaskPatternId: formData.recurringTaskPatternId || null,
+        recurringDeadlinePatternId: formData.recurringDeadlinePatternId || null,
         tags: formData.tags,
         links,
       });
@@ -91,6 +127,10 @@ export default function NotesPage() {
           content: formData.content,
           folderId: formData.folderId || null,
           courseId: formData.courseId || null,
+          taskId: formData.taskId || null,
+          deadlineId: formData.deadlineId || null,
+          recurringTaskPatternId: formData.recurringTaskPatternId || null,
+          recurringDeadlinePatternId: formData.recurringDeadlinePatternId || null,
           tags: formData.tags,
           isPinned: false,
           links,
@@ -117,6 +157,10 @@ export default function NotesPage() {
       content: note.content || { type: 'doc', content: [] },
       folderId: note.folderId || '',
       courseId: note.courseId || '',
+      taskId: note.taskId || '',
+      deadlineId: note.deadlineId || '',
+      recurringTaskPatternId: note.recurringTaskPatternId || '',
+      recurringDeadlinePatternId: note.recurringDeadlinePatternId || '',
       tags: note.tags || [],
       links: note.links && note.links.length > 0 ? note.links : [{ label: '', url: '' }],
     });
@@ -131,6 +175,10 @@ export default function NotesPage() {
       content: { type: 'doc', content: [] },
       folderId: '',
       courseId: '',
+      taskId: '',
+      deadlineId: '',
+      recurringTaskPatternId: '',
+      recurringDeadlinePatternId: '',
       tags: [],
       links: [{ label: '', url: '' }],
     });
@@ -191,6 +239,13 @@ export default function NotesPage() {
     setDeleteConfirmNote(id);
   };
 
+  // Save content changes from detail view
+  const saveDetailViewContent = async () => {
+    if (!selectedNoteId || !hasUnsavedChanges) return;
+    await updateNote(selectedNoteId, { content: detailViewContent });
+    setHasUnsavedChanges(false);
+  };
+
   const confirmDeleteNote = async () => {
     if (!deleteConfirmNote) return;
     await deleteNote(deleteConfirmNote);
@@ -202,10 +257,16 @@ export default function NotesPage() {
   // Get all unique tags
   const allTags = Array.from(new Set(notes.flatMap((n) => n.tags || [])));
 
+  // Get courses that have notes associated with them
+  const coursesWithNotes = courses.filter((course) =>
+    notes.some((note) => note.courseId === course.id)
+  );
+
   // Filter and search notes
   const filtered = notes
     .filter((note) => {
       if (selectedFolder && note.folderId !== selectedFolder) return false;
+      if (selectedCourse && note.courseId !== selectedCourse) return false;
       if (selectedTags.size > 0 && !note.tags?.some((t) => selectedTags.has(t))) return false;
       if (!searchQuery.trim()) return true;
 
@@ -314,6 +375,45 @@ export default function NotesPage() {
                 )}
               </div>
 
+              {/* Course filter dropdown */}
+              {coursesWithNotes.length > 0 && (
+                <div style={{ marginTop: '14px', position: 'relative' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowCoursesDropdown(!showCoursesDropdown)}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', transition: 'color 150ms ease' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                  >
+                    <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)' }}>Courses</span>
+                    <ChevronDown size={16} style={{ transform: showCoursesDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms ease', color: 'var(--text)' }} />
+                  </button>
+                  {showCoursesDropdown && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0px', marginTop: '0px' }}>
+                      <label
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer', padding: '8px', borderRadius: '6px', transition: 'background-color 150ms ease, color 150ms ease', color: selectedCourse === null ? 'var(--text)' : 'var(--text-muted)', backgroundColor: selectedCourse === null ? 'rgba(255,255,255,0.05)' : 'transparent', minWidth: 0 }}
+                        onClick={() => setSelectedCourse(null)}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = selectedCourse === null ? 'rgba(255,255,255,0.05)' : 'transparent'; e.currentTarget.style.color = selectedCourse === null ? 'var(--text)' : 'var(--text-muted)'; }}
+                      >
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>All Courses</span>
+                      </label>
+                      {coursesWithNotes.map((course) => (
+                        <label
+                          key={course.id}
+                          style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer', padding: '8px', borderRadius: '6px', transition: 'background-color 150ms ease, color 150ms ease', color: selectedCourse === course.id ? 'var(--text)' : 'var(--text-muted)', backgroundColor: selectedCourse === course.id ? 'rgba(255,255,255,0.05)' : 'transparent', minWidth: 0 }}
+                          onClick={() => setSelectedCourse(course.id)}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = selectedCourse === course.id ? 'rgba(255,255,255,0.05)' : 'transparent'; e.currentTarget.style.color = selectedCourse === course.id ? 'var(--text)' : 'var(--text-muted)'; }}
+                        >
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{course.code}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Tag filter dropdown */}
               {allTags.length > 0 && (
                 <div style={{ marginTop: '14px', position: 'relative' }}>
@@ -395,6 +495,45 @@ export default function NotesPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Course filter dropdown */}
+                {coursesWithNotes.length > 0 && (
+                  <div style={{ marginTop: isMobile ? '12px' : '14px', position: 'relative' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowCoursesDropdown(!showCoursesDropdown)}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '4px 8px' : '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', transition: 'color 150ms ease' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                    >
+                      <span style={{ fontSize: isMobile ? '11px' : '14px', fontWeight: '600', color: 'var(--text)' }}>Courses</span>
+                      <ChevronDown size={isMobile ? 12 : 16} style={{ transform: showCoursesDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 150ms ease', color: 'var(--text)' }} />
+                    </button>
+                    {showCoursesDropdown && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0px', marginTop: '0px' }}>
+                        <label
+                          style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '4px' : '8px', fontSize: isMobile ? '11px' : '14px', cursor: 'pointer', padding: isMobile ? '4px 6px' : '8px', borderRadius: '6px', transition: 'background-color 150ms ease, color 150ms ease', color: selectedCourse === null ? 'var(--text)' : 'var(--text-muted)', backgroundColor: selectedCourse === null ? 'rgba(255,255,255,0.05)' : 'transparent', minWidth: 0 }}
+                          onClick={() => setSelectedCourse(null)}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = selectedCourse === null ? 'rgba(255,255,255,0.05)' : 'transparent'; e.currentTarget.style.color = selectedCourse === null ? 'var(--text)' : 'var(--text-muted)'; }}
+                        >
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>All Courses</span>
+                        </label>
+                        {coursesWithNotes.map((course) => (
+                          <label
+                            key={course.id}
+                            style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '4px' : '8px', fontSize: isMobile ? '11px' : '14px', cursor: 'pointer', padding: isMobile ? '4px 6px' : '8px', borderRadius: '6px', transition: 'background-color 150ms ease, color 150ms ease', color: selectedCourse === course.id ? 'var(--text)' : 'var(--text-muted)', backgroundColor: selectedCourse === course.id ? 'rgba(255,255,255,0.05)' : 'transparent', minWidth: 0 }}
+                            onClick={() => setSelectedCourse(course.id)}
+                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = selectedCourse === course.id ? 'rgba(255,255,255,0.05)' : 'transparent'; e.currentTarget.style.color = selectedCourse === course.id ? 'var(--text)' : 'var(--text-muted)'; }}
+                          >
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{course.code}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Tag filter dropdown */}
                 {allTags.length > 0 && (
@@ -480,6 +619,86 @@ export default function NotesPage() {
                     />
                   </div>
 
+                  {/* Link to Task or Assignment */}
+                  <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 gap-4'}`} style={{ marginTop: isMobile ? '8px' : '16px' }}>
+                    <Select
+                      label="Link to Task"
+                      value={formData.recurringTaskPatternId ? `pattern:${formData.recurringTaskPatternId}` : (formData.taskId ? `task:${formData.taskId}` : '')}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (!val) {
+                          setFormData({ ...formData, taskId: '', recurringTaskPatternId: '' });
+                        } else if (val.startsWith('pattern:')) {
+                          setFormData({ ...formData, taskId: '', recurringTaskPatternId: val.replace('pattern:', '') });
+                        } else if (val.startsWith('task:')) {
+                          setFormData({ ...formData, taskId: val.replace('task:', ''), recurringTaskPatternId: '' });
+                        }
+                      }}
+                      options={[
+                        { value: '', label: 'No Task' },
+                        ...(() => {
+                          // Get non-recurring tasks
+                          const nonRecurring = tasks
+                            .filter((t) => t.status === 'open' && !t.recurringPatternId)
+                            .map((t) => ({ value: `task:${t.id}`, label: t.title }));
+                          // Get one task per recurring pattern (earliest open instance)
+                          const patternMap = new Map<string, { title: string; dueAt: string | null }>();
+                          tasks
+                            .filter((t) => t.status === 'open' && t.recurringPatternId)
+                            .forEach((t) => {
+                              const existing = patternMap.get(t.recurringPatternId!);
+                              if (!existing || (t.dueAt && existing.dueAt && new Date(t.dueAt) < new Date(existing.dueAt))) {
+                                patternMap.set(t.recurringPatternId!, { title: t.title, dueAt: t.dueAt });
+                              }
+                            });
+                          const recurring = Array.from(patternMap.entries()).map(([patternId, { title }]) => ({
+                            value: `pattern:${patternId}`,
+                            label: `${title} (recurring)`,
+                          }));
+                          return [...nonRecurring, ...recurring];
+                        })(),
+                      ]}
+                    />
+                    <Select
+                      label="Link to Assignment"
+                      value={formData.recurringDeadlinePatternId ? `pattern:${formData.recurringDeadlinePatternId}` : (formData.deadlineId ? `deadline:${formData.deadlineId}` : '')}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (!val) {
+                          setFormData({ ...formData, deadlineId: '', recurringDeadlinePatternId: '' });
+                        } else if (val.startsWith('pattern:')) {
+                          setFormData({ ...formData, deadlineId: '', recurringDeadlinePatternId: val.replace('pattern:', '') });
+                        } else if (val.startsWith('deadline:')) {
+                          setFormData({ ...formData, deadlineId: val.replace('deadline:', ''), recurringDeadlinePatternId: '' });
+                        }
+                      }}
+                      options={[
+                        { value: '', label: 'No Assignment' },
+                        ...(() => {
+                          // Get non-recurring deadlines
+                          const nonRecurring = deadlines
+                            .filter((d) => d.status === 'open' && !d.recurringPatternId)
+                            .map((d) => ({ value: `deadline:${d.id}`, label: d.title }));
+                          // Get one deadline per recurring pattern (earliest open instance)
+                          const patternMap = new Map<string, { title: string; dueAt: string | null }>();
+                          deadlines
+                            .filter((d) => d.status === 'open' && d.recurringPatternId)
+                            .forEach((d) => {
+                              const existing = patternMap.get(d.recurringPatternId!);
+                              if (!existing || (d.dueAt && existing.dueAt && new Date(d.dueAt) < new Date(existing.dueAt))) {
+                                patternMap.set(d.recurringPatternId!, { title: d.title, dueAt: d.dueAt });
+                              }
+                            });
+                          const recurring = Array.from(patternMap.entries()).map(([patternId, { title }]) => ({
+                            value: `pattern:${patternId}`,
+                            label: `${title} (recurring)`,
+                          }));
+                          return [...nonRecurring, ...recurring];
+                        })(),
+                      ]}
+                    />
+                  </div>
+
                   <div style={{ marginTop: isMobile ? '8px' : '16px' }}>
                     <RichTextEditor
                       value={formData.content}
@@ -525,106 +744,128 @@ export default function NotesPage() {
             {selectedNote && !showForm ? (
               <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
                 <Card>
-                  <div className={isMobile ? 'space-y-2' : 'space-y-4'}>
-                  <div className="flex items-start justify-between" style={{ gap: isMobile ? '8px' : '16px', flexDirection: isMobile ? 'column' : 'row' }}>
+                  {/* Header with title and actions */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="flex items-center gap-2">
-                        <h2 className={isMobile ? 'text-lg font-bold text-[var(--text)]' : 'text-2xl font-bold text-[var(--text)]'}>{selectedNote.title}</h2>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <h2 style={{ fontSize: isMobile ? '18px' : '24px', fontWeight: 700, color: 'var(--text)', margin: 0 }}>{selectedNote.title}</h2>
                         {selectedNote.isPinned && (
-                          <Pin size={isMobile ? 16 : 20} className="text-[var(--accent)]" />
+                          <Pin size={isMobile ? 16 : 20} style={{ color: 'var(--accent)' }} />
                         )}
                       </div>
-                      <div className={`flex items-center gap-${isMobile ? '2' : '4'} mt-${isMobile ? '1' : '2'} text-${isMobile ? 'xs' : 'sm'} text-[var(--text-muted)]`} style={{ marginTop: isMobile ? '4px' : '8px', fontSize: isMobile ? '12px' : '14px', gap: isMobile ? '8px' : '16px' }}>
-                        {selectedNote.courseId && (
-                          <span>{courses.find((c) => c.id === selectedNote.courseId)?.code}</span>
-                        )}
-                        {selectedNote.folderId && (
-                          <span className="flex items-center gap-1">
-                            <FolderIcon size={isMobile ? 12 : 14} />
-                            {folders.find((f) => f.id === selectedNote.folderId)?.name}
-                          </span>
-                        )}
-                      </div>
+                      {(selectedNote.courseId || selectedNote.folderId) && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px', fontSize: isMobile ? '12px' : '14px', color: 'var(--text-muted)' }}>
+                          {selectedNote.courseId && (
+                            <span>{courses.find((c) => c.id === selectedNote.courseId)?.code}</span>
+                          )}
+                          {selectedNote.folderId && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <FolderIcon size={isMobile ? 12 : 14} />
+                              {folders.find((f) => f.id === selectedNote.folderId)?.name}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex gap-2" style={{ alignSelf: isMobile ? 'flex-start' : 'initial' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       <Button
                         variant="secondary"
-                        size={isMobile ? 'sm' : 'sm'}
+                        size="sm"
                         onClick={() => toggleNotePin(selectedNote.id)}
                         title={selectedNote.isPinned ? 'Unpin note' : 'Pin note'}
                       >
-                        <Pin size={isMobile ? 14 : 16} className={selectedNote.isPinned ? 'fill-current' : ''} />
+                        <Pin size={16} className={selectedNote.isPinned ? 'fill-current' : ''} />
                       </Button>
                       <Button
                         variant="secondary"
-                        size={isMobile ? 'sm' : 'sm'}
+                        size="sm"
                         onClick={() => startEdit(selectedNote)}
                       >
-                        <Edit2 size={isMobile ? 14 : 16} />
+                        <Edit2 size={16} />
                         {!isMobile && 'Edit'}
                       </Button>
                       <Button
                         variant="secondary"
-                        size={isMobile ? 'sm' : 'sm'}
+                        size="sm"
                         onClick={() => handleDeleteNote(selectedNote.id)}
                       >
-                        <Trash2 size={isMobile ? 14 : 16} />
+                        <Trash2 size={16} />
                         {!isMobile && 'Delete'}
                       </Button>
                     </div>
                   </div>
 
-                  {/* Rich text content display */}
-                  <div className="prose prose-sm max-w-none bg-[var(--panel-2)] rounded-lg text-[var(--text)]" style={{ padding: isMobile ? '8px' : '16px' }}>
-                    {selectedNote.tags && selectedNote.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-4" style={{ marginBottom: isMobile ? '8px' : '16px' }}>
-                        {selectedNote.tags.map((tag) => (
-                          <span key={tag} className="bg-[var(--accent)] text-white rounded text-xs" style={{ padding: isMobile ? '3px 6px' : '4px 8px', fontSize: isMobile ? '10px' : '12px' }}>
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <div className="leading-relaxed whitespace-pre-wrap" style={{ fontSize: isMobile ? '12px' : '14px' }}>
-                      {selectedNote.plainText || 'No content'}
-                    </div>
-                  </div>
-
-                  {selectedNote.links && selectedNote.links.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-[var(--text)] mb-2 flex items-center gap-2" style={{ fontSize: isMobile ? '12px' : '14px', marginBottom: isMobile ? '6px' : '8px' }}>
-                        <LinkIcon size={isMobile ? 14 : 16} />
-                        Links
-                      </h4>
-                      <ul className="space-y-1" style={{ gap: isMobile ? '4px' : '4px' }}>
-                        {selectedNote.links.map((link, idx) => (
-                          <li key={idx} style={{ fontSize: isMobile ? '12px' : '14px' }}>
-                            <a
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[var(--accent)] hover:underline"
-                              style={{ width: 'fit-content' }}
-                            >
-                              {link.label}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
+                  {/* Tags */}
+                  {selectedNote.tags && selectedNote.tags.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '16px' }}>
+                      {selectedNote.tags.map((tag) => (
+                        <span key={tag} style={{ backgroundColor: 'var(--accent)', color: 'white', borderRadius: '4px', padding: '4px 8px', fontSize: '12px' }}>
+                          {tag}
+                        </span>
+                      ))}
                     </div>
                   )}
 
-                  <div className="text-xs text-[var(--text-muted)] border-t border-[var(--border)]" style={{ paddingTop: isMobile ? '8px' : '16px', fontSize: isMobile ? '10px' : '12px' }}>
-                    Last updated {new Date(selectedNote.updatedAt).toLocaleDateString()}
+                  {/* Content */}
+                  <div style={{ marginTop: '16px' }}>
+                    {hasUnsavedChanges && (
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={saveDetailViewContent}
+                        >
+                          <Save size={14} />
+                          Save Changes
+                        </Button>
+                      </div>
+                    )}
+                    <RichTextEditor
+                      value={detailViewContent || { type: 'doc', content: [] }}
+                      onChange={(content) => {
+                        setDetailViewContent(content);
+                        setHasUnsavedChanges(true);
+                      }}
+                    />
                   </div>
 
-                  <Button
-                    variant="secondary"
-                    size={isMobile ? 'sm' : 'sm'}
-                    onClick={() => setSelectedNoteId(null)}
-                  >
-                    Back to List
-                  </Button>
+                  {/* Links */}
+                  {selectedNote.links && selectedNote.links.length > 0 && (
+                    <div style={{ marginTop: '16px' }}>
+                      <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <LinkIcon size={16} />
+                        Links
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {selectedNote.links.map((link, idx) => (
+                          <a
+                            key={idx}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ fontSize: '14px', color: 'var(--accent)', textDecoration: 'none' }}
+                            onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                            onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                          >
+                            {link.label || link.url}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      Last updated {new Date(selectedNote.updatedAt).toLocaleDateString()}
+                    </span>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setSelectedNoteId(null)}
+                    >
+                      Back to List
+                    </Button>
                   </div>
                 </Card>
               </div>

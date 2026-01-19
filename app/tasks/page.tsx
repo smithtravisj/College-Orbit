@@ -11,7 +11,7 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X, Upload, FileIcon, ChevronDown, Crown } from 'lucide-react';
+import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X, Upload, FileIcon, ChevronDown, Crown, FileText } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import Link from 'next/link';
 import CalendarPicker from '@/components/CalendarPicker';
@@ -146,7 +146,7 @@ export default function TasksPage() {
   const [showDeleteAllCompleted, setShowDeleteAllCompleted] = useState(false);
   const [hideRecurringCompleted, setHideRecurringCompleted] = useState(false);
 
-  const { courses, tasks, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, bulkUpdateTasks, bulkDeleteTasks, initializeStore } = useAppStore();
+  const { courses, tasks, notes, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, bulkUpdateTasks, bulkDeleteTasks, initializeStore } = useAppStore();
 
   // Handle filters card collapse state changes and save to database
   const handleFiltersCollapseChange = (isOpen: boolean) => {
@@ -1537,6 +1537,12 @@ export default function TasksPage() {
                           )}
                           {t.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
                           {isOverdueTask && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
+                          {notes.some(n => n.taskId === t.id || (t.recurringPatternId && n.recurringTaskPatternId === t.recurringPatternId)) && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: '600', color: 'var(--link)', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
+                              <FileText size={10} />
+                              Note
+                            </span>
+                          )}
                         </div>
                         {t.notes && (
                           <div style={{
@@ -2001,6 +2007,61 @@ export default function TasksPage() {
                   </div>
                 </div>
               )}
+
+              {/* Related Notes */}
+              {(() => {
+                const relatedNotes = notes.filter(n =>
+                  (previewingTask.courseId && n.courseId === previewingTask.courseId) ||
+                  n.taskId === previewingTask.id ||
+                  (previewingTask.recurringPatternId && n.recurringTaskPatternId === previewingTask.recurringPatternId)
+                );
+                if (relatedNotes.length === 0) return null;
+                return (
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '8px' }}>Related Notes</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {relatedNotes.slice(0, 3).map((note) => (
+                        <Link
+                          key={note.id}
+                          href={`/notes?note=${note.id}`}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '8px 12px',
+                            backgroundColor: 'var(--panel-2)',
+                            borderRadius: '6px',
+                            textDecoration: 'none',
+                            transition: 'background-color 150ms ease',
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--nav-active)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
+                        >
+                          <FileText size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                          <span style={{ fontSize: '13px', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {note.title}
+                          </span>
+                        </Link>
+                      ))}
+                      {relatedNotes.length > 3 && (
+                        <Link
+                          href={previewingTask.courseId ? `/notes?courseId=${previewingTask.courseId}` : '/notes'}
+                          style={{
+                            fontSize: '12px',
+                            color: 'var(--link)',
+                            textDecoration: 'none',
+                            paddingLeft: '4px',
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          View all {relatedNotes.length} related notes →
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Footer */}

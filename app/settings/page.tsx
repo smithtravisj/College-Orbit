@@ -53,6 +53,7 @@ export default function SettingsPage() {
   const [notifyAnnouncements, setNotifyAnnouncements] = useState(true);
   const [notifyExamReminders, setNotifyExamReminders] = useState(true);
   const [notifyAccountAlerts, setNotifyAccountAlerts] = useState(true);
+  const [autoCreateCourseFolders, setAutoCreateCourseFolders] = useState(false);
 
   // Local state for sliders (smooth UI while debouncing API calls)
   const [localGradientIntensity, setLocalGradientIntensity] = useState(50);
@@ -155,6 +156,9 @@ export default function SettingsPage() {
     setNotifyAnnouncements(settings.notifyAnnouncements !== false);
     setNotifyExamReminders(settings.notifyExamReminders !== false);
     setNotifyAccountAlerts(settings.notifyAccountAlerts !== false);
+
+    // Load notes settings
+    setAutoCreateCourseFolders(settings.autoCreateCourseFolders === true);
 
     // Load visual effects sliders
     setLocalGradientIntensity(settings.gradientIntensity ?? 50);
@@ -1333,6 +1337,30 @@ export default function SettingsPage() {
                   />
                 </label>
               </div>
+            </div>
+          </Card>
+
+          {/* Notes Settings */}
+          <Card title="Notes Settings">
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+              Configure how your notes are organized and managed.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                <div>
+                  <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Auto-create Course Folders</p>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Automatically create a notes folder when you add a new course</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={autoCreateCourseFolders}
+                  onChange={async (e) => {
+                    setAutoCreateCourseFolders(e.target.checked);
+                    await updateSettings({ autoCreateCourseFolders: e.target.checked });
+                  }}
+                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                />
+              </label>
             </div>
           </Card>
 
