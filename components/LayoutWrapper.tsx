@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import Navigation from './Navigation';
 import { MobileHeader } from './MobileHeader';
 import { FloatingMenuButton } from './FloatingMenuButton';
+import { QuickAddButton } from './QuickAddButton';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAnalyticsPageView } from '@/lib/useAnalytics';
 import useAppStore from '@/lib/store';
@@ -117,6 +118,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
         <BackgroundDecoration />
         <MobileHeader />
         <Navigation />
+        <QuickAddButton />
         <FloatingMenuButton />
         <main className={styles.mobileMain}>
           {children}
@@ -130,6 +132,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
     <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg)' }}>
       <BackgroundDecoration />
       <Navigation />
+      <QuickAddButton />
       <main style={{ marginLeft: '224px', minWidth: 0 }}>
         {children}
       </main>
