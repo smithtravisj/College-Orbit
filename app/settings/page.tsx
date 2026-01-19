@@ -1477,7 +1477,7 @@ export default function SettingsPage() {
                 </Button>
               </div>
               {/* Keyboard Shortcuts */}
-              <div style={{ paddingTop: '22px', paddingBottom: '6px', borderTop: '1px solid var(--border)' }}>
+              <div style={{ paddingTop: '22px', paddingBottom: '16px', borderTop: '1px solid var(--border)' }}>
                 <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
                   Keyboard Shortcuts
                 </p>
