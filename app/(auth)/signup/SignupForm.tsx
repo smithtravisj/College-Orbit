@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -9,31 +9,12 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
 
-const UNIVERSITIES = [
-  'Arizona State University',
-  'Brigham Young University',
-  'Brigham Young University Hawaii',
-  'Brigham Young University Idaho',
-  'Ohio State University',
-  'UNC Chapel Hill',
-  'University of Central Florida',
-  'University of Texas at Austin',
-  'Utah State University',
-  'Utah Valley University',
-];
-
-const COLLEGE_ABBREVIATIONS: Record<string, string> = {
-  'Brigham Young University': 'BYU',
-  'Brigham Young University Idaho': 'BYUI',
-  'Brigham Young University Hawaii': 'BYUH',
-  'UNC Chapel Hill': 'UNC',
-  'Utah State University': 'USU',
-  'Utah Valley University': 'UVU',
-  'Arizona State University': 'ASU',
-  'University of Central Florida': 'UCF',
-  'Ohio State University': 'OSU',
-  'University of Texas at Austin': 'UT Austin',
-};
+interface CollegeData {
+  fullName: string;
+  acronym: string;
+  darkAccent: string;
+  lightAccent: string;
+}
 
 export default function SignupForm() {
   const router = useRouter();
@@ -47,15 +28,40 @@ export default function SignupForm() {
   const [collegeRequestName, setCollegeRequestName] = useState('');
   const [collegeButtonColor, setCollegeButtonColor] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [collegesList, setCollegesList] = useState<CollegeData[]>([]);
+
+  // Fetch colleges from API (database is source of truth)
+  useEffect(() => {
+    const fetchColleges = async () => {
+      try {
+        const response = await fetch('/api/colleges');
+        if (response.ok) {
+          const data = await response.json();
+          // Use database colleges directly (already filtered by isActive)
+          setCollegesList(data.colleges || []);
+        }
+      } catch (error) {
+        console.error('Error fetching colleges:', error);
+      }
+    };
+    fetchColleges();
+  }, []);
 
   const handleUniversityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedUni = e.target.value;
     setUniversity(selectedUni);
 
     if (selectedUni) {
-      // Use light mode accent colors for better visibility in dark mode (like links elsewhere)
-      const palette = getCollegeColorPalette(selectedUni, 'light');
-      setCollegeButtonColor(palette.accent);
+      // Find the college in the list to get its colors
+      const college = collegesList.find(c => c.fullName === selectedUni);
+      if (college) {
+        // Use light accent for better visibility
+        setCollegeButtonColor(college.lightAccent);
+      } else {
+        // Fallback to palette lookup
+        const palette = getCollegeColorPalette(selectedUni, 'light');
+        setCollegeButtonColor(palette.accent);
+      }
     } else {
       setCollegeButtonColor('');
     }
@@ -235,7 +241,7 @@ export default function SignupForm() {
           textShadow: collegeButtonColor ? `0 0 40px ${collegeButtonColor}40` : 'none',
           filter: collegeButtonColor ? 'brightness(0.85)' : 'none',
         }}>
-          {university ? `${COLLEGE_ABBREVIATIONS[university]} Orbit` : 'College Orbit'}
+          {university ? `${collegesList.find(c => c.fullName === university)?.acronym || university} Orbit` : 'College Orbit'}
         </h1>
         <p style={{
           color: 'var(--text-muted)',
@@ -374,9 +380,9 @@ export default function SignupForm() {
                 }}
               >
                 <option value="">Select University</option>
-                {UNIVERSITIES.map((uni) => (
-                  <option key={uni} value={uni}>
-                    {uni}
+                {collegesList.map((college) => (
+                  <option key={college.fullName} value={college.fullName}>
+                    {college.fullName}
                   </option>
                 ))}
               </select>
