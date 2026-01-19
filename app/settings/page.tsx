@@ -1476,6 +1476,30 @@ export default function SettingsPage() {
                   Restart Tutorial
                 </Button>
               </div>
+              {/* Keyboard Shortcuts */}
+              <div style={{ paddingTop: '22px', paddingBottom: '6px', borderTop: '1px solid var(--border)' }}>
+                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+                  Keyboard Shortcuts
+                </p>
+                <p className="text-sm text-[var(--text-muted)]">
+                  Press <kbd style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: '22px',
+                    height: '22px',
+                    padding: '0 6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    backgroundColor: 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '4px',
+                    color: 'var(--text)',
+                    marginLeft: '4px',
+                    marginRight: '4px',
+                  }}>?</kbd> anywhere to view all available shortcuts
+                </p>
+              </div>
               {/* Contact Section */}
               <div style={{ paddingTop: '22px', paddingBottom: '6px', borderTop: '1px solid var(--border)' }}>
                 <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
