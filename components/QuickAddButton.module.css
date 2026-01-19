@@ -1,0 +1,108 @@
+/* Circular FAB - used on mobile (bottom) and desktop non-dashboard pages (top right) */
+.fab {
+  position: fixed;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 150ms ease;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.fab:active {
+  transform: scale(0.95);
+}
+
+/* Mobile positioning for circular FAB */
+@media (max-width: 767px) {
+  .fab {
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    /* Position to the left of hamburger: hamburger is at right: 20px + safe-area, 56px wide, 12px gap */
+    right: calc(20px + 56px + 12px + env(safe-area-inset-right, 0px));
+  }
+}
+
+/* Desktop positioning for circular FAB (non-dashboard pages) */
+@media (min-width: 768px) {
+  .fab {
+    top: 24px;
+    right: 24px;
+  }
+}
+
+/* Desktop: Circular FAB at bottom right (tasks, assignments, exams, notes, courses, shopping) */
+.fabBottomRight {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 150ms ease;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.fabBottomRight:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.fabBottomRight:active {
+  transform: scale(0.95);
+}
+
+/* Desktop: Pill-shaped FAB with label (dashboard/calendar only) */
+.fabDesktop {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  height: 44px;
+  padding: 0 18px 0 14px;
+  border-radius: 22px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 150ms ease;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.fabDesktop:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.fabDesktop:active {
+  transform: scale(0.98);
+}
+
+.fabLabel {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  white-space: nowrap;
+}

@@ -2,16 +2,32 @@
 
 import { useMobileNav } from '@/context/MobileNavContext';
 import useAppStore from '@/lib/store';
-import { getCollegeColorPalette } from '@/lib/collegeColors';
+import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import styles from './FloatingMenuButton.module.css';
 
 export function FloatingMenuButton() {
   const { toggleDrawer } = useMobileNav();
   const university = useAppStore((state) => state.settings.university) || null;
   const theme = useAppStore((state) => state.settings.theme);
-  const palette = getCollegeColorPalette(university, theme);
-  const buttonColor = palette.accent;
+  const isPremium = useAppStore((state) => state.isPremium);
+  const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const savedCustomColors = useAppStore((state) => state.settings.customColors);
+  const glowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
+
+  // Only use custom theme if premium
+  const useCustomTheme = isPremium ? savedUseCustomTheme : false;
+  const customColors = isPremium ? savedCustomColors : null;
+
+  // Determine accent color based on custom theme or college palette
+  const buttonColor = useCustomTheme && customColors
+    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
+    : getCollegeColorPalette(university, theme).accent;
+
   const iconColor = theme === 'light' ? '#000000' : 'white';
+
+  // Calculate glow intensity (0-100 scale mapped to opacity and spread)
+  const glowOpacity = Math.round((glowIntensity / 100) * 0.6 * 255).toString(16).padStart(2, '0');
+  const glowSpread = 12 + (glowIntensity / 100) * 8;
 
   const handleClick = (e: React.MouseEvent) => {
     console.log('FAB clicked!');
@@ -26,7 +42,7 @@ export function FloatingMenuButton() {
       style={{
         backgroundColor: buttonColor,
         backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.15) 100%)',
-        boxShadow: `0 3px 12px ${buttonColor}60`,
+        boxShadow: `0 0 ${glowSpread}px ${buttonColor}${glowOpacity}, 0 3px 12px ${buttonColor}60`,
         pointerEvents: 'auto',
       }}
       aria-label="Open menu"
