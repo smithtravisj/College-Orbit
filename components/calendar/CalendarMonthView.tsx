@@ -57,6 +57,11 @@ export default function CalendarMonthView({
     dateStr: string;
     position: { top: number; left: number };
   } | null>(null);
+  const [ghostPreview, setGhostPreview] = useState<{
+    dateStr: string;
+    position: { top?: number; bottom?: number; left?: number; right?: number };
+  } | null>(null);
+  const ghostPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const dotsRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const dates = useMemo(() => getDatesInMonth(year, month), [year, month]);
@@ -174,6 +179,31 @@ export default function CalendarMonthView({
                 if (isCurrentMonth) {
                   e.currentTarget.style.backgroundColor = 'var(--panel-2)';
                   e.currentTarget.style.borderColor = 'var(--border-hover)';
+
+                  // Show ghost preview after a short delay (desktop only)
+                  if (!isMobile && dayEvents.length > 0) {
+                    if (ghostPreviewTimerRef.current) {
+                      clearTimeout(ghostPreviewTimerRef.current);
+                    }
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+                    // Position to the right of the cell, or left if near right edge
+                    const isNearRightEdge = rect.right + 260 > viewportWidth;
+                    // Position from bottom if near bottom edge
+                    const isNearBottomEdge = rect.top + 300 > viewportHeight;
+                    ghostPreviewTimerRef.current = setTimeout(() => {
+                      setGhostPreview({
+                        dateStr,
+                        position: {
+                          top: isNearBottomEdge ? undefined : rect.top,
+                          bottom: isNearBottomEdge ? viewportHeight - rect.bottom : undefined,
+                          left: isNearRightEdge ? undefined : rect.right + 8,
+                          right: isNearRightEdge ? viewportWidth - rect.left + 8 : undefined,
+                        },
+                      });
+                    }, 300);
+                  }
                 }
               }}
               onMouseLeave={(e) => {
@@ -186,6 +216,13 @@ export default function CalendarMonthView({
                     e.currentTarget.style.borderColor = 'var(--border)';
                   }
                 }
+                // Clear ghost preview with a short delay to allow moving to the preview
+                if (ghostPreviewTimerRef.current) {
+                  clearTimeout(ghostPreviewTimerRef.current);
+                }
+                ghostPreviewTimerRef.current = setTimeout(() => {
+                  setGhostPreview(null);
+                }, 100);
               }}
             >
               {/* Date number */}
@@ -465,6 +502,129 @@ export default function CalendarMonthView({
           </div>
         </>
       )}
+
+      {/* Ghost preview on day hover */}
+      {ghostPreview && (() => {
+        const unsortedEvents = eventsByDate.get(ghostPreview.dateStr) || [];
+        // Sort by time first, then by type
+        const typeOrder: Record<string, number> = { course: 0, exam: 1, deadline: 2, task: 3, 'calendar-event': 4 };
+        const getEventTime = (event: typeof unsortedEvents[0]) => {
+          if (event.time) return event.time;
+          // Extract time from dueAt, examAt, or startAt
+          const dateStr = event.dueAt || event.examAt || event.startAt;
+          if (dateStr && dateStr.includes('T')) {
+            const timePart = dateStr.split('T')[1];
+            if (timePart) return timePart.substring(0, 5); // HH:MM
+          }
+          return null;
+        };
+        const previewEvents = [...unsortedEvents].sort((a, b) => {
+          // Convert time to minutes for comparison (null/undefined = end of day)
+          const getMinutes = (time: string | null) => {
+            if (!time) return 24 * 60; // No time = end of day
+            const [h, m] = time.split(':').map(Number);
+            return h * 60 + m;
+          };
+          const timeA = getMinutes(getEventTime(a));
+          const timeB = getMinutes(getEventTime(b));
+          if (timeA !== timeB) return timeA - timeB;
+          // Same time, sort by type
+          return (typeOrder[a.type] ?? 5) - (typeOrder[b.type] ?? 5);
+        });
+        const previewDate = new Date(ghostPreview.dateStr + 'T00:00:00');
+        const dayName = previewDate.toLocaleDateString('en-US', { weekday: 'short' });
+        const monthDay = previewDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+        return (
+          <div
+            style={{
+              position: 'fixed',
+              top: ghostPreview.position.top != null ? `${ghostPreview.position.top}px` : 'auto',
+              bottom: ghostPreview.position.bottom != null ? `${ghostPreview.position.bottom}px` : 'auto',
+              left: ghostPreview.position.left != null ? `${ghostPreview.position.left}px` : 'auto',
+              right: ghostPreview.position.right != null ? `${ghostPreview.position.right}px` : 'auto',
+              backgroundColor: 'var(--panel)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-control)',
+              padding: '12px',
+              paddingTop: '0px',
+              minWidth: '200px',
+              maxWidth: '250px',
+              maxHeight: '280px',
+              overflowY: 'auto',
+              zIndex: 998,
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+              animation: 'ghostFadeIn 0.15s ease-out',
+            }}
+            onMouseEnter={() => {
+              // Keep preview open when hovering over it
+              if (ghostPreviewTimerRef.current) {
+                clearTimeout(ghostPreviewTimerRef.current);
+                ghostPreviewTimerRef.current = null;
+              }
+            }}
+            onMouseLeave={() => {
+              setGhostPreview(null);
+            }}
+          >
+            <style>{`
+              @keyframes ghostFadeIn {
+                from { transform: translateX(-4px); }
+                to { transform: translateX(0); }
+              }
+            `}</style>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-2)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px', position: 'sticky', top: '0px', backgroundColor: 'var(--panel)', paddingTop: '12px', paddingBottom: '4px', marginLeft: '-12px', marginRight: '-12px', paddingLeft: '12px', paddingRight: '12px' }}>
+              {dayName}, {monthDay}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {previewEvents.map((event) => {
+                const color = getMonthViewColor(event);
+                const eventTime = getEventTime(event);
+                const timeStr = eventTime
+                  ? new Date(`2000-01-01T${eventTime}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+                  : event.allDay ? 'All day' : 'Due';
+
+                return (
+                  <div
+                    key={event.id}
+                    onClick={() => {
+                      setSelectedEvent(event);
+                      setGhostPreview(null);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '8px',
+                      padding: '6px 8px',
+                      borderRadius: '4px',
+                      backgroundColor: `${color}15`,
+                      borderLeft: `3px solid ${color}`,
+                      cursor: 'pointer',
+                      transition: 'background-color 0.15s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = `${color}25`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = `${color}15`;
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {event.type === 'course' ? event.courseCode : event.title}
+                      </div>
+                      <div style={{ fontSize: '0.6rem', color: 'var(--text-2)', marginTop: '2px' }}>
+                        {timeStr}
+                        {event.type === 'course' && event.location && ` · ${event.location}`}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       <EventDetailModal
         isOpen={selectedEvent !== null}

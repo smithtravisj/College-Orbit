@@ -29,6 +29,7 @@ interface CalendarDayViewProps {
   onTimeSlotClick?: (date: Date, time?: string, allDay?: boolean) => void;
   onEventUpdate?: (updatedEvent: CustomCalendarEvent) => void;
   onStatusChange?: () => void;
+  onEventReschedule?: (eventType: string, eventId: string, newDate: Date, allDay: boolean) => void;
 }
 
 const HOUR_HEIGHT = 60; // pixels
@@ -47,12 +48,16 @@ export default function CalendarDayView({
   calendarEvents = [],
   onEventUpdate,
   onStatusChange,
+  onEventReschedule,
 }: CalendarDayViewProps) {
   const isMobile = useIsMobile();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const timeGridRef = useRef<HTMLDivElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedExclusion, setSelectedExclusion] = useState<ExcludedDate | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [draggedEvent, setDraggedEvent] = useState<CalendarEvent | null>(null);
+  const [dropIndicator, setDropIndicator] = useState<{ top: number; isAllDay: boolean } | null>(null);
 
   // Check if the viewed date is today
   const isViewingToday = useMemo(() => {
@@ -131,6 +136,106 @@ export default function CalendarDayView({
     day: 'numeric',
   });
 
+  // Drag and drop helpers
+  const isDraggable = (event: CalendarEvent) => {
+    // Only tasks, deadlines, exams, and calendar events are draggable (not courses)
+    return event.type !== 'course' && !isMobile;
+  };
+
+  const handleDragStart = (e: React.DragEvent, event: CalendarEvent) => {
+    if (!isDraggable(event)) {
+      e.preventDefault();
+      return;
+    }
+    setDraggedEvent(event);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', JSON.stringify({ type: event.type, id: event.id }));
+    // Make the drag image slightly transparent
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5';
+    }
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    setDraggedEvent(null);
+    setDropIndicator(null);
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1';
+    }
+  };
+
+  const handleTimeGridDragOver = (e: React.DragEvent) => {
+    if (!draggedEvent) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    // Calculate time from Y position
+    const rect = timeGridRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const y = e.clientY - rect.top;
+    // Snap to 15-minute intervals
+    const totalMinutes = Math.round((y / hourHeight) * 60 / 15) * 15;
+    const snappedY = (totalMinutes / 60) * hourHeight;
+
+    setDropIndicator({ top: snappedY, isAllDay: false });
+  };
+
+  const handleTimeGridDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!draggedEvent || !onEventReschedule) return;
+
+    const rect = timeGridRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const y = e.clientY - rect.top;
+    // Snap to 15-minute intervals
+    const totalMinutes = Math.round((y / hourHeight) * 60 / 15) * 15;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    // Create new date with the dropped time
+    const newDate = new Date(date);
+    newDate.setHours(hours, minutes, 0, 0);
+
+    onEventReschedule(draggedEvent.type, draggedEvent.id, newDate, false);
+    setDraggedEvent(null);
+    setDropIndicator(null);
+  };
+
+  const handleAllDayDragOver = (e: React.DragEvent) => {
+    if (!draggedEvent) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDropIndicator({ top: 0, isAllDay: true });
+  };
+
+  const handleAllDayDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!draggedEvent || !onEventReschedule) return;
+
+    // Create new date at start of day (all-day event)
+    const newDate = new Date(date);
+    newDate.setHours(23, 59, 0, 0);
+
+    onEventReschedule(draggedEvent.type, draggedEvent.id, newDate, true);
+    setDraggedEvent(null);
+    setDropIndicator(null);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if leaving the container entirely
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (
+      e.clientX < rect.left ||
+      e.clientX > rect.right ||
+      e.clientY < rect.top ||
+      e.clientY > rect.bottom
+    ) {
+      setDropIndicator(null);
+    }
+  };
+
   const exclusionType = getExclusionType(date, excludedDates);
 
   // Get course code and color for cancelled classes
@@ -162,7 +267,21 @@ export default function CalendarDayView({
         if (allDayEvents.length === 0 && !exclusionType) return null;
 
         return (
-          <div style={{ paddingLeft: isMobile ? '8px' : '16px', paddingRight: isMobile ? '8px' : '16px', paddingTop: isMobile ? '6px' : '12px', paddingBottom: isMobile ? '6px' : '12px', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--panel)', flexShrink: 0 }}>
+          <div
+            style={{
+              paddingLeft: isMobile ? '8px' : '16px',
+              paddingRight: isMobile ? '8px' : '16px',
+              paddingTop: isMobile ? '6px' : '12px',
+              paddingBottom: isMobile ? '6px' : '12px',
+              borderBottom: '1px solid var(--border)',
+              backgroundColor: dropIndicator?.isAllDay ? 'var(--accent-2)' : 'var(--panel)',
+              flexShrink: 0,
+              transition: 'background-color 0.15s',
+            }}
+            onDragOver={handleAllDayDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleAllDayDrop}
+          >
             <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: isMobile ? '4px' : '8px' }}>All Day</p>
             <div style={{ display: 'flex', gap: isMobile ? '2px' : '4px', flexWrap: 'wrap', alignItems: 'center' }}>
               {exclusionType && (() => {
@@ -211,9 +330,13 @@ export default function CalendarDayView({
               })()}
               {allDayEvents.map((event) => {
                 const color = getEventColor(event);
+                const canDrag = isDraggable(event);
                 return (
                   <div
                     key={event.id}
+                    draggable={canDrag}
+                    onDragStart={(e) => handleDragStart(e, event)}
+                    onDragEnd={handleDragEnd}
                     style={{
                       paddingLeft: isMobile ? '6px' : '8px',
                       paddingRight: isMobile ? '6px' : '8px',
@@ -227,7 +350,7 @@ export default function CalendarDayView({
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       flex: '0 0 auto',
-                      cursor: 'pointer',
+                      cursor: canDrag ? 'grab' : 'pointer',
                     }}
                     title={event.title}
                     onClick={() => setSelectedEvent(event)}
@@ -269,7 +392,13 @@ export default function CalendarDayView({
         </div>
 
         {/* Events column */}
-        <div style={{ flex: 1, position: 'relative', paddingTop: isMobile ? '4px' : '8px', paddingRight: isMobile ? '4px' : '8px' }}>
+        <div
+          ref={timeGridRef}
+          style={{ flex: 1, position: 'relative', paddingTop: isMobile ? '4px' : '8px', paddingRight: isMobile ? '4px' : '8px' }}
+          onDragOver={handleTimeGridDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleTimeGridDrop}
+        >
           {/* Hour grid lines */}
           {hours.map((hour) => {
             if (hour === START_HOUR) return null; // Skip first hour line
@@ -326,6 +455,39 @@ export default function CalendarDayView({
               </div>
             );
           })()}
+
+          {/* Drop indicator line */}
+          {dropIndicator && !dropIndicator.isAllDay && (
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: `${dropIndicator.top}px`,
+                zIndex: 25,
+                pointerEvents: 'none',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <div
+                style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--accent)',
+                  marginLeft: '-5px',
+                }}
+              />
+              <div
+                style={{
+                  flex: 1,
+                  height: '2px',
+                  backgroundColor: 'var(--accent)',
+                }}
+              />
+            </div>
+          )}
 
           {/* Course events as blocks */}
           {courseEvents.map((event) => {
@@ -408,6 +570,7 @@ export default function CalendarDayView({
             const height = Math.max(baseHeight * scaleFactor, minHeight);
             const isCompact = baseHeight * scaleFactor < minHeight;
             const color = getEventColor(event);
+            const canDrag = isDraggable(event);
 
             const eventWidth = 100 / layout.totalColumns;
             const eventLeft = layout.column * eventWidth;
@@ -424,6 +587,9 @@ export default function CalendarDayView({
             return (
               <div
                 key={event.id}
+                draggable={canDrag}
+                onDragStart={(e) => handleDragStart(e, event)}
+                onDragEnd={handleDragEnd}
                 style={{
                   position: 'absolute',
                   left: `calc(${eventLeft}% + ${isMobile ? '4px' : '8px'})`,
@@ -431,7 +597,7 @@ export default function CalendarDayView({
                   borderRadius: isMobile ? '6px' : 'var(--radius-control)',
                   padding: isMobile ? '4px 4px 2px 4px' : '6px 8px',
                   overflow: 'hidden',
-                  cursor: 'pointer',
+                  cursor: canDrag ? 'grab' : 'pointer',
                   transition: 'opacity 0.2s',
                   top: `${top}px`,
                   height: `${height}px`,
@@ -486,6 +652,7 @@ export default function CalendarDayView({
               const top = (baseTop + 1) * scaleFactor;
               const height = baseHeight * scaleFactor;
               const color = getEventColor(event);
+              const canDrag = isDraggable(event);
 
               const eventWidth = 100 / layout.totalColumns;
               const eventLeft = layout.column * eventWidth;
@@ -493,13 +660,16 @@ export default function CalendarDayView({
               return (
                 <div
                   key={event.id}
+                  draggable={canDrag}
+                  onDragStart={(e) => handleDragStart(e, event)}
+                  onDragEnd={handleDragEnd}
                   style={{
                     position: 'absolute',
                     left: `calc(${eventLeft}% + ${isMobile ? '4px' : '8px'})`,
                     width: `calc(${eventWidth}% - ${isMobile ? '8px' : '16px'})`,
                     borderRadius: isMobile ? '6px' : 'var(--radius-control)',
                     padding: isMobile ? '4px 4px 2px 4px' : '8px',
-                    cursor: 'pointer',
+                    cursor: canDrag ? 'grab' : 'pointer',
                     transition: 'opacity 0.2s',
                     top: `${top}px`,
                     height: `${height}px`,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
@@ -14,6 +15,8 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [mounted, setMounted] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<Date>(() => {
     if (value) {
       return new Date(value + 'T00:00:00');
@@ -21,6 +24,13 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
     return new Date();
   });
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Track client-side mounting
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const selectedDate = value ? new Date(value + 'T00:00:00') : null;
   const today = new Date();
@@ -41,22 +51,32 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
     const trimmed = input.trim();
     if (!trimmed) return null;
 
-    const currentYear = new Date().getFullYear();
+    const now = new Date();
+    const currentYear = now.getFullYear();
     const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
-    // Try parsing with built-in Date
-    const directParse = new Date(trimmed);
-    if (!isNaN(directParse.getTime()) && directParse.getFullYear() > 1970) {
-      return directParse;
-    }
+    // Helper to pick current or next year if date already passed
+    const pickYear = (month: number, day: number): number => {
+      const thisYearDate = new Date(currentYear, month, day);
+      thisYearDate.setHours(23, 59, 59, 999);
+      if (thisYearDate < now) {
+        return currentYear + 1;
+      }
+      return currentYear;
+    };
 
-    // Try MM/DD or MM-DD format
+    // Try MM/DD or MM-DD format first
     const slashMatch = trimmed.match(/^(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?$/);
     if (slashMatch) {
       const month = parseInt(slashMatch[1]) - 1;
       const day = parseInt(slashMatch[2]);
-      let year = slashMatch[3] ? parseInt(slashMatch[3]) : currentYear;
-      if (year < 100) year += 2000;
+      let year: number;
+      if (slashMatch[3]) {
+        year = parseInt(slashMatch[3]);
+        if (year < 100) year += 2000;
+      } else {
+        year = pickYear(month, day);
+      }
       if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
         return new Date(year, month, day);
       }
@@ -68,8 +88,13 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
       const shortMatch = lower.match(new RegExp(`^${monthNames[i]}[a-z]*\\.?\\s+(\\d{1,2})(?:[,\\s]+(\\d{2,4}))?$`));
       if (shortMatch) {
         const day = parseInt(shortMatch[1]);
-        let year = shortMatch[2] ? parseInt(shortMatch[2]) : currentYear;
-        if (year < 100) year += 2000;
+        let year: number;
+        if (shortMatch[2]) {
+          year = parseInt(shortMatch[2]);
+          if (year < 100) year += 2000;
+        } else {
+          year = pickYear(i, day);
+        }
         if (day >= 1 && day <= 31) {
           return new Date(year, i, day);
         }
@@ -81,12 +106,23 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
       const dayFirstMatch = lower.match(new RegExp(`^(\\d{1,2})\\s+${monthNames[i]}[a-z]*\\.?(?:[,\\s]+(\\d{2,4}))?$`));
       if (dayFirstMatch) {
         const day = parseInt(dayFirstMatch[1]);
-        let year = dayFirstMatch[2] ? parseInt(dayFirstMatch[2]) : currentYear;
-        if (year < 100) year += 2000;
+        let year: number;
+        if (dayFirstMatch[2]) {
+          year = parseInt(dayFirstMatch[2]);
+          if (year < 100) year += 2000;
+        } else {
+          year = pickYear(i, day);
+        }
         if (day >= 1 && day <= 31) {
           return new Date(year, i, day);
         }
       }
+    }
+
+    // Try parsing with built-in Date as fallback (for full date strings like "January 15, 2025")
+    const directParse = new Date(trimmed);
+    if (!isNaN(directParse.getTime()) && directParse.getFullYear() >= currentYear - 1) {
+      return directParse;
     }
 
     return null;
@@ -123,22 +159,32 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
     }
   };
 
+  // Calculate dropdown position when opening
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 8,
+        left: rect.left,
+      });
+    }
+  }, [isOpen]);
+
   // Close popup on Escape key or click outside
   useEffect(() => {
     if (!isOpen) return;
 
-    console.log('[CalendarPicker] Dropdown opened');
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        console.log('[CalendarPicker] Escape key pressed, closing dropdown');
         setIsOpen(false);
       }
     };
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        console.log('[CalendarPicker] Click outside, closing dropdown');
+      const target = event.target as Node;
+      const isOutsideContainer = containerRef.current && !containerRef.current.contains(target);
+      const isOutsideDropdown = dropdownRef.current && !dropdownRef.current.contains(target);
+      if (isOutsideContainer && isOutsideDropdown) {
         setIsOpen(false);
       }
     };
@@ -146,7 +192,6 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      console.log('[CalendarPicker] Cleaning up listeners');
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -190,12 +235,22 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
         </label>
       )}
       <input
+        ref={inputRef}
         type="text"
         value={inputValue}
         onChange={handleInputChange}
         onBlur={handleInputBlur}
         onKeyDown={handleInputKeyDown}
-        onFocus={() => setIsOpen(true)}
+        onFocus={() => {
+          if (inputRef.current) {
+            const rect = inputRef.current.getBoundingClientRect();
+            setDropdownPosition({
+              top: rect.bottom + 8,
+              left: rect.left,
+            });
+          }
+          setIsOpen(true);
+        }}
         placeholder={isMobile ? 'e.g. 1/15, Jan 15' : 'e.g. 1/15, Jan 15, 2025'}
         style={{
           width: '100%',
@@ -211,26 +266,20 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
         }}
       />
 
-      {isOpen && (
+      {mounted && isOpen && createPortal(
         <div
-          onClick={(e) => {
-            console.log('[CalendarPicker] Click inside dropdown, stopping propagation');
-            e.stopPropagation();
-          }}
-          onMouseDown={(e) => {
-            console.log('[CalendarPicker] MouseDown inside dropdown, stopping propagation');
-            e.stopPropagation();
-          }}
+          ref={dropdownRef}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
           style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            marginTop: '8px',
+            position: 'fixed',
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
             backgroundColor: 'var(--panel-2)',
             border: '1px solid var(--border)',
             borderRadius: 'var(--radius-control)',
             padding: '12px',
-            zIndex: 9999,
+            zIndex: 99999,
             minWidth: '260px',
             boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
             pointerEvents: 'auto',
@@ -388,7 +437,8 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
             })}
           </div>
 
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
