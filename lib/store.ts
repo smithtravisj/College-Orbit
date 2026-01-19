@@ -150,6 +150,33 @@ interface AppStore {
   deleteAllData: () => void;
 }
 
+// Helper to save full state to localStorage
+const saveToLocalStorage = (state: AppStore) => {
+  if (typeof window === 'undefined') return;
+  try {
+    const storageKey = state.getStorageKey();
+    if (!storageKey || storageKey === 'byu-survival-tool-') return;
+    localStorage.setItem(storageKey, JSON.stringify({
+      courses: state.courses,
+      deadlines: state.deadlines,
+      tasks: state.tasks,
+      exams: state.exams,
+      notes: state.notes,
+      folders: state.folders,
+      settings: state.settings,
+      excludedDates: state.excludedDates,
+      gpaEntries: state.gpaEntries,
+      recurringPatterns: state.recurringPatterns,
+      recurringDeadlinePatterns: state.recurringDeadlinePatterns,
+      recurringExamPatterns: state.recurringExamPatterns,
+      shoppingItems: state.shoppingItems,
+      calendarEvents: state.calendarEvents,
+    }));
+  } catch (error) {
+    console.warn('Failed to save to localStorage:', error);
+  }
+};
+
 const useAppStore = create<AppStore>((set, get) => ({
   courses: [],
   deadlines: [],
@@ -1628,7 +1655,8 @@ const useAppStore = create<AppStore>((set, get) => ({
         calendarEvents: state.calendarEvents.map((e) => (e.id === tempId ? newEvent : e)),
       }));
 
-      // Invalidate calendar cache
+      // Save to localStorage and invalidate calendar cache
+      saveToLocalStorage(get());
       get().invalidateCalendarCache();
     } catch (error) {
       set((state) => ({
@@ -1660,7 +1688,8 @@ const useAppStore = create<AppStore>((set, get) => ({
         calendarEvents: state.calendarEvents.map((e) => (e.id === id ? updatedEvent : e)),
       }));
 
-      // Invalidate calendar cache
+      // Save to localStorage and invalidate calendar cache
+      saveToLocalStorage(get());
       get().invalidateCalendarCache();
     } catch (error) {
       await get().loadFromDatabase();
@@ -1678,7 +1707,8 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch(`/api/calendar-events/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to delete event');
 
-      // Invalidate calendar cache
+      // Save to localStorage and invalidate calendar cache
+      saveToLocalStorage(get());
       get().invalidateCalendarCache();
     } catch (error) {
       await get().loadFromDatabase();
@@ -1729,23 +1759,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       }
 
       // Update localStorage with new settings
-      if (typeof window !== 'undefined') {
-        try {
-          const appData = get();
-          const newData = {
-            courses: appData.courses,
-            deadlines: appData.deadlines,
-            tasks: appData.tasks,
-            settings: { ...appData.settings, ...settings },
-            excludedDates: appData.excludedDates,
-            gpaEntries: appData.gpaEntries,
-          };
-          const storageKey = get().getStorageKey();
-          localStorage.setItem(storageKey, JSON.stringify(newData));
-        } catch (error) {
-          console.warn('Failed to save to localStorage:', error);
-        }
-      }
+      saveToLocalStorage(get());
 
       // API call
       const response = await fetch('/api/settings', {
@@ -1767,22 +1781,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       if (needsUpdate) {
         set({ settings: updatedSettings });
         // Update localStorage with server response
-        if (typeof window !== 'undefined') {
-          try {
-            const appData = get();
-            const storageKey = get().getStorageKey();
-            localStorage.setItem(storageKey, JSON.stringify({
-              courses: appData.courses,
-              deadlines: appData.deadlines,
-              tasks: appData.tasks,
-              settings: updatedSettings,
-              excludedDates: appData.excludedDates,
-              gpaEntries: appData.gpaEntries,
-            }));
-          } catch (error) {
-            console.warn('Failed to save to localStorage:', error);
-          }
-        }
+        saveToLocalStorage(get());
       }
 
     } catch (error) {
