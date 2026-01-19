@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import useAppStore from '@/lib/store';
 import { Note } from '@/types';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
@@ -9,7 +10,12 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input, { Select } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import RichTextEditor from '@/components/RichTextEditor';
+
+// Lazy load RichTextEditor - TipTap is a heavy dependency
+const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), {
+  loading: () => <div className="text-[var(--text-muted)]" style={{ padding: '12px 16px', minHeight: '50px', border: '1px solid var(--border)', borderRadius: '8px', backgroundColor: 'var(--panel-2)' }}>Loading editor...</div>,
+  ssr: false,
+});
 import FolderTree from '@/components/notes/FolderTree';
 import TagInput from '@/components/notes/TagInput';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';

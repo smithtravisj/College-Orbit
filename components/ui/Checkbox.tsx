@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties } from 'react';
+import React, { CSSProperties } from 'react';
 
 interface CheckboxProps {
   checked: boolean;
@@ -12,7 +12,7 @@ interface CheckboxProps {
   className?: string;
 }
 
-export default function Checkbox({
+const Checkbox = React.memo(function Checkbox({
   checked,
   onChange,
   disabled = false,
@@ -62,4 +62,8 @@ export default function Checkbox({
       )}
     </div>
   );
-}
+});
+
+Checkbox.displayName = 'Checkbox';
+
+export default Checkbox;

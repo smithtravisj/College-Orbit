@@ -6,7 +6,7 @@ interface BadgeProps {
   className?: string;
 }
 
-const Badge: React.FC<BadgeProps> = ({ variant = 'neutral', children, className = '' }) => {
+const Badge: React.FC<BadgeProps> = React.memo(({ variant = 'neutral', children, className = '' }) => {
   const variantStyles = {
     success: 'bg-[rgba(87,171,90,0.2)] text-[var(--success)] border border-[var(--success)]',
     warning: 'bg-[rgba(198,144,38,0.2)] text-[var(--warning)] border border-[var(--warning)]',
@@ -22,6 +22,8 @@ const Badge: React.FC<BadgeProps> = ({ variant = 'neutral', children, className 
       {children}
     </span>
   );
-};
+});
+
+Badge.displayName = 'Badge';
 
 export default Badge;

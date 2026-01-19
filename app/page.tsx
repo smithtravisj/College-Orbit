@@ -50,20 +50,7 @@ function Dashboard() {
   const [hidingDeadlines, setHidingDeadlines] = useState<Set<string>>(new Set());
   const [toggledDeadlines, setToggledDeadlines] = useState<Set<string>>(new Set());
 
-  const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>(() => {
-    // Load from localStorage on initial render
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem('customQuickLinks');
-      if (cached) {
-        try {
-          return JSON.parse(cached);
-        } catch {
-          return [];
-        }
-      }
-    }
-    return [];
-  });
+  const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>([]);
   const [taskFormData, setTaskFormData] = useState({
     title: '',
     courseId: '',
@@ -128,6 +115,17 @@ function Dashboard() {
   // Fetch custom links when university changes
   useEffect(() => {
     if (mounted && settings.university) {
+      // Load from localStorage cache first (prevents hydration mismatch)
+      const cached = localStorage.getItem('customQuickLinks');
+      if (cached) {
+        try {
+          setCustomLinks(JSON.parse(cached));
+        } catch {
+          // Invalid cache, will be replaced by API fetch
+        }
+      }
+
+      // Then fetch fresh data from API
       console.log('[Dashboard] Fetching custom links for:', settings.university);
       fetch(`/api/custom-quick-links?university=${encodeURIComponent(settings.university)}`, { credentials: 'include' })
         .then(res => res.json())

@@ -7,7 +7,7 @@ export interface FilterPillsProps {
   className?: string;
 }
 
-const FilterPills = React.forwardRef<HTMLDivElement, FilterPillsProps>(
+const FilterPills = React.memo(React.forwardRef<HTMLDivElement, FilterPillsProps>(
   ({ filters, activeFilter, onChange, className = '' }, ref) => {
     return (
       <div ref={ref} className={`flex gap-5 ${className}`}>
@@ -28,7 +28,7 @@ const FilterPills = React.forwardRef<HTMLDivElement, FilterPillsProps>(
       </div>
     );
   }
-);
+));
 
 FilterPills.displayName = 'FilterPills';
 

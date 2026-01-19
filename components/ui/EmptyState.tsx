@@ -12,7 +12,7 @@ interface EmptyStateProps {
   className?: string;
 }
 
-const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description, action, className = '' }) => {
+const EmptyState: React.FC<EmptyStateProps> = React.memo(({ icon, title, description, action, className = '' }) => {
   return (
     <div className={`rounded-[var(--radius-card)] border border-dashed border-[var(--border)] ${className}`} style={{ padding: '20px', position: 'relative', zIndex: 10, backgroundColor: 'var(--panel)' }}>
       <div className="flex items-center gap-3" style={{ marginBottom: '8px' }}>
@@ -27,6 +27,8 @@ const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description, actio
       )}
     </div>
   );
-};
+});
+
+EmptyState.displayName = 'EmptyState';
 
 export default EmptyState;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from './ColorPicker.module.css';
 
 interface ColorPickerProps {
@@ -10,7 +10,7 @@ interface ColorPickerProps {
   disabled?: boolean;
 }
 
-export default function ColorPicker({ label, value, onChange, disabled = false }: ColorPickerProps) {
+const ColorPicker = React.memo(function ColorPicker({ label, value, onChange, disabled = false }: ColorPickerProps) {
   const [hexInput, setHexInput] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -73,4 +73,8 @@ export default function ColorPicker({ label, value, onChange, disabled = false }
       </div>
     </div>
   );
-}
+});
+
+ColorPicker.displayName = 'ColorPicker';
+
+export default ColorPicker;

@@ -123,79 +123,43 @@ export default function CalendarContent() {
         console.error('Error loading from cache:', error);
       }
 
-      // Always fetch fresh data in the background
+      // Fetch all calendar data in a single request
       try {
-        const fetchedData: CachedCalendarData = {
-          tasks: [],
-          deadlines: [],
-          exams: [],
-          calendarEvents: [],
-          courses: [],
-          excludedDates: [],
-          timestamp: Date.now(),
-        };
+        const response = await fetch('/api/calendar-data');
+        if (response.ok) {
+          const data = await response.json();
 
-        // Fetch all task instances
-        const tasksResponse = await fetch('/api/tasks?showAll=true');
-        if (tasksResponse.ok) {
-          const tasksData = await tasksResponse.json();
-          const allOpenTasks = tasksData.tasks.filter((task: any) => task.status !== 'done');
+          const allOpenTasks = (data.tasks || []).filter((task: any) => task.status !== 'done');
+          const allOpenDeadlines = (data.deadlines || []).filter((deadline: any) => deadline.status !== 'done');
+          const allOpenExams = (data.exams || []).filter((exam: any) => exam.status !== 'completed');
+
           setAllTaskInstances(allOpenTasks);
-          fetchedData.tasks = allOpenTasks;
-        }
-
-        // Fetch all deadline instances
-        const deadlinesResponse = await fetch('/api/deadlines?showAll=true');
-        if (deadlinesResponse.ok) {
-          const deadlinesData = await deadlinesResponse.json();
-          const allOpenDeadlines = deadlinesData.deadlines.filter((deadline: any) => deadline.status !== 'done');
           setAllDeadlineInstances(allOpenDeadlines);
-          fetchedData.deadlines = allOpenDeadlines;
-        }
-
-        // Fetch all exam instances
-        const examsResponse = await fetch('/api/exams?showAll=true');
-        if (examsResponse.ok) {
-          const examsData = await examsResponse.json();
-          const allOpenExams = examsData.exams.filter((exam: any) => exam.status !== 'completed');
           setAllExamInstances(allOpenExams);
-          fetchedData.exams = allOpenExams;
-        }
+          setCalendarEvents(data.calendarEvents || []);
+          setCachedCourses(data.courses || []);
+          setCachedExcludedDates(data.excludedDates || []);
 
-        // Fetch all calendar events
-        const eventsResponse = await fetch('/api/calendar-events');
-        if (eventsResponse.ok) {
-          const eventsData = await eventsResponse.json();
-          setCalendarEvents(eventsData.events || []);
-          fetchedData.calendarEvents = eventsData.events || [];
-        }
-
-        // Fetch courses
-        const coursesResponse = await fetch('/api/courses');
-        if (coursesResponse.ok) {
-          const coursesData = await coursesResponse.json();
-          setCachedCourses(coursesData.courses || []);
-          fetchedData.courses = coursesData.courses || [];
-        }
-
-        // Fetch excluded dates
-        const excludedDatesResponse = await fetch('/api/excluded-dates');
-        if (excludedDatesResponse.ok) {
-          const excludedDatesData = await excludedDatesResponse.json();
-          setCachedExcludedDates(excludedDatesData.excludedDates || []);
-          fetchedData.excludedDates = excludedDatesData.excludedDates || [];
-        }
-
-        // Save to cache
-        if (typeof window !== 'undefined') {
-          try {
-            localStorage.setItem('calendarCache', JSON.stringify(fetchedData));
-          } catch (e) {
-            console.warn('Failed to save calendar cache:', e);
+          // Save to cache
+          if (typeof window !== 'undefined') {
+            try {
+              const fetchedData: CachedCalendarData = {
+                tasks: allOpenTasks,
+                deadlines: allOpenDeadlines,
+                exams: allOpenExams,
+                calendarEvents: data.calendarEvents || [],
+                courses: data.courses || [],
+                excludedDates: data.excludedDates || [],
+                timestamp: Date.now(),
+              };
+              localStorage.setItem('calendarCache', JSON.stringify(fetchedData));
+            } catch (e) {
+              console.warn('Failed to save calendar cache:', e);
+            }
           }
         }
       } catch (error) {
-        console.error('Error fetching all instances:', error);
+        console.error('Error fetching calendar data:', error);
       }
     };
 
