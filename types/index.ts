@@ -261,6 +261,12 @@ export interface Settings {
   dashboardCardsCollapsedState?: string[] | null;
   hiddenQuickLinks?: Record<string, string[]> | null;
   courseTermFilter?: string;
+  emailAnnouncements?: boolean;
+  emailExamReminders?: boolean;
+  emailAccountAlerts?: boolean;
+  notifyAnnouncements?: boolean;
+  notifyExamReminders?: boolean;
+  notifyAccountAlerts?: boolean;
 }
 
 export interface ExcludedDate {

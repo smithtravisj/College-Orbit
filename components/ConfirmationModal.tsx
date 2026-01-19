@@ -46,16 +46,11 @@ export default function ConfirmationModal({
               {cancelText}
             </Button>
             <Button
-              variant="primary"
+              variant={isDangerous ? 'danger' : 'primary'}
               size="md"
               type="button"
               onClick={onConfirm}
               style={{
-                backgroundColor: isDangerous ? 'var(--danger)' : 'var(--button-secondary)',
-                color: 'white',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: isDangerous ? 'var(--danger)' : 'var(--border)',
                 paddingLeft: '16px',
                 paddingRight: '16px',
               }}

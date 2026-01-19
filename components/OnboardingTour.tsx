@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { driver, Driver } from 'driver.js';
+import type { Driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import './OnboardingTour.css';
 import useAppStore from '@/lib/store';
@@ -48,8 +48,13 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
       return;
     }
 
-    // Build steps based on device type
-    const baseSteps = [
+    // Dynamically import driver.js only when needed (Safari mobile performance)
+    const loadAndStartTour = async () => {
+      // Load driver.js dynamically
+      const { driver } = await import('driver.js');
+
+      // Build steps based on device type
+      const baseSteps = [
       {
         popover: {
           title: 'Welcome to College Orbit!',
@@ -237,24 +242,27 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
       finalStep,
     ];
 
-    const tourDriver = driver({
-      showProgress: true,
-      showButtons: ['next', 'previous', 'close'],
-      steps,
-      onPopoverRender: (_popover, options) => {
-        console.log('[OnboardingTour] Rendering step:', options.state.activeIndex, 'of', steps.length);
-      },
-      onDestroyed: () => {
-        console.log('[OnboardingTour] Tour destroyed');
-        hasStartedRef.current = false;
-        driverRef.current = null;
-        handleTourComplete();
-      },
-    });
+      const tourDriver = driver({
+        showProgress: true,
+        showButtons: ['next', 'previous', 'close'],
+        steps,
+        onPopoverRender: (_popover, options) => {
+          console.log('[OnboardingTour] Rendering step:', options.state.activeIndex, 'of', steps.length);
+        },
+        onDestroyed: () => {
+          console.log('[OnboardingTour] Tour destroyed');
+          hasStartedRef.current = false;
+          driverRef.current = null;
+          handleTourComplete();
+        },
+      });
 
-    driverRef.current = tourDriver;
-    hasStartedRef.current = true;
-    tourDriver.drive();
+      driverRef.current = tourDriver;
+      hasStartedRef.current = true;
+      tourDriver.drive();
+    };
+
+    loadAndStartTour();
 
     return () => {
       // Only destroy if component is actually unmounting, not on re-renders

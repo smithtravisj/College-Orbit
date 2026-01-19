@@ -22,9 +22,11 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   // Track page views for analytics
   useAnalyticsPageView();
 
-  // Mobile auto-refresh: poll database every 10 seconds and refresh on visibility change
+  // Mobile auto-refresh: poll database every 60 seconds and refresh on visibility change
   useEffect(() => {
     if (!isMobile || status !== 'authenticated') return;
+
+    let interval: ReturnType<typeof setInterval> | null = null;
 
     const refreshData = async () => {
       if (isRefreshing.current) return;
@@ -38,8 +40,11 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
       }
     };
 
-    // Poll every 10 seconds
-    const interval = setInterval(refreshData, 10000);
+    // Delay polling start by 10s to let initial load complete (Safari mobile performance)
+    const startDelay = setTimeout(() => {
+      // Poll every 60 seconds (reduced from 10s for Safari mobile performance)
+      interval = setInterval(refreshData, 60000);
+    }, 10000);
 
     // Also refresh when app comes back to foreground
     const handleVisibilityChange = () => {
@@ -50,13 +55,15 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      clearInterval(interval);
+      clearTimeout(startDelay);
+      if (interval) clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [isMobile, status, loadFromDatabase]);
 
   const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password' || pathname === '/reset-password';
   const isPublicPage = pathname === '/privacy' || pathname === '/terms';
+  const isPricingPage = pathname === '/pricing' && status === 'unauthenticated';
 
   // Landing page detection - show for unauthenticated users on root path
   // Wait for session to be determined (not loading) before deciding
@@ -94,8 +101,8 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
     );
   }
 
-  if (isPublicPage) {
-    // Full-width layout for public pages (privacy, terms)
+  if (isPublicPage || isPricingPage) {
+    // Full-width layout for public pages (privacy, terms, pricing for unauthenticated)
     return (
       <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg)' }}>
         {children}

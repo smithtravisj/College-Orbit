@@ -3,6 +3,7 @@ import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { extractPlainText } from '@/lib/tiptapUtils';
+import { checkFeatureLimit } from '@/lib/subscription';
 
 // GET all notes for authenticated user
 export const GET = withRateLimit(async function(request: NextRequest) {
@@ -45,6 +46,15 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     if (!token?.id) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
+    }
+
+    // Check notes limit for free users
+    const limitCheck = await checkFeatureLimit(token.id, 'notes');
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { error: 'limit_reached', message: limitCheck.message },
+        { status: 403 }
+      );
     }
 
     const data = await req.json();

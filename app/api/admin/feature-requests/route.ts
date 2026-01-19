@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authConfig } from '@/auth.config';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { logAuditEvent } from '@/lib/auditLog';
 
 // GET all feature requests (admin only)
 export const GET = withRateLimit(async function() {
@@ -58,12 +59,12 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     }
 
     // Check if user is admin
-    const user = await prisma.user.findUnique({
+    const adminUser = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { isAdmin: true },
+      select: { isAdmin: true, email: true },
     });
 
-    if (!user?.isAdmin) {
+    if (!adminUser?.isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -129,6 +130,19 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
       console.error('Failed to create notification for feature request:', notificationError);
       // Don't block the response if notification fails
     }
+
+    // Log audit event
+    await logAuditEvent({
+      adminId: session.user.id,
+      adminEmail: adminUser.email || 'unknown',
+      action: status === 'implemented' ? 'implement_feature_request' : 'reject_feature_request',
+      targetUserId: originalRequest.user.id,
+      targetEmail: originalRequest.user.email,
+      details: {
+        requestId: featureIdToUpdate,
+        description: originalRequest.description.substring(0, 100),
+      },
+    });
 
     return NextResponse.json({ featureRequest });
   } catch (error) {

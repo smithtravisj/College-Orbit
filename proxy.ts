@@ -18,7 +18,8 @@ export async function proxy(request: NextRequest) {
 
   const isPublicPage =
     request.nextUrl.pathname.startsWith('/privacy') ||
-    request.nextUrl.pathname.startsWith('/terms');
+    request.nextUrl.pathname.startsWith('/terms') ||
+    request.nextUrl.pathname.startsWith('/pricing');
 
   // Landing page is public - unauthenticated users see landing, authenticated see dashboard
   const isLandingPage = request.nextUrl.pathname === '/';

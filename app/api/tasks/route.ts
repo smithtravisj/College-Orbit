@@ -3,6 +3,7 @@ import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { generateAllUserRecurringInstances } from '@/lib/recurringTaskUtils';
+import { checkPremiumAccess } from '@/lib/subscription';
 
 // GET all tasks for authenticated user
 export const GET = withRateLimit(async function(request: NextRequest) {
@@ -108,6 +109,15 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     // Handle recurring task creation
     if (data.recurring) {
+      // Recurring tasks require premium
+      const premiumCheck = await checkPremiumAccess(token.id);
+      if (!premiumCheck.allowed) {
+        return NextResponse.json(
+          { error: 'premium_required', message: 'Recurring tasks are a Premium feature. Upgrade to create recurring tasks.' },
+          { status: 403 }
+        );
+      }
+
       try {
         // Create recurring pattern
         const pattern = await prisma.recurringPattern.create({

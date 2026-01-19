@@ -6,7 +6,6 @@ import Input, { Select } from '@/components/ui/Input';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import TagInput from '@/components/notes/TagInput';
-import useAppStore from '@/lib/store';
 import { Course } from '@/types';
 
 interface BaseModalProps {
@@ -646,8 +645,6 @@ export function BulkDeleteModal({
   entityType,
   onConfirm,
 }: BulkDeleteModalProps) {
-  const { settings } = useAppStore();
-
   if (!isOpen) return null;
 
   const handleConfirm = () => {
@@ -675,15 +672,10 @@ export function BulkDeleteModal({
               Cancel
             </Button>
             <Button
-              variant="secondary"
+              variant="danger"
               size="md"
               onClick={handleConfirm}
               style={{
-                backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
-                color: 'white',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--border)',
                 paddingLeft: '16px',
                 paddingRight: '16px',
               }}

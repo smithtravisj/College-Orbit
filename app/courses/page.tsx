@@ -11,8 +11,11 @@ import EmptyState from '@/components/ui/EmptyState';
 import CourseForm from '@/components/CourseForm';
 import CourseList from '@/components/CourseList';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
-import { Plus } from 'lucide-react';
+import { Plus, Crown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useSubscription } from '@/hooks/useSubscription';
+import { FREE_TIER_LIMITS } from '@/lib/subscription';
+import Link from 'next/link';
 import BulkEditToolbar, { BulkAction } from '@/components/BulkEditToolbar';
 import {
   BulkChangeTermModal,
@@ -22,11 +25,13 @@ import {
 
 export default function CoursesPage() {
   const isMobile = useIsMobile();
+  const subscription = useSubscription();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
   const colorPalette = getCollegeColorPalette(university || null, theme);
   const [mounted, setMounted] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [termFilter, setTermFilter] = useState('all');
   const [termFilterInitialized, setTermFilterInitialized] = useState(false);
@@ -189,6 +194,25 @@ export default function CoursesPage() {
     bulkSelect.clearSelection();
   };
 
+  // Check limit before opening new course form
+  const handleNewCourse = () => {
+    // If premium or trialing, always allow
+    if (subscription.isPremium) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setIsAdding(true);
+      return;
+    }
+
+    // Check if at limit
+    if (courses.length >= FREE_TIER_LIMITS.maxCourses) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsAdding(true);
+  };
+
   // Filter by term
   let filteredCourses = termFilter === 'all' ? courses : courses.filter((c) => c.term === termFilter);
 
@@ -266,7 +290,7 @@ export default function CoursesPage() {
             </p>
           </div>
           {!isMobile && !isAdding && !editingId && (
-            <Button variant="secondary" size="md" style={{ marginTop: '8px' }} onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setIsAdding(true); }}>
+            <Button variant="secondary" size="md" style={{ marginTop: '8px' }} onClick={handleNewCourse}>
               <Plus size={18} />
               New Course
             </Button>
@@ -450,7 +474,7 @@ export default function CoursesPage() {
                 action={
                   termFilter !== 'all'
                     ? { label: 'View all courses', onClick: () => handleTermFilterChange('all') }
-                    : { label: 'Add Course', onClick: () => { window.scrollTo({ top: 0, behavior: 'smooth' }); setIsAdding(true); } }
+                    : { label: 'Add Course', onClick: handleNewCourse }
                 }
               />
             )}
@@ -490,6 +514,101 @@ export default function CoursesPage() {
         entityType="course"
         onConfirm={handleBulkDelete}
       />
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: isMobile ? 'flex-end' : 'center',
+              justifyContent: 'center',
+              zIndex: 50,
+            }}
+            onClick={() => setShowUpgradeModal(false)}
+          >
+            <div
+              style={{
+                backgroundColor: 'var(--panel)',
+                borderRadius: isMobile ? '12px 12px 0 0' : '12px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                maxWidth: isMobile ? '100%' : '420px',
+                width: isMobile ? '100%' : '100%',
+                margin: isMobile ? 0 : '0 16px',
+                padding: isMobile ? '24px 20px' : '28px',
+                textAlign: 'center',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  background: `linear-gradient(135deg, ${colorPalette.accent}30 0%, ${colorPalette.accent}10 100%)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                }}
+              >
+                <Crown size={28} style={{ color: 'var(--text)' }} />
+              </div>
+              <h3 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: '600', color: 'var(--text)', margin: '0 0 8px 0' }}>
+                Course Limit Reached
+              </h3>
+              <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', margin: '0 0 24px 0', lineHeight: 1.5 }}>
+                You&apos;ve reached the free tier limit. Upgrade to Premium for unlimited courses and more features.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Link href="/pricing" style={{ textDecoration: 'none' }}>
+                  <button
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '12px 16px' : '12px 20px',
+                      borderRadius: '10px',
+                      fontWeight: '600',
+                      fontSize: isMobile ? '14px' : '15px',
+                      border: '1px solid var(--border)',
+                      backgroundColor: colorPalette.accent,
+                      backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <Crown size={18} />
+                    Upgrade to Premium
+                  </button>
+                </Link>
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '10px 16px' : '10px 20px',
+                    borderRadius: '10px',
+                    fontWeight: '500',
+                    fontSize: isMobile ? '13px' : '14px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(255,255,255,0.03)',
+                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Maybe Later
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }

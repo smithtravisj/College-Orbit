@@ -375,6 +375,12 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       if (!response.ok) {
         const errorData = await response.json();
+        if (errorData.error === 'limit_reached') {
+          const error = new Error(errorData.message || 'Course limit reached');
+          (error as any).code = 'LIMIT_REACHED';
+          (error as any).upgradeRequired = true;
+          throw error;
+        }
         console.error('API error response:', errorData);
         throw new Error(`Failed to create course: ${errorData.error} - ${errorData.details}`);
       }
@@ -1028,7 +1034,16 @@ const useAppStore = create<AppStore>((set, get) => ({
         body: JSON.stringify(note),
       });
 
-      if (!response.ok) throw new Error('Failed to create note');
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (errorData.error === 'limit_reached') {
+          const error = new Error(errorData.message || 'Note limit reached');
+          (error as any).code = 'LIMIT_REACHED';
+          (error as any).upgradeRequired = true;
+          throw error;
+        }
+        throw new Error('Failed to create note');
+      }
 
       const { note: newNote } = await response.json();
 

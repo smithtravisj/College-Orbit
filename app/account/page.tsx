@@ -9,13 +9,16 @@ import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Shield, Download, Upload, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Shield, Download, Upload, Trash2, Eye, EyeOff, Crown } from 'lucide-react';
+import { useSubscription } from '@/hooks/useSubscription';
+import Link from 'next/link';
 
 export default function AccountPage() {
   const { data: session, update: updateSession } = useSession();
   const router = useRouter();
   const isMobile = useIsMobile();
   const { settings, exportData, importData, deleteAllData } = useAppStore();
+  const subscription = useSubscription();
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -476,8 +479,103 @@ export default function AccountPage() {
             </div>
           </Card>
 
-          {/* Security Section - Full Width */}
-          <Card className="md:col-span-2">
+          {/* Subscription */}
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+              <Crown size={20} className="text-[var(--text)]" />
+              <h2 className="text-lg font-semibold text-[var(--text)]">Subscription</h2>
+            </div>
+
+            {subscription.isLoading ? (
+              <p className="text-sm text-[var(--text-muted)]">Loading...</p>
+            ) : (
+              <div className="space-y-4">
+                {/* Current Plan */}
+                <div>
+                  <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '4px' }}>Current Plan</p>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                    <p className="text-base font-medium text-[var(--text)]" style={{ margin: 0 }}>
+                      {subscription.isLifetimePremium && 'Lifetime Premium'}
+                      {subscription.tier === 'premium' && !subscription.isTrialing && !subscription.isLifetimePremium && (
+                        <>Premium ({subscription.plan === 'yearly' ? 'Yearly' : 'Monthly'})</>
+                      )}
+                      {subscription.isTrialing && 'Premium Trial'}
+                      {subscription.tier === 'free' && 'Free'}
+                    </p>
+                    {subscription.isLifetimePremium && (
+                      <span className="text-sm text-[var(--text-muted)]">
+                        - granted by admin
+                      </span>
+                    )}
+                    {subscription.status === 'canceled' && subscription.expiresAt && (
+                      <span className="text-sm text-[var(--text-muted)]">
+                        - expires {new Date(subscription.expiresAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Trial Info - only show if trial has days remaining */}
+                {subscription.isTrialing && subscription.trialDaysRemaining !== null && subscription.trialDaysRemaining > 0 && (
+                  <div
+                    className="p-3 rounded-lg"
+                    style={{
+                      background: subscription.trialDaysRemaining <= 3 ? 'rgba(239, 68, 68, 0.1)' : 'var(--accent)10',
+                      border: `1px solid ${subscription.trialDaysRemaining <= 3 ? 'rgba(239, 68, 68, 0.2)' : 'var(--accent)20'}`,
+                    }}
+                  >
+                    <p className="text-sm" style={{ color: subscription.trialDaysRemaining <= 3 ? '#ef4444' : 'var(--text)' }}>
+                      <strong>{subscription.trialDaysRemaining} day{subscription.trialDaysRemaining !== 1 ? 's' : ''}</strong> left in your trial
+                    </p>
+                  </div>
+                )}
+
+                {/* Action Button */}
+                {!subscription.isLifetimePremium && (
+                  <div style={{ paddingTop: '12px', paddingBottom: subscription.isPremium ? '0' : '16px' }}>
+                    {subscription.isPremium && !subscription.isTrialing ? (
+                      <Link href="/subscription" className="block">
+                        <Button
+                          variant="secondary"
+                          size="lg"
+                          className="w-full"
+                        >
+                          Manage Subscription
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Link href="/checkout" className="block">
+                        <Button variant="primary" size="lg" className="w-full">
+                          <Crown size={18} />
+                          {subscription.isTrialing ? 'Subscribe Now' : 'Upgrade to Premium'}
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                )}
+
+                {/* Features List */}
+                {!subscription.isPremium && (
+                  <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
+                    <p className="text-xs text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>Premium includes:</p>
+                    <ul className="text-xs text-[var(--text-muted)] space-y-1">
+                      <li>• Unlimited notes & courses</li>
+                      <li>• Calendar & Shopping pages</li>
+                      <li>• All Tools (GPA, Pomodoro, etc.)</li>
+                      <li>• File uploads & recurring items</li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
+
+          {/* Security Section */}
+          <Card>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <Shield size={20} className="text-[var(--text)]" />
               <h2 className="text-lg font-semibold text-[var(--text)]">Security</h2>

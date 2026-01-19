@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authConfig } from '@/auth.config';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { logAuditEvent } from '@/lib/auditLog';
 
 // GET all college requests (admin only)
 export const GET = withRateLimit(async function() {
@@ -59,11 +60,12 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     }
 
     // Check if user is admin
-    const user = await prisma.user.findUnique({
+    const adminUser = await prisma.user.findUnique({
       where: { id: session.user.id },
+      select: { isAdmin: true, email: true },
     });
 
-    if (!user?.isAdmin) {
+    if (!adminUser?.isAdmin) {
       return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
     }
 
@@ -118,6 +120,18 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
       await prisma.notification.deleteMany({
         where: {
           collegeRequestId: requestId,
+        },
+      });
+
+      // Log audit event
+      await logAuditEvent({
+        adminId: session.user.id,
+        adminEmail: adminUser.email || 'unknown',
+        action: status === 'added' ? 'approve_college_request' : 'reject_college_request',
+        targetUserId: collegeRequest.user.id,
+        details: {
+          requestId,
+          collegeName: collegeRequest.collegeName,
         },
       });
     }
