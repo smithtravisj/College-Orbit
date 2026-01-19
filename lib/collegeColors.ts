@@ -1686,6 +1686,11 @@ export function applyColorPalette(palette: ColorPalette): void {
 
   // Slider thumb color
   root.style.setProperty("--slider-thumb", palette.sliderThumb);
+
+  // Delete button color - default based on light/dark mode (detected from bg color)
+  // Light mode uses #dc2626, dark mode uses #660000
+  const isLightMode = palette.bg === "#f5f5f5";
+  root.style.setProperty("--delete-button", isLightMode ? "#dc2626" : "#660000");
 }
 
 /**
@@ -1752,6 +1757,7 @@ export interface CustomColorSet {
   success: string;
   warning: string;
   danger: string;
+  deleteButton?: string;  // Custom delete button color (optional for backwards compatibility)
 }
 
 /**
@@ -1773,6 +1779,7 @@ export const DEFAULT_CUSTOM_COLORS_DARK: CustomColorSet = {
   success: '#57ab5a',
   warning: '#c69026',
   danger: '#e5534b',
+  deleteButton: '#660000',
 };
 
 /**
@@ -1786,6 +1793,7 @@ export const DEFAULT_CUSTOM_COLORS_LIGHT: CustomColorSet = {
   success: '#16a34a',
   warning: '#d97706',
   danger: '#dc2626',
+  deleteButton: '#dc2626',
 };
 
 /**
@@ -1805,6 +1813,7 @@ export function getDefaultCustomColors(collegeName?: string | null): CustomColor
         success: darkPalette.success,
         warning: darkPalette.warning,
         danger: darkPalette.danger,
+        deleteButton: '#660000',
       },
       light: {
         accent: lightPalette.accent,
@@ -1814,6 +1823,7 @@ export function getDefaultCustomColors(collegeName?: string | null): CustomColor
         success: lightPalette.success,
         warning: lightPalette.warning,
         danger: lightPalette.danger,
+        deleteButton: '#dc2626',
       },
     };
   }
@@ -1842,15 +1852,18 @@ export function getCustomColorSetForTheme(
   // Handle new format with light/dark separation
   if (customColors.light && customColors.dark) {
     const colorSet = actualTheme === 'light' ? customColors.light : customColors.dark;
-    // Ensure accentText is always present (for data saved before this field existed)
+    const defaultDeleteButton = actualTheme === 'light' ? '#dc2626' : '#660000';
+    // Ensure accentText and deleteButton are always present (for data saved before these fields existed)
     return {
       ...colorSet,
       accentText: colorSet.accentText || (actualTheme === 'light' ? '#000000' : '#ffffff'),
+      deleteButton: colorSet.deleteButton || defaultDeleteButton,
     };
   }
 
   // Handle old flat format (migrate on the fly)
   if (customColors.accent) {
+    const defaultDeleteButton = actualTheme === 'light' ? '#dc2626' : '#660000';
     return {
       accent: customColors.accent,
       accentHover: customColors.accentHover || customColors.accent,
@@ -1859,6 +1872,7 @@ export function getCustomColorSetForTheme(
       success: customColors.success || DEFAULT_CUSTOM_COLORS_DARK.success,
       warning: customColors.warning || DEFAULT_CUSTOM_COLORS_DARK.warning,
       danger: customColors.danger || DEFAULT_CUSTOM_COLORS_DARK.danger,
+      deleteButton: customColors.deleteButton || defaultDeleteButton,
     };
   }
 
@@ -1909,9 +1923,12 @@ export function applyCustomColors(
   // Apply the custom palette
   applyColorPalette(customPalette);
 
-  // Also set the custom accent text color as a CSS variable
+  // Also set custom CSS variables not in the main palette
   if (typeof document !== 'undefined') {
     document.documentElement.style.setProperty('--accent-text', customColorSet.accentText);
+    // Set delete button color (defaults based on theme)
+    const defaultDeleteButton = theme === 'light' || (theme === 'system' && typeof window !== 'undefined' && !window.matchMedia('(prefers-color-scheme: dark)').matches) ? '#dc2626' : '#660000';
+    document.documentElement.style.setProperty('--delete-button', customColorSet.deleteButton || defaultDeleteButton);
   }
 }
 

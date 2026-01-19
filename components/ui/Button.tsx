@@ -57,7 +57,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const variantStyles = {
       primary: `hover:brightness-110 active:translate-y-[1px]`,
       secondary: 'bg-white/5 text-[var(--text)] hover:bg-white/8 border border-[var(--border)] active:translate-y-[1px]',
-      danger: `${isLightMode ? 'bg-[var(--danger)]' : 'bg-[#660000]'} text-white hover:brightness-110 active:translate-y-[1px]`,
+      danger: `bg-[var(--delete-button)] text-white hover:brightness-110 active:translate-y-[1px]`,
       ghost: 'bg-transparent hover:bg-white/5 text-[var(--muted)] hover:text-[var(--text)] active:translate-y-[1px]',
     };
 
@@ -94,13 +94,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       }
       if (variant === 'danger') {
         const dangerGlowOpacity = isLightMode ? 0.4 * glowScale : 0.6 * glowScale;
+        // Use CSS variable for glow color - extract rgb values
+        // Default fallback colors: light mode #dc2626 (220, 38, 38), dark mode #660000 (102, 0, 0)
         return {
           backgroundImage: gradientIntensity > 0
             ? `linear-gradient(135deg, rgba(255,255,255,${lightOpacity}) 0%, transparent 50%, rgba(0,0,0,${darkOpacity}) 100%)`
             : 'none',
           boxShadow: glowIntensity > 0
             ? (isLightMode
-              ? `0 0 ${Math.round(10 * glowScale)}px rgba(229, 83, 75, ${dangerGlowOpacity})`
+              ? `0 0 ${Math.round(10 * glowScale)}px rgba(220, 38, 38, ${dangerGlowOpacity})`
               : `0 0 ${Math.round(10 * glowScale)}px rgba(102, 0, 0, ${dangerGlowOpacity})`)
             : 'none',
         };
