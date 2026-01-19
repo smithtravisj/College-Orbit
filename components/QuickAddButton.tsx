@@ -33,8 +33,8 @@ export function QuickAddButton() {
   }, [isModalOpen, setEscapeHandler, closeModal]);
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  const bottomRightPages = ['/tasks', '/deadlines', '/exams', '/notes', '/courses', '/shopping'];
-  const isBottomRight = bottomRightPages.includes(pathname);
+  // Top-right only on dashboard, bottom-right everywhere else
+  const isTopRight = pathname === '/' || pathname === '/dashboard';
   const university = useAppStore((state) => state.settings.university) || null;
   const theme = useAppStore((state) => state.settings.theme);
   const isPremium = useAppStore((state) => state.isPremium);
@@ -68,9 +68,9 @@ export function QuickAddButton() {
   // Determine which style class to use
   const getButtonClass = () => {
     if (isMobile) return styles.fab;
-    // On desktop, always use pill-shaped button with label
-    if (isBottomRight) return styles.fabDesktopBottomRight;
-    return styles.fabDesktop;
+    // On desktop, top-right on dashboard, bottom-right everywhere else
+    if (isTopRight) return styles.fabDesktop;
+    return styles.fabDesktopBottomRight;
   };
 
   return (
