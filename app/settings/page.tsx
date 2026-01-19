@@ -59,7 +59,7 @@ export default function SettingsPage() {
   const gradientDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const glowDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { settings, updateSettings } = useAppStore();
+  const { settings, updateSettings, updateSettingsLocal } = useAppStore();
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
 
   // Custom theme and visual effects only apply for premium users
@@ -160,25 +160,32 @@ export default function SettingsPage() {
     );
   }
 
-  // Debounced slider handlers for smooth UI
+  // Slider handlers: update store immediately for real-time visual effects,
+  // debounce only the API call to avoid excessive network requests
   const handleGradientChange = (value: number) => {
     setLocalGradientIntensity(value);
+    // Update store immediately for instant visual feedback across all components
+    updateSettingsLocal({ gradientIntensity: value });
+    // Debounce only the API persistence
     if (gradientDebounceRef.current) {
       clearTimeout(gradientDebounceRef.current);
     }
     gradientDebounceRef.current = setTimeout(() => {
       updateSettings({ gradientIntensity: value });
-    }, 150);
+    }, 300);
   };
 
   const handleGlowChange = (value: number) => {
     setLocalGlowIntensity(value);
+    // Update store immediately for instant visual feedback across all components
+    updateSettingsLocal({ glowIntensity: value });
+    // Debounce only the API persistence
     if (glowDebounceRef.current) {
       clearTimeout(glowDebounceRef.current);
     }
     glowDebounceRef.current = setTimeout(() => {
       updateSettings({ glowIntensity: value });
-    }, 150);
+    }, 300);
   };
 
   const handleSubmitCollegeRequest = async () => {

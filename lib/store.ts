@@ -143,6 +143,7 @@ interface AppStore {
 
   // Settings
   updateSettings: (settings: Partial<Settings>) => Promise<void>;
+  updateSettingsLocal: (settings: Partial<Settings>) => void;
 
   // Import/Export
   exportData: () => Promise<AppData>;
@@ -1790,6 +1791,40 @@ const useAppStore = create<AppStore>((set, get) => ({
       console.error('Error updating settings:', error);
       throw error;
     }
+  },
+
+  // Update settings locally (store + localStorage) without API call
+  // Use this for immediate UI feedback, then debounce API persistence separately
+  updateSettingsLocal: (settings) => {
+    // Update store
+    set((state) => ({
+      settings: { ...state.settings, ...settings },
+    }));
+
+    // Apply colors if theme/university/custom theme settings changed
+    if ((settings.university !== undefined || settings.theme !== undefined ||
+         settings.useCustomTheme !== undefined || settings.customColors !== undefined) && typeof window !== 'undefined') {
+      const currentState = get().settings;
+      const { isPremium } = get();
+      const newTheme = settings.theme !== undefined ? settings.theme : (currentState.theme || 'dark');
+      const newUseCustomTheme = settings.useCustomTheme !== undefined ? settings.useCustomTheme : (currentState.useCustomTheme || false);
+      const newCustomColors = settings.customColors !== undefined ? settings.customColors : currentState.customColors;
+
+      if (isPremium && newUseCustomTheme && newCustomColors) {
+        const colorSet = getCustomColorSetForTheme(newCustomColors as CustomColors, newTheme);
+        applyCustomColors(colorSet, newTheme);
+      } else {
+        const palette = getCollegeColorPalette(
+          settings.university !== undefined ? settings.university : (currentState.university || null),
+          newTheme
+        );
+        applyColorPalette(palette);
+      }
+      localStorage.setItem('app-theme', newTheme);
+    }
+
+    // Update localStorage
+    saveToLocalStorage(get());
   },
 
   exportData: async () => {
