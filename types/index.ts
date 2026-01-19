@@ -220,6 +220,10 @@ export interface Note {
   plainText?: string; // Optional: computed on server
   folderId: string | null;
   courseId: string | null;
+  taskId: string | null;
+  deadlineId: string | null;
+  recurringTaskPatternId: string | null;
+  recurringDeadlinePatternId: string | null;
   tags: string[];
   isPinned: boolean;
   links: Array<{
@@ -286,6 +290,7 @@ export interface Settings {
   customColors?: CustomColors | null;
   gradientIntensity?: number; // 0-100, controls gradient intensity on buttons, nav, filters
   glowIntensity?: number; // 0-100, controls glow effect intensity on buttons
+  autoCreateCourseFolders?: boolean; // Auto-create note folders when courses are created
 }
 
 export interface ExcludedDate {

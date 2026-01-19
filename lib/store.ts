@@ -509,6 +509,23 @@ const useAppStore = create<AppStore>((set, get) => ({
       set((state) => ({
         courses: state.courses.map((c) => (c.id === tempId ? newCourse : c)),
       }));
+
+      // Auto-create folder for the course if setting is enabled
+      const { settings, addFolder } = get();
+      if (settings.autoCreateCourseFolders && newCourse.id) {
+        try {
+          await addFolder({
+            name: `${newCourse.code} - ${newCourse.name}`,
+            parentId: null,
+            courseId: newCourse.id,
+            colorTag: newCourse.colorTag || null,
+            order: 0,
+          });
+        } catch (folderError) {
+          // Don't fail course creation if folder creation fails
+          console.warn('Failed to auto-create course folder:', folderError);
+        }
+      }
     } catch (error) {
       // Rollback on error
       set((state) => ({

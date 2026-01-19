@@ -22,6 +22,10 @@ export async function GET(
       include: {
         course: { select: { id: true, code: true, name: true } },
         folder: { select: { id: true, name: true } },
+        task: { select: { id: true, title: true } },
+        deadline: { select: { id: true, title: true } },
+        recurringTaskPattern: { select: { id: true, taskTemplate: true } },
+        recurringDeadlinePattern: { select: { id: true, deadlineTemplate: true } },
       },
     });
 
@@ -74,6 +78,10 @@ export async function PATCH(
         plainText,
         folderId: 'folderId' in data ? data.folderId : existingNote.folderId,
         courseId: 'courseId' in data ? data.courseId : existingNote.courseId,
+        taskId: 'taskId' in data ? data.taskId : existingNote.taskId,
+        deadlineId: 'deadlineId' in data ? data.deadlineId : existingNote.deadlineId,
+        recurringTaskPatternId: 'recurringTaskPatternId' in data ? data.recurringTaskPatternId : existingNote.recurringTaskPatternId,
+        recurringDeadlinePatternId: 'recurringDeadlinePatternId' in data ? data.recurringDeadlinePatternId : existingNote.recurringDeadlinePatternId,
         tags: 'tags' in data ? data.tags : existingNote.tags,
         isPinned: 'isPinned' in data ? data.isPinned : existingNote.isPinned,
         links:
@@ -89,6 +97,10 @@ export async function PATCH(
       include: {
         course: { select: { id: true, code: true, name: true } },
         folder: { select: { id: true, name: true } },
+        task: { select: { id: true, title: true } },
+        deadline: { select: { id: true, title: true } },
+        recurringTaskPattern: { select: { id: true, taskTemplate: true } },
+        recurringDeadlinePattern: { select: { id: true, deadlineTemplate: true } },
       },
     });
 

@@ -105,6 +105,7 @@ model Deadline {
   course             Course?                   @relation(fields: [courseId], references: [id])
   recurringPattern   RecurringDeadlinePattern? @relation(fields: [recurringPatternId], references: [id])
   user               User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedNotes        Note[]
 
   @@index([userId])
   @@index([courseId])
@@ -136,6 +137,7 @@ model Task {
   course             Course?           @relation(fields: [courseId], references: [id])
   recurringPattern   RecurringPattern? @relation(fields: [recurringPatternId], references: [id])
   user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedNotes        Note[]
 
   @@index([userId])
   @@index([courseId])
@@ -163,6 +165,7 @@ model RecurringPattern {
   startDate       DateTime?
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   tasks           Task[]
+  linkedNotes     Note[]
 
   @@index([userId])
   @@index([isActive])
@@ -185,6 +188,7 @@ model RecurringDeadlinePattern {
   updatedAt        DateTime   @updatedAt
   isActive         Boolean    @default(true)
   deadlines        Deadline[]
+  linkedNotes      Note[]
   user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -258,25 +262,37 @@ model ExamReminder {
 }
 
 model Note {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String
-  content   Json     @default("{}")
-  plainText String   @default("")
-  folderId  String?
-  courseId  String?
-  tags      Json     @default("[]")
-  isPinned  Boolean  @default(false)
-  links     Json     @default("[]")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  course    Course?  @relation(fields: [courseId], references: [id])
-  folder    Folder?  @relation(fields: [folderId], references: [id])
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                          String                    @id @default(cuid())
+  userId                      String
+  title                       String
+  content                     Json                      @default("{}")
+  plainText                   String                    @default("")
+  folderId                    String?
+  courseId                    String?
+  taskId                      String?
+  deadlineId                  String?
+  recurringTaskPatternId      String?
+  recurringDeadlinePatternId  String?
+  tags                        Json                      @default("[]")
+  isPinned                    Boolean                   @default(false)
+  links                       Json                      @default("[]")
+  createdAt                   DateTime                  @default(now())
+  updatedAt                   DateTime                  @updatedAt
+  course                      Course?                   @relation(fields: [courseId], references: [id])
+  folder                      Folder?                   @relation(fields: [folderId], references: [id])
+  task                        Task?                     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  deadline                    Deadline?                 @relation(fields: [deadlineId], references: [id], onDelete: SetNull)
+  recurringTaskPattern        RecurringPattern?         @relation(fields: [recurringTaskPatternId], references: [id], onDelete: SetNull)
+  recurringDeadlinePattern    RecurringDeadlinePattern? @relation(fields: [recurringDeadlinePatternId], references: [id], onDelete: SetNull)
+  user                        User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([folderId])
   @@index([courseId])
+  @@index([taskId])
+  @@index([deadlineId])
+  @@index([recurringTaskPatternId])
+  @@index([recurringDeadlinePatternId])
   @@index([isPinned])
 }
 
@@ -357,6 +373,7 @@ model Settings {
   customColors           Json?
   gradientIntensity      Int      @default(50)
   glowIntensity          Int      @default(50)
+  autoCreateCourseFolders Boolean @default(false)
   user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
