@@ -21,12 +21,12 @@ const coreFeatures = [
   {
     icon: Calendar,
     title: 'Course Management',
-    description: 'Track your classes with meeting times, locations, instructor info, and quick links to syllabi and resources.',
+    description: 'Track your classes with meeting times, locations, instructor info, quick links, and auto-organized note folders.',
   },
   {
     icon: CheckSquare,
     title: 'Tasks & Assignments',
-    description: 'Manage tasks and assignments with priorities, tags, file attachments, and automatic recurring schedules.',
+    description: 'Manage tasks and assignments with priorities, tags, file attachments, linked notes, and automatic recurring schedules.',
   },
   {
     icon: CalendarDays,
@@ -54,7 +54,7 @@ const secondaryFeatures = [
   {
     icon: FileText,
     title: 'Rich Notes',
-    description: 'Full-featured note editor with folders, formatting, and file previews for PDFs, images, and documents.',
+    description: 'Full-featured note editor with markdown support, folders by course, and direct links to tasks and assignments.',
   },
   {
     icon: BarChart3,
