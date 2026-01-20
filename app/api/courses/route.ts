@@ -55,6 +55,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         code: data.code,
         name: data.name,
         term: data.term,
+        credits: data.credits ?? null,
         startDate: data.startDate ? new Date(data.startDate) : null,
         endDate: data.endDate ? new Date(data.endDate) : null,
         meetingTimes: data.meetingTimes || [],

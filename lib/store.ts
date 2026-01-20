@@ -545,7 +545,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       }));
 
       // Auto-create folder for the course if setting is enabled
-      const { settings, addFolder } = get();
+      const { settings, addFolder, addGpaEntry, gpaEntries } = get();
       if (settings.autoCreateCourseFolders && newCourse.id) {
         try {
           await addFolder({
@@ -558,6 +558,29 @@ const useAppStore = create<AppStore>((set, get) => ({
         } catch (folderError) {
           // Don't fail course creation if folder creation fails
           console.warn('Failed to auto-create course folder:', folderError);
+        }
+      }
+
+      // Auto-sync to grade tracker if setting is enabled and course has credits and term
+      if ((settings.autoSyncCoursesToGradeTracker ?? true) && newCourse.credits && newCourse.term) {
+        try {
+          // Check if entry already exists for this course
+          const existingEntry = gpaEntries.find(
+            (e) => e.courseId === newCourse.id
+          );
+          if (!existingEntry) {
+            await addGpaEntry({
+              courseId: newCourse.id,
+              courseName: newCourse.name,
+              grade: '', // No grade yet
+              credits: newCourse.credits,
+              term: newCourse.term,
+              status: 'in_progress',
+            });
+          }
+        } catch (gpaError) {
+          // Don't fail course creation if GPA entry creation fails
+          console.warn('Failed to auto-create GPA entry:', gpaError);
         }
       }
     } catch (error) {
@@ -592,6 +615,46 @@ const useAppStore = create<AppStore>((set, get) => ({
       set((state) => ({
         courses: state.courses.map((c) => (c.id === id ? updatedCourse : c)),
       }));
+
+      // Auto-sync to grade tracker if setting is enabled and course has credits and term
+      const { settings, gpaEntries } = get();
+      if ((settings.autoSyncCoursesToGradeTracker ?? true) && updatedCourse.credits && updatedCourse.term) {
+        try {
+          // Check if entry already exists for this course
+          const existingEntry = gpaEntries.find((e) => e.courseId === id);
+          if (existingEntry) {
+            // Update existing entry
+            await fetch(`/api/gpa-entries/${existingEntry.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                courseName: updatedCourse.name,
+                credits: updatedCourse.credits,
+                term: updatedCourse.term,
+              }),
+            });
+            // Refresh gpa entries
+            const entriesRes = await fetch('/api/gpa-entries');
+            if (entriesRes.ok) {
+              const { entries } = await entriesRes.json();
+              set({ gpaEntries: entries });
+            }
+          } else {
+            // Create new entry
+            const { addGpaEntry } = get();
+            await addGpaEntry({
+              courseId: id,
+              courseName: updatedCourse.name,
+              grade: '',
+              credits: updatedCourse.credits,
+              term: updatedCourse.term,
+              status: 'in_progress',
+            });
+          }
+        } catch (gpaError) {
+          console.warn('Failed to auto-sync GPA entry:', gpaError);
+        }
+      }
     } catch (error) {
       // Reload from database on error
       await get().loadFromDatabase();

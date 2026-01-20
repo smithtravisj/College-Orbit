@@ -71,6 +71,7 @@ export async function PATCH(
         code: data.code ?? existingCourse.code,
         name: data.name ?? existingCourse.name,
         term: data.term ?? existingCourse.term,
+        credits: data.credits !== undefined ? data.credits : existingCourse.credits,
         startDate: data.startDate !== undefined ? (data.startDate ? new Date(data.startDate) : null) : existingCourse.startDate,
         endDate: data.endDate !== undefined ? (data.endDate ? new Date(data.endDate) : null) : existingCourse.endDate,
         meetingTimes: data.meetingTimes ?? existingCourse.meetingTimes,

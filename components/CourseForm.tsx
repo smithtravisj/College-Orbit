@@ -53,6 +53,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
     code: '',
     name: '',
     term: '',
+    credits: '',
     startDate: '',
     endDate: '',
     meetingTimes: [{ days: ['Mon'], start: '', end: '', location: '' }],
@@ -74,6 +75,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
         code: '',
         name: '',
         term: '',
+        credits: '',
       }));
       return;
     }
@@ -85,6 +87,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
       code: parsed.courseCode || '',
       name: parsed.courseName || '',
       term: parsed.term || '',
+      credits: prev.credits, // Keep existing credits
     }));
   };
 
@@ -96,6 +99,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
         code: initialCourse.code,
         name: initialCourse.name,
         term: initialCourse.term,
+        credits: initialCourse.credits?.toString() || '',
         startDate: initialCourse.startDate ? initialCourse.startDate.split('T')[0] : '',
         endDate: initialCourse.endDate ? initialCourse.endDate.split('T')[0] : '',
         meetingTimes: initialCourse.meetingTimes || [{ days: ['Mon'], start: '', end: '', location: '' }],
@@ -161,6 +165,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
       code: form.code,
       name: form.name,
       term: form.term,
+      credits: form.credits ? parseFloat(form.credits) : null,
       meetingTimes: form.meetingTimes.filter((mt) => mt.days && mt.days.length > 0 && mt.start && mt.end),
       links: form.links
         .filter((l) => l.label && l.url)
@@ -224,14 +229,24 @@ const CourseFormComponent = forwardRef(function CourseForm(
         />
       </div>
 
-      {/* Term */}
-      <div style={{ paddingTop: isMobile ? '8px' : '12px' }}>
+      {/* Term and Credits */}
+      <div className="grid grid-cols-2 gap-3" style={{ paddingTop: isMobile ? '8px' : '12px' }}>
         <Input
           label="Term"
           type="text"
           value={form.term}
           onChange={(e) => setForm({ ...form, term: e.target.value })}
           placeholder="e.g., Winter 2026"
+        />
+        <Input
+          label="Credits"
+          type="number"
+          step="0.5"
+          min="0"
+          max="12"
+          value={form.credits}
+          onChange={(e) => setForm({ ...form, credits: e.target.value })}
+          placeholder="e.g., 3"
         />
       </div>
 
