@@ -401,6 +401,18 @@ model Settings {
   glowIntensity          Int      @default(50)
   autoCreateCourseFolders Boolean @default(false)
   showCanvasBadges        Boolean @default(true)
+  showRelativeDates       Boolean @default(false)
+  showNavCounts           Boolean @default(false)
+  showNavCountTasks       Boolean @default(true)
+  showNavCountAssignments Boolean @default(true)
+  showNavCountExams       Boolean @default(true)
+  showPriorityIndicators  Boolean @default(true)
+  showEffortIndicators    Boolean @default(true)
+  groupTasksByCourse      Boolean @default(false)
+  groupAssignmentsByCourse Boolean @default(false)
+  showCourseCode          Boolean @default(false)
+  confirmBeforeDelete     Boolean @default(true)
+  enableKeyboardShortcuts Boolean @default(true)
 
   // Canvas LMS Integration
   canvasInstanceUrl       String?

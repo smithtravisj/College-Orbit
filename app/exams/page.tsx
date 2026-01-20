@@ -6,7 +6,7 @@ import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useBulkSelect } from '@/hooks/useBulkSelect';
-import { formatDate } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
@@ -34,6 +34,7 @@ import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguagePar
 export default function ExamsPage() {
   const isMobile = useIsMobile();
   const { isPremium } = useSubscription();
+  const { formatDate, getCourseDisplayName } = useFormatters();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
@@ -582,7 +583,7 @@ export default function ExamsPage() {
                     label="Course"
                     value={courseFilter}
                     onChange={(e) => setCourseFilter(e.target.value)}
-                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) }))]}
                   />
                 </div>
                 <div className="space-y-1">
@@ -658,7 +659,7 @@ export default function ExamsPage() {
                     label="Course"
                     value={courseFilter}
                     onChange={(e) => setCourseFilter(e.target.value)}
-                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) }))]}
                   />
                 </div>
                 <div className="space-y-1">
@@ -759,7 +760,7 @@ export default function ExamsPage() {
                     label="Course"
                     value={formData.courseId}
                     onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                    options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
+                    options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) }))]}
                   />
                   <Input
                     label="Location"
@@ -1054,7 +1055,7 @@ export default function ExamsPage() {
                           )}
                           {course && (
                             <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
-                              {course.code}
+                              {getCourseDisplayName(course)}
                             </span>
                           )}
                         </div>

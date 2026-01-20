@@ -94,6 +94,30 @@ export function isTomorrow(date: Date | string): boolean {
   );
 }
 
+// Get the number of days from today (0 = today, 1 = tomorrow, etc.)
+export function getDaysFromToday(date: Date | string): number {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const today = new Date();
+  // Reset times to compare just dates
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(d);
+  target.setHours(0, 0, 0, 0);
+  const diffTime = target.getTime() - today.getTime();
+  return Math.round(diffTime / (1000 * 60 * 60 * 24));
+}
+
+// Get relative date string if within 7 days, otherwise return null
+export function getRelativeDateString(date: Date | string): string | null {
+  const days = getDaysFromToday(date);
+
+  if (days < 0) return null; // Past dates show as actual date
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Tomorrow';
+  if (days <= 7) return `In ${days} days`;
+
+  return null; // Beyond 7 days, show actual date
+}
+
 export function isOverdue(date: Date | string): boolean {
   const d = typeof date === 'string' ? new Date(date) : date;
   return d < new Date() && !isToday(d);

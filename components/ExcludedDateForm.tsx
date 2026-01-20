@@ -6,6 +6,7 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import CalendarPicker from '@/components/CalendarPicker';
 import { getDateRange } from '@/lib/calendarUtils';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface ExcludedDateFormProps {
   onClose: () => void;
@@ -13,6 +14,7 @@ interface ExcludedDateFormProps {
 
 export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
   const { courses, settings, addExcludedDate, addExcludedDateRange } = useAppStore();
+  const { getCourseDisplayName } = useFormatters();
   const [dateMode, setDateMode] = useState<'single' | 'range'>('single');
   const [form, setForm] = useState({
     courseId: '', // Empty string = global
@@ -144,7 +146,7 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
           <option value="">All Courses (School Holiday)</option>
           {courses.map((course) => (
             <option key={course.id} value={course.id}>
-              {course.code} - {course.name}
+              {getCourseDisplayName(course)}
             </option>
           ))}
         </select>

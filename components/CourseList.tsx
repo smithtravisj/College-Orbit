@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import useAppStore from '@/lib/store';
 import Card from '@/components/ui/Card';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import { Edit2, Trash2, Check, FileIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useFormatters } from '@/hooks/useFormatters';
 import { Course } from '@/types';
 import { CanvasBadge } from './CanvasBadge';
+import { showDeleteToast } from './ui/DeleteToast';
 
 interface CourseListProps {
   courses: Course[];
@@ -43,7 +45,9 @@ export default function CourseList({
   onContextMenu,
 }: CourseListProps) {
   const isMobile = useIsMobile();
+  const { getCourseDisplayName } = useFormatters();
   const { deleteCourse } = useAppStore();
+  const confirmBeforeDelete = useAppStore((state) => state.settings.confirmBeforeDelete) ?? true;
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
     courseId: string;
@@ -56,16 +60,63 @@ export default function CourseList({
     isCanvasCourse: false,
   });
   const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
+  const [pendingDeletes, setPendingDeletes] = useState<Set<string>>(new Set());
+  const pendingDeleteTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
+  const handleDelete = useCallback((course: Course) => {
+    if (confirmBeforeDelete) {
+      // Show confirmation modal
+      setDeleteConfirmation({
+        isOpen: true,
+        courseId: course.id,
+        courseName: getCourseDisplayName(course),
+        isCanvasCourse: !!course.canvasCourseId,
+      });
+    } else {
+      // Immediate delete with undo toast
+      setPendingDeletes(prev => new Set(prev).add(course.id));
+
+      // Show toast and set timeout for actual deletion
+      showDeleteToast(`${getCourseDisplayName(course)} deleted`, () => {
+        // Undo - cancel the deletion
+        const timeout = pendingDeleteTimeouts.current.get(course.id);
+        if (timeout) {
+          clearTimeout(timeout);
+          pendingDeleteTimeouts.current.delete(course.id);
+        }
+        setPendingDeletes(prev => {
+          const next = new Set(prev);
+          next.delete(course.id);
+          return next;
+        });
+      });
+
+      // Schedule actual deletion after toast duration
+      const timeout = setTimeout(() => {
+        deleteCourse(course.id);
+        pendingDeleteTimeouts.current.delete(course.id);
+        setPendingDeletes(prev => {
+          const next = new Set(prev);
+          next.delete(course.id);
+          return next;
+        });
+      }, 5000);
+      pendingDeleteTimeouts.current.set(course.id, timeout);
+    }
+  }, [confirmBeforeDelete, getCourseDisplayName, deleteCourse]);
 
   if (courses.length === 0) {
     return null;
   }
 
+  // Filter out courses pending deletion
+  const visibleCourses = courses.filter(c => !pendingDeletes.has(c.id));
+
   return (
     <>
       <Card>
       <div className="space-y-4 divide-y divide-[var(--border)]">
-        {courses.map((course) => {
+        {visibleCourses.map((course) => {
           const isSelected = selectedIds.has(course.id);
           return (
           <div
@@ -177,14 +228,7 @@ export default function CourseList({
                 </button>
               )}
               <button
-                onClick={() => {
-                  setDeleteConfirmation({
-                    isOpen: true,
-                    courseId: course.id,
-                    courseName: course.code,
-                    isCanvasCourse: !!course.canvasCourseId,
-                  });
-                }}
+                onClick={() => handleDelete(course)}
                 className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
                 style={{ padding: isMobile ? '6px' : '8px' }}
                 title="Delete course"

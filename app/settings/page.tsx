@@ -9,6 +9,7 @@ import Button from '@/components/ui/Button';
 import ColorPicker from '@/components/ui/ColorPicker';
 import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import { showDeleteToast } from '@/components/ui/DeleteToast';
 import { Monitor, HelpCircle, RefreshCw, Link2, Unlink, ChevronDown } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -86,6 +87,8 @@ export default function SettingsPage() {
   const [canvasAutoMarkComplete, setCanvasAutoMarkComplete] = useState(true);
   const [showCanvasDisconnectModal, setShowCanvasDisconnectModal] = useState(false);
   const [canvasSyncSettingsOpen, setCanvasSyncSettingsOpen] = useState(false);
+  const [pendingDisconnect, setPendingDisconnect] = useState(false);
+  const pendingDisconnectTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Local state for sliders (smooth UI while debouncing API calls)
   const [localGradientIntensity, setLocalGradientIntensity] = useState(50);
@@ -105,6 +108,7 @@ export default function SettingsPage() {
   const glowIntensity = isPremium ? (settings.glowIntensity ?? 50) : 50;
   const glowScale = glowIntensity / 50;
   const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
+  const confirmBeforeDelete = settings.confirmBeforeDelete ?? true;
 
   // Check if running on Mac desktop browser
   useEffect(() => {
@@ -502,9 +506,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleCanvasDisconnect = async () => {
-    setShowCanvasDisconnectModal(false);
-
+  const performCanvasDisconnect = async () => {
     try {
       const response = await fetch('/api/canvas/disconnect', {
         method: 'POST',
@@ -523,6 +525,41 @@ export default function SettingsPage() {
       console.error('Canvas disconnect error:', error);
       setCanvasMessage('✗ Failed to disconnect. Please try again.');
       setTimeout(() => setCanvasMessage(''), 3000);
+    }
+  };
+
+  const handleCanvasDisconnect = async () => {
+    setShowCanvasDisconnectModal(false);
+    await performCanvasDisconnect();
+  };
+
+  const handleCanvasDisconnectClick = () => {
+    if (confirmBeforeDelete) {
+      setShowCanvasDisconnectModal(true);
+    } else {
+      // Show toast with undo
+      setPendingDisconnect(true);
+
+      // Clear any existing timeout
+      if (pendingDisconnectTimeout.current) {
+        clearTimeout(pendingDisconnectTimeout.current);
+      }
+
+      showDeleteToast('Canvas disconnected', () => {
+        // Undo - cancel the disconnect
+        if (pendingDisconnectTimeout.current) {
+          clearTimeout(pendingDisconnectTimeout.current);
+          pendingDisconnectTimeout.current = null;
+        }
+        setPendingDisconnect(false);
+      });
+
+      // Schedule actual disconnect after toast duration
+      pendingDisconnectTimeout.current = setTimeout(async () => {
+        await performCanvasDisconnect();
+        setPendingDisconnect(false);
+        pendingDisconnectTimeout.current = null;
+      }, 5000);
     }
   };
 
@@ -899,6 +936,555 @@ export default function SettingsPage() {
                 </button>
               </div>
             </div>
+
+            {/* Show Relative Dates */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Relative Dates</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Display "Tomorrow" or "In 3 days" instead of actual dates (within 7 days)
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ showRelativeDates: !(settings.showRelativeDates ?? false) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.showRelativeDates ?? false) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.showRelativeDates ?? false) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Show Nav Counts */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Item Counts in Nav</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Display badge counts on sidebar items
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ showNavCounts: !(settings.showNavCounts ?? false) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.showNavCounts ?? false) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.showNavCounts ?? false) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+
+              {/* Sub-options when enabled */}
+              {(settings.showNavCounts ?? false) && (
+                <div style={{ marginTop: '16px', paddingLeft: '16px', borderLeft: '2px solid var(--border)' }}>
+                  {/* Tasks count toggle */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <p className="text-sm text-[var(--text)]" style={{ margin: 0 }}>Tasks</p>
+                      <div className="relative" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <HelpCircle
+                          size={14}
+                          className="text-[var(--text-muted)] cursor-help peer hover:text-[var(--text)]"
+                          style={{ transition: 'color 0.15s' }}
+                        />
+                        <div
+                          className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 pointer-events-none"
+                          style={{
+                            padding: '8px 12px',
+                            fontSize: '12px',
+                            color: 'var(--text)',
+                            backgroundColor: 'var(--panel)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '6px',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                            whiteSpace: 'nowrap',
+                            zIndex: 50,
+                            transition: 'opacity 0.15s, visibility 0.15s',
+                          }}
+                        >
+                          Shows count of overdue tasks
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => updateSettings({ showNavCountTasks: !(settings.showNavCountTasks ?? true) })}
+                      style={{
+                        width: '36px',
+                        height: '20px',
+                        borderRadius: '10px',
+                        backgroundColor: (settings.showNavCountTasks ?? true) ? 'var(--accent)' : 'var(--panel-2)',
+                        border: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background-color 0.2s ease',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '14px',
+                          height: '14px',
+                          borderRadius: '50%',
+                          backgroundColor: 'white',
+                          position: 'absolute',
+                          top: '2px',
+                          left: (settings.showNavCountTasks ?? true) ? '18px' : '2px',
+                          transition: 'left 0.2s ease',
+                        }}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Assignments count toggle */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <p className="text-sm text-[var(--text)]" style={{ margin: 0 }}>Assignments</p>
+                      <div className="relative" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <HelpCircle
+                          size={14}
+                          className="text-[var(--text-muted)] cursor-help peer hover:text-[var(--text)]"
+                          style={{ transition: 'color 0.15s' }}
+                        />
+                        <div
+                          className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 pointer-events-none"
+                          style={{
+                            padding: '8px 12px',
+                            fontSize: '12px',
+                            color: 'var(--text)',
+                            backgroundColor: 'var(--panel)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '6px',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                            whiteSpace: 'nowrap',
+                            zIndex: 50,
+                            transition: 'opacity 0.15s, visibility 0.15s',
+                          }}
+                        >
+                          Shows count of overdue assignments
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => updateSettings({ showNavCountAssignments: !(settings.showNavCountAssignments ?? true) })}
+                      style={{
+                        width: '36px',
+                        height: '20px',
+                        borderRadius: '10px',
+                        backgroundColor: (settings.showNavCountAssignments ?? true) ? 'var(--accent)' : 'var(--panel-2)',
+                        border: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background-color 0.2s ease',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '14px',
+                          height: '14px',
+                          borderRadius: '50%',
+                          backgroundColor: 'white',
+                          position: 'absolute',
+                          top: '2px',
+                          left: (settings.showNavCountAssignments ?? true) ? '18px' : '2px',
+                          transition: 'left 0.2s ease',
+                        }}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Exams count toggle */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <p className="text-sm text-[var(--text)]" style={{ margin: 0 }}>Exams</p>
+                      <div className="relative" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <HelpCircle
+                          size={14}
+                          className="text-[var(--text-muted)] cursor-help peer hover:text-[var(--text)]"
+                          style={{ transition: 'color 0.15s' }}
+                        />
+                        <div
+                          className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 pointer-events-none"
+                          style={{
+                            padding: '8px 12px',
+                            fontSize: '12px',
+                            color: 'var(--text)',
+                            backgroundColor: 'var(--panel)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '6px',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                            whiteSpace: 'nowrap',
+                            zIndex: 50,
+                            transition: 'opacity 0.15s, visibility 0.15s',
+                          }}
+                        >
+                          Shows total number of exams
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => updateSettings({ showNavCountExams: !(settings.showNavCountExams ?? true) })}
+                      style={{
+                        width: '36px',
+                        height: '20px',
+                        borderRadius: '10px',
+                        backgroundColor: (settings.showNavCountExams ?? true) ? 'var(--accent)' : 'var(--panel-2)',
+                        border: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background-color 0.2s ease',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '14px',
+                          height: '14px',
+                          borderRadius: '50%',
+                          backgroundColor: 'white',
+                          position: 'absolute',
+                          top: '2px',
+                          left: (settings.showNavCountExams ?? true) ? '18px' : '2px',
+                          transition: 'left 0.2s ease',
+                        }}
+                      />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Show Priority Indicators */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Priority Indicators</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Display priority badges on tasks
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ showPriorityIndicators: !(settings.showPriorityIndicators ?? true) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.showPriorityIndicators ?? true) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.showPriorityIndicators ?? true) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Show Effort Indicators */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Effort Indicators</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Display effort level badges on assignments
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ showEffortIndicators: !(settings.showEffortIndicators ?? true) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.showEffortIndicators ?? true) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.showEffortIndicators ?? true) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Group Tasks by Course */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Group Tasks by Course</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Auto-group tasks by course in list view
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ groupTasksByCourse: !(settings.groupTasksByCourse ?? false) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.groupTasksByCourse ?? false) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.groupTasksByCourse ?? false) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Group Assignments by Course */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Group Assignments by Course</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Auto-group assignments by course in list view
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ groupAssignmentsByCourse: !(settings.groupAssignmentsByCourse ?? false) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.groupAssignmentsByCourse ?? false) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.groupAssignmentsByCourse ?? false) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+
+              {/* Show Course Code vs Name */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 0',
+                  borderTop: '1px solid var(--border)',
+                  marginTop: '12px',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Course Code</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Display course code (e.g., CS 101) instead of full name
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ showCourseCode: !(settings.showCourseCode ?? false) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.showCourseCode ?? false) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.showCourseCode ?? false) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+
+              {/* Confirm Before Delete */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 0',
+                  borderTop: '1px solid var(--border)',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Confirm Before Delete</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Show confirmation dialogs before deleting items
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ confirmBeforeDelete: !(settings.confirmBeforeDelete ?? true) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.confirmBeforeDelete ?? true) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.confirmBeforeDelete ?? true) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+
+              {/* Enable Keyboard Shortcuts */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 0',
+                  borderTop: '1px solid var(--border)',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Enable Keyboard Shortcuts</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Toggle keyboard navigation and action shortcuts
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ enableKeyboardShortcuts: !(settings.enableKeyboardShortcuts ?? true) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.enableKeyboardShortcuts ?? true) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.enableKeyboardShortcuts ?? true) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
           </Card>
           )}
 
@@ -1087,15 +1673,17 @@ export default function SettingsPage() {
                   <Button
                     size={isMobile ? 'sm' : 'lg'}
                     variant="secondary"
-                    onClick={() => setShowCanvasDisconnectModal(true)}
+                    onClick={handleCanvasDisconnectClick}
+                    disabled={pendingDisconnect}
                     style={{
                       paddingLeft: isMobile ? '12px' : '16px',
                       paddingRight: isMobile ? '12px' : '16px',
                       boxShadow: 'none',
+                      opacity: pendingDisconnect ? 0.5 : 1,
                     }}
                   >
                     <Unlink size={16} className="mr-2" />
-                    Disconnect
+                    {pendingDisconnect ? 'Disconnecting...' : 'Disconnect'}
                   </Button>
                 </div>
 

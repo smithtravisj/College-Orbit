@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, Loader } from 'lucide-react';
 import useAppStore from '@/lib/store';
 import { Course } from '@/types/index';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface FolderModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface FolderModalProps {
 
 export default function FolderModal({ isOpen, onClose, editingFolderId, courses }: FolderModalProps) {
   const { folders, addFolder, updateFolder, deleteFolder } = useAppStore();
+  const { getCourseDisplayName } = useFormatters();
   const [name, setName] = useState('');
   const [courseId, setCourseId] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -233,7 +235,7 @@ export default function FolderModal({ isOpen, onClose, editingFolderId, courses 
               <option value="">No course</option>
               {courses.map((course) => (
                 <option key={course.id} value={course.id}>
-                  {course.code} - {course.name}
+                  {getCourseDisplayName(course)}
                 </option>
               ))}
             </select>

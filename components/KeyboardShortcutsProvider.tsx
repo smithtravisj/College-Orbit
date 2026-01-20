@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import KeyboardShortcutsModal from './KeyboardShortcutsModal';
+import useAppStore from '@/lib/store';
 
 interface KeyboardShortcutsContextType {
   showHelp: () => void;
@@ -40,6 +41,7 @@ interface KeyboardShortcutsProviderProps {
 }
 
 export default function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProviderProps) {
+  const enableKeyboardShortcuts = useAppStore((state) => state.settings.enableKeyboardShortcuts) ?? true;
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [quickAddHandler, setQuickAddHandlerState] = useState<(() => void) | null>(null);
   const [searchHandler, setSearchHandlerState] = useState<(() => void) | null>(null);
@@ -102,7 +104,7 @@ export default function KeyboardShortcutsProvider({ children }: KeyboardShortcut
     onSelectAll: triggerSelectAll,
     onDeselectAll: triggerDeselectAll,
     onEscape: triggerEscape,
-    disabled: false,
+    disabled: !enableKeyboardShortcuts,
   });
 
   const value: KeyboardShortcutsContextType = {

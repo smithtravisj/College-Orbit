@@ -1,16 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { GpaEntry } from '@/types';
 import { Trash2, Plus } from 'lucide-react';
 import Input, { Select } from '@/components/ui/Input';
+import useAppStore from '@/lib/store';
+import { showDeleteToast } from '@/components/ui/DeleteToast';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface GradeTrackerTableProps {
   entries: GpaEntry[];
   onAddGrade: (entry: Omit<GpaEntry, 'id' | 'createdAt'>) => Promise<void>;
   onUpdateGrade: (id: string, updates: Partial<GpaEntry>) => Promise<void>;
   onDeleteGrade: (id: string) => Promise<void>;
-  courses: Array<{ id: string; name: string; term?: string }>;
+  courses: Array<{ id: string; name: string; code: string; term?: string }>;
   theme?: string;
 }
 
@@ -41,6 +44,8 @@ export default function GradeTrackerTable({
   courses,
   theme = 'dark',
 }: GradeTrackerTableProps) {
+  const { getCourseDisplayName } = useFormatters();
+  const confirmBeforeDelete = useAppStore((state) => state.settings.confirmBeforeDelete) ?? true;
   const [isAddingGrade, setIsAddingGrade] = useState(false);
   const [newGrade, setNewGrade] = useState<Omit<GpaEntry, 'id' | 'createdAt'>>({
     courseName: '',
@@ -51,6 +56,8 @@ export default function GradeTrackerTable({
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [pendingDeletes, setPendingDeletes] = useState<Set<string>>(new Set());
+  const pendingDeleteTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   const handleAddGrade = async () => {
     if (!newGrade.courseName || !newGrade.grade) {
@@ -82,6 +89,46 @@ export default function GradeTrackerTable({
       term: selectedCourse?.term || '',
     });
   };
+
+  const handleDelete = useCallback((entry: GpaEntry) => {
+    if (confirmBeforeDelete) {
+      // Show confirmation modal
+      setDeleteConfirmId(entry.id);
+    } else {
+      // Immediate delete with undo toast
+      setPendingDeletes(prev => new Set(prev).add(entry.id));
+
+      // Show toast and set timeout for actual deletion
+      showDeleteToast(`"${entry.courseName}" grade deleted`, () => {
+        // Undo - cancel the deletion
+        const timeout = pendingDeleteTimeouts.current.get(entry.id);
+        if (timeout) {
+          clearTimeout(timeout);
+          pendingDeleteTimeouts.current.delete(entry.id);
+        }
+        setPendingDeletes(prev => {
+          const next = new Set(prev);
+          next.delete(entry.id);
+          return next;
+        });
+      });
+
+      // Schedule actual deletion after toast duration
+      const timeout = setTimeout(async () => {
+        await onDeleteGrade(entry.id);
+        pendingDeleteTimeouts.current.delete(entry.id);
+        setPendingDeletes(prev => {
+          const next = new Set(prev);
+          next.delete(entry.id);
+          return next;
+        });
+      }, 5000);
+      pendingDeleteTimeouts.current.set(entry.id, timeout);
+    }
+  }, [confirmBeforeDelete, onDeleteGrade]);
+
+  // Filter out entries pending deletion
+  const visibleEntries = entries.filter(e => !pendingDeletes.has(e.id));
 
   return (
     <div>
@@ -117,7 +164,7 @@ export default function GradeTrackerTable({
 
       {/* Grade Rows */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-        {entries.map(entry => (
+        {visibleEntries.map(entry => (
           <div
             key={entry.id}
             style={{
@@ -224,7 +271,7 @@ export default function GradeTrackerTable({
               )}
             </div>
             <button
-              onClick={() => setDeleteConfirmId(entry.id)}
+              onClick={() => handleDelete(entry)}
               style={{
                 padding: '8px',
                 display: 'flex',
@@ -296,7 +343,7 @@ export default function GradeTrackerTable({
               onChange={(e) => handleCourseSelect(e.target.value)}
               options={[
                 { value: '', label: 'Select a course...' },
-                ...courses.map(c => ({ value: c.name, label: c.name })),
+                ...courses.map(c => ({ value: c.name, label: getCourseDisplayName(c as any) })),
               ]}
             />
           </div>

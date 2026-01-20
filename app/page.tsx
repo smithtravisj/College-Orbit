@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import useAppStore from '@/lib/store';
 import OnboardingTour from '@/components/OnboardingTour';
-import { isToday, formatDate, isOverdue, formatTimeString, TimeFormat, DateFormat } from '@/lib/utils';
+import { isToday, isOverdue, formatTimeString, TimeFormat } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 import { isDateExcluded } from '@/lib/calendarUtils';
 import { getQuickLinks } from '@/lib/quickLinks';
 import { getDashboardCardSpan } from '@/lib/dashboardLayout';
@@ -40,6 +41,7 @@ export default function HomePage() {
 
 function Dashboard() {
   const { data: session } = useSession();
+  const { formatDate, getCourseDisplayName, showCourseCode } = useFormatters();
   const [mounted, setMounted] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -491,7 +493,7 @@ function Dashboard() {
                   {/* Course Code & Name */}
                   <div>
                     <div className="text-sm font-medium text-[var(--text)]">
-                      {displayClass.courseCode}{displayClass.courseName ? ` - ${displayClass.courseName}` : ''}
+                      {showCourseCode ? displayClass.courseCode : (displayClass.courseName || displayClass.courseCode)}
                     </div>
                   </div>
 
@@ -552,7 +554,7 @@ function Dashboard() {
                         label="Course (optional)"
                         value={deadlineFormData.courseId}
                         onChange={(e) => setDeadlineFormData({ ...deadlineFormData, courseId: e.target.value })}
-                        options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
+                        options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) }))]}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4" style={{ paddingTop: '12px' }}>
@@ -725,7 +727,7 @@ function Dashboard() {
                           </div>
                           <div className="flex items-center gap-2 mt-2 flex-wrap">
                             <span className="text-xs text-[var(--text-muted)]">
-                              {formatDate(d.dueAt!, (settings.dateFormat || 'MM/DD/YYYY') as DateFormat)}
+                              {formatDate(d.dueAt!)}
                             </span>
                             {shouldShowTime && (
                               <span className="text-xs text-[var(--text-muted)]">
@@ -734,7 +736,7 @@ function Dashboard() {
                             )}
                             {course && (
                               <span className="text-xs text-[var(--text-muted)]">
-                                {course.code}
+                                {getCourseDisplayName(course)}
                               </span>
                             )}
                           </div>
@@ -891,7 +893,7 @@ function Dashboard() {
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           {isOverdueTask && t.dueAt && (
                             <span className="text-xs text-[var(--text-muted)]">
-                              {formatDate(t.dueAt, (settings.dateFormat || 'MM/DD/YYYY') as DateFormat)}
+                              {formatDate(t.dueAt)}
                             </span>
                           )}
                           {shouldShowTime && (
@@ -901,7 +903,7 @@ function Dashboard() {
                           )}
                           {course && (
                             <span className="text-xs text-[var(--text-muted)]">
-                              {course.code}
+                              {getCourseDisplayName(course)}
                             </span>
                           )}
                         </div>
@@ -954,7 +956,7 @@ function Dashboard() {
                       label="Course (optional)"
                       value={taskFormData.courseId}
                       onChange={(e) => setTaskFormData({ ...taskFormData, courseId: e.target.value })}
-                      options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
+                      options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) }))]}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4" style={{ paddingTop: '12px' }}>
@@ -1219,9 +1221,9 @@ function Dashboard() {
                                 <div key={idx} style={{ marginBottom: idx !== items.length - 1 ? '16px' : '0px' }}>
                                   <div className="text-sm font-medium text-[var(--text)]">
                                     {item.type === 'class'
-                                      ? `${item.courseCode}${item.courseName ? ` - ${item.courseName}` : ''}`
+                                      ? (showCourseCode ? item.courseCode : (item.courseName || item.courseCode))
                                       : item.type === 'exam'
-                                      ? `${item.courseCode ? `${item.courseCode} - ` : ''}${item.title} (Exam)`
+                                      ? `${showCourseCode && item.courseCode ? `${item.courseCode} - ` : ''}${item.title} (Exam)`
                                       : item.title}
                                   </div>
                                   <div className="text-sm text-[var(--text-secondary)]" style={{ marginTop: '3px' }}>
@@ -1356,7 +1358,7 @@ function Dashboard() {
                 <div style={{ marginBottom: '12px' }}>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Due</div>
                   <div style={{ fontSize: '14px', color: 'var(--text)' }}>
-                    {formatDate(previewingTask.dueAt, (settings.dateFormat || 'MM/DD/YYYY') as DateFormat)}
+                    {formatDate(previewingTask.dueAt)}
                     {' '}
                     {new Date(previewingTask.dueAt).getHours() !== 23 && new Date(previewingTask.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
@@ -1522,7 +1524,7 @@ function Dashboard() {
                 <div style={{ marginBottom: '12px' }}>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Due</div>
                   <div style={{ fontSize: '14px', color: 'var(--text)' }}>
-                    {formatDate(previewingDeadline.dueAt, (settings.dateFormat || 'MM/DD/YYYY') as DateFormat)}
+                    {formatDate(previewingDeadline.dueAt)}
                     {' '}
                     {new Date(previewingDeadline.dueAt).getHours() !== 23 && new Date(previewingDeadline.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useState, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -12,6 +12,7 @@ import { DEFAULT_VISIBLE_PAGES } from '@/lib/customizationConstants';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useMobileNav } from '@/context/MobileNavContext';
+import { isOverdue } from '@/lib/utils';
 import {
   Home,
   CheckSquare,
@@ -103,6 +104,42 @@ export default function Navigation() {
   // Migrate "Deadlines" to "Assignments"
   const visiblePages = rawVisiblePages.map((p: string) => p === 'Deadlines' ? 'Assignments' : p);
   const visiblePagesOrder = rawVisiblePagesOrder ? (rawVisiblePagesOrder as string[]).map((p: string) => p === 'Deadlines' ? 'Assignments' : p) : rawVisiblePagesOrder;
+
+  // Nav counts settings
+  const showNavCounts = useAppStore((state) => state.settings.showNavCounts) ?? false;
+  const showNavCountTasks = useAppStore((state) => state.settings.showNavCountTasks) ?? true;
+  const showNavCountAssignments = useAppStore((state) => state.settings.showNavCountAssignments) ?? true;
+  const showNavCountExams = useAppStore((state) => state.settings.showNavCountExams) ?? true;
+
+  // Get data for counts
+  const tasks = useAppStore((state) => state.tasks);
+  const deadlines = useAppStore((state) => state.deadlines);
+  const exams = useAppStore((state) => state.exams);
+
+  // Calculate counts
+  const navCounts = useMemo(() => {
+    if (!showNavCounts) return {};
+
+    const counts: Record<string, number> = {};
+
+    if (showNavCountTasks) {
+      const overdueTasks = tasks.filter(t => t.status === 'open' && t.dueAt && isOverdue(t.dueAt)).length;
+      if (overdueTasks > 0) counts['Tasks'] = overdueTasks;
+    }
+
+    if (showNavCountAssignments) {
+      const overdueAssignments = deadlines.filter(d => d.status === 'open' && d.dueAt && isOverdue(d.dueAt)).length;
+      if (overdueAssignments > 0) counts['Assignments'] = overdueAssignments;
+    }
+
+    if (showNavCountExams) {
+      const totalExams = exams.length;
+      if (totalExams > 0) counts['Exams'] = totalExams;
+    }
+
+    return counts;
+  }, [showNavCounts, showNavCountTasks, showNavCountAssignments, showNavCountExams, tasks, deadlines, exams]);
+
   const [isAdmin, setIsAdmin] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -329,7 +366,27 @@ export default function Navigation() {
                 }}
               >
                 <Icon size={20} className="h-[20px] w-[20px] opacity-80 group-hover:opacity-100 flex-shrink-0" />
-                <span className="truncate">{item.label}</span>
+                <span className="truncate flex-1">{item.label}</span>
+                {navCounts[item.label] && (
+                  <span
+                    style={{
+                      minWidth: '20px',
+                      height: '20px',
+                      padding: '0 6px',
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '10px',
+                      backgroundColor: item.label === 'Exams' ? 'var(--accent)' : 'var(--danger)',
+                      color: 'white',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {navCounts[item.label]}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -440,7 +497,27 @@ export default function Navigation() {
                   } : undefined}
                 >
                   <Icon size={20} />
-                  <span>{item.label}</span>
+                  <span style={{ flex: 1 }}>{item.label}</span>
+                  {navCounts[item.label] && (
+                    <span
+                      style={{
+                        minWidth: '18px',
+                        height: '18px',
+                        padding: '0 5px',
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '9px',
+                        backgroundColor: item.label === 'Exams' ? 'var(--accent)' : 'var(--danger)',
+                        color: 'white',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {navCounts[item.label]}
+                    </span>
+                  )}
                 </Link>
               );
             })}

@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
-import { formatDate, isOverdue } from '@/lib/utils';
+import { formatDate as formatDateUtil, isOverdue } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useBulkSelect } from '@/hooks/useBulkSelect';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
@@ -35,6 +36,7 @@ import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
 import { CanvasBadge } from '@/components/CanvasBadge';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import { showDeleteToast } from '@/components/ui/DeleteToast';
 
 // Helper function to format recurring pattern as human-readable text
 function getRecurrenceText(pattern: any): string {
@@ -71,7 +73,7 @@ function getRecurrenceText(pattern: any): string {
 
   // Add end condition
   if (pattern.endDate) {
-    text += ` until ${formatDate(pattern.endDate)}`;
+    text += ` until ${formatDateUtil(pattern.endDate)}`;
   } else if (pattern.occurrenceCount) {
     text += ` for ${pattern.occurrenceCount} occurrences`;
   }
@@ -82,6 +84,7 @@ function getRecurrenceText(pattern: any): string {
 export default function DeadlinesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subscription = useSubscription();
+  const { formatDate, getCourseDisplayName } = useFormatters();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -90,6 +93,8 @@ export default function DeadlinesPage() {
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
   const savedGlowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
+  const showEffortIndicators = useAppStore((state) => state.settings.showEffortIndicators) ?? true;
+  const groupAssignmentsByCourse = useAppStore((state) => state.settings.groupAssignmentsByCourse) ?? false;
 
   // Custom theme and visual effects are only active for premium users
   const useCustomTheme = subscription.isPremium ? savedUseCustomTheme : false;
@@ -149,7 +154,12 @@ export default function DeadlinesPage() {
   // Canvas delete confirmation
   const [canvasDeleteConfirm, setCanvasDeleteConfirm] = useState<{ id: string; title: string } | null>(null);
 
+  // Delete with undo functionality
+  const [pendingDeletes, setPendingDeletes] = useState<Set<string>>(new Set());
+  const pendingDeleteTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
   const { courses, deadlines, notes, settings, addDeadline, updateDeadline, deleteDeadline, addRecurringDeadline, updateRecurringDeadlinePattern, bulkUpdateDeadlines, bulkDeleteDeadlines, initializeStore } = useAppStore();
+  const confirmBeforeDelete = settings.confirmBeforeDelete ?? true;
   const isMobile = useIsMobile();
 
   // Handle filters card collapse state changes and save to database
@@ -696,11 +706,41 @@ export default function DeadlinesPage() {
 
   // Handle delete with Canvas confirmation
   const handleDeleteDeadline = (deadline: any) => {
-    if (deadline.canvasAssignmentId) {
-      // Show confirmation modal for Canvas items
+    if (confirmBeforeDelete && deadline.canvasAssignmentId) {
+      // Show confirmation modal for Canvas items when confirmations are enabled
       setCanvasDeleteConfirm({ id: deadline.id, title: deadline.title });
+    } else if (!confirmBeforeDelete) {
+      // Show toast with undo for all items when confirmations are disabled
+      setPendingDeletes(prev => new Set(prev).add(deadline.id));
+
+      // Show toast and set timeout for actual deletion
+      showDeleteToast(`"${deadline.title}" deleted`, () => {
+        // Undo - cancel the deletion
+        const timeout = pendingDeleteTimeouts.current.get(deadline.id);
+        if (timeout) {
+          clearTimeout(timeout);
+          pendingDeleteTimeouts.current.delete(deadline.id);
+        }
+        setPendingDeletes(prev => {
+          const next = new Set(prev);
+          next.delete(deadline.id);
+          return next;
+        });
+      });
+
+      // Schedule actual deletion after toast duration
+      const timeout = setTimeout(() => {
+        deleteDeadline(deadline.id);
+        pendingDeleteTimeouts.current.delete(deadline.id);
+        setPendingDeletes(prev => {
+          const next = new Set(prev);
+          next.delete(deadline.id);
+          return next;
+        });
+      }, 5000);
+      pendingDeleteTimeouts.current.set(deadline.id, timeout);
     } else {
-      // Direct delete for non-Canvas items
+      // Direct delete for non-Canvas items when confirmations are enabled
       deleteDeadline(deadline.id);
     }
   };
@@ -713,6 +753,7 @@ export default function DeadlinesPage() {
   };
 
   const filtered = deadlines
+    .filter((d) => !pendingDeletes.has(d.id)) // Filter out pending deletes
     .filter((d) => {
       // Always include toggled deadlines (keep them visible after status change)
       if (toggledDeadlines.has(d.id)) {
@@ -781,6 +822,46 @@ export default function DeadlinesPage() {
       // Both don't have due dates, sort alphabetically
       return a.title.localeCompare(b.title);
     });
+
+  // Group assignments by course if enabled
+  const groupedDeadlines = (() => {
+    if (!groupAssignmentsByCourse) return null;
+
+    // Group deadlines by courseId
+    const groups: Record<string, typeof filtered> = {};
+    filtered.forEach((d) => {
+      const key = d.courseId || '__no_course__';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(d);
+    });
+
+    // Sort groups by earliest due date, with "No Course" first
+    const sortedGroupKeys = Object.keys(groups).sort((a, b) => {
+      // "No Course" always first
+      if (a === '__no_course__') return -1;
+      if (b === '__no_course__') return 1;
+
+      // Get earliest due date for each group
+      const aEarliest = groups[a].find(d => d.dueAt)?.dueAt;
+      const bEarliest = groups[b].find(d => d.dueAt)?.dueAt;
+
+      if (aEarliest && bEarliest) {
+        return new Date(aEarliest).getTime() - new Date(bEarliest).getTime();
+      }
+      if (aEarliest) return -1;
+      if (bEarliest) return 1;
+      return 0;
+    });
+
+    return sortedGroupKeys.map((key) => {
+      const course = key === '__no_course__' ? null : courses.find(c => c.id === key);
+      return {
+        courseId: key === '__no_course__' ? null : key,
+        courseName: key === '__no_course__' ? 'No Course' : (course ? getCourseDisplayName(course) : 'Unknown Course'),
+        deadlines: groups[key],
+      };
+    });
+  })();
 
   return (
     <>
@@ -864,7 +945,7 @@ export default function DeadlinesPage() {
                     label="Course"
                     value={courseFilter}
                     onChange={(e) => setCourseFilter(e.target.value)}
-                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) }))]}
                   />
                 </div>
                                 <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
@@ -955,7 +1036,7 @@ export default function DeadlinesPage() {
                     label="Course"
                     value={courseFilter}
                     onChange={(e) => setCourseFilter(e.target.value)}
-                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) }))]}
                   />
                 </div>
                 <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
@@ -1066,7 +1147,7 @@ export default function DeadlinesPage() {
                     label="Course"
                     value={formData.courseId}
                     onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                    options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
+                    options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) }))]}
                   />
                   <Select
                     label="Effort"
@@ -1348,7 +1429,192 @@ export default function DeadlinesPage() {
           {/* Deadlines List */}
           {filtered.length > 0 ? (
             <Card>
-              <div className="space-y-4 divide-y divide-[var(--border)]">
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {groupedDeadlines ? (
+                  // Grouped by course view
+                  groupedDeadlines.map((group, groupIndex) => (
+                    <div key={group.courseId || '__no_course__'}>
+                      {/* Course heading */}
+                      <div
+                        style={{
+                          padding: isMobile ? '12px 8px 8px' : '16px 16px 10px',
+                          fontSize: isMobile ? '12px' : '13px',
+                          fontWeight: 600,
+                          color: 'var(--text-muted)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          borderTop: groupIndex > 0 ? '1px solid var(--border)' : 'none',
+                        }}
+                      >
+                        {group.courseName}
+                      </div>
+                      {/* Deadlines in this course */}
+                      {group.deadlines.map((d, deadlineIndex) => {
+                        const course = courses.find((c) => c.id === d.courseId);
+                        const dueHours = d.dueAt ? new Date(d.dueAt).getHours() : null;
+                        const dueMinutes = d.dueAt ? new Date(d.dueAt).getMinutes() : null;
+                        const dueTime = d.dueAt ? new Date(d.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+                        const isOverdueDeadline = d.dueAt && isOverdue(d.dueAt) && d.status === 'open';
+                        const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
+                        const isSelected = bulkSelect.isSelected(d.id);
+                        return (
+                          <div
+                            key={d.id}
+                            style={{
+                              paddingTop: isMobile ? '6px' : '10px',
+                              paddingBottom: isMobile ? '6px' : '10px',
+                              paddingLeft: isMobile ? '2px' : '16px',
+                              paddingRight: isMobile ? '2px' : '16px',
+                              gap: isMobile ? '8px' : '12px',
+                              opacity: hidingDeadlines.has(d.id) ? 0.5 : 1,
+                              transition: 'opacity 0.3s ease, background-color 0.2s ease',
+                              backgroundColor: isSelected ? 'var(--nav-active)' : undefined,
+                              cursor: 'pointer',
+                              borderBottom: deadlineIndex < group.deadlines.length - 1 ? '1px solid var(--border)' : 'none',
+                            }}
+                            className="flex items-center group/deadline hover:bg-[var(--panel-2)] rounded transition-colors"
+                            onContextMenu={(e) => bulkSelect.handleContextMenu(e, d.id)}
+                            onTouchStart={() => bulkSelect.handleLongPressStart(d.id)}
+                            onTouchEnd={bulkSelect.handleLongPressEnd}
+                            onTouchCancel={bulkSelect.handleLongPressEnd}
+                            onClick={() => {
+                              if (bulkSelect.isSelecting) {
+                                bulkSelect.toggleSelection(d.id);
+                              } else {
+                                setPreviewingDeadline(d);
+                              }
+                            }}
+                          >
+                        {/* Checkbox */}
+                        <input
+                          type="checkbox"
+                          checked={d.status === 'done'}
+                          onChange={async () => {
+                            if (d.status === 'done') {
+                              setToggledDeadlines(prev => new Set(prev).add(d.id));
+                              await updateDeadline(d.id, { status: 'open' });
+                              setToggledDeadlines(prev => {
+                                const newSet = new Set(prev);
+                                newSet.delete(d.id);
+                                return newSet;
+                              });
+                            } else {
+                              setToggledDeadlines(prev => new Set(prev).add(d.id));
+                              setHidingDeadlines(prev => new Set(prev).add(d.id));
+                              setTimeout(async () => {
+                                await updateDeadline(d.id, { status: 'done', workingOn: false });
+                                setTimeout(() => {
+                                  setToggledDeadlines(prev => {
+                                    const newSet = new Set(prev);
+                                    newSet.delete(d.id);
+                                    return newSet;
+                                  });
+                                  setHidingDeadlines(prev => {
+                                    const newSet = new Set(prev);
+                                    newSet.delete(d.id);
+                                    return newSet;
+                                  });
+                                }, 300);
+                              }, 300);
+                            }
+                          }}
+                          style={{
+                            appearance: 'none',
+                            width: isMobile ? '16px' : '20px',
+                            height: isMobile ? '16px' : '20px',
+                            border: d.status === 'done' ? 'none' : '2px solid var(--border)',
+                            borderRadius: '4px',
+                            backgroundColor: d.status === 'done' ? 'var(--button-secondary)' : 'transparent',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            backgroundImage: d.status === 'done' ? 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22white%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z%22 clip-rule=%22evenodd%22 /%3E%3C/svg%3E")' : 'none',
+                            backgroundSize: '100%',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'center',
+                            transition: 'all 0.3s ease'
+                          }}
+                          title={d.status === 'done' ? 'Mark as incomplete' : 'Mark as complete'}
+                        />
+                        <div className="flex-1 min-w-0" style={{ lineHeight: 1.4 }}>
+                          <div className="flex items-center" style={{ gap: isMobile ? '2px' : '6px' }}>
+                            <div className={`font-medium ${d.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'}`} style={{ fontSize: isMobile ? '12px' : '14px' }}>
+                              {d.title}
+                            </div>
+                            {d.isRecurring && <Repeat size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} aria-label="Recurring assignment" />}
+                            {d.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
+                            {isOverdueDeadline && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
+                            {notes.some(n => n.deadlineId === d.id || (d.recurringPatternId && n.recurringDeadlinePatternId === d.recurringPatternId)) && (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: '600', color: 'var(--link)', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
+                                <StickyNote size={10} />
+                                Note
+                              </span>
+                            )}
+                          </div>
+                          {d.notes && (
+                            <div style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', marginTop: '2px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                              {d.notes}
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '4px' : '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                            {d.dueAt && (
+                              <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
+                                {formatDate(d.dueAt)} {shouldShowTime && `at ${dueTime}`}
+                              </span>
+                            )}
+                            {course && (
+                              <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
+                                {getCourseDisplayName(course)}
+                              </span>
+                            )}
+                            {showEffortIndicators && d.effort && (
+                              <span style={{
+                                fontSize: isMobile ? '10px' : '11px',
+                                fontWeight: '600',
+                                padding: '1px 6px',
+                                borderRadius: '3px',
+                                backgroundColor: d.effort === 'large' ? 'rgba(239, 68, 68, 0.15)' : d.effort === 'medium' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                                color: d.effort === 'large' ? '#ef4444' : d.effort === 'medium' ? '#eab308' : '#22c55e',
+                              }}>
+                                {d.effort.charAt(0).toUpperCase() + d.effort.slice(1)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {/* Action buttons */}
+                        <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover/deadline:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '12px' }}>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); updateDeadline(d.id, { workingOn: !d.workingOn }); }}
+                            className={`rounded-[var(--radius-control)] transition-colors hover:bg-white/5 ${d.workingOn ? 'text-[var(--success)]' : 'text-[var(--muted)] hover:text-[var(--success)]'}`}
+                            style={{ padding: isMobile ? '2px' : '6px' }}
+                            title={d.workingOn ? 'Stop working on assignment' : 'Start working on assignment'}
+                          >
+                            <Hammer size={isMobile ? 14 : 20} />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); startEdit(d); }}
+                            className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
+                            style={{ padding: isMobile ? '2px' : '6px' }}
+                            title="Edit assignment"
+                          >
+                            <Edit2 size={isMobile ? 14 : 20} />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteDeadline(d); }}
+                            className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                            style={{ padding: isMobile ? '2px' : '6px' }}
+                            title="Delete assignment"
+                          >
+                            <Trash2 size={isMobile ? 14 : 20} />
+                          </button>
+                        </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))
+                ) : (
+                  // Flat list view (default)
+                  <div className="space-y-4 divide-y divide-[var(--border)]">
                 {filtered.map((d) => {
                   const course = courses.find((c) => c.id === d.courseId);
                   const dueHours = d.dueAt ? new Date(d.dueAt).getHours() : null;
@@ -1525,10 +1791,10 @@ export default function DeadlinesPage() {
                           )}
                           {course && (
                             <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
-                              {course.code}
+                              {getCourseDisplayName(course)}
                             </span>
                           )}
-                          {d.effort && (
+                          {showEffortIndicators && d.effort && (
                             <span style={{
                               fontSize: isMobile ? '10px' : '11px',
                               fontWeight: '600',
@@ -1614,6 +1880,8 @@ export default function DeadlinesPage() {
                     </div>
                   );
                 })}
+                  </div>
+                )}
               </div>
             </Card>
           ) : (
@@ -1788,7 +2056,7 @@ export default function DeadlinesPage() {
                     Completed
                   </span>
                 )}
-                {previewingDeadline.effort && (
+                {showEffortIndicators && previewingDeadline.effort && (
                   <span style={{
                     fontSize: '12px',
                     fontWeight: '500',

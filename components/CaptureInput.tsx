@@ -9,10 +9,12 @@ import { Plus } from 'lucide-react';
 export default function CaptureInput() {
   const [input, setInput] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
-  const { addTask, addDeadline } = useAppStore();
+  const { addTask, addDeadline, settings } = useAppStore();
+  const enableKeyboardShortcuts = settings.enableKeyboardShortcuts ?? true;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!enableKeyboardShortcuts) return;
       if (e.key === '/' && e.ctrlKey === false && e.metaKey === false) {
         inputRef.current?.focus();
       }
@@ -20,7 +22,7 @@ export default function CaptureInput() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [enableKeyboardShortcuts]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

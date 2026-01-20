@@ -7,6 +7,7 @@ import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import TagInput from '@/components/notes/TagInput';
 import { Course } from '@/types';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface BaseModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export function BulkChangeCourseModal({
   onConfirm,
 }: BulkChangeCourseModalProps) {
   const [courseId, setCourseId] = useState('');
+  const { getCourseDisplayName } = useFormatters();
   if (!isOpen) return null;
 
   const handleConfirm = () => {
@@ -51,7 +53,7 @@ export function BulkChangeCourseModal({
             onChange={(e) => setCourseId(e.target.value)}
             options={[
               { value: '', label: 'No Course' },
-              ...courses.map((c) => ({ value: c.id, label: `${c.code} - ${c.name}` })),
+              ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) })),
             ]}
           />
 

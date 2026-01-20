@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Download, FileText, ZoomIn, ZoomOut, RotateCw, RotateCcw, Maximize, Minimize, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import useAppStore from '@/lib/store';
 import { marked } from 'marked';
 
 // Heavy dependencies are dynamically imported when needed
@@ -27,6 +28,7 @@ interface FilePreviewModalProps {
 
 export default function FilePreviewModal({ file, files, currentIndex = 0, onClose, onNavigate }: FilePreviewModalProps) {
   const isMobile = useIsMobile();
+  const enableKeyboardShortcuts = useAppStore((state) => state.settings.enableKeyboardShortcuts) ?? true;
   const [mounted, setMounted] = useState(false);
   const [textContent, setTextContent] = useState<string | null>(null);
   const [docxHtml, setDocxHtml] = useState<string | null>(null);
@@ -272,8 +274,14 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
     if (!file) return;
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      // Escape always works to close the modal
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      // Other shortcuts only work if keyboard shortcuts are enabled
+      if (!enableKeyboardShortcuts) return;
       switch (e.key) {
-        case 'Escape': onClose(); break;
         case 'ArrowLeft': e.preventDefault(); goPrev(); break;
         case 'ArrowRight': e.preventDefault(); goNext(); break;
         case '+': case '=': e.preventDefault(); zoomIn(); break;
@@ -284,7 +292,7 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [file, onClose, goPrev, goNext, zoomIn, zoomOut, rotateRight, reset]);
+  }, [file, onClose, goPrev, goNext, zoomIn, zoomOut, rotateRight, reset, enableKeyboardShortcuts]);
 
   // Fullscreen change listener
   useEffect(() => {
