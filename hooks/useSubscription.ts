@@ -16,24 +16,55 @@ export interface ClientSubscriptionStatus {
   isLoading: boolean;
 }
 
-// Read cached premium status from localStorage for faster initial load
-const getCachedPremiumStatus = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  return localStorage.getItem('app-isPremium') === 'true';
+// Read cached subscription status from localStorage for faster initial load
+const getCachedSubscriptionStatus = (): ClientSubscriptionStatus | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const cached = localStorage.getItem('app-subscriptionStatus');
+    if (cached) {
+      return JSON.parse(cached);
+    }
+  } catch (e) {
+    console.warn('Failed to parse cached subscription status:', e);
+  }
+  return null;
 };
 
-const getDefaultStatus = (): ClientSubscriptionStatus => ({
-  tier: 'free',
-  isPremium: getCachedPremiumStatus(), // Use cached value for instant display
-  isTrialing: false,
-  isLifetimePremium: false,
-  trialDaysRemaining: null,
-  trialEndsAt: null,
-  plan: null,
-  expiresAt: null,
-  status: 'none',
-  isLoading: true,
-});
+// Save subscription status to localStorage
+const cacheSubscriptionStatus = (status: ClientSubscriptionStatus): void => {
+  if (typeof window === 'undefined') return;
+  try {
+    // Don't cache the isLoading state
+    const toCache = { ...status, isLoading: false };
+    localStorage.setItem('app-subscriptionStatus', JSON.stringify(toCache));
+    // Also cache isPremium separately for other uses
+    localStorage.setItem('app-isPremium', status.isPremium ? 'true' : 'false');
+  } catch (e) {
+    console.warn('Failed to cache subscription status:', e);
+  }
+};
+
+const getDefaultStatus = (): ClientSubscriptionStatus => {
+  // Try to use cached status first
+  const cached = getCachedSubscriptionStatus();
+  if (cached) {
+    return { ...cached, isLoading: false }; // Use cached data, no loading state
+  }
+
+  // Fallback to default
+  return {
+    tier: 'free',
+    isPremium: false,
+    isTrialing: false,
+    isLifetimePremium: false,
+    trialDaysRemaining: null,
+    trialEndsAt: null,
+    plan: null,
+    expiresAt: null,
+    status: 'none',
+    isLoading: true,
+  };
+};
 
 export function useSubscription(): ClientSubscriptionStatus & { refresh: () => Promise<void> } {
   const [status, setStatus] = useState<ClientSubscriptionStatus>(getDefaultStatus);
@@ -43,7 +74,9 @@ export function useSubscription(): ClientSubscriptionStatus & { refresh: () => P
       const res = await fetch('/api/subscription/status');
       if (res.ok) {
         const data = await res.json();
-        setStatus({ ...data, isLoading: false });
+        const newStatus = { ...data, isLoading: false };
+        setStatus(newStatus);
+        cacheSubscriptionStatus(newStatus);
       } else {
         setStatus({ ...getDefaultStatus(), isLoading: false });
       }

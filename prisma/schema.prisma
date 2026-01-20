@@ -19,6 +19,7 @@ model User {
   isAdmin                   Boolean                    @default(false)
   lastLogin                 DateTime?
   sessionInvalidatedAt      DateTime?
+  calendarToken             String?                    @unique // Token for iCal subscription URL
 
   // Subscription fields
   subscriptionTier          String                     @default("trial")

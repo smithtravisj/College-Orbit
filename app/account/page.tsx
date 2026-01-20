@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Shield, Download, Upload, Trash2, Eye, EyeOff, Crown, Monitor, Smartphone, Tablet, X } from 'lucide-react';
+import { Shield, Download, Upload, Trash2, Eye, EyeOff, Crown, Monitor, Smartphone, Tablet, X, Calendar, Copy } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import Link from 'next/link';
 
@@ -35,6 +35,9 @@ export default function AccountPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [calendarToken, setCalendarToken] = useState<string | null>(null);
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [calendarMessage, setCalendarMessage] = useState('');
   const [activeSessions, setActiveSessions] = useState<Array<{
     id: string;
     browser: string | null;
@@ -84,6 +87,65 @@ export default function AccountPage() {
 
     fetchSessions();
   }, [session]);
+
+  // Fetch calendar token
+  useEffect(() => {
+    if (!session?.user) return;
+
+    const fetchCalendarToken = async () => {
+      try {
+        const response = await fetch('/api/calendar/token');
+        if (response.ok) {
+          const data = await response.json();
+          setCalendarToken(data.token);
+        }
+      } catch (err) {
+        console.error('Failed to fetch calendar token:', err);
+      }
+    };
+
+    fetchCalendarToken();
+  }, [session]);
+
+  const handleCalendarDownload = async () => {
+    setCalendarLoading(true);
+    try {
+      const response = await fetch('/api/calendar/export');
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'college-orbit-calendar.ics';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setCalendarMessage('Calendar downloaded successfully');
+        setTimeout(() => setCalendarMessage(''), 3000);
+      }
+    } catch (err) {
+      console.error('Failed to download calendar:', err);
+      setCalendarMessage('Failed to download calendar');
+      setTimeout(() => setCalendarMessage(''), 3000);
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
+
+  const handleCopyCalendarUrl = async () => {
+    if (!calendarToken) return;
+    const url = `${window.location.origin}/api/calendar/ical/${calendarToken}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCalendarMessage('URL copied to clipboard');
+      setTimeout(() => setCalendarMessage(''), 3000);
+    } catch (err) {
+      console.error('Failed to copy URL:', err);
+      setCalendarMessage('Failed to copy URL');
+      setTimeout(() => setCalendarMessage(''), 3000);
+    }
+  };
 
   const handleRevokeSession = async (sessionId: string) => {
     setRevokingSessionId(sessionId);
@@ -502,6 +564,49 @@ export default function AccountPage() {
                 </Button>
                 {importMessage && (
                   <p style={{ marginTop: '8px', fontSize: '14px', color: importMessage.includes('✓') ? 'var(--success)' : 'var(--danger)' }}>{importMessage}</p>
+                )}
+              </div>
+
+              {/* Calendar Export */}
+              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', paddingBottom: '12px' }}>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Calendar size={16} />
+                  Export to Google Calendar / iCal
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Export your deadlines, exams, tasks, and course schedule to Google Calendar, Apple Calendar, or any calendar app.
+                </p>
+
+                <div style={{ display: 'flex', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    onClick={handleCalendarDownload}
+                    disabled={calendarLoading}
+                    style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}
+                  >
+                    <Download size={18} />
+                    Download .ics
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size={isMobile ? 'sm' : 'lg'}
+                    onClick={handleCopyCalendarUrl}
+                    disabled={calendarLoading || !calendarToken}
+                    style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}
+                  >
+                    <Copy size={18} />
+                    Copy Subscription URL
+                  </Button>
+                </div>
+
+                {calendarMessage && (
+                  <p style={{
+                    marginTop: '8px',
+                    fontSize: '14px',
+                    color: calendarMessage.includes('Failed') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {calendarMessage}
+                  </p>
                 )}
               </div>
 
