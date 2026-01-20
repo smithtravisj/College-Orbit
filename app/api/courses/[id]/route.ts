@@ -104,16 +104,39 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Verify ownership
+    // Verify ownership and get Canvas ID if present
     const existingCourse = await prisma.course.findFirst({
       where: {
         id,
         userId: session.user.id,
       },
+      select: {
+        id: true,
+        canvasCourseId: true,
+      },
     });
 
     if (!existingCourse) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    }
+
+    // If this is a Canvas course, track the deletion to prevent re-sync
+    if (existingCourse.canvasCourseId) {
+      await prisma.deletedCanvasItem.upsert({
+        where: {
+          userId_canvasId_type: {
+            userId: session.user.id,
+            canvasId: existingCourse.canvasCourseId,
+            type: 'course',
+          },
+        },
+        update: { deletedAt: new Date() },
+        create: {
+          userId: session.user.id,
+          canvasId: existingCourse.canvasCourseId,
+          type: 'course',
+        },
+      });
     }
 
     await prisma.course.delete({

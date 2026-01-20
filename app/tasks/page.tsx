@@ -146,7 +146,6 @@ export default function TasksPage() {
   // Bulk selection state
   const bulkSelect = useBulkSelect();
   const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
-  const [showDeleteAllCompleted, setShowDeleteAllCompleted] = useState(false);
   const [hideRecurringCompleted, setHideRecurringCompleted] = useState(false);
 
   const { courses, tasks, notes, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, bulkUpdateTasks, bulkDeleteTasks, initializeStore } = useAppStore();
@@ -190,7 +189,7 @@ export default function TasksPage() {
 
   // Check for task ID in URL params to open preview modal
   useEffect(() => {
-    const taskId = searchParams.get('task');
+    const taskId = searchParams.get('task') || searchParams.get('preview');
     if (taskId && mounted && tasks.length > 0) {
       const task = tasks.find((t) => t.id === taskId);
       if (task) {
@@ -712,28 +711,6 @@ export default function TasksPage() {
     await bulkDeleteTasks(ids);
     bulkSelect.clearSelection();
   };
-
-  // Delete all completed tasks - ONLY deletes non-recurring tasks with status === 'done'
-  const handleDeleteAllCompleted = async () => {
-    try {
-      const completedTaskIds = tasks
-        .filter((t) => t.status === 'done' && !t.isRecurring && !t.recurringPatternId)
-        .map((t) => t.id);
-      if (completedTaskIds.length > 0) {
-        await bulkDeleteTasks(completedTaskIds);
-        // Remove any selected tags that no longer exist in remaining items
-        const remainingTasks = tasks.filter((t) => !completedTaskIds.includes(t.id));
-        const remainingTags = new Set(remainingTasks.flatMap((t) => t.tags || []));
-        setSelectedTags((prev) => new Set([...prev].filter((tag) => remainingTags.has(tag))));
-        // Hide recurring completed items from the done filter
-        setHideRecurringCompleted(true);
-      }
-    } finally {
-      setShowDeleteAllCompleted(false);
-    }
-  };
-
-  const completedTasksCount = tasks.filter((t) => t.status === 'done' && !t.isRecurring && !t.recurringPatternId).length;
 
   // For recurring tasks, find the earliest open instance per pattern
   const earliestRecurringInstanceIds = (() => {
@@ -1412,19 +1389,6 @@ export default function TasksPage() {
           {/* Task List */}
           {filtered.length > 0 ? (
             <Card>
-              {/* Delete All Completed Button */}
-              {filter === 'done' && completedTasksCount > 0 && (
-                <div style={{ marginBottom: '8px' }}>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setShowDeleteAllCompleted(true)}
-                  >
-                    <Trash2 size={14} />
-                    <span style={{ marginLeft: '6px' }}>Delete All Completed</span>
-                  </Button>
-                </div>
-              )}
               <div className="divide-y divide-[var(--border)]" style={{ display: 'flex', flexDirection: 'column' }}>
                 {filtered.map((t) => {
                   const course = courses.find((c) => c.id === t.courseId);
@@ -1761,43 +1725,6 @@ export default function TasksPage() {
         onConfirm={handleBulkDelete}
       />
 
-      {/* Delete All Completed Modal */}
-      {showDeleteAllCompleted && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-          <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
-            <div style={{ padding: '24px' }}>
-              <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Delete All Completed Tasks</h2>
-              <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
-                Are you sure you want to delete {completedTasksCount} completed task{completedTasksCount !== 1 ? 's' : ''}? This action cannot be undone.
-              </p>
-              <div className="flex gap-3 justify-end" style={{ marginTop: '24px' }}>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setShowDeleteAllCompleted(false)}
-                  style={{ paddingLeft: '16px', paddingRight: '16px' }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={handleDeleteAllCompleted}
-                  style={{
-                    backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
-                    color: 'white',
-                    paddingLeft: '16px',
-                    paddingRight: '16px',
-                  }}
-                >
-                  Delete All
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Preview Modal */}
       {previewingTask && (
         <div
@@ -1823,18 +1750,22 @@ export default function TasksPage() {
               width: '100%',
               maxWidth: '500px',
               maxHeight: '80vh',
-              overflow: 'auto',
+              overflow: 'hidden',
               border: '1px solid var(--border)',
+              display: 'flex',
+              flexDirection: 'column',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
+            {/* Header - Sticky */}
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'flex-start',
               padding: isMobile ? '16px' : '20px',
               borderBottom: '1px solid var(--border)',
+              flexShrink: 0,
+              backgroundColor: 'var(--panel)',
             }}>
               <div style={{ flex: 1, paddingRight: '12px' }}>
                 <h2 style={{
@@ -1867,8 +1798,8 @@ export default function TasksPage() {
               </button>
             </div>
 
-            {/* Content */}
-            <div style={{ padding: isMobile ? '16px' : '20px' }}>
+            {/* Content - Scrollable */}
+            <div style={{ padding: isMobile ? '16px' : '20px', flex: 1, overflowY: 'auto' }}>
               {/* Status & Importance */}
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
                 {previewingTask.status === 'done' && (
@@ -2080,12 +2011,14 @@ export default function TasksPage() {
               })()}
             </div>
 
-            {/* Footer */}
+            {/* Footer - Sticky */}
             <div style={{
               display: 'flex',
               gap: '8px',
               padding: isMobile ? '16px' : '20px',
               borderTop: '1px solid var(--border)',
+              flexShrink: 0,
+              backgroundColor: 'var(--panel)',
             }}>
               <Button
                 variant="secondary"

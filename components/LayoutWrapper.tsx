@@ -7,6 +7,7 @@ import Navigation from './Navigation';
 import { MobileHeader } from './MobileHeader';
 import { FloatingMenuButton } from './FloatingMenuButton';
 import { QuickAddButton } from './QuickAddButton';
+import { CanvasSyncManager } from './CanvasSyncManager';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAnalyticsPageView } from '@/lib/useAnalytics';
 import useAppStore from '@/lib/store';
@@ -117,6 +118,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
     return (
       <KeyboardShortcutsProvider>
         <BackgroundDecoration />
+        <CanvasSyncManager />
         <MobileHeader />
         <Navigation />
         <QuickAddButton />
@@ -133,6 +135,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
     <KeyboardShortcutsProvider>
       <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg)' }}>
         <BackgroundDecoration />
+        <CanvasSyncManager />
         <Navigation />
         <QuickAddButton />
         <main style={{ marginLeft: '224px', minWidth: 0 }}>

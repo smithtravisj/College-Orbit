@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {
+  // Feature temporarily disabled - keeping code for future implementation
+  return NextResponse.json({ message: 'Exam reminders feature is currently disabled' }, { status: 200 });
+
   // Verify cron secret for security
   const authHeader = req.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -20,14 +23,16 @@ export async function GET(req: NextRequest) {
     // Process reminders for each user
     for (const user of users) {
       if (!user.settings) continue;
+      const settings = user.settings!; // Non-null assertion since we just checked
 
       // Parse user's custom reminder settings
       let reminders: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }> = [];
-      if (user.settings.examReminders) {
+      const examReminders = settings.examReminders;
+      if (examReminders) {
         try {
-          const parsed = typeof user.settings.examReminders === 'string'
-            ? JSON.parse(user.settings.examReminders)
-            : user.settings.examReminders;
+          const parsed = typeof examReminders === 'string'
+            ? JSON.parse(examReminders as string)
+            : examReminders;
           reminders = Array.isArray(parsed) ? parsed : [];
         } catch (e) {
           console.error(`Failed to parse exam reminders for user ${user.id}:`, e);

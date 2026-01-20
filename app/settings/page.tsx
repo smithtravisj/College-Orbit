@@ -8,10 +8,26 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import ColorPicker from '@/components/ui/ColorPicker';
 import UpgradePrompt from '@/components/subscription/UpgradePrompt';
-import { Monitor } from 'lucide-react';
+import ConfirmationModal from '@/components/ConfirmationModal';
+import { Monitor, HelpCircle, RefreshCw, Link2, Unlink } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { DASHBOARD_CARDS, TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
+
+interface CanvasStatus {
+  connected: boolean;
+  syncEnabled: boolean;
+  instanceUrl: string | null;
+  userId: string | null;
+  userName: string | null;
+  lastSyncedAt: string | null;
+  syncCourses: boolean;
+  syncAssignments: boolean;
+  syncGrades: boolean;
+  syncEvents: boolean;
+  syncAnnouncements: boolean;
+  autoMarkComplete: boolean;
+}
 
 export default function SettingsPage() {
   const isMobile = useIsMobile();
@@ -48,12 +64,27 @@ export default function SettingsPage() {
   const [visibilityMessage, setVisibilityMessage] = useState('');
   const [isMacDesktop, setIsMacDesktop] = useState(false);
   const [emailAnnouncements, setEmailAnnouncements] = useState(true);
-  const [emailExamReminders, setEmailExamReminders] = useState(true);
   const [emailAccountAlerts, setEmailAccountAlerts] = useState(true);
   const [notifyAnnouncements, setNotifyAnnouncements] = useState(true);
-  const [notifyExamReminders, setNotifyExamReminders] = useState(true);
   const [notifyAccountAlerts, setNotifyAccountAlerts] = useState(true);
-  const [autoCreateCourseFolders, setAutoCreateCourseFolders] = useState(false);
+
+  // Settings tab state
+  const [activeSettingsTab, setActiveSettingsTab] = useState<'appearance' | 'preferences' | 'integrations' | 'about'>('appearance');
+
+  // Canvas LMS Integration state
+  const [canvasStatus, setCanvasStatus] = useState<CanvasStatus | null>(null);
+  const [canvasInstanceUrl, setCanvasInstanceUrl] = useState('');
+  const [canvasAccessToken, setCanvasAccessToken] = useState('');
+  const [canvasConnecting, setCanvasConnecting] = useState(false);
+  const [canvasSyncing, setCanvasSyncing] = useState(false);
+  const [canvasMessage, setCanvasMessage] = useState('');
+  const [canvasSyncCourses, setCanvasSyncCourses] = useState(true);
+  const [canvasSyncAssignments, setCanvasSyncAssignments] = useState(true);
+  const [canvasSyncGrades, setCanvasSyncGrades] = useState(true);
+  const [canvasSyncEvents, setCanvasSyncEvents] = useState(true);
+  const [canvasSyncAnnouncements, setCanvasSyncAnnouncements] = useState(true);
+  const [canvasAutoMarkComplete, setCanvasAutoMarkComplete] = useState(true);
+  const [showCanvasDisconnectModal, setShowCanvasDisconnectModal] = useState(false);
 
   // Local state for sliders (smooth UI while debouncing API calls)
   const [localGradientIntensity, setLocalGradientIntensity] = useState(50);
@@ -61,7 +92,7 @@ export default function SettingsPage() {
   const gradientDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const glowDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { settings, updateSettings, updateSettingsLocal } = useAppStore();
+  const { settings, updateSettings, updateSettingsLocal, loadFromDatabase } = useAppStore();
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
 
   // Custom theme and visual effects only apply for premium users
@@ -96,6 +127,30 @@ export default function SettingsPage() {
     };
     fetchColleges();
   }, []);
+
+  // Fetch Canvas connection status
+  useEffect(() => {
+    const fetchCanvasStatus = async () => {
+      try {
+        const response = await fetch('/api/canvas/status');
+        if (response.ok) {
+          const data = await response.json();
+          setCanvasStatus(data);
+          setCanvasSyncCourses(data.syncCourses ?? true);
+          setCanvasSyncAssignments(data.syncAssignments ?? true);
+          setCanvasSyncGrades(data.syncGrades ?? true);
+          setCanvasSyncEvents(data.syncEvents ?? true);
+          setCanvasSyncAnnouncements(data.syncAnnouncements ?? true);
+          setCanvasAutoMarkComplete(data.autoMarkComplete ?? true);
+        }
+      } catch (error) {
+        console.error('Error fetching Canvas status:', error);
+      }
+    };
+    if (session?.user) {
+      fetchCanvasStatus();
+    }
+  }, [session]);
 
   useEffect(() => {
     // Only run once on mount to initialize local state from store
@@ -149,16 +204,11 @@ export default function SettingsPage() {
 
     // Load email preferences
     setEmailAnnouncements(settings.emailAnnouncements !== false);
-    setEmailExamReminders(settings.emailExamReminders !== false);
     setEmailAccountAlerts(settings.emailAccountAlerts !== false);
 
     // Load in-app notification preferences
     setNotifyAnnouncements(settings.notifyAnnouncements !== false);
-    setNotifyExamReminders(settings.notifyExamReminders !== false);
     setNotifyAccountAlerts(settings.notifyAccountAlerts !== false);
-
-    // Load notes settings
-    setAutoCreateCourseFolders(settings.autoCreateCourseFolders === true);
 
     // Load visual effects sliders
     setLocalGradientIntensity(settings.gradientIntensity ?? 50);
@@ -363,6 +413,230 @@ export default function SettingsPage() {
     }
   };
 
+  // Canvas Integration Handlers
+  const handleCanvasConnect = async () => {
+    if (!canvasInstanceUrl.trim() || !canvasAccessToken.trim()) {
+      setCanvasMessage('Please enter both Canvas instance URL and access token');
+      setTimeout(() => setCanvasMessage(''), 3000);
+      return;
+    }
+
+    setCanvasConnecting(true);
+    setCanvasMessage('');
+
+    try {
+      const response = await fetch('/api/canvas/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          instanceUrl: canvasInstanceUrl,
+          accessToken: canvasAccessToken,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setCanvasMessage(`✗ ${data.error || 'Failed to connect to Canvas'}`);
+        setCanvasConnecting(false);
+        setTimeout(() => setCanvasMessage(''), 5000);
+        return;
+      }
+
+      setCanvasMessage(`✓ ${data.message}`);
+      setCanvasInstanceUrl('');
+      setCanvasAccessToken('');
+
+      // Refresh Canvas status
+      const statusResponse = await fetch('/api/canvas/status');
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json();
+        setCanvasStatus(statusData);
+
+        // Automatically sync after successful connection
+        setCanvasMessage('✓ Connected! Starting initial sync...');
+        try {
+          const syncResponse = await fetch('/api/canvas/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              syncCourses: statusData.syncCourses ?? true,
+              syncAssignments: statusData.syncAssignments ?? true,
+              syncGrades: statusData.syncGrades ?? true,
+              syncEvents: statusData.syncEvents ?? true,
+              syncAnnouncements: statusData.syncAnnouncements ?? true,
+            }),
+          });
+
+          if (syncResponse.ok) {
+            const syncResult = await syncResponse.json();
+            setCanvasMessage(`✓ Initial sync complete! ${syncResult.results?.courses?.created || 0} courses, ${syncResult.results?.assignments?.created || 0} assignments synced.`);
+
+            // Refresh Canvas status again to show last synced time
+            const refreshResponse = await fetch('/api/canvas/status');
+            if (refreshResponse.ok) {
+              const refreshData = await refreshResponse.json();
+              setCanvasStatus(refreshData);
+            }
+
+            // Reload the store data to show synced items
+            const { loadFromDatabase } = useAppStore.getState();
+            await loadFromDatabase();
+          } else {
+            setCanvasMessage('✓ Connected! Initial sync may have had issues - you can try syncing manually.');
+          }
+        } catch (syncError) {
+          console.error('Initial sync error:', syncError);
+          setCanvasMessage('✓ Connected! You can sync your data using the Sync Now button.');
+        }
+      }
+
+      setCanvasConnecting(false);
+      setTimeout(() => setCanvasMessage(''), 5000);
+    } catch (error) {
+      console.error('Canvas connection error:', error);
+      setCanvasMessage('✗ Failed to connect to Canvas. Please try again.');
+      setCanvasConnecting(false);
+      setTimeout(() => setCanvasMessage(''), 3000);
+    }
+  };
+
+  const handleCanvasDisconnect = async () => {
+    setShowCanvasDisconnectModal(false);
+
+    try {
+      const response = await fetch('/api/canvas/disconnect', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        setCanvasStatus(null);
+        setCanvasMessage('✓ Successfully disconnected from Canvas');
+        setTimeout(() => setCanvasMessage(''), 3000);
+      } else {
+        const data = await response.json();
+        setCanvasMessage(`✗ ${data.error || 'Failed to disconnect'}`);
+        setTimeout(() => setCanvasMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Canvas disconnect error:', error);
+      setCanvasMessage('✗ Failed to disconnect. Please try again.');
+      setTimeout(() => setCanvasMessage(''), 3000);
+    }
+  };
+
+  const handleCanvasSync = async () => {
+    setCanvasSyncing(true);
+    setCanvasMessage('');
+
+    try {
+      const response = await fetch('/api/canvas/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          syncCourses: canvasSyncCourses,
+          syncAssignments: canvasSyncAssignments,
+          syncGrades: canvasSyncGrades,
+          syncEvents: canvasSyncEvents,
+          syncAnnouncements: canvasSyncAnnouncements,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setCanvasMessage(`✗ ${data.error || 'Sync failed'}`);
+        setCanvasSyncing(false);
+        setTimeout(() => setCanvasMessage(''), 5000);
+        return;
+      }
+
+      // Build success message
+      const result = data.result;
+      const parts = [];
+      if (canvasSyncCourses && (result.courses.created > 0 || result.courses.updated > 0)) {
+        parts.push(`${result.courses.created + result.courses.updated} courses`);
+      }
+      if (canvasSyncAssignments && (result.assignments.created > 0 || result.assignments.updated > 0)) {
+        parts.push(`${result.assignments.created + result.assignments.updated} assignments`);
+      }
+      if (canvasSyncGrades && result.grades.updated > 0) {
+        parts.push(`${result.grades.updated} grades`);
+      }
+      if (canvasSyncEvents && (result.events.created > 0 || result.events.updated > 0)) {
+        parts.push(`${result.events.created + result.events.updated} events`);
+      }
+      if (canvasSyncAnnouncements && result.announcements.created > 0) {
+        parts.push(`${result.announcements.created} announcements`);
+      }
+
+      const syncedMessage = parts.length > 0 ? `Synced ${parts.join(', ')}` : 'No new data to sync';
+      setCanvasMessage(`✓ ${syncedMessage}`);
+
+      // Refresh Canvas status to get new lastSyncedAt
+      const statusResponse = await fetch('/api/canvas/status');
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json();
+        setCanvasStatus(statusData);
+      }
+
+      // Refresh store data so users see synced courses/deadlines/events immediately
+      await loadFromDatabase();
+
+      setCanvasSyncing(false);
+      setTimeout(() => setCanvasMessage(''), 5000);
+    } catch (error) {
+      console.error('Canvas sync error:', error);
+      setCanvasMessage('✗ Sync failed. Please try again.');
+      setCanvasSyncing(false);
+      setTimeout(() => setCanvasMessage(''), 3000);
+    }
+  };
+
+  const handleCanvasSyncSettingsChange = async (setting: string, value: boolean) => {
+    // Update local state immediately
+    switch (setting) {
+      case 'courses': setCanvasSyncCourses(value); break;
+      case 'assignments': setCanvasSyncAssignments(value); break;
+      case 'grades': setCanvasSyncGrades(value); break;
+      case 'events': setCanvasSyncEvents(value); break;
+      case 'announcements': setCanvasSyncAnnouncements(value); break;
+      case 'autoMarkComplete': setCanvasAutoMarkComplete(value); break;
+    }
+
+    // Save to server
+    try {
+      // For autoMarkComplete, use camelCase directly; for others, prefix with 'sync'
+      const key = setting === 'autoMarkComplete'
+        ? 'autoMarkComplete'
+        : `sync${setting.charAt(0).toUpperCase() + setting.slice(1)}`;
+
+      await fetch('/api/canvas/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value }),
+      });
+    } catch (error) {
+      console.error('Failed to save sync settings:', error);
+    }
+  };
+
+  const formatLastSynced = (dateStr: string | null) => {
+    if (!dateStr) return 'Never';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    return date.toLocaleDateString();
+  };
+
   return (
     <>
       <style>{`
@@ -391,6 +665,40 @@ export default function SettingsPage() {
           <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
             Customize your experience.
           </p>
+        </div>
+
+        {/* Tab Navigation */}
+        <div style={{ display: 'flex', gap: isMobile ? '3px' : '8px', marginTop: '16px', marginBottom: '8px' }}>
+          {[
+            { key: 'appearance', label: 'Appearance' },
+            { key: 'preferences', label: 'Preferences' },
+            { key: 'integrations', label: 'Integrations' },
+            { key: 'about', label: 'About' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveSettingsTab(tab.key as typeof activeSettingsTab)}
+              className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
+                activeSettingsTab === tab.key ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              }`}
+              style={{
+                padding: isMobile ? '6px 8px' : '10px 18px',
+                fontSize: isMobile ? '12px' : '14px',
+                flex: isMobile ? 1 : undefined,
+                border: 'none',
+                backgroundColor: activeSettingsTab === tab.key ? accentColor : 'transparent',
+                backgroundImage: activeSettingsTab === tab.key
+                  ? (settings.theme === 'light'
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                    : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)')
+                  : 'none',
+                boxShadow: activeSettingsTab === tab.key ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : undefined,
+                cursor: 'pointer',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
@@ -439,8 +747,416 @@ export default function SettingsPage() {
               ⚠️ You are not logged in. Settings will be saved to your browser only.
             </div>
           )}
-          {/* General Settings */}
-          <Card title="General">
+          {/* Preferences Tab - General Settings */}
+          {activeSettingsTab === 'preferences' && (
+          <Card title="Preferences">
+            {/* Time Format */}
+            <div style={{ marginBottom: '20px' }}>
+              <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Time Format</p>
+              <div style={{
+                display: 'flex',
+                gap: '8px',
+                padding: '4px',
+                backgroundColor: 'var(--panel-2)',
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+              }}>
+                {(['12h', '24h'] as const).map((format) => (
+                  <button
+                    key={format}
+                    onClick={() => updateSettings({ timeFormat: format })}
+                    style={{
+                      flex: 1,
+                      padding: '8px 16px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: settings.timeFormat === format ? 'var(--text)' : 'var(--text-muted)',
+                      backgroundColor: settings.timeFormat === format ? 'var(--panel)' : 'transparent',
+                      border: settings.timeFormat === format ? '1px solid var(--border)' : '1px solid transparent',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {format === '12h' ? '12-hour' : '24-hour'}
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm text-[var(--text-muted)]" style={{ marginTop: '8px' }}>
+                {settings.timeFormat === '12h' ? 'Example: 2:30 PM' : 'Example: 14:30'}
+              </p>
+            </div>
+
+            {/* Date Format */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
+              <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Date Format</p>
+              <div style={{
+                display: 'flex',
+                gap: '8px',
+                padding: '4px',
+                backgroundColor: 'var(--panel-2)',
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+              }}>
+                {(['MM/DD/YYYY', 'DD/MM/YYYY'] as const).map((format) => (
+                  <button
+                    key={format}
+                    onClick={() => updateSettings({ dateFormat: format })}
+                    style={{
+                      flex: 1,
+                      padding: '8px 16px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: settings.dateFormat === format ? 'var(--text)' : 'var(--text-muted)',
+                      backgroundColor: settings.dateFormat === format ? 'var(--panel)' : 'transparent',
+                      border: settings.dateFormat === format ? '1px solid var(--border)' : '1px solid transparent',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {format}
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm text-[var(--text-muted)]" style={{ marginTop: '8px' }}>
+                {settings.dateFormat === 'MM/DD/YYYY' ? 'Example: 01/19/2026' : 'Example: 19/01/2026'}
+              </p>
+            </div>
+
+            {/* Due Soon Window */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+              <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Due Soon Window</p>
+              <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                Show deadlines on dashboard within this many days
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <input
+                  ref={dueSoonInputRef}
+                  type="text"
+                  inputMode="numeric"
+                  defaultValue={dueSoonDays}
+                  onKeyUp={(e) => {
+                    const inputValue = e.currentTarget.value;
+                    setDueSoonDays(inputValue);
+                    const val = parseInt(inputValue);
+                    if (!isNaN(val) && val >= 1 && val <= 30) {
+                      updateSettings({ dueSoonWindowDays: val });
+                    }
+                  }}
+                  style={{
+                    width: '80px',
+                    height: '40px',
+                    padding: '8px 12px',
+                    fontSize: '16px',
+                    fontFamily: 'inherit',
+                    backgroundColor: 'var(--panel-2)',
+                    color: 'var(--text)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                  }}
+                />
+                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>days</span>
+              </div>
+            </div>
+
+            {/* Show Canvas Badges */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Canvas Badges</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Display Canvas markers on synced courses and assignments
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ showCanvasBadges: !(settings.showCanvasBadges ?? true) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.showCanvasBadges ?? true) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.showCanvasBadges ?? true) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
+          </Card>
+          )}
+
+          {/* Integrations Tab - Canvas LMS Integration */}
+          {activeSettingsTab === 'integrations' && (
+          <Card title="Canvas LMS Integration">
+            {!canvasStatus?.connected ? (
+              // Not Connected State
+              <div>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Connect your Canvas LMS account to sync courses, assignments, grades, and more.
+                </p>
+
+                {/* Canvas Instance URL */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Canvas Instance URL</p>
+                    <div className="relative" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                      <HelpCircle
+                        size={14}
+                        className="text-[var(--text-muted)] cursor-help peer hover:text-[var(--text)]"
+                        style={{ transition: 'color 0.15s' }}
+                      />
+                      <div
+                        className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 pointer-events-none"
+                        style={{
+                          padding: '10px 14px',
+                          fontSize: '13px',
+                          color: 'var(--text)',
+                          backgroundColor: 'var(--panel)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          whiteSpace: 'nowrap',
+                          zIndex: 50,
+                          transition: 'opacity 0.15s, visibility 0.15s',
+                        }}
+                      >
+                        Your school's Canvas domain (e.g., school.instructure.com)
+                      </div>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value={canvasInstanceUrl}
+                    onChange={(e) => setCanvasInstanceUrl(e.target.value)}
+                    placeholder="school.instructure.com"
+                    style={{
+                      width: '100%',
+                      height: '44px',
+                      padding: '8px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                    }}
+                    disabled={canvasConnecting}
+                  />
+                </div>
+
+                {/* API Access Token */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>API Access Token</p>
+                    <div className="relative" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                      <HelpCircle
+                        size={14}
+                        className="text-[var(--text-muted)] cursor-help peer hover:text-[var(--text)]"
+                        style={{ transition: 'color 0.15s' }}
+                      />
+                      <div
+                        className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 pointer-events-none"
+                        style={{
+                          padding: '10px 14px',
+                          fontSize: '13px',
+                          color: 'var(--text)',
+                          backgroundColor: 'var(--panel)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          width: '260px',
+                          whiteSpace: 'normal',
+                          lineHeight: '1.4',
+                          zIndex: 50,
+                          transition: 'opacity 0.15s, visibility 0.15s',
+                        }}
+                      >
+                        Generate in Canvas: Account → Settings → New Access Token. Never share this token.
+                      </div>
+                    </div>
+                  </div>
+                  <input
+                    type="password"
+                    value={canvasAccessToken}
+                    onChange={(e) => setCanvasAccessToken(e.target.value)}
+                    placeholder="Paste your access token"
+                    style={{
+                      width: '100%',
+                      height: '44px',
+                      padding: '8px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                    }}
+                    disabled={canvasConnecting}
+                  />
+                </div>
+
+                <Button
+                  size={isMobile ? 'sm' : 'lg'}
+                  onClick={handleCanvasConnect}
+                  disabled={canvasConnecting || !canvasInstanceUrl.trim() || !canvasAccessToken.trim()}
+                  style={{
+                    paddingLeft: isMobile ? '12px' : '16px',
+                    paddingRight: isMobile ? '12px' : '16px',
+                  }}
+                >
+                  {canvasConnecting ? (
+                    <>
+                      <RefreshCw size={16} className="animate-spin mr-2" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 size={16} className="mr-2" />
+                      Connect to Canvas
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              // Connected State
+              <div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px',
+                  backgroundColor: 'var(--panel-2)',
+                  borderRadius: '8px',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--success)',
+                  }} />
+                  <span className="text-sm text-[var(--text)]">
+                    Connected as <strong>{canvasStatus.userName}</strong>
+                  </span>
+                </div>
+
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Last synced: {formatLastSynced(canvasStatus.lastSyncedAt)}
+                </p>
+
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    onClick={handleCanvasSync}
+                    disabled={canvasSyncing}
+                    style={{
+                      paddingLeft: isMobile ? '12px' : '16px',
+                      paddingRight: isMobile ? '12px' : '16px',
+                    }}
+                  >
+                    {canvasSyncing ? (
+                      <>
+                        <RefreshCw size={16} className="animate-spin mr-2" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw size={16} className="mr-2" />
+                        Sync Now
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    variant="secondary"
+                    onClick={() => setShowCanvasDisconnectModal(true)}
+                    style={{
+                      paddingLeft: isMobile ? '12px' : '16px',
+                      paddingRight: isMobile ? '12px' : '16px',
+                      boxShadow: 'none',
+                    }}
+                  >
+                    <Unlink size={16} className="mr-2" />
+                    Disconnect
+                  </Button>
+                </div>
+
+                {/* Message display */}
+                {canvasMessage && (
+                  <p style={{
+                    marginBottom: '16px',
+                    fontSize: '14px',
+                    color: canvasMessage.includes('✗') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {canvasMessage}
+                  </p>
+                )}
+
+                {/* Sync Settings */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>Sync Settings</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {[
+                      { key: 'courses', label: 'Courses', description: 'Creates courses from Canvas', value: canvasSyncCourses },
+                      { key: 'assignments', label: 'Assignments', description: 'Syncs to Assignments page', value: canvasSyncAssignments },
+                      { key: 'grades', label: 'Grades', description: 'Updates assignment scores', value: canvasSyncGrades },
+                      { key: 'events', label: 'Calendar Events', description: 'Syncs to Calendar', value: canvasSyncEvents },
+                      { key: 'announcements', label: 'Announcements', description: 'Creates notifications', value: canvasSyncAnnouncements },
+                      { key: 'autoMarkComplete', label: 'Auto-mark complete', description: 'Mark assignments done when submitted', value: canvasAutoMarkComplete },
+                    ].map((setting) => (
+                      <label
+                        key={setting.key}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '10px 12px',
+                          backgroundColor: 'var(--panel-2)',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <div>
+                          <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>{setting.label}</p>
+                          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{setting.description}</p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={setting.value}
+                          onChange={(e) => handleCanvasSyncSettingsChange(setting.key, e.target.checked)}
+                          style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </Card>
+          )}
+
+          {/* Appearance Tab */}
+          {activeSettingsTab === 'appearance' && (
+            <>
+          {/* Appearance - Theme, University, Custom Theme + Visual Effects */}
+          <Card title="Appearance">
             {/* Theme */}
             <div style={{ marginBottom: '20px' }}>
               <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Theme</p>
@@ -557,45 +1273,6 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Due Soon Window */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-              <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Due Soon Window</p>
-              <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                Show deadlines within this many days
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <input
-                  ref={dueSoonInputRef}
-                  type="text"
-                  inputMode="numeric"
-                  defaultValue={dueSoonDays}
-                  onKeyUp={(e) => {
-                    const inputValue = e.currentTarget.value;
-                    setDueSoonDays(inputValue);
-                    const val = parseInt(inputValue);
-                    if (!isNaN(val) && val >= 1 && val <= 30) {
-                      updateSettings({ dueSoonWindowDays: val });
-                    }
-                  }}
-                  style={{
-                    width: '80px',
-                    height: '40px',
-                    padding: '8px 12px',
-                    fontSize: '16px',
-                    fontFamily: 'inherit',
-                    backgroundColor: 'var(--panel-2)',
-                    color: 'var(--text)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '6px',
-                  }}
-                />
-                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>days</span>
-              </div>
-            </div>
-          </Card>
-
-          {/* Appearance (Premium) - Custom Theme + Visual Effects */}
-          <Card title="Appearance">
             {!isPremium && !isLoadingSubscription && (
               <div style={{ marginBottom: '16px' }}>
                 <UpgradePrompt feature="Custom themes and visual effects" />
@@ -603,7 +1280,7 @@ export default function SettingsPage() {
             )}
 
             {/* Custom Theme Toggle */}
-            <div style={{ marginBottom: '20px' }}>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
               <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Color Theme</p>
               <div style={{
                 display: 'flex',
@@ -1225,8 +1902,11 @@ export default function SettingsPage() {
               </p>
             )}
           </Card>
+            </>
+          )}
 
-          {/* Notification Preferences */}
+          {/* Preferences Tab - Notification Preferences */}
+          {activeSettingsTab === 'preferences' && (
           <Card title="Notification Preferences">
             <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px' }}>
               Email Notifications
@@ -1246,21 +1926,6 @@ export default function SettingsPage() {
                   onChange={async (e) => {
                     setEmailAnnouncements(e.target.checked);
                     await updateSettings({ emailAnnouncements: e.target.checked });
-                  }}
-                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                />
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
-                <div>
-                  <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Exam Reminders</p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before your upcoming exams</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={emailExamReminders}
-                  onChange={async (e) => {
-                    setEmailExamReminders(e.target.checked);
-                    await updateSettings({ emailExamReminders: e.target.checked });
                   }}
                   style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                 />
@@ -1308,21 +1973,6 @@ export default function SettingsPage() {
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
                   <div>
-                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Exam Reminders</p>
-                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before your upcoming exams</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifyExamReminders}
-                    onChange={async (e) => {
-                      setNotifyExamReminders(e.target.checked);
-                      await updateSettings({ notifyExamReminders: e.target.checked });
-                    }}
-                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                  />
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
-                  <div>
                     <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Account Alerts</p>
                     <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Subscription updates, payment alerts, and security notifications</p>
                   </div>
@@ -1339,31 +1989,11 @@ export default function SettingsPage() {
               </div>
             </div>
           </Card>
+          )}
 
-          {/* Notes Settings */}
-          <Card title="Notes Settings">
-            <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-              Configure how your notes are organized and managed.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
-                <div>
-                  <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Auto-create Course Folders</p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Automatically create a notes folder when you add a new course</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={autoCreateCourseFolders}
-                  onChange={async (e) => {
-                    setAutoCreateCourseFolders(e.target.checked);
-                    await updateSettings({ autoCreateCourseFolders: e.target.checked });
-                  }}
-                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                />
-              </label>
-            </div>
-          </Card>
-
+          {/* About Tab */}
+          {activeSettingsTab === 'about' && (
+            <>
           {/* Report an Issue & Request a Feature/Change */}
           <Card title="Feedback">
             <div className="space-y-4">
@@ -1475,7 +2105,7 @@ export default function SettingsPage() {
               <div className="space-y-3 text-sm border-b border-[var(--border)]" style={{ paddingBottom: '18px' }}>
                 <div>
                   <p className="font-semibold text-[var(--text)]">College Orbit</p>
-                  <p className="text-[var(--text-muted)]">v1.1</p>
+                  <p className="text-[var(--text-muted)]">v1.0</p>
                 </div>
                 <p className="text-[var(--text-secondary)]">
                   A personal, privacy-first dashboard for students to manage courses, deadlines, and tasks.
@@ -1581,6 +2211,8 @@ export default function SettingsPage() {
               </div>
             </div>
           </Card>
+            </>
+          )}
         </div>
       </div>
 
@@ -1673,6 +2305,18 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+
+      {/* Canvas Disconnect Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showCanvasDisconnectModal}
+        title="Disconnect from Canvas?"
+        message="Your synced courses, assignments, and events will remain in College Orbit, but you won't receive any new updates from Canvas until you reconnect."
+        confirmText="Disconnect"
+        cancelText="Cancel"
+        isDangerous={true}
+        onConfirm={handleCanvasDisconnect}
+        onCancel={() => setShowCanvasDisconnectModal(false)}
+      />
     </>
   );
 }

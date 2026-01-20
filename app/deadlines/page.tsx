@@ -33,6 +33,8 @@ import { RecurringDeadlineFormData } from '@/types';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
+import { CanvasBadge } from '@/components/CanvasBadge';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 // Helper function to format recurring pattern as human-readable text
 function getRecurrenceText(pattern: any): string {
@@ -142,8 +144,10 @@ export default function DeadlinesPage() {
   // Bulk selection state
   const bulkSelect = useBulkSelect();
   const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
-  const [showDeleteAllCompleted, setShowDeleteAllCompleted] = useState(false);
   const [hideRecurringCompleted, setHideRecurringCompleted] = useState(false);
+
+  // Canvas delete confirmation
+  const [canvasDeleteConfirm, setCanvasDeleteConfirm] = useState<{ id: string; title: string } | null>(null);
 
   const { courses, deadlines, notes, settings, addDeadline, updateDeadline, deleteDeadline, addRecurringDeadline, updateRecurringDeadlinePattern, bulkUpdateDeadlines, bulkDeleteDeadlines, initializeStore } = useAppStore();
   const isMobile = useIsMobile();
@@ -187,7 +191,7 @@ export default function DeadlinesPage() {
 
   // Check for deadline ID in URL params to open preview modal
   useEffect(() => {
-    const deadlineId = searchParams.get('deadline');
+    const deadlineId = searchParams.get('deadline') || searchParams.get('preview');
     if (deadlineId && mounted && deadlines.length > 0) {
       const deadline = deadlines.find((d) => d.id === deadlineId);
       if (deadline) {
@@ -690,27 +694,23 @@ export default function DeadlinesPage() {
     bulkSelect.clearSelection();
   };
 
-  // Delete all completed assignments - ONLY deletes non-recurring assignments with status === 'done'
-  const handleDeleteAllCompleted = async () => {
-    try {
-      const completedIds = deadlines
-        .filter((d) => d.status === 'done' && !d.isRecurring && !d.recurringPatternId)
-        .map((d) => d.id);
-      if (completedIds.length > 0) {
-        await bulkDeleteDeadlines(completedIds);
-        // Remove any selected tags that no longer exist in remaining items
-        const remainingDeadlines = deadlines.filter((d) => !completedIds.includes(d.id));
-        const remainingTags = new Set(remainingDeadlines.flatMap((d) => d.tags || []));
-        setSelectedTags((prev) => new Set([...prev].filter((tag) => remainingTags.has(tag))));
-        // Hide recurring completed items from the done filter
-        setHideRecurringCompleted(true);
-      }
-    } finally {
-      setShowDeleteAllCompleted(false);
+  // Handle delete with Canvas confirmation
+  const handleDeleteDeadline = (deadline: any) => {
+    if (deadline.canvasAssignmentId) {
+      // Show confirmation modal for Canvas items
+      setCanvasDeleteConfirm({ id: deadline.id, title: deadline.title });
+    } else {
+      // Direct delete for non-Canvas items
+      deleteDeadline(deadline.id);
     }
   };
 
-  const completedCount = deadlines.filter((d) => d.status === 'done' && !d.isRecurring && !d.recurringPatternId).length;
+  const confirmCanvasDelete = () => {
+    if (canvasDeleteConfirm) {
+      deleteDeadline(canvasDeleteConfirm.id);
+      setCanvasDeleteConfirm(null);
+    }
+  };
 
   const filtered = deadlines
     .filter((d) => {
@@ -1348,19 +1348,6 @@ export default function DeadlinesPage() {
           {/* Deadlines List */}
           {filtered.length > 0 ? (
             <Card>
-              {/* Delete All Completed Button */}
-              {filter === 'done' && completedCount > 0 && (
-                <div style={{ marginBottom: '8px' }}>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setShowDeleteAllCompleted(true)}
-                  >
-                    <Trash2 size={14} />
-                    <span style={{ marginLeft: '6px' }}>Delete All Completed</span>
-                  </Button>
-                </div>
-              )}
               <div className="space-y-4 divide-y divide-[var(--border)]">
                 {filtered.map((d) => {
                   const course = courses.find((c) => c.id === d.courseId);
@@ -1481,6 +1468,7 @@ export default function DeadlinesPage() {
                           >
                             {d.title}
                           </div>
+                          {d.canvasAssignmentId && <CanvasBadge />}
                           {d.isRecurring && (
                             <Repeat
                               size={14}
@@ -1555,9 +1543,9 @@ export default function DeadlinesPage() {
                         </div>
                         {d.links && d.links.length > 0 && (
                           <div className="flex flex-col" style={{ gap: '0px' }}>
-                            {d.links.map((link: any) => (
+                            {d.links.slice(0, 7).map((link: any, linkIdx: number) => (
                               <a
-                                key={link.url}
+                                key={`${link.url}-${linkIdx}`}
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -1568,6 +1556,16 @@ export default function DeadlinesPage() {
                                 {link.label}
                               </a>
                             ))}
+                            {d.links.length > 7 && (
+                              <button
+                                type="button"
+                                style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', width: 'fit-content', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', marginTop: '2px' }}
+                                className="hover:text-[var(--text)]"
+                                onClick={(e) => { e.stopPropagation(); setPreviewingDeadline(d); }}
+                              >
+                                +{d.links.length - 7} more links
+                              </button>
+                            )}
                           </div>
                         )}
                         {d.files && d.files.length > 0 && (
@@ -1605,7 +1603,7 @@ export default function DeadlinesPage() {
                           <Edit2 size={isMobile ? 14 : 20} />
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); deleteDeadline(d.id); }}
+                          onClick={(e) => { e.stopPropagation(); handleDeleteDeadline(d); }}
                           className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
                           style={{ padding: isMobile ? '2px' : '6px' }}
                           title="Delete assignment"
@@ -1698,43 +1696,6 @@ export default function DeadlinesPage() {
         onConfirm={handleBulkDelete}
       />
 
-      {/* Delete All Completed Modal */}
-      {showDeleteAllCompleted && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-          <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
-            <div style={{ padding: '24px' }}>
-              <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Delete All Completed Assignments</h2>
-              <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
-                Are you sure you want to delete {completedCount} completed assignment{completedCount !== 1 ? 's' : ''}? This action cannot be undone.
-              </p>
-              <div className="flex gap-3 justify-end" style={{ marginTop: '24px' }}>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setShowDeleteAllCompleted(false)}
-                  style={{ paddingLeft: '16px', paddingRight: '16px' }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={handleDeleteAllCompleted}
-                  style={{
-                    backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
-                    color: 'white',
-                    paddingLeft: '16px',
-                    paddingRight: '16px',
-                  }}
-                >
-                  Delete All
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Preview Modal */}
       {previewingDeadline && (
         <div
@@ -1760,29 +1721,36 @@ export default function DeadlinesPage() {
               width: '100%',
               maxWidth: '500px',
               maxHeight: '80vh',
-              overflow: 'auto',
+              overflow: 'hidden',
               border: '1px solid var(--border)',
+              display: 'flex',
+              flexDirection: 'column',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
+            {/* Header - Sticky */}
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'flex-start',
-              padding: isMobile ? '16px' : '20px',
+              padding: isMobile ? '10px 12px' : '12px 16px',
               borderBottom: '1px solid var(--border)',
+              flexShrink: 0,
+              backgroundColor: 'var(--panel)',
             }}>
               <div style={{ flex: 1, paddingRight: '12px' }}>
-                <h2 style={{
-                  fontSize: isMobile ? '16px' : '18px',
-                  fontWeight: '600',
-                  color: 'var(--text)',
-                  margin: 0,
-                  wordBreak: 'break-word',
-                }}>
-                  {previewingDeadline.title}
-                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <h2 style={{
+                    fontSize: isMobile ? '16px' : '18px',
+                    fontWeight: '600',
+                    color: 'var(--text)',
+                    margin: 0,
+                    wordBreak: 'break-word',
+                  }}>
+                    {previewingDeadline.title}
+                  </h2>
+                  {previewingDeadline.canvasAssignmentId && <CanvasBadge />}
+                </div>
                 {previewingDeadline.courseId && (
                   <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
                     {courses.find(c => c.id === previewingDeadline.courseId)?.code || courses.find(c => c.id === previewingDeadline.courseId)?.name}
@@ -1804,10 +1772,10 @@ export default function DeadlinesPage() {
               </button>
             </div>
 
-            {/* Content */}
-            <div style={{ padding: isMobile ? '16px' : '20px' }}>
+            {/* Content - Scrollable */}
+            <div style={{ padding: isMobile ? '10px 12px' : '12px 16px', flex: 1, overflowY: 'auto' }}>
               {/* Status & Effort */}
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
                 {previewingDeadline.status === 'done' && (
                   <span style={{
                     fontSize: '12px',
@@ -1850,7 +1818,7 @@ export default function DeadlinesPage() {
 
               {/* Due Date */}
               {previewingDeadline.dueAt && (
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Due Date</div>
                   <div style={{ fontSize: '14px', color: 'var(--text)' }}>
                     {formatDate(previewingDeadline.dueAt)}
@@ -1869,7 +1837,7 @@ export default function DeadlinesPage() {
 
               {/* Recurring Pattern */}
               {previewingDeadline.isRecurring && previewingDeadline.recurringPattern && (
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Recurring</div>
                   <div style={{ fontSize: '14px', color: 'var(--text)' }}>
                     {getRecurrenceText(previewingDeadline.recurringPattern)}
@@ -1879,7 +1847,7 @@ export default function DeadlinesPage() {
 
               {/* Notes */}
               {previewingDeadline.notes && (
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Notes</div>
                   <div style={{ fontSize: '14px', color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
                     {previewingDeadline.notes}
@@ -1889,7 +1857,7 @@ export default function DeadlinesPage() {
 
               {/* Tags */}
               {previewingDeadline.tags && previewingDeadline.tags.length > 0 && (
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Tags</div>
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {previewingDeadline.tags.map((tag: string) => (
@@ -1909,7 +1877,7 @@ export default function DeadlinesPage() {
 
               {/* Links */}
               {previewingDeadline.links && previewingDeadline.links.length > 0 && (
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Links</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {previewingDeadline.links.map((link: { label: string; url: string }, i: number) => (
@@ -1934,7 +1902,7 @@ export default function DeadlinesPage() {
 
               {/* Files */}
               {previewingDeadline.files && previewingDeadline.files.length > 0 && (
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Files</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {previewingDeadline.files.map((file: { name: string; url: string; size: number }, i: number) => (
@@ -1971,7 +1939,7 @@ export default function DeadlinesPage() {
                 );
                 if (relatedNotes.length === 0) return null;
                 return (
-                  <div style={{ marginBottom: '16px' }}>
+                  <div style={{ marginBottom: '10px' }}>
                     <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '8px' }}>Related Notes</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {relatedNotes.slice(0, 3).map((note) => (
@@ -2018,12 +1986,14 @@ export default function DeadlinesPage() {
               })()}
             </div>
 
-            {/* Footer */}
+            {/* Footer - Sticky */}
             <div style={{
               display: 'flex',
               gap: '8px',
               padding: isMobile ? '16px' : '20px',
               borderTop: '1px solid var(--border)',
+              flexShrink: 0,
+              backgroundColor: 'var(--panel)',
             }}>
               <Button
                 variant="secondary"
@@ -2184,6 +2154,18 @@ export default function DeadlinesPage() {
           </div>
         </>
       )}
+
+      {/* Canvas Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={canvasDeleteConfirm !== null}
+        title="Delete Canvas Assignment"
+        message={`Are you sure you want to delete "${canvasDeleteConfirm?.title}"? This assignment is synced from Canvas and will not reappear on future syncs.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDangerous={true}
+        onConfirm={confirmCanvasDelete}
+        onCancel={() => setCanvasDeleteConfirm(null)}
+      />
     </>
   );
 }

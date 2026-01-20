@@ -44,6 +44,7 @@ export default function TermsContent() {
                 What We Provide
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <li>Canvas LMS integration to sync courses, assignments, grades, calendar events, and announcements</li>
                 <li>Personal task management with importance levels and checklists</li>
                 <li>Assignment tracking with priority and effort markers</li>
                 <li>Recurring tasks, assignments, and exams with flexible scheduling</li>
@@ -232,6 +233,25 @@ export default function TermsContent() {
           <div className="space-y-4">
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Canvas LMS Integration
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                College Orbit offers optional integration with Canvas LMS (Learning Management System). When you connect your Canvas account:
+              </p>
+              <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <li>You provide your Canvas instance URL and a personal API access token that you generate from your Canvas account settings</li>
+                <li>We use this token to fetch your courses, assignments, grades, calendar events, and announcements from Canvas on your behalf</li>
+                <li>Your Canvas API token is encrypted and stored securely on our servers</li>
+                <li>We only read data from Canvas; we never modify, submit, or delete anything in your Canvas account</li>
+                <li>Canvas API tokens expire after approximately 120 days; you will need to generate a new token and reconnect</li>
+                <li>You can disconnect your Canvas account at any time from Settings, which will delete your stored token</li>
+              </ul>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>
+                Your use of Canvas is subject to your institution's Canvas terms of service. We are not affiliated with Instructure (the company behind Canvas) and are not responsible for Canvas availability or data accuracy.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
                 Email Services
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
@@ -243,7 +263,7 @@ export default function TermsContent() {
                 External Services
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                The Service may include links to or reference third-party services and educational resources (Canvas, course portals, etc.). We do not directly integrate third-party authentication providers. We are not responsible for third-party content or services that you access through links in the Service.
+                The Service may include links to or reference third-party services and educational resources. We are not responsible for third-party content or services that you access through links in the Service.
               </p>
             </div>
             <div>

@@ -101,16 +101,39 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Verify ownership
+    // Verify ownership and get Canvas ID if present
     const existingEvent = await prisma.calendarEvent.findFirst({
       where: {
         id,
         userId: token.id,
       },
+      select: {
+        id: true,
+        canvasEventId: true,
+      },
     });
 
     if (!existingEvent) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    }
+
+    // If this is a Canvas event, track the deletion to prevent re-sync
+    if (existingEvent.canvasEventId) {
+      await prisma.deletedCanvasItem.upsert({
+        where: {
+          userId_canvasId_type: {
+            userId: token.id,
+            canvasId: existingEvent.canvasEventId,
+            type: 'event',
+          },
+        },
+        update: { deletedAt: new Date() },
+        create: {
+          userId: token.id,
+          canvasId: existingEvent.canvasEventId,
+          type: 'event',
+        },
+      });
     }
 
     await prisma.calendarEvent.delete({

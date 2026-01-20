@@ -51,6 +51,7 @@ model User {
   shoppingItems             ShoppingItem[]
   tasks                     Task[]
   calendarEvents            CalendarEvent[]
+  deletedCanvasItems        DeletedCanvasItem[]
 
   @@index([email])
   @@index([subscriptionTier])
@@ -71,6 +72,11 @@ model Course {
   updatedAt     DateTime       @updatedAt
   startDate     DateTime?
   endDate       DateTime?
+
+  // Canvas LMS Integration
+  canvasCourseId     String?
+  canvasEnrollmentId String?
+
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   deadlines     Deadline[]
   exams         Exam[]
@@ -81,6 +87,7 @@ model Course {
   tasks         Task[]
 
   @@index([userId])
+  @@index([canvasCourseId])
 }
 
 model Deadline {
@@ -102,6 +109,14 @@ model Deadline {
   instanceDate       DateTime?
   isRecurring        Boolean                   @default(false)
   recurringPatternId String?
+
+  // Canvas LMS Integration
+  canvasAssignmentId  String?
+  canvasSubmissionId  String?
+  canvasPointsPossible Float?
+  canvasPointsEarned   Float?
+  canvasGradePostedAt  DateTime?
+
   course             Course?                   @relation(fields: [courseId], references: [id])
   recurringPattern   RecurringDeadlinePattern? @relation(fields: [recurringPatternId], references: [id])
   user               User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -112,6 +127,7 @@ model Deadline {
   @@index([status])
   @@index([recurringPatternId])
   @@index([isRecurring])
+  @@index([canvasAssignmentId])
 }
 
 model Task {
@@ -352,6 +368,8 @@ model Settings {
   userId                 String   @unique
   dueSoonWindowDays      Int      @default(7)
   weekStartsOn           String   @default("Sun")
+  timeFormat             String   @default("12h")
+  dateFormat             String   @default("MM/DD/YYYY")
   theme                  String   @default("dark")
   enableNotifications    Boolean  @default(false)
   createdAt              DateTime @default(now())
@@ -382,6 +400,22 @@ model Settings {
   gradientIntensity      Int      @default(50)
   glowIntensity          Int      @default(50)
   autoCreateCourseFolders Boolean @default(false)
+  showCanvasBadges        Boolean @default(true)
+
+  // Canvas LMS Integration
+  canvasInstanceUrl       String?
+  canvasAccessToken       String?
+  canvasUserId            String?
+  canvasUserName          String?
+  canvasSyncEnabled       Boolean  @default(false)
+  canvasLastSyncedAt      DateTime?
+  canvasSyncCourses       Boolean  @default(true)
+  canvasSyncAssignments   Boolean  @default(true)
+  canvasSyncGrades        Boolean  @default(true)
+  canvasSyncEvents        Boolean  @default(true)
+  canvasSyncAnnouncements Boolean  @default(true)
+  canvasAutoMarkComplete  Boolean  @default(true)
+
   user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -458,6 +492,10 @@ model Notification {
   featureRequestId String?
   issueReportId    String?
   examId           String?
+
+  // Canvas LMS Integration
+  canvasAnnouncementId String?
+
   collegeRequest   CollegeRequest? @relation(fields: [collegeRequestId], references: [id], onDelete: Cascade)
   exam             Exam?           @relation(fields: [examId], references: [id], onDelete: Cascade)
   featureRequest   FeatureRequest? @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
@@ -470,6 +508,7 @@ model Notification {
   @@index([issueReportId])
   @@index([featureRequestId])
   @@index([examId])
+  @@index([canvasAnnouncementId])
 }
 
 model RateLimit {
@@ -550,10 +589,15 @@ model CalendarEvent {
   location    String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  // Canvas LMS Integration
+  canvasEventId String?
+
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([startAt])
+  @@index([canvasEventId])
 }
 
 model AuditLog {
@@ -586,4 +630,17 @@ model College {
 
   @@index([isActive])
   @@index([fullName])
+}
+
+model DeletedCanvasItem {
+  id        String   @id @default(cuid())
+  userId    String
+  canvasId  String   // The Canvas ID (canvasAssignmentId, canvasCourseId, etc.)
+  type      String   // 'assignment', 'course', 'event', 'announcement'
+  deletedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, canvasId, type])
+  @@index([userId, type])
 }

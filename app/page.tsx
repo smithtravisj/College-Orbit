@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import useAppStore from '@/lib/store';
 import OnboardingTour from '@/components/OnboardingTour';
-import { isToday, formatDate, isOverdue } from '@/lib/utils';
+import { isToday, formatDate, isOverdue, formatTimeString, TimeFormat, DateFormat } from '@/lib/utils';
 import { isDateExcluded } from '@/lib/calendarUtils';
 import { getQuickLinks } from '@/lib/quickLinks';
 import { getDashboardCardSpan } from '@/lib/dashboardLayout';
@@ -17,7 +17,8 @@ import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 import Link from 'next/link';
-import { Trash2 } from 'lucide-react';
+import { Trash2, X, FileIcon } from 'lucide-react';
+import { CanvasBadge } from '@/components/CanvasBadge';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import LandingPage from '@/components/LandingPage';
@@ -49,6 +50,8 @@ function Dashboard() {
   const [toggledTasks, setToggledTasks] = useState<Set<string>>(new Set());
   const [hidingDeadlines, setHidingDeadlines] = useState<Set<string>>(new Set());
   const [toggledDeadlines, setToggledDeadlines] = useState<Set<string>>(new Set());
+  const [previewingTask, setPreviewingTask] = useState<any>(null);
+  const [previewingDeadline, setPreviewingDeadline] = useState<any>(null);
 
   const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>([]);
   const [taskFormData, setTaskFormData] = useState({
@@ -67,7 +70,7 @@ function Dashboard() {
     notes: '',
     links: [{ label: '', url: '' }],
   });
-  const { courses, deadlines, tasks, exams, settings, excludedDates, calendarEvents, initializeStore, addTask, updateTask, deleteTask, toggleTaskDone, updateDeadline, deleteDeadline } = useAppStore();
+  const { courses, deadlines, tasks, exams, settings, excludedDates, calendarEvents, initializeStore, addTask, updateTask, toggleTaskDone, updateDeadline } = useAppStore();
   const { isPremium } = useSubscription();
   // Dashboard card visibility is only customizable for premium users - free users see defaults
   const savedVisibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
@@ -294,13 +297,9 @@ function Dashboard() {
     setShowDeadlineForm(false);
   };
 
-  // Helper function to format 24-hour time to 12-hour format
-  const formatTime12Hour = (time24: string): string => {
-    const [hours, minutes] = time24.split(':').map(Number);
-    const isPM = hours >= 12;
-    const hours12 = hours % 12 || 12;
-    const ampm = isPM ? 'PM' : 'AM';
-    return `${hours12}:${String(minutes).padStart(2, '0')} ${ampm}`;
+  // Helper function to format time based on user preference
+  const formatTimeDisplay = (time24: string): string => {
+    return formatTimeString(time24, (settings.timeFormat || '12h') as TimeFormat);
   };
 
   // Get due soon items
@@ -498,7 +497,7 @@ function Dashboard() {
 
                   {/* Time */}
                   <div className="text-sm text-[var(--text-secondary)]">
-                    {formatTime12Hour(displayClass.start)} – {formatTime12Hour(displayClass.end)}
+                    {formatTimeDisplay(displayClass.start)} – {formatTimeDisplay(displayClass.end)}
                   </div>
 
                   {/* Location */}
@@ -509,9 +508,9 @@ function Dashboard() {
                   {/* Course Links */}
                   {displayClass.courseLinks && displayClass.courseLinks.length > 0 && (
                     <div className="flex flex-col" style={{ gap: '2px', marginTop: isMobile ? '4px' : '8px' }}>
-                      {displayClass.courseLinks.map((link) => (
+                      {displayClass.courseLinks.map((link, linkIdx) => (
                         <a
-                          key={link.url}
+                          key={`${link.url}-${linkIdx}`}
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -667,8 +666,14 @@ function Dashboard() {
                     const isOverdueDeadline = d.dueAt && isOverdue(d.dueAt) && d.status === 'open';
                     const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
                     return (
-                      <div key={d.id} style={{ paddingTop: '10px', paddingBottom: '10px', opacity: hidingDeadlines.has(d.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group">
+                      <div
+                        key={d.id}
+                        style={{ paddingTop: '10px', paddingBottom: '10px', paddingLeft: '12px', paddingRight: '12px', marginLeft: '-12px', marginRight: '-12px', opacity: hidingDeadlines.has(d.id) ? 0.5 : 1, transition: 'opacity 0.3s ease', cursor: 'pointer' }}
+                        className="first:pt-0 last:pb-0 flex items-center gap-4 group hover:bg-[var(--panel-2)] rounded transition-colors"
+                        onClick={() => setPreviewingDeadline(d)}
+                      >
                         <input
+                          onClick={(e) => e.stopPropagation()}
                           type="checkbox"
                           checked={d.status === 'done'}
                           onChange={() => {
@@ -720,7 +725,7 @@ function Dashboard() {
                           </div>
                           <div className="flex items-center gap-2 mt-2 flex-wrap">
                             <span className="text-xs text-[var(--text-muted)]">
-                              {formatDate(d.dueAt!)}
+                              {formatDate(d.dueAt!, (settings.dateFormat || 'MM/DD/YYYY') as DateFormat)}
                             </span>
                             {shouldShowTime && (
                               <span className="text-xs text-[var(--text-muted)]">
@@ -734,29 +739,25 @@ function Dashboard() {
                             )}
                           </div>
                           {d.links && d.links.length > 0 && (
-                            <div className="flex flex-col mt-2" style={{ gap: '0px' }}>
-                              {d.links.map((link: any) => (
+                            <div className="flex flex-col mt-2" style={{ gap: '0px' }} onClick={(e) => e.stopPropagation()}>
+                              {d.links.slice(0, 3).map((link: any, linkIdx: number) => (
                                 <a
-                                  key={link.url}
+                                  key={`${link.url}-${linkIdx}`}
                                   href={link.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-xs text-[var(--link)] hover:text-blue-400"
+                                  className="text-xs text-[var(--link)] hover:text-blue-400 truncate block"
+                                  style={{ maxWidth: '100%' }}
+                                  title={link.label}
                                 >
                                   {link.label}
                                 </a>
                               ))}
+                              {d.links.length > 3 && (
+                                <span className="text-xs text-[var(--text-muted)]">+{d.links.length - 3} more</span>
+                              )}
                             </div>
                           )}
-                        </div>
-                        <div className="flex items-center gap-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
-                          <button
-                            onClick={() => deleteDeadline(d.id)}
-                            className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors -ml-2"
-                            title="Delete deadline"
-                          >
-                            <Trash2 size={16} />
-                          </button>
                         </div>
                       </div>
                     );
@@ -817,8 +818,14 @@ function Dashboard() {
                   const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
                   const course = courses.find((c) => c.id === t.courseId);
                   return (
-                    <div key={t.id} style={{ paddingTop: '10px', paddingBottom: '10px', opacity: hidingTasks.has(t.id) ? 0.5 : 1, transition: 'opacity 0.3s ease' }} className="first:pt-0 last:pb-0 flex items-center gap-4 group border-b border-[var(--border)] last:border-b-0">
+                    <div
+                      key={t.id}
+                      style={{ paddingTop: '10px', paddingBottom: '10px', paddingLeft: '12px', paddingRight: '12px', marginLeft: '-12px', marginRight: '-12px', opacity: hidingTasks.has(t.id) ? 0.5 : 1, transition: 'opacity 0.3s ease', cursor: 'pointer' }}
+                      className="first:pt-0 last:pb-0 flex items-center gap-4 group border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--panel-2)] rounded transition-colors"
+                      onClick={() => setPreviewingTask(t)}
+                    >
                       <input
+                        onClick={(e) => e.stopPropagation()}
                         type="checkbox"
                         checked={t.status === 'done'}
                         onChange={() => {
@@ -884,7 +891,7 @@ function Dashboard() {
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           {isOverdueTask && t.dueAt && (
                             <span className="text-xs text-[var(--text-muted)]">
-                              {formatDate(t.dueAt)}
+                              {formatDate(t.dueAt, (settings.dateFormat || 'MM/DD/YYYY') as DateFormat)}
                             </span>
                           )}
                           {shouldShowTime && (
@@ -899,10 +906,10 @@ function Dashboard() {
                           )}
                         </div>
                         {t.links && t.links.length > 0 && (
-                          <div className="flex flex-col mt-2" style={{ gap: '0px' }}>
-                            {t.links.map((link: any) => (
+                          <div className="flex flex-col mt-2" style={{ gap: '0px' }} onClick={(e) => e.stopPropagation()}>
+                            {t.links.map((link: any, linkIdx: number) => (
                               <a
-                                key={link.url}
+                                key={`${link.url}-${linkIdx}`}
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -913,15 +920,6 @@ function Dashboard() {
                             ))}
                           </div>
                         )}
-                      </div>
-                      <div className="flex items-center gap-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex-shrink-0">
-                        <button
-                          onClick={() => deleteTask(t.id)}
-                          className="p-1.5 rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors -ml-2"
-                          title="Delete task"
-                        >
-                          <Trash2 size={18} />
-                        </button>
                       </div>
                     </div>
                   );
@@ -1228,7 +1226,7 @@ function Dashboard() {
                                   </div>
                                   <div className="text-sm text-[var(--text-secondary)]" style={{ marginTop: '3px' }}>
                                     {item.type === 'class'
-                                      ? `${formatTime12Hour(item.start)} – ${formatTime12Hour(item.end)}`
+                                      ? `${formatTimeDisplay(item.start)} – ${formatTimeDisplay(item.end)}`
                                       : item.type === 'event' && !item.allDay && item.endAt
                                       ? `${item.time} – ${new Date(item.endAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`
                                       : item.time}
@@ -1261,6 +1259,358 @@ function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Task Preview Modal */}
+      {previewingTask && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: isMobile ? '16px' : '24px',
+          }}
+          onClick={() => setPreviewingTask(null)}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--panel)',
+              borderRadius: 'var(--radius-card)',
+              width: '100%',
+              maxWidth: '500px',
+              maxHeight: '80vh',
+              overflow: 'hidden',
+              border: '1px solid var(--border)',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header - Sticky */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              padding: isMobile ? '10px 12px' : '12px 16px',
+              borderBottom: '1px solid var(--border)',
+              flexShrink: 0,
+              backgroundColor: 'var(--panel)',
+            }}>
+              <div style={{ flex: 1, paddingRight: '12px' }}>
+                <h2 style={{
+                  fontSize: isMobile ? '16px' : '18px',
+                  fontWeight: '600',
+                  color: 'var(--text)',
+                  margin: 0,
+                  wordBreak: 'break-word',
+                }}>
+                  {previewingTask.title}
+                </h2>
+                {previewingTask.courseId && (
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    {courses.find(c => c.id === previewingTask.courseId)?.code || courses.find(c => c.id === previewingTask.courseId)?.name}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setPreviewingTask(null)}
+                style={{
+                  padding: '4px',
+                  color: 'var(--text-muted)',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  borderRadius: '4px',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Content - Scrollable */}
+            <div style={{ padding: isMobile ? '10px 12px' : '12px 16px', flex: 1, overflowY: 'auto' }}>
+              {/* Status */}
+              {previewingTask.status === 'done' && (
+                <span style={{
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                  color: 'var(--success)',
+                  marginBottom: '10px',
+                  display: 'inline-block',
+                }}>
+                  Completed
+                </span>
+              )}
+
+              {/* Due Date */}
+              {previewingTask.dueAt && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Due</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>
+                    {formatDate(previewingTask.dueAt, (settings.dateFormat || 'MM/DD/YYYY') as DateFormat)}
+                    {' '}
+                    {new Date(previewingTask.dueAt).getHours() !== 23 && new Date(previewingTask.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {previewingTask.notes && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Notes</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
+                    {previewingTask.notes}
+                  </div>
+                </div>
+              )}
+
+              {/* Links */}
+              {previewingTask.links && previewingTask.links.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Links</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {previewingTask.links.map((link: any, idx: number) => (
+                      <a
+                        key={`${link.url}-${idx}`}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: '14px', color: 'var(--link)' }}
+                      >
+                        {link.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer - Sticky */}
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              padding: isMobile ? '10px 12px' : '12px 16px',
+              borderTop: '1px solid var(--border)',
+              flexShrink: 0,
+              backgroundColor: 'var(--panel)',
+            }}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  toggleTaskDone(previewingTask.id);
+                  setPreviewingTask(null);
+                }}
+                style={{ flex: 1 }}
+              >
+                {previewingTask.status === 'done' ? 'Mark Incomplete' : 'Mark Complete'}
+              </Button>
+              <Link href={`/tasks?preview=${previewingTask.id}`} style={{ flex: 1 }}>
+                <Button variant="primary" style={{ width: '100%' }} onClick={() => setPreviewingTask(null)}>
+                  View in Tasks
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Deadline Preview Modal */}
+      {previewingDeadline && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: isMobile ? '16px' : '24px',
+          }}
+          onClick={() => setPreviewingDeadline(null)}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--panel)',
+              borderRadius: 'var(--radius-card)',
+              width: '100%',
+              maxWidth: '500px',
+              maxHeight: '80vh',
+              overflow: 'hidden',
+              border: '1px solid var(--border)',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header - Sticky */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              padding: isMobile ? '10px 12px' : '12px 16px',
+              borderBottom: '1px solid var(--border)',
+              flexShrink: 0,
+              backgroundColor: 'var(--panel)',
+            }}>
+              <div style={{ flex: 1, paddingRight: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <h2 style={{
+                    fontSize: isMobile ? '16px' : '18px',
+                    fontWeight: '600',
+                    color: 'var(--text)',
+                    margin: 0,
+                    wordBreak: 'break-word',
+                  }}>
+                    {previewingDeadline.title}
+                  </h2>
+                  {previewingDeadline.canvasAssignmentId && <CanvasBadge />}
+                </div>
+                {previewingDeadline.courseId && (
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    {courses.find(c => c.id === previewingDeadline.courseId)?.code || courses.find(c => c.id === previewingDeadline.courseId)?.name}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setPreviewingDeadline(null)}
+                style={{
+                  padding: '4px',
+                  color: 'var(--text-muted)',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  borderRadius: '4px',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Content - Scrollable */}
+            <div style={{ padding: isMobile ? '10px 12px' : '12px 16px', flex: 1, overflowY: 'auto' }}>
+              {/* Status */}
+              {previewingDeadline.status === 'done' && (
+                <span style={{
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                  color: 'var(--success)',
+                  marginBottom: '10px',
+                  display: 'inline-block',
+                }}>
+                  Completed
+                </span>
+              )}
+
+              {/* Due Date */}
+              {previewingDeadline.dueAt && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Due</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>
+                    {formatDate(previewingDeadline.dueAt, (settings.dateFormat || 'MM/DD/YYYY') as DateFormat)}
+                    {' '}
+                    {new Date(previewingDeadline.dueAt).getHours() !== 23 && new Date(previewingDeadline.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {previewingDeadline.notes && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Notes</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
+                    {previewingDeadline.notes}
+                  </div>
+                </div>
+              )}
+
+              {/* Links */}
+              {previewingDeadline.links && previewingDeadline.links.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Links</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {previewingDeadline.links.map((link: any, idx: number) => (
+                      <a
+                        key={`${link.url}-${idx}`}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: '14px', color: 'var(--link)' }}
+                      >
+                        {link.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Files */}
+              {previewingDeadline.files && previewingDeadline.files.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Files</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {previewingDeadline.files.map((file: any, idx: number) => (
+                      <a
+                        key={`${file.url}-${idx}`}
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: '14px', color: 'var(--link)', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <FileIcon size={14} />
+                        {file.name}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer - Sticky */}
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              padding: isMobile ? '10px 12px' : '12px 16px',
+              borderTop: '1px solid var(--border)',
+              flexShrink: 0,
+              backgroundColor: 'var(--panel)',
+            }}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  updateDeadline(previewingDeadline.id, {
+                    status: previewingDeadline.status === 'done' ? 'open' : 'done',
+                  });
+                  setPreviewingDeadline(null);
+                }}
+                style={{ flex: 1 }}
+              >
+                {previewingDeadline.status === 'done' ? 'Mark Incomplete' : 'Mark Complete'}
+              </Button>
+              <Link href={`/deadlines?preview=${previewingDeadline.id}`} style={{ flex: 1 }}>
+                <Button variant="primary" style={{ width: '100%' }} onClick={() => setPreviewingDeadline(null)}>
+                  View in Assignments
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
