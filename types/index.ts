@@ -357,6 +357,10 @@ export interface Settings {
   canvasSyncEvents?: boolean;
   canvasSyncAnnouncements?: boolean;
   canvasAutoMarkComplete?: boolean; // Auto-mark assignments as complete when submitted in Canvas
+  // Timeline Settings
+  timelineRange?: 'today' | 'week'; // Default timeline view range
+  timelineShowProgress?: boolean; // Show progress indicator on timeline
+  timelineItemTypes?: ('class' | 'task' | 'deadline' | 'exam' | 'event')[]; // Which item types to show
 }
 
 export interface ExcludedDate {

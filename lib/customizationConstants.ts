@@ -12,11 +12,13 @@ export const PAGES = {
 } as const;
 
 export const DASHBOARD_CARDS = {
+  TIMELINE: 'timeline',
+  OVERVIEW: 'overview',
+  QUICK_LINKS: 'dashboard_quickLinks',
+  // Legacy cards (kept for backwards compatibility / migration)
   NEXT_CLASS: 'nextClass',
   DUE_SOON: 'dueSoon',
-  OVERVIEW: 'overview',
   TODAY_TASKS: 'todayTasks',
-  QUICK_LINKS: 'dashboard_quickLinks',
   UPCOMING_WEEK: 'upcomingWeek',
 } as const;
 
@@ -30,10 +32,25 @@ export const TOOLS_CARDS = {
 } as const;
 
 export const DEFAULT_VISIBLE_PAGES = Object.values(PAGES);
-export const DEFAULT_VISIBLE_DASHBOARD_CARDS = Object.values(DASHBOARD_CARDS);
+// Default to new timeline-based layout (timeline, overview, quick links)
+export const DEFAULT_VISIBLE_DASHBOARD_CARDS = [
+  DASHBOARD_CARDS.TIMELINE,
+  DASHBOARD_CARDS.OVERVIEW,
+  DASHBOARD_CARDS.QUICK_LINKS,
+];
+// Legacy cards list for users who haven't migrated yet
+export const LEGACY_DASHBOARD_CARDS = [
+  DASHBOARD_CARDS.NEXT_CLASS,
+  DASHBOARD_CARDS.DUE_SOON,
+  DASHBOARD_CARDS.OVERVIEW,
+  DASHBOARD_CARDS.TODAY_TASKS,
+  DASHBOARD_CARDS.QUICK_LINKS,
+  DASHBOARD_CARDS.UPCOMING_WEEK,
+];
 export const DEFAULT_VISIBLE_TOOLS_CARDS = Object.values(TOOLS_CARDS);
 
 export const CARD_LABELS: Record<string, string> = {
+  [DASHBOARD_CARDS.TIMELINE]: 'Timeline',
   [DASHBOARD_CARDS.NEXT_CLASS]: 'Next Class',
   [DASHBOARD_CARDS.DUE_SOON]: 'Due Soon',
   [DASHBOARD_CARDS.OVERVIEW]: 'Overview',

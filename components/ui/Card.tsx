@@ -63,7 +63,7 @@ const Card: React.FC<CardProps> = React.memo(({
     >
       <div className="flex flex-col flex-1 min-h-0" style={{ padding: isMobile ? '14px' : isPrimary ? '24px 24px 20px 24px' : '18px 20px 16px 20px' }}>
         {title && (
-          <div className="flex items-start justify-between gap-3" style={{ marginBottom: isPrimary ? '16px' : '12px' }}>
+          <div className="flex items-start justify-between gap-3" style={{ marginBottom: isPrimary ? '10px' : '8px' }}>
             <div className="space-y-1">
               <h3 className={`font-bold leading-[1.25] text-[var(--text)]`} style={{ fontSize: isPrimary ? (isMobile ? '16px' : '17px') : (isMobile ? '14px' : '15px') }}>{title}</h3>
               {subtitle && <p className="leading-[1.6]" style={{ fontSize: '12px', color: 'var(--text-muted)', opacity: 0.7 }}>{subtitle}</p>}
