@@ -17,6 +17,28 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import Link from 'next/link';
 import { useFormatters } from '@/hooks/useFormatters';
+import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+
+// Tool tab categories
+type ToolsTab = 'productivity' | 'grades';
+
+const TOOLS_TABS: { key: ToolsTab; label: string }[] = [
+  { key: 'productivity', label: 'Productivity' },
+  { key: 'grades', label: 'Grades & GPA' },
+];
+
+// Map tools to their tabs (Quick Links is under Productivity with Pomodoro)
+const TOOL_TAB_MAPPING: Record<string, ToolsTab> = {
+  [TOOLS_CARDS.POMODORO_TIMER]: 'productivity',
+  [TOOLS_CARDS.QUICK_LINKS]: 'productivity',
+  [TOOLS_CARDS.GRADE_TRACKER]: 'grades',
+  [TOOLS_CARDS.GPA_CALCULATOR]: 'grades',
+  [TOOLS_CARDS.GPA_TREND_CHART]: 'grades',
+  [TOOLS_CARDS.WHAT_IF_PROJECTOR]: 'grades',
+};
+
+// Order within productivity tab: Pomodoro first, then Quick Links
+const PRODUCTIVITY_ORDER = [TOOLS_CARDS.POMODORO_TIMER, TOOLS_CARDS.QUICK_LINKS];
 
 interface Course {
   id: string;
@@ -55,6 +77,36 @@ export default function ToolsPage() {
   const subscription = useSubscription();
   const { getCourseDisplayName } = useFormatters();
   const [mounted, setMounted] = useState(false);
+
+  // Tab state with localStorage persistence
+  const [activeTab, setActiveTab] = useState<ToolsTab>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('toolsTab');
+      // Migrate old 'quickAccess' to 'productivity'
+      if (saved === 'quickAccess') return 'productivity';
+      if (saved && ['productivity', 'grades'].includes(saved)) {
+        return saved as ToolsTab;
+      }
+    }
+    return 'productivity';
+  });
+
+  // Save active tab to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('toolsTab', activeTab);
+  }, [activeTab]);
+
+  // Get accent color for tab styling
+  const isPremium = subscription.isPremium;
+  const effectiveUseCustomTheme = isPremium && settings.useCustomTheme;
+  const effectiveCustomColors = isPremium ? settings.customColors : null;
+  const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
+  const accentColor = effectiveUseCustomTheme && effectiveCustomColors
+    ? getCustomColorSetForTheme(effectiveCustomColors as CustomColors, settings.theme || 'dark').accent
+    : colorPalette.accent;
+  const glowIntensity = isPremium ? (settings.glowIntensity ?? 50) : 50;
+  const glowScale = glowIntensity / 50;
+  const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
   const [courses, setCourses] = useState<Course[]>([]);
   const [formCourses, setFormCourses] = useState<FormCourse[]>([
     { courseName: '', gradeType: 'letter', grade: 'A', credits: '3' },
@@ -975,77 +1027,112 @@ export default function ToolsPage() {
             Useful utilities for your semester.
           </p>
         </div>
+
+        {/* Tab Navigation */}
+        <div style={{ display: 'flex', gap: isMobile ? '3px' : '8px', marginTop: '16px', marginBottom: '8px' }}>
+          {TOOLS_TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
+                activeTab === tab.key ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              }`}
+              style={{
+                padding: isMobile ? '6px 8px' : '10px 18px',
+                fontSize: isMobile ? '12px' : '14px',
+                flex: isMobile ? 1 : undefined,
+                border: 'none',
+                backgroundColor: activeTab === tab.key ? accentColor : 'transparent',
+                backgroundImage: activeTab === tab.key
+                  ? (settings.theme === 'light'
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                    : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)')
+                  : 'none',
+                boxShadow: activeTab === tab.key ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : undefined,
+                cursor: 'pointer',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="mx-auto w-full max-w-[1400px]" style={{ paddingLeft: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingRight: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingBottom: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingTop: '0', position: 'relative', zIndex: 1 }}>
         <div className="grid grid-cols-1 gap-[var(--grid-gap)]">
           {subscription.isPremium ? (
-            // Premium users see all tools
-            toolsCardsOrder.map((cardId: string) => renderCard(cardId))
+            // Premium users see all tools filtered by active tab
+            // Use specific order for productivity tab to ensure Pomodoro comes before Quick Links
+            (activeTab === 'productivity' ? PRODUCTIVITY_ORDER : toolsCardsOrder)
+              .filter((cardId: string) => TOOL_TAB_MAPPING[cardId] === activeTab)
+              .map((cardId: string) => renderCard(cardId))
           ) : (
-            // Free users see only Quick Links + Premium info card
+            // Free users see Quick Links on productivity tab (with locked Pomodoro), Premium info on grades tab
             <>
-              {renderCard(TOOLS_CARDS.QUICK_LINKS)}
-
-              {/* Premium Tools Info Card - floating over background */}
-              <div style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: isMobile ? '40px 0' : '60px 0' }}>
-                <div style={{ maxWidth: '600px', width: '100%', textAlign: 'center' }}>
-                  <div style={{ marginBottom: '24px' }}>
-                    <div
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '80px',
-                        height: '80px',
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, var(--panel-2) 0%, var(--panel) 100%)',
-                        border: '1px solid var(--border)',
-                      }}
-                    >
-                      <Lock size={36} className="text-[var(--text-muted)]" />
+              {activeTab === 'productivity' ? (
+                <>
+                  {/* Locked Pomodoro Timer for free users */}
+                  {renderLockedCard(TOOLS_CARDS.POMODORO_TIMER, 'Pomodoro Timer', 'Focus sessions for productive study')}
+                  {/* Quick Links is free */}
+                  {renderCard(TOOLS_CARDS.QUICK_LINKS)}
+                </>
+              ) : (
+                /* Premium Tools Info Card - floating over background */
+                <div style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: isMobile ? '40px 0' : '60px 0' }}>
+                  <div style={{ maxWidth: '600px', width: '100%', textAlign: 'center' }}>
+                    <div style={{ marginBottom: '24px' }}>
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '80px',
+                          height: '80px',
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, var(--panel-2) 0%, var(--panel) 100%)',
+                          border: '1px solid var(--border)',
+                        }}
+                      >
+                        <Lock size={36} className="text-[var(--text-muted)]" />
+                      </div>
                     </div>
-                  </div>
 
-                  <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, color: 'var(--text)', marginBottom: '12px' }}>
-                    Premium Tools
-                  </h2>
+                    <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, color: 'var(--text)', marginBottom: '12px' }}>
+                      Premium Grade Tools
+                    </h2>
 
-                  <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginBottom: '32px', maxWidth: '400px', margin: '0 auto 32px', lineHeight: 1.6 }}>
-                    Upgrade to Premium to unlock powerful study tools including GPA Calculator, Grade Tracker, Pomodoro Timer, and more.
-                  </p>
+                    <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginBottom: '32px', maxWidth: '400px', margin: '0 auto 32px', lineHeight: 1.6 }}>
+                      Upgrade to Premium to unlock GPA Calculator, Grade Tracker, GPA Trend Chart, and What-If Projector.
+                    </p>
 
-                  <div style={{ marginBottom: '16px' }}>
-                    <Link href="/pricing">
-                      <Button variant="primary" size="lg" style={{ minWidth: '200px' }}>
-                        <Crown size={18} />
-                        View Plans
-                      </Button>
-                    </Link>
-                  </div>
+                    <div style={{ marginBottom: '16px' }}>
+                      <Link href="/pricing">
+                        <Button variant="primary" size="lg" style={{ minWidth: '200px' }}>
+                          <Crown size={18} />
+                          View Plans
+                        </Button>
+                      </Link>
+                    </div>
 
-                  <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                    Your data is safely stored and will be accessible once you subscribe.
-                  </p>
+                    <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                      Your data is safely stored and will be accessible once you subscribe.
+                    </p>
 
-                  <div style={{ marginTop: '48px', paddingTop: '32px', borderTop: '1px solid var(--border)' }}>
-                    <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '16px' }}>Premium tools include:</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', maxWidth: '360px', margin: '0 auto', textAlign: 'left' }}>
-                      {[
-                        'GPA Calculator',
-                        'Grade Tracker',
-                        'GPA Trend Chart',
-                        'What-If GPA Projector',
-                        'Pomodoro Timer',
-                      ].map((item) => (
-                        <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>
-                          <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.5)', flexShrink: 0 }} />
-                          {item}
-                        </div>
-                      ))}
+                    <div style={{ marginTop: '48px', paddingTop: '32px', borderTop: '1px solid var(--border)' }}>
+                      <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '16px' }}>
+                        Grade tools include:
+                      </h3>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', maxWidth: '360px', margin: '0 auto', textAlign: 'left' }}>
+                        {['GPA Calculator', 'Grade Tracker', 'GPA Trend Chart', 'What-If GPA Projector'].map((item) => (
+                          <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-muted)' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--text-muted)', flexShrink: 0 }} />
+                            {item}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </>
           )}
         </div>
