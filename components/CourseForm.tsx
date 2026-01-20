@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
 import useAppStore from '@/lib/store';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -31,9 +31,16 @@ const CourseFormComponent = forwardRef(function CourseForm(
   const subscription = useSubscription();
   const { courses, settings, addCourse, updateCourse } = useAppStore();
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
-  const course = courses.find((c) => c.id === courseId);
+
+  // Get initial course data once on mount - use useMemo to avoid re-fetching on every render
+  const initialCourse = useMemo(() => {
+    return courses.find((c) => c.id === courseId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId]); // Only recalculate if courseId changes, NOT when courses array updates
+
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formInitialized = useRef(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useImperativeHandle(ref, () => ({
@@ -81,21 +88,23 @@ const CourseFormComponent = forwardRef(function CourseForm(
     }));
   };
 
+  // Initialize form only once on mount - prevents background sync from resetting user edits
   useEffect(() => {
-    if (course) {
+    if (initialCourse && !formInitialized.current) {
+      formInitialized.current = true;
       setForm({
-        code: course.code,
-        name: course.name,
-        term: course.term,
-        startDate: course.startDate ? course.startDate.split('T')[0] : '',
-        endDate: course.endDate ? course.endDate.split('T')[0] : '',
-        meetingTimes: course.meetingTimes || [{ days: ['Mon'], start: '', end: '', location: '' }],
-        links: course.links || [{ label: '', url: '' }],
-        files: course.files || [],
-        colorTag: course.colorTag || '',
+        code: initialCourse.code,
+        name: initialCourse.name,
+        term: initialCourse.term,
+        startDate: initialCourse.startDate ? initialCourse.startDate.split('T')[0] : '',
+        endDate: initialCourse.endDate ? initialCourse.endDate.split('T')[0] : '',
+        meetingTimes: initialCourse.meetingTimes || [{ days: ['Mon'], start: '', end: '', location: '' }],
+        links: initialCourse.links || [{ label: '', url: '' }],
+        files: initialCourse.files || [],
+        colorTag: initialCourse.colorTag || '',
       });
     }
-  }, [course]);
+  }, [initialCourse]);
 
   // Helper to add minutes to a time string
   const addMinutesToTime = (time: string, minutesToAdd: number): string => {
