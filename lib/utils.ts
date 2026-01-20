@@ -1,5 +1,17 @@
-export function formatDate(date: Date | string): string {
+export type TimeFormat = '12h' | '24h';
+export type DateFormat = 'MM/DD/YYYY' | 'DD/MM/YYYY';
+
+export function formatDate(date: Date | string, dateFormat: DateFormat = 'MM/DD/YYYY'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
+
+  if (dateFormat === 'DD/MM/YYYY') {
+    return d.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: d.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined,
+    });
+  }
+
   return d.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -7,16 +19,58 @@ export function formatDate(date: Date | string): string {
   });
 }
 
-export function formatTime(date: Date | string): string {
+export function formatTime(date: Date | string, timeFormat: TimeFormat = '12h'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
+
+  if (timeFormat === '24h') {
+    return d.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  }
+
   return d.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
+    hour12: true,
   });
 }
 
-export function formatDateTime(date: Date | string): string {
-  return `${formatDate(date)} ${formatTime(date)}`;
+export function formatDateTime(date: Date | string, dateFormat: DateFormat = 'MM/DD/YYYY', timeFormat: TimeFormat = '12h'): string {
+  return `${formatDate(date, dateFormat)} ${formatTime(date, timeFormat)}`;
+}
+
+// Format a time string like "14:30" to the user's preferred format
+export function formatTimeString(time: string, timeFormat: TimeFormat = '12h'): string {
+  const [hours, minutes] = time.split(':').map(Number);
+
+  if (timeFormat === '24h') {
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
+
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hour12 = hours % 12 || 12;
+  return `${hour12}:${String(minutes).padStart(2, '0')} ${period}`;
+}
+
+// Format a date string like "2024-01-19" to the user's preferred format
+export function formatDateString(dateStr: string, dateFormat: DateFormat = 'MM/DD/YYYY'): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  return formatDate(d, dateFormat);
+}
+
+// Format date as numeric (01/19/2024 or 19/01/2024)
+export function formatDateNumeric(date: Date | string, dateFormat: DateFormat = 'MM/DD/YYYY'): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+
+  if (dateFormat === 'DD/MM/YYYY') {
+    return `${day}/${month}/${year}`;
+  }
+  return `${month}/${day}/${year}`;
 }
 
 export function isToday(date: Date | string): boolean {

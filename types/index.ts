@@ -21,6 +21,9 @@ export interface Course {
     size: number;
   }>;
   colorTag?: string;
+  // Canvas LMS Integration
+  canvasCourseId?: string | null;
+  canvasEnrollmentId?: string | null;
 }
 
 export interface Deadline {
@@ -49,6 +52,12 @@ export interface Deadline {
   instanceDate: string | null; // ISO datetime
   isRecurring: boolean;
   recurringPattern?: RecurringDeadlinePattern | null;
+  // Canvas LMS Integration
+  canvasAssignmentId?: string | null;
+  canvasSubmissionId?: string | null;
+  canvasPointsPossible?: number | null;
+  canvasPointsEarned?: number | null;
+  canvasGradePostedAt?: string | null;
 }
 
 export interface Task {
@@ -276,6 +285,8 @@ export interface CustomColors {
 export interface Settings {
   dueSoonWindowDays: number;
   weekStartsOn: 'Sun' | 'Mon';
+  timeFormat: '12h' | '24h';
+  dateFormat: 'MM/DD/YYYY' | 'DD/MM/YYYY';
   theme: 'light' | 'dark' | 'system';
   enableNotifications: boolean;
   university?: string | null;
@@ -304,6 +315,20 @@ export interface Settings {
   gradientIntensity?: number; // 0-100, controls gradient intensity on buttons, nav, filters
   glowIntensity?: number; // 0-100, controls glow effect intensity on buttons
   autoCreateCourseFolders?: boolean; // Auto-create note folders when courses are created
+  showCanvasBadges?: boolean; // Show Canvas badges on synced items
+  // Canvas LMS Integration
+  canvasInstanceUrl?: string | null;
+  canvasAccessToken?: string | null;
+  canvasUserId?: string | null;
+  canvasUserName?: string | null;
+  canvasSyncEnabled?: boolean;
+  canvasLastSyncedAt?: string | null;
+  canvasSyncCourses?: boolean;
+  canvasSyncAssignments?: boolean;
+  canvasSyncGrades?: boolean;
+  canvasSyncEvents?: boolean;
+  canvasSyncAnnouncements?: boolean;
+  canvasAutoMarkComplete?: boolean; // Auto-mark assignments as complete when submitted in Canvas
 }
 
 export interface ExcludedDate {
@@ -333,6 +358,8 @@ export interface Notification {
   type: string;
   read: boolean;
   createdAt: string; // ISO datetime
+  // Canvas LMS Integration
+  canvasAnnouncementId?: string | null;
 }
 
 export interface AppData {
@@ -365,6 +392,8 @@ export interface CalendarEvent {
   location: string | null;
   createdAt: string;
   updatedAt: string;
+  // Canvas LMS Integration
+  canvasEventId?: string | null;
 }
 
 // Shopping List Types

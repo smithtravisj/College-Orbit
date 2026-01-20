@@ -17,6 +17,7 @@ import { ChevronDown, Crown } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Link from 'next/link';
+import { CanvasBadge } from './CanvasBadge';
 
 interface EventDetailModalProps {
   isOpen: boolean;
@@ -487,18 +488,22 @@ export default function EventDetailModal({
           maxWidth: '450px',
           width: '100%',
           maxHeight: '90vh',
-          overflow: 'auto',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* Header - Sticky */}
         <div
           style={{
             display: 'flex',
             alignItems: 'flex-start',
             justifyContent: 'space-between',
-            padding: isMobile ? '12px 12px 8px 12px' : '24px 24px 16px 24px',
+            padding: isMobile ? '12px 12px 8px 12px' : '16px 16px 12px 16px',
             borderBottom: '1px solid var(--border)',
+            flexShrink: 0,
+            backgroundColor: 'var(--panel)',
           }}
         >
           <div style={{ flex: 1 }}>
@@ -512,18 +517,21 @@ export default function EventDetailModal({
             >
               {event.type === 'course' ? (
                 <>
-                  <div
-                    style={{
-                      display: 'inline-block',
-                      backgroundColor: getEventTypeColor(),
-                      color: 'white',
-                      padding: isMobile ? '2px 6px' : '4px 8px',
-                      borderRadius: '4px',
-                      fontSize: isMobile ? '0.65rem' : '0.75rem',
-                      fontWeight: 600,
-                    }}
-                  >
-                    COURSE
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div
+                      style={{
+                        display: 'inline-block',
+                        backgroundColor: getEventTypeColor(),
+                        color: 'white',
+                        padding: isMobile ? '2px 6px' : '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: isMobile ? '0.65rem' : '0.75rem',
+                        fontWeight: 600,
+                      }}
+                    >
+                      COURSE
+                    </div>
+                    {fullData && 'canvasCourseId' in fullData && (fullData as Course).canvasCourseId && <CanvasBadge size="md" />}
                   </div>
                   <h2
                     style={{
@@ -538,18 +546,23 @@ export default function EventDetailModal({
                 </>
               ) : (
                 <>
-                  <div
-                    style={{
-                      display: 'inline-block',
-                      backgroundColor: getEventTypeColor(),
-                      color: 'white',
-                      padding: isMobile ? '2px 6px' : '4px 8px',
-                      borderRadius: '4px',
-                      fontSize: isMobile ? '0.65rem' : '0.75rem',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {event.type === 'task' ? 'TASK' : event.type === 'deadline' ? 'DEADLINE' : event.type === 'exam' ? 'EXAM' : 'EVENT'}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div
+                      style={{
+                        display: 'inline-block',
+                        backgroundColor: getEventTypeColor(),
+                        color: 'white',
+                        padding: isMobile ? '2px 6px' : '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: isMobile ? '0.65rem' : '0.75rem',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {event.type === 'task' ? 'TASK' : event.type === 'deadline' ? 'DEADLINE' : event.type === 'exam' ? 'EXAM' : 'EVENT'}
+                    </div>
+                    {/* Canvas badge for synced items */}
+                    {event.type === 'deadline' && fullData && 'canvasAssignmentId' in fullData && (fullData as Deadline).canvasAssignmentId && <CanvasBadge size="md" />}
+                    {event.type === 'event' && fullData && 'canvasEventId' in fullData && (fullData as CustomCalendarEvent).canvasEventId && <CanvasBadge size="md" />}
                   </div>
                   <h2
                     style={{
@@ -589,8 +602,8 @@ export default function EventDetailModal({
           </button>
         </div>
 
-        {/* Content */}
-        <div style={{ padding: isMobile ? '12px' : '24px' }}>
+        {/* Content - Scrollable */}
+        <div style={{ padding: isMobile ? '12px' : '16px', flex: 1, overflowY: 'auto' }}>
           {isEditing ? (
             event.type === 'course' ? (
               <CourseForm
@@ -628,14 +641,16 @@ export default function EventDetailModal({
           ) : null}
         </div>
 
-        {/* Footer */}
+        {/* Footer - Sticky */}
         <div
           style={{
             display: 'flex',
             gap: isMobile ? '8px' : '12px',
             justifyContent: 'flex-end',
-            padding: isMobile ? '8px 12px' : '16px 24px',
+            padding: isMobile ? '8px 12px' : '12px 16px',
             borderTop: '1px solid var(--border)',
+            flexShrink: 0,
+            backgroundColor: 'var(--panel)',
           }}
         >
           {isEditing ? (
@@ -1135,7 +1150,7 @@ function CalendarEventForm({ formData, setFormData }: CalendarEventFormProps) {
 
           {/* Color Picker */}
           <div>
-            <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0', fontWeight: 600 }}>
+            <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
               Color
             </p>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -1177,7 +1192,7 @@ function CourseContent({ event, course }: CourseContentProps) {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
       <div>
         <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
           Course Name
@@ -1221,7 +1236,7 @@ function CourseContent({ event, course }: CourseContentProps) {
 
       {course.links && course.links.length > 0 && (
         <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Links
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
@@ -1253,7 +1268,7 @@ function CourseContent({ event, course }: CourseContentProps) {
 
       {course.files && course.files.length > 0 && (
         <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Files
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
@@ -1301,7 +1316,7 @@ interface TaskContentProps {
 function TaskContent({ task, relatedCourse }: TaskContentProps) {
   const isMobile = useIsMobile();
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
       {relatedCourse && (
         <div>
           <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
@@ -1326,7 +1341,7 @@ function TaskContent({ task, relatedCourse }: TaskContentProps) {
 
       {task.notes && (
         <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Notes
           </p>
           <p
@@ -1395,7 +1410,7 @@ function TaskContent({ task, relatedCourse }: TaskContentProps) {
 
       {task.links && task.links.length > 0 && (
         <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Links
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
@@ -1427,7 +1442,7 @@ function TaskContent({ task, relatedCourse }: TaskContentProps) {
 
       {task.files && task.files.length > 0 && (
         <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Files
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
@@ -1475,7 +1490,7 @@ interface DeadlineContentProps {
 function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
   const isMobile = useIsMobile();
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
       {relatedCourse && (
         <div>
           <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
@@ -1500,7 +1515,7 @@ function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
 
       {deadline.notes && (
         <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Notes
           </p>
           <p
@@ -1519,7 +1534,7 @@ function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
 
       {deadline.links && deadline.links.length > 0 && (
         <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Links
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
@@ -1551,7 +1566,7 @@ function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
 
       {deadline.files && deadline.files.length > 0 && (
         <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Files
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
@@ -1599,7 +1614,7 @@ interface ExamContentProps {
 function ExamContent({ exam, relatedCourse }: ExamContentProps) {
   const isMobile = useIsMobile();
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
       {relatedCourse && (
         <div>
           <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
@@ -1635,7 +1650,7 @@ function ExamContent({ exam, relatedCourse }: ExamContentProps) {
 
       {exam.notes && (
         <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Notes
           </p>
           <p
@@ -1654,7 +1669,7 @@ function ExamContent({ exam, relatedCourse }: ExamContentProps) {
 
       {exam.links && exam.links.length > 0 && (
         <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Links
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
@@ -1694,7 +1709,7 @@ interface CalendarEventContentProps {
 function CalendarEventContent({ calendarEvent }: CalendarEventContentProps) {
   const isMobile = useIsMobile();
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
       {calendarEvent.startAt && (
         <div>
           <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
@@ -1724,7 +1739,7 @@ function CalendarEventContent({ calendarEvent }: CalendarEventContentProps) {
 
       {calendarEvent.description && (
         <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 4px 0' : '0 0 8px 0' }}>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
             Description
           </p>
           <p

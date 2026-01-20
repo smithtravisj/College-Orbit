@@ -8,6 +8,7 @@ import FilePreviewModal from '@/components/FilePreviewModal';
 import { Edit2, Trash2, Check, FileIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { Course } from '@/types';
+import { CanvasBadge } from './CanvasBadge';
 
 interface CourseListProps {
   courses: Course[];
@@ -47,10 +48,12 @@ export default function CourseList({
     isOpen: boolean;
     courseId: string;
     courseName: string;
+    isCanvasCourse: boolean;
   }>({
     isOpen: false,
     courseId: '',
     courseName: '',
+    isCanvasCourse: false,
   });
   const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
 
@@ -112,8 +115,9 @@ export default function CourseList({
             )}
             <div className="flex-1 min-w-0">
               <div>
-                <h3 className="text-sm font-medium text-[var(--text)]">
-                  {course.code}{course.name ? ` - ${course.name}` : ''}
+                <h3 className="text-sm font-medium text-[var(--text)]" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>{course.code}{course.name ? ` - ${course.name}` : ''}</span>
+                  {course.canvasCourseId && <CanvasBadge />}
                 </h3>
               </div>
               {showSemester && course.term && (
@@ -178,6 +182,7 @@ export default function CourseList({
                     isOpen: true,
                     courseId: course.id,
                     courseName: course.code,
+                    isCanvasCourse: !!course.canvasCourseId,
                   });
                 }}
                 className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
@@ -195,8 +200,11 @@ export default function CourseList({
 
       <ConfirmationModal
         isOpen={deleteConfirmation.isOpen}
-        title="Delete Course"
-        message={`Delete ${deleteConfirmation.courseName}? This will not delete associated tasks and deadlines.`}
+        title={deleteConfirmation.isCanvasCourse ? "Delete Canvas Course" : "Delete Course"}
+        message={deleteConfirmation.isCanvasCourse
+          ? `Delete ${deleteConfirmation.courseName}? This course is synced from Canvas and will not reappear on future syncs. Associated tasks and deadlines will not be deleted.`
+          : `Delete ${deleteConfirmation.courseName}? This will not delete associated tasks and deadlines.`
+        }
         confirmText="Delete"
         cancelText="Cancel"
         isDangerous={true}
@@ -206,6 +214,7 @@ export default function CourseList({
             isOpen: false,
             courseId: '',
             courseName: '',
+            isCanvasCourse: false,
           });
         }}
         onCancel={() => {
@@ -213,6 +222,7 @@ export default function CourseList({
             isOpen: false,
             courseId: '',
             courseName: '',
+            isCanvasCourse: false,
           });
         }}
       />

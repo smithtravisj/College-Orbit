@@ -1202,7 +1202,7 @@ export default function ExamsPage() {
           <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
             <div style={{ padding: '24px' }}>
               <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Delete All Past Exams</h2>
-              <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+              <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '10px' }}>
                 Are you sure you want to delete {pastExamsCount} past exam{pastExamsCount !== 1 ? 's' : ''}? This action cannot be undone.
               </p>
               <div className="flex gap-3 justify-end" style={{ marginTop: '24px' }}>
@@ -1258,18 +1258,22 @@ export default function ExamsPage() {
               width: '100%',
               maxWidth: '500px',
               maxHeight: '80vh',
-              overflow: 'auto',
+              overflow: 'hidden',
               border: '1px solid var(--border)',
+              display: 'flex',
+              flexDirection: 'column',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
+            {/* Header - Sticky */}
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'flex-start',
-              padding: isMobile ? '16px' : '20px',
+              padding: isMobile ? '10px 12px' : '12px 16px',
               borderBottom: '1px solid var(--border)',
+              flexShrink: 0,
+              backgroundColor: 'var(--panel)',
             }}>
               <div style={{ flex: 1, paddingRight: '12px' }}>
                 <h2 style={{
@@ -1302,11 +1306,11 @@ export default function ExamsPage() {
               </button>
             </div>
 
-            {/* Content */}
-            <div style={{ padding: isMobile ? '16px' : '20px' }}>
+            {/* Content - Scrollable */}
+            <div style={{ padding: isMobile ? '10px 12px' : '12px 16px', flex: 1, overflowY: 'auto' }}>
               {/* Status */}
               {(previewingExam.status === 'completed' || previewingExam.status === 'cancelled') && (
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
                   <span style={{
                     fontSize: '12px',
                     fontWeight: '500',
@@ -1322,7 +1326,7 @@ export default function ExamsPage() {
 
               {/* Date & Time */}
               {previewingExam.examAt && (
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Date & Time</div>
                   <div style={{ fontSize: '14px', color: 'var(--text)' }}>
                     {formatDate(previewingExam.examAt)}
@@ -1341,7 +1345,7 @@ export default function ExamsPage() {
 
               {/* Location */}
               {previewingExam.location && (
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Location</div>
                   <div style={{ fontSize: '14px', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <MapPin size={14} />
@@ -1352,7 +1356,7 @@ export default function ExamsPage() {
 
               {/* Notes */}
               {previewingExam.notes && (
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Notes</div>
                   <div style={{ fontSize: '14px', color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
                     {previewingExam.notes}
@@ -1362,7 +1366,7 @@ export default function ExamsPage() {
 
               {/* Tags */}
               {previewingExam.tags && previewingExam.tags.length > 0 && (
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Tags</div>
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {previewingExam.tags.map((tag: string) => (
@@ -1382,7 +1386,7 @@ export default function ExamsPage() {
 
               {/* Links */}
               {previewingExam.links && previewingExam.links.length > 0 && (
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: '10px' }}>
                   <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Links</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {previewingExam.links.map((link: { label: string; url: string }, i: number) => (
@@ -1414,7 +1418,7 @@ export default function ExamsPage() {
                 );
                 if (relatedNotes.length === 0) return null;
                 return (
-                  <div style={{ marginBottom: '16px' }}>
+                  <div style={{ marginBottom: '10px' }}>
                     <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '8px' }}>Related Notes</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {relatedNotes.slice(0, 3).map((note) => (
@@ -1463,12 +1467,14 @@ export default function ExamsPage() {
               })()}
             </div>
 
-            {/* Footer */}
+            {/* Footer - Sticky */}
             <div style={{
               display: 'flex',
               gap: '8px',
               padding: isMobile ? '16px' : '20px',
               borderTop: '1px solid var(--border)',
+              flexShrink: 0,
+              backgroundColor: 'var(--panel)',
             }}>
               <Button
                 variant="secondary"

@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import useAppStore from '@/lib/store';
 
 interface TimePickerProps {
   value: string;
@@ -13,6 +14,9 @@ interface TimePickerProps {
 
 export default function TimePicker({ value, onChange, label }: TimePickerProps) {
   const isMobile = useIsMobile();
+  const timeFormat = useAppStore((state) => state.settings.timeFormat) || '12h';
+  const is24Hour = timeFormat === '24h';
+
   const [isOpen, setIsOpen] = useState(false);
   const [hours, setHours] = useState<string>('');
   const [minutes, setMinutes] = useState<string>('');
@@ -54,23 +58,30 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   useEffect(() => {
     if (value) {
       const [h, m] = value.split(':');
-      const { hours12, isPM: ispm } = convert24To12(h);
       isUpdatingFromParent.current = true;
-      setHours(hours12);
-      setMinutes(m);
-      setIsPM(ispm);
-      setInputValue(`${hours12}:${m} ${ispm ? 'PM' : 'AM'}`);
+
+      if (is24Hour) {
+        setHours(h.padStart(2, '0'));
+        setMinutes(m);
+        setInputValue(`${h.padStart(2, '0')}:${m}`);
+      } else {
+        const { hours12, isPM: ispm } = convert24To12(h);
+        setHours(hours12);
+        setMinutes(m);
+        setIsPM(ispm);
+        setInputValue(`${hours12}:${m} ${ispm ? 'PM' : 'AM'}`);
+      }
     }
-  }, [value]);
+  }, [value, is24Hour]);
 
   // Parse typed input (supports formats like "2:30pm", "2:30 PM", "14:30", "230pm", etc.)
-  const parseTimeInput = (input: string): { hours: string; minutes: string; isPM: boolean } | null => {
+  const parseTimeInput = (input: string): { hours24: string; minutes: string; hours12?: string; isPM?: boolean } | null => {
     const trimmed = input.trim().toLowerCase();
     if (!trimmed) return null;
 
     // Check for AM/PM indicator
-    const hasAM = trimmed.includes('am') || trimmed.includes('a');
-    const hasPM = trimmed.includes('pm') || trimmed.includes('p');
+    const hasAM = trimmed.includes('am') || trimmed.endsWith('a');
+    const hasPM = trimmed.includes('pm') || trimmed.endsWith('p');
     const cleanInput = trimmed.replace(/[ap]m?/gi, '').trim();
 
     // Try to parse time
@@ -97,36 +108,57 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
       return null;
     }
 
-    // Validate
+    // Validate minutes
     if (m > 59) m = 59;
 
-    // Determine AM/PM
+    // For 24-hour format
+    if (is24Hour) {
+      // If explicit AM/PM given, convert
+      if (hasAM && h === 12) h = 0;
+      if (hasPM && h < 12) h += 12;
+      if (h > 23) h = 23;
+
+      return {
+        hours24: String(h).padStart(2, '0'),
+        minutes: String(m).padStart(2, '0'),
+      };
+    }
+
+    // For 12-hour format
     let isPMResult: boolean;
+    let hours12: number;
+
     if (hasAM) {
       isPMResult = false;
-      if (h > 12) h = h % 12 || 12;
+      hours12 = h > 12 ? h % 12 || 12 : h;
+      if (hours12 === 0) hours12 = 12;
     } else if (hasPM) {
       isPMResult = true;
-      if (h > 12) h = h % 12 || 12;
+      hours12 = h > 12 ? h % 12 || 12 : h;
+      if (hours12 === 0) hours12 = 12;
     } else if (h > 12) {
-      // 24-hour format
+      // 24-hour format entered in 12-hour mode
       isPMResult = h >= 12;
-      h = h % 12 || 12;
+      hours12 = h % 12 || 12;
     } else if (h === 0) {
       // Midnight
-      h = 12;
+      hours12 = 12;
       isPMResult = false;
     } else {
-      // Default to current isPM state or PM
+      // Default to current isPM state
+      hours12 = h;
       isPMResult = isPM;
     }
 
-    if (h > 12) h = 12;
-    if (h < 1) h = 12;
+    if (hours12 > 12) hours12 = 12;
+    if (hours12 < 1) hours12 = 12;
+
+    const hours24 = convert12To24(String(hours12), isPMResult);
 
     return {
-      hours: String(h).padStart(2, '0'),
+      hours24,
       minutes: String(m).padStart(2, '0'),
+      hours12: String(hours12).padStart(2, '0'),
       isPM: isPMResult,
     };
   };
@@ -138,11 +170,17 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   const handleInputBlur = () => {
     const parsed = parseTimeInput(inputValue);
     if (parsed) {
-      setHours(parsed.hours);
-      setMinutes(parsed.minutes);
-      setIsPM(parsed.isPM);
-      handleTimeChange(parsed.hours, parsed.minutes, parsed.isPM);
-      setInputValue(`${parsed.hours}:${parsed.minutes} ${parsed.isPM ? 'PM' : 'AM'}`);
+      if (is24Hour) {
+        setHours(parsed.hours24);
+        setMinutes(parsed.minutes);
+        setInputValue(`${parsed.hours24}:${parsed.minutes}`);
+      } else {
+        setHours(parsed.hours12!);
+        setMinutes(parsed.minutes);
+        setIsPM(parsed.isPM!);
+        setInputValue(`${parsed.hours12}:${parsed.minutes} ${parsed.isPM ? 'PM' : 'AM'}`);
+      }
+      onChange(`${parsed.hours24}:${parsed.minutes}`);
     } else if (inputValue.trim() === '') {
       // Clear the time
       setHours('');
@@ -152,7 +190,11 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
     } else {
       // Invalid input, revert to current value
       if (hours && minutes) {
-        setInputValue(`${hours}:${minutes} ${isPM ? 'PM' : 'AM'}`);
+        if (is24Hour) {
+          setInputValue(`${hours}:${minutes}`);
+        } else {
+          setInputValue(`${hours}:${minutes} ${isPM ? 'PM' : 'AM'}`);
+        }
       } else {
         setInputValue('');
       }
@@ -205,20 +247,36 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   }, [isOpen]);
 
   const handleTimeChange = (h: string, m: string, pm: boolean = isPM) => {
-    const formattedHours = String(parseInt(h) || 12).padStart(2, '0');
     const formattedMinutes = String(parseInt(m) || 0).padStart(2, '0');
-    const hours24 = convert12To24(formattedHours, pm);
-    const timeValue = `${hours24}:${formattedMinutes}`;
-    setInputValue(`${formattedHours}:${formattedMinutes} ${pm ? 'PM' : 'AM'}`);
-    onChange(timeValue);
+    let hours24: string;
+    let displayValue: string;
+
+    if (is24Hour) {
+      hours24 = String(parseInt(h) || 0).padStart(2, '0');
+      displayValue = `${hours24}:${formattedMinutes}`;
+    } else {
+      const formattedHours = String(parseInt(h) || 12).padStart(2, '0');
+      hours24 = convert12To24(formattedHours, pm);
+      displayValue = `${formattedHours}:${formattedMinutes} ${pm ? 'PM' : 'AM'}`;
+    }
+
+    setInputValue(displayValue);
+    onChange(`${hours24}:${formattedMinutes}`);
   };
 
   const incrementHours = () => {
     const currentHours = parseInt(hours) || 0;
     const currentMinutes = parseInt(minutes) || 0;
-    let newHours = currentHours + 1;
-    if (newHours > 12) newHours = 1;
-    if (newHours === 0) newHours = 1;
+    let newHours: number;
+
+    if (is24Hour) {
+      newHours = (currentHours + 1) % 24;
+    } else {
+      newHours = currentHours + 1;
+      if (newHours > 12) newHours = 1;
+      if (newHours === 0) newHours = 1;
+    }
+
     const formattedHours = String(newHours).padStart(2, '0');
     const formattedMinutes = String(currentMinutes).padStart(2, '0');
     setHours(formattedHours);
@@ -229,8 +287,15 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   const decrementHours = () => {
     const currentHours = parseInt(hours) || 0;
     const currentMinutes = parseInt(minutes) || 0;
-    let newHours = currentHours - 1;
-    if (newHours < 1) newHours = 12;
+    let newHours: number;
+
+    if (is24Hour) {
+      newHours = (currentHours - 1 + 24) % 24;
+    } else {
+      newHours = currentHours - 1;
+      if (newHours < 1) newHours = 12;
+    }
+
     const formattedHours = String(newHours).padStart(2, '0');
     const formattedMinutes = String(currentMinutes).padStart(2, '0');
     setHours(formattedHours);
@@ -239,7 +304,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   };
 
   const incrementMinutes = () => {
-    const currentHours = parseInt(hours) || 1;
+    const currentHours = parseInt(hours) || (is24Hour ? 0 : 1);
     const currentMinutes = parseInt(minutes) || 0;
     const newMinutes = (currentMinutes + 5) % 60;
     const formattedHours = String(currentHours).padStart(2, '0');
@@ -250,7 +315,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   };
 
   const decrementMinutes = () => {
-    const currentHours = parseInt(hours) || 1;
+    const currentHours = parseInt(hours) || (is24Hour ? 0 : 1);
     const currentMinutes = parseInt(minutes) || 0;
     const newMinutes = (currentMinutes - 5 + 60) % 60;
     const formattedHours = String(currentHours).padStart(2, '0');
@@ -268,21 +333,26 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   const handleHourInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, '');
     if (val.length > 2) val = val.slice(-2);
-    // Allow empty and don't force min while typing
+
     if (val !== '') {
       const numVal = parseInt(val);
-      if (numVal > 12) val = '12';
+      if (is24Hour) {
+        if (numVal > 23) val = '23';
+      } else {
+        if (numVal > 12) val = '12';
+      }
     }
     setHours(val);
   };
 
   const handleHourBlur = () => {
-    // Validate and format on blur
     let val = hours;
-    if (val === '' || parseInt(val) < 1) {
-      val = '01';
+    if (is24Hour) {
+      if (val === '') val = '00';
+      else val = String(parseInt(val)).padStart(2, '0');
     } else {
-      val = String(parseInt(val)).padStart(2, '0');
+      if (val === '' || parseInt(val) < 1) val = '01';
+      else val = String(parseInt(val)).padStart(2, '0');
     }
     setHours(val);
     handleTimeChange(val, minutes.padStart(2, '0') || '00');
@@ -291,7 +361,6 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   const handleMinuteInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, '');
     if (val.length > 2) val = val.slice(-2);
-    // Allow empty and don't force values while typing
     if (val !== '') {
       const numVal = parseInt(val);
       if (numVal > 59) val = '59';
@@ -300,7 +369,6 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   };
 
   const handleMinuteBlur = () => {
-    // Validate and format on blur
     let val = minutes;
     if (val === '') {
       val = '00';
@@ -308,8 +376,12 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
       val = String(parseInt(val)).padStart(2, '0');
     }
     setMinutes(val);
-    handleTimeChange(hours.padStart(2, '0') || '01', val);
+    handleTimeChange(hours.padStart(2, '0') || (is24Hour ? '00' : '01'), val);
   };
+
+  const placeholder = is24Hour
+    ? (isMobile ? 'e.g. 14:30' : 'e.g. 14:30, 2:30pm')
+    : (isMobile ? 'e.g. 2:30pm' : 'e.g. 2:30pm, 14:30');
 
   return (
     <div ref={containerRef} className="relative w-full" style={{ minWidth: '120px', overflow: 'visible' }}>
@@ -335,7 +407,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
           }
           setIsOpen(true);
         }}
-        placeholder={isMobile ? 'e.g. 2:30pm' : 'e.g. 2:30pm, 14:30'}
+        placeholder={placeholder}
         className="w-full h-[var(--input-height)] bg-[var(--panel-2)] border border-[var(--border)] rounded-[var(--radius-control)] transition-colors hover:border-[var(--border-hover)] focus:outline-none focus:border-[var(--border-hover)]"
         style={{
           padding: isMobile ? '8px 10px' : '10px 12px',
@@ -425,39 +497,41 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
               </div>
             </div>
 
-            {/* AM/PM Toggle */}
-            <div className="flex gap-2 justify-center border-t border-[var(--border)]" style={{ marginTop: '12px', paddingTop: '12px' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsPM(false);
-                  handleTimeChange(hours, minutes, false);
-                }}
-                className={`text-sm font-medium transition-colors ${
-                  !isPM
-                    ? 'bg-[var(--accent)] text-white'
-                    : 'bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
-                }`}
-                style={{ padding: '8px 16px', borderRadius: '6px' }}
-              >
-                AM
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsPM(true);
-                  handleTimeChange(hours, minutes, true);
-                }}
-                className={`text-sm font-medium transition-colors ${
-                  isPM
-                    ? 'bg-[var(--accent)] text-white'
-                    : 'bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
-                }`}
-                style={{ padding: '8px 16px', borderRadius: '6px' }}
-              >
-                PM
-              </button>
-            </div>
+            {/* AM/PM Toggle - only show for 12-hour format */}
+            {!is24Hour && (
+              <div className="flex gap-2 justify-center border-t border-[var(--border)]" style={{ marginTop: '12px', paddingTop: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPM(false);
+                    handleTimeChange(hours, minutes, false);
+                  }}
+                  className={`text-sm font-medium transition-colors ${
+                    !isPM
+                      ? 'bg-[var(--accent)] text-white'
+                      : 'bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
+                  }`}
+                  style={{ padding: '8px 16px', borderRadius: '6px' }}
+                >
+                  AM
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPM(true);
+                    handleTimeChange(hours, minutes, true);
+                  }}
+                  className={`text-sm font-medium transition-colors ${
+                    isPM
+                      ? 'bg-[var(--accent)] text-white'
+                      : 'bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
+                  }`}
+                  style={{ padding: '8px 16px', borderRadius: '6px' }}
+                >
+                  PM
+                </button>
+              </div>
+            )}
           </div>
         </div>,
         document.body

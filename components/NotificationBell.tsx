@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Bell, X, Check, Clock, AlertCircle, Crown, CreditCard, Megaphone, Gift, Shield, UserPlus } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { CanvasBadge } from './CanvasBadge';
 
 interface Notification {
   id: string;
@@ -12,6 +13,7 @@ interface Notification {
   type: string;
   read: boolean;
   createdAt: string;
+  canvasAnnouncementId?: string | null;
 }
 
 export default function NotificationBell() {
@@ -448,23 +450,27 @@ export default function NotificationBell() {
                             {getNotificationIcon(notification.type)}
                           </div>
                           <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                            <p
-                              style={{
-                                margin: '0 0 4px 0',
-                                fontSize: isMobile ? '14px' : '15px',
-                                fontWeight: notification.read ? '400' : '600',
-                                color: 'var(--text)',
-                                lineHeight: '1.3',
-                                overflow: expandedIds.has(notification.id) ? 'visible' : 'hidden',
-                                textOverflow: expandedIds.has(notification.id) ? 'clip' : 'ellipsis',
-                                display: expandedIds.has(notification.id) ? 'block' : '-webkit-box',
-                                WebkitLineClamp: expandedIds.has(notification.id) ? undefined : 2,
-                                WebkitBoxOrient: 'vertical' as const,
-                                wordBreak: 'break-word',
-                              }}
-                            >
-                              {notification.title}
-                            </p>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', marginBottom: '4px' }}>
+                              <p
+                                style={{
+                                  margin: 0,
+                                  fontSize: isMobile ? '14px' : '15px',
+                                  fontWeight: notification.read ? '400' : '600',
+                                  color: 'var(--text)',
+                                  lineHeight: '1.3',
+                                  overflow: expandedIds.has(notification.id) ? 'visible' : 'hidden',
+                                  textOverflow: expandedIds.has(notification.id) ? 'clip' : 'ellipsis',
+                                  display: expandedIds.has(notification.id) ? 'block' : '-webkit-box',
+                                  WebkitLineClamp: expandedIds.has(notification.id) ? undefined : 2,
+                                  WebkitBoxOrient: 'vertical' as const,
+                                  wordBreak: 'break-word',
+                                  flex: 1,
+                                }}
+                              >
+                                {notification.title}
+                              </p>
+                              {notification.canvasAnnouncementId && <CanvasBadge />}
+                            </div>
                             <p
                               style={{
                                 margin: '0 0 6px 0',

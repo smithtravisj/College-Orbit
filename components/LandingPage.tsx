@@ -7,17 +7,22 @@ import {
   CheckSquare,
   Clock,
   BookOpen,
-  ShoppingCart,
   BarChart3,
   FileText,
   CalendarDays,
-  Link as LinkIcon,
   Target,
   Repeat,
-  Palette
+  Palette,
+  RefreshCw,
+  Link as LinkIcon
 } from 'lucide-react';
 
 const coreFeatures = [
+  {
+    icon: RefreshCw,
+    title: 'Canvas Integration',
+    description: 'Sync your courses, assignments, grades, and calendar events directly from Canvas LMS.',
+  },
   {
     icon: Calendar,
     title: 'Course Management',
@@ -33,14 +38,14 @@ const coreFeatures = [
     title: 'Calendar',
     description: 'See your schedule with month, week, and day views. Classes, exams, deadlines, and tasks in one place.',
   },
+];
+
+const secondaryFeatures = [
   {
     icon: BookOpen,
     title: 'Exam Tracker',
     description: 'Never miss an exam. Track dates, times, locations, and add notes for each test.',
   },
-];
-
-const secondaryFeatures = [
   {
     icon: Target,
     title: 'Due Soon Dashboard',
@@ -69,12 +74,7 @@ const secondaryFeatures = [
   {
     icon: LinkIcon,
     title: 'Quick Links',
-    description: 'One-click access to Canvas, email, registration, and your school\'s most-used resources.',
-  },
-  {
-    icon: ShoppingCart,
-    title: 'Shopping Lists',
-    description: 'Track groceries, wishlists, and pantry items with categories and quantities.',
+    description: 'One-click access to email, registration, and your school\'s most-used resources.',
   },
   {
     icon: Palette,

@@ -155,11 +155,18 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Verify ownership
+    // Verify ownership and get Canvas ID if present
     const existingDeadline = await prisma.deadline.findFirst({
       where: {
         id,
         userId: token.id,
+      },
+      select: {
+        id: true,
+        userId: true,
+        recurringPatternId: true,
+        canvasAssignmentId: true,
+        dueAt: true,
       },
     });
 
@@ -168,6 +175,25 @@ export async function DELETE(
         { error: 'Deadline not found' },
         { status: 404 }
       );
+    }
+
+    // If this is a Canvas assignment, track the deletion to prevent re-sync
+    if (existingDeadline.canvasAssignmentId) {
+      await prisma.deletedCanvasItem.upsert({
+        where: {
+          userId_canvasId_type: {
+            userId: token.id,
+            canvasId: existingDeadline.canvasAssignmentId,
+            type: 'assignment',
+          },
+        },
+        update: { deletedAt: new Date() },
+        create: {
+          userId: token.id,
+          canvasId: existingDeadline.canvasAssignmentId,
+          type: 'assignment',
+        },
+      });
     }
 
     // If this is a recurring deadline, delete this instance and all future instances

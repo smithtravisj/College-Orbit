@@ -27,6 +27,8 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
       settings: settings || {
         dueSoonWindowDays: 7,
         weekStartsOn: 'Sun',
+        timeFormat: '12h',
+        dateFormat: 'MM/DD/YYYY',
         theme: 'system',
         enableNotifications: false,
         university: null,
@@ -71,6 +73,8 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
 
     if (data.dueSoonWindowDays !== undefined) updateData.dueSoonWindowDays = data.dueSoonWindowDays;
     if (data.weekStartsOn !== undefined) updateData.weekStartsOn = data.weekStartsOn;
+    if (data.timeFormat !== undefined) updateData.timeFormat = data.timeFormat;
+    if (data.dateFormat !== undefined) updateData.dateFormat = data.dateFormat;
     if (data.theme !== undefined) updateData.theme = data.theme;
     if (data.enableNotifications !== undefined) updateData.enableNotifications = data.enableNotifications;
     if (data.university !== undefined) updateData.university = data.university;
@@ -98,6 +102,9 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.customColors !== undefined) updateData.customColors = data.customColors;
     if (data.gradientIntensity !== undefined) updateData.gradientIntensity = data.gradientIntensity;
     if (data.glowIntensity !== undefined) updateData.glowIntensity = data.glowIntensity;
+    if (data.autoCreateCourseFolders !== undefined) updateData.autoCreateCourseFolders = data.autoCreateCourseFolders;
+    if (data.showCanvasBadges !== undefined) updateData.showCanvasBadges = data.showCanvasBadges;
+    if (data.canvasAutoMarkComplete !== undefined) updateData.canvasAutoMarkComplete = data.canvasAutoMarkComplete;
 
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 

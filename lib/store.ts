@@ -7,6 +7,8 @@ import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE
 const DEFAULT_SETTINGS: Settings = {
   dueSoonWindowDays: 7,
   weekStartsOn: 'Sun',
+  timeFormat: '12h',
+  dateFormat: 'MM/DD/YYYY',
   theme: 'dark',
   enableNotifications: false,
   university: null,
