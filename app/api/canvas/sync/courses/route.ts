@@ -83,15 +83,8 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
           const term = getCurrentTerm();
 
           if (existingCourseId) {
-            await prisma.course.update({
-              where: { id: existingCourseId },
-              data: {
-                name: canvasCourse.name,
-                code: canvasCourse.course_code,
-                startDate: canvasCourse.start_at ? new Date(canvasCourse.start_at) : null,
-                endDate: canvasCourse.end_at ? new Date(canvasCourse.end_at) : null,
-              },
-            });
+            // Course already exists - don't override user-edited fields (name, code, term, dates)
+            // Only update Canvas-specific metadata if needed in the future
             result.updated++;
           } else {
             await prisma.course.create({

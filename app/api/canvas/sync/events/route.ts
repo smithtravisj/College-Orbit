@@ -173,11 +173,11 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
           const cleanDescription = htmlToPlainText(event.description);
 
           if (existingEventId) {
+            // Don't override title/description - user may have customized them
+            // Do update times and location since those may change
             await prisma.calendarEvent.update({
               where: { id: existingEventId },
               data: {
-                title: event.title,
-                description: cleanDescription,
                 startAt: new Date(event.start_at),
                 endAt: event.end_at ? new Date(event.end_at) : null,
                 allDay: event.all_day,
