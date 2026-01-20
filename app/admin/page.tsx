@@ -132,8 +132,21 @@ export default function AdminPage() {
   const glowScale = glowIntensity / 50;
   const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
 
-  // Main tab state
-  const [activeTab, setActiveTab] = useState<'analytics' | 'management' | 'addCollege'>('management');
+  // Main tab state - initialize from localStorage
+  const [activeTab, setActiveTab] = useState<'analytics' | 'management' | 'addCollege'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('adminTab');
+      if (saved && ['analytics', 'management', 'addCollege'].includes(saved)) {
+        return saved as 'analytics' | 'management' | 'addCollege';
+      }
+    }
+    return 'management';
+  });
+
+  // Save active tab to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('adminTab', activeTab);
+  }, [activeTab]);
 
   // Analytics state
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
@@ -146,7 +159,20 @@ export default function AdminPage() {
   const [collegeRequests, setCollegeRequests] = useState<CollegeRequest[]>([]);
   const [issueReports, setIssueReports] = useState<IssueReport[]>([]);
   const [featureRequests, setFeatureRequests] = useState<FeatureRequest[]>([]);
-  const [adminTab, setAdminTab] = useState<'college' | 'issues' | 'features'>('college');
+  const [adminTab, setAdminTab] = useState<'college' | 'issues' | 'features'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('adminSubTab');
+      if (saved && ['college', 'issues', 'features'].includes(saved)) {
+        return saved as 'college' | 'issues' | 'features';
+      }
+    }
+    return 'college';
+  });
+
+  // Save admin sub-tab to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('adminSubTab', adminTab);
+  }, [adminTab]);
 
   // Grant premium state
   const [grantPremiumInput, setGrantPremiumInput] = useState('');
