@@ -442,52 +442,54 @@ export default function SubscriptionPage() {
             </Button>
           </Card>
 
-          {/* Cancel/Reactivate Card */}
-          <Card>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-              <AlertTriangle size={20} style={{ color: 'var(--danger)' }} />
-              <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>
-                {isCanceled ? 'Reactivate Subscription' : 'Cancel Subscription'}
-              </h2>
-            </div>
+          {/* Cancel/Reactivate Card - Not shown for semester users (no recurring billing) */}
+          {!isSemester && (
+            <Card>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                <AlertTriangle size={20} style={{ color: 'var(--danger)' }} />
+                <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>
+                  {isCanceled ? 'Reactivate Subscription' : 'Cancel Subscription'}
+                </h2>
+              </div>
 
-            {isCanceled ? (
-              <>
-                <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                  Changed your mind? Reactivate your subscription to continue enjoying Premium features.
-                </p>
-                <Button
-                  variant="primary"
-                  onClick={handleReactivate}
-                  loading={loading === 'reactivate'}
-                  disabled={loading !== null}
-                >
-                  <Crown size={18} style={{ color: '#fff' }} />
-                  Reactivate Subscription
-                </Button>
-              </>
-            ) : (
-              <>
-                <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                  If you cancel, you&apos;ll retain access to Premium features until the end of your current billing period. Your data will be preserved.
-                </p>
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowCancelConfirm(true)}
-                  disabled={loading !== null}
-                  style={{
-                    backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
-                    color: 'white',
-                    borderColor: 'var(--border)',
-                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                    boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)',
-                  }}
-                >
-                  Cancel Subscription
-                </Button>
-              </>
-            )}
-          </Card>
+              {isCanceled ? (
+                <>
+                  <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                    Changed your mind? Reactivate your subscription to continue enjoying Premium features.
+                  </p>
+                  <Button
+                    variant="primary"
+                    onClick={handleReactivate}
+                    loading={loading === 'reactivate'}
+                    disabled={loading !== null}
+                  >
+                    <Crown size={18} style={{ color: '#fff' }} />
+                    Reactivate Subscription
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                    If you cancel, you&apos;ll retain access to Premium features until the end of your current billing period. Your data will be preserved.
+                  </p>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowCancelConfirm(true)}
+                    disabled={loading !== null}
+                    style={{
+                      backgroundColor: settings.theme === 'light' ? 'var(--danger)' : '#660000',
+                      color: 'white',
+                      borderColor: 'var(--border)',
+                      backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                      boxShadow: '0 0 10px rgba(220, 38, 38, 0.2)',
+                    }}
+                  >
+                    Cancel Subscription
+                  </Button>
+                </>
+              )}
+            </Card>
+          )}
         </div>
       </div>
 
