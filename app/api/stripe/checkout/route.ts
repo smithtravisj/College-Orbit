@@ -69,7 +69,12 @@ export const POST = withRateLimit(async function (req: NextRequest) {
         userId: token.id,
         plan,
       },
-      ...(isSemester ? {} : {
+      ...(isSemester ? {
+        // For one-time payments, create an invoice so it shows in customer portal
+        invoice_creation: {
+          enabled: true,
+        },
+      } : {
         subscription_data: {
           metadata: {
             userId: token.id,
