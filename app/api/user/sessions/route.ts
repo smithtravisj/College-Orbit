@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
       where: {
         userId: session.user.id,
         expiresAt: { gt: new Date() }, // Only non-expired sessions
+        revokedAt: null, // Only non-revoked sessions
       },
       orderBy: { lastActivityAt: 'desc' },
       select: {
@@ -65,9 +66,13 @@ export async function POST() {
       data: { sessionInvalidatedAt: new Date() },
     });
 
-    // Delete all session records for this user
-    await prisma.userSession.deleteMany({
-      where: { userId: session.user.id },
+    // Mark all session records as revoked
+    await prisma.userSession.updateMany({
+      where: {
+        userId: session.user.id,
+        revokedAt: null,
+      },
+      data: { revokedAt: new Date() },
     });
 
     return NextResponse.json({ success: true, message: 'All sessions have been invalidated' });
@@ -92,15 +97,19 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Session ID is required' }, { status: 400 });
     }
 
-    // Verify the session belongs to the user and delete it
-    const deletedSession = await prisma.userSession.deleteMany({
+    // Verify the session belongs to the user and mark it as revoked
+    const revokedSession = await prisma.userSession.updateMany({
       where: {
         id: sessionId,
         userId: session.user.id,
+        revokedAt: null, // Only revoke if not already revoked
+      },
+      data: {
+        revokedAt: new Date(),
       },
     });
 
-    if (deletedSession.count === 0) {
+    if (revokedSession.count === 0) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 

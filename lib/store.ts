@@ -235,6 +235,14 @@ const useAppStore = create<AppStore>((set, get) => ({
         set({ colleges });
         // Update the global database colleges for color palette generation
         setDatabaseColleges(colleges);
+        // Cache colleges in localStorage for faster loading
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('app-colleges', JSON.stringify(colleges));
+          } catch (e) {
+            console.warn('Failed to cache colleges:', e);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching colleges:', error);
@@ -313,8 +321,24 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   initializeStore: async () => {
-    // Fetch colleges early for color palette support
-    await get().fetchColleges();
+    // Load cached colleges immediately from localStorage (for instant color palette)
+    if (typeof window !== 'undefined') {
+      try {
+        const cachedColleges = localStorage.getItem('app-colleges');
+        if (cachedColleges) {
+          const colleges = JSON.parse(cachedColleges);
+          set({ colleges });
+          setDatabaseColleges(colleges);
+        }
+      } catch (e) {
+        console.warn('Failed to load cached colleges:', e);
+      }
+    }
+
+    // Fetch fresh colleges in the background (don't block)
+    get().fetchColleges().catch((error) => {
+      console.error('Background college fetch failed:', error);
+    });
 
     // Step 1: Load from localStorage immediately for instant UI
     const hasLocalData = get().loadFromStorage();
