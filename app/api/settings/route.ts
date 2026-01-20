@@ -35,12 +35,16 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
         hasCompletedOnboarding: false,
         selectedGradeSemester: 'all',
         courseTermFilter: 'all',
-        emailAnnouncements: true,
-        emailExamReminders: true,
-        emailAccountAlerts: true,
-        notifyAnnouncements: true,
-        notifyExamReminders: true,
-        notifyAccountAlerts: true,
+        emailAnnouncements: false,
+        emailExamReminders: false,
+        emailAccountAlerts: false,
+        emailDeadlineReminders: false,
+        emailTaskReminders: false,
+        notifyAnnouncements: false,
+        notifyExamReminders: false,
+        notifyAccountAlerts: false,
+        notifyDeadlineReminders: false,
+        notifyTaskReminders: false,
       },
     };
 
@@ -83,6 +87,8 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.visibleToolsCards !== undefined) updateData.visibleToolsCards = data.visibleToolsCards;
     if (data.hasCompletedOnboarding !== undefined) updateData.hasCompletedOnboarding = data.hasCompletedOnboarding;
     if (data.examReminders !== undefined) updateData.examReminders = data.examReminders;
+    if (data.deadlineReminders !== undefined) updateData.deadlineReminders = data.deadlineReminders;
+    if (data.taskReminders !== undefined) updateData.taskReminders = data.taskReminders;
     if (data.pomodoroWorkDuration !== undefined) updateData.pomodoroWorkDuration = data.pomodoroWorkDuration;
     if (data.pomodoroBreakDuration !== undefined) updateData.pomodoroBreakDuration = data.pomodoroBreakDuration;
     if (data.pomodoroIsMuted !== undefined) updateData.pomodoroIsMuted = data.pomodoroIsMuted;
@@ -95,9 +101,13 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.emailAnnouncements !== undefined) updateData.emailAnnouncements = data.emailAnnouncements;
     if (data.emailExamReminders !== undefined) updateData.emailExamReminders = data.emailExamReminders;
     if (data.emailAccountAlerts !== undefined) updateData.emailAccountAlerts = data.emailAccountAlerts;
+    if (data.emailDeadlineReminders !== undefined) updateData.emailDeadlineReminders = data.emailDeadlineReminders;
+    if (data.emailTaskReminders !== undefined) updateData.emailTaskReminders = data.emailTaskReminders;
     if (data.notifyAnnouncements !== undefined) updateData.notifyAnnouncements = data.notifyAnnouncements;
     if (data.notifyExamReminders !== undefined) updateData.notifyExamReminders = data.notifyExamReminders;
     if (data.notifyAccountAlerts !== undefined) updateData.notifyAccountAlerts = data.notifyAccountAlerts;
+    if (data.notifyDeadlineReminders !== undefined) updateData.notifyDeadlineReminders = data.notifyDeadlineReminders;
+    if (data.notifyTaskReminders !== undefined) updateData.notifyTaskReminders = data.notifyTaskReminders;
     if (data.useCustomTheme !== undefined) updateData.useCustomTheme = data.useCustomTheme;
     if (data.customColors !== undefined) updateData.customColors = data.customColors;
     if (data.gradientIntensity !== undefined) updateData.gradientIntensity = data.gradientIntensity;

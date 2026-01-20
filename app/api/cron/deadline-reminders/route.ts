@@ -14,30 +14,30 @@ export async function GET(req: NextRequest) {
   try {
     // Fetch all users with their settings
     const users = await prisma.user.findMany({
-      include: { settings: true, exams: true },
+      include: { settings: true },
     });
 
     // Process reminders for each user
     for (const user of users) {
       if (!user.settings) continue;
-      const settings = user.settings!; // Non-null assertion since we just checked
+      const settings = user.settings!;
 
-      // Check if user has in-app exam reminders enabled
-      if (!settings.notifyExamReminders) {
+      // Check if user has in-app deadline reminders enabled
+      if (!settings.notifyDeadlineReminders) {
         continue;
       }
 
       // Parse user's custom reminder settings
       let reminders: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }> = [];
-      const examReminders = settings.examReminders;
-      if (examReminders) {
+      const deadlineReminders = settings.deadlineReminders;
+      if (deadlineReminders) {
         try {
-          const parsed = typeof examReminders === 'string'
-            ? JSON.parse(examReminders as string)
-            : examReminders;
+          const parsed = typeof deadlineReminders === 'string'
+            ? JSON.parse(deadlineReminders as string)
+            : deadlineReminders;
           reminders = Array.isArray(parsed) ? parsed : [];
         } catch (e) {
-          console.error(`Failed to parse exam reminders for user ${user.id}:`, e);
+          console.error(`Failed to parse deadline reminders for user ${user.id}:`, e);
           continue;
         }
       }
@@ -53,12 +53,12 @@ export async function GET(req: NextRequest) {
         const windowStart = new Date(now.getTime() + (reminderHours - hoursBuffer) * 60 * 60 * 1000);
         const windowEnd = new Date(now.getTime() + (reminderHours + hoursBuffer) * 60 * 60 * 1000);
 
-        // Find user's exams in this reminder window
-        const exams = await prisma.exam.findMany({
+        // Find user's deadlines in this reminder window
+        const deadlines = await prisma.deadline.findMany({
           where: {
             userId: user.id,
-            examAt: { gte: windowStart, lte: windowEnd },
-            status: 'scheduled',
+            dueAt: { gte: windowStart, lte: windowEnd },
+            status: 'open',
           },
           include: {
             course: true,
@@ -66,11 +66,11 @@ export async function GET(req: NextRequest) {
           },
         });
 
-        // Send reminders for each exam
-        for (const exam of exams) {
+        // Send reminders for each deadline
+        for (const deadline of deadlines) {
           // Check if reminder already sent for this value/unit combo
           const reminderKey = `${reminder.value}_${reminder.unit}`;
-          const alreadySent = exam.reminders.some(r => r.reminderType === reminderKey);
+          const alreadySent = deadline.reminders.some(r => r.reminderType === reminderKey);
           if (alreadySent) {
             results.skipped++;
             continue;
@@ -80,21 +80,19 @@ export async function GET(req: NextRequest) {
             // Create notification
             const notification = await prisma.notification.create({
               data: {
-                userId: exam.userId,
-                examId: exam.id,
-                title: `Exam Reminder: ${exam.title}`,
-                message: `Your ${exam.course?.code || 'exam'} exam is ${getTimeUntilText(reminder.value, reminder.unit)}${
-                  exam.location ? ` at ${exam.location}` : ''
-                }`,
-                type: 'exam_reminder',
+                userId: deadline.userId,
+                deadlineId: deadline.id,
+                title: `Assignment Due: ${deadline.title}`,
+                message: `Your ${deadline.course?.code || 'assignment'} is due ${getTimeUntilText(reminder.value, reminder.unit)}`,
+                type: 'deadline_reminder',
                 read: false,
               },
             });
 
             // Record reminder sent
-            await prisma.examReminder.create({
+            await prisma.deadlineReminder.create({
               data: {
-                examId: exam.id,
+                deadlineId: deadline.id,
                 reminderType: reminderKey,
                 notificationId: notification.id,
               },
@@ -102,7 +100,7 @@ export async function GET(req: NextRequest) {
 
             results.sent++;
           } catch (error) {
-            console.error(`Failed to send reminder for exam ${exam.id}:`, error);
+            console.error(`Failed to send reminder for deadline ${deadline.id}:`, error);
             results.errors++;
           }
         }

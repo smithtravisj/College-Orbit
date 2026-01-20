@@ -17,10 +17,28 @@ const DEFAULT_SETTINGS: Settings = {
   visibleToolsCards: DEFAULT_VISIBLE_TOOLS_CARDS,
   hasCompletedOnboarding: false, // Always show tour on first login
   examReminders: [
-    { enabled: true, value: 7, unit: 'days' },
-    { enabled: true, value: 1, unit: 'days' },
-    { enabled: true, value: 3, unit: 'hours' }
+    { enabled: false, value: 7, unit: 'days' },
+    { enabled: false, value: 1, unit: 'days' },
+    { enabled: false, value: 3, unit: 'hours' }
   ],
+  deadlineReminders: [
+    { enabled: false, value: 1, unit: 'days' },
+    { enabled: false, value: 3, unit: 'hours' }
+  ],
+  taskReminders: [
+    { enabled: false, value: 1, unit: 'days' },
+    { enabled: false, value: 3, unit: 'hours' }
+  ],
+  emailAnnouncements: false,
+  emailExamReminders: false,
+  emailAccountAlerts: false,
+  emailDeadlineReminders: false,
+  emailTaskReminders: false,
+  notifyAnnouncements: false,
+  notifyExamReminders: false,
+  notifyAccountAlerts: false,
+  notifyDeadlineReminders: false,
+  notifyTaskReminders: false,
   useCustomTheme: false,
   customColors: null,
   gradientIntensity: 50,

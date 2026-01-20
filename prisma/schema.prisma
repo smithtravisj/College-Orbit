@@ -122,6 +122,8 @@ model Deadline {
   recurringPattern   RecurringDeadlinePattern? @relation(fields: [recurringPatternId], references: [id])
   user               User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
   linkedNotes        Note[]
+  reminders          DeadlineReminder[]
+  notifications      Notification[]
 
   @@index([userId])
   @@index([courseId])
@@ -129,6 +131,7 @@ model Deadline {
   @@index([recurringPatternId])
   @@index([isRecurring])
   @@index([canvasAssignmentId])
+  @@index([dueAt])
 }
 
 model Task {
@@ -155,6 +158,8 @@ model Task {
   recurringPattern   RecurringPattern? @relation(fields: [recurringPatternId], references: [id])
   user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   linkedNotes        Note[]
+  reminders          TaskReminder[]
+  notifications      Notification[]
 
   @@index([userId])
   @@index([courseId])
@@ -162,6 +167,7 @@ model Task {
   @@index([pinned])
   @@index([recurringPatternId])
   @@index([isRecurring])
+  @@index([dueAt])
 }
 
 model RecurringPattern {
@@ -280,6 +286,32 @@ model ExamReminder {
   @@index([sentAt])
 }
 
+model DeadlineReminder {
+  id             String   @id @default(cuid())
+  deadlineId     String
+  reminderType   String
+  sentAt         DateTime @default(now())
+  notificationId String?
+  deadline       Deadline @relation(fields: [deadlineId], references: [id], onDelete: Cascade)
+
+  @@unique([deadlineId, reminderType])
+  @@index([deadlineId])
+  @@index([sentAt])
+}
+
+model TaskReminder {
+  id             String   @id @default(cuid())
+  taskId         String
+  reminderType   String
+  sentAt         DateTime @default(now())
+  notificationId String?
+  task           Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, reminderType])
+  @@index([taskId])
+  @@index([sentAt])
+}
+
 model Note {
   id                          String                    @id @default(cuid())
   userId                      String
@@ -381,7 +413,9 @@ model Settings {
   visiblePages           Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Assignments\", \"Exams\", \"Courses\", \"Tools\", \"Settings\"]")
   visibleToolsCards      Json?    @default("[\"quickLinks\", \"gpaCalculator\"]")
   hasCompletedOnboarding Boolean  @default(false)
-  examReminders          Json?    @default("[{\"unit\": \"days\", \"value\": 7, \"enabled\": true}, {\"unit\": \"days\", \"value\": 1, \"enabled\": true}, {\"unit\": \"hours\", \"value\": 3, \"enabled\": true}]")
+  examReminders          Json?    @default("[{\"unit\": \"days\", \"value\": 7, \"enabled\": false}, {\"unit\": \"days\", \"value\": 1, \"enabled\": false}, {\"unit\": \"hours\", \"value\": 3, \"enabled\": false}]")
+  deadlineReminders      Json?    @default("[{\"unit\": \"days\", \"value\": 1, \"enabled\": false}, {\"unit\": \"hours\", \"value\": 3, \"enabled\": false}]")
+  taskReminders          Json?    @default("[{\"unit\": \"days\", \"value\": 1, \"enabled\": false}, {\"unit\": \"hours\", \"value\": 3, \"enabled\": false}]")
   pomodoroBreakDuration  Int      @default(5)
   pomodoroIsMuted        Boolean  @default(false)
   pomodoroWorkDuration   Int      @default(25)
@@ -391,12 +425,16 @@ model Settings {
   dashboardCardsCollapsedState Json? @default("[]")
   hiddenQuickLinks       Json?    @default("{}")
   courseTermFilter       String   @default("all")
-  emailAnnouncements     Boolean  @default(true)
-  emailExamReminders     Boolean  @default(true)
-  emailAccountAlerts     Boolean  @default(true)
-  notifyAnnouncements    Boolean  @default(true)
-  notifyExamReminders    Boolean  @default(true)
-  notifyAccountAlerts    Boolean  @default(true)
+  emailAnnouncements     Boolean  @default(false)
+  emailExamReminders     Boolean  @default(false)
+  emailAccountAlerts     Boolean  @default(false)
+  emailDeadlineReminders Boolean  @default(false)
+  emailTaskReminders     Boolean  @default(false)
+  notifyAnnouncements    Boolean  @default(false)
+  notifyExamReminders    Boolean  @default(false)
+  notifyAccountAlerts    Boolean  @default(false)
+  notifyDeadlineReminders Boolean @default(false)
+  notifyTaskReminders    Boolean  @default(false)
   useCustomTheme         Boolean  @default(false)
   customColors           Json?
   gradientIntensity      Int      @default(50)
@@ -510,12 +548,16 @@ model Notification {
   featureRequestId String?
   issueReportId    String?
   examId           String?
+  deadlineId       String?
+  taskId           String?
 
   // Canvas LMS Integration
   canvasAnnouncementId String?
 
   collegeRequest   CollegeRequest? @relation(fields: [collegeRequestId], references: [id], onDelete: Cascade)
   exam             Exam?           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  deadline         Deadline?       @relation(fields: [deadlineId], references: [id], onDelete: Cascade)
+  task             Task?           @relation(fields: [taskId], references: [id], onDelete: Cascade)
   featureRequest   FeatureRequest? @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
   issueReport      IssueReport?    @relation(fields: [issueReportId], references: [id], onDelete: Cascade)
   user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -526,6 +568,8 @@ model Notification {
   @@index([issueReportId])
   @@index([featureRequestId])
   @@index([examId])
+  @@index([deadlineId])
+  @@index([taskId])
   @@index([canvasAnnouncementId])
 }
 
