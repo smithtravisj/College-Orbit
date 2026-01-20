@@ -209,7 +209,9 @@ export default function AdminPage() {
   // Announcement state
   const [announcementTitle, setAnnouncementTitle] = useState('');
   const [announcementMessage, setAnnouncementMessage] = useState('');
-  const [announcementTier, setAnnouncementTier] = useState<'all' | 'free' | 'trial' | 'premium' | 'lifetime' | 'admin'>('all');
+  const [announcementTier, setAnnouncementTier] = useState<'all' | 'free' | 'trial' | 'premium' | 'lifetime' | 'admin' | 'specific'>('all');
+  const [announcementDelivery, setAnnouncementDelivery] = useState<'both' | 'notification' | 'email'>('both');
+  const [announcementSpecificEmails, setAnnouncementSpecificEmails] = useState('');
   const [announcementLoading, setAnnouncementLoading] = useState(false);
   const [announcementResult, setAnnouncementResult] = useState('');
 
@@ -1049,6 +1051,12 @@ export default function AdminPage() {
       return;
     }
 
+    if (announcementTier === 'specific' && !announcementSpecificEmails.trim()) {
+      setAnnouncementResult('Error: Please enter at least one email address');
+      setTimeout(() => setAnnouncementResult(''), 3000);
+      return;
+    }
+
     setAnnouncementLoading(true);
     setAnnouncementResult('');
 
@@ -1059,7 +1067,11 @@ export default function AdminPage() {
         body: JSON.stringify({
           title: announcementTitle,
           message: announcementMessage,
-          tierFilter: announcementTier,
+          tierFilter: announcementTier === 'specific' ? 'specific' : announcementTier,
+          deliveryMethod: announcementDelivery,
+          specificEmails: announcementTier === 'specific'
+            ? announcementSpecificEmails.split(/[,\n]/).map(e => e.trim()).filter(e => e)
+            : undefined,
         }),
       });
 
@@ -1072,19 +1084,28 @@ export default function AdminPage() {
         return;
       }
 
-      let emailInfo = `${data.emailsSent} emails sent`;
-      if (data.emailsOptedOut > 0) {
-        emailInfo += `, ${data.emailsOptedOut} opted out`;
+      // Build result message based on delivery method
+      let resultParts: string[] = [];
+      if (announcementDelivery !== 'email') {
+        resultParts.push(`${data.notificationsSent || data.recipientCount} notifications`);
       }
-      if (data.emailsFailed > 0) {
-        emailInfo += `, ${data.emailsFailed} failed`;
-        if (data.emailErrors?.length > 0) {
-          emailInfo += `: ${data.emailErrors[0]}`;
+      if (announcementDelivery !== 'notification') {
+        let emailInfo = `${data.emailsSent} emails sent`;
+        if (data.emailsOptedOut > 0) {
+          emailInfo += `, ${data.emailsOptedOut} opted out`;
         }
+        if (data.emailsFailed > 0) {
+          emailInfo += `, ${data.emailsFailed} failed`;
+          if (data.emailErrors?.length > 0) {
+            emailInfo += `: ${data.emailErrors[0]}`;
+          }
+        }
+        resultParts.push(emailInfo);
       }
-      setAnnouncementResult(`Success: ${data.message} (${emailInfo})`);
+      setAnnouncementResult(`Success: ${data.message} (${resultParts.join('; ')})`);
       setAnnouncementTitle('');
       setAnnouncementMessage('');
+      setAnnouncementSpecificEmails('');
       setAnnouncementLoading(false);
       setTimeout(() => setAnnouncementResult(''), 5000);
     } catch (error) {
@@ -2296,7 +2317,7 @@ export default function AdminPage() {
             <Card title="Announcements">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
-                  Send a notification and email to all users or filter by subscription tier.
+                  Send notifications and/or emails to users.
                 </p>
                 <input
                   type="text"
@@ -2330,14 +2351,15 @@ export default function AdminPage() {
                     minHeight: '100px',
                   }}
                 />
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Send to:</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                  <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Deliver via:</label>
                   <select
-                    value={announcementTier}
-                    onChange={(e) => setAnnouncementTier(e.target.value as 'all' | 'free' | 'trial' | 'premium' | 'lifetime' | 'admin')}
+                    value={announcementDelivery}
+                    onChange={(e) => setAnnouncementDelivery(e.target.value as 'both' | 'notification' | 'email')}
                     style={{
                       flex: 1,
                       padding: '10px 14px',
+                      paddingRight: '36px',
                       fontSize: '14px',
                       backgroundColor: 'var(--panel-2)',
                       border: '1px solid var(--border)',
@@ -2345,6 +2367,39 @@ export default function AdminPage() {
                       color: 'var(--text)',
                       outline: 'none',
                       cursor: 'pointer',
+                      appearance: 'none',
+                      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${selectedTheme === 'light' ? '%23666666' : 'white'}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      backgroundSize: '16px',
+                    }}
+                  >
+                    <option value="both">Both</option>
+                    <option value="notification">Notification Only</option>
+                    <option value="email">Email Only</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Send to:</label>
+                  <select
+                    value={announcementTier}
+                    onChange={(e) => setAnnouncementTier(e.target.value as 'all' | 'free' | 'trial' | 'premium' | 'lifetime' | 'admin' | 'specific')}
+                    style={{
+                      flex: 1,
+                      padding: '10px 14px',
+                      paddingRight: '36px',
+                      fontSize: '14px',
+                      backgroundColor: 'var(--panel-2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '8px',
+                      color: 'var(--text)',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      appearance: 'none',
+                      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${selectedTheme === 'light' ? '%23666666' : 'white'}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      backgroundSize: '16px',
                     }}
                   >
                     <option value="all">All Users</option>
@@ -2353,6 +2408,7 @@ export default function AdminPage() {
                     <option value="premium">Premium Users</option>
                     <option value="lifetime">Lifetime Premium</option>
                     <option value="admin">Admins</option>
+                    <option value="specific">Specific Users</option>
                   </select>
                   <button
                     onClick={handleSendAnnouncement}
@@ -2375,6 +2431,30 @@ export default function AdminPage() {
                     {announcementLoading ? 'Sending...' : 'Send'}
                   </button>
                 </div>
+                {announcementTier === 'specific' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+                      Enter email addresses (comma or newline separated):
+                    </label>
+                    <textarea
+                      value={announcementSpecificEmails}
+                      onChange={(e) => setAnnouncementSpecificEmails(e.target.value)}
+                      placeholder="user1@example.com, user2@example.com"
+                      rows={3}
+                      style={{
+                        padding: '10px 14px',
+                        fontSize: '14px',
+                        backgroundColor: 'var(--panel-2)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px',
+                        color: 'var(--text)',
+                        outline: 'none',
+                        resize: 'vertical',
+                        minHeight: '60px',
+                      }}
+                    />
+                  </div>
+                )}
                 {announcementResult && (
                   <p style={{
                     fontSize: '14px',

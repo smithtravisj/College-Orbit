@@ -19,7 +19,7 @@ const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), {
 import FolderTree from '@/components/notes/FolderTree';
 import TagInput from '@/components/notes/TagInput';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
-import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown, Crown, Save, CheckSquare, FileText, Clock } from 'lucide-react';
+import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown, Crown, Save, CheckSquare, FileText, Clock, Upload, File, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useFormatters } from '@/hooks/useFormatters';
@@ -28,6 +28,7 @@ import Link from 'next/link';
 import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { showDeleteToast } from '@/components/ui/DeleteToast';
 import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
+import FilePreviewModal from '@/components/FilePreviewModal';
 
 export default function NotesPage() {
   const isMobile = useIsMobile();
@@ -67,7 +68,12 @@ export default function NotesPage() {
     recurringExamPatternId: '',
     tags: [] as string[],
     links: [{ label: '', url: '' }],
+    files: [] as Array<{ name: string; url: string; size: number }>,
   });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileUploading, setFileUploading] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState<'notes' | 'files'>('notes');
+  const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
   const [nlpInput, setNlpInput] = useState('');
 
   const { courses, notes, folders, tasks, deadlines, exams, settings, addNote, updateNote, deleteNote, toggleNotePin, initializeStore, updateSettings } = useAppStore();
@@ -133,6 +139,7 @@ export default function NotesPage() {
         recurringExamPatternId: formData.recurringExamPatternId || null,
         tags: formData.tags,
         links,
+        files: formData.files,
       });
       setEditingId(null);
       setSelectedNoteId(null);
@@ -152,6 +159,7 @@ export default function NotesPage() {
           tags: formData.tags,
           isPinned: false,
           links,
+          files: formData.files,
         });
       } catch (error: any) {
         if (error.code === 'LIMIT_REACHED' || error.upgradeRequired) {
@@ -183,6 +191,7 @@ export default function NotesPage() {
       recurringExamPatternId: note.recurringExamPatternId || '',
       tags: note.tags || [],
       links: note.links && note.links.length > 0 ? note.links : [{ label: '', url: '' }],
+      files: note.files || [],
     });
     setShowForm(true);
   };
@@ -203,7 +212,37 @@ export default function NotesPage() {
       recurringExamPatternId: '',
       tags: [],
       links: [{ label: '', url: '' }],
+      files: [],
     });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
+
+    setFileUploading(true);
+    for (const file of Array.from(selectedFiles)) {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      try {
+        const response = await fetch('/api/files', {
+          method: 'POST',
+          body: formDataUpload,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setFormData(prev => ({ ...prev, files: [...(prev.files || []), data.file] }));
+        }
+      } catch (error) {
+        console.error('File upload error:', error);
+      }
+    }
+    setFileUploading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   // Handle NLP input change
@@ -819,22 +858,97 @@ export default function NotesPage() {
                     />
                   </div>
 
-                  <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '8px' : '12px' }}>
-                    <Button variant="primary" type="submit" size={isMobile ? 'sm' : 'md'}>
-                      {editingId ? 'Save Changes' : 'Create Note'}
-                    </Button>
+                  {/* File attachments */}
+                  {formData.files && formData.files.length > 0 && (
+                    <div style={{ paddingTop: isMobile ? '4px' : '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label className={isMobile ? 'block text-xs font-medium text-[var(--text)]' : 'block text-sm font-medium text-[var(--text)]'} style={{ marginBottom: '4px' }}>Attachments</label>
+                      {formData.files.map((file, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: isMobile ? '4px 8px' : '6px 10px',
+                            backgroundColor: 'var(--panel-2)',
+                            borderRadius: 'var(--radius-control)',
+                            border: '1px solid var(--border)',
+                            fontSize: isMobile ? '0.7rem' : '0.8rem',
+                          }}
+                        >
+                          <File size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                          <input
+                            type="text"
+                            value={file.name}
+                            onChange={(e) => {
+                              const newFiles = [...formData.files];
+                              newFiles[index] = { ...newFiles[index], name: e.target.value };
+                              setFormData({ ...formData, files: newFiles });
+                            }}
+                            style={{
+                              flex: 1,
+                              background: 'transparent',
+                              border: 'none',
+                              outline: 'none',
+                              color: 'var(--text)',
+                              fontSize: 'inherit',
+                              padding: 0,
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, files: formData.files.filter((_, i) => i !== index) })}
+                            style={{ background: 'none', border: 'none', padding: '2px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: isMobile ? '8px' : '12px' }}>
+                    <div className={isMobile ? 'flex gap-2' : 'flex gap-3'}>
+                      <Button variant="primary" type="submit" size={isMobile ? 'sm' : 'md'}>
+                        {editingId ? 'Save Changes' : 'Create Note'}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        type="button"
+                        size={isMobile ? 'sm' : 'md'}
+                        onClick={() => {
+                          resetForm();
+                          setShowForm(false);
+                          setSelectedNoteId(null);
+                          setEditingId(null);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      onChange={handleFileUpload}
+                      style={{ display: 'none' }}
+                    />
                     <Button
                       variant="secondary"
-                      type="button"
                       size={isMobile ? 'sm' : 'md'}
+                      type="button"
                       onClick={() => {
-                        resetForm();
-                        setShowForm(false);
-                        setSelectedNoteId(null);
-                        setEditingId(null);
+                        if (!subscription.isPremium) {
+                          setUpgradeFeature('files');
+                          setShowUpgradeModal(true);
+                          return;
+                        }
+                        fileInputRef.current?.click();
                       }}
+                      disabled={fileUploading}
                     >
-                      Cancel
+                      <Upload size={isMobile ? 14 : 16} />
+                      {fileUploading ? 'Uploading...' : 'Add Files'}
                     </Button>
                   </div>
                 </form>
@@ -1003,6 +1117,51 @@ export default function NotesPage() {
                           >
                             {link.label || link.url}
                           </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Files */}
+                  {selectedNote.files && selectedNote.files.length > 0 && (
+                    <div style={{ marginTop: '16px' }}>
+                      <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <File size={16} />
+                        Attachments
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {selectedNote.files.map((file: { name: string; url: string; size: number }, idx: number) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setPreviewingFile({ file, allFiles: selectedNote.files || [], index: idx })}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '8px 12px',
+                              backgroundColor: 'var(--panel-2)',
+                              borderRadius: 'var(--radius-control)',
+                              border: '1px solid var(--border)',
+                              fontSize: '14px',
+                              color: 'var(--text)',
+                              textDecoration: 'none',
+                              transition: 'border-color 0.2s',
+                              cursor: 'pointer',
+                              textAlign: 'left',
+                              width: '100%',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
+                            onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+                          >
+                            <File size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
+                            <span style={{ fontSize: '12px', color: 'var(--text-muted)', flexShrink: 0 }}>
+                              {file.size < 1024 * 1024
+                                ? `${(file.size / 1024).toFixed(1)} KB`
+                                : `${(file.size / (1024 * 1024)).toFixed(1)} MB`}
+                            </span>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -1397,10 +1556,12 @@ export default function NotesPage() {
                 <Crown size={28} style={{ color: 'var(--text)' }} />
               </div>
               <h3 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: '600', color: 'var(--text)', margin: '0 0 8px 0' }}>
-                Note Limit Reached
+                {upgradeFeature === 'files' ? 'Premium Feature' : 'Note Limit Reached'}
               </h3>
               <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', margin: '0 0 24px 0', lineHeight: 1.5 }}>
-                You&apos;ve reached the free tier limit. Upgrade to Premium for unlimited notes and more features.
+                {upgradeFeature === 'files'
+                  ? 'Upgrade to Premium to attach files to your notes and keep everything organized.'
+                  : "You've reached the free tier limit. Upgrade to Premium for unlimited notes and more features."}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <Link href="/pricing" style={{ textDecoration: 'none' }}>
@@ -1448,6 +1609,15 @@ export default function NotesPage() {
           </div>
         </>
       )}
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        file={previewingFile?.file ?? null}
+        files={previewingFile?.allFiles}
+        currentIndex={previewingFile?.index ?? 0}
+        onClose={() => setPreviewingFile(null)}
+        onNavigate={(file, index) => setPreviewingFile(prev => prev ? { ...prev, file, index } : null)}
+      />
 
     </>
   );

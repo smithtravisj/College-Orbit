@@ -134,11 +134,17 @@ interface AppStore {
   addGpaEntry: (gpaEntry: Omit<GpaEntry, 'id' | 'createdAt'>) => Promise<void>;
 
   // Shopping Items
-  addShoppingItem: (item: Omit<ShoppingItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  addShoppingItem: (item: Omit<ShoppingItem, 'id' | 'createdAt' | 'updatedAt' | 'order' | 'purchasedAt'>) => Promise<void>;
   updateShoppingItem: (id: string, item: Partial<ShoppingItem>) => Promise<void>;
   deleteShoppingItem: (id: string) => Promise<void>;
   toggleShoppingItemChecked: (id: string) => Promise<void>;
   clearCheckedShoppingItems: (listType: ShoppingListType) => Promise<void>;
+  moveCheckedToPantry: () => Promise<void>;
+  moveItemToGrocery: (id: string) => Promise<void>;
+  reorderShoppingItem: (id: string, direction: 'up' | 'down') => Promise<void>;
+  loadPurchaseHistory: () => Promise<ShoppingItem[]>;
+  clearPurchaseHistory: () => Promise<void>;
+  restorePurchasedItem: (id: string) => Promise<void>;
 
   // Calendar Events
   addCalendarEvent: (event: Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -1608,7 +1614,7 @@ const useAppStore = create<AppStore>((set, get) => ({
     const tempId = uuidv4();
     const now = new Date().toISOString();
     set((state) => ({
-      shoppingItems: [...state.shoppingItems, { ...item, id: tempId, createdAt: now, updatedAt: now } as ShoppingItem],
+      shoppingItems: [...state.shoppingItems, { ...item, id: tempId, order: 0, purchasedAt: null, createdAt: now, updatedAt: now } as ShoppingItem],
     }));
 
     try {
@@ -1684,18 +1690,215 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   clearCheckedShoppingItems: async (listType) => {
     try {
-      // Optimistically remove checked items
-      set((state) => ({
-        shoppingItems: state.shoppingItems.filter(
-          (i) => !(i.listType === listType && i.checked)
-        ),
-      }));
+      // For grocery list, items are marked as purchased (moved to history)
+      // For other lists, items are deleted
+      if (listType === 'grocery') {
+        // Optimistically mark as purchased and remove from active list
+        set((state) => ({
+          shoppingItems: state.shoppingItems.map((i) =>
+            i.listType === listType && i.checked
+              ? { ...i, purchasedAt: new Date().toISOString(), checked: false }
+              : i
+          ).filter((i) => !(i.listType === listType && i.purchasedAt)),
+        }));
+      } else {
+        // Optimistically remove checked items
+        set((state) => ({
+          shoppingItems: state.shoppingItems.filter(
+            (i) => !(i.listType === listType && i.checked)
+          ),
+        }));
+      }
 
       const response = await fetch(`/api/shopping?listType=${listType}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to clear checked items');
     } catch (error) {
       await get().loadFromDatabase();
       console.error('Error clearing checked items:', error);
+      throw error;
+    }
+  },
+
+  moveCheckedToPantry: async () => {
+    try {
+      // Get all checked grocery items
+      const checkedGroceryItems = get().shoppingItems.filter(
+        (i) => i.listType === 'grocery' && i.checked && !i.purchasedAt
+      );
+
+      if (checkedGroceryItems.length === 0) return;
+
+      // Optimistically update items to pantry list and uncheck them
+      set((state) => ({
+        shoppingItems: state.shoppingItems.map((item) => {
+          if (item.listType === 'grocery' && item.checked && !item.purchasedAt) {
+            return { ...item, listType: 'pantry' as const, checked: false };
+          }
+          return item;
+        }),
+      }));
+
+      // For each item: create a purchase history record, then move to pantry
+      const promises = checkedGroceryItems.flatMap((item) => [
+        // Create a purchase history record (copy with purchasedAt set)
+        fetch('/api/shopping', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            listType: 'grocery',
+            name: item.name,
+            quantity: item.quantity,
+            unit: item.unit,
+            category: item.category,
+            notes: item.notes,
+            checked: false,
+            priority: item.priority,
+            price: item.price,
+            perishable: item.perishable,
+            purchasedAt: new Date().toISOString(),
+          }),
+        }),
+        // Move the original item to pantry
+        fetch(`/api/shopping/${item.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ listType: 'pantry', checked: false }),
+        }),
+      ]);
+
+      const results = await Promise.allSettled(promises);
+      const failed = results.filter((r) => r.status === 'rejected');
+      if (failed.length > 0) {
+        console.error('Some items failed to move to pantry');
+        await get().loadFromDatabase();
+      }
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error moving items to pantry:', error);
+      throw error;
+    }
+  },
+
+  moveItemToGrocery: async (id) => {
+    try {
+      const item = get().shoppingItems.find((i) => i.id === id);
+      if (!item) return;
+
+      // Optimistically update item to grocery list
+      set((state) => ({
+        shoppingItems: state.shoppingItems.map((i) =>
+          i.id === id ? { ...i, listType: 'grocery' as const, checked: false } : i
+        ),
+      }));
+
+      const response = await fetch(`/api/shopping/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listType: 'grocery', checked: false }),
+      });
+
+      if (!response.ok) throw new Error('Failed to move item to grocery');
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error moving item to grocery:', error);
+      throw error;
+    }
+  },
+
+  reorderShoppingItem: async (id, direction) => {
+    try {
+      const items = get().shoppingItems;
+      const item = items.find((i) => i.id === id);
+      if (!item) return;
+
+      // Get items in the same list and category, sorted by order
+      const categoryItems = items
+        .filter((i) => i.listType === item.listType && i.category === item.category && !i.purchasedAt)
+        .sort((a, b) => a.order - b.order);
+
+      const currentIndex = categoryItems.findIndex((i) => i.id === id);
+      const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
+      // Check bounds
+      if (targetIndex < 0 || targetIndex >= categoryItems.length) return;
+
+      const targetItem = categoryItems[targetIndex];
+
+      // Swap orders
+      const currentOrder = item.order;
+      const targetOrder = targetItem.order;
+
+      // Optimistically update
+      set((state) => ({
+        shoppingItems: state.shoppingItems.map((i) => {
+          if (i.id === id) return { ...i, order: targetOrder };
+          if (i.id === targetItem.id) return { ...i, order: currentOrder };
+          return i;
+        }),
+      }));
+
+      // Update both items on server
+      await Promise.all([
+        fetch(`/api/shopping/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order: targetOrder }),
+        }),
+        fetch(`/api/shopping/${targetItem.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order: currentOrder }),
+        }),
+      ]);
+    } catch (error) {
+      await get().loadFromDatabase();
+      console.error('Error reordering item:', error);
+      throw error;
+    }
+  },
+
+  loadPurchaseHistory: async () => {
+    try {
+      const response = await fetch('/api/shopping?includePurchased=true');
+      if (!response.ok) throw new Error('Failed to load purchase history');
+      const data = await response.json();
+      // Return only purchased items
+      return (data.items || []).filter((item: ShoppingItem) => item.purchasedAt !== null);
+    } catch (error) {
+      console.error('Error loading purchase history:', error);
+      return [];
+    }
+  },
+
+  clearPurchaseHistory: async () => {
+    try {
+      const response = await fetch('/api/shopping?clearHistory=true', { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to clear purchase history');
+    } catch (error) {
+      console.error('Error clearing purchase history:', error);
+      throw error;
+    }
+  },
+
+  restorePurchasedItem: async (id) => {
+    try {
+      const response = await fetch(`/api/shopping/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ purchasedAt: null, checked: false }),
+      });
+
+      if (!response.ok) throw new Error('Failed to restore item');
+
+      // Add the restored item back to the local state
+      const data = await response.json();
+      if (data.item) {
+        set((state) => ({
+          shoppingItems: [...state.shoppingItems, data.item],
+        }));
+      }
+    } catch (error) {
+      console.error('Error restoring purchased item:', error);
       throw error;
     }
   },

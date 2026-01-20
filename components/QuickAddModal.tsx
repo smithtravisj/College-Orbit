@@ -38,7 +38,7 @@ const QUICK_INPUT_PLACEHOLDERS: Record<QuickAddType, string> = {
   task: 'e.g. Finish chapter 3 CS 101 tomorrow',
   assignment: 'e.g. Essay draft ENG 201 Jan 26 5pm',
   exam: 'e.g. Calc midterm Feb 2 1pm Room 102',
-  note: 'e.g. Lecture notes CS 101',
+  note: 'e.g. Meeting notes: key points from today',
   course: 'e.g. CS 101 Intro to Computer Science',
   shopping: 'e.g. 2 gallons milk',
 };
@@ -64,6 +64,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
   // Form states
   const [title, setTitle] = useState('');
   const [courseId, setCourseId] = useState<string | null>(null);
+  const [, setFolderId] = useState<string | null>(null);
+  const [noteContent, setNoteContent] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('');
   const [location, setLocation] = useState('');
@@ -111,6 +113,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
     setQuickInput('');
     setTitle('');
     setCourseId(null);
+    setFolderId(null);
+    setNoteContent('');
     setDueDate('');
     setDueTime('');
     setLocation('');
@@ -148,6 +152,10 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
       // For course type, use courseCode and courseName
       setCourseCode(parsed.courseCode || '');
       setCourseName(parsed.courseName || '');
+    } else if (selectedType === 'note') {
+      // For notes, use title and noteContent
+      setTitle(parsed.title || '');
+      setNoteContent(parsed.noteContent || '');
     } else {
       // For other types, use title, course, date, time, location
       setTitle(parsed.title || '');
@@ -170,6 +178,9 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
       if (selectedType === 'course') {
         setCourseCode(parsed.courseCode || '');
         setCourseName(parsed.courseName || '');
+      } else if (selectedType === 'note') {
+        setTitle(parsed.title || '');
+        setNoteContent(parsed.noteContent || '');
       } else {
         setTitle(parsed.title || '');
         setCourseId(parsed.courseId);
@@ -277,11 +288,21 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
         }
         case 'note': {
           if (!title.trim()) return;
+          // Convert plain text to TipTap JSON format
+          const content = noteContent.trim()
+            ? {
+                type: 'doc',
+                content: noteContent.split('\n').map(line => ({
+                  type: 'paragraph',
+                  content: line ? [{ type: 'text', text: line }] : [],
+                })),
+              }
+            : { type: 'doc', content: [] };
           await addNote({
             title: title.trim(),
-            content: null,
+            content,
             folderId: null,
-            courseId: courseId || null,
+            courseId: null,
             taskId: null,
             deadlineId: null,
             examId: null,
@@ -480,19 +501,15 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
               />
             </div>
             <div className={styles.formGroup}>
-              <label className={styles.label}>Course</label>
-              <select
-                value={courseId || ''}
-                onChange={(e) => setCourseId(e.target.value || null)}
-                className={styles.select}
-              >
-                <option value="">No course</option>
-                {courses.map((course) => (
-                  <option key={course.id} value={course.id}>
-                    {course.code} - {course.name}
-                  </option>
-                ))}
-              </select>
+              <label className={styles.label}>Content</label>
+              <textarea
+                value={noteContent}
+                onChange={(e) => setNoteContent(e.target.value)}
+                placeholder="Write your note here..."
+                className={styles.input}
+                rows={4}
+                style={{ resize: 'vertical', minHeight: '80px' }}
+              />
             </div>
           </>
         );

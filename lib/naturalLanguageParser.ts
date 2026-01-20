@@ -33,6 +33,7 @@ export interface ParsedInput {
   term: string | null;
   // Note fields
   folderId: string | null;
+  noteContent: string | null; // Content after title for notes
   // Shopping fields
   quantity: number;
   unit: string | null;
@@ -286,6 +287,7 @@ export function parseNaturalLanguage(
     courseName: null,
     term: null,
     folderId: null,
+    noteContent: null,
     quantity: 1,
     unit: null,
     category: null,
@@ -478,6 +480,19 @@ export function parseNaturalLanguage(
 
   // ========== NOTE-SPECIFIC PARSING ==========
   if (itemType === 'note') {
+    // Extract content after delimiter (: or -)
+    // Pattern: "Title: content here" or "Title - content here"
+    const contentDelimiterMatch = workingText.match(/^([^:\-]+?)(?:\s*[:\-]\s*)(.+)$/s);
+    if (contentDelimiterMatch) {
+      // First part before delimiter is potential title, rest is content
+      const potentialTitle = contentDelimiterMatch[1].trim();
+      const content = contentDelimiterMatch[2].trim();
+      if (potentialTitle && content) {
+        result.noteContent = content;
+        workingText = potentialTitle; // Continue parsing just the title part
+      }
+    }
+
     // Extract folder: "in [folder]", "folder: [name]", or just match folder names
     for (const folder of folders) {
       const folderPatterns = [
@@ -959,7 +974,7 @@ export const NLP_PLACEHOLDERS: Record<ItemType, string> = {
   task: 'e.g. Finish chapter 3 CS 101 tomorrow high priority',
   assignment: 'e.g. Essay draft ENG 201 Jan 26 5pm large',
   exam: 'e.g. Calc midterm Feb 2 1pm Room 102',
-  note: 'e.g. Lecture notes CS 101 in Homework folder',
+  note: 'e.g. Meeting notes: key points from today',
   course: 'e.g. CS 101 Intro to Computer Science Winter 2026',
   shopping: 'e.g. 2 gallons milk, 3 apples produce',
 };
