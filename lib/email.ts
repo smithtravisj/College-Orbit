@@ -505,15 +505,28 @@ export async function sendSubscriptionStartedEmail({
                   <p style="margin: 0 0 16px 0; color: #fafafa; font-weight: 600;">
                     You now have access to:
                   </p>
-                  <ul style="margin: 0 0 24px 0; padding-left: 20px; color: #a1a1aa;">
-                    <li style="margin-bottom: 8px;">Full Calendar view</li>
-                    <li style="margin-bottom: 8px;">Shopping lists & Pantry tracking</li>
-                    <li style="margin-bottom: 8px;">Unlimited notes and courses</li>
-                    <li style="margin-bottom: 8px;">File attachments</li>
-                    <li style="margin-bottom: 8px;">Recurring tasks, assignments & exams</li>
-                    <li style="margin-bottom: 8px;">All Tools (GPA Calculator, Pomodoro, etc.)</li>
-                    <li style="margin-bottom: 8px;">Custom color themes & visual effects</li>
-                  </ul>
+                  <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 24px 0;">
+                    <tr>
+                      <td style="vertical-align: top; padding-right: 16px; width: 50%;">
+                        <ul style="margin: 0; padding-left: 20px; color: #a1a1aa;">
+                          <li style="margin-bottom: 8px;">Unlimited notes</li>
+                          <li style="margin-bottom: 8px;">Unlimited courses</li>
+                          <li style="margin-bottom: 8px;">Calendar page</li>
+                          <li style="margin-bottom: 8px;">Shopping lists</li>
+                          <li style="margin-bottom: 8px;">All Tools access</li>
+                        </ul>
+                      </td>
+                      <td style="vertical-align: top; width: 50%;">
+                        <ul style="margin: 0; padding-left: 20px; color: #a1a1aa;">
+                          <li style="margin-bottom: 8px;">File attachments</li>
+                          <li style="margin-bottom: 8px;">Recurring items</li>
+                          <li style="margin-bottom: 8px;">Custom themes</li>
+                          <li style="margin-bottom: 8px;">Visual effects</li>
+                          <li style="margin-bottom: 8px;">Dashboard customization</li>
+                        </ul>
+                      </td>
+                    </tr>
+                  </table>
 
                   <!-- CTA Button -->
                   <table width="100%" cellpadding="0" cellspacing="0">
@@ -558,13 +571,15 @@ Hi ${displayName},
 Thank you for subscribing to College Orbit Premium! Your ${planLabel} plan (${price}) is now active.
 
 You now have access to:
-- Full Calendar view
-- Shopping lists & Pantry tracking
-- Unlimited notes and courses
+- Unlimited notes & courses
+- Calendar page
+- Shopping lists
+- All Tools access
 - File attachments
-- Recurring tasks, assignments & exams
-- All Tools (GPA Calculator, Pomodoro, etc.)
-- Custom color themes & visual effects
+- Recurring items
+- Custom themes
+- Visual effects
+- Dashboard customization
 
 Go to your dashboard: ${APP_URL}/dashboard
 
