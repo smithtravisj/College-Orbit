@@ -181,6 +181,14 @@ export default function CoursesPage() {
   // Get unique terms for filter
   const uniqueTerms = Array.from(new Set(courses.map((c) => c.term).filter(Boolean)));
 
+  // Calculate total credits per term
+  const getTermCredits = (term: string) => {
+    return courses
+      .filter(c => c.term === term)
+      .reduce((sum, c) => sum + (c.credits || 0), 0);
+  };
+
+  
   // Bulk action handlers
   const handleBulkAction = (action: BulkAction) => {
     setBulkModal(action);
@@ -313,8 +321,8 @@ export default function CoursesPage() {
               </div>
               <div className="space-y-1" style={{ marginBottom: '14px' }}>
                 {[
-                  { value: 'all', label: 'All Courses' },
-                  ...uniqueTerms.map((term) => ({ value: term, label: term })),
+                  { value: 'all', label: 'All Courses', credits: courses.reduce((sum, c) => sum + (c.credits || 0), 0) },
+                  ...uniqueTerms.map((term) => ({ value: term, label: term, credits: getTermCredits(term) })),
                 ].map((f) => (
                   <button
                     key={f.value}
@@ -333,9 +341,21 @@ export default function CoursesPage() {
                           : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)')
                         : 'none',
                       boxShadow: termFilter === f.value ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
                     }}
                   >
-                    {f.label}
+                    <span>{f.label}</span>
+                    {f.credits > 0 && (
+                      <span style={{
+                        fontSize: '12px',
+                        opacity: termFilter === f.value ? 1 : 0.7,
+                        fontWeight: 500,
+                      }}>
+                        {f.credits} cr
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -384,8 +404,8 @@ export default function CoursesPage() {
                 </div>
                 <div className="space-y-2" style={{ marginBottom: isMobile ? '8px' : '16px' }}>
                   {[
-                    { value: 'all', label: 'All Courses' },
-                    ...uniqueTerms.map((term) => ({ value: term, label: term })),
+                    { value: 'all', label: 'All Courses', credits: courses.reduce((sum, c) => sum + (c.credits || 0), 0) },
+                    ...uniqueTerms.map((term) => ({ value: term, label: term, credits: getTermCredits(term) })),
                   ].map((f) => (
                     <button
                       key={f.value}
@@ -401,9 +421,21 @@ export default function CoursesPage() {
                         backgroundColor: termFilter === f.value ? 'var(--nav-active)' : 'transparent',
                         backgroundImage: termFilter === f.value ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' : 'none',
                         boxShadow: termFilter === f.value ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
                       }}
                     >
-                      {f.label}
+                      <span>{f.label}</span>
+                      {f.credits > 0 && (
+                        <span style={{
+                          fontSize: '11px',
+                          opacity: termFilter === f.value ? 1 : 0.7,
+                          fontWeight: 500,
+                        }}>
+                          {f.credits} cr
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>

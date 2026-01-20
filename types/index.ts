@@ -3,6 +3,7 @@ export interface Course {
   code: string;
   name: string;
   term: string;
+  credits?: number | null;
   startDate?: string | null; // ISO date or null
   endDate?: string | null; // ISO date or null
   meetingTimes: Array<{
@@ -320,6 +321,7 @@ export interface Settings {
   gradientIntensity?: number; // 0-100, controls gradient intensity on buttons, nav, filters
   glowIntensity?: number; // 0-100, controls glow effect intensity on buttons
   autoCreateCourseFolders?: boolean; // Auto-create note folders when courses are created
+  autoSyncCoursesToGradeTracker?: boolean; // Auto-add courses to grade tracker when created/updated
   showCanvasBadges?: boolean; // Show Canvas badges on synced items
   showRelativeDates?: boolean; // Show "Today", "Tomorrow", "In 3 days" instead of actual dates (within 7 days)
   showNavCounts?: boolean; // Master toggle for showing counts in navigation

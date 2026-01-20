@@ -1491,6 +1491,45 @@ export default function SettingsPage() {
                 </button>
               </div>
             </div>
+
+            {/* Auto-sync Courses to Grade Tracker */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Auto-sync Courses to Grade Tracker</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Automatically add courses to Grade Tracker when created or updated
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ autoSyncCoursesToGradeTracker: !(settings.autoSyncCoursesToGradeTracker ?? true) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.autoSyncCoursesToGradeTracker ?? true) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.autoSyncCoursesToGradeTracker ?? true) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
           </Card>
           </>
           )}

@@ -64,6 +64,7 @@ model Course {
   code          String
   name          String
   term          String
+  credits       Float?
   meetingTimes  Json           @default("[]")
   links         Json           @default("[]")
   files         Json           @default("[]")
