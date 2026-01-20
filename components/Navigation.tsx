@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import useAppStore from '@/lib/store';
 import { getAppTitle } from '@/lib/universityTitles';
-import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors, applyColorPalette, applyCustomColors } from '@/lib/collegeColors';
+import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors, applyColorPalette, applyCustomColors, applyColorblindMode, ColorblindMode, ColorblindStyle } from '@/lib/collegeColors';
 import NotificationBell from '@/components/NotificationBell';
 import { DEFAULT_VISIBLE_PAGES } from '@/lib/customizationConstants';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -56,6 +56,8 @@ export default function Navigation() {
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
   const savedGradientIntensity = useAppStore((state) => state.settings.gradientIntensity) ?? 50;
   const savedGlowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
+  const colorblindMode = useAppStore((state) => state.settings.colorblindMode);
+  const colorblindStyle = useAppStore((state) => state.settings.colorblindStyle);
 
   // Check premium status - premium features use defaults when not premium
   const { isPremium } = useSubscription();
@@ -167,7 +169,15 @@ export default function Navigation() {
       const freshPalette = getCollegeColorPalette(university || null, theme);
       applyColorPalette(freshPalette);
     }
-  }, [isPremium, savedUseCustomTheme, savedCustomColors, theme, university]);
+    // Re-apply colorblind mode after palette (must come after to override semantic colors)
+    // Skip palette changes if custom theme is active (custom theme takes priority)
+    applyColorblindMode(
+      colorblindMode as ColorblindMode | null,
+      colorblindStyle as ColorblindStyle | null,
+      theme,
+      effectiveUseCustomTheme
+    );
+  }, [isPremium, savedUseCustomTheme, savedCustomColors, theme, university, colorblindMode, colorblindStyle]);
 
   // Check localStorage directly after mount for instant display
   const showAdminNav = isAdmin || (mounted && localStorage.getItem('isAdmin') === 'true');

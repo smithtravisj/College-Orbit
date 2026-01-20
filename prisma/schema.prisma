@@ -414,6 +414,10 @@ model Settings {
   confirmBeforeDelete     Boolean @default(true)
   enableKeyboardShortcuts Boolean @default(true)
 
+  // Colorblind Accessibility
+  colorblindMode          String?  // 'protanopia', 'deuteranopia', 'tritanopia', 'achromatopsia', or null for off
+  colorblindStyle         String?  // 'palette', 'patterns', 'both', or null for default
+
   // Canvas LMS Integration
   canvasInstanceUrl       String?
   canvasAccessToken       String?

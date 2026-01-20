@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
-import { getCollegeColorPalette, applyColorPalette, applyCustomColors, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { getCollegeColorPalette, applyColorPalette, applyCustomColors, getCustomColorSetForTheme, CustomColors, applyColorblindMode, ColorblindMode, ColorblindStyle } from '@/lib/collegeColors';
 
 export default function AppLoader({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -66,11 +66,20 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
     const handleChange = () => {
+      const currentSettings = useAppStore.getState().settings;
+      const { isPremium } = useAppStore.getState();
       const palette = getCollegeColorPalette(
-        settings.university || null,
+        currentSettings.university || null,
         'system'
       );
       applyColorPalette(palette);
+      // Re-apply colorblind mode after palette (skip palette changes if custom theme is active)
+      applyColorblindMode(
+        currentSettings.colorblindMode as ColorblindMode | null,
+        currentSettings.colorblindStyle as ColorblindStyle | null,
+        'system',
+        isPremium && currentSettings.useCustomTheme
+      );
     };
 
     mediaQuery.addEventListener('change', handleChange);

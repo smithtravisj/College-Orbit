@@ -117,6 +117,8 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.showCourseCode !== undefined) updateData.showCourseCode = data.showCourseCode;
     if (data.confirmBeforeDelete !== undefined) updateData.confirmBeforeDelete = data.confirmBeforeDelete;
     if (data.enableKeyboardShortcuts !== undefined) updateData.enableKeyboardShortcuts = data.enableKeyboardShortcuts;
+    if (data.colorblindMode !== undefined) updateData.colorblindMode = data.colorblindMode;
+    if (data.colorblindStyle !== undefined) updateData.colorblindStyle = data.colorblindStyle;
 
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 

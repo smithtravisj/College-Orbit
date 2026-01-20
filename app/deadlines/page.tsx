@@ -1541,8 +1541,8 @@ export default function DeadlinesPage() {
                               {d.title}
                             </div>
                             {d.isRecurring && <Repeat size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} aria-label="Recurring assignment" />}
-                            {d.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
-                            {isOverdueDeadline && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
+                            {d.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
+                            {isOverdueDeadline && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'var(--danger-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                             {notes.some(n => n.deadlineId === d.id || (d.recurringPatternId && n.recurringDeadlinePatternId === d.recurringPatternId)) && (
                               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: '600', color: 'var(--link)', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
                                 <StickyNote size={10} />
@@ -1567,14 +1567,18 @@ export default function DeadlinesPage() {
                               </span>
                             )}
                             {showEffortIndicators && d.effort && (
-                              <span style={{
-                                fontSize: isMobile ? '10px' : '11px',
-                                fontWeight: '600',
-                                padding: '1px 6px',
-                                borderRadius: '3px',
-                                backgroundColor: d.effort === 'large' ? 'rgba(239, 68, 68, 0.15)' : d.effort === 'medium' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
-                                color: d.effort === 'large' ? '#ef4444' : d.effort === 'medium' ? '#eab308' : '#22c55e',
-                              }}>
+                              <span
+                                data-priority={d.effort === 'large' ? 'high' : d.effort === 'medium' ? 'medium' : 'low'}
+                                style={{
+                                  position: 'relative',
+                                  fontSize: isMobile ? '10px' : '11px',
+                                  fontWeight: '600',
+                                  padding: '1px 6px',
+                                  borderRadius: '3px',
+                                  backgroundColor: d.effort === 'large' ? 'var(--danger-bg)' : d.effort === 'medium' ? 'var(--warning-bg)' : 'var(--success-bg)',
+                                  color: d.effort === 'large' ? 'var(--danger)' : d.effort === 'medium' ? 'var(--warning)' : 'var(--success)',
+                                }}
+                              >
                                 {d.effort.charAt(0).toUpperCase() + d.effort.slice(1)}
                               </span>
                             )}
@@ -1742,8 +1746,8 @@ export default function DeadlinesPage() {
                               aria-label="Recurring deadline"
                             />
                           )}
-                          {d.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
-                          {isOverdueDeadline && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
+                          {d.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
+                          {isOverdueDeadline && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'var(--danger-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                           {notes.some(n => n.deadlineId === d.id || (d.recurringPatternId && n.recurringDeadlinePatternId === d.recurringPatternId)) && (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: '600', color: 'var(--link)', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
                               <StickyNote size={10} />
@@ -1795,14 +1799,18 @@ export default function DeadlinesPage() {
                             </span>
                           )}
                           {showEffortIndicators && d.effort && (
-                            <span style={{
-                              fontSize: isMobile ? '10px' : '11px',
-                              fontWeight: '600',
-                              padding: '1px 6px',
-                              borderRadius: '3px',
-                              backgroundColor: d.effort === 'large' ? 'rgba(239, 68, 68, 0.15)' : d.effort === 'medium' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
-                              color: d.effort === 'large' ? '#ef4444' : d.effort === 'medium' ? '#eab308' : '#22c55e',
-                            }}>
+                            <span
+                              data-priority={d.effort === 'large' ? 'high' : d.effort === 'medium' ? 'medium' : 'low'}
+                              style={{
+                                position: 'relative',
+                                fontSize: isMobile ? '10px' : '11px',
+                                fontWeight: '600',
+                                padding: '1px 6px',
+                                borderRadius: '3px',
+                                backgroundColor: d.effort === 'large' ? 'var(--danger-bg)' : d.effort === 'medium' ? 'var(--warning-bg)' : 'var(--success-bg)',
+                                color: d.effort === 'large' ? 'var(--danger)' : d.effort === 'medium' ? 'var(--warning)' : 'var(--success)',
+                              }}
+                            >
                               {d.effort.charAt(0).toUpperCase() + d.effort.slice(1)}
                             </span>
                           )}
@@ -2050,23 +2058,27 @@ export default function DeadlinesPage() {
                     fontWeight: '500',
                     padding: '4px 8px',
                     borderRadius: '4px',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    backgroundColor: 'var(--success-bg)',
                     color: 'var(--success)',
                   }}>
                     Completed
                   </span>
                 )}
                 {showEffortIndicators && previewingDeadline.effort && (
-                  <span style={{
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    backgroundColor: previewingDeadline.effort === 'large' ? 'rgba(239, 68, 68, 0.15)' :
-                      previewingDeadline.effort === 'medium' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
-                    color: previewingDeadline.effort === 'large' ? '#ef4444' :
-                      previewingDeadline.effort === 'medium' ? '#eab308' : '#22c55e',
-                  }}>
+                  <span
+                    data-priority={previewingDeadline.effort === 'large' ? 'high' : previewingDeadline.effort === 'medium' ? 'medium' : 'low'}
+                    style={{
+                      position: 'relative',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      backgroundColor: previewingDeadline.effort === 'large' ? 'var(--danger-bg)' :
+                        previewingDeadline.effort === 'medium' ? 'var(--warning-bg)' : 'var(--success-bg)',
+                      color: previewingDeadline.effort === 'large' ? 'var(--danger)' :
+                        previewingDeadline.effort === 'medium' ? 'var(--warning)' : 'var(--success)',
+                    }}
+                  >
                     {previewingDeadline.effort.charAt(0).toUpperCase() + previewingDeadline.effort.slice(1)}
                   </span>
                 )}
@@ -2076,7 +2088,7 @@ export default function DeadlinesPage() {
                     fontWeight: '500',
                     padding: '4px 8px',
                     borderRadius: '4px',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    backgroundColor: 'var(--success-bg)',
                     color: 'var(--success)',
                   }}>
                     Working On

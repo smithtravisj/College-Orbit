@@ -1948,3 +1948,200 @@ function adjustColor(hex: string, amount: number): string {
   // Convert back to hex
   return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
+
+/**
+ * Colorblind-friendly color palettes
+ * These use colors that are distinguishable for different types of color vision deficiency
+ */
+export type ColorblindMode = 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia';
+export type ColorblindStyle = 'palette' | 'patterns' | 'both';
+
+interface ColorblindSemanticColors {
+  success: string;
+  warning: string;
+  danger: string;
+  successBg: string;
+  warningBg: string;
+  dangerBg: string;
+  // Priority colors for tasks
+  priorityHigh: string;
+  priorityMedium: string;
+  priorityLow: string;
+}
+
+// Colorblind-friendly semantic colors for each type
+// Using colors from research-backed palettes (Wong, 2011 and IBM Design)
+const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColors; light: ColorblindSemanticColors }> = {
+  // Protanopia (red-blind): avoid red, use blue/yellow distinction
+  protanopia: {
+    dark: {
+      success: '#56B4E9',    // Sky blue (instead of green)
+      warning: '#F0E442',    // Yellow
+      danger: '#CC79A7',     // Pink/magenta (instead of red)
+      successBg: '#56B4E91a',
+      warningBg: '#F0E4421a',
+      dangerBg: '#CC79A71a',
+      priorityHigh: '#CC79A7',
+      priorityMedium: '#F0E442',
+      priorityLow: '#56B4E9',
+    },
+    light: {
+      success: '#0072B2',    // Darker blue
+      warning: '#E69F00',    // Orange-yellow
+      danger: '#D55E00',     // Vermillion
+      successBg: '#0072B21a',
+      warningBg: '#E69F001a',
+      dangerBg: '#D55E001a',
+      priorityHigh: '#D55E00',
+      priorityMedium: '#E69F00',
+      priorityLow: '#0072B2',
+    },
+  },
+  // Deuteranopia (green-blind): similar to protanopia
+  deuteranopia: {
+    dark: {
+      success: '#56B4E9',    // Sky blue
+      warning: '#F0E442',    // Yellow
+      danger: '#CC79A7',     // Pink/magenta
+      successBg: '#56B4E91a',
+      warningBg: '#F0E4421a',
+      dangerBg: '#CC79A71a',
+      priorityHigh: '#CC79A7',
+      priorityMedium: '#F0E442',
+      priorityLow: '#56B4E9',
+    },
+    light: {
+      success: '#0072B2',    // Blue
+      warning: '#E69F00',    // Orange
+      danger: '#D55E00',     // Vermillion
+      successBg: '#0072B21a',
+      warningBg: '#E69F001a',
+      dangerBg: '#D55E001a',
+      priorityHigh: '#D55E00',
+      priorityMedium: '#E69F00',
+      priorityLow: '#0072B2',
+    },
+  },
+  // Tritanopia (blue-blind): avoid blue, use red/green distinction
+  tritanopia: {
+    dark: {
+      success: '#009E73',    // Bluish green
+      warning: '#F0E442',    // Yellow
+      danger: '#D55E00',     // Vermillion/red
+      successBg: '#009E731a',
+      warningBg: '#F0E4421a',
+      dangerBg: '#D55E001a',
+      priorityHigh: '#D55E00',
+      priorityMedium: '#F0E442',
+      priorityLow: '#009E73',
+    },
+    light: {
+      success: '#009E73',    // Bluish green
+      warning: '#E69F00',    // Orange
+      danger: '#CC3311',     // Red
+      successBg: '#009E731a',
+      warningBg: '#E69F001a',
+      dangerBg: '#CC33111a',
+      priorityHigh: '#CC3311',
+      priorityMedium: '#E69F00',
+      priorityLow: '#009E73',
+    },
+  },
+  // Achromatopsia (monochromacy): use brightness/value differences only
+  achromatopsia: {
+    dark: {
+      success: '#A0A0A0',    // Medium gray
+      warning: '#E0E0E0',    // Light gray
+      danger: '#606060',     // Dark gray
+      successBg: '#A0A0A01a',
+      warningBg: '#E0E0E01a',
+      dangerBg: '#6060601a',
+      priorityHigh: '#E0E0E0',
+      priorityMedium: '#A0A0A0',
+      priorityLow: '#606060',
+    },
+    light: {
+      success: '#505050',    // Dark gray
+      warning: '#808080',    // Medium gray
+      danger: '#202020',     // Very dark gray
+      successBg: '#5050501a',
+      warningBg: '#8080801a',
+      dangerBg: '#2020201a',
+      priorityHigh: '#202020',
+      priorityMedium: '#505050',
+      priorityLow: '#808080',
+    },
+  },
+};
+
+/**
+ * Apply colorblind mode
+ * Overrides semantic colors with colorblind-friendly alternatives
+ * @param skipPaletteChanges - If true, only applies patterns (for when custom theme is active)
+ */
+export function applyColorblindMode(
+  mode: ColorblindMode | null,
+  style: ColorblindStyle | null,
+  theme: 'light' | 'dark' | 'system',
+  skipPaletteChanges: boolean = false
+): void {
+  if (typeof document === 'undefined') return;
+
+  const root = document.documentElement;
+
+  // Remove existing colorblind classes
+  root.classList.remove('colorblind-patterns', 'colorblind-mode');
+
+  if (!mode) {
+    // Clear colorblind CSS variables
+    root.style.removeProperty('--cb-success');
+    root.style.removeProperty('--cb-warning');
+    root.style.removeProperty('--cb-danger');
+    root.style.removeProperty('--cb-success-bg');
+    root.style.removeProperty('--cb-warning-bg');
+    root.style.removeProperty('--cb-danger-bg');
+    root.style.removeProperty('--cb-priority-high');
+    root.style.removeProperty('--cb-priority-medium');
+    root.style.removeProperty('--cb-priority-low');
+    return;
+  }
+
+  // Resolve system theme
+  let actualTheme = theme;
+  if (theme === 'system') {
+    actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  const palette = colorblindPalettes[mode][actualTheme as 'light' | 'dark'];
+  const effectiveStyle = style || 'palette';
+
+  // Add colorblind mode class for CSS targeting
+  root.classList.add('colorblind-mode');
+
+  // Apply palette colors if style includes palette AND not skipped (custom theme takes priority)
+  if (!skipPaletteChanges && (effectiveStyle === 'palette' || effectiveStyle === 'both')) {
+    // Set colorblind-specific CSS variables
+    root.style.setProperty('--cb-success', palette.success);
+    root.style.setProperty('--cb-warning', palette.warning);
+    root.style.setProperty('--cb-danger', palette.danger);
+    root.style.setProperty('--cb-success-bg', palette.successBg);
+    root.style.setProperty('--cb-warning-bg', palette.warningBg);
+    root.style.setProperty('--cb-danger-bg', palette.dangerBg);
+    root.style.setProperty('--cb-priority-high', palette.priorityHigh);
+    root.style.setProperty('--cb-priority-medium', palette.priorityMedium);
+    root.style.setProperty('--cb-priority-low', palette.priorityLow);
+
+    // Override main semantic colors
+    root.style.setProperty('--success', palette.success);
+    root.style.setProperty('--warning', palette.warning);
+    root.style.setProperty('--danger', palette.danger);
+    root.style.setProperty('--success-bg', palette.successBg);
+    root.style.setProperty('--warning-bg', palette.warningBg);
+    root.style.setProperty('--danger-bg', palette.dangerBg);
+  }
+
+  // Add patterns class if style includes patterns
+  if (effectiveStyle === 'patterns' || effectiveStyle === 'both') {
+    root.classList.add('colorblind-patterns');
+  }
+}
