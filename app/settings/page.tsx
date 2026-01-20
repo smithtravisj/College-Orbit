@@ -1897,14 +1897,13 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {!isPremium && !isLoadingSubscription && (
-              <div style={{ marginBottom: '16px' }}>
-                <UpgradePrompt feature="Custom themes and visual effects" />
-              </div>
-            )}
-
             {/* Custom Theme Toggle */}
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
+              {!isPremium && !isLoadingSubscription && (
+                <div style={{ marginBottom: '16px' }}>
+                  <UpgradePrompt feature="Custom themes and visual effects" />
+                </div>
+              )}
               <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Color Theme</p>
               <div style={{
                 display: 'flex',

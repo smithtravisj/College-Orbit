@@ -41,6 +41,7 @@ export async function GET() {
       universityCounts,
       premiumMonthly,
       premiumYearly,
+      premiumSemester,
       lifetimePremium,
       trialUsers,
       freeUsers,
@@ -137,6 +138,14 @@ export async function GET() {
         where: {
           subscriptionTier: 'premium',
           subscriptionPlan: 'yearly',
+          lifetimePremium: false,
+        },
+      }),
+
+      prisma.user.count({
+        where: {
+          subscriptionTier: 'premium',
+          subscriptionPlan: 'semester',
           lifetimePremium: false,
         },
       }),
@@ -279,18 +288,19 @@ export async function GET() {
       subscriptionStats: {
         premiumMonthly,
         premiumYearly,
+        premiumSemester,
         lifetimePremium,
         trialUsers,
         freeUsers,
       },
       revenueStats: {
-        // MRR = (monthly * $5) + (yearly * $48/12)
-        mrr: (premiumMonthly * 5) + (premiumYearly * (48 / 12)),
-        activeSubscriptions: premiumMonthly + premiumYearly,
+        // MRR = (monthly * $5) + (yearly * $48/12) + (semester * $18/4)
+        mrr: (premiumMonthly * 5) + (premiumYearly * (48 / 12)) + (premiumSemester * (18 / 4)),
+        activeSubscriptions: premiumMonthly + premiumYearly + premiumSemester,
         canceledLast30Days,
         // Churn rate = canceled / (active + canceled) * 100
-        churnRate: (premiumMonthly + premiumYearly + canceledLast30Days) > 0
-          ? ((canceledLast30Days / (premiumMonthly + premiumYearly + canceledLast30Days)) * 100).toFixed(1)
+        churnRate: (premiumMonthly + premiumYearly + premiumSemester + canceledLast30Days) > 0
+          ? ((canceledLast30Days / (premiumMonthly + premiumYearly + premiumSemester + canceledLast30Days)) * 100).toFixed(1)
           : '0',
       },
     });

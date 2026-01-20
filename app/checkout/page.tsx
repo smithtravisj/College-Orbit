@@ -28,7 +28,7 @@ export default function CheckoutPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const subscription = useSubscription();
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly' | 'semester'>('yearly');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
@@ -38,7 +38,7 @@ export default function CheckoutPage() {
   // Get plan from URL if provided
   useEffect(() => {
     const planParam = searchParams.get('plan');
-    if (planParam === 'monthly' || planParam === 'yearly') {
+    if (planParam === 'monthly' || planParam === 'yearly' || planParam === 'semester') {
       setSelectedPlan(planParam);
     }
   }, [searchParams]);
@@ -177,6 +177,63 @@ export default function CheckoutPage() {
               </p>
             </div>
 
+            {/* Semester Option */}
+            <div
+              onClick={() => setSelectedPlan('semester')}
+              style={{
+                padding: '20px',
+                borderRadius: '12px',
+                border: `2px solid ${selectedPlan === 'semester' ? colorPalette.accent : 'var(--border)'}`,
+                background: selectedPlan === 'semester' ? `${colorPalette.accent}10` : 'var(--panel)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                position: 'relative',
+              }}
+            >
+              {/* Popular Badge */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '-10px',
+                  right: '16px',
+                  padding: '4px 10px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  borderRadius: '12px',
+                  background: colorPalette.accent,
+                  color: '#fff',
+                }}
+              >
+                POPULAR
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>Semester</p>
+                  <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+                    $18 one-time <span style={{ color: 'var(--success)' }}>(Save 10%)</span>
+                  </p>
+                </div>
+                <div
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    border: `2px solid ${selectedPlan === 'semester' ? colorPalette.accent : 'var(--border)'}`,
+                    background: selectedPlan === 'semester' ? colorPalette.accent : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {selectedPlan === 'semester' && <Check size={14} style={{ color: '#fff' }} />}
+                </div>
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '8px' }}>
+                4 months of access, no auto-renewal
+              </p>
+            </div>
+
             {/* Monthly Option */}
             <div
               onClick={() => setSelectedPlan('monthly')}
@@ -277,10 +334,10 @@ export default function CheckoutPage() {
               </div>
               <div>
                 <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>
-                  Premium {selectedPlan === 'yearly' ? 'Yearly' : 'Monthly'}
+                  Premium {selectedPlan === 'yearly' ? 'Yearly' : selectedPlan === 'semester' ? 'Semester' : 'Monthly'}
                 </p>
                 <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-                  {selectedPlan === 'yearly' ? '$48.00/year' : '$5.00/month'}
+                  {selectedPlan === 'yearly' ? '$48.00/year' : selectedPlan === 'semester' ? '$18.00 (4 months)' : '$5.00/month'}
                 </p>
               </div>
             </div>
@@ -313,19 +370,21 @@ export default function CheckoutPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Subtotal</span>
                 <span style={{ fontSize: '14px', color: 'var(--text)' }}>
-                  {selectedPlan === 'yearly' ? '$48.00' : '$5.00'}
+                  {selectedPlan === 'yearly' ? '$48.00' : selectedPlan === 'semester' ? '$18.00' : '$5.00'}
                 </span>
               </div>
-              {selectedPlan === 'yearly' && (
+              {(selectedPlan === 'yearly' || selectedPlan === 'semester') && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ fontSize: '14px', color: 'var(--success)' }}>You save</span>
-                  <span style={{ fontSize: '14px', color: 'var(--success)' }}>$12.00</span>
+                  <span style={{ fontSize: '14px', color: 'var(--success)' }}>
+                    {selectedPlan === 'yearly' ? '$12.00' : '$2.00'}
+                  </span>
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
                 <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>Total due today</span>
                 <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>
-                  {selectedPlan === 'yearly' ? '$48.00' : '$5.00'}
+                  {selectedPlan === 'yearly' ? '$48.00' : selectedPlan === 'semester' ? '$18.00' : '$5.00'}
                 </span>
               </div>
             </div>

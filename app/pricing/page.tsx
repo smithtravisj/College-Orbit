@@ -375,6 +375,14 @@ function AuthenticatedPricingPage() {
                       Get Yearly - $48/yr
                     </Button>
                   </Link>
+                  <Link href="/checkout?plan=semester">
+                    <Button
+                      variant="secondary"
+                      className="w-full"
+                    >
+                      Get Semester - $18 (4 months)
+                    </Button>
+                  </Link>
                   <Link href="/checkout?plan=monthly">
                     <Button
                       variant="secondary"
