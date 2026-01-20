@@ -91,6 +91,24 @@ export const authConfig: NextAuthOptions = {
 
       session.user.id = token.id as string;
 
+      // Check if this specific session was revoked
+      if (token.sessionToken) {
+        try {
+          const userSession = await prisma.userSession.findUnique({
+            where: { sessionToken: token.sessionToken as string },
+            select: { revokedAt: true },
+          });
+
+          if (userSession?.revokedAt) {
+            // This specific session was revoked
+            (session as any).invalidated = true;
+            return session;
+          }
+        } catch (error) {
+          console.error('Error checking session revocation:', error);
+        }
+      }
+
       // Fetch fresh user data from database to ensure updates are reflected
       try {
         const freshUser = await prisma.user.findUnique({

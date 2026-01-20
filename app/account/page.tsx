@@ -64,19 +64,11 @@ export default function AccountPage() {
     }
   }, [session]);
 
-  // Fetch and register sessions
+  // Fetch active sessions (registration handled globally in SessionRegistrar)
   useEffect(() => {
     if (!session?.user) return;
 
-    const registerAndFetchSessions = async () => {
-      // Register current session (creates if doesn't exist)
-      try {
-        await fetch('/api/user/sessions/register', { method: 'POST' });
-      } catch (err) {
-        console.error('Failed to register session:', err);
-      }
-
-      // Fetch all active sessions
+    const fetchSessions = async () => {
       try {
         const response = await fetch('/api/user/sessions');
         if (response.ok) {
@@ -90,7 +82,7 @@ export default function AccountPage() {
       }
     };
 
-    registerAndFetchSessions();
+    fetchSessions();
   }, [session]);
 
   const handleRevokeSession = async (sessionId: string) => {

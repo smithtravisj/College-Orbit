@@ -21,23 +21,39 @@ export async function POST(req: NextRequest) {
 
     const sessionToken = token.sessionToken as string;
 
+    // Get client-provided browser name (for browsers like Brave that hide in UA)
+    let clientBrowser: string | null = null;
+    try {
+      const body = await req.json().catch(() => ({}));
+      clientBrowser = body.browser || null;
+    } catch {
+      // No body provided, that's fine
+    }
+
     // Check if this session is already registered
     const existingSession = await prisma.userSession.findUnique({
       where: { sessionToken },
     });
 
     if (existingSession) {
-      // Update last activity
+      // Update last activity and browser if client provided a more specific one
       await prisma.userSession.update({
         where: { sessionToken },
-        data: { lastActivityAt: new Date() },
+        data: {
+          lastActivityAt: new Date(),
+          // Override browser if client provides one (e.g., Brave detected client-side)
+          ...(clientBrowser ? { browser: clientBrowser } : {}),
+        },
       });
       return NextResponse.json({ success: true, message: 'Session already registered' });
     }
 
     // Parse user agent
     const userAgent = req.headers.get('user-agent');
-    const { browser, os, device } = parseUserAgent(userAgent);
+    const { browser: parsedBrowser, os, device } = parseUserAgent(userAgent);
+
+    // Use client-provided browser if available, otherwise use parsed
+    const browser = clientBrowser || parsedBrowser;
 
     // Get IP address
     const forwarded = req.headers.get('x-forwarded-for');

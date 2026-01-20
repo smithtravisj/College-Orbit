@@ -11,18 +11,24 @@ export function parseUserAgent(userAgent: string | null): ParsedUserAgent {
     return { browser: 'Unknown', os: 'Unknown', device: 'Unknown' };
   }
 
-  // Parse browser
+  // Parse browser (order matters - check specific browsers before generic ones)
   let browser = 'Unknown';
-  if (userAgent.includes('Firefox/')) {
+  if (userAgent.includes('Brave')) {
+    browser = 'Brave';
+  } else if (userAgent.includes('Firefox/')) {
     browser = 'Firefox';
   } else if (userAgent.includes('Edg/')) {
     browser = 'Edge';
-  } else if (userAgent.includes('Chrome/')) {
+  } else if (userAgent.includes('OPR/') || userAgent.includes('Opera')) {
+    browser = 'Opera';
+  } else if (userAgent.includes('Vivaldi')) {
+    browser = 'Vivaldi';
+  } else if (userAgent.includes('Chrome/') && !userAgent.includes('Chromium')) {
     browser = 'Chrome';
+  } else if (userAgent.includes('Chromium')) {
+    browser = 'Chromium';
   } else if (userAgent.includes('Safari/') && !userAgent.includes('Chrome')) {
     browser = 'Safari';
-  } else if (userAgent.includes('Opera') || userAgent.includes('OPR/')) {
-    browser = 'Opera';
   } else if (userAgent.includes('MSIE') || userAgent.includes('Trident/')) {
     browser = 'Internet Explorer';
   }

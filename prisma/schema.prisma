@@ -712,9 +712,9 @@ model DeletedCanvasItem {
 }
 
 model UserSession {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   userId         String
-  sessionToken   String   @unique
+  sessionToken   String    @unique
   userAgent      String?
   browser        String?
   os             String?
@@ -722,12 +722,13 @@ model UserSession {
   ipAddress      String?
   city           String?
   country        String?
-  lastActivityAt DateTime @default(now())
-  createdAt      DateTime @default(now())
+  lastActivityAt DateTime  @default(now())
+  createdAt      DateTime  @default(now())
   expiresAt      DateTime
-  isCurrent      Boolean  @default(false)
+  isCurrent      Boolean   @default(false)
+  revokedAt      DateTime? // When set, this session is revoked
 
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([sessionToken])
