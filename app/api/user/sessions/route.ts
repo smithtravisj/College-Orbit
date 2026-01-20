@@ -1,7 +1,55 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authConfig } from '@/auth.config';
 import { prisma } from '@/lib/prisma';
+import { getToken } from 'next-auth/jwt';
+
+// GET /api/user/sessions - List all active sessions
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getServerSession(authConfig);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get the current session token from the JWT
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const currentSessionToken = token?.sessionToken as string | undefined;
+
+    const sessions = await prisma.userSession.findMany({
+      where: {
+        userId: session.user.id,
+        expiresAt: { gt: new Date() }, // Only non-expired sessions
+      },
+      orderBy: { lastActivityAt: 'desc' },
+      select: {
+        id: true,
+        sessionToken: true,
+        browser: true,
+        os: true,
+        device: true,
+        ipAddress: true,
+        city: true,
+        country: true,
+        lastActivityAt: true,
+        createdAt: true,
+      },
+    });
+
+    // Mark which session is current
+    const sessionsWithCurrent = sessions.map(s => ({
+      ...s,
+      isCurrent: s.sessionToken === currentSessionToken,
+      // Don't expose full session token to client
+      sessionToken: undefined,
+    }));
+
+    return NextResponse.json({ sessions: sessionsWithCurrent });
+  } catch (error) {
+    console.error('Error fetching sessions:', error);
+    return NextResponse.json({ error: 'Failed to fetch sessions' }, { status: 500 });
+  }
+}
 
 // POST /api/user/sessions - Invalidate all sessions (log out everywhere)
 export async function POST() {
@@ -17,9 +65,48 @@ export async function POST() {
       data: { sessionInvalidatedAt: new Date() },
     });
 
+    // Delete all session records for this user
+    await prisma.userSession.deleteMany({
+      where: { userId: session.user.id },
+    });
+
     return NextResponse.json({ success: true, message: 'All sessions have been invalidated' });
   } catch (error) {
     console.error('Error invalidating sessions:', error);
     return NextResponse.json({ error: 'Failed to invalidate sessions' }, { status: 500 });
+  }
+}
+
+// DELETE /api/user/sessions - Revoke a specific session
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = await getServerSession(authConfig);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const sessionId = searchParams.get('id');
+
+    if (!sessionId) {
+      return NextResponse.json({ error: 'Session ID is required' }, { status: 400 });
+    }
+
+    // Verify the session belongs to the user and delete it
+    const deletedSession = await prisma.userSession.deleteMany({
+      where: {
+        id: sessionId,
+        userId: session.user.id,
+      },
+    });
+
+    if (deletedSession.count === 0) {
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Session revoked successfully' });
+  } catch (error) {
+    console.error('Error revoking session:', error);
+    return NextResponse.json({ error: 'Failed to revoke session' }, { status: 500 });
   }
 }

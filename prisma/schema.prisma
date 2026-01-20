@@ -34,6 +34,7 @@ model User {
   collegeRequests           CollegeRequest[]
   courses                   Course[]
   customQuickLinks          CustomQuickLink[]
+  sessions                  UserSession[]
   deadlines                 Deadline[]
   exams                     Exam[]
   excludedDates             ExcludedDate[]
@@ -708,4 +709,27 @@ model DeletedCanvasItem {
 
   @@unique([userId, canvasId, type])
   @@index([userId, type])
+}
+
+model UserSession {
+  id             String   @id @default(cuid())
+  userId         String
+  sessionToken   String   @unique
+  userAgent      String?
+  browser        String?
+  os             String?
+  device         String?
+  ipAddress      String?
+  city           String?
+  country        String?
+  lastActivityAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime
+  isCurrent      Boolean  @default(false)
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([expiresAt])
 }

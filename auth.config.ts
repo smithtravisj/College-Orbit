@@ -2,6 +2,7 @@ import type { NextAuthOptions } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { randomUUID } from 'crypto';
 
 export const authConfig: NextAuthOptions = {
   pages: {
@@ -77,6 +78,7 @@ export const authConfig: NextAuthOptions = {
         token.name = user.name;
         token.email = user.email;
         token.iat = Math.floor(Date.now() / 1000); // Token creation time
+        token.sessionToken = randomUUID(); // Unique session identifier
       } else {
         console.log('JWT callback - no user, token:', token ? 'exists' : 'null');
       }
