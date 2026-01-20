@@ -179,12 +179,47 @@ interface AppStore {
   deleteAllData: () => void;
 }
 
+// Migrate old localStorage keys to new naming convention
+const migrateLocalStorageKeys = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    // Migrate userId key
+    const oldUserId = localStorage.getItem('byu-survival-tool-userId');
+    if (oldUserId && !localStorage.getItem('college-orbit-userId')) {
+      localStorage.setItem('college-orbit-userId', oldUserId);
+      localStorage.removeItem('byu-survival-tool-userId');
+    }
+
+    // Migrate user data keys (check for pattern byu-survival-tool-data-*)
+    const keysToMigrate: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('byu-survival-tool-data')) {
+        keysToMigrate.push(key);
+      }
+    }
+
+    for (const oldKey of keysToMigrate) {
+      const newKey = oldKey.replace('byu-survival-tool-', 'college-orbit-');
+      if (!localStorage.getItem(newKey)) {
+        const data = localStorage.getItem(oldKey);
+        if (data) {
+          localStorage.setItem(newKey, data);
+        }
+      }
+      localStorage.removeItem(oldKey);
+    }
+  } catch (error) {
+    console.warn('Failed to migrate localStorage keys:', error);
+  }
+};
+
 // Helper to save full state to localStorage
 const saveToLocalStorage = (state: AppStore) => {
   if (typeof window === 'undefined') return;
   try {
     const storageKey = state.getStorageKey();
-    if (!storageKey || storageKey === 'byu-survival-tool-') return;
+    if (!storageKey || storageKey === 'college-orbit-') return;
     localStorage.setItem(storageKey, JSON.stringify({
       courses: state.courses,
       deadlines: state.deadlines,
@@ -297,16 +332,16 @@ const useAppStore = create<AppStore>((set, get) => ({
     const state = get();
     // First check state, then check localStorage for userId
     if (state.userId) {
-      return `byu-survival-tool-data-${state.userId}`;
+      return `college-orbit-data-${state.userId}`;
     }
     // Try to get userId from localStorage (saved from previous session)
     if (typeof window !== 'undefined') {
-      const savedUserId = localStorage.getItem('byu-survival-tool-userId');
+      const savedUserId = localStorage.getItem('college-orbit-userId');
       if (savedUserId) {
-        return `byu-survival-tool-data-${savedUserId}`;
+        return `college-orbit-data-${savedUserId}`;
       }
     }
-    return 'byu-survival-tool-data'; // Fallback for when userId is not set
+    return 'college-orbit-data'; // Fallback for when userId is not set
   },
 
   // Helper function to invalidate calendar cache when tasks/deadlines/exams change
@@ -321,6 +356,9 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   initializeStore: async () => {
+    // Migrate old localStorage keys to new naming convention
+    migrateLocalStorageKeys();
+
     // Load cached colleges immediately from localStorage (for instant color palette)
     if (typeof window !== 'undefined') {
       try {
@@ -465,7 +503,7 @@ const useAppStore = create<AppStore>((set, get) => ({
         localStorage.setItem('app-theme', theme);
         // Store userId separately for storage key on next load
         if (userId) {
-          localStorage.setItem('byu-survival-tool-userId', userId);
+          localStorage.setItem('college-orbit-userId', userId);
         }
       }
 

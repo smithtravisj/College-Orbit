@@ -5,7 +5,7 @@ config({ path: '.env.local' });
 import { sendWelcomeEmail } from '../lib/email';
 
 async function main() {
-  const testEmail = process.argv[2] || 'byusurvivaltool.dispose286@passmail.net';
+  const testEmail = process.argv[2] || 'collegeorbit.test@passmail.net';
   const testName = process.argv[3] || 'Test User';
 
   console.log(`Sending welcome email to: ${testEmail}`);

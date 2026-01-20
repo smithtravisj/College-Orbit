@@ -111,7 +111,7 @@ export default function SignupForm() {
       }
 
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('byu-survival-tool-data');
+        localStorage.removeItem('college-orbit-data');
       }
 
       router.push('/');

@@ -8,7 +8,7 @@ const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@collegeorbit.app';
 const FROM_NAME = process.env.RESEND_FROM_NAME || 'College Orbit';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://collegeorbit.app';
 
-const testEmail = process.argv[2] || 'byusurvivaltool.dispose286@passmail.net';
+const testEmail = process.argv[2] || 'collegeorbit.test@passmail.net';
 const testName = process.argv[3] || 'Test User';
 const loginUrl = `${APP_URL}/login`;
 
