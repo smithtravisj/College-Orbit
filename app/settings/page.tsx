@@ -9,7 +9,7 @@ import Button from '@/components/ui/Button';
 import ColorPicker from '@/components/ui/ColorPicker';
 import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import ConfirmationModal from '@/components/ConfirmationModal';
-import { Monitor, HelpCircle, RefreshCw, Link2, Unlink } from 'lucide-react';
+import { Monitor, HelpCircle, RefreshCw, Link2, Unlink, ChevronDown } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { DASHBOARD_CARDS, TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
@@ -85,6 +85,7 @@ export default function SettingsPage() {
   const [canvasSyncAnnouncements, setCanvasSyncAnnouncements] = useState(true);
   const [canvasAutoMarkComplete, setCanvasAutoMarkComplete] = useState(true);
   const [showCanvasDisconnectModal, setShowCanvasDisconnectModal] = useState(false);
+  const [canvasSyncSettingsOpen, setCanvasSyncSettingsOpen] = useState(false);
 
   // Local state for sliders (smooth UI while debouncing API calls)
   const [localGradientIntensity, setLocalGradientIntensity] = useState(50);
@@ -1109,43 +1110,71 @@ export default function SettingsPage() {
                   </p>
                 )}
 
-                {/* Sync Settings */}
+                {/* Sync Settings Dropdown */}
                 <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>Sync Settings</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {[
-                      { key: 'courses', label: 'Courses', description: 'Creates courses from Canvas', value: canvasSyncCourses },
-                      { key: 'assignments', label: 'Assignments', description: 'Syncs to Assignments page', value: canvasSyncAssignments },
-                      { key: 'grades', label: 'Grades', description: 'Updates assignment scores', value: canvasSyncGrades },
-                      { key: 'events', label: 'Calendar Events', description: 'Syncs to Calendar', value: canvasSyncEvents },
-                      { key: 'announcements', label: 'Announcements', description: 'Creates notifications', value: canvasSyncAnnouncements },
-                      { key: 'autoMarkComplete', label: 'Auto-mark complete', description: 'Mark assignments done when submitted', value: canvasAutoMarkComplete },
-                    ].map((setting) => (
-                      <label
-                        key={setting.key}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '10px 12px',
-                          backgroundColor: 'var(--panel-2)',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <div>
-                          <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>{setting.label}</p>
-                          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{setting.description}</p>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={setting.value}
-                          onChange={(e) => handleCanvasSyncSettingsChange(setting.key, e.target.checked)}
-                          style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                        />
-                      </label>
-                    ))}
-                  </div>
+                  <button
+                    onClick={() => setCanvasSyncSettingsOpen(!canvasSyncSettingsOpen)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      padding: '10px 12px',
+                      backgroundColor: 'var(--panel-2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      color: 'var(--text)',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Sync Settings
+                    <ChevronDown
+                      size={18}
+                      style={{
+                        transition: 'transform 0.2s ease',
+                        transform: canvasSyncSettingsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        color: 'var(--text-muted)',
+                      }}
+                    />
+                  </button>
+                  {canvasSyncSettingsOpen && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+                      {[
+                        { key: 'courses', label: 'Courses', description: 'Creates courses from Canvas', value: canvasSyncCourses },
+                        { key: 'assignments', label: 'Assignments', description: 'Syncs to Assignments page', value: canvasSyncAssignments },
+                        { key: 'grades', label: 'Grades', description: 'Updates assignment scores', value: canvasSyncGrades },
+                        { key: 'events', label: 'Calendar Events', description: 'Syncs to Calendar', value: canvasSyncEvents },
+                        { key: 'announcements', label: 'Announcements', description: 'Creates notifications', value: canvasSyncAnnouncements },
+                        { key: 'autoMarkComplete', label: 'Auto-mark complete', description: 'Mark assignments done when submitted', value: canvasAutoMarkComplete },
+                      ].map((setting) => (
+                        <label
+                          key={setting.key}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '10px 12px',
+                            backgroundColor: 'var(--panel-2)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <div>
+                            <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>{setting.label}</p>
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{setting.description}</p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={setting.value}
+                            onChange={(e) => handleCanvasSyncSettingsChange(setting.key, e.target.checked)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
