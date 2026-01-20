@@ -542,7 +542,7 @@ export default function AccountPage() {
             ) : (
               <div className="space-y-4">
                 {/* Current Plan */}
-                <div>
+                <div style={{ marginBottom: subscription.isLifetimePremium ? '8px' : '0' }}>
                   <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '4px' }}>Current Plan</p>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
                     <p className="text-base font-medium text-[var(--text)]" style={{ margin: 0 }}>
