@@ -1,31 +1,88 @@
 # College Orbit
 
-A personal, privacy-first college dashboard web app for managing deadlines, schedule, checklists, and quick actions.
+A comprehensive college dashboard web app for managing courses, deadlines, tasks, exams, notes, and more. Features Canvas LMS integration, cloud sync, and a premium subscription tier.
 
 ## Features
 
-- **Dashboard**: Quick overview of today's classes, upcoming deadlines, and tasks
-- **Courses**: Manage course information, meeting times, and links
-- **Deadlines**: Track all deadlines with filtering and sorting
-- **Tasks**: Create and track tasks with due dates and checklists
-- **Quick Links**: One-click access to Canvas, email, library, and more
-- **GPA Calculator**: Simple tool to calculate your current GPA
-- **Privacy-First**: All data stored locally; no tracking or analytics
-- **Export/Import**: Backup and restore your data as JSON
-- **Offline Support**: Works offline with cached data
+### Core Features
+- **Dashboard**: Customizable overview with today's classes, upcoming deadlines, tasks, exams, and quick links
+- **Courses**: Manage course information, meeting times, locations, and links with file attachments
+- **Assignments**: Track deadlines with priority levels, effort estimates, tags, notes, and recurring patterns
+- **Tasks**: Create tasks with checklists, importance levels, pinning, and recurring schedules
+- **Exams**: Schedule exams with location tracking, reminders, and recurring patterns
+- **Notes**: Rich text editor (TipTap) with folders, tags, and deep linking to tasks/deadlines/exams
+- **Calendar**: Day, week, and month views with all your events in one place
+- **Shopping Lists**: Grocery, wishlist, and pantry lists with categories and priority
+
+### Productivity Tools
+- **GPA Calculator**: Track grades by semester with trend visualization and what-if projections
+- **Pomodoro Timer**: Built-in focus timer with customizable work/break durations
+- **Quick Capture**: Press "/" to quickly add tasks, deadlines, or exams from anywhere
+- **Natural Language Input**: Create items using natural language parsing
+- **Keyboard Shortcuts**: Full keyboard navigation support
+
+### Integrations
+- **Canvas LMS**: Sync courses, assignments, grades, events, and announcements from Canvas
+- **File Attachments**: Upload and attach files to courses, deadlines, tasks, and notes
+- **Export/Import**: Backup and restore all your data as JSON
+
+### Personalization
+- **Theme Support**: Light, dark, and system-based themes
+- **Custom Colors**: Customize accent colors for light and dark modes
+- **University Branding**: Select your university for school colors and quick links
+- **Colorblind Accessibility**: Multiple colorblind modes with pattern options
+- **Dashboard Customization**: Show/hide and reorder dashboard cards
+
+### Account & Security
+- **User Authentication**: Secure login with email/password
+- **Password Reset**: Email-based password recovery
+- **Session Management**: View and manage active sessions
+- **Data Privacy**: Your data stays in your account
 
 ## Tech Stack
 
-- **Frontend**: Next.js 16+ with React 19
-- **Styling**: Tailwind CSS
+- **Framework**: Next.js 16+ with React 19
+- **Styling**: Tailwind CSS 4
 - **State Management**: Zustand
-- **Storage**: localStorage
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: NextAuth.js
+- **Payments**: Stripe
+- **File Storage**: Vercel Blob
+- **Email**: Resend
+- **Rich Text**: TipTap
 - **Language**: TypeScript
 
 ## Setup
 
 ### Prerequisites
 - Node.js 18+ and npm
+- PostgreSQL database
+- Stripe account (for payments)
+- Resend account (for emails)
+
+### Environment Variables
+
+Create a `.env` file with:
+
+```env
+# Database
+DATABASE_URL="postgresql://..."
+
+# NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-secret-key"
+
+# Stripe
+STRIPE_SECRET_KEY="sk_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_..."
+
+# Resend (Email)
+RESEND_API_KEY="re_..."
+
+# Vercel Blob (File Storage)
+BLOB_READ_WRITE_TOKEN="..."
+```
 
 ### Local Development
 
@@ -39,12 +96,18 @@ cd "College Orbit"
 npm install
 ```
 
-3. Run the development server:
+3. Set up the database:
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+4. Run the development server:
 ```bash
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Building for Production
 
@@ -55,202 +118,153 @@ npm start
 
 ## Deployment
 
-### Option 1: Railway (Recommended)
-
-1. Push your code to GitHub
-2. Go to [railway.app](https://railway.app)
-3. Create a new project and connect your GitHub repository
-4. Railway will auto-detect the Next.js app
-5. Set environment variables if needed (optional for this app)
-6. Deploy!
-
-### Option 2: Vercel
+### Vercel (Recommended)
 
 1. Push your code to GitHub
 2. Go to [vercel.com](https://vercel.com)
 3. Import your repository
-4. Vercel will auto-configure Next.js settings
-5. Click Deploy!
+4. Add environment variables in the Vercel dashboard
+5. Deploy
 
-### Option 3: Other Platforms
+### Railway
 
-For static export:
-```bash
-npm run build
-# Output is in ./out directory
-```
-
-Deploy the `./out` directory to any static hosting (Netlify, GitHub Pages, etc.)
+1. Push your code to GitHub
+2. Go to [railway.app](https://railway.app)
+3. Create a new project and connect your GitHub repository
+4. Add a PostgreSQL database
+5. Set environment variables
+6. Deploy
 
 ## Project Structure
 
 ```
 College Orbit/
-├── app/                    # Next.js app directory
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Dashboard page
-│   ├── courses/page.tsx   # Courses page
-│   ├── deadlines/page.tsx # Deadlines page
-│   ├── tasks/page.tsx     # Tasks page
-│   ├── tools/page.tsx     # Tools page (GPA calculator)
-│   ├── settings/page.tsx  # Settings page
-│   └── globals.css        # Global styles
-├── components/            # Reusable components
-│   ├── Navigation.tsx     # Navigation sidebar/tabs
-│   ├── Card.tsx          # Card wrapper component
-│   ├── CaptureInput.tsx  # Quick capture input
-│   ├── CourseForm.tsx    # Course form
-│   └── CourseList.tsx    # Course list
-├── lib/                   # Utilities and helpers
-│   ├── store.ts          # Zustand store
-│   └── utils.ts          # Date and utility functions
-├── types/                 # TypeScript types
-│   └── index.ts          # Data model types
-├── package.json          # Dependencies
-├── tailwind.config.js    # Tailwind configuration
-├── tsconfig.json         # TypeScript configuration
-└── README.md             # This file
+├── app/                          # Next.js app directory
+│   ├── (auth)/                   # Auth pages (login, signup, etc.)
+│   │   ├── login/
+│   │   ├── signup/
+│   │   ├── forgot-password/
+│   │   └── reset-password/
+│   ├── api/                      # API routes
+│   │   ├── auth/                 # NextAuth routes
+│   │   ├── courses/
+│   │   ├── deadlines/
+│   │   ├── tasks/
+│   │   ├── exams/
+│   │   ├── notes/
+│   │   ├── folders/
+│   │   ├── shopping/
+│   │   ├── stripe/               # Payment webhooks
+│   │   ├── admin/                # Admin endpoints
+│   │   └── ...
+│   ├── account/                  # Account management
+│   ├── admin/                    # Admin panel
+│   ├── analytics/                # Usage analytics
+│   ├── calendar/                 # Calendar view
+│   ├── checkout/                 # Subscription checkout
+│   ├── courses/                  # Course management
+│   ├── deadlines/                # Assignment tracking
+│   ├── exams/                    # Exam scheduling
+│   ├── notes/                    # Note taking
+│   ├── pricing/                  # Pricing page
+│   ├── release-notes/            # Version history
+│   ├── settings/                 # User settings
+│   ├── shopping/                 # Shopping lists
+│   ├── subscription/             # Subscription management
+│   ├── tasks/                    # Task management
+│   ├── tools/                    # GPA calculator, Pomodoro, etc.
+│   ├── privacy/                  # Privacy policy
+│   ├── terms/                    # Terms of service
+│   ├── layout.tsx                # Root layout
+│   ├── page.tsx                  # Landing/Dashboard page
+│   └── globals.css               # Global styles
+├── components/                   # Reusable components
+│   ├── ui/                       # Base UI components
+│   ├── calendar/                 # Calendar components
+│   ├── notes/                    # Notes components
+│   ├── subscription/             # Subscription components
+│   ├── tools/                    # Tool components (GPA, Pomodoro)
+│   └── ...
+├── lib/                          # Utilities and helpers
+│   ├── store.ts                  # Zustand store
+│   ├── prisma.ts                 # Prisma client
+│   ├── stripe.ts                 # Stripe configuration
+│   ├── email.ts                  # Email utilities
+│   ├── canvas.ts                 # Canvas LMS integration
+│   ├── subscription.ts           # Subscription helpers
+│   ├── naturalLanguageParser.ts  # NLP for quick capture
+│   └── ...
+├── types/                        # TypeScript types
+│   └── index.ts                  # Data model types
+├── prisma/                       # Database schema
+│   └── schema.prisma
+├── public/                       # Static assets
+├── package.json
+├── tailwind.config.js
+├── tsconfig.json
+└── README.md
 ```
 
-## Manual Test Checklist
+## Data Models
 
-Use this checklist to verify all MVP features work:
+### Core Entities
+- **Course**: Code, name, term, meeting times, links, files, Canvas sync
+- **Deadline**: Title, due date, priority (1-3), effort (S/M/L), course link, recurring support
+- **Task**: Title, due date, importance, checklist, pinned status, recurring support
+- **Exam**: Title, date/time, location, course link, recurring support
+- **Note**: Rich text content, folders, tags, links to tasks/deadlines/exams
 
-### Dashboard
-- [ ] Open app and see Dashboard
-- [ ] See "Next Class" card with today's class time and location
-- [ ] See "Due Soon" card with upcoming deadlines (next 7 days)
-- [ ] See "Today Tasks" card with today's tasks
-- [ ] See "Quick Links" card
-- [ ] See "Status" summary at bottom
-- [ ] Press "/" to focus capture input
-- [ ] Type in capture box and click Add to create a task
+### Supporting Entities
+- **Folder**: Organize notes with nested folders
+- **GpaEntry**: Track grades for GPA calculation
+- **ShoppingItem**: Grocery, wishlist, and pantry items
+- **CalendarEvent**: Custom calendar events
+- **Notification**: System and Canvas notifications
+- **ExcludedDate**: Holidays and course-specific excluded dates
 
-### Courses
-- [ ] Click "Courses" in navigation
-- [ ] Click "+ New Course" button
-- [ ] Fill in course details (code, name, meeting times, links)
-- [ ] Click "Add Course" to save
-- [ ] See course in list
-- [ ] Click "Edit" to modify course
-- [ ] Click "Delete" to remove course
-- [ ] Verify course links work
+## Accessibility
 
-### Deadlines
-- [ ] Click "Deadlines" in navigation
-- [ ] Click "+ New Deadline"
-- [ ] Enter deadline details and click "Add"
-- [ ] See deadline in list sorted by date
-- [ ] Click filters (All, Overdue, Done)
-- [ ] Verify overdue items show "■ OVERDUE" label
-- [ ] Verify deadline appears in Dashboard "Due Soon"
-
-### Tasks
-- [ ] Click "Tasks" in navigation
-- [ ] Click "+ New Task"
-- [ ] Create a task with title and optional due date
-- [ ] Check/uncheck task to mark done
-- [ ] Click pin icon to pin/unpin task
-- [ ] Pinned task should appear in Dashboard
-- [ ] Filter by Today, All, Done
-
-### Settings
-- [ ] Click "Settings" in navigation
-- [ ] Change "Due Soon Window" value
-- [ ] Verify setting persists (refresh page)
-- [ ] Click "Export Data" to download JSON
-- [ ] Click "Import Data" and select the exported file
-- [ ] Verify data is imported
-- [ ] Note: "Delete All Data" permanently clears localStorage
-
-### Data Persistence
-- [ ] Add some courses, deadlines, and tasks
-- [ ] Refresh the page
-- [ ] Verify all data is still there (localStorage)
-
-### Mobile Responsive
-- [ ] View on mobile (or use browser DevTools)
-- [ ] Navigation should be a bottom tab bar on mobile
-- [ ] Cards should stack vertically
-- [ ] Buttons should be at least 44px tall
-
-### Accessibility
-- [ ] Use Tab key to navigate
-- [ ] Verify focus states are visible
-- [ ] Overdue items use both icon and text (not just color)
-- [ ] All text has sufficient contrast
-
-## Data Model
-
-All data is stored in localStorage as JSON. Export format:
-
-```json
-{
-  "courses": [
-    {
-      "id": "uuid",
-      "code": "CHEM 101",
-      "name": "General Chemistry",
-      "term": "Winter 2026",
-      "meetingTimes": [
-        {
-          "day": "Mon",
-          "start": "10:00",
-          "end": "10:50",
-          "location": "BNSN 120"
-        }
-      ],
-      "links": [
-        {
-          "label": "Canvas",
-          "url": "https://canvas.byu.edu/..."
-        }
-      ],
-      "colorTag": ""
-    }
-  ],
-  "deadlines": [...],
-  "tasks": [...],
-  "settings": {...}
-}
-```
+- Colorblind modes: Protanopia, Deuteranopia, Tritanopia, Achromatopsia
+- Pattern-based indicators in addition to colors
+- Full keyboard navigation support
+- Clear focus states
+- High contrast text
+- Screen reader friendly
 
 ## Privacy & Security
 
-- ✅ All data stored locally on your device
-- ✅ No data sent to external servers
-- ✅ No third-party analytics
-- ✅ No ads or tracking
-- ✅ No accounts required
-- ✅ Delete all data anytime in Settings
+- Secure authentication with hashed passwords
+- Session-based auth with NextAuth.js
+- Data stored in your personal database
+- No third-party analytics or tracking
+- Export all your data anytime
+- Delete account and all data in settings
 
 ## Common Issues
 
-### Data not persisting
-- Check browser localStorage settings
-- Ensure localStorage is not disabled
-- Try in incognito/private mode to test
+### Database connection errors
+- Verify DATABASE_URL is correct
+- Ensure PostgreSQL is running
+- Run `npx prisma db push` to sync schema
 
 ### Build errors
 - Delete `node_modules` and `.next` directories
 - Run `npm install` again
-- Ensure you're using Node 18+
+- Ensure Node 18+
 
-### App not loading
-- Check browser console for errors
-- Clear browser cache and reload
-- Try a different browser
+### Canvas sync not working
+- Verify Canvas instance URL format (e.g., `https://canvas.instructure.com`)
+- Generate a new access token in Canvas settings
+- Check that API access is enabled for your Canvas account
 
 ## Future Enhancements
 
-- Natural language parsing in capture ("Bio lab report Friday 5pm")
-- iCal import for class schedule
-- Canvas API integration
-- Recurring deadlines
-- Kanban board view
-- Notifications
-- Cloud sync with encryption
-- Dark mode toggle
+- Mobile app (React Native)
+- Browser extension for quick capture
+- AI-powered study suggestions
+- Collaborative study groups
+- Integration with more LMS platforms (Blackboard, Moodle)
+- Offline mode with sync
 
 ## License
 
@@ -258,4 +272,4 @@ MIT - Feel free to use and modify for personal use.
 
 ## Support
 
-If you find bugs or have suggestions, create an issue in your GitHub repository.
+If you find bugs or have suggestions, create an issue in your GitHub repository or use the in-app feedback feature.
