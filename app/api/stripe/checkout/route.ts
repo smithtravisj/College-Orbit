@@ -17,11 +17,15 @@ export const POST = withRateLimit(async function (req: NextRequest) {
 
     const { plan } = await req.json();
 
-    if (!plan || !['monthly', 'yearly'].includes(plan)) {
+    if (!plan || !['monthly', 'yearly', 'semester'].includes(plan)) {
       return NextResponse.json({ error: 'Invalid plan selected' }, { status: 400 });
     }
 
-    const priceId = plan === 'monthly' ? PRICE_IDS.monthly : PRICE_IDS.yearly;
+    const priceId = plan === 'monthly'
+      ? PRICE_IDS.monthly
+      : plan === 'yearly'
+        ? PRICE_IDS.yearly
+        : PRICE_IDS.semester;
 
     // Get user to check for existing Stripe customer
     const user = await prisma.user.findUnique({
@@ -51,10 +55,12 @@ export const POST = withRateLimit(async function (req: NextRequest) {
       });
     }
 
-    // Create checkout session
+    // Create checkout session - semester is one-time payment, others are subscriptions
+    const isSemester = plan === 'semester';
+
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
-      mode: 'subscription',
+      mode: isSemester ? 'payment' : 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL}/settings?subscription=success`,
@@ -63,12 +69,14 @@ export const POST = withRateLimit(async function (req: NextRequest) {
         userId: token.id,
         plan,
       },
-      subscription_data: {
-        metadata: {
-          userId: token.id,
-          plan,
+      ...(isSemester ? {} : {
+        subscription_data: {
+          metadata: {
+            userId: token.id,
+            plan,
+          },
         },
-      },
+      }),
       allow_promotion_codes: true,
     });
 

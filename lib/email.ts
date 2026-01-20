@@ -455,7 +455,7 @@ export async function sendWelcomeEmailDev({
 interface SendSubscriptionEmailParams {
   email: string;
   name: string | null;
-  plan: 'monthly' | 'yearly';
+  plan: 'monthly' | 'yearly' | 'semester';
 }
 
 /**
@@ -467,8 +467,8 @@ export async function sendSubscriptionStartedEmail({
   plan,
 }: SendSubscriptionEmailParams): Promise<void> {
   const displayName = name || 'there';
-  const planLabel = plan === 'yearly' ? 'Yearly' : 'Monthly';
-  const price = plan === 'yearly' ? '$48/year' : '$5/month';
+  const planLabel = plan === 'yearly' ? 'Yearly' : plan === 'semester' ? 'Semester' : 'Monthly';
+  const price = plan === 'yearly' ? '$48/year' : plan === 'semester' ? '$18 (4 months)' : '$5/month';
 
   const htmlContent = `
     <!DOCTYPE html>

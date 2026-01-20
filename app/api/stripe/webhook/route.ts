@@ -68,9 +68,53 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     return;
   }
 
+  const plan = (session.metadata?.plan || 'monthly') as 'monthly' | 'yearly' | 'semester';
+
+  // Handle semester one-time payment differently
+  if (plan === 'semester') {
+    // Calculate expiration 4 months from now
+    const expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + 4);
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        subscriptionTier: 'premium',
+        subscriptionStatus: 'active',
+        stripeSubscriptionId: null, // No recurring subscription
+        subscriptionPlan: plan,
+        subscriptionExpiresAt: expiresAt,
+      },
+    });
+
+    // Create notification for user
+    await prisma.notification.create({
+      data: {
+        userId,
+        title: 'Welcome to Premium!',
+        message: `Your semester pass is now active! Enjoy unlimited access to all features until ${expiresAt.toLocaleDateString()}.`,
+        type: 'subscription_active',
+      },
+    });
+
+    // Send welcome email
+    try {
+      await sendSubscriptionStartedEmail({
+        email: user.email,
+        name: user.name,
+        plan,
+      });
+    } catch (emailError) {
+      console.error('Failed to send subscription started email:', emailError);
+    }
+
+    console.log(`User ${userId} purchased semester pass, expires ${expiresAt.toISOString()}`);
+    return;
+  }
+
+  // Handle recurring subscriptions (monthly/yearly)
   const subscriptionId = session.subscription as string;
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-  const plan = (session.metadata?.plan || 'monthly') as 'monthly' | 'yearly';
 
   const user = await prisma.user.update({
     where: { id: userId },

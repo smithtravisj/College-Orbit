@@ -179,9 +179,10 @@ export default function SubscriptionPage() {
   }
 
   const isCanceled = subscription.status === 'canceled';
+  const isSemester = subscription.plan === 'semester';
   const otherPlan = subscription.plan === 'monthly' ? 'yearly' : 'monthly';
   const otherPlanPrice = otherPlan === 'yearly' ? '$48/year' : '$5/month';
-  const currentPlanPrice = subscription.plan === 'yearly' ? '$48/year' : '$5/month';
+  const currentPlanPrice = subscription.plan === 'yearly' ? '$48/year' : subscription.plan === 'semester' ? '$18 (4 months)' : '$5/month';
 
   return (
     <>
@@ -264,7 +265,7 @@ export default function SubscriptionPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div>
                 <p style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text)' }}>
-                  Premium {subscription.plan === 'yearly' ? 'Yearly' : 'Monthly'}
+                  Premium {subscription.plan === 'yearly' ? 'Yearly' : subscription.plan === 'semester' ? 'Semester' : 'Monthly'}
                 </p>
                 <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{currentPlanPrice}</p>
               </div>
@@ -286,14 +287,19 @@ export default function SubscriptionPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <Calendar size={16} style={{ color: 'var(--text-muted)' }} />
                 <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                  {isCanceled ? 'Access ends' : 'Next billing date'}: {formatDate(subscription.expiresAt)}
+                  {isCanceled || isSemester ? 'Access ends' : 'Next billing date'}: {formatDate(subscription.expiresAt)}
                 </span>
               </div>
+              {isSemester && (
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '8px' }}>
+                  Semester pass - one-time purchase, no auto-renewal
+                </p>
+              )}
             </div>
           </Card>
 
-          {/* Change Plan Card */}
-          {!isCanceled && (
+          {/* Change Plan Card - Not shown for semester users */}
+          {!isCanceled && !isSemester && (
             <Card>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
                 <CreditCard size={20} style={{ color: 'var(--text)' }} />

@@ -10,7 +10,7 @@ export interface ClientSubscriptionStatus {
   isLifetimePremium: boolean;
   trialDaysRemaining: number | null;
   trialEndsAt: string | null;
-  plan: 'monthly' | 'yearly' | null;
+  plan: 'monthly' | 'yearly' | 'semester' | null;
   expiresAt: string | null;
   status: 'active' | 'canceled' | 'past_due' | 'none' | 'lifetime';
   isLoading: boolean;
