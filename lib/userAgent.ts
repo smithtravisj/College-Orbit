@@ -33,20 +33,20 @@ export function parseUserAgent(userAgent: string | null): ParsedUserAgent {
     browser = 'Internet Explorer';
   }
 
-  // Parse OS
+  // Parse OS (order matters - check mobile devices before desktop OS)
   let os = 'Unknown';
-  if (userAgent.includes('Windows NT 10')) {
-    os = 'Windows 10/11';
-  } else if (userAgent.includes('Windows NT')) {
-    os = 'Windows';
-  } else if (userAgent.includes('Mac OS X')) {
-    os = 'macOS';
-  } else if (userAgent.includes('iPhone')) {
+  if (userAgent.includes('iPhone')) {
     os = 'iOS';
   } else if (userAgent.includes('iPad')) {
     os = 'iPadOS';
   } else if (userAgent.includes('Android')) {
     os = 'Android';
+  } else if (userAgent.includes('Windows NT 10')) {
+    os = 'Windows 10/11';
+  } else if (userAgent.includes('Windows NT')) {
+    os = 'Windows';
+  } else if (userAgent.includes('Mac OS X')) {
+    os = 'macOS';
   } else if (userAgent.includes('Linux')) {
     os = 'Linux';
   } else if (userAgent.includes('CrOS')) {
