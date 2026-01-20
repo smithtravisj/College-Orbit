@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getDefaultCustomColors, getCustomColorSetForTheme, CustomColors, CustomColorSet } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
@@ -14,6 +15,7 @@ import { Monitor, HelpCircle, RefreshCw, Link2, Unlink, ChevronDown } from 'luci
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { DASHBOARD_CARDS, TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
+import releases from '@/data/releases.json';
 
 interface CanvasStatus {
   connected: boolean;
@@ -69,8 +71,21 @@ export default function SettingsPage() {
   const [notifyAnnouncements, setNotifyAnnouncements] = useState(true);
   const [notifyAccountAlerts, setNotifyAccountAlerts] = useState(true);
 
-  // Settings tab state
-  const [activeSettingsTab, setActiveSettingsTab] = useState<'appearance' | 'preferences' | 'integrations' | 'about'>('appearance');
+  // Settings tab state - initialize from localStorage
+  const [activeSettingsTab, setActiveSettingsTab] = useState<'appearance' | 'preferences' | 'integrations' | 'about'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('settingsTab');
+      if (saved && ['appearance', 'preferences', 'integrations', 'about'].includes(saved)) {
+        return saved as 'appearance' | 'preferences' | 'integrations' | 'about';
+      }
+    }
+    return 'appearance';
+  });
+
+  // Save active tab to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('settingsTab', activeSettingsTab);
+  }, [activeSettingsTab]);
 
   // Canvas LMS Integration state
   const [canvasStatus, setCanvasStatus] = useState<CanvasStatus | null>(null);
@@ -2822,20 +2837,8 @@ export default function SettingsPage() {
           {/* About */}
           <Card title="About">
             <div className="space-y-4">
-              <div className="space-y-3 text-sm border-b border-[var(--border)]" style={{ paddingBottom: '18px' }}>
-                <div>
-                  <p className="font-semibold text-[var(--text)]">College Orbit</p>
-                  <p className="text-[var(--text-muted)]">v1.0</p>
-                </div>
-                <p className="text-[var(--text-secondary)]">
-                  A personal, privacy-first dashboard for students to manage courses, deadlines, and tasks.
-                </p>
-                <p className="text-[var(--text-muted)] text-xs">
-                  Your data is stored securely on our servers. We do not share your personal information with third parties.
-                </p>
-              </div>
               {/* Onboarding Tour */}
-              <div style={{ paddingTop: '16px', paddingBottom: '22px', borderTop: '1px solid var(--border)' }}>
+              <div style={{ paddingBottom: '22px' }}>
                 <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
                   Onboarding Tour
                 </label>
@@ -2928,6 +2931,29 @@ export default function SettingsPage() {
                     Terms of Service
                   </a>
                 </div>
+              </div>
+              {/* Branding */}
+              <div className="space-y-3 text-sm" style={{ paddingTop: '22px', borderTop: '1px solid var(--border)' }}>
+                <div>
+                  <p className="font-semibold text-[var(--text)]">College Orbit</p>
+                  <p className="text-[var(--text-muted)]">v{releases.releases[0]?.version || '1.0.0'}</p>
+                  <Link
+                    href="/release-notes"
+                    className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
+                    style={{ marginTop: '4px', display: 'inline-block' }}
+                  >
+                    View Release Notes
+                  </Link>
+                </div>
+                <p className="text-[var(--text-secondary)]">
+                  A personal, privacy-first dashboard for students to manage courses, deadlines, and tasks.
+                </p>
+                <p className="text-[var(--text-muted)] text-xs">
+                  Your data is stored securely on our servers. We do not share your personal information with third parties.
+                </p>
+                <p className="text-[var(--text-muted)] text-xs" style={{ marginTop: '8px' }}>
+                  © {new Date().getFullYear()} College Orbit. All rights reserved.
+                </p>
               </div>
             </div>
           </Card>

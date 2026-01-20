@@ -1,0 +1,31 @@
+{
+  "releases": [
+    {
+      "version": "1.0.1",
+      "date": "2026-01-20",
+      "changes": [
+        "Added colorblind accessibility support with type selector and patterns",
+        "Reorganized preferences tab with better card grouping",
+        "Added settings preferences and improved delete UX",
+        "Fixed course form resetting during background Canvas sync",
+        "Fixed main sync route to preserve user edits"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-01-15",
+      "changes": [
+        "Initial release of College Orbit",
+        "Dashboard with courses, tasks, deadlines, and exams",
+        "Calendar with day, week, and month views",
+        "Notes with rich text editor and folder organization",
+        "Canvas LMS integration for automatic syncing",
+        "Grade tracker with GPA calculator",
+        "Pomodoro timer for focused study sessions",
+        "Custom themes with college color palettes",
+        "Keyboard shortcuts for power users",
+        "Data export and backup functionality"
+      ]
+    }
+  ]
+}
