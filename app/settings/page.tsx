@@ -66,10 +66,30 @@ export default function SettingsPage() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [visibilityMessage, setVisibilityMessage] = useState('');
   const [isMacDesktop, setIsMacDesktop] = useState(false);
-  const [emailAnnouncements, setEmailAnnouncements] = useState(true);
-  const [emailAccountAlerts, setEmailAccountAlerts] = useState(true);
-  const [notifyAnnouncements, setNotifyAnnouncements] = useState(true);
-  const [notifyAccountAlerts, setNotifyAccountAlerts] = useState(true);
+  const [emailAnnouncements, setEmailAnnouncements] = useState(false);
+  const [emailAccountAlerts, setEmailAccountAlerts] = useState(false);
+  const [emailExamReminders, setEmailExamReminders] = useState(false);
+  const [emailDeadlineReminders, setEmailDeadlineReminders] = useState(false);
+  const [emailTaskReminders, setEmailTaskReminders] = useState(false);
+  const [notifyAnnouncements, setNotifyAnnouncements] = useState(false);
+  const [notifyAccountAlerts, setNotifyAccountAlerts] = useState(false);
+  const [notifyExamReminders, setNotifyExamReminders] = useState(false);
+  const [notifyDeadlineReminders, setNotifyDeadlineReminders] = useState(false);
+  const [notifyTaskReminders, setNotifyTaskReminders] = useState(false);
+  const [reminderTimingOpen, setReminderTimingOpen] = useState(false);
+  const [examReminders, setExamReminders] = useState<Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>>([
+    { enabled: false, value: 7, unit: 'days' },
+    { enabled: false, value: 1, unit: 'days' },
+    { enabled: false, value: 3, unit: 'hours' }
+  ]);
+  const [deadlineReminders, setDeadlineReminders] = useState<Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>>([
+    { enabled: false, value: 1, unit: 'days' },
+    { enabled: false, value: 3, unit: 'hours' }
+  ]);
+  const [taskReminders, setTaskReminders] = useState<Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>>([
+    { enabled: false, value: 1, unit: 'days' },
+    { enabled: false, value: 3, unit: 'hours' }
+  ]);
 
   // Settings tab state - initialize from localStorage
   const [activeSettingsTab, setActiveSettingsTab] = useState<'appearance' | 'preferences' | 'integrations' | 'about'>(() => {
@@ -223,12 +243,29 @@ export default function SettingsPage() {
     }
 
     // Load email preferences
-    setEmailAnnouncements(settings.emailAnnouncements !== false);
-    setEmailAccountAlerts(settings.emailAccountAlerts !== false);
+    setEmailAnnouncements(settings.emailAnnouncements === true);
+    setEmailAccountAlerts(settings.emailAccountAlerts === true);
+    setEmailExamReminders(settings.emailExamReminders === true);
+    setEmailDeadlineReminders(settings.emailDeadlineReminders === true);
+    setEmailTaskReminders(settings.emailTaskReminders === true);
 
     // Load in-app notification preferences
-    setNotifyAnnouncements(settings.notifyAnnouncements !== false);
-    setNotifyAccountAlerts(settings.notifyAccountAlerts !== false);
+    setNotifyAnnouncements(settings.notifyAnnouncements === true);
+    setNotifyAccountAlerts(settings.notifyAccountAlerts === true);
+    setNotifyExamReminders(settings.notifyExamReminders === true);
+    setNotifyDeadlineReminders(settings.notifyDeadlineReminders === true);
+    setNotifyTaskReminders(settings.notifyTaskReminders === true);
+
+    // Load reminder timing preferences
+    if (settings.examReminders) {
+      setExamReminders(settings.examReminders);
+    }
+    if (settings.deadlineReminders) {
+      setDeadlineReminders(settings.deadlineReminders);
+    }
+    if (settings.taskReminders) {
+      setTaskReminders(settings.taskReminders);
+    }
 
     // Load visual effects sliders
     setLocalGradientIntensity(settings.gradientIntensity ?? 50);
@@ -2718,6 +2755,51 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Exam Reminders</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before upcoming exams</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={emailExamReminders}
+                      onChange={async (e) => {
+                        setEmailExamReminders(e.target.checked);
+                        await updateSettings({ emailExamReminders: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Deadline Reminders</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before assignment due dates</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={emailDeadlineReminders}
+                      onChange={async (e) => {
+                        setEmailDeadlineReminders(e.target.checked);
+                        await updateSettings({ emailDeadlineReminders: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Task Reminders</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before task due dates</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={emailTaskReminders}
+                      onChange={async (e) => {
+                        setEmailTaskReminders(e.target.checked);
+                        await updateSettings({ emailTaskReminders: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
                 </div>
               </div>
 
@@ -2757,8 +2839,278 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Exam Reminders</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before upcoming exams</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={notifyExamReminders}
+                      onChange={async (e) => {
+                        setNotifyExamReminders(e.target.checked);
+                        await updateSettings({ notifyExamReminders: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Deadline Reminders</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before assignment due dates</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={notifyDeadlineReminders}
+                      onChange={async (e) => {
+                        setNotifyDeadlineReminders(e.target.checked);
+                        await updateSettings({ notifyDeadlineReminders: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Task Reminders</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before task due dates</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={notifyTaskReminders}
+                      onChange={async (e) => {
+                        setNotifyTaskReminders(e.target.checked);
+                        await updateSettings({ notifyTaskReminders: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
                 </div>
               </div>
+            </div>
+
+            {/* Reminder Timing Section */}
+            <div style={{ marginTop: '24px', borderTop: '1px solid var(--border)', paddingTop: '24px' }}>
+              <button
+                onClick={() => setReminderTimingOpen(!reminderTimingOpen)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  padding: '10px 12px',
+                  backgroundColor: 'var(--panel-2)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  color: 'var(--text)',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  textAlign: 'left',
+                }}
+              >
+                <span>Reminder Timing</span>
+                <ChevronDown
+                  size={18}
+                  style={{
+                    transition: 'transform 0.2s ease',
+                    transform: reminderTimingOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    color: 'var(--text-muted)',
+                  }}
+                />
+              </button>
+
+              {reminderTimingOpen && (
+                <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px' }}>
+                  {/* Exam Reminders */}
+                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: '8px' }}>
+                    <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px' }}>Exam Reminders</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {examReminders.map((reminder, index) => (
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <input
+                            type="checkbox"
+                            checked={reminder.enabled}
+                            onChange={async (e) => {
+                              const newReminders = [...examReminders];
+                              newReminders[index] = { ...reminder, enabled: e.target.checked };
+                              setExamReminders(newReminders);
+                              await updateSettings({ examReminders: newReminders });
+                            }}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                          />
+                          <input
+                            type="number"
+                            min="1"
+                            value={reminder.value}
+                            onChange={async (e) => {
+                              const value = parseInt(e.target.value) || 1;
+                              const newReminders = [...examReminders];
+                              newReminders[index] = { ...reminder, value };
+                              setExamReminders(newReminders);
+                              await updateSettings({ examReminders: newReminders });
+                            }}
+                            style={{
+                              width: '60px',
+                              padding: '6px 8px',
+                              fontSize: '14px',
+                              backgroundColor: 'var(--panel)',
+                              color: 'var(--text)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '4px',
+                            }}
+                          />
+                          <select
+                            value={reminder.unit}
+                            onChange={async (e) => {
+                              const newReminders = [...examReminders];
+                              newReminders[index] = { ...reminder, unit: e.target.value as 'hours' | 'days' };
+                              setExamReminders(newReminders);
+                              await updateSettings({ examReminders: newReminders });
+                            }}
+                            style={{
+                              padding: '6px 8px',
+                              fontSize: '14px',
+                              backgroundColor: 'var(--panel)',
+                              color: 'var(--text)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            <option value="hours">hours before</option>
+                            <option value="days">days before</option>
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Deadline Reminders */}
+                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: '8px' }}>
+                    <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px' }}>Assignment Reminders</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {deadlineReminders.map((reminder, index) => (
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <input
+                            type="checkbox"
+                            checked={reminder.enabled}
+                            onChange={async (e) => {
+                              const newReminders = [...deadlineReminders];
+                              newReminders[index] = { ...reminder, enabled: e.target.checked };
+                              setDeadlineReminders(newReminders);
+                              await updateSettings({ deadlineReminders: newReminders });
+                            }}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                          />
+                          <input
+                            type="number"
+                            min="1"
+                            value={reminder.value}
+                            onChange={async (e) => {
+                              const value = parseInt(e.target.value) || 1;
+                              const newReminders = [...deadlineReminders];
+                              newReminders[index] = { ...reminder, value };
+                              setDeadlineReminders(newReminders);
+                              await updateSettings({ deadlineReminders: newReminders });
+                            }}
+                            style={{
+                              width: '60px',
+                              padding: '6px 8px',
+                              fontSize: '14px',
+                              backgroundColor: 'var(--panel)',
+                              color: 'var(--text)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '4px',
+                            }}
+                          />
+                          <select
+                            value={reminder.unit}
+                            onChange={async (e) => {
+                              const newReminders = [...deadlineReminders];
+                              newReminders[index] = { ...reminder, unit: e.target.value as 'hours' | 'days' };
+                              setDeadlineReminders(newReminders);
+                              await updateSettings({ deadlineReminders: newReminders });
+                            }}
+                            style={{
+                              padding: '6px 8px',
+                              fontSize: '14px',
+                              backgroundColor: 'var(--panel)',
+                              color: 'var(--text)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            <option value="hours">hours before</option>
+                            <option value="days">days before</option>
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Task Reminders */}
+                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: '8px' }}>
+                    <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px' }}>Task Reminders</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {taskReminders.map((reminder, index) => (
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <input
+                            type="checkbox"
+                            checked={reminder.enabled}
+                            onChange={async (e) => {
+                              const newReminders = [...taskReminders];
+                              newReminders[index] = { ...reminder, enabled: e.target.checked };
+                              setTaskReminders(newReminders);
+                              await updateSettings({ taskReminders: newReminders });
+                            }}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                          />
+                          <input
+                            type="number"
+                            min="1"
+                            value={reminder.value}
+                            onChange={async (e) => {
+                              const value = parseInt(e.target.value) || 1;
+                              const newReminders = [...taskReminders];
+                              newReminders[index] = { ...reminder, value };
+                              setTaskReminders(newReminders);
+                              await updateSettings({ taskReminders: newReminders });
+                            }}
+                            style={{
+                              width: '60px',
+                              padding: '6px 8px',
+                              fontSize: '14px',
+                              backgroundColor: 'var(--panel)',
+                              color: 'var(--text)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '4px',
+                            }}
+                          />
+                          <select
+                            value={reminder.unit}
+                            onChange={async (e) => {
+                              const newReminders = [...taskReminders];
+                              newReminders[index] = { ...reminder, unit: e.target.value as 'hours' | 'days' };
+                              setTaskReminders(newReminders);
+                              await updateSettings({ taskReminders: newReminders });
+                            }}
+                            style={{
+                              padding: '6px 8px',
+                              fontSize: '14px',
+                              backgroundColor: 'var(--panel)',
+                              color: 'var(--text)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            <option value="hours">hours before</option>
+                            <option value="days">days before</option>
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
           </div>

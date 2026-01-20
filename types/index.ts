@@ -303,6 +303,8 @@ export interface Settings {
   visiblePagesOrder?: string[] | string | null;
   hasCompletedOnboarding?: boolean;
   examReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
+  deadlineReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
+  taskReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
   pomodoroWorkDuration?: number;
   pomodoroBreakDuration?: number;
   pomodoroIsMuted?: boolean;
@@ -313,9 +315,13 @@ export interface Settings {
   emailAnnouncements?: boolean;
   emailExamReminders?: boolean;
   emailAccountAlerts?: boolean;
+  emailDeadlineReminders?: boolean;
+  emailTaskReminders?: boolean;
   notifyAnnouncements?: boolean;
   notifyExamReminders?: boolean;
   notifyAccountAlerts?: boolean;
+  notifyDeadlineReminders?: boolean;
+  notifyTaskReminders?: boolean;
   useCustomTheme?: boolean;
   customColors?: CustomColors | null;
   gradientIntensity?: number; // 0-100, controls gradient intensity on buttons, nav, filters
