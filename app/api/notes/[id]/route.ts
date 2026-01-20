@@ -97,6 +97,7 @@ export async function PATCH(
                   url: l.url.startsWith('http') ? l.url : `https://${l.url}`,
                 }))
             : existingNote.links,
+        files: 'files' in data ? data.files : existingNote.files,
       },
       include: {
         course: { select: { id: true, code: true, name: true } },

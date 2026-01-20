@@ -243,6 +243,11 @@ export interface Note {
     label: string;
     url: string;
   }>;
+  files?: Array<{
+    name: string;
+    url: string;
+    size: number;
+  }>;
   createdAt: string; // ISO datetime
   updatedAt: string; // ISO datetime
   // Optional included relations from API
@@ -426,24 +431,39 @@ export interface ShoppingItem {
   priority: 'low' | 'medium' | 'high' | null;
   price: number | null;
   perishable: boolean | null;
+  order: number;
+  purchasedAt: string | null; // ISO datetime when purchased, null = active item
   createdAt: string;
   updatedAt: string;
 }
 
-export const GROCERY_CATEGORIES = [
+// Shared categories for Grocery and Pantry (so items can move between them)
+export const FOOD_CATEGORIES = [
   'Produce',
   'Dairy',
   'Meat & Seafood',
   'Bakery',
+  'Bread',
   'Frozen',
+  'Refrigerated',
   'Canned Goods',
+  'Pasta & Rice',
   'Snacks',
   'Beverages',
   'Condiments',
+  'Sauces',
+  'Spreads',
+  'Spices & Seasonings',
+  'Baking Supplies',
+  'Oils & Cooking Sprays',
+  'Breakfast',
+  'Instant Meals',
   'Household',
   'Personal Care',
   'Other',
 ] as const;
+
+export const GROCERY_CATEGORIES = FOOD_CATEGORIES;
 
 export const WISHLIST_CATEGORIES = [
   'Electronics',
@@ -458,22 +478,4 @@ export const WISHLIST_CATEGORIES = [
   'Other',
 ] as const;
 
-export const PANTRY_CATEGORIES = [
-  'Baking Supplies',
-  'Beverages',
-  'Bread',
-  'Breakfast',
-  'Canned Goods',
-  'Condiments',
-  'Frozen',
-  'Instant Meals',
-  'Pasta & Rice',
-  'Oils & Cooking Sprays',
-  'Produce',
-  'Refrigerated',
-  'Sauces',
-  'Snacks',
-  'Spices & Seasonings',
-  'Spreads',
-  'Other',
-] as const;
+export const PANTRY_CATEGORIES = FOOD_CATEGORIES;

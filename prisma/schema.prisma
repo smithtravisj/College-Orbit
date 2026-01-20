@@ -296,6 +296,7 @@ model Note {
   tags                        Json                      @default("[]")
   isPinned                    Boolean                   @default(false)
   links                       Json                      @default("[]")
+  files                       Json                      @default("[]")
   createdAt                   DateTime                  @default(now())
   updatedAt                   DateTime                  @updatedAt
   course                      Course?                   @relation(fields: [courseId], references: [id])
@@ -571,26 +572,29 @@ model CustomQuickLink {
 }
 
 model ShoppingItem {
-  id         String   @id @default(cuid())
-  userId     String
-  listType   String   // "grocery" | "wishlist" | "pantry"
-  name       String
-  quantity   Int      @default(1)
-  unit       String?
-  category   String
-  notes      String   @default("")
-  checked    Boolean  @default(false)
-  priority   String?  // "low" | "medium" | "high"
-  price      Float?
-  perishable Boolean? @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String    @id @default(cuid())
+  userId      String
+  listType    String    // "grocery" | "wishlist" | "pantry"
+  name        String
+  quantity    Int       @default(1)
+  unit        String?
+  category    String
+  notes       String    @default("")
+  checked     Boolean   @default(false)
+  priority    String?   // "low" | "medium" | "high"
+  price       Float?
+  perishable  Boolean?  @default(false)
+  order       Int       @default(0) // For manual reordering within category
+  purchasedAt DateTime? // When item was purchased/cleared (null = active item)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([listType])
   @@index([category])
   @@index([checked])
+  @@index([purchasedAt])
 }
 
 model CalendarEvent {

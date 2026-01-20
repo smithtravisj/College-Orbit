@@ -76,6 +76,9 @@ export async function PATCH(
         priority: 'priority' in data ? data.priority : existingItem.priority,
         price: 'price' in data ? data.price : existingItem.price,
         perishable: 'perishable' in data ? data.perishable : existingItem.perishable,
+        listType: 'listType' in data ? data.listType : existingItem.listType,
+        order: 'order' in data ? data.order : existingItem.order,
+        purchasedAt: 'purchasedAt' in data ? data.purchasedAt : existingItem.purchasedAt,
       },
     });
 

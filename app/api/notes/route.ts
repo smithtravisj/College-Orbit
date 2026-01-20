@@ -132,6 +132,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
             label: l.label || new URL(l.url).hostname,
             url: l.url.startsWith('http') ? l.url : `https://${l.url}`,
           })),
+        files: data.files || [],
       },
       include: {
         course: { select: { id: true, code: true, name: true } },

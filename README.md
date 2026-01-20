@@ -10,9 +10,13 @@ A comprehensive college dashboard web app for managing courses, deadlines, tasks
 - **Assignments**: Track deadlines with priority levels, effort estimates, tags, notes, and recurring patterns
 - **Tasks**: Create tasks with checklists, importance levels, pinning, and recurring schedules
 - **Exams**: Schedule exams with location tracking, reminders, and recurring patterns
-- **Notes**: Rich text editor (TipTap) with folders, tags, and deep linking to tasks/deadlines/exams
+- **Notes**: Rich text editor (TipTap) with folders, tags, file attachments, and deep linking to tasks/deadlines/exams
 - **Calendar**: Day, week, and month views with all your events in one place
-- **Shopping Lists**: Grocery, wishlist, and pantry lists with categories and priority
+- **Shopping Lists**: Grocery, wishlist, and pantry management with:
+  - Bulk import from recipes or lists (smart parsing)
+  - Purchase history tracking
+  - Move items between lists (pantry ↔ grocery)
+  - Categories, priority levels, and perishable tracking
 
 ### Productivity Tools
 - **GPA Calculator**: Track grades by semester with trend visualization and what-if projections
@@ -235,9 +239,9 @@ College Orbit/
 
 - Secure authentication with hashed passwords
 - Session-based auth with NextAuth.js
-- Data stored in your personal database
-- No third-party analytics or tracking
-- Export all your data anytime
+- Data stored securely in PostgreSQL database
+- First-party analytics for usage insights (no third-party trackers)
+- Export all your data anytime as JSON
 - Delete account and all data in settings
 
 ## Common Issues
@@ -264,7 +268,8 @@ College Orbit/
 - AI-powered study suggestions
 - Collaborative study groups
 - Integration with more LMS platforms (Blackboard, Moodle)
-- Offline mode with sync
+- Offline mode with background sync
+- Meal planning integration with shopping lists
 
 ## License
 
