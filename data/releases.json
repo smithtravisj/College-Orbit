@@ -1,30 +1,34 @@
 {
   "releases": [
     {
-      "version": "1.0.1",
+      "version": "1.0.0",
       "date": "2026-01-20",
       "changes": [
-        "Added colorblind accessibility support with type selector and patterns",
-        "Reorganized preferences tab with better card grouping",
-        "Added settings preferences and improved delete UX",
-        "Fixed course form resetting during background Canvas sync",
-        "Fixed main sync route to preserve user edits"
-      ]
-    },
-    {
-      "version": "1.0.0",
-      "date": "2026-01-15",
-      "changes": [
-        "Initial release of College Orbit",
-        "Dashboard with courses, tasks, deadlines, and exams",
-        "Calendar with day, week, and month views",
-        "Notes with rich text editor and folder organization",
-        "Canvas LMS integration for automatic syncing",
-        "Grade tracker with GPA calculator",
-        "Pomodoro timer for focused study sessions",
-        "Custom themes with college color palettes",
+        "Dashboard with at-a-glance view of upcoming tasks, assignments, and exams",
+        "Course management with meeting times, locations, links, and custom colors",
+        "Task tracking with priority levels, effort estimates, checklists, and importance markers",
+        "Assignment tracking with due dates, effort levels, tags, and file attachments",
+        "Exam scheduling with locations, custom reminders, and countdown timers",
+        "Full calendar with day, week, and month views plus custom events",
+        "Notes with rich text editor, folder organization, tagging, and course linking",
+        "Canvas LMS integration to sync courses, assignments, grades, and announcements",
+        "Grade tracker with semester-based GPA calculation and trend visualization",
+        "GPA tools including What-If projector and grade calculator",
+        "Pomodoro timer with customizable focus and break sessions",
+        "Quick links for fast access to frequently used resources",
+        "Shopping lists with grocery, wishlist, and pantry tracking",
+        "Recurring patterns for tasks, assignments, and exams",
+        "Excluded dates for holidays and breaks",
+        "Light, dark, and system theme modes",
+        "Custom color themes with college color palettes",
+        "Visual effects customization for gradients and glow",
+        "Colorblind accessibility modes with pattern support",
         "Keyboard shortcuts for power users",
-        "Data export and backup functionality"
+        "Page and card visibility customization",
+        "File attachments with HEIC/HEIF auto-conversion",
+        "Data export and backup functionality",
+        "Interactive onboarding tour for new users",
+        "Mobile-responsive design"
       ]
     }
   ]
