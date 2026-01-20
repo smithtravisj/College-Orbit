@@ -298,7 +298,7 @@ export default function SubscriptionPage() {
             </div>
           </Card>
 
-          {/* Change Plan Card - Not shown for semester users */}
+          {/* Change Plan Card - For monthly/yearly users */}
           {!isCanceled && !isSemester && (
             <Card>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
@@ -308,7 +308,7 @@ export default function SubscriptionPage() {
 
               <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
                 {subscription.plan === 'monthly'
-                  ? 'Switch to yearly and save 33%! The change will take effect at your next billing date.'
+                  ? 'Switch to yearly and save 20%! The change will take effect at your next billing date.'
                   : 'Switch to monthly for more flexibility. The change will take effect at the end of your current yearly period.'}
               </p>
 
@@ -330,7 +330,7 @@ export default function SubscriptionPage() {
                   </p>
                   <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
                     {otherPlanPrice}
-                    {otherPlan === 'yearly' && <span style={{ color: 'var(--success)', marginLeft: '8px' }}>(Save 33%)</span>}
+                    {otherPlan === 'yearly' && <span style={{ color: 'var(--success)', marginLeft: '8px' }}>(Save 20%)</span>}
                   </p>
                 </div>
                 <Button
@@ -344,6 +344,76 @@ export default function SubscriptionPage() {
                 >
                   Switch Plan
                 </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Upgrade Card - For semester users */}
+          {!isCanceled && isSemester && (
+            <Card>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                <Crown size={20} style={{ color: 'var(--text)' }} />
+                <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>Continue with Premium</h2>
+              </div>
+
+              <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                Your semester pass expires on {subscription.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}.
+                Subscribe to keep your premium access!
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Link href="/checkout?plan=yearly" style={{ textDecoration: 'none' }}>
+                  <div
+                    style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: '1px solid var(--border)',
+                      background: 'var(--panel-2)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div>
+                      <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>
+                        Premium Yearly
+                      </p>
+                      <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+                        $48/year <span style={{ color: 'var(--success)', marginLeft: '8px' }}>(Save 20%)</span>
+                      </p>
+                    </div>
+                    <Button variant="primary" size="sm">
+                      Subscribe
+                    </Button>
+                  </div>
+                </Link>
+                <Link href="/checkout?plan=monthly" style={{ textDecoration: 'none' }}>
+                  <div
+                    style={{
+                      padding: '16px',
+                      borderRadius: '12px',
+                      border: '1px solid var(--border)',
+                      background: 'var(--panel-2)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div>
+                      <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>
+                        Premium Monthly
+                      </p>
+                      <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+                        $5/month
+                      </p>
+                    </div>
+                    <Button variant="secondary" size="sm">
+                      Subscribe
+                    </Button>
+                  </div>
+                </Link>
               </div>
             </Card>
           )}
