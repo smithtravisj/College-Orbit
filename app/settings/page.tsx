@@ -779,15 +779,16 @@ export default function SettingsPage() {
           </div>
         )}
 
-        <div className="w-full" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(400px, 1fr))', gap: isMobile ? '14px' : 'var(--grid-gap)' }}>
+        <div className="w-full" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(400px, 1fr))', gap: isMobile ? '14px' : 'var(--grid-gap)', maxWidth: '100%', boxSizing: 'border-box' }}>
           {!session && sessionStatus !== 'loading' && (
             <div style={{ gridColumn: '1 / -1', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '6px', padding: '12px', marginBottom: '0px', color: '#856404', fontSize: '14px' }}>
               ⚠️ You are not logged in. Settings will be saved to your browser only.
             </div>
           )}
-          {/* Preferences Tab - General Settings */}
+          {/* Preferences Tab - Date & Time */}
           {activeSettingsTab === 'preferences' && (
-          <Card title="Preferences">
+          <>
+          <Card title="Date & Time">
             {/* Time Format */}
             <div style={{ marginBottom: '20px' }}>
               <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Time Format</p>
@@ -862,44 +863,89 @@ export default function SettingsPage() {
               </p>
             </div>
 
-            {/* Due Soon Window */}
+            {/* Show Relative Dates */}
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-              <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Due Soon Window</p>
-              <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                Show deadlines on dashboard within this many days
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <input
-                  ref={dueSoonInputRef}
-                  type="text"
-                  inputMode="numeric"
-                  defaultValue={dueSoonDays}
-                  onKeyUp={(e) => {
-                    const inputValue = e.currentTarget.value;
-                    setDueSoonDays(inputValue);
-                    const val = parseInt(inputValue);
-                    if (!isNaN(val) && val >= 1 && val <= 30) {
-                      updateSettings({ dueSoonWindowDays: val });
-                    }
-                  }}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Relative Dates</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Display "Tomorrow" or "In 3 days" instead of actual dates
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ showRelativeDates: !(settings.showRelativeDates ?? false) })}
                   style={{
-                    width: '80px',
-                    height: '40px',
-                    padding: '8px 12px',
-                    fontSize: '16px',
-                    fontFamily: 'inherit',
-                    backgroundColor: 'var(--panel-2)',
-                    color: 'var(--text)',
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.showRelativeDates ?? false) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
-                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
                   }}
-                />
-                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>days</span>
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.showRelativeDates ?? false) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
+          </Card>
+
+          {/* Display Options */}
+          <Card title="Display Options">
+            {/* Show Course Code vs Name */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Course Code</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Display course code (e.g., CS 101) instead of full name
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ showCourseCode: !(settings.showCourseCode ?? false) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.showCourseCode ?? false) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.showCourseCode ?? false) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
               </div>
             </div>
 
             {/* Show Canvas Badges */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Canvas Badges</p>
@@ -937,22 +983,22 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Show Relative Dates */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
+            {/* Show Priority Indicators */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Relative Dates</p>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Priority Indicators</p>
                   <p className="text-sm text-[var(--text-muted)]">
-                    Display "Tomorrow" or "In 3 days" instead of actual dates (within 7 days)
+                    Display priority badges on tasks
                   </p>
                 </div>
                 <button
-                  onClick={() => updateSettings({ showRelativeDates: !(settings.showRelativeDates ?? false) })}
+                  onClick={() => updateSettings({ showPriorityIndicators: !(settings.showPriorityIndicators ?? true) })}
                   style={{
                     width: '44px',
                     height: '24px',
                     borderRadius: '12px',
-                    backgroundColor: (settings.showRelativeDates ?? false) ? 'var(--accent)' : 'var(--panel-2)',
+                    backgroundColor: (settings.showPriorityIndicators ?? true) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
                     position: 'relative',
@@ -968,7 +1014,46 @@ export default function SettingsPage() {
                       backgroundColor: 'white',
                       position: 'absolute',
                       top: '2px',
-                      left: (settings.showRelativeDates ?? false) ? '22px' : '2px',
+                      left: (settings.showPriorityIndicators ?? true) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Show Effort Indicators */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Effort Indicators</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Display effort level badges on assignments
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ showEffortIndicators: !(settings.showEffortIndicators ?? true) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.showEffortIndicators ?? true) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.showEffortIndicators ?? true) ? '22px' : '2px',
                       transition: 'left 0.2s ease',
                     }}
                   />
@@ -977,7 +1062,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Show Nav Counts */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Item Counts in Nav</p>
@@ -1193,87 +1278,12 @@ export default function SettingsPage() {
                 </div>
               )}
             </div>
+          </Card>
 
-            {/* Show Priority Indicators */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Priority Indicators</p>
-                  <p className="text-sm text-[var(--text-muted)]">
-                    Display priority badges on tasks
-                  </p>
-                </div>
-                <button
-                  onClick={() => updateSettings({ showPriorityIndicators: !(settings.showPriorityIndicators ?? true) })}
-                  style={{
-                    width: '44px',
-                    height: '24px',
-                    borderRadius: '12px',
-                    backgroundColor: (settings.showPriorityIndicators ?? true) ? 'var(--accent)' : 'var(--panel-2)',
-                    border: '1px solid var(--border)',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'background-color 0.2s ease',
-                    flexShrink: 0,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '50%',
-                      backgroundColor: 'white',
-                      position: 'absolute',
-                      top: '2px',
-                      left: (settings.showPriorityIndicators ?? true) ? '22px' : '2px',
-                      transition: 'left 0.2s ease',
-                    }}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Show Effort Indicators */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Effort Indicators</p>
-                  <p className="text-sm text-[var(--text-muted)]">
-                    Display effort level badges on assignments
-                  </p>
-                </div>
-                <button
-                  onClick={() => updateSettings({ showEffortIndicators: !(settings.showEffortIndicators ?? true) })}
-                  style={{
-                    width: '44px',
-                    height: '24px',
-                    borderRadius: '12px',
-                    backgroundColor: (settings.showEffortIndicators ?? true) ? 'var(--accent)' : 'var(--panel-2)',
-                    border: '1px solid var(--border)',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'background-color 0.2s ease',
-                    flexShrink: 0,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '50%',
-                      backgroundColor: 'white',
-                      position: 'absolute',
-                      top: '2px',
-                      left: (settings.showEffortIndicators ?? true) ? '22px' : '2px',
-                      transition: 'left 0.2s ease',
-                    }}
-                  />
-                </button>
-              </div>
-            </div>
-
+          {/* List Organization */}
+          <Card title="List Organization">
             {/* Group Tasks by Course */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
+            <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Group Tasks by Course</p>
@@ -1312,7 +1322,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Group Assignments by Course */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Group Assignments by Course</p>
@@ -1348,63 +1358,50 @@ export default function SettingsPage() {
                   />
                 </button>
               </div>
+            </div>
 
-              {/* Show Course Code vs Name */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 0',
-                  borderTop: '1px solid var(--border)',
-                  marginTop: '12px',
-                }}
-              >
-                <div>
-                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Course Code</p>
-                  <p className="text-sm text-[var(--text-muted)]">
-                    Display course code (e.g., CS 101) instead of full name
-                  </p>
-                </div>
-                <button
-                  onClick={() => updateSettings({ showCourseCode: !(settings.showCourseCode ?? false) })}
-                  style={{
-                    width: '44px',
-                    height: '24px',
-                    borderRadius: '12px',
-                    backgroundColor: (settings.showCourseCode ?? false) ? 'var(--accent)' : 'var(--panel-2)',
-                    border: '1px solid var(--border)',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'background-color 0.2s ease',
-                    flexShrink: 0,
+            {/* Due Soon Window */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+              <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Due Soon Window</p>
+              <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                Show deadlines on dashboard within this many days
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <input
+                  ref={dueSoonInputRef}
+                  type="text"
+                  inputMode="numeric"
+                  defaultValue={dueSoonDays}
+                  onKeyUp={(e) => {
+                    const inputValue = e.currentTarget.value;
+                    setDueSoonDays(inputValue);
+                    const val = parseInt(inputValue);
+                    if (!isNaN(val) && val >= 1 && val <= 30) {
+                      updateSettings({ dueSoonWindowDays: val });
+                    }
                   }}
-                >
-                  <div
-                    style={{
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '50%',
-                      backgroundColor: 'white',
-                      position: 'absolute',
-                      top: '2px',
-                      left: (settings.showCourseCode ?? false) ? '22px' : '2px',
-                      transition: 'left 0.2s ease',
-                    }}
-                  />
-                </button>
+                  style={{
+                    width: '80px',
+                    height: '40px',
+                    padding: '8px 12px',
+                    fontSize: '16px',
+                    fontFamily: 'inherit',
+                    backgroundColor: 'var(--panel-2)',
+                    color: 'var(--text)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                  }}
+                />
+                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>days</span>
               </div>
+            </div>
+          </Card>
 
-              {/* Confirm Before Delete */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 0',
-                  borderTop: '1px solid var(--border)',
-                }}
-              >
+          {/* Behavior */}
+          <Card title="Behavior">
+            {/* Confirm Before Delete */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Confirm Before Delete</p>
                   <p className="text-sm text-[var(--text-muted)]">
@@ -1439,17 +1436,11 @@ export default function SettingsPage() {
                   />
                 </button>
               </div>
+            </div>
 
-              {/* Enable Keyboard Shortcuts */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 0',
-                  borderTop: '1px solid var(--border)',
-                }}
-              >
+            {/* Enable Keyboard Shortcuts */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Enable Keyboard Shortcuts</p>
                   <p className="text-sm text-[var(--text-muted)]">
@@ -1486,6 +1477,7 @@ export default function SettingsPage() {
               </div>
             </div>
           </Card>
+          </>
           )}
 
           {/* Integrations Tab - Canvas LMS Integration */}
@@ -2524,88 +2516,89 @@ export default function SettingsPage() {
 
           {/* Preferences Tab - Notification Preferences */}
           {activeSettingsTab === 'preferences' && (
+          <div style={{ gridColumn: '1 / -1' }}>
           <Card title="Notification Preferences">
-            <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px' }}>
-              Email Notifications
-            </p>
-            <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-              Choose which emails you want to receive from College Orbit.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
-                <div>
-                  <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Announcements</p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Updates and news from College Orbit</p>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: isMobile ? '20px' : '24px' }}>
+              {/* Email Column */}
+              <div>
+                <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>
+                  Email
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Announcements</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Updates and news from College Orbit</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={emailAnnouncements}
+                      onChange={async (e) => {
+                        setEmailAnnouncements(e.target.checked);
+                        await updateSettings({ emailAnnouncements: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Account Alerts</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Password changes and security alerts</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={emailAccountAlerts}
+                      onChange={async (e) => {
+                        setEmailAccountAlerts(e.target.checked);
+                        await updateSettings({ emailAccountAlerts: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={emailAnnouncements}
-                  onChange={async (e) => {
-                    setEmailAnnouncements(e.target.checked);
-                    await updateSettings({ emailAnnouncements: e.target.checked });
-                  }}
-                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                />
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
-                <div>
-                  <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Account Alerts</p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Password changes, subscription updates, and security alerts</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={emailAccountAlerts}
-                  onChange={async (e) => {
-                    setEmailAccountAlerts(e.target.checked);
-                    await updateSettings({ emailAccountAlerts: e.target.checked });
-                  }}
-                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                />
-              </label>
-            </div>
+              </div>
 
-            {/* In-App Notification Preferences */}
-            <div style={{ borderTop: '1px solid var(--border)', marginTop: '20px', paddingTop: '20px' }}>
-              <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', marginBottom: '4px' }}>
-                In-App Notifications
-              </p>
-              <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                Choose which in-app notifications you want to receive.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
-                  <div>
-                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Announcements</p>
-                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Updates and news from College Orbit</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifyAnnouncements}
-                    onChange={async (e) => {
-                      setNotifyAnnouncements(e.target.checked);
-                      await updateSettings({ notifyAnnouncements: e.target.checked });
-                    }}
-                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                  />
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
-                  <div>
-                    <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Account Alerts</p>
-                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Subscription updates, payment alerts, and security notifications</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifyAccountAlerts}
-                    onChange={async (e) => {
-                      setNotifyAccountAlerts(e.target.checked);
-                      await updateSettings({ notifyAccountAlerts: e.target.checked });
-                    }}
-                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                  />
-                </label>
+              {/* In-App Column */}
+              <div>
+                <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px' }}>
+                  In-App
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Announcements</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Updates and news from College Orbit</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={notifyAnnouncements}
+                      onChange={async (e) => {
+                        setNotifyAnnouncements(e.target.checked);
+                        await updateSettings({ notifyAnnouncements: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Account Alerts</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Subscription and payment notifications</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={notifyAccountAlerts}
+                      onChange={async (e) => {
+                        setNotifyAccountAlerts(e.target.checked);
+                        await updateSettings({ notifyAccountAlerts: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
+                </div>
               </div>
             </div>
           </Card>
+          </div>
           )}
 
           {/* About Tab */}
