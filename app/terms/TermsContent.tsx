@@ -16,7 +16,7 @@ export default function TermsContent() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Effective Date: January 19, 2026
+                Effective Date: January 20, 2026
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 These Terms of Service ("Terms") govern your use of the College Orbit website and services ("Service"). By creating an account and using the Service, you agree to be legally bound by these Terms. If you do not agree to these Terms, please do not use the Service.
@@ -61,6 +61,8 @@ export default function TermsContent() {
                 <li>Feedback submission (feature requests, issue reports, school requests)</li>
                 <li>School-specific information and branding (universities and high schools)</li>
                 <li>Data export and import functionality for backup and portability</li>
+                <li>Calendar export to iCal format and subscription URLs for external calendar apps</li>
+                <li>Session management to view and revoke access from logged-in devices</li>
               </ul>
             </div>
           </div>
@@ -256,6 +258,14 @@ export default function TermsContent() {
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 We use Resend, a third-party email service provider, to send password reset emails and other transactional communications. Resend processes your email address solely to deliver these messages and is bound by their privacy policy and our data processing agreement.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Calendar Export & External Calendars
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                College Orbit allows you to export your calendar data (deadlines, exams, tasks, courses, and custom events) to external calendar applications like Google Calendar, Apple Calendar, and others. You can download a one-time iCal file or generate a subscription URL that automatically syncs with your College Orbit data. The subscription URL contains a unique token—anyone with this URL can view your calendar data. You are responsible for keeping your subscription URL private. You can regenerate your token at any time to invalidate previous URLs.
               </p>
             </div>
             <div>

@@ -36,7 +36,7 @@ const coreFeatures = [
   {
     icon: CalendarDays,
     title: 'Calendar',
-    description: 'See your schedule with month, week, and day views. Classes, exams, deadlines, and tasks in one place.',
+    description: 'See your schedule with month, week, and day views. Export to Google Calendar or Apple Calendar.',
   },
 ];
 
