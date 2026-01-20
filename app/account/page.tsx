@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Shield, Download, Upload, Trash2, Eye, EyeOff, Crown } from 'lucide-react';
+import { Shield, Download, Upload, Trash2, Eye, EyeOff, Crown, Monitor, Smartphone, Tablet, X } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import Link from 'next/link';
 
@@ -35,6 +35,20 @@ export default function AccountPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [activeSessions, setActiveSessions] = useState<Array<{
+    id: string;
+    browser: string | null;
+    os: string | null;
+    device: string | null;
+    ipAddress: string | null;
+    city: string | null;
+    country: string | null;
+    lastActivityAt: string;
+    createdAt: string;
+    isCurrent: boolean;
+  }>>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -49,6 +63,74 @@ export default function AccountPage() {
       setEmail(session.user.email || '');
     }
   }, [session]);
+
+  // Fetch and register sessions
+  useEffect(() => {
+    if (!session?.user) return;
+
+    const registerAndFetchSessions = async () => {
+      // Register current session (creates if doesn't exist)
+      try {
+        await fetch('/api/user/sessions/register', { method: 'POST' });
+      } catch (err) {
+        console.error('Failed to register session:', err);
+      }
+
+      // Fetch all active sessions
+      try {
+        const response = await fetch('/api/user/sessions');
+        if (response.ok) {
+          const data = await response.json();
+          setActiveSessions(data.sessions || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch sessions:', err);
+      } finally {
+        setSessionsLoading(false);
+      }
+    };
+
+    registerAndFetchSessions();
+  }, [session]);
+
+  const handleRevokeSession = async (sessionId: string) => {
+    setRevokingSessionId(sessionId);
+    try {
+      const response = await fetch(`/api/user/sessions?id=${sessionId}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        setActiveSessions(prev => prev.filter(s => s.id !== sessionId));
+      }
+    } catch (err) {
+      console.error('Failed to revoke session:', err);
+    } finally {
+      setRevokingSessionId(null);
+    }
+  };
+
+  const formatSessionTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  const getDeviceIcon = (device: string | null) => {
+    if (!device) return <Monitor size={18} />;
+    const d = device.toLowerCase();
+    if (d.includes('mobile') || d.includes('phone')) return <Smartphone size={18} />;
+    if (d.includes('tablet') || d.includes('ipad')) return <Tablet size={18} />;
+    return <Monitor size={18} />;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -582,6 +664,94 @@ export default function AccountPage() {
                     {formatLastLogin((session?.user as any)?.lastLogin)}
                   </p>
                 </div>
+              </div>
+
+              {/* Active Sessions */}
+              <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '16px' }}>
+                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>Active Sessions</p>
+                {sessionsLoading ? (
+                  <p className="text-sm text-[var(--text-muted)]">Loading sessions...</p>
+                ) : activeSessions.length === 0 ? (
+                  <p className="text-sm text-[var(--text-muted)]">No active sessions found</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {activeSessions.map((s) => (
+                      <div
+                        key={s.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '12px',
+                          backgroundColor: s.isCurrent ? 'rgba(59, 130, 246, 0.1)' : 'var(--panel-2)',
+                          borderRadius: '8px',
+                          border: s.isCurrent ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid var(--border)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ color: 'var(--text-muted)' }}>
+                            {getDeviceIcon(s.device)}
+                          </div>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>
+                                {s.browser || 'Unknown'} on {s.os || 'Unknown'}
+                              </p>
+                              {s.isCurrent && (
+                                <span style={{
+                                  fontSize: '10px',
+                                  fontWeight: '600',
+                                  color: '#3b82f6',
+                                  backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                }}>
+                                  Current
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-[var(--text-muted)]" style={{ margin: '2px 0 0 0' }}>
+                              {s.ipAddress && s.ipAddress !== 'Unknown' ? `${s.ipAddress} · ` : ''}
+                              {s.city && s.country ? `${s.city}, ${s.country} · ` : ''}
+                              Last active {formatSessionTime(s.lastActivityAt)}
+                            </p>
+                          </div>
+                        </div>
+                        {!s.isCurrent && (
+                          <button
+                            onClick={() => handleRevokeSession(s.id)}
+                            disabled={revokingSessionId === s.id}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: revokingSessionId === s.id ? 'not-allowed' : 'pointer',
+                              color: 'var(--text-muted)',
+                              padding: '6px',
+                              borderRadius: '6px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              opacity: revokingSessionId === s.id ? 0.5 : 1,
+                            }}
+                            onMouseEnter={(e) => {
+                              if (revokingSessionId !== s.id) {
+                                e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                                e.currentTarget.style.color = '#ef4444';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                              e.currentTarget.style.color = 'var(--text-muted)';
+                            }}
+                            title="Revoke this session"
+                          >
+                            <X size={16} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
