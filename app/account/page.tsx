@@ -474,7 +474,7 @@ export default function AccountPage() {
                     <p className="text-base font-medium text-[var(--text)]" style={{ margin: 0 }}>
                       {subscription.isLifetimePremium && 'Lifetime Premium'}
                       {subscription.tier === 'premium' && !subscription.isTrialing && !subscription.isLifetimePremium && (
-                        <>Premium ({subscription.plan === 'yearly' ? 'Yearly' : 'Monthly'})</>
+                        <>Premium ({subscription.plan === 'yearly' ? 'Yearly' : subscription.plan === 'semester' ? 'Semester' : 'Monthly'})</>
                       )}
                       {subscription.isTrialing && 'Premium Trial'}
                       {subscription.tier === 'free' && 'Free'}
