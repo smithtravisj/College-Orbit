@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData, ShoppingItem, ShoppingListType, CalendarEvent } from '@/types';
-import { applyColorPalette, getCollegeColorPalette, applyCustomColors, getCustomColorSetForTheme, CustomColors, setDatabaseColleges, DatabaseCollege } from '@/lib/collegeColors';
+import { applyColorPalette, getCollegeColorPalette, applyCustomColors, getCustomColorSetForTheme, CustomColors, setDatabaseColleges, DatabaseCollege, applyColorblindMode, ColorblindMode, ColorblindStyle } from '@/lib/collegeColors';
 import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
 const DEFAULT_SETTINGS: Settings = {
@@ -246,6 +246,14 @@ const useAppStore = create<AppStore>((set, get) => ({
         const palette = getCollegeColorPalette(settings.university || null, theme);
         applyColorPalette(palette);
       }
+
+      // Apply colorblind mode (skip palette changes if custom theme is active)
+      applyColorblindMode(
+        settings.colorblindMode as ColorblindMode | null,
+        settings.colorblindStyle as ColorblindStyle | null,
+        theme,
+        isPremium && useCustomTheme
+      );
     }
   },
 
@@ -396,6 +404,15 @@ const useAppStore = create<AppStore>((set, get) => ({
           );
           applyColorPalette(palette);
         }
+
+        // Apply colorblind mode (skip palette changes if custom theme is active)
+        applyColorblindMode(
+          newData.settings?.colorblindMode as ColorblindMode | null,
+          newData.settings?.colorblindStyle as ColorblindStyle | null,
+          theme,
+          isPremium && useCustomTheme
+        );
+
         // Store theme in localStorage for loading screen
         localStorage.setItem('app-theme', theme);
         // Store userId separately for storage key on next load
@@ -467,6 +484,15 @@ const useAppStore = create<AppStore>((set, get) => ({
           );
           applyColorPalette(palette);
         }
+
+        // Apply colorblind mode (skip palette changes if custom theme is active)
+        applyColorblindMode(
+          settings.colorblindMode as ColorblindMode | null,
+          settings.colorblindStyle as ColorblindStyle | null,
+          theme,
+          cachedIsPremium && useCustomTheme
+        );
+
         // Store theme in localStorage for loading screen
         localStorage.setItem('app-theme', theme);
         return true;
@@ -1765,9 +1791,10 @@ const useAppStore = create<AppStore>((set, get) => ({
         settings: { ...state.settings, ...settings },
       }));
 
-      // Apply colors if college, theme, or custom theme settings changed
+      // Apply colors if college, theme, custom theme, or colorblind settings changed
       if ((settings.university !== undefined || settings.theme !== undefined ||
-           settings.useCustomTheme !== undefined || settings.customColors !== undefined) && typeof window !== 'undefined') {
+           settings.useCustomTheme !== undefined || settings.customColors !== undefined ||
+           settings.colorblindMode !== undefined || settings.colorblindStyle !== undefined) && typeof window !== 'undefined') {
         const currentState = get().settings;
         const { isPremium } = get();
         const newTheme = settings.theme !== undefined ? settings.theme : (currentState.theme || 'dark');
@@ -1787,6 +1814,18 @@ const useAppStore = create<AppStore>((set, get) => ({
           );
           applyColorPalette(palette);
         }
+
+        // Apply colorblind mode (must be after palette is applied to override semantic colors)
+        // Skip palette changes if custom theme is active (custom theme takes priority)
+        const colorblindMode = settings.colorblindMode !== undefined ? settings.colorblindMode : currentState.colorblindMode;
+        const colorblindStyle = settings.colorblindStyle !== undefined ? settings.colorblindStyle : currentState.colorblindStyle;
+        applyColorblindMode(
+          colorblindMode as ColorblindMode | null,
+          colorblindStyle as ColorblindStyle | null,
+          newTheme,
+          isPremium && newUseCustomTheme
+        );
+
         // Store theme in localStorage for loading screen to access
         localStorage.setItem('app-theme', newTheme);
 
@@ -1823,6 +1862,19 @@ const useAppStore = create<AppStore>((set, get) => ({
         set({ settings: updatedSettings });
         // Update localStorage with server response
         saveToLocalStorage(get());
+
+        // Re-apply colorblind mode after state update (colors may have been reset)
+        // Skip palette changes if custom theme is active
+        if (typeof window !== 'undefined' && updatedSettings.colorblindMode) {
+          const { isPremium } = get();
+          const theme = updatedSettings.theme || 'dark';
+          applyColorblindMode(
+            updatedSettings.colorblindMode as ColorblindMode | null,
+            updatedSettings.colorblindStyle as ColorblindStyle | null,
+            theme,
+            isPremium && updatedSettings.useCustomTheme
+          );
+        }
       }
 
     } catch (error) {
@@ -1841,9 +1893,10 @@ const useAppStore = create<AppStore>((set, get) => ({
       settings: { ...state.settings, ...settings },
     }));
 
-    // Apply colors if theme/university/custom theme settings changed
+    // Apply colors if theme/university/custom theme/colorblind settings changed
     if ((settings.university !== undefined || settings.theme !== undefined ||
-         settings.useCustomTheme !== undefined || settings.customColors !== undefined) && typeof window !== 'undefined') {
+         settings.useCustomTheme !== undefined || settings.customColors !== undefined ||
+         settings.colorblindMode !== undefined || settings.colorblindStyle !== undefined) && typeof window !== 'undefined') {
       const currentState = get().settings;
       const { isPremium } = get();
       const newTheme = settings.theme !== undefined ? settings.theme : (currentState.theme || 'dark');
@@ -1860,6 +1913,17 @@ const useAppStore = create<AppStore>((set, get) => ({
         );
         applyColorPalette(palette);
       }
+
+      // Apply colorblind mode (skip palette changes if custom theme is active)
+      const colorblindMode = settings.colorblindMode !== undefined ? settings.colorblindMode : currentState.colorblindMode;
+      const colorblindStyle = settings.colorblindStyle !== undefined ? settings.colorblindStyle : currentState.colorblindStyle;
+      applyColorblindMode(
+        colorblindMode as ColorblindMode | null,
+        colorblindStyle as ColorblindStyle | null,
+        newTheme,
+        isPremium && newUseCustomTheme
+      );
+
       localStorage.setItem('app-theme', newTheme);
     }
 

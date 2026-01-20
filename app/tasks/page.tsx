@@ -1560,8 +1560,8 @@ export default function TasksPage() {
                                 aria-label="Recurring task"
                               />
                             )}
-                            {t.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
-                            {isOverdueTask && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
+                            {t.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
+                            {isOverdueTask && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'var(--danger-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                             {notes.some(n => n.taskId === t.id || (t.recurringPatternId && n.recurringTaskPatternId === t.recurringPatternId)) && (
                               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: '600', color: 'var(--link)', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
                                 <StickyNote size={10} />
@@ -1594,13 +1594,16 @@ export default function TasksPage() {
                               </span>
                             )}
                             {showPriorityIndicators && t.importance && (
-                              <span style={{
+                              <span
+                                data-priority={t.importance}
+                                style={{
+                                position: 'relative',
                                 fontSize: isMobile ? '10px' : '11px',
                                 fontWeight: '600',
                                 padding: '1px 6px',
                                 borderRadius: '3px',
-                                backgroundColor: t.importance === 'high' ? 'rgba(239, 68, 68, 0.15)' : t.importance === 'medium' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
-                                color: t.importance === 'high' ? '#ef4444' : t.importance === 'medium' ? '#eab308' : '#22c55e',
+                                backgroundColor: t.importance === 'high' ? 'var(--danger-bg)' : t.importance === 'medium' ? 'var(--warning-bg)' : 'var(--success-bg)',
+                                color: t.importance === 'high' ? 'var(--danger)' : t.importance === 'medium' ? 'var(--warning)' : 'var(--success)',
                               }}>
                                 {t.importance.charAt(0).toUpperCase() + t.importance.slice(1)}
                               </span>
@@ -1767,8 +1770,8 @@ export default function TasksPage() {
                               aria-label="Recurring task"
                             />
                           )}
-                          {t.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
-                          {isOverdueTask && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
+                          {t.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
+                          {isOverdueTask && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'var(--danger-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
                           {notes.some(n => n.taskId === t.id || (t.recurringPatternId && n.recurringTaskPatternId === t.recurringPatternId)) && (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: '600', color: 'var(--link)', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
                               <StickyNote size={10} />
@@ -1820,14 +1823,18 @@ export default function TasksPage() {
                             </span>
                           )}
                           {showPriorityIndicators && t.importance && (
-                            <span style={{
-                              fontSize: isMobile ? '10px' : '11px',
-                              fontWeight: '600',
-                              padding: '1px 6px',
-                              borderRadius: '3px',
-                              backgroundColor: t.importance === 'high' ? 'rgba(239, 68, 68, 0.15)' : t.importance === 'medium' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
-                              color: t.importance === 'high' ? '#ef4444' : t.importance === 'medium' ? '#eab308' : '#22c55e',
-                            }}>
+                            <span
+                              data-priority={t.importance}
+                              style={{
+                                position: 'relative',
+                                fontSize: isMobile ? '10px' : '11px',
+                                fontWeight: '600',
+                                padding: '1px 6px',
+                                borderRadius: '3px',
+                                backgroundColor: t.importance === 'high' ? 'var(--danger-bg)' : t.importance === 'medium' ? 'var(--warning-bg)' : 'var(--success-bg)',
+                                color: t.importance === 'high' ? 'var(--danger)' : t.importance === 'medium' ? 'var(--warning)' : 'var(--success)',
+                              }}
+                            >
                               {t.importance.charAt(0).toUpperCase() + t.importance.slice(1)}
                             </span>
                           )}
@@ -2062,7 +2069,7 @@ export default function TasksPage() {
                     fontWeight: '500',
                     padding: '4px 8px',
                     borderRadius: '4px',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    backgroundColor: 'var(--success-bg)',
                     color: 'var(--success)',
                   }}>
                     Completed
@@ -2074,8 +2081,8 @@ export default function TasksPage() {
                     fontWeight: '500',
                     padding: '4px 8px',
                     borderRadius: '4px',
-                    backgroundColor: previewingTask.importance === 'high' ? 'rgba(239, 68, 68, 0.1)' :
-                      previewingTask.importance === 'medium' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                    backgroundColor: previewingTask.importance === 'high' ? 'var(--danger-bg)' :
+                      previewingTask.importance === 'medium' ? 'var(--warning-bg)' : 'rgba(107, 114, 128, 0.1)',
                     color: previewingTask.importance === 'high' ? 'var(--danger)' :
                       previewingTask.importance === 'medium' ? 'var(--warning)' : 'var(--text-muted)',
                   }}>
@@ -2088,7 +2095,7 @@ export default function TasksPage() {
                     fontWeight: '500',
                     padding: '4px 8px',
                     borderRadius: '4px',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    backgroundColor: 'var(--success-bg)',
                     color: 'var(--success)',
                   }}>
                     Working On

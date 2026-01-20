@@ -636,3 +636,160 @@ input[type="range"]:disabled::-moz-range-thumb {
   animation: pulse 4s ease-in-out infinite;
 }
 
+/* ============================================
+   Colorblind Accessibility Patterns
+   ============================================ */
+
+/* Pattern styles for colorblind users - adds visual patterns to distinguish elements */
+.colorblind-patterns [data-status="success"]::before,
+.colorblind-patterns [data-priority="low"]::before,
+.colorblind-patterns .status-success::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    currentColor 4px,
+    currentColor 5px
+  );
+  opacity: 0.35;
+  border-radius: inherit;
+}
+
+.colorblind-patterns [data-status="warning"]::before,
+.colorblind-patterns [data-priority="medium"]::before,
+.colorblind-patterns .status-warning::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 4px,
+    currentColor 4px,
+    currentColor 5px
+  );
+  opacity: 0.35;
+  border-radius: inherit;
+}
+
+.colorblind-patterns [data-status="danger"]::before,
+.colorblind-patterns [data-status="error"]::before,
+.colorblind-patterns [data-priority="high"]::before,
+.colorblind-patterns .status-danger::before,
+.colorblind-patterns .status-error::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 3px,
+    currentColor 3px,
+    currentColor 4px
+  ),
+  repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    currentColor 3px,
+    currentColor 4px
+  );
+  opacity: 0.35;
+  border-radius: inherit;
+}
+
+/* Ensure elements with patterns have relative positioning */
+.colorblind-patterns [data-status],
+.colorblind-patterns [data-priority],
+.colorblind-patterns .status-success,
+.colorblind-patterns .status-warning,
+.colorblind-patterns .status-danger,
+.colorblind-patterns .status-error {
+  position: relative;
+}
+
+/* Add icons/symbols for better distinction */
+.colorblind-patterns [data-status="success"]::after,
+.colorblind-patterns .status-success::after {
+  content: "\2713"; /* Checkmark */
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 0.75em;
+  opacity: 0.6;
+}
+
+.colorblind-patterns [data-status="warning"]::after,
+.colorblind-patterns .status-warning::after {
+  content: "\26A0"; /* Warning triangle */
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 0.75em;
+  opacity: 0.6;
+}
+
+.colorblind-patterns [data-status="danger"]::after,
+.colorblind-patterns [data-status="error"]::after,
+.colorblind-patterns .status-danger::after,
+.colorblind-patterns .status-error::after {
+  content: "\2717"; /* X mark */
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 0.75em;
+  opacity: 0.6;
+}
+
+/* Priority indicator icons */
+.colorblind-patterns [data-priority="high"]::after {
+  content: "!!!";
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 0.65em;
+  font-weight: bold;
+  opacity: 0.7;
+}
+
+.colorblind-patterns [data-priority="medium"]::after {
+  content: "!!";
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 0.65em;
+  font-weight: bold;
+  opacity: 0.7;
+}
+
+.colorblind-patterns [data-priority="low"]::after {
+  content: "!";
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 0.65em;
+  font-weight: bold;
+  opacity: 0.7;
+}
+

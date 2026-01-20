@@ -328,6 +328,9 @@ export interface Settings {
   showCourseCode?: boolean; // Show course code (CS 101) instead of name (Intro to Computer Science)
   confirmBeforeDelete?: boolean; // Show confirmation dialogs before deleting items
   enableKeyboardShortcuts?: boolean; // Enable keyboard shortcuts for navigation and actions
+  // Colorblind Accessibility
+  colorblindMode?: 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia' | null; // Type of colorblindness
+  colorblindStyle?: 'palette' | 'patterns' | 'both' | null; // How to apply colorblind mode
   // Canvas LMS Integration
   canvasInstanceUrl?: string | null;
   canvasAccessToken?: string | null;

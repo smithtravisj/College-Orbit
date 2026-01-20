@@ -740,7 +740,7 @@ export default function ExamsPage() {
                   />
                 )}
                 {formError && (
-                  <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '8px', padding: '8px' }}>
+                  <div style={{ backgroundColor: 'var(--danger-bg)', border: '1px solid rgba(220, 38, 38, 0.2)', borderRadius: '8px', padding: '8px' }}>
                     <p style={{ fontSize: '13px', color: 'rgb(239, 68, 68)', margin: 0 }}>{formError}</p>
                   </div>
                 )}
@@ -1317,7 +1317,7 @@ export default function ExamsPage() {
                     fontWeight: '500',
                     padding: '4px 8px',
                     borderRadius: '4px',
-                    backgroundColor: previewingExam.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                    backgroundColor: previewingExam.status === 'completed' ? 'var(--success-bg)' : 'rgba(107, 114, 128, 0.1)',
                     color: previewingExam.status === 'completed' ? 'var(--success)' : 'var(--text-muted)',
                   }}>
                     {previewingExam.status.charAt(0).toUpperCase() + previewingExam.status.slice(1)}
