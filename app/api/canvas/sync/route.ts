@@ -337,17 +337,13 @@ export const POST = withRateLimit(async function(req: NextRequest) {
             const canvasLink = { label: 'View on Canvas', url: canvasCourseUrl };
 
             if (existingCourse) {
-              // Merge Canvas link with existing links
+              // Course already exists - don't override user-edited fields (name, code, term, dates)
+              // Only merge Canvas link with existing links
               const mergedLinks = mergeLinks(existingCourse.links, [canvasLink]);
 
-              // Update existing course
               await prisma.course.update({
                 where: { id: existingCourse.id },
                 data: {
-                  name: canvasCourse.name,
-                  code: canvasCourse.course_code,
-                  startDate: canvasCourse.start_at ? new Date(canvasCourse.start_at) : null,
-                  endDate: canvasCourse.end_at ? new Date(canvasCourse.end_at) : null,
                   links: mergedLinks,
                 },
               });
@@ -479,11 +475,11 @@ export const POST = withRateLimit(async function(req: NextRequest) {
                   ? { status: 'done' as const }
                   : {};
 
-                // Update existing deadline
+                // Don't override title - user may have customized it
+                // Do update dueAt since professors often change due dates
                 await prisma.deadline.update({
                   where: { id: existingDeadline.id },
                   data: {
-                    title: assignment.name,
                     dueAt: assignment.due_at ? new Date(assignment.due_at) : null,
                     notes: mergedNotesContent,
                     links: mergedLinksContent,
@@ -589,12 +585,11 @@ export const POST = withRateLimit(async function(req: NextRequest) {
             const cleanDescription = htmlToPlainText(event.description);
 
             if (existingEventId) {
-              // Update existing event
+              // Don't override title/description - user may have customized them
+              // Do update times and location since those may change
               await prisma.calendarEvent.update({
                 where: { id: existingEventId },
                 data: {
-                  title: event.title,
-                  description: cleanDescription,
                   startAt: new Date(event.start_at),
                   endAt: event.end_at ? new Date(event.end_at) : null,
                   allDay: event.all_day,
