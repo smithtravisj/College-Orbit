@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import useAppStore from '@/lib/store';
@@ -22,14 +22,17 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown, Crown, Save, CheckSquare, FileText, Clock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useFormatters } from '@/hooks/useFormatters';
 import { FREE_TIER_LIMITS } from '@/lib/subscription';
 import Link from 'next/link';
 import NaturalLanguageInput from '@/components/NaturalLanguageInput';
+import { showDeleteToast } from '@/components/ui/DeleteToast';
 import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
 
 export default function NotesPage() {
   const isMobile = useIsMobile();
   const subscription = useSubscription();
+  const { getCourseDisplayName } = useFormatters();
   const searchParams = useSearchParams();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
@@ -46,6 +49,8 @@ export default function NotesPage() {
   const [showCoursesDropdown, setShowCoursesDropdown] = useState(false);
   const [showTagsDropdown, setShowTagsDropdown] = useState(false);
   const [deleteConfirmNote, setDeleteConfirmNote] = useState<string | null>(null);
+  const [pendingDeletes, setPendingDeletes] = useState<Set<string>>(new Set());
+  const pendingDeleteTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [detailViewContent, setDetailViewContent] = useState<any>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -66,6 +71,7 @@ export default function NotesPage() {
   const [nlpInput, setNlpInput] = useState('');
 
   const { courses, notes, folders, tasks, deadlines, exams, settings, addNote, updateNote, deleteNote, toggleNotePin, initializeStore, updateSettings } = useAppStore();
+  const confirmBeforeDelete = settings.confirmBeforeDelete ?? true;
 
   useEffect(() => {
     initializeStore();
@@ -251,8 +257,48 @@ export default function NotesPage() {
     updateSettings({ dashboardCardsCollapsedState: newState });
   };
 
-  const handleDeleteNote = async (id: string) => {
-    setDeleteConfirmNote(id);
+  const handleDeleteNote = (id: string) => {
+    const noteToDelete = notes.find(n => n.id === id);
+    if (!noteToDelete) return;
+
+    if (confirmBeforeDelete) {
+      // Show confirmation modal
+      setDeleteConfirmNote(id);
+    } else {
+      // Immediate delete with undo toast
+      setPendingDeletes(prev => new Set(prev).add(id));
+
+      // Show toast and set timeout for actual deletion
+      showDeleteToast(`"${noteToDelete.title}" deleted`, () => {
+        // Undo - cancel the deletion
+        const timeout = pendingDeleteTimeouts.current.get(id);
+        if (timeout) {
+          clearTimeout(timeout);
+          pendingDeleteTimeouts.current.delete(id);
+        }
+        setPendingDeletes(prev => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      });
+
+      // Schedule actual deletion after toast duration
+      const timeout = setTimeout(async () => {
+        await deleteNote(id);
+        if (selectedNoteId === id) {
+          setSelectedNoteId(null);
+          setShowForm(false);
+        }
+        pendingDeleteTimeouts.current.delete(id);
+        setPendingDeletes(prev => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }, 5000);
+      pendingDeleteTimeouts.current.set(id, timeout);
+    }
   };
 
   // Save content changes from detail view
@@ -281,6 +327,8 @@ export default function NotesPage() {
   // Filter and search notes
   const filtered = notes
     .filter((note) => {
+      // Exclude notes pending deletion
+      if (pendingDeletes.has(note.id)) return false;
       if (selectedFolder && note.folderId !== selectedFolder) return false;
       if (selectedCourse && note.courseId !== selectedCourse) return false;
       if (selectedTags.size > 0 && !note.tags?.some((t) => selectedTags.has(t))) return false;
@@ -422,7 +470,7 @@ export default function NotesPage() {
                           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text)'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = selectedCourse === course.id ? 'rgba(255,255,255,0.05)' : 'transparent'; e.currentTarget.style.color = selectedCourse === course.id ? 'var(--text)' : 'var(--text-muted)'; }}
                         >
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{course.code}</span>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{getCourseDisplayName(course)}</span>
                         </label>
                       ))}
                     </div>
@@ -543,7 +591,7 @@ export default function NotesPage() {
                             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text)'; }}
                             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = selectedCourse === course.id ? 'rgba(255,255,255,0.05)' : 'transparent'; e.currentTarget.style.color = selectedCourse === course.id ? 'var(--text)' : 'var(--text-muted)'; }}
                           >
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{course.code}</span>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{getCourseDisplayName(course)}</span>
                           </label>
                         ))}
                       </div>
@@ -622,7 +670,7 @@ export default function NotesPage() {
                       label="Course"
                       value={formData.courseId}
                       onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                      options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: `${c.code} - ${c.name}` }))]}
+                      options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) }))]}
                     />
                     <Select
                       label="Folder"
@@ -1015,7 +1063,7 @@ export default function NotesPage() {
                                     </p>
                                   )}
                                   <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: isMobile ? '4px' : '6px', marginTop: isMobile ? '4px' : '4px' }}>
-                                    {course && <span style={{ fontSize: isMobile ? '10px' : '12px', backgroundColor: 'var(--nav-active)', padding: isMobile ? '2px 4px' : '4px 8px', borderRadius: '4px' }}>{course.code}</span>}
+                                    {course && <span style={{ fontSize: isMobile ? '10px' : '12px', backgroundColor: 'var(--nav-active)', padding: isMobile ? '2px 4px' : '4px 8px', borderRadius: '4px' }}>{getCourseDisplayName(course)}</span>}
                                     {folder && selectedFolder !== note.folderId && (
                                       <span style={{ fontSize: isMobile ? '10px' : '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>
                                         <FolderIcon size={isMobile ? 10 : 12} />
@@ -1128,7 +1176,7 @@ export default function NotesPage() {
                                     </p>
                                   )}
                                   <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: isMobile ? '4px' : '6px', marginTop: isMobile ? '4px' : '4px' }}>
-                                    {course && <span style={{ fontSize: isMobile ? '10px' : '12px', backgroundColor: 'var(--nav-active)', padding: isMobile ? '2px 4px' : '4px 8px', borderRadius: '4px' }}>{course.code}</span>}
+                                    {course && <span style={{ fontSize: isMobile ? '10px' : '12px', backgroundColor: 'var(--nav-active)', padding: isMobile ? '2px 4px' : '4px 8px', borderRadius: '4px' }}>{getCourseDisplayName(course)}</span>}
                                     {folder && selectedFolder !== note.folderId && (
                                       <span style={{ fontSize: isMobile ? '10px' : '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>
                                         <FolderIcon size={isMobile ? 10 : 12} />

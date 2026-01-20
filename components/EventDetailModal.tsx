@@ -18,6 +18,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Link from 'next/link';
 import { CanvasBadge } from './CanvasBadge';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface EventDetailModalProps {
   isOpen: boolean;
@@ -817,6 +818,7 @@ interface TaskDeadlineFormProps {
 
 function TaskDeadlineForm({ formData, setFormData, courses, isPremium, onShowUpgradeModal }: TaskDeadlineFormProps) {
   const isMobile = useIsMobile();
+  const { getCourseDisplayName } = useFormatters();
   const [showMore, setShowMore] = useState(false);
   if (!formData) return null;
 
@@ -843,7 +845,7 @@ function TaskDeadlineForm({ formData, setFormData, courses, isPremium, onShowUpg
           onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
           options={[
             { value: '', label: 'None' },
-            ...courses.map((c) => ({ value: c.id, label: `${c.code}: ${c.name}` })),
+            ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) })),
           ]}
           style={{ fontSize: isMobile ? '0.75rem' : '0.875rem' }}
         />

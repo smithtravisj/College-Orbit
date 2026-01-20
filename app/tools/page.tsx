@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import useAppStore from '@/lib/store';
+import { showDeleteToast } from '@/components/ui/DeleteToast';
 import { getQuickLinks } from '@/lib/quickLinks';
 import { TOOLS_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
@@ -15,6 +16,7 @@ import { Plus, Trash2, X, Pencil, Lock, Crown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import Link from 'next/link';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface Course {
   id: string;
@@ -51,6 +53,7 @@ export default function ToolsPage() {
   const isMobile = useIsMobile();
   const { settings, updateSettings } = useAppStore();
   const subscription = useSubscription();
+  const { getCourseDisplayName } = useFormatters();
   const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [formCourses, setFormCourses] = useState<FormCourse[]>([
@@ -70,6 +73,9 @@ export default function ToolsPage() {
     message: string;
     onConfirm: () => void;
   } | null>(null);
+  const [pendingLinkRemove, setPendingLinkRemove] = useState<{ type: 'custom' | 'default'; id?: string; university?: string; label?: string } | null>(null);
+  const pendingLinkTimeout = useRef<NodeJS.Timeout | null>(null);
+  const confirmBeforeDelete = settings.confirmBeforeDelete ?? true;
 
   // Tools card visibility is only customizable for premium users - free users see defaults
   const savedVisibleToolsCards = settings.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS;
@@ -368,51 +374,111 @@ export default function ToolsPage() {
     }
   };
 
-  const removeCustomLink = (id: string, label: string) => {
-    setConfirmModal({
-      isOpen: true,
-      title: 'Remove Link',
-      message: `Are you sure you want to remove "${label}" from your quick links? This action cannot be undone.`,
-      onConfirm: async () => {
-        try {
-          const res = await fetch(`/api/custom-quick-links/${id}`, {
-            method: 'DELETE',
-          });
+  const performRemoveCustomLink = async (id: string) => {
+    try {
+      const res = await fetch(`/api/custom-quick-links/${id}`, {
+        method: 'DELETE',
+      });
 
-          if (res.ok) {
-            setCustomLinks((prev) => {
-              const newLinks = prev.filter((link) => link.id !== id);
-              localStorage.setItem('customQuickLinks', JSON.stringify(newLinks));
-              return newLinks;
-            });
-          }
-        } catch (error) {
-          console.error('Error removing custom link:', error);
+      if (res.ok) {
+        setCustomLinks((prev) => {
+          const newLinks = prev.filter((link) => link.id !== id);
+          localStorage.setItem('customQuickLinks', JSON.stringify(newLinks));
+          return newLinks;
+        });
+      }
+    } catch (error) {
+      console.error('Error removing custom link:', error);
+    }
+  };
+
+  const removeCustomLink = (id: string, label: string) => {
+    if (confirmBeforeDelete) {
+      setConfirmModal({
+        isOpen: true,
+        title: 'Remove Link',
+        message: `Are you sure you want to remove "${label}" from your quick links? This action cannot be undone.`,
+        onConfirm: async () => {
+          await performRemoveCustomLink(id);
+          setConfirmModal(null);
+        },
+      });
+    } else {
+      // Show toast with undo
+      setPendingLinkRemove({ type: 'custom', id, label });
+
+      // Clear any existing timeout
+      if (pendingLinkTimeout.current) {
+        clearTimeout(pendingLinkTimeout.current);
+      }
+
+      showDeleteToast(`"${label}" removed`, () => {
+        // Undo - cancel the removal
+        if (pendingLinkTimeout.current) {
+          clearTimeout(pendingLinkTimeout.current);
+          pendingLinkTimeout.current = null;
         }
-        setConfirmModal(null);
-      },
-    });
+        setPendingLinkRemove(null);
+      });
+
+      // Schedule actual removal after toast duration
+      pendingLinkTimeout.current = setTimeout(async () => {
+        await performRemoveCustomLink(id);
+        setPendingLinkRemove(null);
+        pendingLinkTimeout.current = null;
+      }, 5000);
+    }
+  };
+
+  const performHideDefaultLink = async (university: string, linkLabel: string) => {
+    const currentHidden = settings.hiddenQuickLinks || {};
+    const universityHidden = currentHidden[university] || [];
+
+    if (!universityHidden.includes(linkLabel)) {
+      const newHidden = {
+        ...currentHidden,
+        [university]: [...universityHidden, linkLabel],
+      };
+      await updateSettings({ hiddenQuickLinks: newHidden });
+    }
   };
 
   const hideDefaultLink = (university: string, linkLabel: string) => {
-    setConfirmModal({
-      isOpen: true,
-      title: 'Hide Link',
-      message: `Are you sure you want to hide "${linkLabel}"? You can restore it later from the Hidden Links section.`,
-      onConfirm: async () => {
-        const currentHidden = settings.hiddenQuickLinks || {};
-        const universityHidden = currentHidden[university] || [];
+    if (confirmBeforeDelete) {
+      setConfirmModal({
+        isOpen: true,
+        title: 'Hide Link',
+        message: `Are you sure you want to hide "${linkLabel}"? You can restore it later from the Hidden Links section.`,
+        onConfirm: async () => {
+          await performHideDefaultLink(university, linkLabel);
+          setConfirmModal(null);
+        },
+      });
+    } else {
+      // Show toast with undo
+      setPendingLinkRemove({ type: 'default', university, label: linkLabel });
 
-        if (!universityHidden.includes(linkLabel)) {
-          const newHidden = {
-            ...currentHidden,
-            [university]: [...universityHidden, linkLabel],
-          };
-          await updateSettings({ hiddenQuickLinks: newHidden });
+      // Clear any existing timeout
+      if (pendingLinkTimeout.current) {
+        clearTimeout(pendingLinkTimeout.current);
+      }
+
+      showDeleteToast(`"${linkLabel}" hidden`, () => {
+        // Undo - cancel the hide
+        if (pendingLinkTimeout.current) {
+          clearTimeout(pendingLinkTimeout.current);
+          pendingLinkTimeout.current = null;
         }
-        setConfirmModal(null);
-      },
-    });
+        setPendingLinkRemove(null);
+      });
+
+      // Schedule actual hide after toast duration
+      pendingLinkTimeout.current = setTimeout(async () => {
+        await performHideDefaultLink(university, linkLabel);
+        setPendingLinkRemove(null);
+        pendingLinkTimeout.current = null;
+      }, 5000);
+    }
   };
 
   const unhideDefaultLink = async (university: string, linkLabel: string) => {
@@ -579,7 +645,7 @@ export default function ToolsPage() {
                           onChange={(e) => updateCourse(idx, 'courseName', e.target.value)}
                           options={[
                             { value: '', label: 'Select a course...' },
-                            ...courses.map((c) => ({ value: c.name, label: c.name })),
+                            ...courses.map((c) => ({ value: c.name, label: getCourseDisplayName(c as any) })),
                           ]}
                         />
                       </div>
@@ -665,10 +731,14 @@ export default function ToolsPage() {
           </CollapsibleCard>
         );
       case TOOLS_CARDS.QUICK_LINKS:
-        const universityCustomLinks = customLinks.filter((link) => link.university === settings.university);
+        const universityCustomLinks = customLinks
+          .filter((link) => link.university === settings.university)
+          .filter((link) => !(pendingLinkRemove?.type === 'custom' && pendingLinkRemove.id === link.id));
         const hiddenLinksForUniversity = (settings.hiddenQuickLinks && settings.university) ? (settings.hiddenQuickLinks[settings.university] || []) : [];
         const allDefaultLinks = settings.university ? getQuickLinks(settings.university) : [];
-        const visibleDefaultLinks = allDefaultLinks.filter((link) => !hiddenLinksForUniversity.includes(link.label));
+        const visibleDefaultLinks = allDefaultLinks
+          .filter((link) => !hiddenLinksForUniversity.includes(link.label))
+          .filter((link) => !(pendingLinkRemove?.type === 'default' && pendingLinkRemove.label === link.label));
         const hiddenDefaultLinks = allDefaultLinks.filter((link) => hiddenLinksForUniversity.includes(link.label));
 
         return visibleToolsCards.includes(cardId) && (

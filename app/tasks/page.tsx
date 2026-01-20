@@ -6,7 +6,8 @@ import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import { useBulkSelect } from '@/hooks/useBulkSelect';
-import { isToday, formatDate, isOverdue } from '@/lib/utils';
+import { isToday, isOverdue, formatDate as formatDateUtil } from '@/lib/utils';
+import { useFormatters } from '@/hooks/useFormatters';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
@@ -69,7 +70,7 @@ function getRecurrenceText(pattern: any): string {
 
   // Add end condition
   if (pattern.endDate) {
-    text += ` until ${formatDate(pattern.endDate)}`;
+    text += ` until ${formatDateUtil(pattern.endDate)}`;
   } else if (pattern.occurrenceCount) {
     text += ` for ${pattern.occurrenceCount} occurrences`;
   }
@@ -80,6 +81,7 @@ function getRecurrenceText(pattern: any): string {
 export default function TasksPage() {
   const isMobile = useIsMobile();
   const subscription = useSubscription();
+  const { formatDate, getCourseDisplayName } = useFormatters();
   const searchParams = useSearchParams();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -88,6 +90,8 @@ export default function TasksPage() {
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
   const savedGlowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
+  const showPriorityIndicators = useAppStore((state) => state.settings.showPriorityIndicators) ?? true;
+  const groupTasksByCourse = useAppStore((state) => state.settings.groupTasksByCourse) ?? false;
 
   // Custom theme and visual effects are only active for premium users
   const useCustomTheme = subscription.isPremium ? savedUseCustomTheme : false;
@@ -819,6 +823,46 @@ export default function TasksPage() {
       return a.title.localeCompare(b.title);
     });
 
+  // Group tasks by course if enabled
+  const groupedTasks = (() => {
+    if (!groupTasksByCourse) return null;
+
+    // Group tasks by courseId
+    const groups: Record<string, typeof filtered> = {};
+    filtered.forEach((t) => {
+      const key = t.courseId || '__no_course__';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(t);
+    });
+
+    // Sort groups by earliest due date, with "No Course" first
+    const sortedGroupKeys = Object.keys(groups).sort((a, b) => {
+      // "No Course" always first
+      if (a === '__no_course__') return -1;
+      if (b === '__no_course__') return 1;
+
+      // Get earliest due date for each group
+      const aEarliest = groups[a].find(t => t.dueAt)?.dueAt;
+      const bEarliest = groups[b].find(t => t.dueAt)?.dueAt;
+
+      if (aEarliest && bEarliest) {
+        return new Date(aEarliest).getTime() - new Date(bEarliest).getTime();
+      }
+      if (aEarliest) return -1;
+      if (bEarliest) return 1;
+      return 0;
+    });
+
+    return sortedGroupKeys.map((key) => {
+      const course = key === '__no_course__' ? null : courses.find(c => c.id === key);
+      return {
+        courseId: key === '__no_course__' ? null : key,
+        courseName: key === '__no_course__' ? 'No Course' : (course ? getCourseDisplayName(course) : 'Unknown Course'),
+        tasks: groups[key],
+      };
+    });
+  })();
+
   return (
     <>
       {/* Tasks Header */}
@@ -902,7 +946,7 @@ export default function TasksPage() {
                     label="Course"
                     value={courseFilter}
                     onChange={(e) => setCourseFilter(e.target.value)}
-                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) }))]}
                   />
                 </div>
                 <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
@@ -994,7 +1038,7 @@ export default function TasksPage() {
                     label="Course"
                     value={courseFilter}
                     onChange={(e) => setCourseFilter(e.target.value)}
-                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: c.code }))]}
+                    options={[{ value: '', label: 'All Courses' }, ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) }))]}
                   />
                 </div>
                 <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
@@ -1106,7 +1150,7 @@ export default function TasksPage() {
                     label="Course"
                     value={formData.courseId}
                     onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                    options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: c.name }))]}
+                    options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) }))]}
                   />
                   <Select
                     label="Importance"
@@ -1389,7 +1433,215 @@ export default function TasksPage() {
           {/* Task List */}
           {filtered.length > 0 ? (
             <Card>
-              <div className="divide-y divide-[var(--border)]" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {groupedTasks ? (
+                  // Grouped by course view
+                  groupedTasks.map((group, groupIndex) => (
+                    <div key={group.courseId || '__no_course__'}>
+                      {/* Course heading */}
+                      <div
+                        style={{
+                          padding: isMobile ? '12px 8px 8px' : '16px 16px 10px',
+                          fontSize: isMobile ? '12px' : '13px',
+                          fontWeight: 600,
+                          color: 'var(--text-muted)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          borderTop: groupIndex > 0 ? '1px solid var(--border)' : 'none',
+                        }}
+                      >
+                        {group.courseName}
+                      </div>
+                      {/* Tasks in this course */}
+                      {group.tasks.map((t, taskIndex) => {
+                        const course = courses.find((c) => c.id === t.courseId);
+                        const dueHours = t.dueAt ? new Date(t.dueAt).getHours() : null;
+                        const dueMinutes = t.dueAt ? new Date(t.dueAt).getMinutes() : null;
+                        const dueTime = t.dueAt ? new Date(t.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+                        const isOverdueTask = t.dueAt && isOverdue(t.dueAt) && t.status === 'open';
+                        const shouldShowTime = dueTime && !(dueHours === 23 && dueMinutes === 59);
+                        const isSelected = bulkSelect.isSelected(t.id);
+                        return (
+                          <div
+                            key={t.id}
+                            style={{
+                              paddingTop: isMobile ? '6px' : '10px',
+                              paddingBottom: isMobile ? '6px' : '10px',
+                              paddingLeft: isMobile ? '2px' : '16px',
+                              paddingRight: isMobile ? '2px' : '16px',
+                              gap: isMobile ? '8px' : '12px',
+                              opacity: hidingTasks.has(t.id) ? 0.5 : 1,
+                              transition: 'opacity 0.3s ease, background-color 0.2s ease',
+                              backgroundColor: isSelected ? 'var(--accent)' : undefined,
+                              backgroundImage: isSelected && theme !== 'light' ? 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2))' : undefined,
+                              cursor: 'pointer',
+                              borderBottom: taskIndex < group.tasks.length - 1 ? '1px solid var(--border)' : 'none',
+                            }}
+                            className="flex items-center group/task hover:bg-[var(--panel-2)] rounded transition-colors"
+                            onContextMenu={(e) => bulkSelect.handleContextMenu(e, t.id)}
+                            onTouchStart={() => bulkSelect.handleLongPressStart(t.id)}
+                            onTouchEnd={bulkSelect.handleLongPressEnd}
+                            onTouchCancel={bulkSelect.handleLongPressEnd}
+                            onClick={() => {
+                              if (bulkSelect.isSelecting) {
+                                bulkSelect.toggleSelection(t.id);
+                              } else {
+                                setPreviewingTask(t);
+                              }
+                            }}
+                          >
+                        {/* Checkbox */}
+                        <input
+                          type="checkbox"
+                          checked={t.status === 'done'}
+                          onChange={async () => {
+                            if (t.status === 'done') {
+                              // Unchecking - mark as incomplete
+                              setToggledTasks(prev => new Set(prev).add(t.id));
+                              await updateTask(t.id, { status: 'open' });
+                              setToggledTasks(prev => {
+                                const newSet = new Set(prev);
+                                newSet.delete(t.id);
+                                return newSet;
+                              });
+                            } else {
+                              // Checking - mark as complete
+                              setToggledTasks(prev => new Set(prev).add(t.id));
+                              setHidingTasks(prev => new Set(prev).add(t.id));
+
+                              setTimeout(async () => {
+                                await updateTask(t.id, { status: 'done', workingOn: false });
+                                setTimeout(() => {
+                                  setToggledTasks(prev => {
+                                    const newSet = new Set(prev);
+                                    newSet.delete(t.id);
+                                    return newSet;
+                                  });
+                                  setHidingTasks(prev => {
+                                    const newSet = new Set(prev);
+                                    newSet.delete(t.id);
+                                    return newSet;
+                                  });
+                                }, 300);
+                              }, 300);
+                            }
+                          }}
+                          style={{
+                            appearance: 'none',
+                            width: isMobile ? '16px' : '20px',
+                            height: isMobile ? '16px' : '20px',
+                            border: t.status === 'done' ? 'none' : '2px solid var(--border)',
+                            borderRadius: '4px',
+                            backgroundColor: t.status === 'done' ? 'var(--button-secondary)' : 'transparent',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            backgroundImage: t.status === 'done' ? 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22white%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z%22 clip-rule=%22evenodd%22 /%3E%3C/svg%3E")' : 'none',
+                            backgroundSize: '100%',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'center',
+                            transition: 'all 0.3s ease'
+                          }}
+                          title={t.status === 'done' ? 'Mark as incomplete' : 'Mark as complete'}
+                        />
+                        <div className="flex-1 min-w-0" style={{ lineHeight: 1.4 }}>
+                          <div className="flex items-center" style={{ gap: isMobile ? '2px' : '6px' }}>
+                            <div
+                              className={`font-medium ${
+                                t.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'
+                              }`}
+                              style={{ fontSize: isMobile ? '12px' : '14px' }}
+                            >
+                              {t.title}
+                            </div>
+                            {t.isRecurring && (
+                              <Repeat
+                                size={14}
+                                style={{ color: 'var(--text-muted)', flexShrink: 0 }}
+                                aria-label="Recurring task"
+                              />
+                            )}
+                            {t.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
+                            {isOverdueTask && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
+                            {notes.some(n => n.taskId === t.id || (t.recurringPatternId && n.recurringTaskPatternId === t.recurringPatternId)) && (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: '600', color: 'var(--link)', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
+                                <StickyNote size={10} />
+                                Note
+                              </span>
+                            )}
+                          </div>
+                          {t.notes && (
+                            <div style={{
+                              fontSize: isMobile ? '11px' : '12px',
+                              color: 'var(--text-muted)',
+                              marginTop: '2px',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                            }}>
+                              {t.notes}
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '4px' : '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                            {t.dueAt && (
+                              <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
+                                {formatDate(t.dueAt)} {shouldShowTime && `at ${dueTime}`}
+                              </span>
+                            )}
+                            {course && (
+                              <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
+                                {getCourseDisplayName(course)}
+                              </span>
+                            )}
+                            {showPriorityIndicators && t.importance && (
+                              <span style={{
+                                fontSize: isMobile ? '10px' : '11px',
+                                fontWeight: '600',
+                                padding: '1px 6px',
+                                borderRadius: '3px',
+                                backgroundColor: t.importance === 'high' ? 'rgba(239, 68, 68, 0.15)' : t.importance === 'medium' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                                color: t.importance === 'high' ? '#ef4444' : t.importance === 'medium' ? '#eab308' : '#22c55e',
+                              }}>
+                                {t.importance.charAt(0).toUpperCase() + t.importance.slice(1)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {/* Action buttons */}
+                        <div className="flex gap-1 opacity-0 group-hover/task:opacity-100 transition-opacity" style={{ flexShrink: 0 }}>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); updateTask(t.id, { workingOn: !t.workingOn }); }}
+                            className={`rounded-[var(--radius-control)] transition-colors ${t.workingOn ? 'text-[var(--success)]' : 'text-[var(--muted)] hover:text-[var(--success)]'} hover:bg-white/5`}
+                            style={{ padding: isMobile ? '2px' : '6px' }}
+                            title={t.workingOn ? 'Stop working on' : 'Mark as working on'}
+                          >
+                            <Hammer size={isMobile ? 14 : 20} />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); startEdit(t); }}
+                            className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
+                            style={{ padding: isMobile ? '2px' : '6px' }}
+                            title="Edit task"
+                          >
+                            <Edit2 size={isMobile ? 14 : 20} />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); deleteTask(t.id); }}
+                            className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
+                            style={{ padding: isMobile ? '2px' : '6px' }}
+                            title="Delete task"
+                          >
+                            <Trash2 size={isMobile ? 14 : 20} />
+                          </button>
+                        </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))
+                ) : (
+                  // Flat list view (default)
+                  <div className="divide-y divide-[var(--border)]">
                 {filtered.map((t) => {
                   const course = courses.find((c) => c.id === t.courseId);
                   const dueHours = t.dueAt ? new Date(t.dueAt).getHours() : null;
@@ -1564,10 +1816,10 @@ export default function TasksPage() {
                           )}
                           {course && (
                             <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
-                              {course.code}
+                              {getCourseDisplayName(course)}
                             </span>
                           )}
-                          {t.importance && (
+                          {showPriorityIndicators && t.importance && (
                             <span style={{
                               fontSize: isMobile ? '10px' : '11px',
                               fontWeight: '600',
@@ -1643,6 +1895,8 @@ export default function TasksPage() {
                     </div>
                   );
                 })}
+                  </div>
+                )}
               </div>
             </Card>
           ) : (
@@ -1814,7 +2068,7 @@ export default function TasksPage() {
                     Completed
                   </span>
                 )}
-                {previewingTask.importance && (
+                {showPriorityIndicators && previewingTask.importance && (
                   <span style={{
                     fontSize: '12px',
                     fontWeight: '500',

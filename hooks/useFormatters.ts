@@ -7,6 +7,7 @@ import {
   formatTimeString as formatTimeStringUtil,
   formatDateString as formatDateStringUtil,
   formatDateNumeric as formatDateNumericUtil,
+  getRelativeDateString,
   TimeFormat,
   DateFormat,
 } from '@/lib/utils';
@@ -18,10 +19,18 @@ import {
 export function useFormatters() {
   const timeFormat = useAppStore((state) => state.settings.timeFormat) || '12h';
   const dateFormat = useAppStore((state) => state.settings.dateFormat) || 'MM/DD/YYYY';
+  const showRelativeDates = useAppStore((state) => state.settings.showRelativeDates) ?? false;
+  const showCourseCode = useAppStore((state) => state.settings.showCourseCode) ?? false;
 
   const formatDate = useCallback(
-    (date: Date | string) => formatDateUtil(date, dateFormat as DateFormat),
-    [dateFormat]
+    (date: Date | string) => {
+      if (showRelativeDates) {
+        const relative = getRelativeDateString(date);
+        if (relative) return relative;
+      }
+      return formatDateUtil(date, dateFormat as DateFormat);
+    },
+    [dateFormat, showRelativeDates]
   );
 
   const formatTime = useCallback(
@@ -42,14 +51,29 @@ export function useFormatters() {
 
   // Format a date string like "2024-01-19" to user's preferred format
   const formatDateString = useCallback(
-    (dateStr: string) => formatDateStringUtil(dateStr, dateFormat as DateFormat),
-    [dateFormat]
+    (dateStr: string) => {
+      if (showRelativeDates) {
+        const relative = getRelativeDateString(dateStr);
+        if (relative) return relative;
+      }
+      return formatDateStringUtil(dateStr, dateFormat as DateFormat);
+    },
+    [dateFormat, showRelativeDates]
   );
 
   // Format date as numeric (01/19/2024 or 19/01/2024)
   const formatDateNumeric = useCallback(
     (date: Date | string) => formatDateNumericUtil(date, dateFormat as DateFormat),
     [dateFormat]
+  );
+
+  // Get course display name based on showCourseCode setting
+  const getCourseDisplayName = useCallback(
+    (course: { code: string; name: string } | null | undefined): string => {
+      if (!course) return '';
+      return showCourseCode ? course.code : course.name;
+    },
+    [showCourseCode]
   );
 
   return {
@@ -59,6 +83,8 @@ export function useFormatters() {
     formatTimeString,
     formatDateString,
     formatDateNumeric,
+    getCourseDisplayName,
+    showCourseCode,
     timeFormat: timeFormat as TimeFormat,
     dateFormat: dateFormat as DateFormat,
   };

@@ -316,6 +316,18 @@ export interface Settings {
   glowIntensity?: number; // 0-100, controls glow effect intensity on buttons
   autoCreateCourseFolders?: boolean; // Auto-create note folders when courses are created
   showCanvasBadges?: boolean; // Show Canvas badges on synced items
+  showRelativeDates?: boolean; // Show "Today", "Tomorrow", "In 3 days" instead of actual dates (within 7 days)
+  showNavCounts?: boolean; // Master toggle for showing counts in navigation
+  showNavCountTasks?: boolean; // Show overdue tasks count in nav
+  showNavCountAssignments?: boolean; // Show overdue assignments count in nav
+  showNavCountExams?: boolean; // Show total exams count in nav
+  showPriorityIndicators?: boolean; // Show priority badges on tasks
+  showEffortIndicators?: boolean; // Show effort level badges on assignments
+  groupTasksByCourse?: boolean; // Group tasks by course in list view
+  groupAssignmentsByCourse?: boolean; // Group assignments by course in list view
+  showCourseCode?: boolean; // Show course code (CS 101) instead of name (Intro to Computer Science)
+  confirmBeforeDelete?: boolean; // Show confirmation dialogs before deleting items
+  enableKeyboardShortcuts?: boolean; // Enable keyboard shortcuts for navigation and actions
   // Canvas LMS Integration
   canvasInstanceUrl?: string | null;
   canvasAccessToken?: string | null;

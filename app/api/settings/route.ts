@@ -105,6 +105,18 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.autoCreateCourseFolders !== undefined) updateData.autoCreateCourseFolders = data.autoCreateCourseFolders;
     if (data.showCanvasBadges !== undefined) updateData.showCanvasBadges = data.showCanvasBadges;
     if (data.canvasAutoMarkComplete !== undefined) updateData.canvasAutoMarkComplete = data.canvasAutoMarkComplete;
+    if (data.showRelativeDates !== undefined) updateData.showRelativeDates = data.showRelativeDates;
+    if (data.showNavCounts !== undefined) updateData.showNavCounts = data.showNavCounts;
+    if (data.showNavCountTasks !== undefined) updateData.showNavCountTasks = data.showNavCountTasks;
+    if (data.showNavCountAssignments !== undefined) updateData.showNavCountAssignments = data.showNavCountAssignments;
+    if (data.showNavCountExams !== undefined) updateData.showNavCountExams = data.showNavCountExams;
+    if (data.showPriorityIndicators !== undefined) updateData.showPriorityIndicators = data.showPriorityIndicators;
+    if (data.showEffortIndicators !== undefined) updateData.showEffortIndicators = data.showEffortIndicators;
+    if (data.groupTasksByCourse !== undefined) updateData.groupTasksByCourse = data.groupTasksByCourse;
+    if (data.groupAssignmentsByCourse !== undefined) updateData.groupAssignmentsByCourse = data.groupAssignmentsByCourse;
+    if (data.showCourseCode !== undefined) updateData.showCourseCode = data.showCourseCode;
+    if (data.confirmBeforeDelete !== undefined) updateData.confirmBeforeDelete = data.confirmBeforeDelete;
+    if (data.enableKeyboardShortcuts !== undefined) updateData.enableKeyboardShortcuts = data.enableKeyboardShortcuts;
 
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 

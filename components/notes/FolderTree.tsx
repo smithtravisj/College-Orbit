@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Folder, Edit2, Trash2 } from 'lucide-react';
 import { Folder as FolderType } from '@/types/index';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { showDeleteToast } from '@/components/ui/DeleteToast';
 
 interface FolderTreeProps {
   folders: FolderType[];
@@ -20,12 +21,15 @@ export default function FolderTree({
 }: FolderTreeProps) {
   const isMobile = useIsMobile();
   const { deleteFolder, addFolder, updateFolder, settings } = useAppStore();
+  const confirmBeforeDelete = settings.confirmBeforeDelete ?? true;
   const [contextMenu, setContextMenu] = useState<{ folderId: string; x: number; y: number } | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [pendingDeletes, setPendingDeletes] = useState<Set<string>>(new Set());
+  const pendingDeleteTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -69,10 +73,51 @@ export default function FolderTree({
     setContextMenu({ folderId, x: pos.x, y: pos.y });
   };
 
-  const handleDeleteFolder = async (folderId: string) => {
-    setDeleteConfirm(folderId);
+  const handleDeleteFolder = useCallback((folderId: string) => {
+    const folderToDelete = folders.find(f => f.id === folderId);
+    if (!folderToDelete) return;
+
     setContextMenu(null);
-  };
+
+    if (confirmBeforeDelete) {
+      // Show confirmation modal
+      setDeleteConfirm(folderId);
+    } else {
+      // Immediate delete with undo toast
+      setPendingDeletes(prev => new Set(prev).add(folderId));
+
+      // Show toast and set timeout for actual deletion
+      showDeleteToast(`"${folderToDelete.name}" deleted`, () => {
+        // Undo - cancel the deletion
+        const timeout = pendingDeleteTimeouts.current.get(folderId);
+        if (timeout) {
+          clearTimeout(timeout);
+          pendingDeleteTimeouts.current.delete(folderId);
+        }
+        setPendingDeletes(prev => {
+          const next = new Set(prev);
+          next.delete(folderId);
+          return next;
+        });
+      });
+
+      // Schedule actual deletion after toast duration
+      const timeout = setTimeout(async () => {
+        try {
+          await deleteFolder(folderId);
+        } catch (err) {
+          console.error('Failed to delete folder:', err);
+        }
+        pendingDeleteTimeouts.current.delete(folderId);
+        setPendingDeletes(prev => {
+          const next = new Set(prev);
+          next.delete(folderId);
+          return next;
+        });
+      }, 5000);
+      pendingDeleteTimeouts.current.set(folderId, timeout);
+    }
+  }, [confirmBeforeDelete, folders, deleteFolder]);
 
   const confirmDelete = async () => {
     if (!deleteConfirm) return;
@@ -139,7 +184,9 @@ export default function FolderTree({
     }
   };
 
-  const allRootFolders = folders.filter((f) => !f.parentId).sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
+  const allRootFolders = folders
+    .filter((f) => !f.parentId && !pendingDeletes.has(f.id))
+    .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
 
   // Light mode detection
   const isLightMode = settings.theme === 'light';
