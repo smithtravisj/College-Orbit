@@ -16,7 +16,7 @@ export default function PrivacyContent() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Last Updated: January 19, 2026
+                Last Updated: January 20, 2026
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 At College Orbit, your privacy is our priority. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our service. We believe in transparency and give you full control over your data.
@@ -78,10 +78,10 @@ export default function PrivacyContent() {
             </div>
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
-                Technical Information
+                Technical Information & Session Data
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                When you use our service, we may collect technical information including your browser type, device information, and IP address. This helps us troubleshoot technical issues and ensure service reliability.
+                When you use our service, we collect technical information including your browser type, operating system, device information, and IP address. We track active sessions to help you manage your account security—you can view all devices currently logged into your account and revoke access to any session from Account Settings. Session data is used solely for security purposes and to let you control which devices have access to your account.
               </p>
             </div>
             <div>
@@ -206,6 +206,14 @@ export default function PrivacyContent() {
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 If you connect your Canvas LMS account, our servers communicate directly with your school's Canvas instance using the API token you provide. This communication is used solely to fetch your course data, assignments, grades, calendar events, and announcements. We do not share your College Orbit account information with Canvas, and Canvas does not have access to your College Orbit data. All communication with Canvas servers uses secure HTTPS connections. Your Canvas data remains under your school's privacy policies; we simply import a copy for display within College Orbit.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Calendar Export & Subscription
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                You can export your calendar data (deadlines, exams, tasks, courses, and custom events) as an iCal file for use in external calendar applications like Google Calendar or Apple Calendar. You can also generate a subscription URL that allows external calendars to automatically sync with your College Orbit data. This subscription URL contains a unique, randomly-generated token—anyone with this URL can view your calendar data. You can regenerate this token at any time from Account Settings, which will invalidate the previous URL. We recommend treating your calendar subscription URL as private information.
               </p>
             </div>
             <div>
