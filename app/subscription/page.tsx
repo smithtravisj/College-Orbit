@@ -180,8 +180,8 @@ export default function SubscriptionPage() {
 
   const isCanceled = subscription.status === 'canceled';
   const otherPlan = subscription.plan === 'monthly' ? 'yearly' : 'monthly';
-  const otherPlanPrice = otherPlan === 'yearly' ? '$40/year' : '$5/month';
-  const currentPlanPrice = subscription.plan === 'yearly' ? '$40/year' : '$5/month';
+  const otherPlanPrice = otherPlan === 'yearly' ? '$48/year' : '$5/month';
+  const currentPlanPrice = subscription.plan === 'yearly' ? '$48/year' : '$5/month';
 
   return (
     <>
@@ -447,7 +447,7 @@ export default function SubscriptionPage() {
             </h3>
             <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
               {otherPlan === 'yearly'
-                ? `Your plan will change to yearly ($40/year) at the end of your current billing period (${formatDate(subscription.expiresAt)}). You won't be charged until then.`
+                ? `Your plan will change to yearly ($48/year) at the end of your current billing period (${formatDate(subscription.expiresAt)}). You won't be charged until then.`
                 : `Your plan will change to monthly ($5/month) at the end of your current billing period (${formatDate(subscription.expiresAt)}). You won't be charged until then.`}
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
