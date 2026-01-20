@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "1.2.0",
+      "date": "2026-01-20",
+      "changes": [
+        "Dashboard redesign with new unified Timeline component",
+        "Timeline shows classes, tasks, deadlines, exams, and calendar events in one view",
+        "Instant timeline loading with smart caching",
+        "Today/Week view toggle (week view for Premium users)",
+        "Click any timeline item to view details in a modal",
+        "Improved click targets and cleaner card layouts"
+      ]
+    },
+    {
       "version": "1.1.0",
       "date": "2026-01-20",
       "changes": [
