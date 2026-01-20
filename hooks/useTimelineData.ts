@@ -43,11 +43,6 @@ function setCachedData(range: TimelineRange, data: TimelineGroupedData) {
   } catch {}
 }
 
-const EMPTY_DATA: TimelineGroupedData = {
-  days: [],
-  totalProgress: { completed: 0, total: 0, percentage: 100, hasOverdue: false }
-};
-
 interface UseTimelineDataOptions {
   range: TimelineRange;
   itemTypes?: TimelineItemType[];

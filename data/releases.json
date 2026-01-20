@@ -7,7 +7,7 @@
         "Dashboard redesign with new unified Timeline component",
         "Timeline shows classes, tasks, deadlines, exams, and calendar events in one view",
         "Instant timeline loading with smart caching",
-        "Today/Week view toggle (week view for Premium users)",
+        "Today/Week view toggle",
         "Click any timeline item to view details in a modal",
         "Improved click targets and cleaner card layouts"
       ]

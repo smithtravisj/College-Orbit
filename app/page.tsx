@@ -54,7 +54,7 @@ function Dashboard() {
   const [quickLinksHeight, setQuickLinksHeight] = useState<number>(300);
   const timelineRef = useRef<HTMLDivElement>(null);
   const quickLinksRef = useRef<HTMLDivElement>(null);
-  const { courses, deadlines, tasks, exams, calendarEvents, settings, excludedDates, initializeStore, toggleTaskDone, updateDeadline } = useAppStore();
+  const { courses, deadlines, tasks, settings, excludedDates, initializeStore, toggleTaskDone, updateDeadline } = useAppStore();
   const { isPremium } = useSubscription();
   // Dashboard card visibility is only customizable for premium users - free users see defaults
   const savedVisibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;

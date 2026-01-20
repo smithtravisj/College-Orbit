@@ -59,15 +59,15 @@ export const Timeline: React.FC<TimelineProps> = ({
     return { accentColor: accent, glowScale: scale, glowOpacity: opacity };
   }, [isPremium, settings, theme]);
 
-  // Initialize range from localStorage, only premium users can use week view
+  // Initialize range from localStorage
   const [range, setRange] = useState<TimelineRange>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('timelineRange') as TimelineRange;
-      if (saved && (saved === 'today' || (saved === 'week' && isPremium))) {
+      if (saved && (saved === 'today' || saved === 'week')) {
         return saved;
       }
     }
-    return isPremium ? defaultRange : 'today';
+    return defaultRange;
   });
 
   // Save range to localStorage when it changes
@@ -127,11 +127,10 @@ export const Timeline: React.FC<TimelineProps> = ({
               { key: 'week' as TimelineRange, label: 'Week' },
             ].map((tab) => {
               const isActive = range === tab.key;
-              const isDisabled = tab.key === 'week' && !isPremium;
               return (
                 <button
                   key={tab.key}
-                  onClick={() => !isDisabled && setRange(tab.key)}
+                  onClick={() => setRange(tab.key)}
                   className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
                     isActive ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
                   }`}
@@ -146,10 +145,8 @@ export const Timeline: React.FC<TimelineProps> = ({
                         : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)')
                       : 'none',
                     boxShadow: isActive ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : undefined,
-                    cursor: isDisabled ? 'not-allowed' : 'pointer',
-                    opacity: isDisabled ? 0.5 : 1,
+                    cursor: 'pointer',
                   }}
-                  title={isDisabled ? 'Week view is a Premium feature' : undefined}
                 >
                   {tab.label}
                 </button>
