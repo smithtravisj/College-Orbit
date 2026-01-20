@@ -618,7 +618,7 @@ export default function AccountPage() {
                   </div>
                 )}
 
-                {/* Features List */}
+                {/* Features List - for non-premium users */}
                 {!subscription.isPremium && (
                   <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
                     <p className="text-xs text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>Premium includes:</p>
@@ -629,6 +629,56 @@ export default function AccountPage() {
                       <li>• File uploads & recurring items</li>
                       <li>• Custom themes & visual effects</li>
                     </ul>
+                  </div>
+                )}
+
+                {/* Features List - for premium users */}
+                {subscription.isPremium && (
+                  <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
+                    <p className="text-xs text-[var(--text-muted)]" style={{ marginBottom: '10px' }}>Your premium features:</p>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '6px 16px',
+                    }}>
+                      {[
+                        'Unlimited notes',
+                        'Unlimited courses',
+                        'Calendar page',
+                        'Shopping lists',
+                        'All Tools access',
+                        'File attachments',
+                        'Recurring items',
+                        'Custom themes',
+                        'Visual effects',
+                        'Dashboard customization',
+                      ].map((feature) => (
+                        <div
+                          key={feature}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            fontSize: '12px',
+                            color: 'var(--text-muted)',
+                          }}
+                        >
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="var(--success)"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                          {feature}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
