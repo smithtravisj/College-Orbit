@@ -36,13 +36,20 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingSession) {
-      // Update last activity and browser if client provided a more specific one
+      // Re-parse user agent to fix any previous detection issues
+      const userAgent = req.headers.get('user-agent');
+      const { browser: parsedBrowser, os, device } = parseUserAgent(userAgent);
+      const browser = clientBrowser || parsedBrowser;
+
+      // Update last activity, browser, OS, and device info
       await prisma.userSession.update({
         where: { sessionToken },
         data: {
           lastActivityAt: new Date(),
-          // Override browser if client provides one (e.g., Brave detected client-side)
-          ...(clientBrowser ? { browser: clientBrowser } : {}),
+          browser,
+          os,
+          device,
+          userAgent,
         },
       });
       return NextResponse.json({ success: true, message: 'Session already registered' });
