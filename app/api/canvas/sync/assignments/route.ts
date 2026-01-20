@@ -331,10 +331,11 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
                 ? { status: 'done' as const }
                 : {};
 
+              // Don't override title - user may have customized it
+              // Do update dueAt since professors often change due dates
               await prisma.deadline.update({
                 where: { id: existingDeadline.id },
                 data: {
-                  title: assignment.name,
                   dueAt: assignment.due_at ? new Date(assignment.due_at) : null,
                   notes: mergedNotes,
                   links: mergedLinks,
