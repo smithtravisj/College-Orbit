@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { GpaEntry } from '@/types';
 import { Trash2, Plus } from 'lucide-react';
 import Input, { Select } from '@/components/ui/Input';
@@ -58,6 +58,28 @@ export default function GradeTrackerTable({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [pendingDeletes, setPendingDeletes] = useState<Set<string>>(new Set());
   const pendingDeleteTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const editingRowRef = useRef<HTMLDivElement | null>(null);
+
+  // Close editing when clicking outside the editing row
+  useEffect(() => {
+    if (!editingId) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (editingRowRef.current && !editingRowRef.current.contains(event.target as Node)) {
+        setEditingId(null);
+      }
+    };
+
+    // Add listener with a small delay to avoid immediate triggering
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [editingId]);
 
   const handleAddGrade = async () => {
     if (!newGrade.courseName || !newGrade.grade) {
@@ -167,6 +189,7 @@ export default function GradeTrackerTable({
         {visibleEntries.map(entry => (
           <div
             key={entry.id}
+            ref={editingId === entry.id ? editingRowRef : null}
             style={{
               display: 'flex',
               gap: '12px',
