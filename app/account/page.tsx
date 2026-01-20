@@ -493,6 +493,15 @@ export default function AccountPage() {
                         })}
                       </span>
                     )}
+                    {subscription.plan === 'semester' && subscription.expiresAt && subscription.status !== 'canceled' && (
+                      <span className="text-sm text-[var(--text-muted)]">
+                        - until {new Date(subscription.expiresAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    )}
                   </div>
                 </div>
 
