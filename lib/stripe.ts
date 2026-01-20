@@ -11,5 +11,5 @@ export const PRICE_IDS = {
 
 export const PRICES = {
   monthly: 5,
-  yearly: 40,
+  yearly: 48,
 };

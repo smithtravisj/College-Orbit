@@ -146,8 +146,8 @@ function PublicPricingPage() {
                 <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--text-muted)' }}> /month</span>
               </p>
               <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-                or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$40/year</span>{' '}
-                <span style={{ color: 'var(--success)' }}>(save 33%)</span>
+                or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$48/year</span>{' '}
+                <span style={{ color: 'var(--success)' }}>(save 20%)</span>
               </p>
 
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: '20px' }}>
@@ -331,8 +331,8 @@ function AuthenticatedPricingPage() {
                 <span style={{ fontSize: '14px', fontWeight: 400, color: mutedText }}> /month</span>
               </p>
               <p style={{ fontSize: '13px', color: mutedText, marginBottom: '20px' }}>
-                or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$40/year</span>{' '}
-                <span style={{ color: 'var(--success)' }}>(save 33%)</span>
+                or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$48/year</span>{' '}
+                <span style={{ color: 'var(--success)' }}>(save 20%)</span>
               </p>
 
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: '20px' }}>
@@ -372,7 +372,7 @@ function AuthenticatedPricingPage() {
                       className="w-full"
                     >
                       <Crown size={18} />
-                      Get Yearly - $40/yr
+                      Get Yearly - $48/yr
                     </Button>
                   </Link>
                   <Link href="/checkout?plan=monthly">
