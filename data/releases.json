@@ -1,6 +1,28 @@
 {
   "releases": [
     {
+      "version": "1.1.0",
+      "date": "2026-01-20",
+      "changes": [
+        "File uploads in Notes - Attach files directly to your notes for better organization",
+        "Quick Add improvements for Notes - Faster note creation workflow",
+        "Shopping page improvements - Enhanced grocery, wishlist, and pantry tracking",
+        "Semester pricing option - New one-time payment option for semester access",
+        "Tools page tabs - Better organization with tabbed navigation for GPA tools",
+        "Grade/GPA tracker improvements - Enhanced grade tracking with course credits",
+        "Course credits tracking - Track credit hours for each course with auto-sync to grade tracker",
+        "Notification reminders for exams, tasks, and assignments - Never miss important deadlines",
+        "Session management - View and revoke access from active devices in Account settings",
+        "Calendar export - Export to Google Calendar, Apple Calendar, or any iCal-compatible app",
+        "Calendar subscription URL - Auto-syncing calendar feed for external calendar apps",
+        "Safari mobile performance improvements - Faster loading on iOS devices",
+        "Premium features display - See all premium features on your subscription card",
+        "Updated welcome to premium email with comprehensive feature list",
+        "iOS/iPadOS device detection improvements for active sessions",
+        "Privacy Policy and Terms of Service updates for new features"
+      ]
+    },
+    {
       "version": "1.0.0",
       "date": "2026-01-20",
       "changes": [
