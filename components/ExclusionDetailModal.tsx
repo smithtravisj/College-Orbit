@@ -46,13 +46,26 @@ export default function ExclusionDetailModal({
 
   // Format date for display
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr + 'T00:00:00');
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    try {
+      // Parse YYYY-MM-DD format manually to avoid timezone issues
+      const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (match) {
+        const [, year, month, day] = match;
+        // Create date using local timezone by specifying components
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        return date.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+      }
+
+      // Fallback for other formats
+      return dateStr;
+    } catch {
+      return dateStr;
+    }
   };
 
   return createPortal(
@@ -80,7 +93,7 @@ export default function ExclusionDetailModal({
           transform: 'translate(-50%, -50%)',
           backgroundColor: 'var(--panel)',
           border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-panel)',
+          borderRadius: '16px',
           padding: '0',
           minWidth: '320px',
           maxWidth: '450px',

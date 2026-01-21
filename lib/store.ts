@@ -421,8 +421,12 @@ const useAppStore = create<AppStore>((set, get) => ({
 
     if (hasLocalData) {
       // We have cached data, show UI immediately
-      // Skip background refresh to prevent UI flash - data will refresh on next page load
       set({ loading: false, initialized: true });
+      // Refresh data in background to ensure we have fresh data
+      // This won't cause UI flash since we already have cached data
+      get().loadFromDatabase().catch((error) => {
+        console.error('Background data refresh failed:', error);
+      });
     } else {
       // No cached data, must wait for API
       set({ loading: true });

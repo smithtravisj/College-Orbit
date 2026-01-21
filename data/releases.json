@@ -1,6 +1,16 @@
 {
   "releases": [
     {
+      "version": "1.2.7",
+      "date": "2026-01-20",
+      "changes": [
+        "Fixed excluded dates and notes not loading from database",
+        "Fixed No School event popup showing invalid date",
+        "Fixed No School event popup missing rounded corners",
+        "Data now refreshes in background to ensure freshness"
+      ]
+    },
+    {
       "version": "1.2.6",
       "date": "2026-01-20",
       "changes": [
