@@ -1,6 +1,17 @@
 {
   "releases": [
     {
+      "version": "1.2.11",
+      "date": "2026-01-22",
+      "changes": [
+        "Fixed overdue tasks and assignments not showing in week view of timeline",
+        "Overdue items now display their original due date",
+        "Added help tooltips for Pomodoro Timer, Grade Tracker, GPA Trend, What-If GPA Projector, and GPA Calculator",
+        "Added help tooltips for calendar export, colorblind mode, keyboard shortcuts, and shopping bulk import",
+        "Help tooltips now work on mobile (tap to open, tap away to close)"
+      ]
+    },
+    {
       "version": "1.2.10",
       "date": "2026-01-22",
       "changes": [

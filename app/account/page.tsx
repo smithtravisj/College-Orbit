@@ -9,6 +9,7 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { Shield, Download, Upload, Trash2, Eye, EyeOff, Crown, Monitor, Smartphone, Tablet, X, Calendar, Copy } from 'lucide-react';
+import HelpTooltip from '@/components/ui/HelpTooltip';
 import { useSubscription } from '@/hooks/useSubscription';
 import Link from 'next/link';
 
@@ -572,6 +573,7 @@ export default function AccountPage() {
                 <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Calendar size={16} />
                   Export to Google Calendar / iCal
+                  <HelpTooltip text="Download .ics: One-time export file to import into any calendar app. Subscription URL: Auto-syncing link that keeps your calendar updated when changes are made." size={14} width={260} />
                 </label>
                 <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
                   Export your deadlines, exams, tasks, and course schedule to Google Calendar, Apple Calendar, or any calendar app.

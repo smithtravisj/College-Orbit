@@ -634,31 +634,31 @@ export default function ToolsPage() {
     switch (cardId) {
       case TOOLS_CARDS.POMODORO_TIMER:
         return visibleToolsCards.includes(cardId) && (
-          <CollapsibleCard key={cardId} id="pomodoro-timer" title="Pomodoro Timer" subtitle="Focus sessions for productive study">
+          <CollapsibleCard key={cardId} id="pomodoro-timer" title="Pomodoro Timer" subtitle="Focus sessions for productive study" helpTooltip="The Pomodoro Technique helps you focus by working in timed intervals (usually 25 min) followed by short breaks. Start a session, take a break when the timer ends, then repeat.">
             <PomodoroTimer theme={settings.theme} />
           </CollapsibleCard>
         );
       case TOOLS_CARDS.GRADE_TRACKER:
         return visibleToolsCards.includes(cardId) && (
-          <CollapsibleCard key={cardId} id="grade-tracker" title="Grade Tracker" subtitle="Track your grades and GPA by semester">
+          <CollapsibleCard key={cardId} id="grade-tracker" title="Grade Tracker" subtitle="Track your grades and GPA by semester" helpTooltip="Track your grades for each course by semester. Enter your grades and credit hours to calculate your semester and cumulative GPA automatically.">
             <GradeTracker courses={courses} theme={settings.theme} onEntriesChange={refreshGpaEntries} />
           </CollapsibleCard>
         );
       case TOOLS_CARDS.GPA_TREND_CHART:
         return visibleToolsCards.includes(cardId) && (
-          <CollapsibleCard key={cardId} id="gpa-trend" title="GPA Trend" subtitle="Visualize your academic progress">
+          <CollapsibleCard key={cardId} id="gpa-trend" title="GPA Trend" subtitle="Visualize your academic progress" helpTooltip="Visualize how your GPA has changed over time. See your academic progress across semesters in a chart to identify trends.">
             <GpaTrendChart entries={gpaEntries} />
           </CollapsibleCard>
         );
       case TOOLS_CARDS.WHAT_IF_PROJECTOR:
         return visibleToolsCards.includes(cardId) && (
-          <CollapsibleCard key={cardId} id="whatif-projector" title="What-If GPA Projector" subtitle="See how future grades impact your GPA">
+          <CollapsibleCard key={cardId} id="whatif-projector" title="What-If GPA Projector" subtitle="See how future grades impact your GPA" helpTooltip="See how potential future grades would affect your cumulative GPA. Add hypothetical courses to plan your academic goals and see what grades you need.">
             <WhatIfProjector />
           </CollapsibleCard>
         );
       case TOOLS_CARDS.GPA_CALCULATOR:
         return visibleToolsCards.includes(cardId) && (
-          <CollapsibleCard key={cardId} id="gpa-calculator" title="GPA Calculator" subtitle="Calculate your GPA from individual courses">
+          <CollapsibleCard key={cardId} id="gpa-calculator" title="GPA Calculator" subtitle="Calculate your GPA from individual courses" helpTooltip="Calculate your GPA by entering courses with their grades and credit hours. Supports both letter grades (A, B+, etc.) and percentages.">
             <div className={isMobile ? 'space-y-3' : 'space-y-5'}>
               {/* Form Fields */}
               <div className={isMobile ? 'space-y-2' : 'space-y-4'}>

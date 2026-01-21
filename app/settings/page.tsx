@@ -11,7 +11,8 @@ import ColorPicker from '@/components/ui/ColorPicker';
 import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { showDeleteToast } from '@/components/ui/DeleteToast';
-import { Monitor, HelpCircle, RefreshCw, Link2, Unlink, ChevronDown } from 'lucide-react';
+import { Monitor, RefreshCw, Link2, Unlink, ChevronDown } from 'lucide-react';
+import HelpTooltip from '@/components/ui/HelpTooltip';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { DASHBOARD_CARDS, TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
@@ -1158,30 +1159,7 @@ export default function SettingsPage() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <p className="text-sm text-[var(--text)]" style={{ margin: 0 }}>Tasks</p>
-                      <div className="relative" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                        <HelpCircle
-                          size={14}
-                          className="text-[var(--text-muted)] cursor-help peer hover:text-[var(--text)]"
-                          style={{ transition: 'color 0.15s' }}
-                        />
-                        <div
-                          className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 pointer-events-none"
-                          style={{
-                            padding: '8px 12px',
-                            fontSize: '12px',
-                            color: 'var(--text)',
-                            backgroundColor: 'var(--panel)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '6px',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                            whiteSpace: 'nowrap',
-                            zIndex: 50,
-                            transition: 'opacity 0.15s, visibility 0.15s',
-                          }}
-                        >
-                          Shows count of overdue tasks
-                        </div>
-                      </div>
+                      <HelpTooltip text="Shows count of overdue tasks" size={14} width={180} />
                     </div>
                     <button
                       onClick={() => updateSettings({ showNavCountTasks: !(settings.showNavCountTasks ?? true) })}
@@ -1216,30 +1194,7 @@ export default function SettingsPage() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <p className="text-sm text-[var(--text)]" style={{ margin: 0 }}>Assignments</p>
-                      <div className="relative" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                        <HelpCircle
-                          size={14}
-                          className="text-[var(--text-muted)] cursor-help peer hover:text-[var(--text)]"
-                          style={{ transition: 'color 0.15s' }}
-                        />
-                        <div
-                          className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 pointer-events-none"
-                          style={{
-                            padding: '8px 12px',
-                            fontSize: '12px',
-                            color: 'var(--text)',
-                            backgroundColor: 'var(--panel)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '6px',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                            whiteSpace: 'nowrap',
-                            zIndex: 50,
-                            transition: 'opacity 0.15s, visibility 0.15s',
-                          }}
-                        >
-                          Shows count of overdue assignments
-                        </div>
-                      </div>
+                      <HelpTooltip text="Shows count of overdue assignments" size={14} width={200} />
                     </div>
                     <button
                       onClick={() => updateSettings({ showNavCountAssignments: !(settings.showNavCountAssignments ?? true) })}
@@ -1274,30 +1229,7 @@ export default function SettingsPage() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <p className="text-sm text-[var(--text)]" style={{ margin: 0 }}>Exams</p>
-                      <div className="relative" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                        <HelpCircle
-                          size={14}
-                          className="text-[var(--text-muted)] cursor-help peer hover:text-[var(--text)]"
-                          style={{ transition: 'color 0.15s' }}
-                        />
-                        <div
-                          className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 pointer-events-none"
-                          style={{
-                            padding: '8px 12px',
-                            fontSize: '12px',
-                            color: 'var(--text)',
-                            backgroundColor: 'var(--panel)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '6px',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                            whiteSpace: 'nowrap',
-                            zIndex: 50,
-                            transition: 'opacity 0.15s, visibility 0.15s',
-                          }}
-                        >
-                          Shows total number of exams
-                        </div>
-                      </div>
+                      <HelpTooltip text="Shows total number of exams" size={14} width={180} />
                     </div>
                     <button
                       onClick={() => updateSettings({ showNavCountExams: !(settings.showNavCountExams ?? true) })}
@@ -1494,7 +1426,10 @@ export default function SettingsPage() {
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Enable Keyboard Shortcuts</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Enable Keyboard Shortcuts</p>
+                    <HelpTooltip text="Press ? anywhere in the app to see all available shortcuts. Includes navigation (g+d for Dashboard), quick actions (n for new item), and more." size={14} width={240} />
+                  </div>
                   <p className="text-sm text-[var(--text-muted)]">
                     Toggle keyboard navigation and action shortcuts
                   </p>
@@ -1585,30 +1520,7 @@ export default function SettingsPage() {
                 <div style={{ marginBottom: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                     <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Canvas Instance URL</p>
-                    <div className="relative" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                      <HelpCircle
-                        size={14}
-                        className="text-[var(--text-muted)] cursor-help peer hover:text-[var(--text)]"
-                        style={{ transition: 'color 0.15s' }}
-                      />
-                      <div
-                        className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 pointer-events-none"
-                        style={{
-                          padding: '10px 14px',
-                          fontSize: '13px',
-                          color: 'var(--text)',
-                          backgroundColor: 'var(--panel)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '8px',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                          whiteSpace: 'nowrap',
-                          zIndex: 50,
-                          transition: 'opacity 0.15s, visibility 0.15s',
-                        }}
-                      >
-                        Your school's Canvas domain (e.g., school.instructure.com)
-                      </div>
-                    </div>
+                    <HelpTooltip text="Your school's Canvas domain (e.g., school.instructure.com)" size={14} width={280} />
                   </div>
                   <input
                     type="text"
@@ -1634,32 +1546,7 @@ export default function SettingsPage() {
                 <div style={{ marginBottom: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                     <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>API Access Token</p>
-                    <div className="relative" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                      <HelpCircle
-                        size={14}
-                        className="text-[var(--text-muted)] cursor-help peer hover:text-[var(--text)]"
-                        style={{ transition: 'color 0.15s' }}
-                      />
-                      <div
-                        className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 pointer-events-none"
-                        style={{
-                          padding: '10px 14px',
-                          fontSize: '13px',
-                          color: 'var(--text)',
-                          backgroundColor: 'var(--panel)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '8px',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                          width: '260px',
-                          whiteSpace: 'normal',
-                          lineHeight: '1.4',
-                          zIndex: 50,
-                          transition: 'opacity 0.15s, visibility 0.15s',
-                        }}
-                      >
-                        Generate in Canvas: Account → Settings → New Access Token. Never share this token.
-                      </div>
-                    </div>
+                    <HelpTooltip text="Generate in Canvas: Account → Settings → New Access Token. Never share this token." size={14} width={260} />
                   </div>
                   <input
                     type="password"
@@ -2129,7 +2016,10 @@ export default function SettingsPage() {
 
             {/* Colorblind Mode */}
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
-              <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Colorblind Mode</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Colorblind Mode</p>
+                <HelpTooltip text="Protanopia: difficulty seeing red. Deuteranopia: difficulty seeing green. Tritanopia: difficulty seeing blue. Achromatopsia: complete color blindness. Choose your type for optimized colors." size={14} width={240} />
+              </div>
               <select
                 value={settings.colorblindMode || ''}
                 onChange={(e) => {

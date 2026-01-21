@@ -12,6 +12,7 @@ import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 import PremiumGate from '@/components/subscription/PremiumGate';
 import { Plus, Trash2, Edit2, ShoppingCart, Heart, Package, Check, Copy, History, RotateCcw, Download, X } from 'lucide-react';
+import HelpTooltip from '@/components/ui/HelpTooltip';
 import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { parseNaturalLanguage, NLP_SHOPPING_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
 import {
@@ -1460,9 +1461,12 @@ export default function ShoppingPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: 600, color: 'var(--text)' }}>
-                Bulk Import
-              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h2 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: 600, color: 'var(--text)', margin: 0 }}>
+                  Bulk Import
+                </h2>
+                <HelpTooltip text="Paste any list format: recipe ingredients, comma-separated items, numbered lists, or one item per line. Quantities and units are automatically detected." size={16} width={240} position="below" />
+              </div>
               <button
                 onClick={() => setShowBulkImport(false)}
                 className="text-[var(--text-muted)] hover:text-[var(--text)]"

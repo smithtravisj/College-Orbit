@@ -9,7 +9,8 @@ import TimePicker from '@/components/TimePicker';
 import CalendarPicker from '@/components/CalendarPicker';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Plus, Trash2, Upload, X, FileIcon, ChevronDown, Crown, HelpCircle } from 'lucide-react';
+import { Plus, Trash2, Upload, X, FileIcon, ChevronDown, Crown } from 'lucide-react';
+import HelpTooltip from '@/components/ui/HelpTooltip';
 import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Link from 'next/link';
@@ -376,30 +377,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
           <div style={{ paddingTop: isMobile ? '12px' : '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
               <label className={isMobile ? 'block text-sm font-medium text-[var(--text)]' : 'block text-lg font-medium text-[var(--text)]'} style={{ margin: 0 }}>Links</label>
-              <div className="relative" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                <HelpCircle
-                  size={isMobile ? 14 : 16}
-                  className="text-[var(--text-muted)] cursor-help peer hover:text-[var(--text)]"
-                  style={{ transition: 'color 0.15s' }}
-                />
-                <div
-                  className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 pointer-events-none"
-                  style={{
-                    padding: '8px 12px',
-                    fontSize: '12px',
-                    color: 'var(--text)',
-                    backgroundColor: 'var(--panel)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '6px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                    whiteSpace: 'nowrap',
-                    zIndex: 50,
-                    transition: 'opacity 0.15s, visibility 0.15s',
-                  }}
-                >
-                  Canvas, Learning Suite, Syllabus, Textbook, Class Page, Zoom, etc.
-                </div>
-              </div>
+              <HelpTooltip text="Canvas, Learning Suite, Syllabus, Textbook, Class Page, Zoom, etc." size={isMobile ? 14 : 16} width={280} />
             </div>
             <div className="space-y-3">
               {form.links.map((link, idx) => (

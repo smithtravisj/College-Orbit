@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
+import HelpTooltip from './HelpTooltip';
 import React from 'react';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
@@ -12,6 +13,7 @@ interface CollapsibleCardProps {
   id: string;
   title?: string;
   subtitle?: string;
+  helpTooltip?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
   hoverable?: boolean;
@@ -25,6 +27,7 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = React.memo(({
   id,
   title,
   subtitle,
+  helpTooltip,
   action,
   children,
   hoverable = false,
@@ -93,7 +96,12 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = React.memo(({
         {title && (
           <div className="flex items-start justify-between gap-4" style={{ marginBottom: isOpen ? '16px' : '0px', paddingTop: isOpen ? '0px' : '8px' }}>
             <div className="space-y-1 flex-1">
-              <h3 className="font-bold leading-[1.25] text-[var(--text)]" style={{ fontSize: '17px' }}>{title}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <h3 className="font-bold leading-[1.25] text-[var(--text)]" style={{ fontSize: '17px', margin: 0 }}>{title}</h3>
+                {helpTooltip && (
+                  <HelpTooltip text={helpTooltip} />
+                )}
+              </div>
               {subtitle && isOpen && <p className="leading-[1.6]" style={{ fontSize: '12px', color: theme === 'light' ? 'var(--text-muted)' : 'rgba(255, 255, 255, 0.6)' }}>{subtitle}</p>}
             </div>
             <div className="flex items-center gap-2">

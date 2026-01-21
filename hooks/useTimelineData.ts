@@ -350,8 +350,9 @@ export function useTimelineData({
       });
     }
 
-    // Also include overdue items from previous days in the "today" view
-    if (range === 'today') {
+    // Also include overdue items from previous days in both views
+    // For week view, overdue items are added to today (first day)
+    {
       const overdueItems: TimelineItem[] = [];
 
       // Overdue tasks

@@ -138,7 +138,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
             </span>
           )}
 
-          {/* Overdue indicator */}
+          {/* Overdue indicator with due date */}
           {item.isOverdue && !item.isCompleted && (
             <span
               style={{
@@ -154,6 +154,18 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
               }}
             >
               Overdue
+              {item.originalItem?.dueAt && (() => {
+                const dueDate = new Date(item.originalItem.dueAt);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const dueDateOnly = new Date(dueDate);
+                dueDateOnly.setHours(0, 0, 0, 0);
+                // Only show date if it's not today
+                if (dueDateOnly.getTime() !== today.getTime()) {
+                  return ` · ${dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+                }
+                return null;
+              })()}
             </span>
           )}
 
