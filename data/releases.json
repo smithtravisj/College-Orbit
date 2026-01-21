@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.2.8",
+      "date": "2026-01-20",
+      "changes": [
+        "Improved app loading reliability on Chrome and other browsers",
+        "Added timeout fallback if loading takes too long",
+        "Added error banner with refresh option when loading fails"
+      ]
+    },
+    {
       "version": "1.2.7",
       "date": "2026-01-20",
       "changes": [

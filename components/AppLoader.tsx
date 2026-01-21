@@ -4,33 +4,41 @@ import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { applyCustomColors, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 
+const MAX_LOAD_TIME = 15000; // 15 seconds max before forcing render
+
 export default function AppLoader({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isLightMode, setIsLightMode] = useState(() => {
     if (typeof window !== 'undefined') {
-      const storedTheme = localStorage.getItem('app-theme');
-      // Migrate 'system' to 'dark' (system theme removed in v1.2.6)
-      const theme = storedTheme === 'system' ? 'dark' : storedTheme;
-      const result = theme === 'light';
+      try {
+        const storedTheme = localStorage.getItem('app-theme');
+        // Migrate 'system' to 'dark' (system theme removed in v1.2.6)
+        const theme = storedTheme === 'system' ? 'dark' : storedTheme;
+        const result = theme === 'light';
 
-      // Apply cached colors immediately to prevent flicker
-      const cachedIsPremium = localStorage.getItem('app-isPremium') === 'true';
-      const cachedUseCustomTheme = localStorage.getItem('app-useCustomTheme') === 'true';
-      const cachedCustomColorsStr = localStorage.getItem('app-customColors');
+        // Apply cached colors immediately to prevent flicker
+        const cachedIsPremium = localStorage.getItem('app-isPremium') === 'true';
+        const cachedUseCustomTheme = localStorage.getItem('app-useCustomTheme') === 'true';
+        const cachedCustomColorsStr = localStorage.getItem('app-customColors');
 
-      if (cachedIsPremium && cachedUseCustomTheme && cachedCustomColorsStr) {
-        try {
-          const customColors = JSON.parse(cachedCustomColorsStr);
-          const effectiveTheme = (theme || 'dark') as 'light' | 'dark';
-          const colorSet = getCustomColorSetForTheme(customColors as CustomColors, effectiveTheme);
-          applyCustomColors(colorSet, effectiveTheme);
-        } catch (e) {
-          console.warn('[AppLoader] Failed to parse cached custom colors:', e);
+        if (cachedIsPremium && cachedUseCustomTheme && cachedCustomColorsStr) {
+          try {
+            const customColors = JSON.parse(cachedCustomColorsStr);
+            const effectiveTheme = (theme || 'dark') as 'light' | 'dark';
+            const colorSet = getCustomColorSetForTheme(customColors as CustomColors, effectiveTheme);
+            applyCustomColors(colorSet, effectiveTheme);
+          } catch (e) {
+            console.warn('[AppLoader] Failed to parse cached custom colors:', e);
+          }
         }
-      }
 
-      return result;
+        return result;
+      } catch (e) {
+        console.warn('[AppLoader] Failed to read localStorage:', e);
+        return false;
+      }
     }
     return false;
   });
@@ -39,11 +47,28 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
     // Mark as hydrated after mount
     setIsHydrated(true);
 
+    // Set a timeout to force render if initialization takes too long
+    const timeoutId = setTimeout(() => {
+      if (!isInitialized) {
+        console.error('[AppLoader] Initialization timed out after 15s, forcing render');
+        setLoadError('Loading took too long. Some features may not work correctly.');
+        setIsInitialized(true);
+      }
+    }, MAX_LOAD_TIME);
+
     const initialize = async () => {
-      await useAppStore.getState().initializeStore();
-      setIsInitialized(true);
+      try {
+        await useAppStore.getState().initializeStore();
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('[AppLoader] Failed to initialize:', error);
+        setLoadError('Failed to load app data. Please refresh the page.');
+        setIsInitialized(true); // Still render the app so user can try to use it
+      }
     };
     initialize();
+
+    return () => clearTimeout(timeoutId);
   }, []);
 
   // Listen for theme changes via storage events (when changed in another tab)
@@ -118,6 +143,50 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
           ))}
         </div>
       </div>
+    );
+  }
+
+  // Show error banner if there was a loading issue
+  if (loadError) {
+    return (
+      <>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: '#fef3c7',
+          color: '#92400e',
+          padding: '12px 16px',
+          textAlign: 'center',
+          fontSize: '14px',
+          zIndex: 10000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px',
+        }}>
+          <span>{loadError}</span>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              backgroundColor: '#92400e',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 500,
+            }}
+          >
+            Refresh
+          </button>
+        </div>
+        <div style={{ paddingTop: '48px' }}>
+          {children}
+        </div>
+      </>
     );
   }
 
