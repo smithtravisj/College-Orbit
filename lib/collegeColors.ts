@@ -1967,6 +1967,12 @@ interface ColorblindSemanticColors {
   priorityHigh: string;
   priorityMedium: string;
   priorityLow: string;
+  // Event type colors for calendar and timeline
+  eventCourse: string;
+  eventTask: string;
+  eventExam: string;
+  eventDeadline: string;
+  eventCalendar: string;
 }
 
 // Colorblind-friendly semantic colors for each type
@@ -1984,6 +1990,12 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       priorityHigh: '#CC79A7',
       priorityMedium: '#F0E442',
       priorityLow: '#56B4E9',
+      // Event colors - avoid red/green confusion
+      eventCourse: '#0072B2',   // Blue (distinguishable)
+      eventTask: '#56B4E9',     // Sky blue (instead of green)
+      eventExam: '#CC79A7',     // Pink/magenta (instead of red)
+      eventDeadline: '#E69F00', // Orange-yellow (visible)
+      eventCalendar: '#009E73', // Bluish green (instead of purple)
     },
     light: {
       success: '#0072B2',    // Darker blue
@@ -1995,6 +2007,12 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       priorityHigh: '#D55E00',
       priorityMedium: '#E69F00',
       priorityLow: '#0072B2',
+      // Event colors - avoid red/green confusion
+      eventCourse: '#0072B2',   // Blue (distinguishable)
+      eventTask: '#56B4E9',     // Sky blue (instead of green)
+      eventExam: '#CC79A7',     // Pink/magenta (instead of red)
+      eventDeadline: '#E69F00', // Orange-yellow (visible)
+      eventCalendar: '#009E73', // Bluish green (instead of purple)
     },
   },
   // Deuteranopia (green-blind): similar to protanopia
@@ -2009,6 +2027,12 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       priorityHigh: '#CC79A7',
       priorityMedium: '#F0E442',
       priorityLow: '#56B4E9',
+      // Event colors - avoid red/green confusion
+      eventCourse: '#0072B2',   // Blue (distinguishable)
+      eventTask: '#56B4E9',     // Sky blue (instead of green)
+      eventExam: '#CC79A7',     // Pink/magenta (instead of red)
+      eventDeadline: '#E69F00', // Orange-yellow (visible)
+      eventCalendar: '#009E73', // Bluish green (instead of purple)
     },
     light: {
       success: '#0072B2',    // Blue
@@ -2020,6 +2044,12 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       priorityHigh: '#D55E00',
       priorityMedium: '#E69F00',
       priorityLow: '#0072B2',
+      // Event colors - avoid red/green confusion
+      eventCourse: '#0072B2',   // Blue (distinguishable)
+      eventTask: '#56B4E9',     // Sky blue (instead of green)
+      eventExam: '#CC79A7',     // Pink/magenta (instead of red)
+      eventDeadline: '#E69F00', // Orange-yellow (visible)
+      eventCalendar: '#009E73', // Bluish green (instead of purple)
     },
   },
   // Tritanopia (blue-blind): avoid blue, use red/green distinction
@@ -2034,6 +2064,12 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       priorityHigh: '#D55E00',
       priorityMedium: '#F0E442',
       priorityLow: '#009E73',
+      // Event colors - avoid blue confusion
+      eventCourse: '#D55E00',   // Vermillion (instead of blue)
+      eventTask: '#009E73',     // Bluish green (visible)
+      eventExam: '#CC3311',     // Red (visible)
+      eventDeadline: '#E69F00', // Orange (visible)
+      eventCalendar: '#CC79A7', // Pink (instead of purple)
     },
     light: {
       success: '#009E73',    // Bluish green
@@ -2045,6 +2081,12 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       priorityHigh: '#CC3311',
       priorityMedium: '#E69F00',
       priorityLow: '#009E73',
+      // Event colors - avoid blue confusion
+      eventCourse: '#D55E00',   // Vermillion (instead of blue)
+      eventTask: '#009E73',     // Bluish green (visible)
+      eventExam: '#CC3311',     // Red (visible)
+      eventDeadline: '#E69F00', // Orange (visible)
+      eventCalendar: '#CC79A7', // Pink (instead of purple)
     },
   },
   // Achromatopsia (monochromacy): use brightness/value differences only
@@ -2059,6 +2101,12 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       priorityHigh: '#E0E0E0',
       priorityMedium: '#A0A0A0',
       priorityLow: '#606060',
+      // Event colors - use distinct brightness levels
+      eventCourse: '#808080',   // Medium gray
+      eventTask: '#B0B0B0',     // Light-medium gray
+      eventExam: '#404040',     // Dark gray
+      eventDeadline: '#606060', // Medium-dark gray
+      eventCalendar: '#D0D0D0', // Light gray
     },
     light: {
       success: '#505050',    // Dark gray
@@ -2070,6 +2118,12 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       priorityHigh: '#202020',
       priorityMedium: '#505050',
       priorityLow: '#808080',
+      // Event colors - use distinct brightness levels
+      eventCourse: '#606060',   // Medium gray
+      eventTask: '#808080',     // Light-medium gray
+      eventExam: '#202020',     // Very dark gray
+      eventDeadline: '#404040', // Dark gray
+      eventCalendar: '#A0A0A0', // Light gray
     },
   },
 };
@@ -2103,6 +2157,12 @@ export function applyColorblindMode(
     root.style.removeProperty('--cb-priority-high');
     root.style.removeProperty('--cb-priority-medium');
     root.style.removeProperty('--cb-priority-low');
+    // Clear event type colors
+    root.style.removeProperty('--cb-event-course');
+    root.style.removeProperty('--cb-event-task');
+    root.style.removeProperty('--cb-event-exam');
+    root.style.removeProperty('--cb-event-deadline');
+    root.style.removeProperty('--cb-event-calendar');
     return;
   }
 
@@ -2130,6 +2190,13 @@ export function applyColorblindMode(
     root.style.setProperty('--cb-priority-high', palette.priorityHigh);
     root.style.setProperty('--cb-priority-medium', palette.priorityMedium);
     root.style.setProperty('--cb-priority-low', palette.priorityLow);
+
+    // Set event type colors for calendar and timeline
+    root.style.setProperty('--cb-event-course', palette.eventCourse);
+    root.style.setProperty('--cb-event-task', palette.eventTask);
+    root.style.setProperty('--cb-event-exam', palette.eventExam);
+    root.style.setProperty('--cb-event-deadline', palette.eventDeadline);
+    root.style.setProperty('--cb-event-calendar', palette.eventCalendar);
 
     // Override main semantic colors
     root.style.setProperty('--success', palette.success);

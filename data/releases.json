@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.2.1",
+      "date": "2026-01-20",
+      "changes": [
+        "Colorblind accessibility now includes calendar and timeline event colors",
+        "Event type colors (Course, Task, Exam, Deadline, Event) adapt to colorblind mode",
+        "Settings preview now shows event colors alongside status colors"
+      ]
+    },
+    {
       "version": "1.2.0",
       "date": "2026-01-20",
       "changes": [
