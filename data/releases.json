@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.2.13",
+      "date": "2026-01-22",
+      "changes": [
+        "Updated page header descriptions to be more personal"
+      ]
+    },
+    {
       "version": "1.2.12",
       "date": "2026-01-22",
       "changes": [
