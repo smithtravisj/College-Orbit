@@ -63,6 +63,7 @@ interface AppStore {
   calendarEvents: CalendarEvent[];
   colleges: DatabaseCollege[];
   loading: boolean;
+  initialized: boolean; // True once store has been fully initialized (from cache or database)
   userId: string | null;
   isPremium: boolean; // Track premium status for color application
 
@@ -258,6 +259,7 @@ const useAppStore = create<AppStore>((set, get) => ({
   calendarEvents: [],
   colleges: [],
   loading: false,
+  initialized: false,
   userId: null,
   isPremium: false,
 
@@ -383,7 +385,7 @@ const useAppStore = create<AppStore>((set, get) => ({
 
     if (hasLocalData) {
       // We have cached data, show UI immediately
-      set({ loading: false });
+      set({ loading: false, initialized: true });
 
       // Step 2: Fetch fresh data in the background (don't await)
       get().loadFromDatabase().catch((error) => {
@@ -397,7 +399,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       } catch (error) {
         console.error('Failed to initialize store:', error);
       } finally {
-        set({ loading: false });
+        set({ loading: false, initialized: true });
       }
     }
   },

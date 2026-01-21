@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.2.2",
+      "date": "2026-01-20",
+      "changes": [
+        "Timeline scrollbar no longer overlaps with day headers",
+        "Smooth scroll-away animation for day headers in timeline",
+        "Fixed timeline not appearing immediately on dashboard load"
+      ]
+    },
+    {
       "version": "1.2.1",
       "date": "2026-01-20",
       "changes": [

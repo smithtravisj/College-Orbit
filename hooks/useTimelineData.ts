@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import useAppStore from '@/lib/store';
 import { useShallow } from 'zustand/react/shallow';
 import { isDateExcluded } from '@/lib/calendarUtils';
@@ -104,10 +104,9 @@ export function useTimelineData({
 
   // Track if we've received real data from the store (not just initial empty state)
   const [hasReceivedData, setHasReceivedData] = useState(false);
-  const hasSeenLoadingRef = useRef(false);
 
   // Single selector with shallow comparison to reduce re-renders
-  const { courses, tasks, deadlines, exams, calendarEvents, excludedDates, loading } = useAppStore(
+  const { courses, tasks, deadlines, exams, calendarEvents, excludedDates, loading, initialized } = useAppStore(
     useShallow((state) => ({
       courses: state.courses,
       tasks: state.tasks,
@@ -116,6 +115,7 @@ export function useTimelineData({
       calendarEvents: state.calendarEvents,
       excludedDates: state.excludedDates,
       loading: state.loading,
+      initialized: state.initialized,
     }))
   );
 
@@ -442,24 +442,13 @@ export function useTimelineData({
     }
   }, [groupedData, loading, range]);
 
-  // Check if store has any data
-  const hasStoreData = courses.length > 0 || tasks.length > 0 || deadlines.length > 0 || exams.length > 0 || (calendarEvents && calendarEvents.length > 0);
-
-  // Track if we've seen the loading state become true (indicates store is initializing)
-  if (loading) {
-    hasSeenLoadingRef.current = true;
-  }
-
-  // Mark as received data once:
-  // 1. We have actual data, OR
-  // 2. Loading was true and is now false (store finished initializing with no data)
+  // Mark as received data once the store is initialized
+  // The store's initialized flag is set to true after data is loaded from cache or database
   useEffect(() => {
-    if (!hasReceivedData) {
-      if (hasStoreData || (hasSeenLoadingRef.current && !loading)) {
-        setHasReceivedData(true);
-      }
+    if (!hasReceivedData && initialized) {
+      setHasReceivedData(true);
     }
-  }, [loading, hasStoreData, hasReceivedData]);
+  }, [initialized, hasReceivedData]);
 
   // Show cached data until we've confirmed the store has loaded
   // This prevents showing empty state before real data arrives

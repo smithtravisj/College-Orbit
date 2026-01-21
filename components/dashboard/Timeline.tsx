@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTimelineData } from '@/hooks/useTimelineData';
 import { TimelineRange, TimelineItem as TimelineItemType, TimelineItemType as ItemType } from '@/types/timeline';
 import { TimelineDay } from './TimelineDay';
+import { TimelineItem } from './TimelineItem';
 import { TimelineProgress } from './TimelineProgress';
 import useAppStore from '@/lib/store';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -80,6 +81,53 @@ export const Timeline: React.FC<TimelineProps> = ({
     itemTypes,
   });
 
+  // Refs and state for smooth first day header scroll-away effect
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const firstDayHeaderRef = useRef<HTMLDivElement>(null);
+  const nextDayHeaderRef = useRef<HTMLDivElement>(null);
+  const [firstDayHeaderOffset, setFirstDayHeaderOffset] = useState(0);
+
+  // Attach scroll listener
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    const header = firstDayHeaderRef.current;
+    if (!scrollContainer || !header) return;
+
+    const handleScroll = () => {
+      const nextHeader = nextDayHeaderRef.current;
+      const scrollTop = scrollContainer.scrollTop;
+      const headerHeight = header.offsetHeight;
+
+      // If there's no next day header, don't hide the first day header
+      if (!nextHeader) {
+        setFirstDayHeaderOffset(0);
+        return;
+      }
+
+      // Get the position of the next day's header relative to scroll container
+      const nextHeaderTop = nextHeader.offsetTop;
+
+      // Start hiding before the next header reaches the first header for smoother transition
+      const buffer = 100;
+      const threshold = nextHeaderTop - headerHeight - buffer;
+
+      if (scrollTop > threshold) {
+        const offset = Math.min(scrollTop - threshold, headerHeight);
+        setFirstDayHeaderOffset(offset);
+      } else {
+        setFirstDayHeaderOffset(0);
+      }
+    };
+
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, [groupedData]);
+
+  // Reset offset when range changes
+  useEffect(() => {
+    setFirstDayHeaderOffset(0);
+  }, [range]);
+
   const handleToggleComplete = async (item: TimelineItemType) => {
     if (item.type === 'task') {
       await toggleTaskDone(item.originalItem.id);
@@ -116,9 +164,9 @@ export const Timeline: React.FC<TimelineProps> = ({
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Header with toggle and progress */}
-      <div className="flex items-center justify-between" style={{ marginBottom: '12px' }}>
+      <div className="flex items-center justify-between shrink-0" style={{ marginBottom: '12px', position: 'relative', zIndex: 20 }}>
         {/* Range toggle */}
         {showRangeToggle && (
           <div style={{ display: 'flex', gap: '4px' }}>
@@ -166,21 +214,80 @@ export const Timeline: React.FC<TimelineProps> = ({
       </div>
 
       {/* Timeline content */}
-      <div className="flex-1 overflow-y-auto" style={maxHeight ? { maxHeight: `${maxHeight}px` } : undefined}>
-        {hasAnyItems ? (
-          <div>
-            {groupedData.days.map((day, index) => (
-              <TimelineDay
-                key={day.dateKey}
-                day={day}
-                onToggleComplete={handleToggleComplete}
-                onItemClick={handleItemClick}
-                collapsible={isMobile && range === 'week' && !day.isToday}
-                defaultCollapsed={isMobile && range === 'week' && !day.isToday && index > 2}
-              />
-            ))}
-          </div>
-        ) : (
+      {hasAnyItems ? (
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {groupedData.days.slice(0, 1).map((day) => (
+            <div key={day.dateKey} className="flex flex-col min-h-0 flex-1">
+              {/* First day header - smoothly scrolls away */}
+              <div
+                ref={firstDayHeaderRef}
+                className="flex items-center justify-between shrink-0"
+                style={{
+                  backgroundColor: 'var(--panel)',
+                  paddingBottom: '4px',
+                  transform: `translateY(-${firstDayHeaderOffset}px)`,
+                  opacity: 1 - (firstDayHeaderOffset / 24),
+                  marginBottom: -firstDayHeaderOffset,
+                  transition: 'opacity 0.1s ease-out',
+                }}
+              >
+                <span className="text-sm font-semibold uppercase tracking-wide text-[var(--text)]">
+                  {day.isToday ? 'Today' : day.dayName}, {day.dateStr}
+                </span>
+                {day.progress.total > 0 && (
+                  <span
+                    className="text-xs"
+                    style={{
+                      color:
+                        day.progress.percentage === 100
+                          ? 'var(--success)'
+                          : day.progress.hasOverdue
+                          ? 'var(--danger)'
+                          : 'var(--text-muted)',
+                    }}
+                  >
+                    {day.progress.completed}/{day.progress.total}
+                  </span>
+                )}
+              </div>
+              {/* Day items - scrollable */}
+              <div
+                ref={scrollContainerRef}
+                className="flex-1 overflow-y-auto min-h-0"
+                style={maxHeight ? { maxHeight: `${maxHeight - 30 + firstDayHeaderOffset}px` } : undefined}
+              >
+                  {day.items.length > 0 ? (
+                    <div className="flex flex-col">
+                      {day.items.map((item) => (
+                        <TimelineItem
+                          key={item.id}
+                          item={item}
+                          onToggleComplete={handleToggleComplete}
+                          onItemClick={handleItemClick}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-[var(--text-muted)]">No items scheduled</p>
+                  )}
+                  {/* Render remaining days inside the scroll area */}
+                  {groupedData.days.slice(1).map((remainingDay, remainingIndex) => (
+                    <div key={remainingDay.dateKey} ref={remainingIndex === 0 ? nextDayHeaderRef : undefined}>
+                      <TimelineDay
+                        day={remainingDay}
+                        onToggleComplete={handleToggleComplete}
+                        onItemClick={handleItemClick}
+                        collapsible={isMobile && range === 'week' && !remainingDay.isToday}
+                        defaultCollapsed={isMobile && range === 'week' && !remainingDay.isToday && remainingIndex > 1}
+                      />
+                    </div>
+                  ))}
+                </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto min-h-0" style={maxHeight ? { maxHeight: `${maxHeight}px` } : undefined}>
           <EmptyState
             title={range === 'today' ? 'Nothing scheduled today' : 'Nothing scheduled this week'}
             description={
@@ -189,8 +296,8 @@ export const Timeline: React.FC<TimelineProps> = ({
                 : 'Your week is clear!'
             }
           />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
