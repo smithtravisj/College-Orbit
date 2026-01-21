@@ -1,12 +1,18 @@
 {
   "releases": [
     {
+      "version": "1.2.10",
+      "date": "2026-01-22",
+      "changes": [
+        "Implemented help circle for links in courses pages"
+      ]
+    },
+    {
       "version": "1.2.9",
       "date": "2026-01-21",
       "changes": [
         "Fixed import/export button icons in Account page",
-        "Fixed bulk import button icon in Shopping page",
-        "Implemented help circle for links in courses pages"
+        "Fixed bulk import button icon in Shopping page"
       ]
     },
     {
