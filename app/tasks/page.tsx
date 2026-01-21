@@ -880,7 +880,7 @@ export default function TasksPage() {
               Tasks
             </h1>
             <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-              Your tasks and to-dos.
+              Everything you need to do.
             </p>
           </div>
           <Button variant="secondary" size="md" style={{ marginTop: isMobile ? '12px' : '8px' }} onClick={() => {

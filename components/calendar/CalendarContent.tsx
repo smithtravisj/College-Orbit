@@ -475,7 +475,7 @@ export default function CalendarContent() {
           Calendar
         </h1>
         <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-          Your schedule at a glance.
+          Your schedule, all in one place.
         </p>
       </div>
 

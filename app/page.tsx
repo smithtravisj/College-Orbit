@@ -303,7 +303,7 @@ function Dashboard() {
           Dashboard
         </h1>
         <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-          Welcome back{session?.user?.name ? `, ${session.user.name.split(' ')[0]}` : ''}. Here's your schedule and tasks for today.
+          Welcome back{session?.user?.name ? `, ${session.user.name.split(' ')[0]}` : ''}. Here's the plan for today.
         </p>
       </div>
 

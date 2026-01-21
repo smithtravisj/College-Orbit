@@ -880,7 +880,7 @@ export default function DeadlinesPage() {
               Assignments
             </h1>
             <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-              Your assignments and deadlines.
+              Your upcoming assignments and deadlines.
             </p>
           </div>
           <Button variant="secondary" size="md" style={{ marginTop: isMobile ? '12px' : '8px' }} onClick={() => {
