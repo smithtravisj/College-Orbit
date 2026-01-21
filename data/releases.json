@@ -2,15 +2,16 @@
   "releases": [
     {
       "version": "1.2.9",
-      "date": "2026-01-20",
+      "date": "2026-01-21",
       "changes": [
         "Fixed import/export button icons in Account page",
-        "Fixed bulk import button icon in Shopping page"
+        "Fixed bulk import button icon in Shopping page",
+        "Implemented help circle for links in courses pages"
       ]
     },
     {
       "version": "1.2.8",
-      "date": "2026-01-20",
+      "date": "2026-01-21",
       "changes": [
         "Improved app loading reliability on Chrome and other browsers",
         "Added timeout fallback if loading takes too long",
@@ -19,7 +20,7 @@
     },
     {
       "version": "1.2.7",
-      "date": "2026-01-20",
+      "date": "2026-01-21",
       "changes": [
         "Fixed excluded dates and notes not loading from database",
         "Fixed No School event popup showing invalid date",
@@ -29,7 +30,7 @@
     },
     {
       "version": "1.2.6",
-      "date": "2026-01-20",
+      "date": "2026-01-21",
       "changes": [
         "Simplified theme settings to Light and Dark modes only",
         "Removed System theme option for more reliable color handling"
@@ -37,7 +38,7 @@
     },
     {
       "version": "1.2.5",
-      "date": "2026-01-20",
+      "date": "2026-01-21",
       "changes": [
         "Fixed notes not displaying content until reopened",
         "Note content now loads on-demand from the server for faster page loads"
@@ -45,7 +46,7 @@
     },
     {
       "version": "1.2.4",
-      "date": "2026-01-20",
+      "date": "2026-01-21",
       "changes": [
         "Fixed calendar event colors not displaying correctly",
         "Fixed timeline card disappearing momentarily on settings changes",
@@ -116,7 +117,7 @@
     },
     {
       "version": "1.0.0",
-      "date": "2026-01-20",
+      "date": "2026-01-19",
       "changes": [
         "Dashboard with at-a-glance view of upcoming tasks, assignments, and exams",
         "Course management with meeting times, locations, links, and custom colors",
