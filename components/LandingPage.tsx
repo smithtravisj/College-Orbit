@@ -48,8 +48,8 @@ const secondaryFeatures = [
   },
   {
     icon: Target,
-    title: 'Due Soon Dashboard',
-    description: 'See upcoming deadlines, tasks, and exams on your personalized dashboard.',
+    title: 'Timeline Dashboard',
+    description: 'See classes, tasks, deadlines, exams, and events in one unified view with Today and Week toggles.',
   },
   {
     icon: Repeat,

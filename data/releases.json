@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.2.3",
+      "date": "2026-01-20",
+      "changes": [
+        "Updated onboarding tour with new Timeline dashboard and Quick Add button",
+        "Onboarding now covers all pages in navigation order",
+        "Landing page feature updated to reflect Timeline Dashboard"
+      ]
+    },
+    {
       "version": "1.2.2",
       "date": "2026-01-20",
       "changes": [

@@ -106,6 +106,7 @@ export function QuickAddButton() {
       <button
         onClick={handleClick}
         className={getButtonClass()}
+        data-tour="quick-add"
         style={{
           backgroundColor: buttonColor,
           backgroundImage: isMobile ? mobileBackgroundImage : desktopBackgroundImage,

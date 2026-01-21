@@ -86,11 +86,11 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
 
     const dashboardSteps = [
       {
-        element: '[data-tour="next-class"]',
+        element: '[data-tour="timeline"]',
         popover: {
-          title: 'Your Next Class',
-          description: 'This card shows your upcoming class with the time and location. Click on a course to see more details, meeting times, and links to Canvas or other resources.',
-          side: 'top',
+          title: 'Your Timeline',
+          description: 'See all your classes, tasks, assignments, exams, and events in one unified view. Toggle between Today and Week to plan ahead. Click any item to see details or mark it complete.',
+          side: 'bottom',
           align: 'start'
         }
       },
@@ -98,38 +98,30 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
         element: '[data-tour="overview"]',
         popover: {
           title: 'Quick Overview',
-          description: 'See at a glance how many classes you have left today, overdue items, assignments coming up, and tasks due today.',
-          side: 'top',
+          description: 'See at a glance how many classes you have left today, items due soon, overdue items, and tasks for today.',
+          side: 'left',
           align: 'start'
         }
       },
       {
-        element: '[data-tour="today-tasks"]',
+        element: '[data-tour="quick-add"]',
         popover: {
-          title: 'Today\'s Tasks',
-          description: 'Personal to-do items for today. Click the + button to add a new task, or check the box to mark tasks as done. Create checklists and organize your priorities.',
-          side: 'top',
-          align: 'start'
-        }
-      },
-      {
-        element: '[data-tour="due-soon"]',
-        popover: {
-          title: 'Upcoming Assignments',
-          description: 'Course assignments and deadlines coming up. Click the + button to add new assignments for your courses. These appear on your calendar and send you reminders.',
-          side: 'top',
-          align: 'start'
+          title: 'Quick Add',
+          description: 'Quickly add tasks, assignments, exams, notes, or calendar events from anywhere in the app. On desktop, press Cmd+K (or Ctrl+K) to open it instantly.',
+          side: 'left',
+          align: 'center'
         }
       },
     ];
 
     // Navigation steps - differ between mobile and desktop
+    // Order matches nav: Calendar, Tasks, Assignments, Exams, Notes, Courses, Shopping, Settings
     const navigationSteps = isMobile ? [
       {
         element: '[data-tour="mobile-hamburger"]',
         popover: {
-          title: 'Add Your Courses',
-          description: 'Tap the menu icon to open the navigation. Go to "Courses" to add all your classes. Include meeting times, location, instructors, and links to Canvas, email, or other resources.',
+          title: 'Calendar',
+          description: 'See all your classes, assignments, and exams in one place. Export to Google Calendar or Apple Calendar.',
           side: 'bottom',
           align: 'center'
         }
@@ -137,8 +129,8 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
       {
         element: '[data-tour="mobile-hamburger"]',
         popover: {
-          title: 'Take Rich Notes',
-          description: 'From the menu, go to "Notes" to create study notes with rich text formatting. Organize notes into folders, add tags, and pin your most important notes for quick access.',
+          title: 'Tasks',
+          description: 'Create personal to-do items with priorities, due dates, and checklists.',
           side: 'bottom',
           align: 'center'
         }
@@ -146,8 +138,8 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
       {
         element: '[data-tour="mobile-hamburger"]',
         popover: {
-          title: 'Track Your Exams',
-          description: 'From the menu, go to "Exams" to add your test dates, times, and locations. Set up custom exam reminders (7 days, 1 day, 3 hours before) to stay prepared.',
+          title: 'Assignments',
+          description: 'Track homework and course deadlines. Link them to courses and get reminders.',
           side: 'bottom',
           align: 'center'
         }
@@ -155,8 +147,8 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
       {
         element: '[data-tour="mobile-hamburger"]',
         popover: {
-          title: 'View Your Calendar',
-          description: 'From the menu, go to "Calendar" to see your classes, deadlines, and exams in calendar view. Switch between month, week, and day views to plan your schedule.',
+          title: 'Exams',
+          description: 'Add test dates, times, and locations. Set up reminders so you never miss one.',
           side: 'bottom',
           align: 'center'
         }
@@ -164,27 +156,63 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
       {
         element: '[data-tour="mobile-hamburger"]',
         popover: {
-          title: 'Customize Your Experience',
-          description: 'From the menu, go to "Settings" to select your university, choose your theme (light/dark), hide/show pages and dashboard cards, export your data, and restart this tour anytime!',
+          title: 'Notes',
+          description: 'Create study notes with rich text formatting. Organize into folders and attach files.',
+          side: 'bottom',
+          align: 'center'
+        }
+      },
+      {
+        element: '[data-tour="mobile-hamburger"]',
+        popover: {
+          title: 'Courses',
+          description: 'Add your classes with meeting times, locations, and links to Canvas or other resources.',
+          side: 'bottom',
+          align: 'center'
+        }
+      },
+      {
+        element: '[data-tour="mobile-hamburger"]',
+        popover: {
+          title: 'Shopping',
+          description: 'Track groceries, wishlists, and pantry items. Great for meal planning and dorm supplies.',
+          side: 'bottom',
+          align: 'center'
+        }
+      },
+      {
+        element: '[data-tour="mobile-hamburger"]',
+        popover: {
+          title: 'Settings',
+          description: 'Select your university, choose a theme, and restart this tour anytime.',
           side: 'bottom',
           align: 'center'
         }
       },
     ] : [
       {
-        element: 'a[href="/courses"]',
+        element: 'a[href="/calendar"]',
         popover: {
-          title: 'Add Your Courses',
-          description: 'Go to "Courses" in the sidebar to add all your classes. Include meeting times, location, instructors, and links to Canvas, email, or other resources.',
+          title: 'Calendar',
+          description: 'See all your classes, assignments, and exams in one place. Export to Google Calendar or Apple Calendar.',
           side: 'right',
           align: 'center'
         }
       },
       {
-        element: 'a[href="/notes"]',
+        element: 'a[href="/tasks"]',
         popover: {
-          title: 'Take Rich Notes',
-          description: 'Go to "Notes" to create study notes with rich text formatting. Organize notes into folders, add tags, and pin your most important notes for quick access.',
+          title: 'Tasks',
+          description: 'Create personal to-do items with priorities, due dates, and checklists.',
+          side: 'right',
+          align: 'center'
+        }
+      },
+      {
+        element: 'a[href="/deadlines"]',
+        popover: {
+          title: 'Assignments',
+          description: 'Track homework and course deadlines. Link them to courses and get reminders.',
           side: 'right',
           align: 'center'
         }
@@ -192,26 +220,35 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
       {
         element: 'a[href="/exams"]',
         popover: {
-          title: 'Track Your Exams',
-          description: 'Go to "Exams" to add your test dates, times, and locations. Set up custom exam reminders (7 days, 1 day, 3 hours before) to stay prepared.',
+          title: 'Exams',
+          description: 'Add test dates, times, and locations. Set up reminders so you never miss one.',
           side: 'right',
           align: 'center'
         }
       },
       {
-        element: 'a[href="/calendar"]',
+        element: 'a[href="/notes"]',
         popover: {
-          title: 'View Your Calendar',
-          description: 'Go to "Calendar" to see your classes, deadlines, and exams in calendar view. Switch between month, week, and day views to plan your schedule.',
+          title: 'Notes',
+          description: 'Create study notes with rich text formatting. Organize into folders and attach files.',
           side: 'right',
           align: 'center'
         }
       },
       {
-        element: 'a[href="/tools"]',
+        element: 'a[href="/courses"]',
         popover: {
-          title: 'Use Productivity Tools',
-          description: 'Go to "Tools" for the Pomodoro timer (to boost focus during study sessions) and GPA calculator. Customize timer durations to match your study style.',
+          title: 'Courses',
+          description: 'Add your classes with meeting times, locations, and links to Canvas or other resources.',
+          side: 'right',
+          align: 'center'
+        }
+      },
+      {
+        element: 'a[href="/shopping"]',
+        popover: {
+          title: 'Shopping',
+          description: 'Track groceries, wishlists, and pantry items. Great for meal planning and dorm supplies.',
           side: 'right',
           align: 'center'
         }
@@ -219,8 +256,8 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
       {
         element: '[data-tour="settings-link"]',
         popover: {
-          title: 'Customize Your Experience',
-          description: 'In Settings, select your university, choose your theme (light/dark), hide/show pages and dashboard cards, export your data, and restart this tour anytime!',
+          title: 'Settings',
+          description: 'Select your university, choose a theme, and restart this tour anytime.',
           side: 'right',
           align: 'start'
         }
