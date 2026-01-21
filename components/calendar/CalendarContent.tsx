@@ -54,7 +54,7 @@ export default function CalendarContent() {
   const glowScale = glowIntensity / 50;
   const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
 
-  const [view, setView] = useState<ViewType>('month');
+  const [view, setView] = useState<ViewType>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date>(new Date()); // For mobile: track selected day separate from month
   const [filteredTasks, setFilteredTasks] = useState<any[]>([]);
@@ -185,7 +185,7 @@ export default function CalendarContent() {
 
   useEffect(() => {
     // Read view from localStorage (persists across refreshes)
-    let viewToUse: ViewType = 'month';
+    let viewToUse: ViewType = 'week';
     if (typeof window !== 'undefined') {
       const savedView = localStorage.getItem('calendarView') as ViewType;
       if (savedView && ['month', 'week', 'day'].includes(savedView)) {
@@ -491,7 +491,7 @@ export default function CalendarContent() {
           boxShadow: isLightMode ? '0 1px 4px rgba(0,0,0,0.04)' : '0 2px 8px rgba(0,0,0,0.15)',
           display: 'flex',
           flexDirection: 'column',
-          ...(isMobile ? { minHeight: 'calc(100vh - 140px)' } : { height: 'calc(100vh - 140px)', overflow: 'hidden' }),
+          ...(isMobile ? {} : { height: 'calc(100vh - 140px)', overflow: 'hidden' }),
         }}>
           {/* Controls Bar */}
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>

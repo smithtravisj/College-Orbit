@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.2.12",
+      "date": "2026-01-22",
+      "changes": [
+        "Fixed empty space at bottom of calendar card on mobile",
+        "Changed default calendar view to Week on desktop"
+      ]
+    },
+    {
       "version": "1.2.11",
       "date": "2026-01-22",
       "changes": [
