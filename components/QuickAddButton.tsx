@@ -8,6 +8,7 @@ import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from 
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { QuickAddModal } from './QuickAddModal';
 import { useKeyboardShortcutsContext } from './KeyboardShortcutsProvider';
+import { useIsLightMode } from '@/hooks/useEffectiveTheme';
 import styles from './QuickAddButton.module.css';
 
 export function QuickAddButton() {
@@ -52,8 +53,8 @@ export function QuickAddButton() {
     ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
     : getCollegeColorPalette(university, theme).accent;
 
-  const iconColor = theme === 'light' ? '#000000' : 'white';
-  const isLightMode = theme === 'light';
+  const isLightMode = useIsLightMode();
+  const iconColor = isLightMode ? '#000000' : 'white';
 
   // Mobile: Use simple gradient/glow to match FloatingMenuButton exactly
   // Desktop: Use customizable gradient/glow based on settings

@@ -5,6 +5,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { useIsLightMode } from '@/hooks/useEffectiveTheme';
 
 interface CardProps {
   title?: string;
@@ -31,7 +32,7 @@ const Card: React.FC<CardProps> = React.memo(({
   const { isPremium } = useSubscription();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
-  const isLightMode = theme === 'light';
+  const isLightMode = useIsLightMode();
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
 

@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.2.6",
+      "date": "2026-01-20",
+      "changes": [
+        "Simplified theme settings to Light and Dark modes only",
+        "Removed System theme option for more reliable color handling"
+      ]
+    },
+    {
       "version": "1.2.5",
       "date": "2026-01-20",
       "changes": [

@@ -1701,17 +1701,9 @@ export function applyColorPalette(palette: ColorPalette): void {
  */
 export function getCollegeColorPalette(
   collegeName: string | null,
-  theme: 'light' | 'dark' | 'system' = 'dark'
+  theme: 'light' | 'dark' = 'dark'
 ): ColorPalette {
-  // Resolve system theme to actual preference
-  let actualTheme = theme;
-  if (theme === 'system' && typeof window !== 'undefined') {
-    actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light';
-  }
-
-  const isLight = actualTheme === 'light';
+  const isLight = theme === 'light';
 
   // No college selected
   if (!collegeName) {
@@ -1723,7 +1715,7 @@ export function getCollegeColorPalette(
   if (dbCollege) {
     const accentColor = isLight ? dbCollege.lightAccent : dbCollege.darkAccent;
     const linkColor = isLight ? dbCollege.lightLink : dbCollege.darkLink;
-    return generatePaletteFromDbColors(accentColor, linkColor, actualTheme as 'light' | 'dark');
+    return generatePaletteFromDbColors(accentColor, linkColor, theme);
   }
 
   // Fallback to hardcoded palettes
@@ -1740,7 +1732,7 @@ export function getCollegeColorPalette(
  */
 export function getCollegeColor(
   collegeName: string | null | undefined,
-  theme: 'light' | 'dark' | 'system' = 'dark'
+  theme: 'light' | 'dark' = 'dark'
 ): string {
   const palette = getCollegeColorPalette(collegeName || null, theme);
   return palette.accent;
@@ -1840,34 +1832,27 @@ export function getDefaultCustomColors(collegeName?: string | null): CustomColor
  */
 export function getCustomColorSetForTheme(
   customColors: CustomColors | CustomColorSet | any,
-  theme: 'light' | 'dark' | 'system'
+  theme: 'light' | 'dark'
 ): CustomColorSet {
-  let actualTheme = theme;
-  if (theme === 'system' && typeof window !== 'undefined') {
-    actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light';
-  }
-
   // Handle new format with light/dark separation
   if (customColors.light && customColors.dark) {
-    const colorSet = actualTheme === 'light' ? customColors.light : customColors.dark;
-    const defaultDeleteButton = actualTheme === 'light' ? '#dc2626' : '#660000';
+    const colorSet = theme === 'light' ? customColors.light : customColors.dark;
+    const defaultDeleteButton = theme === 'light' ? '#dc2626' : '#660000';
     // Ensure accentText and deleteButton are always present (for data saved before these fields existed)
     return {
       ...colorSet,
-      accentText: colorSet.accentText || (actualTheme === 'light' ? '#000000' : '#ffffff'),
+      accentText: colorSet.accentText || (theme === 'light' ? '#000000' : '#ffffff'),
       deleteButton: colorSet.deleteButton || defaultDeleteButton,
     };
   }
 
   // Handle old flat format (migrate on the fly)
   if (customColors.accent) {
-    const defaultDeleteButton = actualTheme === 'light' ? '#dc2626' : '#660000';
+    const defaultDeleteButton = theme === 'light' ? '#dc2626' : '#660000';
     return {
       accent: customColors.accent,
       accentHover: customColors.accentHover || customColors.accent,
-      accentText: customColors.accentText || (actualTheme === 'light' ? '#000000' : '#ffffff'),
+      accentText: customColors.accentText || (theme === 'light' ? '#000000' : '#ffffff'),
       link: customColors.link || customColors.accent,
       success: customColors.success || DEFAULT_CUSTOM_COLORS_DARK.success,
       warning: customColors.warning || DEFAULT_CUSTOM_COLORS_DARK.warning,
@@ -1877,7 +1862,7 @@ export function getCustomColorSetForTheme(
   }
 
   // Fallback to defaults
-  return actualTheme === 'light' ? DEFAULT_CUSTOM_COLORS_LIGHT : DEFAULT_CUSTOM_COLORS_DARK;
+  return theme === 'light' ? DEFAULT_CUSTOM_COLORS_LIGHT : DEFAULT_CUSTOM_COLORS_DARK;
 }
 
 /**
@@ -1886,7 +1871,7 @@ export function getCustomColorSetForTheme(
  */
 export function applyCustomColors(
   customColorSet: CustomColorSet,
-  theme: 'light' | 'dark' | 'system' = 'dark'
+  theme: 'light' | 'dark' = 'dark'
 ): void {
   // First get the base palette (default, no college)
   const basePalette = getCollegeColorPalette(null, theme);
@@ -1927,7 +1912,7 @@ export function applyCustomColors(
   if (typeof document !== 'undefined') {
     document.documentElement.style.setProperty('--accent-text', customColorSet.accentText);
     // Set delete button color (defaults based on theme)
-    const defaultDeleteButton = theme === 'light' || (theme === 'system' && typeof window !== 'undefined' && !window.matchMedia('(prefers-color-scheme: dark)').matches) ? '#dc2626' : '#660000';
+    const defaultDeleteButton = theme === 'light' ? '#dc2626' : '#660000';
     document.documentElement.style.setProperty('--delete-button', customColorSet.deleteButton || defaultDeleteButton);
   }
 }
@@ -2136,7 +2121,7 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
 export function applyColorblindMode(
   mode: ColorblindMode | null,
   style: ColorblindStyle | null,
-  theme: 'light' | 'dark' | 'system',
+  theme: 'light' | 'dark',
   skipPaletteChanges: boolean = false
 ): void {
   if (typeof document === 'undefined') return;
@@ -2166,13 +2151,7 @@ export function applyColorblindMode(
     return;
   }
 
-  // Resolve system theme
-  let actualTheme = theme;
-  if (theme === 'system') {
-    actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-
-  const palette = colorblindPalettes[mode][actualTheme as 'light' | 'dark'];
+  const palette = colorblindPalettes[mode][theme];
   const effectiveStyle = style || 'palette';
 
   // Add colorblind mode class for CSS targeting

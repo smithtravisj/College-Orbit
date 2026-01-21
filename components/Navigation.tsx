@@ -13,6 +13,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useMobileNav } from '@/context/MobileNavContext';
 import { isOverdue } from '@/lib/utils';
+import { useIsLightMode } from '@/hooks/useEffectiveTheme';
 import {
   Home,
   CheckSquare,
@@ -79,7 +80,7 @@ export default function Navigation() {
   // Calculate intensity scales - use quadratic scaling so 50% = 1x, 100% = 4x
   const gradientScale = Math.pow(gradientIntensity / 50, 2);
   const glowScale = glowIntensity / 50;
-  const isLightMode = theme === 'light';
+  const isLightMode = useIsLightMode();
   // Reduce glow intensity when no college is selected (default theme)
   const noCollegeSelected = !university;
   const glowReduction = noCollegeSelected ? 0.5 : 1;

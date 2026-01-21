@@ -3,6 +3,7 @@
 import { useMobileNav } from '@/context/MobileNavContext';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { useIsLightMode } from '@/hooks/useEffectiveTheme';
 import styles from './FloatingMenuButton.module.css';
 
 export function FloatingMenuButton() {
@@ -23,7 +24,8 @@ export function FloatingMenuButton() {
     ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
     : getCollegeColorPalette(university, theme).accent;
 
-  const iconColor = theme === 'light' ? '#000000' : 'white';
+  const isLightMode = useIsLightMode();
+  const iconColor = isLightMode ? '#000000' : 'white';
 
   // Calculate glow intensity (0-100 scale mapped to opacity and spread)
   const glowOpacity = Math.round((glowIntensity / 100) * 0.6 * 255).toString(16).padStart(2, '0');

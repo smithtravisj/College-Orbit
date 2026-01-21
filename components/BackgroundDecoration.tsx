@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import { useSubscription } from '@/hooks/useSubscription';
 
 export default function BackgroundDecoration() {
   const university = useAppStore((state) => state.settings.university);
-  const themeSetting = useAppStore((state) => state.settings.theme) || 'dark';
+  const theme = useAppStore((state) => state.settings.theme) || 'dark';
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
 
@@ -16,29 +15,10 @@ export default function BackgroundDecoration() {
   const useCustomTheme = isPremium ? savedUseCustomTheme : false;
   const customColors = isPremium ? savedCustomColors : null;
 
-  // Resolve 'system' theme to actual theme
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
-
-  useEffect(() => {
-    if (themeSetting === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      setResolvedTheme(mediaQuery.matches ? 'dark' : 'light');
-
-      const handler = (e: MediaQueryListEvent) => {
-        setResolvedTheme(e.matches ? 'dark' : 'light');
-      };
-      mediaQuery.addEventListener('change', handler);
-      return () => mediaQuery.removeEventListener('change', handler);
-    } else {
-      setResolvedTheme(themeSetting === 'dark' ? 'dark' : 'light');
-      return undefined;
-    }
-  }, [themeSetting]);
-
   // Use current theme's accent color for background blobs
   const accentColor = useCustomTheme && customColors
-    ? getCustomColorSetForTheme(customColors as CustomColors, resolvedTheme).accent
-    : getCollegeColorPalette(university || null, resolvedTheme).accent;
+    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
+    : getCollegeColorPalette(university || null, theme).accent;
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>

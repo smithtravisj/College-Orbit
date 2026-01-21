@@ -39,7 +39,7 @@ export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
   const [dueSoonDays, setDueSoonDays] = useState<number | string>(7);
   const [university, setUniversity] = useState<string | null>(null);
-  const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | 'system'>('dark');
+  const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark'>('dark');
   const [useCustomTheme, setUseCustomTheme] = useState(false);
   const [customColors, setCustomColors] = useState<CustomColors | null>(null);
   const [collegeRequestName, setCollegeRequestName] = useState('');
@@ -1868,7 +1868,7 @@ export default function SettingsPage() {
                 borderRadius: '8px',
                 border: '1px solid var(--border)',
               }}>
-                {(['light', 'dark', 'system'] as const).map((themeOption) => (
+                {(['light', 'dark'] as const).map((themeOption) => (
                   <button
                     key={themeOption}
                     onClick={() => {
@@ -2037,9 +2037,7 @@ export default function SettingsPage() {
 
             {/* Color Pickers */}
             {isPremium && useCustomTheme && customColors && (() => {
-              const currentThemeMode = selectedTheme === 'system'
-                ? (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-                : selectedTheme;
+              const currentThemeMode = selectedTheme;
               const currentColorSet = currentThemeMode === 'light' ? customColors.light : customColors.dark;
 
               const updateColor = (key: keyof CustomColorSet, value: string) => {

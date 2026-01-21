@@ -4,6 +4,7 @@ import React from 'react';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useIsLightMode } from '@/hooks/useEffectiveTheme';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
@@ -20,7 +21,7 @@ const Button = React.memo(React.forwardRef<HTMLButtonElement, ButtonProps>(
     const { isPremium } = useSubscription();
 
     const theme = settings.theme || 'dark';
-    const isLightMode = theme === 'light';
+    const isLightMode = useIsLightMode();
     const colorPalette = getCollegeColorPalette(settings.university || null, theme);
 
     // Custom theme and visual effects are only active for premium users

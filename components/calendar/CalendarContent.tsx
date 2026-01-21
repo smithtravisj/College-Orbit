@@ -6,6 +6,7 @@ import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { useIsLightMode } from '@/hooks/useEffectiveTheme';
 import CalendarMonthView from './CalendarMonthView';
 import CalendarDayView from './CalendarDayView';
 import CalendarWeekView from './CalendarWeekView';
@@ -35,7 +36,7 @@ export default function CalendarContent() {
   const isMobile = useIsMobile();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
-  const isLightMode = theme === 'light';
+  const isLightMode = useIsLightMode();
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
   const savedGlowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;

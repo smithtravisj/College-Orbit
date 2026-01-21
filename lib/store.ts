@@ -543,7 +543,9 @@ const useAppStore = create<AppStore>((set, get) => ({
       // Apply colors based on loaded settings
       if (typeof window !== 'undefined') {
         const { isPremium } = get();
-        const theme = newData.settings?.theme || 'dark';
+        // Migrate 'system' theme to 'dark' (system theme removed in v1.2.6)
+        const rawTheme = (newData.settings?.theme || 'dark') as string;
+        const theme = (rawTheme === 'system' ? 'dark' : rawTheme) as 'light' | 'dark';
         const useCustomTheme = newData.settings?.useCustomTheme || false;
         const customColors = newData.settings?.customColors;
 
@@ -600,8 +602,14 @@ const useAppStore = create<AppStore>((set, get) => ({
           ? [...new Set([...DEFAULT_VISIBLE_DASHBOARD_CARDS, ...savedVisibleDashboardCards])]
           : DEFAULT_VISIBLE_DASHBOARD_CARDS;
 
+        // Migrate 'system' theme to 'dark' (system theme removed in v1.2.6)
+        // Cast to string since legacy data may have 'system' value
+        const storedTheme = rawSettings.theme as string;
+        const migratedTheme = (storedTheme === 'system' ? 'dark' : storedTheme) as 'light' | 'dark';
+
         const settings = {
           ...rawSettings,
+          theme: migratedTheme,
           visibleDashboardCards: mergedVisibleDashboardCards,
         };
 

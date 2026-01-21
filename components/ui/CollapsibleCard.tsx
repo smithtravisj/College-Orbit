@@ -6,6 +6,7 @@ import React from 'react';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useIsLightMode } from '@/hooks/useEffectiveTheme';
 
 interface CollapsibleCardProps {
   id: string;
@@ -51,7 +52,7 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = React.memo(({
     ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
     : colorPalette.accent;
   const isPrimary = variant === 'primary';
-  const isLightMode = theme === 'light';
+  const isLightMode = useIsLightMode();
 
   // Load state from database (via initialOpen prop)
   useEffect(() => {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
-import { getCollegeColorPalette, applyColorPalette, applyCustomColors, getCustomColorSetForTheme, CustomColors, applyColorblindMode, ColorblindMode, ColorblindStyle } from '@/lib/collegeColors';
+import { applyCustomColors, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 
 export default function AppLoader({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -10,9 +10,9 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
   const [isLightMode, setIsLightMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const storedTheme = localStorage.getItem('app-theme');
-      console.log('[AppLoader] Init: storedTheme =', storedTheme);
-      const result = storedTheme === 'light';
-      console.log('[AppLoader] Init: isLightMode =', result);
+      // Migrate 'system' to 'dark' (system theme removed in v1.2.6)
+      const theme = storedTheme === 'system' ? 'dark' : storedTheme;
+      const result = theme === 'light';
 
       // Apply cached colors immediately to prevent flicker
       const cachedIsPremium = localStorage.getItem('app-isPremium') === 'true';
@@ -22,10 +22,9 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
       if (cachedIsPremium && cachedUseCustomTheme && cachedCustomColorsStr) {
         try {
           const customColors = JSON.parse(cachedCustomColorsStr);
-          const theme = (storedTheme || 'dark') as 'light' | 'dark' | 'system';
-          const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
-          applyCustomColors(colorSet, theme);
-          console.log('[AppLoader] Applied cached custom colors');
+          const effectiveTheme = (theme || 'dark') as 'light' | 'dark';
+          const colorSet = getCustomColorSetForTheme(customColors as CustomColors, effectiveTheme);
+          applyCustomColors(colorSet, effectiveTheme);
         } catch (e) {
           console.warn('[AppLoader] Failed to parse cached custom colors:', e);
         }
@@ -56,34 +55,6 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  // System theme detection
-  useEffect(() => {
-    const settings = useAppStore.getState().settings;
-    if (settings.theme !== 'system') return;
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const handleChange = () => {
-      const currentSettings = useAppStore.getState().settings;
-      const { isPremium } = useAppStore.getState();
-      const palette = getCollegeColorPalette(
-        currentSettings.university || null,
-        'system'
-      );
-      applyColorPalette(palette);
-      // Re-apply colorblind mode after palette (skip palette changes if custom theme is active)
-      applyColorblindMode(
-        currentSettings.colorblindMode as ColorblindMode | null,
-        currentSettings.colorblindStyle as ColorblindStyle | null,
-        'system',
-        isPremium && currentSettings.useCustomTheme
-      );
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   // Don't render loading screen during initial SSR/hydration
@@ -124,11 +95,6 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
             background-color: var(--accent, #6ba5d9);
             opacity: 0.6;
             animation: wave 1.2s ease-in-out infinite;
-          }
-          @media (prefers-color-scheme: light) {
-            .dot {
-              opacity: 0.5;
-            }
           }
           .dot:nth-child(1) { animation-delay: 0s; }
           .dot:nth-child(2) { animation-delay: 0.1s; }

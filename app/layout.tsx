@@ -77,9 +77,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.className} style={{ backgroundColor: '#0b0f14' }}>
+    <html lang="en" className={inter.className}>
       <head>
-        <meta name="color-scheme" content="dark" />
+        <meta name="color-scheme" content="light dark" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black" />
         <meta name="apple-mobile-web-app-title" content="College Orbit" />
@@ -130,12 +130,9 @@ export default function RootLayout({
           }}
         />
         <style>{`
-          @supports (color-scheme: dark) {
-            :root { color-scheme: dark; }
-          }
           html {
-            background-color: #0b0f14 !important;
-            color: #e6edf6 !important;
+            background-color: var(--bg, #0b0f14);
+            color: var(--text, #e6edf6);
           }
         `}</style>
       </head>

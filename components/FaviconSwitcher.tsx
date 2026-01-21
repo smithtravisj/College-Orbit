@@ -20,18 +20,7 @@ export default function FaviconSwitcher() {
       }
     };
 
-    // Determine if dark mode based on theme setting
-    if (theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      updateFavicon(mediaQuery.matches);
-
-      const handler = (e: MediaQueryListEvent) => updateFavicon(e.matches);
-      mediaQuery.addEventListener('change', handler);
-      return () => mediaQuery.removeEventListener('change', handler);
-    } else {
-      updateFavicon(theme === 'dark');
-      return undefined;
-    }
+    updateFavicon(theme === 'dark');
   }, [theme]);
 
   return null;

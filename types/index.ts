@@ -293,7 +293,7 @@ export interface Settings {
   weekStartsOn: 'Sun' | 'Mon';
   timeFormat: '12h' | '24h';
   dateFormat: 'MM/DD/YYYY' | 'DD/MM/YYYY';
-  theme: 'light' | 'dark' | 'system';
+  theme: 'light' | 'dark';
   enableNotifications: boolean;
   university?: string | null;
   visiblePages?: string[];
