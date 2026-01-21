@@ -296,7 +296,7 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   fetchColleges: async () => {
     try {
-      const response = await fetch('/api/colleges');
+      const response = await fetch('/api/colleges', { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
         const colleges = data.colleges || [];
@@ -445,7 +445,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       console.log('[Store] loadFromDatabase called', new Error().stack?.split('\n').slice(1, 4).join(' <- '));
 
       // Single API call to fetch all data
-      const response = await fetch('/api/init');
+      const response = await fetch('/api/init', { credentials: 'include' });
 
       // If not authenticated, silently return (user is on login page or session expired)
       if (response.status === 401) {
@@ -688,6 +688,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/courses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(course),
       });
 
@@ -800,7 +801,7 @@ const useAppStore = create<AppStore>((set, get) => ({
               }),
             });
             // Refresh gpa entries
-            const entriesRes = await fetch('/api/gpa-entries');
+            const entriesRes = await fetch('/api/gpa-entries', { credentials: 'include' });
             if (entriesRes.ok) {
               const { entries } = await entriesRes.json();
               set({ gpaEntries: entries });
@@ -869,6 +870,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/deadlines', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: requestBody,
       });
 
@@ -998,6 +1000,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(task),
       });
 
@@ -1323,6 +1326,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/exams', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(exam),
       });
 
@@ -1429,6 +1433,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(note),
       });
 
@@ -1567,6 +1572,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/folders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(folder),
       });
 
@@ -1664,6 +1670,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/excluded-dates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(requestBody),
       });
 
@@ -1709,6 +1716,7 @@ const useAppStore = create<AppStore>((set, get) => ({
         const response = await fetch('/api/excluded-dates', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             dates: dates.map((d) => d.date),
             description: dates[0].description,
@@ -1808,6 +1816,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/gpa-entries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(gpaEntry),
       });
 
@@ -1820,7 +1829,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       }
 
       // Reload all GPA entries from database to ensure consistency
-      const entriesRes = await fetch('/api/gpa-entries');
+      const entriesRes = await fetch('/api/gpa-entries', { credentials: 'include' });
       if (!entriesRes.ok) throw new Error('Failed to fetch GPA entries');
 
       const { entries: allEntries } = await entriesRes.json();
@@ -1850,6 +1859,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/shopping', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(item),
       });
 
@@ -2088,7 +2098,7 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   loadPurchaseHistory: async () => {
     try {
-      const response = await fetch('/api/shopping?includePurchased=true');
+      const response = await fetch('/api/shopping?includePurchased=true', { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to load purchase history');
       const data = await response.json();
       // Return only purchased items
@@ -2101,7 +2111,7 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   clearPurchaseHistory: async () => {
     try {
-      const response = await fetch('/api/shopping?clearHistory=true', { method: 'DELETE' });
+      const response = await fetch('/api/shopping?clearHistory=true', { method: 'DELETE', credentials: 'include' });
       if (!response.ok) throw new Error('Failed to clear purchase history');
     } catch (error) {
       console.error('Error clearing purchase history:', error);
@@ -2144,6 +2154,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/calendar-events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(event),
       });
 
@@ -2277,6 +2288,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(settings),
       });
 
@@ -2371,7 +2383,7 @@ const useAppStore = create<AppStore>((set, get) => ({
     // Fetch notifications from API
     let notifications = [];
     try {
-      const response = await fetch('/api/notifications');
+      const response = await fetch('/api/notifications', { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
         notifications = data.notifications || [];
@@ -2498,7 +2510,7 @@ const useAppStore = create<AppStore>((set, get) => ({
         console.log('Importing excluded dates:', data.excludedDates.length);
 
         // Reload courses from database to ensure we have all newly imported courses
-        const coursesRes = await fetch('/api/courses');
+        const coursesRes = await fetch('/api/courses', { credentials: 'include' });
         const coursesData = await coursesRes.json();
         const currentCourses = coursesData.courses || [];
 
@@ -2555,6 +2567,7 @@ const useAppStore = create<AppStore>((set, get) => ({
           const response = await fetch('/api/recurring-patterns', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify(patternData),
           });
           if (!response.ok) {
@@ -2572,6 +2585,7 @@ const useAppStore = create<AppStore>((set, get) => ({
           const response = await fetch('/api/recurring-deadline-patterns', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify(patternData),
           });
           if (!response.ok) {
@@ -2589,6 +2603,7 @@ const useAppStore = create<AppStore>((set, get) => ({
           const response = await fetch('/api/recurring-exam-patterns', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify(patternData),
           });
           if (!response.ok) {
@@ -2617,6 +2632,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...taskData,
           recurring: recurringData,
@@ -2739,6 +2755,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/deadlines', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...deadlineData,
           recurring: recurringData,
@@ -2854,6 +2871,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/exams', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...examData,
           recurring: recurringData,
@@ -2984,6 +3002,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       const response = await fetch('/api/user/data', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
       });
 
       if (!response.ok) {

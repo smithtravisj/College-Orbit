@@ -71,7 +71,7 @@ export function useSubscription(): ClientSubscriptionStatus & { refresh: () => P
 
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await fetch('/api/subscription/status');
+      const res = await fetch('/api/subscription/status', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         const newStatus = { ...data, isLoading: false };

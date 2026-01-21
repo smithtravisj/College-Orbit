@@ -140,7 +140,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const response = await fetch('/api/analytics/data');
+        const response = await fetch('/api/analytics/data', { credentials: 'include' });
 
         if (response.status === 401) {
           router.push('/login');

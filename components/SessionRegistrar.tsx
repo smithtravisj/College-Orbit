@@ -43,11 +43,15 @@ export default function SessionRegistrar() {
 
       // Register current session
       try {
-        await fetch('/api/user/sessions/register', {
+        const res = await fetch('/api/user/sessions/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ browser: detectedBrowser }),
         });
+        if (!res.ok) {
+          console.error('Session registration failed:', res.status);
+        }
       } catch (err) {
         console.error('Failed to register session:', err);
       }
