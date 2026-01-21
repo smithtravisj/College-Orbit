@@ -96,15 +96,51 @@ export default function NotesPage() {
   }, [searchParams, mounted, notes]);
 
   // Sync detail view content when selected note changes
+  // If content is null (cached without content), fetch from API
   useEffect(() => {
-    if (selectedNoteId) {
+    let isCancelled = false;
+
+    const loadNoteContent = async () => {
+      if (!selectedNoteId) return;
+
       const note = notes.find((n) => n.id === selectedNoteId);
-      if (note) {
+      if (!note) return;
+
+      // If content is already loaded, use it directly
+      if (note.content !== null) {
         setDetailViewContent(note.content || { type: 'doc', content: [] });
         setHasUnsavedChanges(false);
+        return;
       }
-    }
-  }, [selectedNoteId, notes]);
+
+      // Content is null (cached without content), fetch from API
+      try {
+        const res = await fetch(`/api/notes/${selectedNoteId}`);
+        const data = await res.json();
+
+        if (isCancelled) return;
+
+        const content = data.note?.content || { type: 'doc', content: [] };
+        setDetailViewContent(content);
+        setHasUnsavedChanges(false);
+
+        // Update the note in the store with the fetched content
+        updateNote(selectedNoteId, { content });
+      } catch {
+        if (!isCancelled) {
+          setDetailViewContent({ type: 'doc', content: [] });
+          setHasUnsavedChanges(false);
+        }
+      }
+    };
+
+    loadNoteContent();
+
+    return () => {
+      isCancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNoteId]);
 
   if (!mounted) {
     return (

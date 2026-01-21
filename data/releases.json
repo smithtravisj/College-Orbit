@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.2.5",
+      "date": "2026-01-20",
+      "changes": [
+        "Fixed notes not displaying content until reopened",
+        "Note content now loads on-demand from the server for faster page loads"
+      ]
+    },
+    {
       "version": "1.2.4",
       "date": "2026-01-20",
       "changes": [

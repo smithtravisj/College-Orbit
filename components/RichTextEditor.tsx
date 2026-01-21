@@ -72,6 +72,19 @@ export default function RichTextEditor({
     editable: !readOnly,
   });
 
+  // Sync external value changes to the editor
+  useEffect(() => {
+    if (!editor || !value) return;
+
+    // Only update if the content actually differs to avoid cursor jumping
+    const currentContent = JSON.stringify(editor.getJSON());
+    const newContent = JSON.stringify(value);
+
+    if (currentContent !== newContent) {
+      editor.commands.setContent(value, { emitUpdate: false });
+    }
+  }, [editor, value]);
+
   useEffect(() => {
     if (!editor) return;
 

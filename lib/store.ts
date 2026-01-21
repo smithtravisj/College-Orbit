@@ -222,19 +222,25 @@ const saveToLocalStorage = (state: AppStore) => {
     const storageKey = state.getStorageKey();
     if (!storageKey || storageKey === 'college-orbit-') return;
 
-    // Only cache essential data for instant dashboard/timeline loading
-    // Less critical data (GPA, shopping, recurring patterns) loads from DB
+    // Cache essential data for instant loading
+    // Exclude large data (note content, GPA, shopping, recurring patterns)
+    const notesWithoutContent = state.notes.map(note => ({
+      ...note,
+      content: null, // Don't cache note content - it can be very large
+      plainText: '', // Don't cache plainText either
+    }));
+
     localStorage.setItem(storageKey, JSON.stringify({
       courses: state.courses,
       deadlines: state.deadlines,
       tasks: state.tasks,
       exams: state.exams,
+      notes: notesWithoutContent,
+      folders: state.folders,
       settings: state.settings,
       calendarEvents: state.calendarEvents,
       excludedDates: state.excludedDates,
       // Exclude to save space - these load from DB when needed:
-      // - notes (large content)
-      // - folders (only used on notes page)
       // - gpaEntries (only used on GPA page)
       // - shoppingItems (only used on shopping page)
       // - recurringPatterns, recurringDeadlinePatterns, recurringExamPatterns (rarely accessed)
