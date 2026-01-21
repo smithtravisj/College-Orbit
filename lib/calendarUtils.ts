@@ -464,14 +464,13 @@ export const COLOR_PALETTE = {
   cyan: '#06b6d4',
 };
 
-// Event type colors with colorblind CSS variable support
-// Uses CSS custom properties with fallbacks for colorblind accessibility
+// Event type colors - hex values for calendar rendering
 export const EVENT_TYPE_COLORS = {
-  course: 'var(--cb-event-course, #3b82f6)',
-  task: 'var(--cb-event-task, #22c55e)',
-  exam: 'var(--cb-event-exam, #ef4444)',
-  deadline: 'var(--cb-event-deadline, #ff7d00)',
-  event: 'var(--cb-event-calendar, #a855f7)',
+  course: '#3b82f6',   // Blue
+  task: '#22c55e',     // Green
+  exam: '#ef4444',     // Red
+  deadline: '#ff7d00', // Orange
+  event: '#a855f7',    // Purple
 };
 
 // Get the color for an event (supports colorblind mode via CSS variables)

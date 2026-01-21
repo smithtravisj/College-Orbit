@@ -3235,37 +3235,8 @@ export default function SettingsPage() {
           {/* About */}
           <Card title="About">
             <div>
-              {/* Onboarding Tour */}
-              <div style={{ paddingBottom: '18px' }}>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
-                  Onboarding Tour
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                  Replay the interactive tutorial to learn about app features
-                </p>
-                <Button
-                  size={isMobile ? 'sm' : 'lg'}
-                  onClick={async () => {
-                    try {
-                      // Update settings through store (updates both local state and database)
-                      await updateSettings({ hasCompletedOnboarding: false });
-
-                      // Redirect to dashboard to start the tutorial
-                      window.location.href = '/';
-                    } catch (error) {
-                      console.error('Failed to restart tutorial:', error);
-                    }
-                  }}
-                  style={{
-                    paddingLeft: isMobile ? '12px' : '16px',
-                    paddingRight: isMobile ? '12px' : '16px',
-                  }}
-                >
-                  Restart Tutorial
-                </Button>
-              </div>
               {/* Keyboard Shortcuts */}
-              <div style={{ paddingTop: '18px', paddingBottom: '18px', borderTop: '1px solid var(--border)' }}>
+              <div style={{ paddingBottom: '18px' }}>
                 <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
                   Keyboard Shortcuts
                 </p>

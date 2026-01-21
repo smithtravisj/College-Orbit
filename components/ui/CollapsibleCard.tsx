@@ -33,7 +33,9 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = React.memo(({
   variant = 'primary',
 }) => {
   const [isOpen, setIsOpen] = useState(initialOpen);
-  const [mounted, setMounted] = useState(false);
+  // Initialize mounted to true to prevent flash of empty content on remount
+  // The SSR check below handles hydration
+  const [mounted, setMounted] = useState(typeof window !== 'undefined');
   const { isPremium } = useSubscription();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
@@ -72,7 +74,7 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = React.memo(({
 
   return (
     <div
-      className={`card-hover rounded-[16px] border transition-all duration-300 w-full flex flex-col animate-fade-in-up ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${!isOpen ? 'cursor-pointer' : ''} ${className}`}
+      className={`card-hover rounded-[16px] border transition-all duration-300 w-full flex flex-col ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${!isOpen ? 'cursor-pointer' : ''} ${className}`}
       style={{
         position: 'relative',
         overflow: 'visible',

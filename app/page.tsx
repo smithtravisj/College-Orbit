@@ -51,9 +51,7 @@ function Dashboard() {
 
   const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>([]);
   const [timelineHeight, setTimelineHeight] = useState<number>(500);
-  const [quickLinksHeight, setQuickLinksHeight] = useState<number>(300);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const quickLinksRef = useRef<HTMLDivElement>(null);
   const { courses, deadlines, tasks, settings, excludedDates, initializeStore, toggleTaskDone, updateDeadline } = useAppStore();
   const { isPremium } = useSubscription();
   // Dashboard card visibility is only customizable for premium users - free users see defaults
@@ -94,10 +92,12 @@ function Dashboard() {
   };
 
   useEffect(() => {
+    // Only run once on mount - initializeStore has its own guard against re-initialization
     initializeStore().then(() => {
       setMounted(true);
     });
-  }, [initializeStore]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Calculate timeline and quick links height to extend to bottom of viewport
   const isMobileValue = isMobile;
@@ -108,11 +108,6 @@ function Dashboard() {
         const rect = timelineRef.current.getBoundingClientRect();
         const availableHeight = window.innerHeight - rect.top - 24;
         setTimelineHeight(Math.max(300, availableHeight));
-      }
-      if (quickLinksRef.current) {
-        const rect = quickLinksRef.current.getBoundingClientRect();
-        const availableHeight = window.innerHeight - rect.top - 24;
-        setQuickLinksHeight(Math.max(200, availableHeight));
       }
     };
 
@@ -318,7 +313,7 @@ function Dashboard() {
           <div className="flex flex-col" style={{ gap: '16px' }}>
             {/* Timeline Card */}
             {visibleDashboardCards.includes(DASHBOARD_CARDS.TIMELINE) && (
-              <div className="animate-fade-in-up" data-tour="timeline">
+              <div data-tour="timeline">
                 {renderCard(
                   DASHBOARD_CARDS.TIMELINE,
                   'Timeline',
@@ -412,7 +407,7 @@ function Dashboard() {
           <div className="flex gap-6" style={{ alignItems: 'flex-start' }}>
             {/* Column 1: Timeline (extends to bottom of viewport) */}
             {visibleDashboardCards.includes(DASHBOARD_CARDS.TIMELINE) && (
-              <div ref={timelineRef} className="flex-1 animate-fade-in-up" data-tour="timeline" style={{ height: `${timelineHeight}px` }}>
+              <div ref={timelineRef} className="flex-1" data-tour="timeline" style={{ height: `${timelineHeight}px` }}>
                 {renderCard(
                   DASHBOARD_CARDS.TIMELINE,
                   'Timeline',
@@ -433,7 +428,7 @@ function Dashboard() {
             )}
 
             {/* Column 2: Overview and Quick Links stacked */}
-            <div className="flex flex-col gap-6" style={{ width: '320px', flexShrink: 0 }}>
+            <div className="flex flex-col gap-6" style={{ width: '320px', flexShrink: 0, height: `${timelineHeight}px` }}>
               {/* Overview */}
               {visibleDashboardCards.includes(DASHBOARD_CARDS.OVERVIEW) && (
                 <div className="animate-fade-in-up" data-tour="overview">
@@ -465,13 +460,13 @@ function Dashboard() {
 
               {/* Quick Links */}
               {visibleDashboardCards.includes(DASHBOARD_CARDS.QUICK_LINKS) && (
-                <div ref={quickLinksRef} className="animate-fade-in-up" style={{ height: `${quickLinksHeight}px` }}>
+                <div className="animate-fade-in-up flex-1 min-h-0 flex flex-col">
                   {renderCard(
                     DASHBOARD_CARDS.QUICK_LINKS,
                     'Quick Links',
                     <>
                       {settings.university ? (
-                        <div className="grid grid-cols-2 gap-3 overflow-y-auto flex-1">
+                        <div className="grid grid-cols-2 gap-3 overflow-y-auto flex-1" style={{ alignContent: 'start' }}>
                           {quickLinks.map((link: { id?: string; label: string; url: string }) => (
                             <a
                               key={link.id || link.label}

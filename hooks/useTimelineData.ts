@@ -102,8 +102,6 @@ export function useTimelineData({
   // Load from cache instantly for fast initial render
   const [cachedData] = useState<TimelineGroupedData | null>(() => getCachedData(range));
 
-  // Track if we've received real data from the store (not just initial empty state)
-  const [hasReceivedData, setHasReceivedData] = useState(false);
 
   // Single selector with shallow comparison to reduce re-renders
   const { courses, tasks, deadlines, exams, calendarEvents, excludedDates, loading, initialized } = useAppStore(
@@ -442,20 +440,20 @@ export function useTimelineData({
     }
   }, [groupedData, loading, range]);
 
-  // Mark as received data once the store is initialized
-  // The store's initialized flag is set to true after data is loaded from cache or database
-  useEffect(() => {
-    if (!hasReceivedData && initialized) {
-      setHasReceivedData(true);
-    }
-  }, [initialized, hasReceivedData]);
 
-  // Show cached data until we've confirmed the store has loaded
-  // This prevents showing empty state before real data arrives
-  const shouldUseCache = !hasReceivedData && cachedData !== null;
+  // Check if store has actual data (not just empty arrays)
+  const storeHasData = courses.length > 0 || tasks.length > 0 || deadlines.length > 0 || exams.length > 0 || (calendarEvents?.length || 0) > 0;
+
+  // Use store data if it has content, otherwise fall back to cache
+  // This prevents flashing empty state when component remounts
+  const shouldUseCache = !storeHasData && cachedData !== null;
+
+  const finalData = shouldUseCache ? cachedData : groupedData;
+  const isLoadingResult = !initialized && !cachedData;
+
 
   return {
-    groupedData: shouldUseCache ? cachedData : groupedData,
-    isLoading: !hasReceivedData && !cachedData,
+    groupedData: finalData,
+    isLoading: isLoadingResult,
   };
 }

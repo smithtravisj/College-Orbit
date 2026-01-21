@@ -221,24 +221,49 @@ const saveToLocalStorage = (state: AppStore) => {
   try {
     const storageKey = state.getStorageKey();
     if (!storageKey || storageKey === 'college-orbit-') return;
+
+    // Only cache essential data for instant dashboard/timeline loading
+    // Less critical data (GPA, shopping, recurring patterns) loads from DB
     localStorage.setItem(storageKey, JSON.stringify({
       courses: state.courses,
       deadlines: state.deadlines,
       tasks: state.tasks,
       exams: state.exams,
-      notes: state.notes,
-      folders: state.folders,
       settings: state.settings,
-      excludedDates: state.excludedDates,
-      gpaEntries: state.gpaEntries,
-      recurringPatterns: state.recurringPatterns,
-      recurringDeadlinePatterns: state.recurringDeadlinePatterns,
-      recurringExamPatterns: state.recurringExamPatterns,
-      shoppingItems: state.shoppingItems,
       calendarEvents: state.calendarEvents,
+      excludedDates: state.excludedDates,
+      // Exclude to save space - these load from DB when needed:
+      // - notes (large content)
+      // - folders (only used on notes page)
+      // - gpaEntries (only used on GPA page)
+      // - shoppingItems (only used on shopping page)
+      // - recurringPatterns, recurringDeadlinePatterns, recurringExamPatterns (rarely accessed)
     }));
   } catch (error) {
-    console.warn('Failed to save to localStorage:', error);
+    // If quota exceeded, try to clear old data and save minimal data
+    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+      console.warn('localStorage quota exceeded, clearing cache...');
+      try {
+        // Clear timeline cache and try again with minimal data
+        localStorage.removeItem('timeline_cache_today');
+        localStorage.removeItem('timeline_cache_week');
+        localStorage.removeItem('calendarCache');
+
+        const storageKey = state.getStorageKey();
+        // Save only absolutely essential data for dashboard
+        localStorage.setItem(storageKey, JSON.stringify({
+          courses: state.courses,
+          tasks: state.tasks,
+          deadlines: state.deadlines,
+          settings: state.settings,
+        }));
+      } catch {
+        // If still failing, just skip localStorage
+        console.warn('Could not save to localStorage even after clearing cache');
+      }
+    } else {
+      console.warn('Failed to save to localStorage:', error);
+    }
   }
 };
 
@@ -358,6 +383,11 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   initializeStore: async () => {
+    // Prevent re-initialization if already initialized
+    if (get().initialized) {
+      return;
+    }
+
     // Migrate old localStorage keys to new naming convention
     migrateLocalStorageKeys();
 
@@ -385,12 +415,8 @@ const useAppStore = create<AppStore>((set, get) => ({
 
     if (hasLocalData) {
       // We have cached data, show UI immediately
+      // Skip background refresh to prevent UI flash - data will refresh on next page load
       set({ loading: false, initialized: true });
-
-      // Step 2: Fetch fresh data in the background (don't await)
-      get().loadFromDatabase().catch((error) => {
-        console.error('Background refresh failed:', error);
-      });
     } else {
       // No cached data, must wait for API
       set({ loading: true });
@@ -406,6 +432,8 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   loadFromDatabase: async () => {
     try {
+      console.log('[Store] loadFromDatabase called', new Error().stack?.split('\n').slice(1, 4).join(' <- '));
+
       // Single API call to fetch all data
       const response = await fetch('/api/init');
 
@@ -470,7 +498,41 @@ const useAppStore = create<AppStore>((set, get) => ({
         calendarEvents: data.calendarEvents || [],
       };
 
-      set(newData);
+      // Only update fields that have actually changed to prevent unnecessary re-renders
+      const currentState = get();
+      const updates: Partial<typeof newData> = {};
+
+      // Helper to check if arrays are different (by comparing JSON)
+      const arraysEqual = (a: any[], b: any[]) => {
+        if (a.length !== b.length) return false;
+        return JSON.stringify(a) === JSON.stringify(b);
+      };
+
+      // Only include fields that have changed
+      if (newData.userId !== currentState.userId) updates.userId = newData.userId;
+      if (!arraysEqual(newData.courses, currentState.courses)) updates.courses = newData.courses;
+      if (!arraysEqual(newData.deadlines, currentState.deadlines)) updates.deadlines = newData.deadlines;
+      if (!arraysEqual(newData.tasks, currentState.tasks)) updates.tasks = newData.tasks;
+      if (!arraysEqual(newData.exams, currentState.exams)) updates.exams = newData.exams;
+      if (!arraysEqual(newData.notes, currentState.notes)) updates.notes = newData.notes;
+      if (!arraysEqual(newData.folders, currentState.folders)) updates.folders = newData.folders;
+      if (!arraysEqual(newData.excludedDates, currentState.excludedDates)) updates.excludedDates = newData.excludedDates;
+      if (!arraysEqual(newData.gpaEntries, currentState.gpaEntries)) updates.gpaEntries = newData.gpaEntries;
+      if (!arraysEqual(newData.recurringPatterns, currentState.recurringPatterns)) updates.recurringPatterns = newData.recurringPatterns;
+      if (!arraysEqual(newData.recurringDeadlinePatterns, currentState.recurringDeadlinePatterns)) updates.recurringDeadlinePatterns = newData.recurringDeadlinePatterns;
+      if (!arraysEqual(newData.recurringExamPatterns, currentState.recurringExamPatterns)) updates.recurringExamPatterns = newData.recurringExamPatterns;
+      if (!arraysEqual(newData.shoppingItems, currentState.shoppingItems)) updates.shoppingItems = newData.shoppingItems;
+      if (!arraysEqual(newData.calendarEvents || [], currentState.calendarEvents || [])) updates.calendarEvents = newData.calendarEvents;
+
+      // Always update settings (they're usually different)
+      if (JSON.stringify(newData.settings) !== JSON.stringify(currentState.settings)) {
+        updates.settings = newData.settings;
+      }
+
+      // Only call set if there are actual updates
+      if (Object.keys(updates).length > 0) {
+        set(updates);
+      }
 
       // Apply colors based on loaded settings
       if (typeof window !== 'undefined') {
@@ -509,15 +571,8 @@ const useAppStore = create<AppStore>((set, get) => ({
         }
       }
 
-      // Save fresh data to localStorage with user-specific key
-      if (typeof window !== 'undefined') {
-        try {
-          const storageKey = get().getStorageKey();
-          localStorage.setItem(storageKey, JSON.stringify(newData));
-        } catch (error) {
-          console.warn('Failed to save to localStorage:', error);
-        }
-      }
+      // Save fresh data to localStorage using the helper (which excludes note content)
+      saveToLocalStorage(get());
     } catch (error) {
       console.error('Failed to load from database:', error);
     }
@@ -531,7 +586,18 @@ const useAppStore = create<AppStore>((set, get) => ({
       const stored = localStorage.getItem(storageKey);
       if (stored) {
         const data: AppData = JSON.parse(stored);
-        const settings = data.settings || DEFAULT_SETTINGS;
+        const rawSettings = data.settings || DEFAULT_SETTINGS;
+
+        // Merge visibleDashboardCards with defaults to ensure new cards are always included
+        const savedVisibleDashboardCards = rawSettings.visibleDashboardCards;
+        const mergedVisibleDashboardCards = savedVisibleDashboardCards
+          ? [...new Set([...DEFAULT_VISIBLE_DASHBOARD_CARDS, ...savedVisibleDashboardCards])]
+          : DEFAULT_VISIBLE_DASHBOARD_CARDS;
+
+        const settings = {
+          ...rawSettings,
+          visibleDashboardCards: mergedVisibleDashboardCards,
+        };
 
         // Read cached premium status from localStorage for immediate color application
         const cachedIsPremium = localStorage.getItem('app-isPremium') === 'true';
@@ -2203,31 +2269,33 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       const { settings: updatedSettings } = await response.json();
 
-      // Only update if server response differs from optimistic update
+      // Merge server response with current state to preserve client-side defaults
+      // This prevents fields like visibleDashboardCards from being lost if they weren't saved to DB
       const currentState = get().settings;
-      const needsUpdate = JSON.stringify(currentState) !== JSON.stringify(updatedSettings);
+      const mergedSettings = { ...currentState, ...updatedSettings };
+      const needsUpdate = JSON.stringify(currentState) !== JSON.stringify(mergedSettings);
       if (needsUpdate) {
-        set({ settings: updatedSettings });
+        set({ settings: mergedSettings });
         // Update localStorage with server response
         saveToLocalStorage(get());
 
         // Re-apply colorblind mode after state update (colors may have been reset)
         // Skip palette changes if custom theme is active
-        if (typeof window !== 'undefined' && updatedSettings.colorblindMode) {
+        if (typeof window !== 'undefined' && mergedSettings.colorblindMode) {
           const { isPremium } = get();
-          const theme = updatedSettings.theme || 'dark';
+          const theme = mergedSettings.theme || 'dark';
           applyColorblindMode(
-            updatedSettings.colorblindMode as ColorblindMode | null,
-            updatedSettings.colorblindStyle as ColorblindStyle | null,
+            mergedSettings.colorblindMode as ColorblindMode | null,
+            mergedSettings.colorblindStyle as ColorblindStyle | null,
             theme,
-            isPremium && updatedSettings.useCustomTheme
+            isPremium && mergedSettings.useCustomTheme
           );
         }
       }
 
     } catch (error) {
-      // Reload from database on error
-      await get().loadFromDatabase();
+      // Log error but don't reload from database - that causes UI flash
+      // The optimistic update will remain, and data will sync on next page load
       console.error('Error updating settings:', error);
       throw error;
     }

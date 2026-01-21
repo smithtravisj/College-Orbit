@@ -45,12 +45,11 @@ export interface TimelineGroupedData {
   totalProgress: TimelineProgress;
 }
 
-// Color mapping for timeline item types (supports colorblind mode via CSS variables)
-// Uses CSS custom properties with fallbacks for colorblind accessibility
+// Color mapping for timeline item types - hex values for rendering
 export const TIMELINE_COLORS: Record<TimelineItemType, string> = {
-  class: 'var(--cb-event-course, #3b82f6)',    // blue
-  exam: 'var(--cb-event-exam, #ef4444)',       // red
-  task: 'var(--cb-event-task, #22c55e)',       // green
-  deadline: 'var(--cb-event-deadline, #ff7d00)', // orange
-  event: 'var(--cb-event-calendar, #a855f7)',  // purple
+  class: '#3b82f6',    // blue
+  exam: '#ef4444',     // red
+  task: '#22c55e',     // green
+  deadline: '#ff7d00', // orange
+  event: '#a855f7',    // purple
 };

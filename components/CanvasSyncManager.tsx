@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import useAppStore from '@/lib/store';
 
 // Sync intervals and thresholds (in milliseconds)
 const SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes while active
@@ -82,10 +81,9 @@ export function CanvasSyncManager() {
       if (syncRes.ok) {
         const result = await syncRes.json();
         console.log('[CanvasSync] Sync completed:', result);
-
-        // Refresh the store data
-        const { loadFromDatabase } = useAppStore.getState();
-        await loadFromDatabase();
+        // Note: We don't call loadFromDatabase here to avoid disrupting the UI
+        // The synced data is already in the database and will be loaded on next page load
+        // or when the user takes an action that triggers a data refresh
       } else {
         console.error('[CanvasSync] Sync failed:', await syncRes.text());
       }
