@@ -536,7 +536,7 @@ export default function AccountPage() {
                   Download a backup of all your data as a JSON file
                 </p>
                 <Button size={isMobile ? 'sm' : 'lg'} onClick={handleExport} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
-                  <Download size={18} />
+                  <Upload size={18} />
                   Export Data
                 </Button>
                 {exportMessage && (
@@ -559,7 +559,7 @@ export default function AccountPage() {
                   className="hidden"
                 />
                 <Button variant="secondary" size={isMobile ? 'sm' : 'lg'} onClick={() => fileInputRef.current?.click()} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
-                  <Upload size={18} />
+                  <Download size={18} />
                   Import Data
                 </Button>
                 {importMessage && (

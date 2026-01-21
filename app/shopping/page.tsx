@@ -11,7 +11,7 @@ import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 import PremiumGate from '@/components/subscription/PremiumGate';
-import { Plus, Trash2, Edit2, ShoppingCart, Heart, Package, Check, Copy, History, RotateCcw, Upload, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, ShoppingCart, Heart, Package, Check, Copy, History, RotateCcw, Download, X } from 'lucide-react';
 import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { parseNaturalLanguage, NLP_SHOPPING_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
 import {
@@ -916,7 +916,7 @@ export default function ShoppingPage() {
           </div>
           <div style={{ display: 'flex', gap: '8px', marginTop: isMobile ? '12px' : '8px' }}>
             <Button variant="secondary" size="md" onClick={() => setShowBulkImport(true)}>
-              <Upload size={18} />
+              <Download size={18} />
               {isMobile ? 'Import' : 'Bulk Import'}
             </Button>
             <Button variant="secondary" size="md" onClick={() => {

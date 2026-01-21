@@ -1,15 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import useAppStore from '@/lib/store';
 import { applyCustomColors, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 
-const MAX_LOAD_TIME = 15000; // 15 seconds max before forcing render
+const MAX_LOAD_TIME = 30000; // 30 seconds max before forcing render
 
 export default function AppLoader({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const isInitializedRef = useRef(false);
   const [isLightMode, setIsLightMode] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -49,21 +50,28 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
 
     // Set a timeout to force render if initialization takes too long
     const timeoutId = setTimeout(() => {
-      if (!isInitialized) {
-        console.error('[AppLoader] Initialization timed out after 15s, forcing render');
+      if (!isInitializedRef.current) {
+        console.error('[AppLoader] Initialization timed out after 30s, forcing render');
         setLoadError('Loading took too long. Some features may not work correctly.');
         setIsInitialized(true);
+        isInitializedRef.current = true;
       }
     }, MAX_LOAD_TIME);
 
     const initialize = async () => {
       try {
         await useAppStore.getState().initializeStore();
-        setIsInitialized(true);
+        if (!isInitializedRef.current) {
+          setIsInitialized(true);
+          isInitializedRef.current = true;
+        }
       } catch (error) {
         console.error('[AppLoader] Failed to initialize:', error);
-        setLoadError('Failed to load app data. Please refresh the page.');
-        setIsInitialized(true); // Still render the app so user can try to use it
+        if (!isInitializedRef.current) {
+          setLoadError('Failed to load app data. Please refresh the page.');
+          setIsInitialized(true);
+          isInitializedRef.current = true;
+        }
       }
     };
     initialize();
