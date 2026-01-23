@@ -111,7 +111,7 @@ export default function SignupForm() {
       }
 
       if (typeof window !== 'undefined') {
-        // Clear all user-specific cache to prevent stale data from previous user
+        // Clear ALL user-specific cache for new user signup
         const oldUserId = localStorage.getItem('college-orbit-userId');
         if (oldUserId) {
           localStorage.removeItem(`college-orbit-data-${oldUserId}`);
@@ -120,11 +120,14 @@ export default function SignupForm() {
         localStorage.removeItem('college-orbit-data');
         localStorage.removeItem('app-theme');
         localStorage.removeItem('app-isPremium');
+        localStorage.removeItem('app-useCustomTheme');
         localStorage.removeItem('app-customColors');
         localStorage.removeItem('customQuickLinks');
         localStorage.removeItem('timeline_cache_today');
         localStorage.removeItem('timeline_cache_week');
         localStorage.removeItem('calendarCache');
+        localStorage.removeItem('pomodoroState');
+        localStorage.removeItem('timelineRange');
       }
 
       router.push('/');

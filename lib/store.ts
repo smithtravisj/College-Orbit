@@ -466,13 +466,18 @@ const useAppStore = create<AppStore>((set, get) => ({
         const cachedUserId = localStorage.getItem('college-orbit-userId');
         if (cachedUserId && cachedUserId !== userId) {
           console.log('[Store] UserId mismatch - clearing stale cache. Cached:', cachedUserId, 'Actual:', userId);
-          // Clear old user's cache
+          // Clear ALL old user's cache
           localStorage.removeItem(`college-orbit-data-${cachedUserId}`);
           localStorage.removeItem('college-orbit-data');
+          localStorage.removeItem('app-isPremium');
+          localStorage.removeItem('app-useCustomTheme');
+          localStorage.removeItem('app-customColors');
           localStorage.removeItem('customQuickLinks');
           localStorage.removeItem('timeline_cache_today');
           localStorage.removeItem('timeline_cache_week');
           localStorage.removeItem('calendarCache');
+          localStorage.removeItem('pomodoroState');
+          localStorage.removeItem('timelineRange');
         }
       }
 
@@ -609,6 +614,15 @@ const useAppStore = create<AppStore>((set, get) => ({
     if (typeof window === 'undefined') return false;
 
     try {
+      // Only load from cache if we have a userId to verify it's the right user's data
+      // If there's no userId in localStorage, we just logged in as a different user
+      // and should wait for the API to provide fresh data
+      const savedUserId = localStorage.getItem('college-orbit-userId');
+      if (!savedUserId) {
+        console.log('[loadFromStorage] No userId in localStorage, skipping cache to ensure fresh data');
+        return false;
+      }
+
       const storageKey = get().getStorageKey();
       const stored = localStorage.getItem(storageKey);
       if (stored) {

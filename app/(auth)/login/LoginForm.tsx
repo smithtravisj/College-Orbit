@@ -35,7 +35,7 @@ export function LoginForm() {
         return;
       }
 
-      // Clear stale cache from any previous user to ensure fresh data loads
+      // Clear ALL user-specific cache to ensure fresh data loads for new user
       if (typeof window !== 'undefined') {
         const oldUserId = localStorage.getItem('college-orbit-userId');
         if (oldUserId) {
@@ -44,11 +44,14 @@ export function LoginForm() {
         localStorage.removeItem('college-orbit-userId');
         localStorage.removeItem('college-orbit-data');
         localStorage.removeItem('app-isPremium');
+        localStorage.removeItem('app-useCustomTheme');
+        localStorage.removeItem('app-customColors');
         localStorage.removeItem('customQuickLinks');
         localStorage.removeItem('timeline_cache_today');
         localStorage.removeItem('timeline_cache_week');
         localStorage.removeItem('calendarCache');
-        // Note: Don't clear app-theme and app-customColors here to avoid theme flash
+        localStorage.removeItem('pomodoroState');
+        localStorage.removeItem('timelineRange');
       }
 
       const callbackUrl = searchParams.get('callbackUrl') || '/';
