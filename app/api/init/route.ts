@@ -1,20 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
-import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET all data for authenticated user in a single request
 // This replaces 14 separate API calls with 1
-export const GET = withRateLimit(async function(_request: NextRequest) {
+// Note: No rate limiting on this read-heavy init endpoint to reduce latency
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    // Use getToken instead of getServerSession to avoid session callback DB queries
+    // This is ~10x faster since it only decodes the JWT without hitting the database
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
 
-    if (!session?.user?.id) {
+    if (!token?.id) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
-    const userId = session.user.id;
+    const userId = token.id as string;
 
     // Fetch all data in parallel using a single database connection
     const [
@@ -143,4 +147,4 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
       { status: 500 }
     );
   }
-});
+}

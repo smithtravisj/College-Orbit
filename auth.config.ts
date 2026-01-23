@@ -91,39 +91,36 @@ export const authConfig: NextAuthOptions = {
 
       session.user.id = token.id as string;
 
-      // Check if this specific session was revoked
-      if (token.sessionToken) {
-        try {
-          const userSession = await prisma.userSession.findUnique({
-            where: { sessionToken: token.sessionToken as string },
-            select: { revokedAt: true },
-          });
-
-          if (userSession?.revokedAt) {
-            // This specific session was revoked
-            (session as any).invalidated = true;
-            return session;
-          }
-        } catch (error) {
-          console.error('Error checking session revocation:', error);
-        }
-      }
-
-      // Fetch fresh user data from database to ensure updates are reflected
+      // Combined query: fetch user data AND check session revocation in a single DB call
       try {
-        const freshUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: {
-            name: true,
-            email: true,
-            isAdmin: true,
-            lastLogin: true,
-            sessionInvalidatedAt: true,
-            subscriptionTier: true,
-            trialEndsAt: true,
-            lifetimePremium: true,
-          },
-        });
+        const [freshUser, userSession] = await Promise.all([
+          prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: {
+              name: true,
+              email: true,
+              isAdmin: true,
+              lastLogin: true,
+              sessionInvalidatedAt: true,
+              subscriptionTier: true,
+              trialEndsAt: true,
+              lifetimePremium: true,
+            },
+          }),
+          // Only check session revocation if we have a sessionToken
+          token.sessionToken
+            ? prisma.userSession.findUnique({
+                where: { sessionToken: token.sessionToken as string },
+                select: { revokedAt: true },
+              })
+            : Promise.resolve(null),
+        ]);
+
+        // Check if this specific session was revoked
+        if (userSession?.revokedAt) {
+          (session as any).invalidated = true;
+          return session;
+        }
 
         if (freshUser) {
           // Check if session was invalidated after token was created
@@ -169,7 +166,7 @@ export const authConfig: NextAuthOptions = {
           (session.user as any).isPremium = isPremium;
         }
       } catch (error) {
-        console.error('Error fetching fresh user data in session:', error);
+        console.error('Error in session callback:', error);
       }
 
       return session;
