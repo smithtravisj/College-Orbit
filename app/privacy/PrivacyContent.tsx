@@ -16,7 +16,7 @@ export default function PrivacyContent() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Last Updated: January 20, 2026
+                Last Updated: January 23, 2026
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 At College Orbit, your privacy is our priority. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our service. We believe in transparency and give you full control over your data.
@@ -90,6 +90,14 @@ export default function PrivacyContent() {
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 If you submit feedback, college requests, issue reports, or feature requests through the app, we store this information to help us improve the service. This data may be viewed by administrators to review and address your feedback.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Beta Program Data
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                If you join the Beta Program, we store your beta participation status in your settings. If you submit beta feedback, we store your feedback description, submission date, status (pending, reviewed, resolved), and any admin responses. Beta feedback is associated with your user account and can be viewed by administrators. You will receive in-app notifications when administrators respond to or update the status of your beta feedback.
               </p>
             </div>
             <div>

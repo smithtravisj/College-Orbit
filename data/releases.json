@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.3.4",
+      "date": "2026-01-23",
+      "changes": [
+        "Restart tutorial button in Settings to retake the onboarding tour",
+        "Updated Terms of Service with Beta Program section",
+        "Updated Privacy Policy with Beta Program data collection details"
+      ]
+    },
+    {
       "version": "1.3.3",
       "date": "2026-01-23",
       "changes": [

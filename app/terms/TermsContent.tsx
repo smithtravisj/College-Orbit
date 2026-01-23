@@ -16,7 +16,7 @@ export default function TermsContent() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Effective Date: January 20, 2026
+                Effective Date: January 23, 2026
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 These Terms of Service ("Terms") govern your use of the College Orbit website and services ("Service"). By creating an account and using the Service, you agree to be legally bound by these Terms. If you do not agree to these Terms, please do not use the Service.
@@ -164,6 +164,44 @@ export default function TermsContent() {
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 You may attach files to notes and courses. Files are limited to 5MB each and are stored securely. Supported formats include images (JPEG, PNG, GIF, WebP, HEIC/HEIF), documents (PDF, DOCX, XLSX, CSV, PPTX, Markdown, TXT), and other common file types. HEIC/HEIF images are automatically converted to JPEG for compatibility.
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Beta Program */}
+        <Card title="Beta Program">
+          <div className="space-y-4">
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Voluntary Participation
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                The Beta Program is entirely voluntary. You may join or leave the beta program at any time from Settings. Beta users get early access to new features before they are released to all users.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Beta Features
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Beta features are experimental and may be unstable, incomplete, or subject to change without notice. We do not guarantee that beta features will become permanent features, and they may be modified or removed at any time. By participating in the beta program, you acknowledge and accept these risks.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Feedback Submission
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                As a beta user, you may submit feedback about beta features directly through the app. By submitting feedback, you grant us a perpetual, royalty-free license to use your feedback to improve the Service. Feedback submissions are reviewed by administrators who may respond to your feedback through in-app notifications.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                No Warranty for Beta Features
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Beta features are provided "AS IS" without any warranty. We are not liable for any issues, data loss, or inconvenience caused by beta features. We recommend maintaining regular backups of your data while using beta features.
               </p>
             </div>
           </div>
