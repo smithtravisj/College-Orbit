@@ -3554,6 +3554,24 @@ export default function SettingsPage() {
                   }}>?</kbd> anywhere to view all available shortcuts
                 </p>
               </div>
+              {/* Tutorial Section */}
+              <div style={{ paddingTop: '18px', paddingBottom: '18px', borderTop: '1px solid var(--border)' }}>
+                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+                  Tutorial
+                </p>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                  New to College Orbit? Take a quick tour of the app.
+                </p>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    updateSettings({ hasCompletedOnboarding: false });
+                    window.location.href = '/';
+                  }}
+                >
+                  Restart Tutorial
+                </Button>
+              </div>
               {/* Contact Section */}
               <div style={{ paddingTop: '18px', paddingBottom: '18px', borderTop: '1px solid var(--border)' }}>
                 <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
