@@ -594,10 +594,13 @@ export default function CoursesPage() {
                 <Crown size={28} style={{ color: 'var(--text)' }} />
               </div>
               <h3 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: '600', color: 'var(--text)', margin: '0 0 8px 0' }}>
-                Course Limit Reached
+                Track All Your Courses
               </h3>
-              <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', margin: '0 0 24px 0', lineHeight: 1.5 }}>
-                You&apos;ve reached the free tier limit. Upgrade to Premium for unlimited courses and more features.
+              <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', margin: '0 0 16px 0', lineHeight: 1.5 }}>
+                You&apos;ve hit the free limit. Unlock unlimited courses and keep your entire schedule organized.
+              </p>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 24px 0' }}>
+                Starting at <span style={{ fontWeight: 600, color: 'var(--text)' }}>$5/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$18/semester</span>
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <Link href="/pricing" style={{ textDecoration: 'none' }}>

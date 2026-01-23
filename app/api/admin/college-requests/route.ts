@@ -104,7 +104,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (status === 'added' || status === 'rejected') {
       const notificationTitle = status === 'added' ? 'College Request Approved' : 'College Request Rejected';
       const notificationMessage = status === 'added'
-        ? `Your request for ${collegeRequest.collegeName} has been approved!`
+        ? `Your request for ${collegeRequest.collegeName} has been approved! You can now select it as your college in Settings.`
         : `Your request for ${collegeRequest.collegeName} was not approved.`;
 
       await prisma.notification.create({

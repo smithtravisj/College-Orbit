@@ -178,6 +178,9 @@ export default function AdminPage() {
   const [grantPremiumInput, setGrantPremiumInput] = useState('');
   const [grantPremiumLoading, setGrantPremiumLoading] = useState(false);
   const [grantPremiumMessage, setGrantPremiumMessage] = useState('');
+  const [grantSemesterInput, setGrantSemesterInput] = useState('');
+  const [grantSemesterLoading, setGrantSemesterLoading] = useState(false);
+  const [grantSemesterMessage, setGrantSemesterMessage] = useState('');
 
   // Grant admin state
   const [grantAdminInput, setGrantAdminInput] = useState('');
@@ -455,6 +458,7 @@ export default function AdminPage() {
   const getActionLabel = (action: string): string => {
     const labels: Record<string, string> = {
       grant_premium: 'Granted Lifetime Premium',
+      grant_semester: 'Granted Semester Pass',
       revoke_premium: 'Revoked Premium',
       grant_admin: 'Granted Admin Access',
       revoke_admin: 'Revoked Admin Access',
@@ -898,6 +902,44 @@ export default function AdminPage() {
       setGrantPremiumMessage('Error: Failed to grant premium');
       setGrantPremiumLoading(false);
       setTimeout(() => setGrantPremiumMessage(''), 3000);
+    }
+  };
+
+  const handleGrantSemester = async () => {
+    if (!grantSemesterInput.trim()) {
+      setGrantSemesterMessage('Please enter a user ID or email');
+      setTimeout(() => setGrantSemesterMessage(''), 3000);
+      return;
+    }
+
+    setGrantSemesterLoading(true);
+    setGrantSemesterMessage('');
+
+    try {
+      const response = await fetch('/api/admin/grant-semester', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIdOrEmail: grantSemesterInput }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setGrantSemesterMessage(`Error: ${data.error}`);
+        setGrantSemesterLoading(false);
+        setTimeout(() => setGrantSemesterMessage(''), 5000);
+        return;
+      }
+
+      setGrantSemesterMessage(`Success: ${data.message}`);
+      setGrantSemesterInput('');
+      setGrantSemesterLoading(false);
+      setTimeout(() => setGrantSemesterMessage(''), 5000);
+    } catch (error) {
+      console.error('Error granting semester pass:', error);
+      setGrantSemesterMessage('Error: Failed to grant semester pass');
+      setGrantSemesterLoading(false);
+      setTimeout(() => setGrantSemesterMessage(''), 3000);
     }
   };
 
@@ -1972,65 +2014,136 @@ export default function AdminPage() {
               )}
             </Card>
 
-            {/* Grant Lifetime Premium Card */}
-            <Card title="Grant Lifetime Premium">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
-                  Grant a user lifetime premium access. They will receive a notification and have permanent premium access.
-                </p>
-                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: '12px' }}>
-                  {!isMobile && <Crown size={24} style={{ color: selectedTheme === 'light' ? '#000000' : 'white', flexShrink: 0 }} />}
-                  <input
-                    type="text"
-                    value={grantPremiumInput}
-                    onChange={(e) => setGrantPremiumInput(e.target.value)}
-                    placeholder="User ID or email"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleGrantPremium();
-                      }
-                    }}
-                    style={{
-                      flex: 1,
-                      padding: '10px 14px',
+            {/* Grant Premium Access Card */}
+            <Card title="Grant Premium Access">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {/* Lifetime Premium Section */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div>
+                    <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', margin: '0 0 4px 0' }}>Lifetime Premium</h4>
+                    <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
+                      Permanent premium access — never expires.
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: '12px' }}>
+                    {!isMobile && <Crown size={20} style={{ color: selectedTheme === 'light' ? '#000000' : 'white', flexShrink: 0 }} />}
+                    <input
+                      type="text"
+                      value={grantPremiumInput}
+                      onChange={(e) => setGrantPremiumInput(e.target.value)}
+                      placeholder="User ID or email"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleGrantPremium();
+                        }
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '10px 14px',
+                        fontSize: '14px',
+                        backgroundColor: 'var(--panel-2)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px',
+                        color: 'var(--text)',
+                        outline: 'none',
+                      }}
+                    />
+                    <button
+                      onClick={handleGrantPremium}
+                      disabled={grantPremiumLoading}
+                      style={{
+                        padding: '10px 20px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        backgroundColor: accentColor,
+                        backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                        color: selectedTheme === 'light' ? '#000000' : 'white',
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px',
+                        cursor: grantPremiumLoading ? 'not-allowed' : 'pointer',
+                        opacity: grantPremiumLoading ? 0.6 : 1,
+                        whiteSpace: 'nowrap',
+                        boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
+                      }}
+                    >
+                      {grantPremiumLoading ? 'Granting...' : 'Grant Lifetime'}
+                    </button>
+                  </div>
+                  {grantPremiumMessage && (
+                    <p style={{
                       fontSize: '14px',
-                      backgroundColor: 'var(--panel-2)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      color: 'var(--text)',
-                      outline: 'none',
-                    }}
-                  />
-                  <button
-                    onClick={handleGrantPremium}
-                    disabled={grantPremiumLoading}
-                    style={{
-                      padding: '10px 20px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      backgroundColor: accentColor,
-                      backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                      color: selectedTheme === 'light' ? '#000000' : 'white',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      cursor: grantPremiumLoading ? 'not-allowed' : 'pointer',
-                      opacity: grantPremiumLoading ? 0.6 : 1,
-                      whiteSpace: 'nowrap',
-                      boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
-                    }}
-                  >
-                    {grantPremiumLoading ? 'Granting...' : 'Grant Premium'}
-                  </button>
+                      color: grantPremiumMessage.startsWith('Error') ? 'var(--danger)' : 'var(--success)',
+                      margin: 0,
+                    }}>
+                      {grantPremiumMessage}
+                    </p>
+                  )}
                 </div>
-                {grantPremiumMessage && (
-                  <p style={{
-                    fontSize: '14px',
-                    color: grantPremiumMessage.startsWith('Error') ? 'var(--danger)' : 'var(--success)',
-                    margin: 0,
-                  }}>
-                    {grantPremiumMessage}
-                  </p>
-                )}
+
+                <div style={{ borderTop: '1px solid var(--border)' }} />
+
+                {/* Semester Pass Section */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div>
+                    <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', margin: '0 0 4px 0' }}>Semester Pass</h4>
+                    <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
+                      4 months of premium access — great for a semester.
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: '12px' }}>
+                    {!isMobile && <Crown size={20} style={{ color: selectedTheme === 'light' ? '#000000' : 'white', flexShrink: 0 }} />}
+                    <input
+                      type="text"
+                      value={grantSemesterInput}
+                      onChange={(e) => setGrantSemesterInput(e.target.value)}
+                      placeholder="User ID or email"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleGrantSemester();
+                        }
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '10px 14px',
+                        fontSize: '14px',
+                        backgroundColor: 'var(--panel-2)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px',
+                        color: 'var(--text)',
+                        outline: 'none',
+                      }}
+                    />
+                    <button
+                      onClick={handleGrantSemester}
+                      disabled={grantSemesterLoading}
+                      style={{
+                        padding: '10px 20px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        backgroundColor: accentColor,
+                        backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                        color: selectedTheme === 'light' ? '#000000' : 'white',
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px',
+                        cursor: grantSemesterLoading ? 'not-allowed' : 'pointer',
+                        opacity: grantSemesterLoading ? 0.6 : 1,
+                        whiteSpace: 'nowrap',
+                        boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
+                      }}
+                    >
+                      {grantSemesterLoading ? 'Granting...' : 'Grant Semester'}
+                    </button>
+                  </div>
+                  {grantSemesterMessage && (
+                    <p style={{
+                      fontSize: '14px',
+                      color: grantSemesterMessage.startsWith('Error') ? 'var(--danger)' : 'var(--success)',
+                      margin: 0,
+                    }}>
+                      {grantSemesterMessage}
+                    </p>
+                  )}
+                </div>
               </div>
             </Card>
 

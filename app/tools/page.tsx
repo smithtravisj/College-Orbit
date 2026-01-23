@@ -575,7 +575,11 @@ export default function ToolsPage() {
               color: 'var(--text)',
               marginBottom: '8px',
             }}>
-              Premium Feature
+              {title.includes('GPA') || title.includes('Grade')
+                ? 'Know Exactly Where You Stand'
+                : title.includes('Pomodoro')
+                ? 'Study Smarter, Not Harder'
+                : 'Premium Feature'}
             </h3>
             <p style={{
               fontSize: isMobile ? '13px' : '14px',
@@ -583,7 +587,18 @@ export default function ToolsPage() {
               maxWidth: '300px',
               lineHeight: 1.5,
             }}>
-              Upgrade to Premium to unlock {title} and other powerful tools.
+              {title.includes('GPA') || title.includes('Grade')
+                ? 'Track your grades, project your GPA, and plan your path to success.'
+                : title.includes('Pomodoro')
+                ? 'Stay focused with timed study sessions and built-in breaks.'
+                : `Unlock ${title} and other powerful tools.`}
+            </p>
+            <p style={{
+              fontSize: '12px',
+              color: 'var(--text-muted)',
+              marginTop: '8px',
+            }}>
+              Starting at <span style={{ fontWeight: 600, color: 'var(--text)' }}>$5/month</span>
             </p>
           </div>
           <Link href="/pricing">
@@ -1097,14 +1112,14 @@ export default function ToolsPage() {
                     </div>
 
                     <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, color: 'var(--text)', marginBottom: '12px' }}>
-                      Premium Grade Tools
+                      Know Exactly Where You Stand
                     </h2>
 
                     <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginBottom: '32px', maxWidth: '400px', margin: '0 auto 32px', lineHeight: 1.6 }}>
-                      Upgrade to Premium to unlock GPA Calculator, Grade Tracker, GPA Trend Chart, and What-If Projector.
+                      Track every grade, see your GPA trend over time, and project how future classes will impact your standing.
                     </p>
 
-                    <div style={{ marginBottom: '16px' }}>
+                    <div style={{ marginBottom: '12px' }}>
                       <Link href="/pricing">
                         <Button variant="primary" size="lg" style={{ minWidth: '200px' }}>
                           <Crown size={18} />
@@ -1113,18 +1128,22 @@ export default function ToolsPage() {
                       </Link>
                     </div>
 
-                    <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                      Starting at <span style={{ fontWeight: 600, color: 'var(--text)' }}>$5/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$18/semester</span>
+                    </p>
+
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                       Your data is safely stored and will be accessible once you subscribe.
                     </p>
 
                     <div style={{ marginTop: '48px', paddingTop: '32px', borderTop: '1px solid var(--border)' }}>
                       <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '16px' }}>
-                        Grade tools include:
+                        With grade tools, you can:
                       </h3>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', maxWidth: '360px', margin: '0 auto', textAlign: 'left' }}>
-                        {['GPA Calculator', 'Grade Tracker', 'GPA Trend Chart', 'What-If GPA Projector'].map((item) => (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', maxWidth: '280px', margin: '0 auto', textAlign: 'left' }}>
+                        {['Calculate your GPA instantly', 'Track grades by semester', 'See your progress over time', 'Project future GPA scenarios'].map((item) => (
                           <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-muted)' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--text-muted)', flexShrink: 0 }} />
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--accent)', flexShrink: 0 }} />
                             {item}
                           </div>
                         ))}

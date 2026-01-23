@@ -64,14 +64,22 @@ export default function PremiumGate({ children, feature }: PremiumGateProps) {
           </div>
 
           <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, color: 'var(--text)', marginBottom: '12px' }}>
-            {feature} is a Premium Feature
+            {feature === 'Calendar'
+              ? 'See Your Entire Semester at a Glance'
+              : feature === 'Shopping'
+              ? 'Never Run Out of Essentials Again'
+              : `${feature} is a Premium Feature`}
           </h2>
 
           <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginBottom: '32px', maxWidth: '400px', margin: '0 auto 32px', lineHeight: 1.6 }}>
-            Upgrade to Premium to access {feature} and unlock unlimited notes, courses, file uploads, recurring items, and more.
+            {feature === 'Calendar'
+              ? 'Plan ahead, spot conflicts early, and stay on top of every deadline and exam — all in one view.'
+              : feature === 'Shopping'
+              ? 'Track groceries, manage your pantry, and keep a wishlist so you always know what you need.'
+              : `Upgrade to Premium to access ${feature} and take control of your college life.`}
           </p>
 
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginBottom: '12px' }}>
             <Link href="/pricing">
               <Button variant="primary" size="lg" style={{ minWidth: '200px' }}>
                 <Crown size={18} />
@@ -80,26 +88,27 @@ export default function PremiumGate({ children, feature }: PremiumGateProps) {
             </Link>
           </div>
 
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+            Starting at just <span style={{ fontWeight: 600, color: 'var(--text)' }}>$5/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$18/semester</span>
+          </p>
+
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             Your data is safely stored and will be accessible once you subscribe.
           </p>
 
           <div style={{ marginTop: '48px', paddingTop: '32px', borderTop: '1px solid var(--border)' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '16px' }}>Premium includes:</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', maxWidth: '360px', margin: '0 auto', textAlign: 'left', paddingLeft: isMobile ? '0' : '40px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '16px' }}>With Premium, you can:</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '10px 24px', maxWidth: '480px', margin: '0 auto', textAlign: 'left' }}>
               {[
-                'Calendar view',
-                'Shopping lists',
-                'Unlimited notes',
-                'Unlimited courses',
-                'File uploads',
-                'Recurring items',
-                'All Tools',
-                'Custom themes',
-                'Smart form filling',
+                'See your entire semester at a glance',
+                'Never forget a recurring assignment',
+                'Keep everything for a class in one place',
+                'Track groceries and never run out',
+                'Calculate your GPA and plan ahead',
+                'Make the app truly yours with themes',
               ].map((item) => (
-                <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1 }}>
-                  <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'var(--text-muted)', flexShrink: 0 }} />
+                <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.3 }}>
+                  <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'var(--accent)', flexShrink: 0 }} />
                   <span>{item}</span>
                 </div>
               ))}

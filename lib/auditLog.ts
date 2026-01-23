@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 
 export type AuditAction =
   | 'grant_premium'
+  | 'grant_semester'
   | 'revoke_premium'
   | 'grant_admin'
   | 'revoke_admin'
@@ -53,6 +54,7 @@ export async function logAuditEvent({
 export function getActionLabel(action: string): string {
   const labels: Record<string, string> = {
     grant_premium: 'Granted Lifetime Premium',
+    grant_semester: 'Granted Semester Pass',
     revoke_premium: 'Revoked Premium',
     grant_admin: 'Granted Admin Access',
     revoke_admin: 'Revoked Admin Access',

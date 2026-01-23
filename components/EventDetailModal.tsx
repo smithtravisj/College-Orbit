@@ -751,10 +751,13 @@ export default function EventDetailModal({
                 <Crown size={28} style={{ color: 'var(--text)' }} />
               </div>
               <h3 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: 700, color: 'var(--text)', marginBottom: '8px' }}>
-                File Uploads is a Premium Feature
+                Keep Everything in One Place
               </h3>
-              <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
-                Upgrade to Premium to attach files and keep everything organized.
+              <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.5 }}>
+                Attach files directly to your events so everything you need is right where you need it.
+              </p>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+                Starting at <span style={{ fontWeight: 600, color: 'var(--text)' }}>$5/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$18/semester</span>
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <Link href="/pricing" onClick={() => setShowUpgradeModal(false)}>

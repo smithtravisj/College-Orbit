@@ -1592,12 +1592,15 @@ export default function NotesPage() {
                 <Crown size={28} style={{ color: 'var(--text)' }} />
               </div>
               <h3 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: '600', color: 'var(--text)', margin: '0 0 8px 0' }}>
-                {upgradeFeature === 'files' ? 'Premium Feature' : 'Note Limit Reached'}
+                {upgradeFeature === 'files' ? 'Keep Everything in One Place' : 'Keep All Your Notes'}
               </h3>
-              <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', margin: '0 0 24px 0', lineHeight: 1.5 }}>
+              <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', margin: '0 0 16px 0', lineHeight: 1.5 }}>
                 {upgradeFeature === 'files'
-                  ? 'Upgrade to Premium to attach files to your notes and keep everything organized.'
-                  : "You've reached the free tier limit. Upgrade to Premium for unlimited notes and more features."}
+                  ? 'Attach lecture slides, PDFs, and images directly to your notes — no more hunting through folders.'
+                  : "You've hit the free limit. Unlock unlimited notes and never worry about running out of space."}
+              </p>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 24px 0' }}>
+                Starting at <span style={{ fontWeight: 600, color: 'var(--text)' }}>$5/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$18/semester</span>
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <Link href="/pricing" style={{ textDecoration: 'none' }}>

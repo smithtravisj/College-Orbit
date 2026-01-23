@@ -12,6 +12,8 @@ interface TimelineDayProps {
   onFileClick?: (file: { name: string; url: string; size: number }, allFiles: { name: string; url: string; size: number }[], index: number) => void;
   collapsible?: boolean;
   defaultCollapsed?: boolean;
+  nextEventId?: string | null;
+  nextEventRef?: React.RefObject<HTMLDivElement>;
 }
 
 export const TimelineDay: React.FC<TimelineDayProps> = ({
@@ -21,6 +23,8 @@ export const TimelineDay: React.FC<TimelineDayProps> = ({
   onFileClick,
   collapsible = false,
   defaultCollapsed = false,
+  nextEventId,
+  nextEventRef,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
@@ -90,13 +94,14 @@ export const TimelineDay: React.FC<TimelineDayProps> = ({
           {hasItems ? (
             <div className="flex flex-col">
               {day.items.map((item) => (
-                <TimelineItem
-                  key={item.id}
-                  item={item}
-                  onToggleComplete={onToggleComplete}
-                  onItemClick={onItemClick}
-                  onFileClick={onFileClick}
-                />
+                <div key={item.id} ref={item.id === nextEventId ? nextEventRef : undefined}>
+                  <TimelineItem
+                    item={item}
+                    onToggleComplete={onToggleComplete}
+                    onItemClick={onItemClick}
+                    onFileClick={onFileClick}
+                  />
+                </div>
               ))}
             </div>
           ) : (

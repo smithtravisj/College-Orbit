@@ -160,10 +160,13 @@ export default function SubscriptionPage() {
             <div style={{ textAlign: 'center', padding: '24px' }}>
               <Crown size={48} style={{ color: colorPalette.accent, margin: '0 auto 16px' }} />
               <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--text)', marginBottom: '8px' }}>
-                Upgrade to Premium
+                Take Control of Your College Life
               </h2>
-              <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '24px' }}>
-                Get unlimited access to all features including Calendar, Shopping, unlimited notes, and more.
+              <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '16px', maxWidth: '360px', margin: '0 auto 16px' }}>
+                See your semester at a glance, never miss a deadline, and keep everything organized in one place.
+              </p>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>
+                Starting at <span style={{ fontWeight: 600, color: 'var(--text)' }}>$5/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$18/semester</span>
               </p>
               <Link href="/pricing">
                 <Button variant="primary" size="lg">

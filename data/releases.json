@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "1.2.17",
+      "date": "2026-01-23",
+      "changes": [
+        "Added search functionality to timeline card (search by title, course, effort, priority, overdue, completed, canvas)",
+        "Timeline card now auto-scrolls to next event on load (prioritizes overdue items)",
+        "Fixed timed items not showing as overdue after their specific time passed",
+        "Added grant semester pass functionality for admins",
+        "College approval notifications now tell users how to set their college in settings",
+        "Reframed premium features with benefit-driven messaging and pricing info"
+      ]
+    },
+    {
       "version": "1.2.16",
       "date": "2026-01-23",
       "changes": [

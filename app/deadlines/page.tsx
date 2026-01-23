@@ -2382,12 +2382,15 @@ export default function DeadlinesPage() {
                 <Crown size={28} style={{ color: 'var(--text)' }} />
               </div>
               <h3 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: 700, color: 'var(--text)', marginBottom: '8px' }}>
-                {upgradeFeature === 'recurring' ? 'Recurring Assignments' : 'File Uploads'} is a Premium Feature
+                {upgradeFeature === 'recurring' ? 'Never Forget a Weekly Assignment Again' : 'Keep Everything in One Place'}
               </h3>
-              <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
+              <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.5 }}>
                 {upgradeFeature === 'recurring'
-                  ? 'Upgrade to Premium to create recurring assignments and automate your workflow.'
-                  : 'Upgrade to Premium to attach files to your assignments and keep everything organized.'}
+                  ? 'Weekly homework, reading assignments, lab reports — set them once and they create themselves.'
+                  : 'Attach assignment sheets, rubrics, and resources directly so everything you need is right there.'}
+              </p>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+                Starting at <span style={{ fontWeight: 600, color: 'var(--text)' }}>$5/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$18/semester</span>
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <Link href="/pricing" onClick={() => setShowUpgradeModal(false)}>

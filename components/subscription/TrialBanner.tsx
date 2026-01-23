@@ -53,7 +53,7 @@ export default function TrialBanner() {
             {' '}left in your trial
           </span>
           <span className="hidden sm:inline text-[var(--text-muted)]">
-            {isUrgent ? "Don't lose access!" : 'Enjoying Premium?'}
+            {isUrgent ? "Don't lose your calendar & tools!" : 'Keep your semester organized.'}
           </span>
           <Link
             href="/pricing"

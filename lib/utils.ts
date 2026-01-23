@@ -120,7 +120,18 @@ export function getRelativeDateString(date: Date | string): string | null {
 
 export function isOverdue(date: Date | string): boolean {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d < new Date() && !isToday(d);
+  const now = new Date();
+
+  // Check if this is a "no specific time" item (23:59 is the default)
+  const isAllDayItem = d.getHours() === 23 && d.getMinutes() === 59;
+
+  if (isAllDayItem) {
+    // For all-day items, only overdue if the entire day has passed
+    return d < now && !isToday(d);
+  } else {
+    // For timed items, overdue if the specific datetime has passed
+    return d < now;
+  }
 }
 
 export function getNextDays(days: number): Date {
