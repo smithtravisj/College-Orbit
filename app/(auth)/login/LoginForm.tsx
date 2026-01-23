@@ -2,14 +2,13 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -39,9 +38,9 @@ export function LoginForm() {
       // This allows returning users to get instant cached data loading
       // The store will detect if the logged-in user differs from cached user and clear appropriately
 
+      // Use hard navigation to ensure session cookie is properly recognized
       const callbackUrl = searchParams.get('callbackUrl') || '/';
-      router.push(callbackUrl);
-      router.refresh();
+      window.location.href = callbackUrl;
     } catch (error) {
       setError('Something went wrong. Please check your connection and try again.');
       setLoading(false);

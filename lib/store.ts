@@ -447,16 +447,18 @@ const useAppStore = create<AppStore>((set, get) => ({
       // Single API call to fetch all data - retry on 401 in case session is still being established
       let response = await fetch('/api/init', { credentials: 'include' });
 
-      // If not authenticated, retry once after a short delay (session might still be establishing)
-      if (response.status === 401) {
-        console.log('[Store] Got 401, retrying after delay...');
-        await new Promise(resolve => setTimeout(resolve, 500));
+      // If not authenticated, retry with increasing delays (session might still be establishing after login/signup)
+      const retryDelays = [300, 600, 1000];
+      for (const delay of retryDelays) {
+        if (response.status !== 401) break;
+        console.log(`[Store] Got 401, retrying after ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
         response = await fetch('/api/init', { credentials: 'include' });
       }
 
       // If still not authenticated, silently return (user is on login page or session expired)
       if (response.status === 401) {
-        console.log('[Store] Still 401 after retry, returning');
+        console.log('[Store] Still 401 after retries, returning');
         return;
       }
 
@@ -2345,6 +2347,22 @@ const useAppStore = create<AppStore>((set, get) => ({
       const filteredSettings = Object.fromEntries(
         Object.entries(updatedSettings || {}).filter(([, value]) => value !== null)
       );
+
+      // Ensure visibleDashboardCards always includes new default cards (like 'timeline')
+      // This handles users who saved settings before new cards were added
+      if (filteredSettings.visibleDashboardCards && Array.isArray(filteredSettings.visibleDashboardCards)) {
+        filteredSettings.visibleDashboardCards = [...new Set([
+          ...DEFAULT_VISIBLE_DASHBOARD_CARDS,
+          ...(filteredSettings.visibleDashboardCards as string[])
+        ])];
+      }
+      if (filteredSettings.visibleToolsCards && Array.isArray(filteredSettings.visibleToolsCards)) {
+        filteredSettings.visibleToolsCards = [...new Set([
+          ...DEFAULT_VISIBLE_TOOLS_CARDS,
+          ...(filteredSettings.visibleToolsCards as string[])
+        ])];
+      }
+
       const mergedSettings = { ...currentState, ...filteredSettings };
       const needsUpdate = JSON.stringify(currentState) !== JSON.stringify(mergedSettings);
       if (needsUpdate) {

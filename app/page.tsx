@@ -149,24 +149,30 @@ function Dashboard() {
   }, [mounted, settings.university]);
 
   // Check if user needs onboarding after mount
+  // Use userId to verify data has actually loaded (not just defaults)
+  const userId = useAppStore((state) => state.userId);
+  const storeInitialized = useAppStore((state) => state.initialized);
   useEffect(() => {
     console.log('[Dashboard] Onboarding check:', {
       mounted,
+      storeInitialized,
+      userId,
       hasCompletedOnboarding: settings.hasCompletedOnboarding,
-      userId: useAppStore.getState().userId,
     });
 
     // Show onboarding if:
-    // 1. Mounted
-    // 2. hasCompletedOnboarding is explicitly false (not undefined)
-    if (mounted && settings.hasCompletedOnboarding === false) {
-      // Small delay to ensure DOM is fully rendered and IDs are available
+    // 1. Mounted (initializeStore completed)
+    // 2. Store is initialized
+    // 3. userId is set (confirms API returned actual user data, not just defaults)
+    // 4. hasCompletedOnboarding is explicitly false
+    if (mounted && storeInitialized && userId && settings.hasCompletedOnboarding === false) {
+      // Delay to ensure DOM is fully rendered
       console.log('[Dashboard] Showing onboarding tour');
       setTimeout(() => {
         setShowOnboarding(true);
       }, 800);
     }
-  }, [mounted, settings.hasCompletedOnboarding]);
+  }, [mounted, storeInitialized, userId, settings.hasCompletedOnboarding]);
 
 
   // Get due soon items (for Overview card stats)

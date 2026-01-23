@@ -5,10 +5,11 @@
       "date": "2026-01-23",
       "changes": [
         "Fixed stale user data showing when switching between accounts",
-        "Fixed returning users not seeing their data until page refresh",
-        "Improved cache handling to preserve data for returning users while clearing on account switch",
-        "Changed default theme to dark mode for new users",
-        "Added default visible cards for dashboard and tools pages"
+        "Fixed data not loading immediately after login/signup",
+        "Fixed timeline card disappearing when changing settings",
+        "Fixed onboarding tour not appearing for new users",
+        "Improved session handling for more reliable login experience",
+        "Changed default theme to dark mode for new users"
       ]
     },
     {

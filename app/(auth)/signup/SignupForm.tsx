@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 import Button from '@/components/ui/Button';
@@ -17,7 +16,6 @@ interface CollegeData {
 }
 
 export default function SignupForm() {
-  const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -130,8 +128,8 @@ export default function SignupForm() {
         localStorage.removeItem('timelineRange');
       }
 
-      router.push('/');
-      router.refresh();
+      // Use hard navigation to ensure session cookie is properly recognized
+      window.location.href = '/';
     } catch (error) {
       setError('Something went wrong. Please check your connection and try again.');
       setLoading(false);
