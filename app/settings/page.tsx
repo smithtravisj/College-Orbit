@@ -35,7 +35,7 @@ interface CanvasStatus {
 
 export default function SettingsPage() {
   const isMobile = useIsMobile();
-  const { isBetaUser } = useBetaAccess();
+  const { hasAccessToFeature } = useBetaAccess();
   const { data: session, status: sessionStatus } = useSession();
   const { isPremium, isLoading: isLoadingSubscription } = useSubscription();
   const [mounted, setMounted] = useState(false);
@@ -3556,8 +3556,8 @@ export default function SettingsPage() {
                   }}>?</kbd> anywhere to view all available shortcuts
                 </p>
               </div>
-              {/* Tutorial Section - Beta only */}
-              {isBetaUser && (
+              {/* Tutorial Section - v1.3.4 */}
+              {hasAccessToFeature('1.3.4') && (
                 <div style={{ paddingTop: '18px', paddingBottom: '18px', borderTop: '1px solid var(--border)' }}>
                   <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
                     Tutorial
