@@ -179,10 +179,17 @@ export const Timeline: React.FC<TimelineProps> = ({
       }
     }
 
-    // Scroll to the target item
-    if (targetItemId && nextEventRef.current) {
+    // Scroll to the target item within the container (not the whole page)
+    if (targetItemId && nextEventRef.current && scrollContainerRef.current) {
       setTimeout(() => {
-        nextEventRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const container = scrollContainerRef.current;
+        const target = nextEventRef.current;
+        if (container && target) {
+          const containerRect = container.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+          const scrollTop = container.scrollTop + (targetRect.top - containerRect.top);
+          container.scrollTo({ top: scrollTop, behavior: 'smooth' });
+        }
       }, 100);
     }
   }, [groupedData, isLoading]);
@@ -413,7 +420,8 @@ export const Timeline: React.FC<TimelineProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search..."
               style={{
-                width: '120px',
+                width: isMobile ? '100px' : '120px',
+                marginLeft: isMobile ? '8px' : '0',
                 backgroundColor: 'var(--panel-2)',
                 border: '1px solid var(--border)',
                 borderRadius: '6px',
