@@ -43,6 +43,7 @@ const DEFAULT_SETTINGS: Settings = {
   customColors: null,
   gradientIntensity: 50,
   glowIntensity: 50,
+  isBetaUser: false,
 };
 
 interface AppStore {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, X, Check, Clock, AlertCircle, Crown, CreditCard, Megaphone, Gift, Shield, UserPlus, FileText, CheckSquare } from 'lucide-react';
+import { Bell, X, Check, Clock, AlertCircle, Crown, CreditCard, Megaphone, Gift, Shield, UserPlus, FileText, CheckSquare, MessageCircle, Eye } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { CanvasBadge } from './CanvasBadge';
 
@@ -245,6 +245,19 @@ export default function NotificationBell() {
     // Request pending/submitted
     if (type === 'college_request_pending' || type === 'issue_report_pending' || type === 'feature_request_pending' || type === 'feature_request' || type === 'issue_report' || type === 'college_request_submitted' || type === 'issue_report_submitted' || type === 'feature_request_submitted') {
       return <Clock size={18} style={{ color: '#f59e0b' }} />;
+    }
+    // Beta feedback notifications
+    if (type === 'beta_feedback_submitted') {
+      return <Clock size={18} style={{ color: '#f59e0b' }} />;
+    }
+    if (type === 'beta_feedback_response') {
+      return <MessageCircle size={18} style={{ color: '#8b5cf6' }} />;
+    }
+    if (type === 'beta_feedback_reviewed') {
+      return <Eye size={18} style={{ color: '#f59e0b' }} />;
+    }
+    if (type === 'beta_feedback_resolved') {
+      return <Check size={18} style={{ color: '#10b981' }} />;
     }
     // Default
     return <Bell size={18} style={{ color: '#6b7280' }} />;

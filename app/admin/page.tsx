@@ -133,11 +133,11 @@ export default function AdminPage() {
   const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
 
   // Main tab state - initialize from localStorage
-  const [activeTab, setActiveTab] = useState<'analytics' | 'management' | 'addCollege'>(() => {
+  const [activeTab, setActiveTab] = useState<'analytics' | 'management' | 'addCollege' | 'beta'>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('adminTab');
-      if (saved && ['analytics', 'management', 'addCollege'].includes(saved)) {
-        return saved as 'analytics' | 'management' | 'addCollege';
+      if (saved && ['analytics', 'management', 'addCollege', 'beta'].includes(saved)) {
+        return saved as 'analytics' | 'management' | 'addCollege' | 'beta';
       }
     }
     return 'management';
@@ -260,6 +260,30 @@ export default function AdminPage() {
   const [showIssueModal, setShowIssueModal] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState<FeatureRequest | null>(null);
   const [showFeatureModal, setShowFeatureModal] = useState(false);
+
+  // Beta Program state
+  const [betaSubTab, setBetaSubTab] = useState<'users' | 'feedback' | 'versions'>('users');
+  const [betaUsers, setBetaUsers] = useState<Array<{ id: string; email: string; name: string | null; createdAt: string; betaJoinedAt: string }>>([]);
+  const [betaFeedbackList, setBetaFeedbackList] = useState<Array<{
+    id: string;
+    userId: string;
+    description: string;
+    status: 'pending' | 'reviewed' | 'resolved';
+    adminResponse: string | null;
+    respondedAt: string | null;
+    createdAt: string;
+    user: { email: string; name: string | null };
+  }>>([]);
+  const [appVersions, setAppVersions] = useState<Array<{
+    id: string;
+    version: string;
+    changes: string[];
+    isBetaOnly: boolean;
+    releasedAt: string;
+  }>>([]);
+  const [selectedFeedback, setSelectedFeedback] = useState<typeof betaFeedbackList[0] | null>(null);
+  const [adminResponse, setAdminResponse] = useState('');
+  const [betaResponseLoading, setBetaResponseLoading] = useState(false);
 
   const selectedTheme = settings.theme || 'dark';
 
@@ -423,6 +447,40 @@ export default function AdminPage() {
 
     fetchAdminData();
   }, [session, router]);
+
+  // Fetch Beta Program data when tab is active
+  useEffect(() => {
+    if (activeTab !== 'beta' || !session?.user?.id) return;
+
+    const fetchBetaData = async () => {
+      try {
+        // Fetch beta users
+        const usersRes = await fetch('/api/admin/beta-users').catch(() => null);
+        if (usersRes?.ok) {
+          const data = await usersRes.json();
+          setBetaUsers(data.betaUsers || []);
+        }
+
+        // Fetch beta feedback
+        const feedbackRes = await fetch('/api/admin/beta-feedback').catch(() => null);
+        if (feedbackRes?.ok) {
+          const data = await feedbackRes.json();
+          setBetaFeedbackList(data.feedback || []);
+        }
+
+        // Fetch app versions
+        const versionsRes = await fetch('/api/admin/app-versions').catch(() => null);
+        if (versionsRes?.ok) {
+          const data = await versionsRes.json();
+          setAppVersions(data.versions || []);
+        }
+      } catch (error) {
+        console.error('Error fetching beta data:', error);
+      }
+    };
+
+    fetchBetaData();
+  }, [activeTab, session]);
 
   const refreshAdminUsers = async () => {
     try {
@@ -1187,10 +1245,11 @@ export default function AdminPage() {
             { id: 'management', label: 'Management' },
             { id: 'addCollege', label: 'Add College' },
             { id: 'analytics', label: 'Analytics' },
+            { id: 'beta', label: 'Beta' },
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as 'analytics' | 'management' | 'addCollege')}
+              onClick={() => setActiveTab(tab.id as 'analytics' | 'management' | 'addCollege' | 'beta')}
               className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
                 activeTab === tab.id ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
@@ -3601,6 +3660,349 @@ export default function AdminPage() {
                   </div>
                 </Card>
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ==================== Beta Tab ==================== */}
+      {activeTab === 'beta' && (
+        <div style={{ padding: isMobile ? '0 16px 32px 16px' : '0 24px 32px 24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr', gap: '24px' }}>
+
+            {/* Beta Sub-tabs */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+              {[
+                { id: 'users', label: 'Beta Users' },
+                { id: 'feedback', label: 'Feedback' },
+                { id: 'versions', label: 'Versions' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setBetaSubTab(tab.id as 'users' | 'feedback' | 'versions')}
+                  className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
+                    betaSubTab === tab.id ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                  }`}
+                  style={{
+                    padding: '10px 18px',
+                    fontSize: '14px',
+                    backgroundColor: betaSubTab === tab.id ? 'var(--panel-2)' : 'transparent',
+                    border: betaSubTab === tab.id ? '1px solid var(--border)' : '1px solid transparent',
+                  }}
+                >
+                  {tab.label}
+                  {tab.id === 'users' && betaUsers.length > 0 && (
+                    <span style={{ marginLeft: '8px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                      ({betaUsers.length})
+                    </span>
+                  )}
+                  {tab.id === 'feedback' && betaFeedbackList.filter(f => f.status === 'pending').length > 0 && (
+                    <span style={{ marginLeft: '8px', padding: '2px 6px', fontSize: '11px', backgroundColor: 'var(--warning-bg)', color: 'var(--warning)', borderRadius: '8px' }}>
+                      {betaFeedbackList.filter(f => f.status === 'pending').length}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Beta Users */}
+            {betaSubTab === 'users' && (
+              <Card title={`Beta Users (${betaUsers.length})`}>
+                {betaUsers.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>No users have joined the beta program yet.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '480px', overflowY: 'auto' }}>
+                    {betaUsers.map((user) => (
+                      <div
+                        key={user.id}
+                        style={{
+                          padding: '12px 16px',
+                          backgroundColor: 'var(--panel-2)',
+                          borderRadius: '8px',
+                          border: '1px solid var(--border)',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                          gap: '8px',
+                        }}
+                      >
+                        <div>
+                          <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>
+                            {user.name || user.email}
+                          </p>
+                          {user.name && (
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                              {user.email}
+                            </p>
+                          )}
+                        </div>
+                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+                          Joined {new Date(user.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {/* Beta Feedback */}
+            {betaSubTab === 'feedback' && (
+              <Card title="Beta Feedback">
+                {betaFeedbackList.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>No feedback submitted yet.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '480px', overflowY: 'auto' }}>
+                    {betaFeedbackList.map((feedback) => (
+                      <div
+                        key={feedback.id}
+                        style={{
+                          padding: '16px',
+                          backgroundColor: selectedFeedback?.id === feedback.id ? 'var(--panel)' : 'var(--panel-2)',
+                          borderRadius: '8px',
+                          border: selectedFeedback?.id === feedback.id ? '1px solid var(--accent)' : '1px solid var(--border)',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => {
+                          setSelectedFeedback(selectedFeedback?.id === feedback.id ? null : feedback);
+                          setAdminResponse(feedback.adminResponse || '');
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
+                          <div>
+                            <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>
+                              {feedback.user.name || feedback.user.email}
+                            </p>
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                              {new Date(feedback.createdAt).toLocaleString()}
+                            </p>
+                          </div>
+                          <span
+                            style={{
+                              padding: '4px 8px',
+                              fontSize: '11px',
+                              fontWeight: '500',
+                              borderRadius: '6px',
+                              backgroundColor: feedback.status === 'pending' ? 'var(--warning-bg)' : feedback.status === 'reviewed' ? 'var(--info-bg)' : 'var(--success-bg)',
+                              color: feedback.status === 'pending' ? 'var(--warning)' : feedback.status === 'reviewed' ? 'var(--info)' : 'var(--success)',
+                            }}
+                          >
+                            {feedback.status.charAt(0).toUpperCase() + feedback.status.slice(1)}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '14px', color: 'var(--text)', margin: 0, whiteSpace: 'pre-wrap' }}>
+                          {selectedFeedback?.id === feedback.id ? feedback.description : (feedback.description.length > 150 ? feedback.description.substring(0, 150) + '...' : feedback.description)}
+                        </p>
+
+                        {/* Expanded view with response form */}
+                        {selectedFeedback?.id === feedback.id && (
+                          <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                            {feedback.adminResponse && (
+                              <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px' }}>
+                                <p style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', margin: '0 0 4px 0' }}>
+                                  Previous Response:
+                                </p>
+                                <p style={{ fontSize: '14px', color: 'var(--text)', margin: 0, whiteSpace: 'pre-wrap' }}>
+                                  {feedback.adminResponse}
+                                </p>
+                              </div>
+                            )}
+                            <textarea
+                              value={adminResponse}
+                              onChange={(e) => setAdminResponse(e.target.value)}
+                              placeholder="Write a response to the user..."
+                              style={{
+                                width: '100%',
+                                minHeight: '80px',
+                                padding: '8px 12px',
+                                fontSize: '14px',
+                                fontFamily: 'inherit',
+                                backgroundColor: 'var(--panel-2)',
+                                color: 'var(--text)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '6px',
+                                resize: 'vertical',
+                                boxSizing: 'border-box',
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              disabled={betaResponseLoading}
+                            />
+                            <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (!adminResponse.trim()) return;
+                                  setBetaResponseLoading(true);
+                                  try {
+                                    const res = await fetch('/api/admin/beta-feedback', {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ id: feedback.id, adminResponse: adminResponse.trim(), status: 'reviewed' }),
+                                    });
+                                    if (res.ok) {
+                                      const data = await res.json();
+                                      setBetaFeedbackList(list => list.map(f => f.id === feedback.id ? data.feedback : f));
+                                      setSelectedFeedback(null);
+                                      setAdminResponse('');
+                                    }
+                                  } catch (err) {
+                                    console.error('Error responding:', err);
+                                  } finally {
+                                    setBetaResponseLoading(false);
+                                  }
+                                }}
+                                disabled={!adminResponse.trim() || betaResponseLoading}
+                                style={{
+                                  padding: '8px 16px',
+                                  fontSize: '13px',
+                                  fontWeight: '500',
+                                  backgroundColor: accentColor,
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  cursor: !adminResponse.trim() || betaResponseLoading ? 'not-allowed' : 'pointer',
+                                  opacity: !adminResponse.trim() || betaResponseLoading ? 0.6 : 1,
+                                }}
+                              >
+                                {betaResponseLoading ? 'Sending...' : 'Send Response'}
+                              </button>
+                              {feedback.status !== 'resolved' && (
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    setBetaResponseLoading(true);
+                                    try {
+                                      const res = await fetch('/api/admin/beta-feedback', {
+                                        method: 'PATCH',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ id: feedback.id, status: 'resolved' }),
+                                      });
+                                      if (res.ok) {
+                                        const data = await res.json();
+                                        setBetaFeedbackList(list => list.map(f => f.id === feedback.id ? data.feedback : f));
+                                        setSelectedFeedback(null);
+                                      }
+                                    } catch (err) {
+                                      console.error('Error updating status:', err);
+                                    } finally {
+                                      setBetaResponseLoading(false);
+                                    }
+                                  }}
+                                  disabled={betaResponseLoading}
+                                  style={{
+                                    padding: '8px 16px',
+                                    fontSize: '13px',
+                                    fontWeight: '500',
+                                    backgroundColor: 'var(--panel-2)',
+                                    color: 'var(--text)',
+                                    border: '1px solid var(--border)',
+                                    borderRadius: '6px',
+                                    cursor: betaResponseLoading ? 'not-allowed' : 'pointer',
+                                  }}
+                                >
+                                  Mark Resolved
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {/* App Versions */}
+            {betaSubTab === 'versions' && (
+              <Card title={`App Versions (${appVersions.length})`}>
+                  {appVersions.length === 0 ? (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>No versions added yet.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {appVersions.map((version) => (
+                        <div
+                          key={version.id}
+                          style={{
+                            padding: '12px 16px',
+                            backgroundColor: 'var(--panel-2)',
+                            borderRadius: '8px',
+                            border: '1px solid var(--border)',
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>
+                                v{version.version}
+                              </p>
+                              <span
+                                style={{
+                                  padding: '4px 8px',
+                                  fontSize: '11px',
+                                  fontWeight: '500',
+                                  borderRadius: '6px',
+                                  backgroundColor: version.isBetaOnly ? 'var(--warning-bg)' : 'var(--success-bg)',
+                                  color: version.isBetaOnly ? 'var(--warning)' : 'var(--success)',
+                                }}
+                              >
+                                {version.isBetaOnly ? 'Beta Only' : 'Released'}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+                                {new Date(version.releasedAt).toLocaleDateString()}
+                              </p>
+                              {version.isBetaOnly && (
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      const res = await fetch('/api/admin/app-versions', {
+                                        method: 'PATCH',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ id: version.id, isBetaOnly: false }),
+                                      });
+                                      if (res.ok) {
+                                        const data = await res.json();
+                                        setAppVersions(list => list.map(v => v.id === version.id ? data.version : v));
+                                      }
+                                    } catch (err) {
+                                      console.error('Error releasing version:', err);
+                                    }
+                                  }}
+                                  style={{
+                                    padding: '6px 12px',
+                                    fontSize: '12px',
+                                    fontWeight: '500',
+                                    backgroundColor: 'var(--success-bg)',
+                                    color: 'var(--success)',
+                                    border: '1px solid var(--success)',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  Release to All
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          {version.changes && version.changes.length > 0 && (
+                            <ul style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '8px 0 0 0', paddingLeft: '16px' }}>
+                              {version.changes.slice(0, 3).map((change, idx) => (
+                                <li key={idx} style={{ marginBottom: '4px' }}>{change}</li>
+                              ))}
+                              {version.changes.length > 3 && (
+                                <li style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                  +{version.changes.length - 3} more changes
+                                </li>
+                              )}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
             )}
           </div>
         </div>

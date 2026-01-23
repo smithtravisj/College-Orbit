@@ -56,6 +56,7 @@ model User {
   deletedCanvasItems        DeletedCanvasItem[]
   workItems                 WorkItem[]
   recurringWorkPatterns     RecurringWorkPattern[]
+  betaFeedback              BetaFeedback[]
 
   @@index([email])
   @@index([subscriptionTier])
@@ -465,6 +466,9 @@ model Settings {
   confirmBeforeDelete          Boolean  @default(true)
   enableKeyboardShortcuts      Boolean  @default(true)
 
+  // Beta Program
+  isBetaUser                   Boolean  @default(false)
+
   // Colorblind Accessibility
   colorblindMode  String? // 'protanopia', 'deuteranopia', 'tritanopia', 'achromatopsia', or null for off
   colorblindStyle String? // 'palette', 'patterns', 'both', or null for default
@@ -562,6 +566,7 @@ model Notification {
   deadlineId       String?
   taskId           String?
   workItemId       String?
+  betaFeedbackId   String?
 
   // Canvas LMS Integration
   canvasAnnouncementId String?
@@ -573,6 +578,7 @@ model Notification {
   workItem       WorkItem?       @relation(fields: [workItemId], references: [id], onDelete: Cascade)
   featureRequest FeatureRequest? @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
   issueReport    IssueReport?    @relation(fields: [issueReportId], references: [id], onDelete: Cascade)
+  betaFeedback   BetaFeedback?   @relation(fields: [betaFeedbackId], references: [id], onDelete: Cascade)
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -584,6 +590,7 @@ model Notification {
   @@index([deadlineId])
   @@index([taskId])
   @@index([workItemId])
+  @@index([betaFeedbackId])
   @@index([canvasAnnouncementId])
 }
 
@@ -835,4 +842,33 @@ model WorkItemReminder {
 
   @@unique([workItemId, reminderType])
   @@index([workItemId])
+}
+
+model BetaFeedback {
+  id            String         @id @default(cuid())
+  userId        String
+  description   String
+  status        String         @default("pending") // pending, reviewed, resolved
+  adminResponse String?
+  respondedAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model AppVersion {
+  id           String   @id @default(cuid())
+  version      String   @unique
+  changes      Json     @default("[]")
+  isBetaOnly   Boolean  @default(true)
+  releasedAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isBetaOnly])
+  @@index([releasedAt])
 }

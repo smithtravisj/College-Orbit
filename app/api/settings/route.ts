@@ -131,6 +131,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.enableKeyboardShortcuts !== undefined) updateData.enableKeyboardShortcuts = data.enableKeyboardShortcuts;
     if (data.colorblindMode !== undefined) updateData.colorblindMode = data.colorblindMode;
     if (data.colorblindStyle !== undefined) updateData.colorblindStyle = data.colorblindStyle;
+    if (data.isBetaUser !== undefined) updateData.isBetaUser = data.isBetaUser;
 
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 

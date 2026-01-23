@@ -34,8 +34,9 @@ export function QuickAddButton() {
   }, [isModalOpen, setEscapeHandler, closeModal]);
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  // Top-right only on dashboard, bottom-right everywhere else
-  const isTopRight = pathname === '/' || pathname === '/dashboard';
+  // Top-right on dashboard and pages without item lists, bottom-right on list pages
+  const topRightPages = ['/', '/dashboard', '/calendar', '/tools', '/settings', '/admin', '/account'];
+  const isTopRight = topRightPages.includes(pathname);
   const university = useAppStore((state) => state.settings.university) || null;
   const theme = useAppStore((state) => state.settings.theme);
   const isPremium = useAppStore((state) => state.isPremium);

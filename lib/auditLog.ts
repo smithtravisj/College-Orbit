@@ -15,7 +15,12 @@ export type AuditAction =
   | 'reject_feature_request'
   | 'add_college'
   | 'update_college'
-  | 'delete_college';
+  | 'delete_college'
+  | 'respond_beta_feedback'
+  | 'update_beta_feedback_status'
+  | 'create_app_version'
+  | 'update_app_version'
+  | 'release_app_version';
 
 interface LogAuditParams {
   adminId: string;
@@ -68,6 +73,11 @@ export function getActionLabel(action: string): string {
     add_college: 'Added College',
     update_college: 'Updated College',
     delete_college: 'Deleted College',
+    respond_beta_feedback: 'Responded to Beta Feedback',
+    update_beta_feedback_status: 'Updated Beta Feedback Status',
+    create_app_version: 'Created App Version',
+    update_app_version: 'Updated App Version',
+    release_app_version: 'Released App Version',
   };
   return labels[action] || action;
 }

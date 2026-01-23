@@ -11,12 +11,11 @@ import ColorPicker from '@/components/ui/ColorPicker';
 import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { showDeleteToast } from '@/components/ui/DeleteToast';
-import { Monitor, RefreshCw, Link2, Unlink, ChevronDown } from 'lucide-react';
+import { Monitor, RefreshCw, Link2, Unlink, ChevronDown, AlertCircle } from 'lucide-react';
 import HelpTooltip from '@/components/ui/HelpTooltip';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { DASHBOARD_CARDS, TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
-import releases from '@/data/releases.json';
 
 interface CanvasStatus {
   connected: boolean;
@@ -53,6 +52,13 @@ export default function SettingsPage() {
   const [featureDescription, setFeatureDescription] = useState('');
   const [featureRequestMessage, setFeatureRequestMessage] = useState('');
   const [featureRequestLoading, setFeatureRequestLoading] = useState(false);
+  const [betaFeedbackText, setBetaFeedbackText] = useState('');
+  const [betaFeedbackMessage, setBetaFeedbackMessage] = useState('');
+  const [betaFeedbackLoading, setBetaFeedbackLoading] = useState(false);
+  const [notificationPrefsExpanded, setNotificationPrefsExpanded] = useState(false);
+  const [betaWarningOpen, setBetaWarningOpen] = useState(false);
+  const betaWarningRef = useRef<HTMLDivElement>(null);
+  const [currentVersion, setCurrentVersion] = useState<string>('1.0.0');
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
@@ -163,6 +169,25 @@ export default function SettingsPage() {
     const isMac = typeof window !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
     setIsMacDesktop(isMac);
   }, []);
+
+  // Close beta warning tooltip when clicking outside
+  useEffect(() => {
+    if (!betaWarningOpen) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (betaWarningRef.current && !betaWarningRef.current.contains(e.target as Node)) {
+        setBetaWarningOpen(false);
+      }
+    };
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }, 10);
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [betaWarningOpen]);
 
   // Fetch colleges list from API (database is source of truth)
   useEffect(() => {
@@ -307,6 +332,24 @@ export default function SettingsPage() {
       dueSoonInputRef.current.value = String(dueSoonDays);
     }
   }, [dueSoonDays]);
+
+  // Fetch current version from API
+  useEffect(() => {
+    const fetchVersion = async () => {
+      try {
+        const response = await fetch('/api/releases');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.releases && data.releases.length > 0) {
+            setCurrentVersion(data.releases[0].version);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch version:', error);
+      }
+    };
+    fetchVersion();
+  }, []);
 
   if (!mounted) {
     return (
@@ -2576,7 +2619,42 @@ export default function SettingsPage() {
           {/* Preferences Tab - Notification Preferences */}
           {activeSettingsTab === 'preferences' && (
           <div style={{ gridColumn: '1 / -1' }}>
-          <Card title="Notification Preferences">
+          <Card
+            title="Notification Preferences"
+            action={
+              <button
+                onClick={() => setNotificationPrefsExpanded(!notificationPrefsExpanded)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '32px',
+                  height: '32px',
+                  backgroundColor: 'transparent',
+                  color: 'var(--text-muted)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <ChevronDown
+                  size={20}
+                  style={{
+                    transform: notificationPrefsExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease',
+                  }}
+                />
+              </button>
+            }
+          >
+            {!notificationPrefsExpanded && (
+              <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
+                Configure email and in-app notification settings for reminders and alerts.
+              </p>
+            )}
+            {notificationPrefsExpanded && (
+            <>
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: isMobile ? '20px' : '24px' }}>
               {/* Email Column */}
               <div>
@@ -3157,6 +3235,186 @@ export default function SettingsPage() {
                 </div>
               )}
             </div>
+            </>
+            )}
+          </Card>
+          </div>
+          )}
+
+          {/* Preferences Tab - Beta Program */}
+          {activeSettingsTab === 'preferences' && (
+          <div style={{ gridColumn: '1 / -1' }}>
+          <Card title="Beta Program">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Beta Toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Join Beta Program</p>
+                    <div ref={betaWarningRef} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setBetaWarningOpen(!betaWarningOpen);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: '2px',
+                          cursor: 'help',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'var(--text-muted)',
+                        }}
+                        aria-label="Warning"
+                      >
+                        <AlertCircle size={15} />
+                      </button>
+                      {betaWarningOpen && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            bottom: '100%',
+                            marginBottom: '8px',
+                            padding: '8px 12px',
+                            fontSize: '12px',
+                            color: 'var(--text)',
+                            backgroundColor: 'var(--panel)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '6px',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                            whiteSpace: 'normal',
+                            width: '240px',
+                            textAlign: 'left',
+                            lineHeight: '1.4',
+                            zIndex: 50,
+                          }}
+                        >
+                          Beta features are experimental and may be unstable. Data loss or unexpected behavior is possible. We recommend backing up important information.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Get early access to new features and help shape College Orbit
+                  </p>
+                </div>
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const newValue = !(settings.isBetaUser ?? false);
+                    await updateSettings({ isBetaUser: newValue });
+                  }}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.isBetaUser ?? false) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.isBetaUser ?? false) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+
+              {/* Beta Feedback Form (only visible when enrolled) */}
+              {(settings.isBetaUser ?? false) && (
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Submit Beta Feedback</p>
+                  <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                    Share your thoughts, report bugs, or suggest improvements for beta features
+                  </p>
+                  <textarea
+                    value={betaFeedbackText}
+                    onChange={(e) => setBetaFeedbackText(e.target.value)}
+                    placeholder="Describe your feedback, bug report, or suggestion..."
+                    maxLength={1000}
+                    style={{
+                      width: '100%',
+                      minHeight: '100px',
+                      padding: '8px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                      boxSizing: 'border-box',
+                      marginBottom: '0',
+                      resize: 'vertical',
+                    }}
+                    disabled={betaFeedbackLoading}
+                  />
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                    {betaFeedbackText.length}/1000 characters
+                  </p>
+                  <Button
+                    disabled={!betaFeedbackText.trim() || betaFeedbackLoading}
+                    onClick={async () => {
+                      if (!betaFeedbackText.trim()) return;
+                      setBetaFeedbackLoading(true);
+                      setBetaFeedbackMessage('');
+                      try {
+                        const response = await fetch('/api/beta-feedback', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ description: betaFeedbackText.trim() }),
+                        });
+                        if (response.ok) {
+                          setBetaFeedbackText('');
+                          setBetaFeedbackMessage('Feedback submitted successfully! Thank you for helping improve College Orbit.');
+                          setTimeout(() => setBetaFeedbackMessage(''), 5000);
+                        } else {
+                          const data = await response.json();
+                          setBetaFeedbackMessage(data.error || 'Failed to submit feedback. Please try again.');
+                        }
+                      } catch {
+                        setBetaFeedbackMessage('Failed to submit feedback. Please try again.');
+                      } finally {
+                        setBetaFeedbackLoading(false);
+                      }
+                    }}
+                    style={{
+                      paddingLeft: isMobile ? '12px' : '16px',
+                      paddingRight: isMobile ? '12px' : '16px',
+                    }}
+                  >
+                    {betaFeedbackLoading ? 'Submitting...' : 'Submit Feedback'}
+                  </Button>
+                  {betaFeedbackMessage && (
+                    <p
+                      style={{
+                        marginTop: '8px',
+                        fontSize: '14px',
+                        color: betaFeedbackMessage.includes('Error') || betaFeedbackMessage.includes('Failed') ? 'var(--danger)' : 'var(--success)',
+                      }}
+                    >
+                      {betaFeedbackMessage}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </Card>
           </div>
           )}
@@ -3342,7 +3600,7 @@ export default function SettingsPage() {
               <div className="space-y-3 text-sm" style={{ paddingTop: '18px', borderTop: '1px solid var(--border)' }}>
                 <div>
                   <p className="font-semibold text-[var(--text)]">College Orbit</p>
-                  <p className="text-[var(--text-muted)]">v{releases.releases[0]?.version || '1.0.0'}</p>
+                  <p className="text-[var(--text-muted)]">v{currentVersion}</p>
                   <Link
                     href="/release-notes"
                     className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"

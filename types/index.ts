@@ -376,6 +376,8 @@ export interface Settings {
   timelineRange?: 'today' | 'week'; // Default timeline view range
   timelineShowProgress?: boolean; // Show progress indicator on timeline
   timelineItemTypes?: ('class' | 'task' | 'deadline' | 'exam' | 'event')[]; // Which item types to show
+  // Beta Program
+  isBetaUser?: boolean;
 }
 
 export interface ExcludedDate {
@@ -627,3 +629,26 @@ export const WORK_ITEM_EFFORT_LABELS: Record<Exclude<WorkItemEffort, null>, stri
   medium: 'Medium',
   large: 'Large',
 };
+
+// Beta Program Types
+export interface BetaFeedback {
+  id: string;
+  userId: string;
+  description: string;
+  status: 'pending' | 'reviewed' | 'resolved';
+  adminResponse: string | null;
+  respondedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user?: { email: string; name: string | null };
+}
+
+export interface AppVersion {
+  id: string;
+  version: string;
+  changes: string[];
+  isBetaOnly: boolean;
+  releasedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}

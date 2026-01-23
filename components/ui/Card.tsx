@@ -8,7 +8,7 @@ import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from 
 import { useIsLightMode } from '@/hooks/useEffectiveTheme';
 
 interface CardProps {
-  title?: string;
+  title?: React.ReactNode;
   subtitle?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
