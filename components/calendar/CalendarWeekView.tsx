@@ -178,6 +178,10 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
     e.dataTransfer.setData('text/plain', JSON.stringify({ type: event.type, id: event.id }));
     if (e.currentTarget instanceof HTMLElement) {
       e.currentTarget.style.opacity = '0.5';
+      // Position the drag ghost so its top edge aligns with the cursor
+      const rect = e.currentTarget.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      e.dataTransfer.setDragImage(e.currentTarget, offsetX, 0);
     }
   };
 

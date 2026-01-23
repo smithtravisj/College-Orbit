@@ -166,9 +166,12 @@ const CalendarDayView = React.memo(function CalendarDayView({
     setDraggedEvent(event);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', JSON.stringify({ type: event.type, id: event.id }));
-    // Make the drag image slightly transparent
+    // Make the drag image slightly transparent and position so top edge aligns with cursor
     if (e.currentTarget instanceof HTMLElement) {
       e.currentTarget.style.opacity = '0.5';
+      const rect = e.currentTarget.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      e.dataTransfer.setDragImage(e.currentTarget, offsetX, 0);
     }
   };
 

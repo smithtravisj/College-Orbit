@@ -86,7 +86,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
   return (
     <div
       onClick={handleClick}
-      className="group flex items-start gap-3 rounded transition-colors hover:bg-[var(--panel-2)] cursor-pointer w-full"
+      className="group flex items-center gap-3 rounded transition-colors hover:bg-[var(--panel-2)] cursor-pointer w-full"
       style={{
         padding: '8px 10px 8px 0',
         opacity: item.isCompleted ? 0.6 : 1,
@@ -121,7 +121,6 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
             backgroundColor: item.isCompleted ? 'var(--button-secondary)' : 'transparent',
             cursor: 'pointer',
             flexShrink: 0,
-            marginTop: '1px',
             backgroundImage: item.isCompleted
               ? 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22white%22%3E%3Cpath fill-rule=%22evenodd%22 d=%22M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z%22 clip-rule=%22evenodd%22 /%3E%3C/svg%3E")'
               : 'none',
@@ -137,7 +136,6 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
             width: '16px',
             height: '16px',
             flexShrink: 0,
-            marginTop: '1px',
           }}
         />
       )}

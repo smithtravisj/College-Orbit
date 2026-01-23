@@ -19,7 +19,7 @@ const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), {
 import FolderTree from '@/components/notes/FolderTree';
 import TagInput from '@/components/notes/TagInput';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
-import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown, Crown, Save, CheckSquare, FileText, Clock, Upload, File, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown, Crown, Save, CheckSquare, FileText, Clock, Upload, File, X, BookOpen, FolderKanban, Hammer } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useFormatters } from '@/hooks/useFormatters';
@@ -240,6 +240,7 @@ export default function NotesPage() {
 
   const resetForm = () => {
     setEditingId(null);
+    setShowMoreOptions(false);
     setFormData({
       title: '',
       content: { type: 'doc', content: [] },
@@ -749,7 +750,7 @@ export default function NotesPage() {
                       gap: '6px',
                       background: 'none',
                       border: 'none',
-                      padding: '10px 0',
+                      padding: '0 0 10px 0',
                       cursor: 'pointer',
                       color: 'var(--text)',
                       fontSize: isMobile ? '14px' : '14px',
@@ -1155,7 +1156,7 @@ export default function NotesPage() {
                   )}
 
                   {/* Linked Items */}
-                  {(selectedNote.task || selectedNote.deadline || selectedNote.exam || selectedNote.recurringTaskPattern || selectedNote.recurringDeadlinePattern || selectedNote.recurringExamPattern) && (
+                  {(selectedNote.task || selectedNote.deadline || selectedNote.exam || selectedNote.workItem || selectedNote.recurringTaskPattern || selectedNote.recurringDeadlinePattern || selectedNote.recurringExamPattern || selectedNote.recurringWorkPattern) && (
                     <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
                       <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '8px' }}>Linked To</h4>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1201,6 +1202,41 @@ export default function NotesPage() {
                             </span>
                           </Link>
                         )}
+                        {(selectedNote.workItem || selectedNote.recurringWorkPattern) && (() => {
+                          const workItemType = selectedNote.workItem?.type || (selectedNote.recurringWorkPattern?.workItemTemplate as any)?.type;
+                          const getWorkItemIcon = () => {
+                            switch (workItemType) {
+                              case 'reading': return <BookOpen size={16} />;
+                              case 'project': return <FolderKanban size={16} />;
+                              case 'task': return <Hammer size={16} />;
+                              case 'assignment': return <Clock size={16} />;
+                              default: return <CheckSquare size={16} />;
+                            }
+                          };
+                          const getWorkItemLabel = () => {
+                            switch (workItemType) {
+                              case 'reading': return 'Reading';
+                              case 'project': return 'Project';
+                              case 'task': return 'Task';
+                              case 'assignment': return 'Assignment';
+                              default: return 'Work Item';
+                            }
+                          };
+                          return (
+                            <Link
+                              href={`/work?preview=${selectedNote.workItemId || ''}`}
+                              style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--link)', textDecoration: 'none' }}
+                              onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
+                              onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                            >
+                              {getWorkItemIcon()}
+                              <span>
+                                {selectedNote.workItem?.title || (selectedNote.recurringWorkPattern?.workItemTemplate as any)?.title || getWorkItemLabel()}
+                                {selectedNote.recurringWorkPattern && ' (recurring)'}
+                              </span>
+                            </Link>
+                          );
+                        })()}
                       </div>
                     </div>
                   )}

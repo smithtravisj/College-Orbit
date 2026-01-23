@@ -682,7 +682,13 @@ function Dashboard() {
               <Button
                 variant="secondary"
                 onClick={() => {
-                  toggleTaskDone(previewingTask.id);
+                  // Check if this is a WorkItem (has type field) vs legacy Task
+                  const isWorkItem = previewingTask.type && ['task', 'assignment', 'reading', 'project'].includes(previewingTask.type);
+                  if (isWorkItem) {
+                    toggleWorkItemComplete(previewingTask.id);
+                  } else {
+                    toggleTaskDone(previewingTask.id);
+                  }
                   setPreviewingTask(null);
                 }}
                 style={{ flex: 1 }}
@@ -868,9 +874,15 @@ function Dashboard() {
               <Button
                 variant="secondary"
                 onClick={() => {
-                  updateDeadline(previewingDeadline.id, {
-                    status: previewingDeadline.status === 'done' ? 'open' : 'done',
-                  });
+                  // Check if this is a WorkItem (has type='assignment') vs legacy Deadline
+                  const isWorkItem = previewingDeadline.type === 'assignment';
+                  if (isWorkItem) {
+                    toggleWorkItemComplete(previewingDeadline.id);
+                  } else {
+                    updateDeadline(previewingDeadline.id, {
+                      status: previewingDeadline.status === 'done' ? 'open' : 'done',
+                    });
+                  }
                   setPreviewingDeadline(null);
                 }}
                 style={{ flex: 1 }}

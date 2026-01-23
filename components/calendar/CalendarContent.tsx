@@ -398,8 +398,23 @@ export default function CalendarContent() {
     }
     const newDateISO = finalDate.toISOString();
 
+    // Check if this is a WorkItem (exists in workItems arrays or is a work item type like reading/project)
+    const isWorkItemType = ['task', 'deadline', 'reading', 'project'].includes(eventType);
+    const existsInWorkItems = allWorkItemInstances.some(item => item.id === eventId) ||
+                              filteredWorkItems.some(item => item.id === eventId) ||
+                              workItems.some(item => item.id === eventId);
+    const isWorkItem = isWorkItemType && existsInWorkItems;
+
     // Optimistic update - update UI immediately
-    if (eventType === 'task') {
+    if (isWorkItem || eventType === 'reading' || eventType === 'project') {
+      // Update work item state
+      setAllWorkItemInstances((prev) =>
+        prev.map((item) => (item.id === eventId ? { ...item, dueAt: newDateISO } : item))
+      );
+      setFilteredWorkItems((prev) =>
+        prev.map((item) => (item.id === eventId ? { ...item, dueAt: newDateISO } : item))
+      );
+    } else if (eventType === 'task') {
       setAllTaskInstances((prev) =>
         prev.map((task) => (task.id === eventId ? { ...task, dueAt: newDateISO } : task))
       );
@@ -436,7 +451,11 @@ export default function CalendarContent() {
       let apiUrl = '';
       let body: Record<string, any> = {};
 
-      if (eventType === 'task') {
+      if (isWorkItem || eventType === 'reading' || eventType === 'project') {
+        // Use work API for WorkItems
+        apiUrl = `/api/work/${eventId}`;
+        body = { dueAt: newDateISO };
+      } else if (eventType === 'task') {
         apiUrl = `/api/tasks/${eventId}`;
         body = { dueAt: newDateISO };
       } else if (eventType === 'deadline') {

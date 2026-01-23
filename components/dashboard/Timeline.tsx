@@ -98,8 +98,6 @@ export const Timeline: React.FC<TimelineProps> = ({
   const nextDayHeaderRef = useRef<HTMLDivElement>(null);
   const [firstDayHeaderOffset, setFirstDayHeaderOffset] = useState(0);
 
-  // Ref for auto-scrolling to next event
-  const nextEventRef = useRef<HTMLDivElement>(null);
   const hasAutoScrolled = useRef(false);
 
   // Attach scroll listener
@@ -142,60 +140,6 @@ export const Timeline: React.FC<TimelineProps> = ({
     setFirstDayHeaderOffset(0);
     hasAutoScrolled.current = false; // Allow auto-scroll again when range changes
   }, [range]);
-
-  // Auto-scroll to next relevant event on initial load only (not when items change)
-  const initialLoadComplete = useRef(false);
-  useEffect(() => {
-    // Only run once when data first loads
-    if (initialLoadComplete.current || isLoading || !scrollContainerRef.current) return;
-    if (groupedData.days.length === 0) return;
-
-    // Mark as complete so we don't scroll again
-    initialLoadComplete.current = true;
-
-    const now = new Date();
-    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    const todayItems = groupedData.days[0]?.items || [];
-
-    let targetItemId: string | null = null;
-
-    // First, look for the first non-completed overdue item
-    for (const item of todayItems) {
-      if (item.isOverdue && !item.isCompleted) {
-        targetItemId = item.id;
-        break;
-      }
-    }
-
-    // If no overdue items, find the next upcoming event
-    if (!targetItemId) {
-      for (const item of todayItems) {
-        if (item.isCompleted) continue;
-        if (item.isCurrent) {
-          targetItemId = item.id;
-          break;
-        }
-        if (item.time && item.time >= currentTime) {
-          targetItemId = item.id;
-          break;
-        }
-      }
-    }
-
-    // Scroll to the target item within the container (not the whole page)
-    if (targetItemId && nextEventRef.current && scrollContainerRef.current) {
-      setTimeout(() => {
-        const container = scrollContainerRef.current;
-        const target = nextEventRef.current;
-        if (container && target) {
-          const containerRect = container.getBoundingClientRect();
-          const targetRect = target.getBoundingClientRect();
-          const scrollTop = container.scrollTop + (targetRect.top - containerRect.top);
-          container.scrollTo({ top: scrollTop, behavior: 'smooth' });
-        }
-      }, 100);
-    }
-  }, [groupedData, isLoading]);
 
   const handleToggleComplete = async (item: TimelineItemType) => {
     // Check if this item came from a WorkItem (has a type field like 'task', 'assignment', 'reading', 'project')
@@ -369,8 +313,50 @@ export const Timeline: React.FC<TimelineProps> = ({
       }
     }
 
+    // Fallback: if all timed items are past, scroll to first incomplete all-day item
+    for (const item of todayItems) {
+      if ((item.isAllDay || !item.time) && !item.isCompleted) {
+        return item.id;
+      }
+    }
+
+    // If all items are completed, don't scroll
     return null;
   }, [groupedData]);
+
+  // Auto-scroll to next relevant event on initial load only (not when items change)
+  const initialLoadComplete = useRef(false);
+  useEffect(() => {
+    // Only run once when data first loads
+    if (initialLoadComplete.current || isLoading) return;
+    if (groupedData.days.length === 0) return;
+
+    // If no target item, nothing to scroll to - mark complete
+    if (!nextEventId) {
+      initialLoadComplete.current = true;
+      return;
+    }
+
+    // Mark as complete immediately to prevent multiple attempts
+    initialLoadComplete.current = true;
+
+    // Wait for DOM to be ready, then scroll within the container
+    // Use querySelector to find element by data attribute (more reliable than ref timing)
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const container = scrollContainerRef.current;
+        const target = container?.querySelector(`[data-timeline-item-id="${nextEventId}"]`) as HTMLElement;
+
+        if (container && target) {
+          // Calculate scroll position relative to container
+          const containerRect = container.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+          const scrollTop = container.scrollTop + (targetRect.top - containerRect.top);
+          container.scrollTo({ top: scrollTop, behavior: 'smooth' });
+        }
+      }, 100);
+    });
+  }, [groupedData, isLoading, nextEventId]);
 
   if (isLoading) {
     return (
@@ -527,7 +513,7 @@ export const Timeline: React.FC<TimelineProps> = ({
                   {day.items.length > 0 ? (
                     <div className="flex flex-col">
                       {day.items.map((item) => (
-                        <div key={item.id} ref={item.id === nextEventId ? nextEventRef : undefined}>
+                        <div key={item.id} data-timeline-item-id={item.id}>
                           <TimelineItem
                             item={item}
                             onToggleComplete={handleToggleComplete}

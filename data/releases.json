@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "1.3.2",
+      "date": "2026-01-23",
+      "changes": [
+        "Fixed timeline auto-scroll not working for all-day items when timed items are completed",
+        "Fixed mark complete/incomplete buttons not working in timeline item modals",
+        "Fixed timeline checkboxes not vertically centered",
+        "Fixed calendar drag and drop not working for work items",
+        "Fixed calendar drop indicator not aligning with drag ghost",
+        "Fixed linked readings, projects, and assignments not displaying in notes detail view",
+        "Fixed 'More options' dropdown not closing by default when creating a new note"
+      ]
+    },
+    {
       "version": "1.3.1",
       "date": "2026-01-23",
       "changes": [
