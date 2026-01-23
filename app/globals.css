@@ -41,6 +41,13 @@
   --warning-bg: rgba(198, 144, 38, 0.1);
   --danger-bg: rgba(229, 83, 75, 0.1);
 
+  /* Event type colors (colorblind mode overrides these) */
+  --cb-event-course: #3b82f6;
+  --cb-event-task: #22c55e;
+  --cb-event-exam: #ef4444;
+  --cb-event-deadline: #ff7d00;
+  --cb-event-calendar: #a855f7;
+
   /* Shadows - Subtle in dark mode */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 8px 0 rgba(0, 0, 0, 0.4);
@@ -791,5 +798,136 @@ input[type="range"]:disabled::-moz-range-thumb {
   font-size: 0.65em;
   font-weight: bold;
   opacity: 0.7;
+}
+
+/* Event type patterns for calendar and timeline */
+.colorblind-patterns [data-event-type="course"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    currentColor 4px,
+    currentColor 5px
+  );
+  opacity: 0.3;
+  border-radius: inherit;
+}
+
+.colorblind-patterns [data-event-type="task"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 4px,
+    currentColor 4px,
+    currentColor 5px
+  );
+  opacity: 0.3;
+  border-radius: inherit;
+}
+
+.colorblind-patterns [data-event-type="exam"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 3px,
+    currentColor 3px,
+    currentColor 4px
+  ),
+  repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    currentColor 3px,
+    currentColor 4px
+  );
+  opacity: 0.3;
+  border-radius: inherit;
+}
+
+.colorblind-patterns [data-event-type="deadline"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 4px,
+    currentColor 4px,
+    currentColor 5px
+  );
+  opacity: 0.3;
+  border-radius: inherit;
+}
+
+.colorblind-patterns [data-event-type="event"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image: radial-gradient(
+    circle,
+    currentColor 1.5px,
+    transparent 1.5px
+  );
+  background-size: 8px 8px;
+  opacity: 0.35;
+  border-radius: inherit;
+}
+
+/* Ensure event type elements have relative positioning */
+.colorblind-patterns [data-event-type] {
+  position: relative;
+}
+
+/* Exclusion/No School pattern - dashed diagonal lines */
+.colorblind-patterns [data-exclusion-type]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 6px,
+    currentColor 6px,
+    currentColor 8px
+  );
+  opacity: 0.25;
+  border-radius: inherit;
+}
+
+.colorblind-patterns [data-exclusion-type] {
+  position: relative;
 }
 

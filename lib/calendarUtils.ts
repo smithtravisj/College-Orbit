@@ -1,5 +1,6 @@
 import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent } from '@/types';
 import { getDayOfWeek } from './utils';
+import { getEventTypeColors, ColorblindMode, ColorblindStyle } from '@/lib/collegeColors';
 
 export interface CalendarEvent {
   id: string;
@@ -464,7 +465,7 @@ export const COLOR_PALETTE = {
   cyan: '#06b6d4',
 };
 
-// Event type colors - hex values for calendar rendering
+// Event type colors - default hex values
 export const EVENT_TYPE_COLORS = {
   course: '#3b82f6',   // Blue
   task: '#22c55e',     // Green
@@ -473,37 +474,50 @@ export const EVENT_TYPE_COLORS = {
   event: '#a855f7',    // Purple
 };
 
-// Get the color for an event (supports colorblind mode via CSS variables)
-export function getEventColor(event: CalendarEvent): string {
+// Raw hex colors for cases where CSS variables can't be used (e.g., color calculations)
+export const EVENT_TYPE_COLORS_HEX = {
+  course: '#3b82f6',
+  task: '#22c55e',
+  exam: '#ef4444',
+  deadline: '#ff7d00',
+  event: '#a855f7',
+};
+
+// Get the color for an event (supports colorblind mode)
+export function getEventColor(
+  event: CalendarEvent,
+  colorblindMode?: ColorblindMode | null,
+  theme?: 'light' | 'dark',
+  colorblindStyle?: ColorblindStyle | null
+): string {
+  const colors = getEventTypeColors(colorblindMode, theme || 'dark', colorblindStyle);
+
   if (event.type === 'course') {
     // Use course color tag if available, otherwise colorblind-aware blue
     if (event.colorTag) {
       return parseColor(event.colorTag);
     }
-    return EVENT_TYPE_COLORS.course;
+    return colors.course;
   }
 
   if (event.type === 'exam') {
-    // Use colorblind-aware red for exams
-    return EVENT_TYPE_COLORS.exam;
+    return colors.exam;
   }
 
   if (event.type === 'task') {
-    // Use colorblind-aware green for tasks
-    return EVENT_TYPE_COLORS.task;
+    return colors.task;
   }
 
   if (event.type === 'deadline') {
-    // Use colorblind-aware orange for deadlines
-    return EVENT_TYPE_COLORS.deadline;
+    return colors.deadline;
   }
 
   if (event.type === 'event') {
     // Use custom color if set, otherwise colorblind-aware purple for calendar events
-    return event.color || EVENT_TYPE_COLORS.event;
+    return event.color || colors.event;
   }
 
-  return EVENT_TYPE_COLORS.course;
+  return colors.course;
 }
 
 // Parse color tag to RGB values for opacity variations
@@ -560,15 +574,29 @@ export function parseColor(colorTag?: string): string {
   return colorTag;
 }
 
-// Get color for month view dots and legend (supports colorblind mode via CSS variables)
-export function getMonthViewColor(event: CalendarEvent): string {
+// Get color for month view dots and legend (supports colorblind mode)
+export function getMonthViewColor(
+  event: CalendarEvent,
+  colorblindMode?: ColorblindMode | null,
+  theme?: 'light' | 'dark',
+  colorblindStyle?: ColorblindStyle | null
+): string {
+  const colors = getEventTypeColors(colorblindMode, theme || 'dark', colorblindStyle);
+
   // For custom calendar events, use their custom color if set
   if (event.type === 'event' && event.color) {
     return event.color;
   }
 
-  // Use colorblind-aware colors via CSS variables with fallbacks
-  return EVENT_TYPE_COLORS[event.type as keyof typeof EVENT_TYPE_COLORS] || EVENT_TYPE_COLORS.course;
+  // Use colorblind-aware colors
+  const colorMap: Record<string, string> = {
+    course: colors.course,
+    exam: colors.exam,
+    task: colors.task,
+    deadline: colors.deadline,
+    event: colors.event,
+  };
+  return colorMap[event.type] || colors.course;
 }
 
 // Event layout interface for handling overlaps

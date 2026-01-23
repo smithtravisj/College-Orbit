@@ -14,6 +14,7 @@ import {
   CalendarEvent,
 } from '@/lib/calendarUtils';
 import dynamic from 'next/dynamic';
+import useAppStore from '@/lib/store';
 
 // Lazy load heavy modal - only needed when user clicks an event
 const EventDetailModal = dynamic(() => import('@/components/EventDetailModal'), {
@@ -63,6 +64,12 @@ const CalendarDayView = React.memo(function CalendarDayView({
   const [currentTime, setCurrentTime] = useState(new Date());
   const [draggedEvent, setDraggedEvent] = useState<CalendarEvent | null>(null);
   const [dropIndicator, setDropIndicator] = useState<{ top: number; isAllDay: boolean } | null>(null);
+
+  // Get colorblind settings
+  const settings = useAppStore((state) => state.settings);
+  const colorblindMode = settings.colorblindMode as any;
+  const colorblindStyle = settings.colorblindStyle as any;
+  const theme = (settings.theme || 'dark') as 'light' | 'dark';
 
   // Check if the viewed date is today
   const isViewingToday = useMemo(() => {
@@ -290,7 +297,7 @@ const CalendarDayView = React.memo(function CalendarDayView({
             <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: isMobile ? '4px' : '8px' }}>All Day</p>
             <div style={{ display: 'flex', gap: isMobile ? '2px' : '4px', flexWrap: 'wrap', alignItems: 'center' }}>
               {exclusionType && (() => {
-                let markerColor = getEventColor({ courseId: exclusionCourseId } as any);
+                let markerColor = getEventColor({ courseId: exclusionCourseId } as any, colorblindMode, theme, colorblindStyle);
                 const dateYear = date.getFullYear();
                 const dateMonth = String(date.getMonth() + 1).padStart(2, '0');
                 const dateDay = String(date.getDate()).padStart(2, '0');
@@ -302,6 +309,7 @@ const CalendarDayView = React.memo(function CalendarDayView({
 
                 return (
                   <div
+                    data-exclusion-type={exclusionType}
                     style={{
                       paddingLeft: isMobile ? '4px' : '8px',
                       paddingRight: isMobile ? '4px' : '8px',
@@ -334,11 +342,12 @@ const CalendarDayView = React.memo(function CalendarDayView({
                 );
               })()}
               {allDayEvents.map((event) => {
-                const color = getEventColor(event);
+                const color = getEventColor(event, colorblindMode, theme, colorblindStyle);
                 const canDrag = isDraggable(event);
                 return (
                   <div
                     key={event.id}
+                    data-event-type={event.type}
                     draggable={canDrag}
                     onDragStart={(e) => handleDragStart(e, event)}
                     onDragEnd={handleDragEnd}
@@ -507,7 +516,7 @@ const CalendarDayView = React.memo(function CalendarDayView({
             const scaleFactor = hourHeight / HOUR_HEIGHT;
             const top = (baseTop + 1) * scaleFactor;
             const height = baseHeight * scaleFactor;
-            const color = getEventColor(event);
+            const color = getEventColor(event, colorblindMode, theme, colorblindStyle);
 
             // Calculate width and left position based on column
             const eventWidth = 100 / layout.totalColumns;
@@ -525,6 +534,7 @@ const CalendarDayView = React.memo(function CalendarDayView({
             return (
               <div
                 key={event.id}
+                data-event-type={event.type}
                 style={{
                   position: 'absolute',
                   left: `calc(${eventLeft}% + ${isMobile ? '4px' : '8px'})`,
@@ -574,7 +584,7 @@ const CalendarDayView = React.memo(function CalendarDayView({
             const minHeight = 30; // Minimum height ~30 minutes
             const height = Math.max(baseHeight * scaleFactor, minHeight);
             const isCompact = baseHeight * scaleFactor < minHeight;
-            const color = getEventColor(event);
+            const color = getEventColor(event, colorblindMode, theme, colorblindStyle);
             const canDrag = isDraggable(event);
 
             const eventWidth = 100 / layout.totalColumns;
@@ -592,6 +602,7 @@ const CalendarDayView = React.memo(function CalendarDayView({
             return (
               <div
                 key={event.id}
+                data-event-type={event.type}
                 draggable={canDrag}
                 onDragStart={(e) => handleDragStart(e, event)}
                 onDragEnd={handleDragEnd}
@@ -656,7 +667,7 @@ const CalendarDayView = React.memo(function CalendarDayView({
               const scaleFactor = hourHeight / HOUR_HEIGHT;
               const top = (baseTop + 1) * scaleFactor;
               const height = baseHeight * scaleFactor;
-              const color = getEventColor(event);
+              const color = getEventColor(event, colorblindMode, theme, colorblindStyle);
               const canDrag = isDraggable(event);
 
               const eventWidth = 100 / layout.totalColumns;
@@ -665,6 +676,7 @@ const CalendarDayView = React.memo(function CalendarDayView({
               return (
                 <div
                   key={event.id}
+                  data-event-type={event.type}
                   draggable={canDrag}
                   onDragStart={(e) => handleDragStart(e, event)}
                   onDragEnd={handleDragEnd}

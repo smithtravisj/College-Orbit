@@ -9,6 +9,7 @@ interface TimelineDayProps {
   day: TimelineDayData;
   onToggleComplete?: (item: TimelineItemType) => void;
   onItemClick?: (item: TimelineItemType) => void;
+  onFileClick?: (file: { name: string; url: string; size: number }, allFiles: { name: string; url: string; size: number }[], index: number) => void;
   collapsible?: boolean;
   defaultCollapsed?: boolean;
 }
@@ -17,6 +18,7 @@ export const TimelineDay: React.FC<TimelineDayProps> = ({
   day,
   onToggleComplete,
   onItemClick,
+  onFileClick,
   collapsible = false,
   defaultCollapsed = false,
 }) => {
@@ -93,6 +95,7 @@ export const TimelineDay: React.FC<TimelineDayProps> = ({
                   item={item}
                   onToggleComplete={onToggleComplete}
                   onItemClick={onItemClick}
+                  onFileClick={onFileClick}
                 />
               ))}
             </div>

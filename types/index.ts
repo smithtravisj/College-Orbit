@@ -219,6 +219,11 @@ export interface Exam {
     label: string;
     url: string;
   }>;
+  files?: Array<{
+    name: string;
+    url: string;
+    size: number;
+  }>;
   status: 'scheduled' | 'completed' | 'cancelled';
   isRecurring?: boolean;
   recurringPatternId?: string | null;

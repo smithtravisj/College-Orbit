@@ -1,27 +1,45 @@
 'use client';
 
 import React from 'react';
-import { TimelineItem as TimelineItemType, TIMELINE_COLORS } from '@/types/timeline';
+import { TimelineItem as TimelineItemType, TimelineItemType as ItemType } from '@/types/timeline';
 import { useFormatters } from '@/hooks/useFormatters';
 import useAppStore from '@/lib/store';
 import { formatTimeString, TimeFormat } from '@/lib/utils';
 import { CanvasBadge } from '@/components/CanvasBadge';
+import { getEventTypeColors } from '@/lib/collegeColors';
 
 interface TimelineItemProps {
   item: TimelineItemType;
   onToggleComplete?: (item: TimelineItemType) => void;
   onItemClick?: (item: TimelineItemType) => void;
+  onFileClick?: (file: { name: string; url: string; size: number }, allFiles: { name: string; url: string; size: number }[], index: number) => void;
 }
 
 export const TimelineItem: React.FC<TimelineItemProps> = ({
   item,
   onToggleComplete,
   onItemClick,
+  onFileClick,
 }) => {
   const settings = useAppStore((state) => state.settings);
   const { showCourseCode } = useFormatters();
 
-  const borderColor = TIMELINE_COLORS[item.type];
+  // Get colorblind-aware colors
+  const eventColors = getEventTypeColors(
+    settings.colorblindMode as any,
+    (settings.theme || 'dark') as 'light' | 'dark',
+    settings.colorblindStyle as any
+  );
+
+  // Map timeline item type to event color
+  const colorMap: Record<ItemType, string> = {
+    class: eventColors.course,
+    task: eventColors.task,
+    exam: eventColors.exam,
+    deadline: eventColors.deadline,
+    event: eventColors.event,
+  };
+  const borderColor = colorMap[item.type];
 
   const formatTime = (time: string | null | undefined): string => {
     if (!time) return '';
@@ -60,16 +78,31 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
   const courseDisplay = getCourseDisplay();
   const timeDisplay = getTimeDisplay();
 
+  // Map item type to event type for colorblind patterns
+  const eventType = item.type === 'class' ? 'course' : item.type;
+
   return (
     <div
       onClick={handleClick}
       className="group flex items-start gap-3 rounded transition-colors hover:bg-[var(--panel-2)] cursor-pointer w-full"
       style={{
-        padding: '8px 10px 8px 8px',
-        borderLeft: `3px solid ${borderColor}`,
+        padding: '8px 10px 8px 0',
         opacity: item.isCompleted ? 0.6 : 1,
+        position: 'relative',
       }}
     >
+      {/* Accent indicator with colorblind pattern */}
+      <div
+        data-event-type={eventType}
+        style={{
+          width: '4px',
+          alignSelf: 'stretch',
+          backgroundColor: borderColor,
+          borderRadius: '2px',
+          flexShrink: 0,
+          marginLeft: '8px',
+        }}
+      />
       {/* Checkbox for completable items */}
       {item.canComplete ? (
         <input
@@ -177,8 +210,8 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
                 alignItems: 'center',
                 fontSize: '10px',
                 fontWeight: '600',
-                color: TIMELINE_COLORS.exam,
-                backgroundColor: `${TIMELINE_COLORS.exam}15`,
+                color: eventColors.exam,
+                backgroundColor: `${eventColors.exam}26`,
                 padding: '1px 5px',
                 borderRadius: '3px',
                 whiteSpace: 'nowrap',
@@ -228,6 +261,46 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
             {item.links.length > 2 && (
               <span className="text-xs text-[var(--text-muted)]">
                 +{item.links.length - 2} more
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Files */}
+        {item.files && item.files.length > 0 && (
+          <div
+            className="flex flex-col items-start w-fit"
+            style={{ gap: '0px', marginTop: '4px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {item.files.slice(0, 2).map((file, idx) => (
+              onFileClick ? (
+                <button
+                  key={`${file.url}-${idx}`}
+                  type="button"
+                  onClick={() => onFileClick(file, item.files!, idx)}
+                  className="text-[var(--link)] hover:text-blue-400"
+                  style={{ fontSize: '12px', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+                >
+                  {file.name}
+                </button>
+              ) : (
+                <a
+                  key={`${file.url}-${idx}`}
+                  href={file.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download={file.name}
+                  className="text-[var(--link)] hover:text-blue-400"
+                  style={{ fontSize: '12px' }}
+                >
+                  {file.name}
+                </a>
+              )
+            ))}
+            {item.files.length > 2 && (
+              <span className="text-[var(--text-muted)]" style={{ fontSize: '12px' }}>
+                +{item.files.length - 2} more files
               </span>
             )}
           </div>

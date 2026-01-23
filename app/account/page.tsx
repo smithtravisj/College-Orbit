@@ -758,7 +758,6 @@ export default function AccountPage() {
                         'Recurring items',
                         'Custom themes',
                         'Visual effects',
-                        'Dashboard customization',
                       ].map((feature) => (
                         <div
                           key={feature}

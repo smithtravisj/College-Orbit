@@ -14,6 +14,7 @@ import {
 } from '@/lib/calendarUtils';
 import { isToday } from '@/lib/utils';
 import dynamic from 'next/dynamic';
+import useAppStore from '@/lib/store';
 
 // Lazy load heavy modal - only needed when user clicks an event
 const EventDetailModal = dynamic(() => import('@/components/EventDetailModal'), {
@@ -68,6 +69,12 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
   } | null>(null);
   const ghostPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const dotsRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  // Get colorblind settings
+  const settings = useAppStore((state) => state.settings);
+  const colorblindMode = settings.colorblindMode as any;
+  const colorblindStyle = settings.colorblindStyle as any;
+  const theme = (settings.theme || 'dark') as 'light' | 'dark';
 
   const dates = useMemo(() => getDatesInMonth(year, month), [year, month]);
 
@@ -275,9 +282,10 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
                   );
                 }
 
-                const markerColor = getEventColor({ courseId: '' } as any);
+                const markerColor = getEventColor({ courseId: '' } as any, colorblindMode, theme, colorblindStyle);
                 return (
                   <div
+                    data-exclusion-type="holiday"
                     style={{
                       fontSize: '0.65rem',
                       backgroundColor: `${markerColor}80`,
@@ -325,7 +333,7 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
                   }
 
                   return dayEvents.slice(0, limit).map((event) => {
-                    const color = getMonthViewColor(event);
+                    const color = getMonthViewColor(event, colorblindMode, theme, colorblindStyle);
 
                     return (
                       <div
@@ -469,10 +477,11 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
                     {hiddenEvents.length} more event{hiddenEvents.length !== 1 ? 's' : ''}
                   </div>
                   {hiddenEvents.map((event) => {
-                    const color = getMonthViewColor(event);
+                    const color = getMonthViewColor(event, colorblindMode, theme, colorblindStyle);
                     return (
                       <div
                         key={event.id}
+                        data-event-type={event.type}
                         style={{
                           fontSize: '0.7rem',
                           paddingLeft: '6px',
@@ -583,7 +592,7 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {previewEvents.map((event) => {
-                const color = getMonthViewColor(event);
+                const color = getMonthViewColor(event, colorblindMode, theme, colorblindStyle);
                 const eventTime = getEventTime(event);
                 const timeStr = eventTime
                   ? new Date(`2000-01-01T${eventTime}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
@@ -592,6 +601,7 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
                 return (
                   <div
                     key={event.id}
+                    data-event-type={event.type}
                     onClick={() => {
                       setSelectedEvent(event);
                       setGhostPreview(null);

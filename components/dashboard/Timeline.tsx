@@ -19,6 +19,7 @@ interface TimelineProps {
   onClassClick?: (course: Course, meetingTime: any) => void;
   onExamClick?: (exam: Exam) => void;
   onEventClick?: (event: CalendarEvent) => void;
+  onFileClick?: (file: { name: string; url: string; size: number }, allFiles: { name: string; url: string; size: number }[], index: number) => void;
   defaultRange?: TimelineRange;
   showProgress?: boolean;
   showRangeToggle?: boolean;
@@ -32,6 +33,7 @@ export const Timeline: React.FC<TimelineProps> = ({
   onClassClick,
   onExamClick,
   onEventClick,
+  onFileClick,
   defaultRange = 'today',
   showProgress = true,
   showRangeToggle = true,
@@ -261,6 +263,7 @@ export const Timeline: React.FC<TimelineProps> = ({
                           item={item}
                           onToggleComplete={handleToggleComplete}
                           onItemClick={handleItemClick}
+                          onFileClick={onFileClick}
                         />
                       ))}
                     </div>
@@ -274,6 +277,7 @@ export const Timeline: React.FC<TimelineProps> = ({
                         day={remainingDay}
                         onToggleComplete={handleToggleComplete}
                         onItemClick={handleItemClick}
+                        onFileClick={onFileClick}
                         collapsible={isMobile && range === 'week' && !remainingDay.isToday}
                         defaultCollapsed={isMobile && range === 'week' && !remainingDay.isToday && remainingIndex > 1}
                       />

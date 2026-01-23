@@ -2113,6 +2113,48 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
   },
 };
 
+// Default event type colors (non-colorblind)
+const defaultEventColors = {
+  course: '#3b82f6',   // Blue
+  task: '#22c55e',     // Green
+  exam: '#ef4444',     // Red
+  deadline: '#ff7d00', // Orange
+  event: '#a855f7',    // Purple
+};
+
+/**
+ * Get event type colors based on colorblind mode and style
+ * Returns colorblind-friendly colors when mode is active and style includes colors
+ * Returns default colors when style is 'patterns' only (patterns without color changes)
+ */
+export function getEventTypeColors(
+  colorblindMode: ColorblindMode | null | undefined,
+  theme: 'light' | 'dark' = 'dark',
+  colorblindStyle?: ColorblindStyle | null
+): { course: string; task: string; exam: string; deadline: string; event: string } {
+  if (!colorblindMode) {
+    return defaultEventColors;
+  }
+
+  // If style is 'patterns' only, use default colors (patterns are applied via CSS)
+  if (colorblindStyle === 'patterns') {
+    return defaultEventColors;
+  }
+
+  const palette = colorblindPalettes[colorblindMode]?.[theme];
+  if (!palette) {
+    return defaultEventColors;
+  }
+
+  return {
+    course: palette.eventCalendar,
+    task: palette.eventTask,
+    exam: palette.eventExam,
+    deadline: palette.eventDeadline,
+    event: palette.eventCourse,
+  };
+}
+
 /**
  * Apply colorblind mode
  * Overrides semantic colors with colorblind-friendly alternatives

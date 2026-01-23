@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import useAppStore from '@/lib/store';
-import { getCollegeColorPalette, getDefaultCustomColors, getCustomColorSetForTheme, CustomColors, CustomColorSet } from '@/lib/collegeColors';
+import { getCollegeColorPalette, getDefaultCustomColors, getCustomColorSetForTheme, CustomColors, CustomColorSet, getEventTypeColors } from '@/lib/collegeColors';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import ColorPicker from '@/components/ui/ColorPicker';
@@ -2072,13 +2072,22 @@ export default function SettingsPage() {
                     <span data-status="danger" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger)' }}>Danger</span>
                   </div>
                   <p className="text-xs text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>Event Colors (Calendar & Timeline):</p>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    <span style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: 'color-mix(in srgb, var(--cb-event-course, #3b82f6) 15%, transparent)', color: 'var(--cb-event-course, #3b82f6)', border: '1px solid var(--cb-event-course, #3b82f6)' }}>Course</span>
-                    <span style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: 'color-mix(in srgb, var(--cb-event-task, #22c55e) 15%, transparent)', color: 'var(--cb-event-task, #22c55e)', border: '1px solid var(--cb-event-task, #22c55e)' }}>Task</span>
-                    <span style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: 'color-mix(in srgb, var(--cb-event-exam, #ef4444) 15%, transparent)', color: 'var(--cb-event-exam, #ef4444)', border: '1px solid var(--cb-event-exam, #ef4444)' }}>Exam</span>
-                    <span style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: 'color-mix(in srgb, var(--cb-event-deadline, #ff7d00) 15%, transparent)', color: 'var(--cb-event-deadline, #ff7d00)', border: '1px solid var(--cb-event-deadline, #ff7d00)' }}>Deadline</span>
-                    <span style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: 'color-mix(in srgb, var(--cb-event-calendar, #a855f7) 15%, transparent)', color: 'var(--cb-event-calendar, #a855f7)', border: '1px solid var(--cb-event-calendar, #a855f7)' }}>Event</span>
-                  </div>
+                  {(() => {
+                    const eventColors = getEventTypeColors(
+                      settings.colorblindMode as any,
+                      (settings.theme || 'dark') as 'light' | 'dark',
+                      settings.colorblindStyle as any
+                    );
+                    return (
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <span data-event-type="course" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.course}26`, color: eventColors.course, border: `1px solid ${eventColors.course}` }}>Course</span>
+                        <span data-event-type="task" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.task}26`, color: eventColors.task, border: `1px solid ${eventColors.task}` }}>Task</span>
+                        <span data-event-type="exam" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.exam}26`, color: eventColors.exam, border: `1px solid ${eventColors.exam}` }}>Exam</span>
+                        <span data-event-type="deadline" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.deadline}26`, color: eventColors.deadline, border: `1px solid ${eventColors.deadline}` }}>Deadline</span>
+                        <span data-event-type="event" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.event}26`, color: eventColors.event, border: `1px solid ${eventColors.event}` }}>Event</span>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 

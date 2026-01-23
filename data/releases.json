@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "1.2.16",
+      "date": "2026-01-23",
+      "changes": [
+        "Fixed overdue items in timeline disappearing immediately when marked complete",
+        "Added file attachments display to timeline items and preview modals",
+        "Fixed colorblind mode not affecting calendar and timeline event colors",
+        "Added colorblind patterns support for calendar events and timeline items",
+        "Fixed 'Patterns only' mode incorrectly changing colors",
+        "Added patterns to 'No School' and 'Class Cancelled' indicators",
+        "Fixed subscription features list showing non-existent feature"
+      ]
+    },
+    {
       "version": "1.2.15",
       "date": "2026-01-22",
       "changes": [

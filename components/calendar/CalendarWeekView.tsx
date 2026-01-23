@@ -15,6 +15,7 @@ import {
 } from '@/lib/calendarUtils';
 import { getDayOfWeek, isToday } from '@/lib/utils';
 import dynamic from 'next/dynamic';
+import useAppStore from '@/lib/store';
 
 // Lazy load heavy modal - only needed when user clicks an event
 const EventDetailModal = dynamic(() => import('@/components/EventDetailModal'), {
@@ -69,6 +70,12 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
   const [currentTime, setCurrentTime] = useState(new Date());
   const [draggedEvent, setDraggedEvent] = useState<CalendarEvent | null>(null);
   const [dropIndicator, setDropIndicator] = useState<{ dateStr: string; top: number; isAllDay: boolean } | null>(null);
+
+  // Get colorblind settings
+  const settings = useAppStore((state) => state.settings);
+  const colorblindMode = settings.colorblindMode as any;
+  const colorblindStyle = settings.colorblindStyle as any;
+  const theme = (settings.theme || 'dark') as 'light' | 'dark';
 
   // Update current time every minute
   useEffect(() => {
@@ -357,7 +364,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
               onDrop={(e) => handleAllDayDrop(e, day)}
             >
               {exclusionType && (() => {
-                let markerColor = getEventColor({ courseId: exclusionCourseId } as any);
+                let markerColor = getEventColor({ courseId: exclusionCourseId } as any, colorblindMode, theme, colorblindStyle);
                 const exclusion = excludedDates.find((ex) => {
                   const exDateOnly = ex.date.includes('T') ? ex.date.split('T')[0] : ex.date;
                   return exDateOnly === dateStr && (exclusionType === 'holiday' ? !ex.courseId : ex.courseId);
@@ -365,6 +372,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
 
                 return (
                   <div
+                    data-exclusion-type={exclusionType}
                     style={{
                       fontSize: '0.7rem',
                       paddingLeft: '6px',
@@ -399,11 +407,12 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
                 );
               })()}
               {visibleEvents.map((event, idx) => {
-                const color = getEventColor(event);
+                const color = getEventColor(event, colorblindMode, theme, colorblindStyle);
                 const canDrag = isDraggable(event);
                 return (
                   <div
                     key={`${dateStr}-allday-${event.id}-${idx}`}
+                    data-event-type={event.type}
                     draggable={canDrag}
                     onDragStart={(e) => handleDragStart(e, event)}
                     onDragEnd={handleDragEnd}
@@ -611,7 +620,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
                   const { top: baseTop } = getTimeSlotPosition(event.time, START_HOUR, END_HOUR);
                   const top = baseTop + 9; // Offset to align with grid lines + 1px spacing
                   const height = getEventHeight(event.time, event.endTime);
-                  const color = getEventColor(event);
+                  const color = getEventColor(event, colorblindMode, theme, colorblindStyle);
 
                   // Calculate width and left position based on column
                   const eventWidth = 100 / layout.totalColumns;
@@ -629,6 +638,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
                   return (
                     <div
                       key={`${dateStr}-course-${event.id}`}
+                      data-event-type={event.type}
                       style={{
                         position: 'absolute',
                         left: `calc(${eventLeft}% + 3px)`,
@@ -688,7 +698,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
                     const baseHeight = event.endTime ? getEventHeight(event.time, event.endTime) : HOUR_HEIGHT * 0.5;
                     const minHeight = 30; // Minimum height ~30 minutes
                     const height = Math.max(baseHeight, minHeight);
-                    const color = getEventColor(event);
+                    const color = getEventColor(event, colorblindMode, theme, colorblindStyle);
                     const canDrag = isDraggable(event);
 
                     // Check if there are any other events overlapping this one in time
@@ -714,6 +724,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
                     return (
                       <div
                         key={`${dateStr}-timed-${event.id}`}
+                        data-event-type={event.type}
                         draggable={canDrag}
                         onDragStart={(e) => handleDragStart(e, event)}
                         onDragEnd={handleDragEnd}
@@ -808,10 +819,11 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
                     All-day events
                   </div>
                   {hiddenEvents.map((event, idx) => {
-                    const color = getEventColor(event);
+                    const color = getEventColor(event, colorblindMode, theme, colorblindStyle);
                     return (
                       <div
                         key={`${dateStr}-hidden-${event.id}-${idx}`}
+                        data-event-type={event.type}
                         style={{
                           fontSize: '0.7rem',
                           paddingLeft: '6px',

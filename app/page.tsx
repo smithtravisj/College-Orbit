@@ -20,6 +20,7 @@ import { X, FileIcon } from 'lucide-react';
 import { CanvasBadge } from '@/components/CanvasBadge';
 import LandingPage from '@/components/LandingPage';
 import { Timeline } from '@/components/dashboard';
+import FilePreviewModal from '@/components/FilePreviewModal';
 import { Task, Deadline, Course, Exam, CalendarEvent } from '@/types';
 
 export default function HomePage() {
@@ -47,6 +48,7 @@ function Dashboard() {
   const [previewingClass, setPreviewingClass] = useState<{ course: any; meetingTime: any } | null>(null);
   const [previewingExam, setPreviewingExam] = useState<any>(null);
   const [previewingEvent, setPreviewingEvent] = useState<any>(null);
+  const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
   const [, startTransition] = useTransition();
 
   const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>([]);
@@ -331,6 +333,7 @@ function Dashboard() {
                     onClassClick={(course: Course, meetingTime: any) => startTransition(() => setPreviewingClass({ course, meetingTime }))}
                     onExamClick={(exam: Exam) => startTransition(() => setPreviewingExam(exam))}
                     onEventClick={(event: CalendarEvent) => startTransition(() => setPreviewingEvent(event))}
+                    onFileClick={(file, allFiles, index) => setPreviewingFile({ file, allFiles, index })}
                     defaultRange="today"
                     showProgress={true}
                     showRangeToggle={true}
@@ -425,6 +428,7 @@ function Dashboard() {
                     onClassClick={(course: Course, meetingTime: any) => startTransition(() => setPreviewingClass({ course, meetingTime }))}
                     onExamClick={(exam: Exam) => startTransition(() => setPreviewingExam(exam))}
                     onEventClick={(event: CalendarEvent) => startTransition(() => setPreviewingEvent(event))}
+                    onFileClick={(file, allFiles, index) => setPreviewingFile({ file, allFiles, index })}
                     defaultRange="today"
                     showProgress={true}
                     showRangeToggle={true}
@@ -641,6 +645,26 @@ function Dashboard() {
                   </div>
                 </div>
               )}
+
+              {/* Files */}
+              {previewingTask.files && previewingTask.files.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Files</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {previewingTask.files.map((file: any, idx: number) => (
+                      <button
+                        key={`${file.url}-${idx}`}
+                        type="button"
+                        onClick={() => setPreviewingFile({ file, allFiles: previewingTask.files, index: idx })}
+                        style={{ fontSize: '14px', color: 'var(--link)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <FileIcon size={14} style={{ flexShrink: 0 }} />
+                        {file.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Footer - Sticky */}
@@ -814,16 +838,15 @@ function Dashboard() {
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Files</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     {previewingDeadline.files.map((file: any, idx: number) => (
-                      <a
+                      <button
                         key={`${file.url}-${idx}`}
-                        href={file.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ fontSize: '14px', color: 'var(--link)', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        type="button"
+                        onClick={() => setPreviewingFile({ file, allFiles: previewingDeadline.files, index: idx })}
+                        style={{ fontSize: '14px', color: 'var(--link)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}
                       >
-                        <FileIcon size={14} />
+                        <FileIcon size={14} style={{ flexShrink: 0 }} />
                         {file.name}
-                      </a>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -955,6 +978,24 @@ function Dashboard() {
                   </div>
                 </div>
               )}
+              {previewingClass.course.files && previewingClass.course.files.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Files</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {previewingClass.course.files.map((file: any, idx: number) => (
+                      <button
+                        key={`${file.url}-${idx}`}
+                        type="button"
+                        onClick={() => setPreviewingFile({ file, allFiles: previewingClass.course.files, index: idx })}
+                        style={{ fontSize: '14px', color: 'var(--link)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <FileIcon size={14} style={{ flexShrink: 0 }} />
+                        {file.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <div style={{ display: 'flex', gap: '8px', padding: isMobile ? '10px 12px' : '12px 16px', borderTop: '1px solid var(--border)' }}>
               <Link href={`/courses?preview=${previewingClass.course.id}`} style={{ flex: 1 }}>
@@ -1049,6 +1090,24 @@ function Dashboard() {
                       <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--link)] hover:underline">
                         {link.label || link.url}
                       </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {previewingExam.files && previewingExam.files.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Files</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {previewingExam.files.map((file: any, idx: number) => (
+                      <button
+                        key={`${file.url}-${idx}`}
+                        type="button"
+                        onClick={() => setPreviewingFile({ file, allFiles: previewingExam.files, index: idx })}
+                        style={{ fontSize: '14px', color: 'var(--link)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <FileIcon size={14} style={{ flexShrink: 0 }} />
+                        {file.name}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -1151,6 +1210,15 @@ function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        file={previewingFile?.file ?? null}
+        files={previewingFile?.allFiles}
+        currentIndex={previewingFile?.index ?? 0}
+        onClose={() => setPreviewingFile(null)}
+        onNavigate={(file, index) => setPreviewingFile(prev => prev ? { ...prev, file, index } : null)}
+      />
     </>
   );
 }

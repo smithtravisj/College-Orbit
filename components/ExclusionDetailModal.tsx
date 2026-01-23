@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ExcludedDate, Course } from '@/types';
 import { getEventColor } from '@/lib/calendarUtils';
+import useAppStore from '@/lib/store';
 
 interface ExclusionDetailModalProps {
   isOpen: boolean;
@@ -18,6 +19,12 @@ export default function ExclusionDetailModal({
   courses,
   onClose,
 }: ExclusionDetailModalProps) {
+  // Get colorblind settings
+  const settings = useAppStore((state) => state.settings);
+  const colorblindMode = settings.colorblindMode as any;
+  const colorblindStyle = settings.colorblindStyle as any;
+  const theme = (settings.theme || 'dark') as 'light' | 'dark';
+
   // Handle escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -42,7 +49,7 @@ export default function ExclusionDetailModal({
   const course = exclusion.courseId
     ? courses.find((c) => c.id === exclusion.courseId)
     : null;
-  const markerColor = getEventColor({ courseId: exclusion.courseId } as any);
+  const markerColor = getEventColor({ courseId: exclusion.courseId } as any, colorblindMode, theme, colorblindStyle);
 
   // Format date for display
   const formatDate = (dateStr: string) => {

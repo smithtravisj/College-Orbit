@@ -18,6 +18,7 @@ export interface TimelineItem {
   isCurrent?: boolean; // For classes currently in session
   originalItem: Course | Task | Deadline | Exam | CalendarEvent | any; // The original data for actions
   links?: Array<{ label: string; url: string }>;
+  files?: Array<{ name: string; url: string; size: number }>;
   canComplete?: boolean; // Tasks and deadlines can be completed
 }
 

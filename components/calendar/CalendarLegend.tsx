@@ -1,13 +1,19 @@
 'use client';
 
 import { getMonthViewColor } from '@/lib/calendarUtils';
+import useAppStore from '@/lib/store';
 
 export default function CalendarLegend() {
+  const settings = useAppStore((state) => state.settings);
+  const colorblindMode = settings.colorblindMode as any;
+  const colorblindStyle = settings.colorblindStyle as any;
+  const theme = (settings.theme || 'dark') as 'light' | 'dark';
+
   const legendItems = [
-    { color: getMonthViewColor({ type: 'course' } as any), label: 'Course' },
-    { color: getMonthViewColor({ type: 'exam' } as any), label: 'Exam' },
-    { color: getMonthViewColor({ type: 'task' } as any), label: 'Task' },
-    { color: getMonthViewColor({ type: 'deadline' } as any), label: 'Assignment' },
+    { color: getMonthViewColor({ type: 'course' } as any, colorblindMode, theme, colorblindStyle), label: 'Course' },
+    { color: getMonthViewColor({ type: 'exam' } as any, colorblindMode, theme, colorblindStyle), label: 'Exam' },
+    { color: getMonthViewColor({ type: 'task' } as any, colorblindMode, theme, colorblindStyle), label: 'Task' },
+    { color: getMonthViewColor({ type: 'deadline' } as any, colorblindMode, theme, colorblindStyle), label: 'Assignment' },
   ];
 
   return (
