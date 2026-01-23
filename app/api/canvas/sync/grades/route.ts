@@ -82,8 +82,8 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
           try {
             const canvasAssignmentIdStr = String(assignment.id);
 
-            // Find the deadline with this Canvas assignment ID
-            const deadline = await prisma.deadline.findFirst({
+            // Find the work item with this Canvas assignment ID
+            const workItem = await prisma.workItem.findFirst({
               where: {
                 userId,
                 courseId: course.id,
@@ -91,9 +91,9 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
               },
             });
 
-            if (deadline) {
-              await prisma.deadline.update({
-                where: { id: deadline.id },
+            if (workItem) {
+              await prisma.workItem.update({
+                where: { id: workItem.id },
                 data: {
                   canvasSubmissionId: String(assignment.submission.id),
                   canvasPointsEarned: assignment.submission.score,

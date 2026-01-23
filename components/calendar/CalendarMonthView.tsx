@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent } from '@/types';
+import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent, WorkItem } from '@/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   getDatesInMonth,
@@ -28,9 +28,11 @@ interface CalendarMonthViewProps {
   courses: Course[];
   tasks: Task[];
   deadlines: Deadline[];
+  workItems?: WorkItem[];
   exams?: Exam[];
   allTasks?: Task[];
   allDeadlines?: Deadline[];
+  allWorkItems?: WorkItem[];
   excludedDates?: ExcludedDate[];
   calendarEvents?: CustomCalendarEvent[];
   onSelectDate: (date: Date) => void;
@@ -45,9 +47,11 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
   courses,
   tasks,
   deadlines,
+  workItems = [],
   exams = [],
   allTasks = [],
   allDeadlines = [],
+  allWorkItems = [],
   excludedDates = [],
   calendarEvents = [],
   onSelectDate,
@@ -82,13 +86,13 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
     const map = new Map<string, ReturnType<typeof getEventsForDate>>();
     dates.forEach((date) => {
       const dateStr = date.toISOString().split('T')[0];
-      const events = getEventsForDate(date, courses, tasks, deadlines, exams, excludedDates, calendarEvents);
+      const events = getEventsForDate(date, courses, tasks, deadlines, exams, excludedDates, calendarEvents, workItems);
       if (events.length > 0) {
         map.set(dateStr, events);
       }
     });
     return map;
-  }, [dates, courses, tasks, deadlines, exams, excludedDates, calendarEvents]);
+  }, [dates, courses, tasks, deadlines, workItems, exams, excludedDates, calendarEvents]);
 
   // Measure dots containers to determine how many can fit
   useEffect(() => {
@@ -648,6 +652,7 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
         courses={courses}
         tasks={allTasks.length > 0 ? allTasks : tasks}
         deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
+        workItems={allWorkItems && allWorkItems.length > 0 ? allWorkItems : workItems}
         exams={exams}
         calendarEvents={calendarEvents}
         onEventUpdate={onEventUpdate}

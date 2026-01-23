@@ -902,6 +902,50 @@ input[type="range"]:disabled::-moz-range-thumb {
   border-radius: inherit;
 }
 
+/* Reading pattern - dotted horizontal lines (stippled) */
+.colorblind-patterns [data-event-type="reading"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      currentColor 0px,
+      currentColor 3px,
+      transparent 3px,
+      transparent 6px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 4px,
+      currentColor 4px,
+      currentColor 5px
+    );
+  background-size: 6px 8px;
+  opacity: 0.35;
+  border-radius: inherit;
+}
+
+/* Project pattern - small diamonds/dots */
+.colorblind-patterns [data-event-type="project"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image: radial-gradient(currentColor 1.5px, transparent 1.5px);
+  background-size: 6px 6px;
+  opacity: 0.4;
+  border-radius: inherit;
+}
+
 /* Ensure event type elements have relative positioning */
 .colorblind-patterns [data-event-type] {
   position: relative;

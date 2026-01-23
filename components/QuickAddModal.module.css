@@ -180,14 +180,21 @@
 /* Type Selector Pills */
 .typeSelector {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
   padding: 16px;
   padding-bottom: 8px;
 }
 
+.typeRow {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
 .typePill {
-  padding: 8px 16px;
+  flex: 1;
+  padding: 8px 12px;
   border-radius: 20px;
   border: 1px solid var(--border);
   background-color: var(--panel-2);
@@ -196,6 +203,8 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 150ms ease;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .typePill:hover {
@@ -348,16 +357,23 @@
 
   .typeSelector {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
     gap: 6px;
     padding: 8px 12px;
   }
 
+  .typeRow {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+  }
+
   .typePill {
-    padding: 6px 12px;
+    flex: 1;
+    padding: 6px 8px;
     font-size: 0.8125rem;
     border-radius: 16px;
+    text-align: center;
   }
 
   /* Quick Input - smaller on mobile */
@@ -417,6 +433,15 @@
   .typeSelector {
     padding: 16px 20px;
     padding-bottom: 8px;
+    gap: 8px;
+  }
+
+  .typeRow {
+    gap: 8px;
+  }
+
+  .typePill {
+    padding: 8px 12px;
   }
 
   .form {

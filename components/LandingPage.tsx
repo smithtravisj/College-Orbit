@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   Calendar,
-  CheckSquare,
+  PenLine,
   Clock,
   BookOpen,
   BarChart3,
@@ -29,9 +29,9 @@ const coreFeatures = [
     description: 'Track your classes with meeting times, locations, and quick links to course resources.',
   },
   {
-    icon: CheckSquare,
-    title: 'Tasks & Assignments',
-    description: 'Manage tasks and assignments with priorities, checklists, tags, and links to notes and files.',
+    icon: PenLine,
+    title: 'Work',
+    description: 'Manage tasks, assignments, readings, and projects with priorities, checklists, tags, and links to notes and files.',
   },
   {
     icon: CalendarDays,
@@ -49,17 +49,17 @@ const secondaryFeatures = [
   {
     icon: Target,
     title: 'Timeline Dashboard',
-    description: 'See classes, tasks, deadlines, exams, and events in one unified view with Today and Week toggles.',
+    description: 'See classes, tasks, assignments, exams, and events in one unified view with Today and Week toggles.',
   },
   {
     icon: Repeat,
     title: 'Recurring Items',
-    description: 'Set up recurring tasks, assignments, or exams that repeat daily, weekly, or on custom schedules.',
+    description: 'Set up recurring tasks, assignments, readings, projects, or exams that repeat daily, weekly, or on custom schedules.',
   },
   {
     icon: FileText,
     title: 'Rich Notes',
-    description: 'Rich text editor with formatting, folders, course organization, and links to tasks and assignments.',
+    description: 'Rich text editor with formatting, folders, course organization, and links to work items.',
   },
   {
     icon: BarChart3,

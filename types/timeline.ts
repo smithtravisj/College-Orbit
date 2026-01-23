@@ -1,6 +1,6 @@
 import { Course, Task, Deadline, Exam, CalendarEvent } from './index';
 
-export type TimelineItemType = 'class' | 'task' | 'deadline' | 'exam' | 'event';
+export type TimelineItemType = 'class' | 'task' | 'deadline' | 'exam' | 'event' | 'reading' | 'project';
 
 export interface TimelineItem {
   id: string;
@@ -53,4 +53,6 @@ export const TIMELINE_COLORS: Record<TimelineItemType, string> = {
   task: '#22c55e',     // green
   deadline: '#ff7d00', // orange
   event: '#a855f7',    // purple
+  reading: '#06b6d4',  // cyan
+  project: '#ec4899',  // pink
 };

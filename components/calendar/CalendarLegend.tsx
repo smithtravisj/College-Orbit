@@ -14,6 +14,8 @@ export default function CalendarLegend() {
     { color: getMonthViewColor({ type: 'exam' } as any, colorblindMode, theme, colorblindStyle), label: 'Exam' },
     { color: getMonthViewColor({ type: 'task' } as any, colorblindMode, theme, colorblindStyle), label: 'Task' },
     { color: getMonthViewColor({ type: 'deadline' } as any, colorblindMode, theme, colorblindStyle), label: 'Assignment' },
+    { color: getMonthViewColor({ type: 'reading' } as any, colorblindMode, theme, colorblindStyle), label: 'Reading' },
+    { color: getMonthViewColor({ type: 'project' } as any, colorblindMode, theme, colorblindStyle), label: 'Project' },
   ];
 
   return (

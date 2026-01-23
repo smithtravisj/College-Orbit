@@ -21,7 +21,7 @@ import { CanvasBadge } from '@/components/CanvasBadge';
 import LandingPage from '@/components/LandingPage';
 import { Timeline } from '@/components/dashboard';
 import FilePreviewModal from '@/components/FilePreviewModal';
-import { Task, Deadline, Course, Exam, CalendarEvent } from '@/types';
+import { Task, Deadline, Course, Exam, CalendarEvent, WorkItem } from '@/types';
 
 export default function HomePage() {
   const { status } = useSession();
@@ -45,6 +45,7 @@ function Dashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [previewingTask, setPreviewingTask] = useState<any>(null);
   const [previewingDeadline, setPreviewingDeadline] = useState<any>(null);
+  const [previewingWorkItem, setPreviewingWorkItem] = useState<WorkItem | null>(null);
   const [previewingClass, setPreviewingClass] = useState<{ course: any; meetingTime: any } | null>(null);
   const [previewingExam, setPreviewingExam] = useState<any>(null);
   const [previewingEvent, setPreviewingEvent] = useState<any>(null);
@@ -54,7 +55,7 @@ function Dashboard() {
   const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>([]);
   const [timelineHeight, setTimelineHeight] = useState<number>(500);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const { courses, deadlines, tasks, settings, excludedDates, initializeStore, toggleTaskDone, updateDeadline } = useAppStore();
+  const { courses, deadlines, tasks, settings, excludedDates, initializeStore, toggleTaskDone, updateDeadline, toggleWorkItemComplete } = useAppStore();
   const { isPremium } = useSubscription();
   // Dashboard card visibility is only customizable for premium users - free users see defaults
   const savedVisibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
@@ -330,6 +331,7 @@ function Dashboard() {
                   <Timeline
                     onTaskClick={(task: Task) => startTransition(() => setPreviewingTask(task))}
                     onDeadlineClick={(deadline: Deadline) => startTransition(() => setPreviewingDeadline(deadline))}
+                    onWorkItemClick={(workItem: WorkItem) => startTransition(() => setPreviewingWorkItem(workItem))}
                     onClassClick={(course: Course, meetingTime: any) => startTransition(() => setPreviewingClass({ course, meetingTime }))}
                     onExamClick={(exam: Exam) => startTransition(() => setPreviewingExam(exam))}
                     onEventClick={(event: CalendarEvent) => startTransition(() => setPreviewingEvent(event))}
@@ -425,6 +427,7 @@ function Dashboard() {
                   <Timeline
                     onTaskClick={(task: Task) => startTransition(() => setPreviewingTask(task))}
                     onDeadlineClick={(deadline: Deadline) => startTransition(() => setPreviewingDeadline(deadline))}
+                    onWorkItemClick={(workItem: WorkItem) => startTransition(() => setPreviewingWorkItem(workItem))}
                     onClassClick={(course: Course, meetingTime: any) => startTransition(() => setPreviewingClass({ course, meetingTime }))}
                     onExamClick={(exam: Exam) => startTransition(() => setPreviewingExam(exam))}
                     onEventClick={(event: CalendarEvent) => startTransition(() => setPreviewingEvent(event))}
@@ -686,9 +689,9 @@ function Dashboard() {
               >
                 {previewingTask.status === 'done' ? 'Mark Incomplete' : 'Mark Complete'}
               </Button>
-              <Link href={`/tasks?preview=${previewingTask.id}`} style={{ flex: 1 }}>
+              <Link href={`/work?preview=${previewingTask.id}`} style={{ flex: 1 }}>
                 <Button variant="primary" style={{ width: '100%' }} onClick={() => setPreviewingTask(null)}>
-                  View in Tasks
+                  View in Work
                 </Button>
               </Link>
             </div>
@@ -874,9 +877,198 @@ function Dashboard() {
               >
                 {previewingDeadline.status === 'done' ? 'Mark Incomplete' : 'Mark Complete'}
               </Button>
-              <Link href={`/deadlines?preview=${previewingDeadline.id}`} style={{ flex: 1 }}>
+              <Link href={`/work?preview=${previewingDeadline.id}`} style={{ flex: 1 }}>
                 <Button variant="primary" style={{ width: '100%' }} onClick={() => setPreviewingDeadline(null)}>
-                  View in Assignments
+                  View in Work
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WorkItem Preview Modal (for readings and projects) */}
+      {previewingWorkItem && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: isMobile ? '16px' : '24px',
+          }}
+          onClick={() => setPreviewingWorkItem(null)}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--panel)',
+              borderRadius: '12px',
+              border: '1px solid var(--border)',
+              width: isMobile ? '100%' : '400px',
+              maxHeight: isMobile ? '80vh' : '70vh',
+              overflow: 'auto',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                padding: isMobile ? '12px' : '16px',
+                borderBottom: '1px solid var(--border)',
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h3 style={{ margin: 0, fontSize: isMobile ? '1rem' : '1.125rem', color: 'var(--text)' }}>
+                    {previewingWorkItem.title}
+                  </h3>
+                </div>
+                {previewingWorkItem.courseId && (
+                  <p style={{ margin: '4px 0 0 0', fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)' }}>
+                    {courses.find(c => c.id === previewingWorkItem.courseId)?.code || courses.find(c => c.id === previewingWorkItem.courseId)?.name}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => setPreviewingWorkItem(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '4px',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div style={{ padding: isMobile ? '12px' : '16px' }}>
+              {/* Type Badge */}
+              <div style={{ marginBottom: '12px' }}>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    backgroundColor: previewingWorkItem.type === 'reading' ? 'rgba(6, 182, 212, 0.2)' : 'rgba(236, 72, 153, 0.2)',
+                    color: previewingWorkItem.type === 'reading' ? '#06b6d4' : '#ec4899',
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {previewingWorkItem.type}
+                </span>
+              </div>
+
+              {previewingWorkItem.status === 'done' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    color: 'var(--success)',
+                    marginBottom: '12px',
+                    fontSize: isMobile ? '0.75rem' : '0.875rem',
+                  }}
+                >
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--success)' }} />
+                  Completed
+                </div>
+              )}
+
+              {previewingWorkItem.dueAt && (
+                <div style={{ marginBottom: '12px' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Due: </span>
+                  <span style={{ color: 'var(--text)', fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
+                    {formatDate(previewingWorkItem.dueAt)}
+                    {new Date(previewingWorkItem.dueAt).getHours() !== 23 && ` at ${formatTime(previewingWorkItem.dueAt)}`}
+                  </span>
+                </div>
+              )}
+
+              {previewingWorkItem.notes && (
+                <div style={{ marginBottom: '12px' }}>
+                  <p style={{ color: 'var(--text)', fontSize: isMobile ? '0.75rem' : '0.875rem', whiteSpace: 'pre-wrap', margin: 0 }}>
+                    {previewingWorkItem.notes}
+                  </p>
+                </div>
+              )}
+
+              {previewingWorkItem.links && previewingWorkItem.links.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '4px' }}>Links:</p>
+                  {previewingWorkItem.links.map((link: any, idx: number) => (
+                    <a
+                      key={idx}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: 'block', color: 'var(--link)', fontSize: isMobile ? '0.75rem' : '0.875rem', marginBottom: '4px' }}
+                    >
+                      {link.label || link.url}
+                    </a>
+                  ))}
+                </div>
+              )}
+
+              {previewingWorkItem.files && previewingWorkItem.files.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '4px' }}>Files:</p>
+                  {previewingWorkItem.files.map((file: any, idx: number) => (
+                    <button
+                      key={idx}
+                      onClick={() => setPreviewingFile({ file, allFiles: previewingWorkItem.files, index: idx })}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        color: 'var(--link)',
+                        fontSize: isMobile ? '0.75rem' : '0.875rem',
+                        marginBottom: '4px',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 0,
+                      }}
+                    >
+                      <FileIcon size={14} />
+                      {file.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '8px', padding: isMobile ? '12px' : '16px', borderTop: '1px solid var(--border)' }}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  toggleWorkItemComplete(previewingWorkItem.id);
+                  setPreviewingWorkItem(null);
+                }}
+                style={{ flex: 1 }}
+              >
+                {previewingWorkItem.status === 'done' ? 'Mark Incomplete' : 'Mark Complete'}
+              </Button>
+              <Link href={`/work?preview=${previewingWorkItem.id}`} style={{ flex: 1 }}>
+                <Button variant="primary" style={{ width: '100%' }} onClick={() => setPreviewingWorkItem(null)}>
+                  View in Work
                 </Button>
               </Link>
             </div>

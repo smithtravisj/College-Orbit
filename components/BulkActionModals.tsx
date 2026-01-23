@@ -6,7 +6,7 @@ import Input, { Select } from '@/components/ui/Input';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import TagInput from '@/components/notes/TagInput';
-import { Course } from '@/types';
+import { Course, WorkItemType, WORK_ITEM_TYPE_LABELS } from '@/types';
 import { useFormatters } from '@/hooks/useFormatters';
 
 interface BaseModalProps {
@@ -138,6 +138,76 @@ export function BulkChangeTagsModal({
               placeholder="Add tags..."
             />
           </div>
+
+          <div className="flex gap-3 justify-end" style={{ marginTop: '24px' }}>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={onClose}
+              style={{ paddingLeft: '16px', paddingRight: '16px' }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleConfirm}
+              style={{
+                paddingLeft: '16px',
+                paddingRight: '16px',
+              }}
+            >
+              Apply
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Type Modal (for work items)
+interface BulkChangeTypeModalProps extends BaseModalProps {
+  onConfirm: (type: WorkItemType) => void;
+}
+
+export function BulkChangeTypeModal({
+  isOpen,
+  onClose,
+  selectedCount,
+  onConfirm,
+}: BulkChangeTypeModalProps) {
+  const [type, setType] = useState<WorkItemType>('task');
+  if (!isOpen) return null;
+
+  const handleConfirm = () => {
+    onConfirm(type);
+    setType('task');
+    onClose();
+  };
+
+  const typeOptions: { value: WorkItemType; label: string }[] = [
+    { value: 'task', label: WORK_ITEM_TYPE_LABELS.task },
+    { value: 'assignment', label: WORK_ITEM_TYPE_LABELS.assignment },
+    { value: 'reading', label: WORK_ITEM_TYPE_LABELS.reading },
+    { value: 'project', label: WORK_ITEM_TYPE_LABELS.project },
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
+      <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+        <div style={{ padding: '24px' }}>
+          <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Type</h2>
+          <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+            Update type for {selectedCount} item{selectedCount !== 1 ? 's' : ''}
+          </p>
+
+          <Select
+            label="Type"
+            value={type}
+            onChange={(e) => setType(e.target.value as WorkItemType)}
+            options={typeOptions}
+          />
 
           <div className="flex gap-3 justify-end" style={{ marginTop: '24px' }}>
             <Button

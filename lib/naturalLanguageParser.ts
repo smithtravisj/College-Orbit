@@ -9,7 +9,7 @@ import { Course, ShoppingListType, GROCERY_CATEGORIES, WISHLIST_CATEGORIES, PANT
 // TYPE DEFINITIONS
 // ============================================================================
 
-export type ItemType = 'task' | 'assignment' | 'exam' | 'note' | 'course' | 'shopping';
+export type ItemType = 'task' | 'assignment' | 'reading' | 'project' | 'exam' | 'note' | 'course' | 'shopping';
 
 export interface NoteFolder {
   id: string;
@@ -973,6 +973,8 @@ function normalizeUnit(unit: string): string {
 export const NLP_PLACEHOLDERS: Record<ItemType, string> = {
   task: 'e.g. Finish chapter 3 CS 101 tomorrow high priority',
   assignment: 'e.g. Essay draft ENG 201 Jan 26 5pm large',
+  reading: 'e.g. Read chapters 5-6 CS 101 by Friday',
+  project: 'e.g. Group project proposal HIST 210 next week large',
   exam: 'e.g. Calc midterm Feb 2 1pm Room 102',
   note: 'e.g. Meeting notes: key points from today',
   course: 'e.g. CS 101 Intro to Computer Science Winter 2026',

@@ -240,9 +240,11 @@ export interface Note {
   taskId: string | null;
   deadlineId: string | null;
   examId: string | null;
+  workItemId: string | null;
   recurringTaskPatternId: string | null;
   recurringDeadlinePatternId: string | null;
   recurringExamPatternId: string | null;
+  recurringWorkPatternId: string | null;
   tags: string[];
   isPinned: boolean;
   links: Array<{
@@ -260,9 +262,11 @@ export interface Note {
   task?: { id: string; title: string } | null;
   deadline?: { id: string; title: string } | null;
   exam?: { id: string; title: string } | null;
+  workItem?: { id: string; title: string; type: WorkItemType } | null;
   recurringTaskPattern?: { id: string; taskTemplate: any } | null;
   recurringDeadlinePattern?: { id: string; deadlineTemplate: any } | null;
   recurringExamPattern?: { id: string; examTemplate: any } | null;
+  recurringWorkPattern?: { id: string; workItemTemplate: any } | null;
   course?: { id: string; code: string; name: string } | null;
   folder?: { id: string; name: string } | null;
 }
@@ -310,6 +314,8 @@ export interface Settings {
   examReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
   deadlineReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
   taskReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
+  readingReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
+  projectReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
   pomodoroWorkDuration?: number;
   pomodoroBreakDuration?: number;
   pomodoroIsMuted?: boolean;
@@ -322,11 +328,15 @@ export interface Settings {
   emailAccountAlerts?: boolean;
   emailDeadlineReminders?: boolean;
   emailTaskReminders?: boolean;
+  emailReadingReminders?: boolean;
+  emailProjectReminders?: boolean;
   notifyAnnouncements?: boolean;
   notifyExamReminders?: boolean;
   notifyAccountAlerts?: boolean;
   notifyDeadlineReminders?: boolean;
   notifyTaskReminders?: boolean;
+  notifyReadingReminders?: boolean;
+  notifyProjectReminders?: boolean;
   useCustomTheme?: boolean;
   customColors?: CustomColors | null;
   gradientIntensity?: number; // 0-100, controls gradient intensity on buttons, nav, filters
@@ -415,6 +425,8 @@ export interface AppData {
   notifications?: Notification[];
   shoppingItems?: ShoppingItem[];
   calendarEvents?: CalendarEvent[];
+  workItems?: WorkItem[];
+  recurringWorkPatterns?: RecurringWorkPattern[];
 }
 
 // Calendar Event Types
@@ -496,3 +508,122 @@ export const WISHLIST_CATEGORIES = [
 ] as const;
 
 export const PANTRY_CATEGORIES = FOOD_CATEGORIES;
+
+// Unified Work Item Types
+export type WorkItemType = 'task' | 'assignment' | 'reading' | 'project';
+export type WorkItemPriority = 'low' | 'medium' | 'high' | 'critical' | null;
+export type WorkItemEffort = 'small' | 'medium' | 'large' | null;
+
+export interface WorkItem {
+  id: string;
+  title: string;
+  type: WorkItemType;
+  courseId: string | null;
+  dueAt: string | null; // ISO datetime
+  priority: WorkItemPriority;
+  effort: WorkItemEffort;
+  pinned: boolean;
+  checklist: Array<{
+    id: string;
+    text: string;
+    done: boolean;
+  }>;
+  notes: string;
+  tags: string[];
+  links: Array<{
+    label: string;
+    url: string;
+  }>;
+  files: Array<{
+    name: string;
+    url: string;
+    size: number;
+  }>;
+  status: 'open' | 'done';
+  workingOn: boolean;
+  createdAt: string; // ISO datetime
+  updatedAt: string; // ISO datetime
+  instanceDate: string | null; // ISO datetime
+  isRecurring: boolean;
+  recurringPatternId: string | null;
+  recurringPattern?: RecurringWorkPattern | null;
+  // Canvas LMS Integration (for type='assignment')
+  canvasAssignmentId?: string | null;
+  canvasSubmissionId?: string | null;
+  canvasPointsPossible?: number | null;
+  canvasPointsEarned?: number | null;
+  canvasGradePostedAt?: string | null;
+  // Optional included course relation
+  course?: {
+    id: string;
+    code: string;
+    name: string;
+    colorTag?: string | null;
+  } | null;
+}
+
+export interface RecurringWorkPattern {
+  id: string;
+  userId: string;
+  recurrenceType: 'daily' | 'weekly' | 'monthly' | 'custom';
+  intervalDays: number | null;
+  daysOfWeek?: number[]; // 0-6, Sunday-Saturday
+  daysOfMonth?: number[]; // 1-31
+  startDate: string | null; // ISO datetime - when recurrence starts
+  endDate: string | null; // ISO datetime
+  occurrenceCount: number | null;
+  lastGenerated: string; // ISO datetime
+  instanceCount: number;
+  workItemTemplate: {
+    title: string;
+    type: WorkItemType;
+    courseId: string | null;
+    notes: string;
+    tags: string[];
+    links: Array<{ label: string; url: string }>;
+    dueTime: string; // HH:mm
+    priority: WorkItemPriority;
+    effort: WorkItemEffort;
+    pinned: boolean;
+    checklist: Array<{ id: string; text: string; done: boolean }>;
+  };
+  isActive: boolean;
+  createdAt: string; // ISO datetime
+  updatedAt: string; // ISO datetime
+}
+
+export interface RecurringWorkFormData {
+  isRecurring: boolean;
+  recurrenceType: 'daily' | 'weekly' | 'monthly' | 'custom';
+  customIntervalDays: number;
+  daysOfWeek: number[]; // 0=Sunday, 1=Monday, ..., 6=Saturday
+  daysOfMonth: number[]; // 1-31 for monthly recurrence
+  startDate: string; // ISO date - when recurrence starts
+  endCondition: 'date' | 'count' | 'never';
+  endDate: string;
+  occurrenceCount: number;
+  dueTime: string; // HH:mm
+}
+
+// Work Item type labels for display
+export const WORK_ITEM_TYPE_LABELS: Record<WorkItemType, string> = {
+  task: 'Task',
+  assignment: 'Assignment',
+  reading: 'Reading',
+  project: 'Project',
+};
+
+// Work Item priority labels for display
+export const WORK_ITEM_PRIORITY_LABELS: Record<Exclude<WorkItemPriority, null>, string> = {
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+  critical: 'Critical',
+};
+
+// Work Item effort labels for display
+export const WORK_ITEM_EFFORT_LABELS: Record<Exclude<WorkItemEffort, null>, string> = {
+  small: 'Small',
+  medium: 'Medium',
+  large: 'Large',
+};

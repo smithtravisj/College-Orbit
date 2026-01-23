@@ -16,10 +16,9 @@ import { isOverdue } from '@/lib/utils';
 import { useIsLightMode } from '@/hooks/useEffectiveTheme';
 import {
   Home,
-  CheckSquare,
+  PenLine,
   BookOpen,
   Calendar,
-  Clock,
   FileText,
   StickyNote,
   ShoppingCart,
@@ -34,8 +33,7 @@ import styles from './Navigation.module.css';
 export const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
-  { href: '/tasks', label: 'Tasks', icon: CheckSquare },
-  { href: '/deadlines', label: 'Assignments', icon: Clock },
+  { href: '/work', label: 'Work', icon: PenLine },
   { href: '/exams', label: 'Exams', icon: FileText },
   { href: '/notes', label: 'Notes', icon: StickyNote },
   { href: '/courses', label: 'Courses', icon: BookOpen },
@@ -50,6 +48,12 @@ export const ADMIN_NAV_ITEMS = [
 
 export default function Navigation() {
   const pathname = usePathname();
+  const [pendingNav, setPendingNav] = useState<string | null>(null);
+
+  // Clear pending nav when pathname changes (page has loaded)
+  useEffect(() => {
+    setPendingNav(null);
+  }, [pathname]);
   const { data: session, status: sessionStatus } = useSession();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
@@ -104,19 +108,26 @@ export default function Navigation() {
   const rawVisiblePages = isPremium ? savedVisiblePages : DEFAULT_VISIBLE_PAGES;
   const rawVisiblePagesOrder = isPremium ? savedVisiblePagesOrder : null;
 
-  // Migrate "Deadlines" to "Assignments"
-  const visiblePages = rawVisiblePages.map((p: string) => p === 'Deadlines' ? 'Assignments' : p);
-  const visiblePagesOrder = rawVisiblePagesOrder ? (rawVisiblePagesOrder as string[]).map((p: string) => p === 'Deadlines' ? 'Assignments' : p) : rawVisiblePagesOrder;
+  // Migrate "Deadlines", "Assignments", and "Tasks" to unified "Work" page
+  const migratePageName = (p: string) => {
+    if (p === 'Deadlines' || p === 'Assignments' || p === 'Tasks') return 'Work';
+    return p;
+  };
+  // Remove duplicates after migration (in case both Tasks and Assignments/Deadlines exist)
+  const visiblePages = [...new Set(rawVisiblePages.map(migratePageName))];
+  const visiblePagesOrder = rawVisiblePagesOrder
+    ? [...new Set((rawVisiblePagesOrder as string[]).map(migratePageName))]
+    : rawVisiblePagesOrder;
 
   // Nav counts settings
   const showNavCounts = useAppStore((state) => state.settings.showNavCounts) ?? false;
   const showNavCountTasks = useAppStore((state) => state.settings.showNavCountTasks) ?? true;
-  const showNavCountAssignments = useAppStore((state) => state.settings.showNavCountAssignments) ?? true;
   const showNavCountExams = useAppStore((state) => state.settings.showNavCountExams) ?? true;
 
-  // Get data for counts
+  // Get data for counts - use workItems (unified) or fall back to tasks for backward compatibility
+  // Note: Matches the work page logic which uses workItems or tasks, not deadlines separately
+  const workItems = useAppStore((state) => state.workItems);
   const tasks = useAppStore((state) => state.tasks);
-  const deadlines = useAppStore((state) => state.deadlines);
   const exams = useAppStore((state) => state.exams);
 
   // Calculate counts
@@ -126,13 +137,16 @@ export default function Navigation() {
     const counts: Record<string, number> = {};
 
     if (showNavCountTasks) {
-      const overdueTasks = tasks.filter(t => t.status === 'open' && t.dueAt && isOverdue(t.dueAt)).length;
-      if (overdueTasks > 0) counts['Tasks'] = overdueTasks;
-    }
-
-    if (showNavCountAssignments) {
-      const overdueAssignments = deadlines.filter(d => d.status === 'open' && d.dueAt && isOverdue(d.dueAt)).length;
-      if (overdueAssignments > 0) counts['Assignments'] = overdueAssignments;
+      // Use workItems if available, otherwise fall back to tasks
+      // This matches the work page logic: useWorkItems = workItems.length > 0 || tasks.length === 0
+      const useWorkItems = workItems.length > 0 || tasks.length === 0;
+      if (useWorkItems) {
+        const overdueWorkItems = workItems.filter(w => w.status === 'open' && w.dueAt && isOverdue(w.dueAt)).length;
+        if (overdueWorkItems > 0) counts['Work'] = overdueWorkItems;
+      } else {
+        const overdueTasks = tasks.filter(t => t.status === 'open' && t.dueAt && isOverdue(t.dueAt)).length;
+        if (overdueTasks > 0) counts['Work'] = overdueTasks;
+      }
     }
 
     if (showNavCountExams) {
@@ -141,7 +155,7 @@ export default function Navigation() {
     }
 
     return counts;
-  }, [showNavCounts, showNavCountTasks, showNavCountAssignments, showNavCountExams, tasks, deadlines, exams]);
+  }, [showNavCounts, showNavCountTasks, showNavCountExams, workItems, tasks, exams]);
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -362,11 +376,12 @@ export default function Navigation() {
         <div className="space-y-3 flex-1" style={{ position: 'relative', zIndex: 1 }}>
           {sortedNavItems.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = (pendingNav ? pendingNav === item.href : pathname === item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setPendingNav(item.href)}
                 aria-current={isActive ? 'page' : undefined}
                 data-tour={item.label === 'Settings' ? 'settings-link' : item.label === 'Courses' ? 'courses-link' : undefined}
                 className={`nav-link-hover relative flex items-center gap-2.5 h-11 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
@@ -412,11 +427,12 @@ export default function Navigation() {
           })}
           {showAdminNav && ADMIN_NAV_ITEMS.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = (pendingNav ? pendingNav === item.href : pathname === item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setPendingNav(item.href)}
                 aria-current={isActive ? 'page' : undefined}
                 className={`nav-link-hover relative flex items-center gap-2.5 h-11 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   isActive
@@ -447,18 +463,19 @@ export default function Navigation() {
             <div className="flex items-center justify-between">
               <Link
                 href="/account"
+                onClick={() => setPendingNav('/account')}
                 className={`nav-link-hover flex items-center gap-2.5 flex-1 h-11 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
-                  pathname === '/account'
+                  (pendingNav ? pendingNav === '/account' : pathname === '/account')
                     ? 'text-[var(--text)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
                 style={{
                   padding: '0 16px 0 11px',
-                  backgroundColor: pathname === '/account' ? accentColor : 'transparent',
-                  backgroundImage: pathname === '/account'
+                  backgroundColor: (pendingNav ? pendingNav === '/account' : pathname === '/account') ? accentColor : 'transparent',
+                  backgroundImage: (pendingNav ? pendingNav === '/account' : pathname === '/account')
                     ? activeGradient
                     : 'none',
-                  boxShadow: pathname === '/account'
+                  boxShadow: (pendingNav ? pendingNav === '/account' : pathname === '/account')
                     ? `0 0 ${glowSpread}px ${accentColor}${glowOpacity}, 0 3px 12px ${accentColor}40`
                     : undefined,
                 }}
@@ -505,11 +522,12 @@ export default function Navigation() {
           <nav className={styles.drawerNav} style={{ position: 'relative', zIndex: 1 }}>
             {sortedNavItems.filter(item => (visiblePages.includes(item.label) || item.label === 'Settings') && item.label !== 'Tools').map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href;
+              const isActive = (pendingNav ? pendingNav === item.href : pathname === item.href);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => setPendingNav(item.href)}
                   className={`${styles.drawerLink} ${isActive ? styles.active : ''}`}
                   style={isActive ? {
                     backgroundImage: activeGradient,
@@ -543,11 +561,12 @@ export default function Navigation() {
             })}
             {showAdminNav && ADMIN_NAV_ITEMS.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href;
+              const isActive = (pendingNav ? pendingNav === item.href : pathname === item.href);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => setPendingNav(item.href)}
                   className={`${styles.drawerLink} ${isActive ? styles.active : ''}`}
                   style={isActive ? {
                     backgroundImage: activeGradient,
@@ -566,8 +585,9 @@ export default function Navigation() {
             <div className={styles.drawerFooter} style={{ position: 'relative', zIndex: 1 }}>
               <Link
                 href="/account"
-                className={`${styles.drawerLink} ${pathname === '/account' ? styles.active : ''}`}
-                style={pathname === '/account' ? {
+                onClick={() => setPendingNav('/account')}
+                className={`${styles.drawerLink} ${(pendingNav ? pendingNav === '/account' : pathname === '/account') ? styles.active : ''}`}
+                style={(pendingNav ? pendingNav === '/account' : pathname === '/account') ? {
                   backgroundImage: activeGradient,
                   boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
                 } : undefined}

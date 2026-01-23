@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useEffect, useRef, useState } from 'react';
-import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent } from '@/types';
+import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent, WorkItem } from '@/types';
 import {
   getWeekRange,
   getEventsForDate,
@@ -28,9 +28,11 @@ interface CalendarWeekViewProps {
   courses: Course[];
   tasks: Task[];
   deadlines: Deadline[];
+  workItems?: WorkItem[];
   exams?: Exam[];
   allTasks?: Task[];
   allDeadlines?: Deadline[];
+  allWorkItems?: WorkItem[];
   excludedDates?: ExcludedDate[];
   calendarEvents?: CustomCalendarEvent[];
   onTimeSlotClick?: (date: Date, time?: string, allDay?: boolean) => void;
@@ -48,9 +50,11 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
   courses,
   tasks,
   deadlines,
+  workItems = [],
   exams = [],
   allTasks = [],
   allDeadlines = [],
+  allWorkItems = [],
   excludedDates = [],
   calendarEvents = [],
   onEventUpdate,
@@ -101,11 +105,11 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
   const eventsByDay = useMemo(() => {
     const map = new Map<string, ReturnType<typeof getEventsForDate>>();
     weekDays.forEach((day) => {
-      const events = getEventsForDate(day, courses, tasks, deadlines, exams, excludedDates, calendarEvents);
+      const events = getEventsForDate(day, courses, tasks, deadlines, exams, excludedDates, calendarEvents, workItems);
       map.set(day.toISOString().split('T')[0], events);
     });
     return map;
-  }, [weekDays, courses, tasks, deadlines, exams, excludedDates, calendarEvents]);
+  }, [weekDays, courses, tasks, deadlines, workItems, exams, excludedDates, calendarEvents]);
 
   const eventLayoutsByDay = useMemo(() => {
     const map = new Map<string, ReturnType<typeof calculateEventLayout>>();
@@ -858,6 +862,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
         courses={courses}
         tasks={allTasks.length > 0 ? allTasks : tasks}
         deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
+        workItems={allWorkItems && allWorkItems.length > 0 ? allWorkItems : workItems}
         exams={exams}
         calendarEvents={calendarEvents}
         onEventUpdate={onEventUpdate}

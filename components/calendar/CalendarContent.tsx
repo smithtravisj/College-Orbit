@@ -23,6 +23,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 interface CachedCalendarData {
   tasks: any[];
   deadlines: any[];
+  workItems: any[];
   exams: any[];
   calendarEvents: CalendarEvent[];
   courses: any[];
@@ -59,9 +60,11 @@ export default function CalendarContent() {
   const [selectedDay, setSelectedDay] = useState<Date>(new Date()); // For mobile: track selected day separate from month
   const [filteredTasks, setFilteredTasks] = useState<any[]>([]);
   const [filteredDeadlines, setFilteredDeadlines] = useState<any[]>([]);
+  const [filteredWorkItems, setFilteredWorkItems] = useState<any[]>([]);
   const [filteredExams, setFilteredExams] = useState<any[]>([]);
   const [allTaskInstances, setAllTaskInstances] = useState<any[]>([]);
   const [allDeadlineInstances, setAllDeadlineInstances] = useState<any[]>([]);
+  const [allWorkItemInstances, setAllWorkItemInstances] = useState<any[]>([]);
   const [allExamInstances, setAllExamInstances] = useState<any[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [cachedCourses, setCachedCourses] = useState<any[]>([]);
@@ -73,7 +76,7 @@ export default function CalendarContent() {
   const hasFilteredRef = useRef(false);
   const cacheLoadedRef = useRef(false);
 
-  const { courses, tasks, deadlines, exams, excludedDates, calendarEvents: storeCalendarEvents, initializeStore } = useAppStore();
+  const { courses, tasks, deadlines, workItems, exams, excludedDates, calendarEvents: storeCalendarEvents, initializeStore } = useAppStore();
 
   // Initialize calendar events from store immediately (store loads from localStorage on startup)
   // This provides instant data while fresh data is fetched in the background
@@ -102,6 +105,7 @@ export default function CalendarContent() {
                 console.log('[Calendar] Loading from cache');
                 setAllTaskInstances(parsed.tasks || []);
                 setAllDeadlineInstances(parsed.deadlines || []);
+                setAllWorkItemInstances(parsed.workItems || []);
                 setAllExamInstances(parsed.exams || []);
                 if (parsed.calendarEvents) {
                   setCalendarEvents(parsed.calendarEvents);
@@ -132,10 +136,12 @@ export default function CalendarContent() {
 
           const allOpenTasks = (data.tasks || []).filter((task: any) => task.status !== 'done');
           const allOpenDeadlines = (data.deadlines || []).filter((deadline: any) => deadline.status !== 'done');
+          const allOpenWorkItems = (data.workItems || []).filter((item: any) => item.status !== 'done');
           const allOpenExams = (data.exams || []).filter((exam: any) => exam.status !== 'completed');
 
           setAllTaskInstances(allOpenTasks);
           setAllDeadlineInstances(allOpenDeadlines);
+          setAllWorkItemInstances(allOpenWorkItems);
           setAllExamInstances(allOpenExams);
           setCalendarEvents(data.calendarEvents || []);
           setCachedCourses(data.courses || []);
@@ -147,6 +153,7 @@ export default function CalendarContent() {
               const fetchedData: CachedCalendarData = {
                 tasks: allOpenTasks,
                 deadlines: allOpenDeadlines,
+                workItems: allOpenWorkItems,
                 exams: allOpenExams,
                 calendarEvents: data.calendarEvents || [],
                 courses: data.courses || [],
@@ -167,21 +174,23 @@ export default function CalendarContent() {
     loadCalendarData();
   }, []);
 
-  // Filter out completed tasks and deadlines on mount and when data loads
+  // Filter out completed tasks, deadlines, and work items on mount and when data loads
   useEffect(() => {
     // Only filter if we haven't filtered yet OR if the arrays were empty and now have data
     if (!hasFilteredRef.current || (filteredTasks.length === 0 && (tasks.length > 0 || allTaskInstances.length > 0))) {
       // Use fetched instances if available, otherwise fall back to store data
       const tasksToUse = allTaskInstances.length > 0 ? allTaskInstances : tasks;
       const deadlinesToUse = allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines;
+      const workItemsToUse = allWorkItemInstances.length > 0 ? allWorkItemInstances : workItems;
       const examsToUse = allExamInstances.length > 0 ? allExamInstances : exams;
 
       setFilteredTasks(tasksToUse.filter(task => task.status !== 'done'));
       setFilteredDeadlines(deadlinesToUse.filter(deadline => deadline.status !== 'done'));
+      setFilteredWorkItems(workItemsToUse.filter(item => item.status !== 'done'));
       setFilteredExams(examsToUse.filter(exam => exam.status !== 'completed'));
       hasFilteredRef.current = true;
     }
-  }, [tasks.length, deadlines.length, exams.length, allTaskInstances.length, allDeadlineInstances.length, allExamInstances.length]);
+  }, [tasks.length, deadlines.length, workItems.length, exams.length, allTaskInstances.length, allDeadlineInstances.length, allWorkItemInstances.length, allExamInstances.length]);
 
   useEffect(() => {
     // Read view from localStorage (persists across refreshes)
@@ -658,9 +667,11 @@ export default function CalendarContent() {
                     courses={cachedCourses.length > 0 ? cachedCourses : courses}
                     tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
                     deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
+                    workItems={allWorkItemInstances.length > 0 ? allWorkItemInstances : filteredWorkItems}
                     exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
+                    allWorkItems={allWorkItemInstances.length > 0 ? allWorkItemInstances : workItems}
                     excludedDates={cachedExcludedDates.length > 0 ? cachedExcludedDates : excludedDates}
                     calendarEvents={calendarEvents}
                     onSelectDate={handleSelectDate}
@@ -676,9 +687,11 @@ export default function CalendarContent() {
                     courses={cachedCourses.length > 0 ? cachedCourses : courses}
                     tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
                     deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
+                    workItems={allWorkItemInstances.length > 0 ? allWorkItemInstances : filteredWorkItems}
                     exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
+                    allWorkItems={allWorkItemInstances.length > 0 ? allWorkItemInstances : workItems}
                     excludedDates={cachedExcludedDates.length > 0 ? cachedExcludedDates : excludedDates}
                     calendarEvents={calendarEvents}
                     onTimeSlotClick={handleTimeSlotClick}
@@ -698,9 +711,11 @@ export default function CalendarContent() {
                     courses={cachedCourses.length > 0 ? cachedCourses : courses}
                     tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
                     deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
+                    workItems={allWorkItemInstances.length > 0 ? allWorkItemInstances : filteredWorkItems}
                     exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
+                    allWorkItems={allWorkItemInstances.length > 0 ? allWorkItemInstances : workItems}
                     excludedDates={cachedExcludedDates.length > 0 ? cachedExcludedDates : excludedDates}
                     calendarEvents={calendarEvents}
                     onSelectDate={handleSelectDate}
@@ -714,9 +729,11 @@ export default function CalendarContent() {
                     courses={cachedCourses.length > 0 ? cachedCourses : courses}
                     tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
                     deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
+                    workItems={allWorkItemInstances.length > 0 ? allWorkItemInstances : filteredWorkItems}
                     exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
+                    allWorkItems={allWorkItemInstances.length > 0 ? allWorkItemInstances : workItems}
                     excludedDates={cachedExcludedDates.length > 0 ? cachedExcludedDates : excludedDates}
                     calendarEvents={calendarEvents}
                     onTimeSlotClick={handleTimeSlotClick}
@@ -731,9 +748,11 @@ export default function CalendarContent() {
                     courses={cachedCourses.length > 0 ? cachedCourses : courses}
                     tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
                     deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
+                    workItems={allWorkItemInstances.length > 0 ? allWorkItemInstances : filteredWorkItems}
                     exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
                     allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
                     allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
+                    allWorkItems={allWorkItemInstances.length > 0 ? allWorkItemInstances : workItems}
                     excludedDates={cachedExcludedDates.length > 0 ? cachedExcludedDates : excludedDates}
                     calendarEvents={calendarEvents}
                     onTimeSlotClick={handleTimeSlotClick}

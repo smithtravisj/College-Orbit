@@ -38,6 +38,8 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
     exam: eventColors.exam,
     deadline: eventColors.deadline,
     event: eventColors.event,
+    reading: eventColors.reading,
+    project: eventColors.project,
   };
   const borderColor = colorMap[item.type];
 

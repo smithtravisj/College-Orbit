@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useEffect, useRef, useState } from 'react';
-import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent } from '@/types';
+import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent, WorkItem } from '@/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   getEventsForDate,
@@ -27,9 +27,11 @@ interface CalendarDayViewProps {
   courses: Course[];
   tasks: Task[];
   deadlines: Deadline[];
+  workItems?: WorkItem[];
   exams?: Exam[];
   allTasks?: Task[];
   allDeadlines?: Deadline[];
+  allWorkItems?: WorkItem[];
   excludedDates?: ExcludedDate[];
   calendarEvents?: CustomCalendarEvent[];
   onTimeSlotClick?: (date: Date, time?: string, allDay?: boolean) => void;
@@ -47,9 +49,11 @@ const CalendarDayView = React.memo(function CalendarDayView({
   courses,
   tasks,
   deadlines,
+  workItems = [],
   exams = [],
   allTasks = [],
   allDeadlines = [],
+  allWorkItems = [],
   excludedDates = [],
   calendarEvents = [],
   onEventUpdate,
@@ -93,8 +97,8 @@ const CalendarDayView = React.memo(function CalendarDayView({
   }, [isViewingToday]);
 
   const events = useMemo(
-    () => getEventsForDate(date, courses, tasks, deadlines, exams, excludedDates, calendarEvents),
-    [date, courses, tasks, deadlines, exams, excludedDates, calendarEvents]
+    () => getEventsForDate(date, courses, tasks, deadlines, exams, excludedDates, calendarEvents, workItems),
+    [date, courses, tasks, deadlines, workItems, exams, excludedDates, calendarEvents]
   );
 
   const courseEvents = useMemo(() => events.filter((e) => e.type === 'course'), [events]);
@@ -721,6 +725,7 @@ const CalendarDayView = React.memo(function CalendarDayView({
         courses={courses}
         tasks={allTasks.length > 0 ? allTasks : tasks}
         deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
+        workItems={allWorkItems && allWorkItems.length > 0 ? allWorkItems : workItems}
         exams={exams}
         calendarEvents={calendarEvents}
         onEventUpdate={onEventUpdate}

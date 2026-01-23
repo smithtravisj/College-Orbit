@@ -32,6 +32,8 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
       recurringExamPatterns,
       shoppingItems,
       calendarEvents,
+      workItems,
+      recurringWorkPatterns,
     ] = await Promise.all([
       prisma.course.findMany({
         where: { userId },
@@ -94,6 +96,13 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
         where: { userId },
         orderBy: { startAt: 'asc' },
       }),
+      prisma.workItem.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.recurringWorkPattern.findMany({
+        where: { userId },
+      }),
     ]);
 
     // Return all data in a single response
@@ -124,6 +133,8 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
       recurringExamPatterns,
       shoppingItems,
       calendarEvents,
+      workItems,
+      recurringWorkPatterns,
     });
   } catch (error) {
     console.error('Error fetching initial data:', error);

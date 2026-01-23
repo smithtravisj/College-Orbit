@@ -37,7 +37,7 @@ export default function TermsContent() {
         <Card title="Description of Service">
           <div className="space-y-4">
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              College Orbit is an educational productivity platform designed to help students manage their academic and personal lives. The Service provides features for organizing courses, tracking deadlines, managing tasks, maintaining a calendar, calculating GPA, managing shopping lists, and organizing academic information.
+              College Orbit is an educational productivity platform designed to help students manage their academic and personal lives. The Service provides features for organizing courses, managing work items (tasks, assignments, readings, and projects), maintaining a calendar, calculating GPA, managing shopping lists, and organizing academic information.
             </p>
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
@@ -45,13 +45,12 @@ export default function TermsContent() {
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <li>Canvas LMS integration to sync courses, assignments, grades, calendar events, and announcements</li>
-                <li>Personal task management with importance levels and checklists</li>
-                <li>Assignment tracking with priority and effort markers</li>
-                <li>Recurring tasks, assignments, and exams with flexible scheduling</li>
+                <li>Unified work management for tasks, assignments, readings, and projects with priorities, effort levels, checklists, and tags</li>
+                <li>Recurring work items and exams with flexible scheduling</li>
                 <li>Course and calendar organization with meeting schedules</li>
                 <li>Custom calendar events for personal scheduling</li>
                 <li>Exam tracking with customizable reminders</li>
-                <li>Rich text note-taking with folder organization, linking to tasks/assignments/exams, and file attachments (up to 5MB per file)</li>
+                <li>Rich text note-taking with folder organization, linking to work items and exams, and file attachments (up to 5MB per file)</li>
                 <li>GPA calculation and tracking</li>
                 <li>Shopping lists (grocery, wishlist, and pantry inventory)</li>
                 <li>Pomodoro productivity timer</li>
@@ -140,7 +139,7 @@ export default function TermsContent() {
                 Ownership
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                You retain full ownership of all content, data, and information you create in the Service (courses, tasks, assignments, exams, notes, file attachments, shopping lists, calendar events, etc.). We do not claim ownership of your data.
+                You retain full ownership of all content, data, and information you create in the Service (courses, work items, exams, notes, file attachments, shopping lists, calendar events, etc.). We do not claim ownership of your data.
               </p>
             </div>
             <div>
@@ -265,7 +264,7 @@ export default function TermsContent() {
                 Calendar Export & External Calendars
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                College Orbit allows you to export your calendar data (deadlines, exams, tasks, courses, and custom events) to external calendar applications like Google Calendar, Apple Calendar, and others. You can download a one-time iCal file or generate a subscription URL that automatically syncs with your College Orbit data. The subscription URL contains a unique token—anyone with this URL can view your calendar data. You are responsible for keeping your subscription URL private. You can regenerate your token at any time to invalidate previous URLs.
+                College Orbit allows you to export your calendar data (work items, exams, courses, and custom events) to external calendar applications like Google Calendar, Apple Calendar, and others. You can download a one-time iCal file or generate a subscription URL that automatically syncs with your College Orbit data. The subscription URL contains a unique token—anyone with this URL can view your calendar data. You are responsible for keeping your subscription URL private. You can regenerate your token at any time to invalidate previous URLs.
               </p>
             </div>
             <div>

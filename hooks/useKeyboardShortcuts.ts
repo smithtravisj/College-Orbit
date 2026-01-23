@@ -10,8 +10,8 @@ export const KEYBOARD_SHORTCUTS = {
     shortcuts: [
       { keys: ['G', 'H'], description: 'Go to Dashboard (Home)' },
       { keys: ['G', 'C'], description: 'Go to Calendar' },
-      { keys: ['G', 'T'], description: 'Go to Tasks' },
-      { keys: ['G', 'A'], description: 'Go to Assignments' },
+      { keys: ['G', 'T'], description: 'Go to Work' },
+      { keys: ['G', 'A'], description: 'Go to Work' },
       { keys: ['G', 'E'], description: 'Go to Exams' },
       { keys: ['G', 'N'], description: 'Go to Notes' },
       { keys: ['G', 'O'], description: 'Go to Courses' },
@@ -54,8 +54,8 @@ export const KEYBOARD_SHORTCUTS = {
 const NAV_ROUTES: Record<string, string> = {
   h: '/',
   c: '/calendar',
-  t: '/tasks',
-  a: '/deadlines',
+  t: '/work',
+  a: '/work',
   e: '/exams',
   n: '/notes',
   o: '/courses',

@@ -1958,6 +1958,8 @@ interface ColorblindSemanticColors {
   eventExam: string;
   eventDeadline: string;
   eventCalendar: string;
+  eventReading: string;
+  eventProject: string;
 }
 
 // Colorblind-friendly semantic colors for each type
@@ -1981,6 +1983,8 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       eventExam: '#CC79A7',     // Pink/magenta (instead of red)
       eventDeadline: '#E69F00', // Orange-yellow (visible)
       eventCalendar: '#009E73', // Bluish green (instead of purple)
+      eventReading: '#44AA99',  // Teal (distinguishable from blue/yellow)
+      eventProject: '#882255',  // Wine/burgundy (distinguishable)
     },
     light: {
       success: '#0072B2',    // Darker blue
@@ -1998,6 +2002,8 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       eventExam: '#CC79A7',     // Pink/magenta (instead of red)
       eventDeadline: '#E69F00', // Orange-yellow (visible)
       eventCalendar: '#009E73', // Bluish green (instead of purple)
+      eventReading: '#44AA99',  // Teal (distinguishable from blue/yellow)
+      eventProject: '#882255',  // Wine/burgundy (distinguishable)
     },
   },
   // Deuteranopia (green-blind): similar to protanopia
@@ -2018,6 +2024,8 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       eventExam: '#CC79A7',     // Pink/magenta (instead of red)
       eventDeadline: '#E69F00', // Orange-yellow (visible)
       eventCalendar: '#009E73', // Bluish green (instead of purple)
+      eventReading: '#44AA99',  // Teal (distinguishable from blue/yellow)
+      eventProject: '#882255',  // Wine/burgundy (distinguishable)
     },
     light: {
       success: '#0072B2',    // Blue
@@ -2035,6 +2043,8 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       eventExam: '#CC79A7',     // Pink/magenta (instead of red)
       eventDeadline: '#E69F00', // Orange-yellow (visible)
       eventCalendar: '#009E73', // Bluish green (instead of purple)
+      eventReading: '#44AA99',  // Teal (distinguishable from blue/yellow)
+      eventProject: '#882255',  // Wine/burgundy (distinguishable)
     },
   },
   // Tritanopia (blue-blind): avoid blue, use red/green distinction
@@ -2055,6 +2065,8 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       eventExam: '#CC3311',     // Red (visible)
       eventDeadline: '#E69F00', // Orange (visible)
       eventCalendar: '#CC79A7', // Pink (instead of purple)
+      eventReading: '#117733',  // Dark green (visible without blue)
+      eventProject: '#AA4499',  // Purple-pink (visible)
     },
     light: {
       success: '#009E73',    // Bluish green
@@ -2072,6 +2084,8 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       eventExam: '#CC3311',     // Red (visible)
       eventDeadline: '#E69F00', // Orange (visible)
       eventCalendar: '#CC79A7', // Pink (instead of purple)
+      eventReading: '#117733',  // Dark green (visible without blue)
+      eventProject: '#AA4499',  // Purple-pink (visible)
     },
   },
   // Achromatopsia (monochromacy): use brightness/value differences only
@@ -2092,6 +2106,8 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       eventExam: '#404040',     // Dark gray
       eventDeadline: '#606060', // Medium-dark gray
       eventCalendar: '#D0D0D0', // Light gray
+      eventReading: '#909090',  // Medium-light gray
+      eventProject: '#505050',  // Medium-dark gray
     },
     light: {
       success: '#505050',    // Dark gray
@@ -2109,6 +2125,8 @@ const colorblindPalettes: Record<ColorblindMode, { dark: ColorblindSemanticColor
       eventExam: '#202020',     // Very dark gray
       eventDeadline: '#404040', // Dark gray
       eventCalendar: '#A0A0A0', // Light gray
+      eventReading: '#707070',  // Medium gray
+      eventProject: '#303030',  // Dark gray
     },
   },
 };
@@ -2120,6 +2138,8 @@ const defaultEventColors = {
   exam: '#ef4444',     // Red
   deadline: '#ff7d00', // Orange
   event: '#a855f7',    // Purple
+  reading: '#06b6d4',  // Cyan
+  project: '#ec4899',  // Pink
 };
 
 /**
@@ -2131,7 +2151,7 @@ export function getEventTypeColors(
   colorblindMode: ColorblindMode | null | undefined,
   theme: 'light' | 'dark' = 'dark',
   colorblindStyle?: ColorblindStyle | null
-): { course: string; task: string; exam: string; deadline: string; event: string } {
+): { course: string; task: string; exam: string; deadline: string; event: string; reading: string; project: string } {
   if (!colorblindMode) {
     return defaultEventColors;
   }
@@ -2152,6 +2172,8 @@ export function getEventTypeColors(
     exam: palette.eventExam,
     deadline: palette.eventDeadline,
     event: palette.eventCourse,
+    reading: palette.eventReading,
+    project: palette.eventProject,
   };
 }
 
@@ -2190,6 +2212,8 @@ export function applyColorblindMode(
     root.style.removeProperty('--cb-event-exam');
     root.style.removeProperty('--cb-event-deadline');
     root.style.removeProperty('--cb-event-calendar');
+    root.style.removeProperty('--cb-event-reading');
+    root.style.removeProperty('--cb-event-project');
     return;
   }
 
@@ -2218,6 +2242,8 @@ export function applyColorblindMode(
     root.style.setProperty('--cb-event-exam', palette.eventExam);
     root.style.setProperty('--cb-event-deadline', palette.eventDeadline);
     root.style.setProperty('--cb-event-calendar', palette.eventCalendar);
+    root.style.setProperty('--cb-event-reading', palette.eventReading);
+    root.style.setProperty('--cb-event-project', palette.eventProject);
 
     // Override main semantic colors
     root.style.setProperty('--success', palette.success);

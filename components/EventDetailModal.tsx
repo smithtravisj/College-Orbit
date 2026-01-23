@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { Course, Task, Deadline, Exam, CalendarEvent as CustomCalendarEvent } from '@/types';
+import { Course, Task, Deadline, Exam, CalendarEvent as CustomCalendarEvent, WorkItem } from '@/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { CalendarEvent } from '@/lib/calendarUtils';
 import useAppStore from '@/lib/store';
@@ -27,6 +27,7 @@ interface EventDetailModalProps {
   courses: Course[];
   tasks: Task[];
   deadlines: Deadline[];
+  workItems?: WorkItem[];
   exams?: Exam[];
   calendarEvents?: CustomCalendarEvent[];
   onEventUpdate?: (updatedEvent: CustomCalendarEvent) => void;
@@ -80,6 +81,7 @@ export default function EventDetailModal({
   courses,
   tasks,
   deadlines,
+  workItems = [],
   exams = [],
   calendarEvents = [],
   onEventUpdate,
@@ -137,7 +139,7 @@ export default function EventDetailModal({
 
   if (!isOpen || !event) return null;
 
-  let fullData: Course | Task | Deadline | Exam | CustomCalendarEvent | null = null;
+  let fullData: Course | Task | Deadline | Exam | CustomCalendarEvent | WorkItem | null = null;
   let relatedCourse: Course | null = null;
 
   if (event.type === 'course') {
@@ -164,6 +166,17 @@ export default function EventDetailModal({
       const courseId = (fullData as Deadline).courseId;
       relatedCourse = courses.find((c) => c.id === courseId) || null;
     }
+  } else if (event.type === 'reading' || event.type === 'project') {
+    // WorkItem types: reading and project
+    if (event.instanceDate) {
+      fullData = workItems.find((w) => w.id === event.id && (w as any).instanceDate === event.instanceDate) || null;
+    } else {
+      fullData = workItems.find((w) => w.id === event.id) || null;
+    }
+    if (fullData && 'courseId' in fullData && fullData.courseId) {
+      const courseId = (fullData as WorkItem).courseId;
+      relatedCourse = courses.find((c) => c.id === courseId) || null;
+    }
   } else if (event.type === 'exam') {
     // For recurring exams, match both ID and instanceDate to get the correct instance
     if (event.instanceDate) {
@@ -186,6 +199,8 @@ export default function EventDetailModal({
     if (event.type === 'course') return '#3d5fa5';
     if (event.type === 'task') return '#3d7855';
     if (event.type === 'deadline') return '#7d5c52';
+    if (event.type === 'reading') return '#0891b2'; // Cyan
+    if (event.type === 'project') return '#be185d'; // Pink
     if (event.type === 'exam') return '#c41e3a';
     if (event.type === 'event') return event.color || '#a855f7'; // Purple for custom events
     return '#666';
@@ -633,7 +648,9 @@ export default function EventDetailModal({
           ) : event.type === 'course' && 'meetingTimes' in fullData ? (
             <CourseContent event={event} course={fullData} />
           ) : event.type === 'task' && 'checklist' in fullData ? (
-            <TaskContent task={fullData} relatedCourse={relatedCourse} />
+            <TaskContent task={fullData as Task} relatedCourse={relatedCourse} />
+          ) : (event.type === 'reading' || event.type === 'project') && 'type' in fullData ? (
+            <WorkItemContent workItem={fullData as WorkItem} relatedCourse={relatedCourse} eventType={event.type} />
           ) : event.type === 'deadline' ? (
             <DeadlineContent deadline={fullData as Deadline} relatedCourse={relatedCourse} />
           ) : event.type === 'exam' ? (
@@ -1477,6 +1494,174 @@ function TaskContent({ task, relatedCourse }: TaskContentProps) {
               >
                 {file.name}
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                  ({file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`})
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface WorkItemContentProps {
+  workItem: WorkItem;
+  relatedCourse: Course | null;
+  eventType: 'reading' | 'project';
+}
+
+function WorkItemContent({ workItem, relatedCourse, eventType }: WorkItemContentProps) {
+  const isMobile = useIsMobile();
+  const typeLabel = eventType === 'reading' ? 'Reading' : 'Project';
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
+      {relatedCourse && (
+        <div>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
+            Related Course
+          </p>
+          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+            {relatedCourse.code}: {relatedCourse.name}
+          </p>
+        </div>
+      )}
+
+      <div>
+        <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
+          Type
+        </p>
+        <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+          {typeLabel}
+        </p>
+      </div>
+
+      {workItem.dueAt && (
+        <div>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
+            Due Date
+          </p>
+          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+            {formatDateTimeWithTime(workItem.dueAt)}
+          </p>
+        </div>
+      )}
+
+      {workItem.notes && (
+        <div>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
+            Notes
+          </p>
+          <p
+            style={{
+              fontSize: isMobile ? '0.75rem' : '0.875rem',
+              color: 'var(--text)',
+              margin: 0,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+            }}
+          >
+            {workItem.notes}
+          </p>
+        </div>
+      )}
+
+      {workItem.checklist && workItem.checklist.length > 0 && (
+        <div>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 8px 0' : '0 0 12px 0' }}>
+            Checklist
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
+            {workItem.checklist.map((item) => (
+              <label
+                key={item.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: isMobile ? '8px' : '10px',
+                  cursor: 'pointer',
+                  padding: isMobile ? '4px' : '8px',
+                  borderRadius: '4px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={item.done}
+                  readOnly
+                  style={{
+                    width: isMobile ? '14px' : '16px',
+                    height: isMobile ? '14px' : '16px',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: isMobile ? '0.75rem' : '0.875rem',
+                    color: item.done ? 'var(--text-muted)' : 'var(--text)',
+                    textDecoration: item.done ? 'line-through' : 'none',
+                  }}
+                >
+                  {item.text}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {workItem.links && workItem.links.length > 0 && (
+        <div>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 8px 0' : '0 0 12px 0' }}>
+            Links
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
+            {workItem.links.map((link, idx) => (
+              <a
+                key={idx}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontSize: isMobile ? '0.75rem' : '0.875rem',
+                  color: 'var(--link)',
+                  textDecoration: 'none',
+                }}
+              >
+                {link.label || link.url}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {workItem.files && workItem.files.length > 0 && (
+        <div>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 8px 0' : '0 0 12px 0' }}>
+            Attachments
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
+            {workItem.files.map((file, idx) => (
+              <a
+                key={idx}
+                href={file.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontSize: isMobile ? '0.75rem' : '0.875rem',
+                  color: 'var(--link)',
+                  textDecoration: 'none',
+                }}
+              >
+                {file.name}{' '}
+                <span style={{ color: 'var(--text-muted)' }}>
                   ({file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`})
                 </span>
               </a>

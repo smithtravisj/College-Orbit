@@ -107,11 +107,12 @@ export function useTimelineData({
   const initialOverdueIdsRef = useRef<Set<string> | null>(null);
 
   // Single selector with shallow comparison to reduce re-renders
-  const { courses, tasks, deadlines, exams, calendarEvents, excludedDates, loading, initialized } = useAppStore(
+  const { courses, tasks, deadlines, workItems, exams, calendarEvents, excludedDates, loading, initialized } = useAppStore(
     useShallow((state) => ({
       courses: state.courses,
       tasks: state.tasks,
       deadlines: state.deadlines,
+      workItems: state.workItems,
       exams: state.exams,
       calendarEvents: state.calendarEvents,
       excludedDates: state.excludedDates,
@@ -119,6 +120,9 @@ export function useTimelineData({
       initialized: state.initialized,
     }))
   );
+
+  // Use workItems if available, otherwise fall back to tasks + deadlines for backward compatibility
+  const useWorkItems = workItems.length > 0 || (tasks.length === 0 && deadlines.length === 0);
 
   const groupedData = useMemo<TimelineGroupedData>(() => {
     const today = new Date();
@@ -173,100 +177,162 @@ export function useTimelineData({
           });
       }
 
-      // 2. Tasks for this day
-      if (itemTypes.includes('task')) {
-        tasks
-          .filter((task) => {
-            if (!task.dueAt) return false;
-            const taskDate = new Date(task.dueAt);
-            taskDate.setHours(0, 0, 0, 0);
-            return taskDate.getTime() === date.getTime();
-          })
-          .forEach((task) => {
-            const taskDate = new Date(task.dueAt!);
-            const course = task.courseId ? courses.find((c) => c.id === task.courseId) : null;
-            const taskIsOverdue = task.status === 'open' && isOverdue(task.dueAt!);
+      // 2. Tasks and Deadlines for this day
+      // Use workItems if available, otherwise fall back to separate tasks + deadlines
+      if (useWorkItems) {
+        // Unified work items
+        if (itemTypes.includes('task') || itemTypes.includes('deadline')) {
+          workItems
+            .filter((item) => {
+              if (!item.dueAt) return false;
+              const itemDate = new Date(item.dueAt);
+              itemDate.setHours(0, 0, 0, 0);
+              return itemDate.getTime() === date.getTime();
+            })
+            .forEach((item) => {
+              const itemDate = new Date(item.dueAt!);
+              const course = item.courseId ? courses.find((c) => c.id === item.courseId) : null;
+              const itemIsOverdue = item.status === 'open' && isOverdue(item.dueAt!);
+              // Map work item type to timeline type
+              const getTimelineType = (workItemType: string): TimelineItemType => {
+                switch (workItemType) {
+                  case 'assignment': return 'deadline';
+                  case 'reading': return 'reading';
+                  case 'project': return 'project';
+                  default: return 'task';
+                }
+              };
+              const timelineType: TimelineItemType = getTimelineType(item.type);
 
-            if (taskIsOverdue && isToday) {
-              hasOverdue = true;
-            }
+              // Skip if this type is not requested (reading/project are filtered with task)
+              const filterType = timelineType === 'reading' || timelineType === 'project' ? 'task' : timelineType;
+              if (!itemTypes.includes(filterType)) return;
 
-            // Only count actionable items (open tasks)
-            if (task.status === 'open') {
-              dayTotal++;
-              totalActionable++;
-            } else if (task.status === 'done') {
-              dayCompleted++;
-              totalCompleted++;
-              dayTotal++;
-              totalActionable++;
-            }
+              if (itemIsOverdue && isToday) {
+                hasOverdue = true;
+              }
 
-            items.push({
-              id: `task-${task.id}`,
-              type: 'task',
-              title: task.title,
-              time: isDefaultTime(taskDate) ? null : formatTimeFromDate(taskDate),
-              courseId: task.courseId,
-              courseName: course?.name,
-              courseCode: course?.code,
-              isAllDay: isDefaultTime(taskDate),
-              isOverdue: taskIsOverdue,
-              isCompleted: task.status === 'done',
-              originalItem: task,
-              links: task.links,
-              files: task.files,
-              canComplete: true,
+              if (item.status === 'open') {
+                dayTotal++;
+                totalActionable++;
+              } else if (item.status === 'done') {
+                dayCompleted++;
+                totalCompleted++;
+                dayTotal++;
+                totalActionable++;
+              }
+
+              items.push({
+                id: `${timelineType}-${item.id}`,
+                type: timelineType,
+                title: item.title,
+                time: isDefaultTime(itemDate) ? null : formatTimeFromDate(itemDate),
+                courseId: item.courseId,
+                courseName: course?.name,
+                courseCode: course?.code,
+                isAllDay: isDefaultTime(itemDate),
+                isOverdue: itemIsOverdue,
+                isCompleted: item.status === 'done',
+                originalItem: item,
+                links: item.links,
+                files: item.files,
+                canComplete: true,
+              });
             });
-          });
-      }
+        }
+      } else {
+        // Legacy: separate tasks and deadlines
+        if (itemTypes.includes('task')) {
+          tasks
+            .filter((task) => {
+              if (!task.dueAt) return false;
+              const taskDate = new Date(task.dueAt);
+              taskDate.setHours(0, 0, 0, 0);
+              return taskDate.getTime() === date.getTime();
+            })
+            .forEach((task) => {
+              const taskDate = new Date(task.dueAt!);
+              const course = task.courseId ? courses.find((c) => c.id === task.courseId) : null;
+              const taskIsOverdue = task.status === 'open' && isOverdue(task.dueAt!);
 
-      // 3. Deadlines for this day
-      if (itemTypes.includes('deadline')) {
-        deadlines
-          .filter((deadline) => {
-            if (!deadline.dueAt) return false;
-            const deadlineDate = new Date(deadline.dueAt);
-            deadlineDate.setHours(0, 0, 0, 0);
-            return deadlineDate.getTime() === date.getTime();
-          })
-          .forEach((deadline) => {
-            const deadlineDate = new Date(deadline.dueAt!);
-            const course = deadline.courseId ? courses.find((c) => c.id === deadline.courseId) : null;
-            const deadlineIsOverdue = deadline.status === 'open' && isOverdue(deadline.dueAt!);
+              if (taskIsOverdue && isToday) {
+                hasOverdue = true;
+              }
 
-            if (deadlineIsOverdue && isToday) {
-              hasOverdue = true;
-            }
+              if (task.status === 'open') {
+                dayTotal++;
+                totalActionable++;
+              } else if (task.status === 'done') {
+                dayCompleted++;
+                totalCompleted++;
+                dayTotal++;
+                totalActionable++;
+              }
 
-            // Only count actionable items (open deadlines)
-            if (deadline.status === 'open') {
-              dayTotal++;
-              totalActionable++;
-            } else if (deadline.status === 'done') {
-              dayCompleted++;
-              totalCompleted++;
-              dayTotal++;
-              totalActionable++;
-            }
-
-            items.push({
-              id: `deadline-${deadline.id}`,
-              type: 'deadline',
-              title: deadline.title,
-              time: isDefaultTime(deadlineDate) ? null : formatTimeFromDate(deadlineDate),
-              courseId: deadline.courseId,
-              courseName: course?.name,
-              courseCode: course?.code,
-              isAllDay: isDefaultTime(deadlineDate),
-              isOverdue: deadlineIsOverdue,
-              isCompleted: deadline.status === 'done',
-              originalItem: deadline,
-              links: deadline.links,
-              files: deadline.files,
-              canComplete: true,
+              items.push({
+                id: `task-${task.id}`,
+                type: 'task',
+                title: task.title,
+                time: isDefaultTime(taskDate) ? null : formatTimeFromDate(taskDate),
+                courseId: task.courseId,
+                courseName: course?.name,
+                courseCode: course?.code,
+                isAllDay: isDefaultTime(taskDate),
+                isOverdue: taskIsOverdue,
+                isCompleted: task.status === 'done',
+                originalItem: task,
+                links: task.links,
+                files: task.files,
+                canComplete: true,
+              });
             });
-          });
+        }
+
+        if (itemTypes.includes('deadline')) {
+          deadlines
+            .filter((deadline) => {
+              if (!deadline.dueAt) return false;
+              const deadlineDate = new Date(deadline.dueAt);
+              deadlineDate.setHours(0, 0, 0, 0);
+              return deadlineDate.getTime() === date.getTime();
+            })
+            .forEach((deadline) => {
+              const deadlineDate = new Date(deadline.dueAt!);
+              const course = deadline.courseId ? courses.find((c) => c.id === deadline.courseId) : null;
+              const deadlineIsOverdue = deadline.status === 'open' && isOverdue(deadline.dueAt!);
+
+              if (deadlineIsOverdue && isToday) {
+                hasOverdue = true;
+              }
+
+              if (deadline.status === 'open') {
+                dayTotal++;
+                totalActionable++;
+              } else if (deadline.status === 'done') {
+                dayCompleted++;
+                totalCompleted++;
+                dayTotal++;
+                totalActionable++;
+              }
+
+              items.push({
+                id: `deadline-${deadline.id}`,
+                type: 'deadline',
+                title: deadline.title,
+                time: isDefaultTime(deadlineDate) ? null : formatTimeFromDate(deadlineDate),
+                courseId: deadline.courseId,
+                courseName: course?.name,
+                courseCode: course?.code,
+                isAllDay: isDefaultTime(deadlineDate),
+                isOverdue: deadlineIsOverdue,
+                isCompleted: deadline.status === 'done',
+                originalItem: deadline,
+                links: deadline.links,
+                files: deadline.files,
+                canComplete: true,
+              });
+            });
+        }
       }
 
       // 4. Exams for this day
@@ -365,109 +431,165 @@ export function useTimelineData({
       // Build list of currently open overdue item IDs (for initializing the ref on first load)
       const currentOpenOverdueIds = new Set<string>();
 
-      // Overdue tasks
-      if (itemTypes.includes('task')) {
-        tasks
-          .filter((task) => task.dueAt && isOverdue(task.dueAt))
-          .forEach((task) => {
-            const taskDate = new Date(task.dueAt!);
-            // Skip if it's already in today's items
-            if (checkIsToday(taskDate)) return;
+      if (useWorkItems) {
+        // Unified work items for overdue
+        if (itemTypes.includes('task') || itemTypes.includes('deadline')) {
+          workItems
+            .filter((item) => item.dueAt && isOverdue(item.dueAt))
+            .forEach((item) => {
+              const itemDate = new Date(item.dueAt!);
+              // Skip if it's already in today's items
+              if (checkIsToday(itemDate)) return;
 
-            const taskId = `task-${task.id}`;
-            const isTaskCompleted = task.status === 'done';
+              const timelineType: TimelineItemType = item.type === 'assignment' ? 'deadline' : 'task';
+              // Skip if this type is not requested
+              if (!itemTypes.includes(timelineType)) return;
 
-            // Track open overdue items for initial ref population
-            if (!isTaskCompleted) {
-              currentOpenOverdueIds.add(taskId);
-            }
+              const itemId = `${timelineType}-${item.id}`;
+              const isItemCompleted = item.status === 'done';
 
-            // Show item if it's open OR if it was in the initial overdue set (completed during this session)
-            const wasInitiallyOverdue = initialOverdueIdsRef.current?.has(taskId) ?? false;
-            if (!isTaskCompleted || wasInitiallyOverdue) {
-              const course = task.courseId ? courses.find((c) => c.id === task.courseId) : null;
+              // Track open overdue items for initial ref population
+              if (!isItemCompleted) {
+                currentOpenOverdueIds.add(itemId);
+              }
 
+              // Show item if it's open OR if it was in the initial overdue set (completed during this session)
+              const wasInitiallyOverdue = initialOverdueIdsRef.current?.has(itemId) ?? false;
+              if (!isItemCompleted || wasInitiallyOverdue) {
+                const course = item.courseId ? courses.find((c) => c.id === item.courseId) : null;
+
+                if (!isItemCompleted) {
+                  hasOverdue = true;
+                }
+                totalActionable++;
+                if (isItemCompleted) {
+                  totalCompleted++;
+                }
+
+                overdueItems.push({
+                  id: itemId,
+                  type: timelineType,
+                  title: item.title,
+                  time: isDefaultTime(itemDate) ? null : formatTimeFromDate(itemDate),
+                  courseId: item.courseId,
+                  courseName: course?.name,
+                  courseCode: course?.code,
+                  isAllDay: isDefaultTime(itemDate),
+                  isOverdue: !isItemCompleted,
+                  isCompleted: isItemCompleted,
+                  originalItem: item,
+                  links: item.links,
+                  files: item.files,
+                  canComplete: true,
+                });
+              }
+            });
+        }
+      } else {
+        // Legacy: Overdue tasks
+        if (itemTypes.includes('task')) {
+          tasks
+            .filter((task) => task.dueAt && isOverdue(task.dueAt))
+            .forEach((task) => {
+              const taskDate = new Date(task.dueAt!);
+              // Skip if it's already in today's items
+              if (checkIsToday(taskDate)) return;
+
+              const taskId = `task-${task.id}`;
+              const isTaskCompleted = task.status === 'done';
+
+              // Track open overdue items for initial ref population
               if (!isTaskCompleted) {
-                hasOverdue = true;
-              }
-              totalActionable++;
-              if (isTaskCompleted) {
-                totalCompleted++;
+                currentOpenOverdueIds.add(taskId);
               }
 
-              overdueItems.push({
-                id: taskId,
-                type: 'task',
-                title: task.title,
-                time: isDefaultTime(taskDate) ? null : formatTimeFromDate(taskDate),
-                courseId: task.courseId,
-                courseName: course?.name,
-                courseCode: course?.code,
-                isAllDay: isDefaultTime(taskDate),
-                isOverdue: !isTaskCompleted,
-                isCompleted: isTaskCompleted,
-                originalItem: task,
-                links: task.links,
-                files: task.files,
-                canComplete: true,
-              });
-            }
-          });
-      }
+              // Show item if it's open OR if it was in the initial overdue set (completed during this session)
+              const wasInitiallyOverdue = initialOverdueIdsRef.current?.has(taskId) ?? false;
+              if (!isTaskCompleted || wasInitiallyOverdue) {
+                const course = task.courseId ? courses.find((c) => c.id === task.courseId) : null;
 
-      // Overdue deadlines
-      if (itemTypes.includes('deadline')) {
-        deadlines
-          .filter((deadline) => deadline.dueAt && isOverdue(deadline.dueAt))
-          .forEach((deadline) => {
-            const deadlineDate = new Date(deadline.dueAt!);
-            // Skip if it's already in today's items
-            if (checkIsToday(deadlineDate)) return;
+                if (!isTaskCompleted) {
+                  hasOverdue = true;
+                }
+                totalActionable++;
+                if (isTaskCompleted) {
+                  totalCompleted++;
+                }
 
-            const deadlineId = `deadline-${deadline.id}`;
-            const isDeadlineCompleted = deadline.status === 'done';
+                overdueItems.push({
+                  id: taskId,
+                  type: 'task',
+                  title: task.title,
+                  time: isDefaultTime(taskDate) ? null : formatTimeFromDate(taskDate),
+                  courseId: task.courseId,
+                  courseName: course?.name,
+                  courseCode: course?.code,
+                  isAllDay: isDefaultTime(taskDate),
+                  isOverdue: !isTaskCompleted,
+                  isCompleted: isTaskCompleted,
+                  originalItem: task,
+                  links: task.links,
+                  files: task.files,
+                  canComplete: true,
+                });
+              }
+            });
+        }
 
-            // Track open overdue items for initial ref population
-            if (!isDeadlineCompleted) {
-              currentOpenOverdueIds.add(deadlineId);
-            }
+        // Legacy: Overdue deadlines
+        if (itemTypes.includes('deadline')) {
+          deadlines
+            .filter((deadline) => deadline.dueAt && isOverdue(deadline.dueAt))
+            .forEach((deadline) => {
+              const deadlineDate = new Date(deadline.dueAt!);
+              // Skip if it's already in today's items
+              if (checkIsToday(deadlineDate)) return;
 
-            // Show item if it's open OR if it was in the initial overdue set (completed during this session)
-            const wasInitiallyOverdue = initialOverdueIdsRef.current?.has(deadlineId) ?? false;
-            if (!isDeadlineCompleted || wasInitiallyOverdue) {
-              const course = deadline.courseId ? courses.find((c) => c.id === deadline.courseId) : null;
+              const deadlineId = `deadline-${deadline.id}`;
+              const isDeadlineCompleted = deadline.status === 'done';
 
+              // Track open overdue items for initial ref population
               if (!isDeadlineCompleted) {
-                hasOverdue = true;
-              }
-              totalActionable++;
-              if (isDeadlineCompleted) {
-                totalCompleted++;
+                currentOpenOverdueIds.add(deadlineId);
               }
 
-              overdueItems.push({
-                id: deadlineId,
-                type: 'deadline',
-                title: deadline.title,
-                time: isDefaultTime(deadlineDate) ? null : formatTimeFromDate(deadlineDate),
-                courseId: deadline.courseId,
-                courseName: course?.name,
-                courseCode: course?.code,
-                isAllDay: isDefaultTime(deadlineDate),
-                isOverdue: !isDeadlineCompleted,
-                isCompleted: isDeadlineCompleted,
-                originalItem: deadline,
-                links: deadline.links,
-                files: deadline.files,
-                canComplete: true,
-              });
-            }
-          });
+              // Show item if it's open OR if it was in the initial overdue set (completed during this session)
+              const wasInitiallyOverdue = initialOverdueIdsRef.current?.has(deadlineId) ?? false;
+              if (!isDeadlineCompleted || wasInitiallyOverdue) {
+                const course = deadline.courseId ? courses.find((c) => c.id === deadline.courseId) : null;
+
+                if (!isDeadlineCompleted) {
+                  hasOverdue = true;
+                }
+                totalActionable++;
+                if (isDeadlineCompleted) {
+                  totalCompleted++;
+                }
+
+                overdueItems.push({
+                  id: deadlineId,
+                  type: 'deadline',
+                  title: deadline.title,
+                  time: isDefaultTime(deadlineDate) ? null : formatTimeFromDate(deadlineDate),
+                  courseId: deadline.courseId,
+                  courseName: course?.name,
+                  courseCode: course?.code,
+                  isAllDay: isDefaultTime(deadlineDate),
+                  isOverdue: !isDeadlineCompleted,
+                  isCompleted: isDeadlineCompleted,
+                  originalItem: deadline,
+                  links: deadline.links,
+                  files: deadline.files,
+                  canComplete: true,
+                });
+              }
+            });
+        }
       }
 
       // Initialize the ref on first computation with actual data
       // This captures which items were open+overdue at page load
-      if (initialOverdueIdsRef.current === null && (tasks.length > 0 || deadlines.length > 0)) {
+      if (initialOverdueIdsRef.current === null && (tasks.length > 0 || deadlines.length > 0 || workItems.length > 0)) {
         initialOverdueIdsRef.current = currentOpenOverdueIds;
       }
 
@@ -486,7 +608,7 @@ export function useTimelineData({
     };
 
     return { days, totalProgress };
-  }, [courses, tasks, deadlines, exams, calendarEvents, excludedDates, range, itemTypes]);
+  }, [courses, tasks, deadlines, workItems, useWorkItems, exams, calendarEvents, excludedDates, range, itemTypes]);
 
   // Cache the computed data for next load
   useEffect(() => {
@@ -497,7 +619,7 @@ export function useTimelineData({
 
 
   // Check if store has actual data (not just empty arrays)
-  const storeHasData = courses.length > 0 || tasks.length > 0 || deadlines.length > 0 || exams.length > 0 || (calendarEvents?.length || 0) > 0;
+  const storeHasData = courses.length > 0 || tasks.length > 0 || deadlines.length > 0 || workItems.length > 0 || exams.length > 0 || (calendarEvents?.length || 0) > 0;
 
   // Use store data if it has content, otherwise fall back to cache
   // This prevents flashing empty state when component remounts

@@ -22,6 +22,7 @@ export const GET = withRateLimit(async function(request: NextRequest) {
     const [
       tasks,
       deadlines,
+      workItems,
       exams,
       calendarEvents,
       courses,
@@ -32,6 +33,10 @@ export const GET = withRateLimit(async function(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
       }),
       prisma.deadline.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.workItem.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' },
       }),
@@ -55,6 +60,7 @@ export const GET = withRateLimit(async function(request: NextRequest) {
     return NextResponse.json({
       tasks,
       deadlines,
+      workItems,
       exams,
       calendarEvents,
       courses,

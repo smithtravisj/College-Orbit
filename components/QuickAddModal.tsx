@@ -13,20 +13,28 @@ import { useModalShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { parseNaturalLanguage } from '@/lib/naturalLanguageParser';
 import styles from './QuickAddModal.module.css';
 
-type QuickAddType = 'task' | 'assignment' | 'exam' | 'note' | 'course' | 'shopping';
+type QuickAddType = 'task' | 'assignment' | 'reading' | 'project' | 'exam' | 'note' | 'course' | 'shopping';
 
 interface QuickAddModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const TYPE_OPTIONS: { value: QuickAddType; label: string }[] = [
+const TYPE_OPTIONS_ROW1: { value: QuickAddType; label: string }[] = [
   { value: 'task', label: 'Task' },
   { value: 'assignment', label: 'Assignment' },
+  { value: 'reading', label: 'Reading' },
+  { value: 'project', label: 'Project' },
+];
+
+const TYPE_OPTIONS_ROW2: { value: QuickAddType; label: string }[] = [
   { value: 'exam', label: 'Exam' },
   { value: 'note', label: 'Note' },
   { value: 'course', label: 'Course' },
+  { value: 'shopping', label: 'Shopping' },
 ];
+
+const TYPE_OPTIONS = [...TYPE_OPTIONS_ROW1, ...TYPE_OPTIONS_ROW2];
 
 const SHOPPING_LIST_OPTIONS: { value: ShoppingListType; label: string }[] = [
   { value: 'grocery', label: 'Grocery' },
@@ -37,6 +45,8 @@ const SHOPPING_LIST_OPTIONS: { value: ShoppingListType; label: string }[] = [
 const QUICK_INPUT_PLACEHOLDERS: Record<QuickAddType, string> = {
   task: 'e.g. Finish chapter 3 CS 101 tomorrow',
   assignment: 'e.g. Essay draft ENG 201 Jan 26 5pm',
+  reading: 'e.g. Read chapters 5-7 BIO 201 Friday',
+  project: 'e.g. Group presentation HIST 301 Feb 15',
   exam: 'e.g. Calc midterm Feb 2 1pm Room 102',
   note: 'e.g. Meeting notes: key points from today',
   course: 'e.g. CS 101 Intro to Computer Science',
@@ -45,8 +55,7 @@ const QUICK_INPUT_PLACEHOLDERS: Record<QuickAddType, string> = {
 
 // Map pathname to QuickAddType
 const getTypeFromPathname = (pathname: string): QuickAddType | null => {
-  if (pathname === '/tasks') return 'task';
-  if (pathname === '/deadlines') return 'assignment';
+  if (pathname === '/work') return 'task'; // Unified work page defaults to task
   if (pathname === '/exams') return 'exam';
   if (pathname === '/notes') return 'note';
   if (pathname === '/courses') return 'course';
@@ -75,8 +84,7 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
   const [quantity, setQuantity] = useState(1);
 
   // Store actions
-  const addTask = useAppStore((state) => state.addTask);
-  const addDeadline = useAppStore((state) => state.addDeadline);
+  const addWorkItem = useAppStore((state) => state.addWorkItem);
   const addExam = useAppStore((state) => state.addExam);
   const addNote = useAppStore((state) => state.addNote);
   const addCourse = useAppStore((state) => state.addCourse);
@@ -219,7 +227,10 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
 
     try {
       switch (selectedType) {
-        case 'task': {
+        case 'task':
+        case 'assignment':
+        case 'reading':
+        case 'project': {
           if (!title.trim()) return;
           let dueAt: string | null = null;
           if (dueDate) {
@@ -227,48 +238,29 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
             dueAt = new Date(`${dueDate}T${timeStr}`).toISOString();
           }
           // Don't await - optimistic update handles UI immediately
-          addTask({
+          addWorkItem({
             title: title.trim(),
-            courseId: courseId || null,
-            dueAt,
-            pinned: false,
-            importance: null,
-            checklist: [],
-            notes: '',
-            tags: [],
-            links: [],
-            status: 'open',
-            workingOn: false,
-            updatedAt: new Date().toISOString(),
-            recurringPatternId: null,
-            instanceDate: null,
-            isRecurring: false,
-          });
-          break;
-        }
-        case 'assignment': {
-          if (!title.trim()) return;
-          let dueAt: string | null = null;
-          if (dueDate) {
-            const timeStr = dueTime || '23:59';
-            dueAt = new Date(`${dueDate}T${timeStr}`).toISOString();
-          }
-          // Don't await - optimistic update handles UI immediately
-          addDeadline({
-            title: title.trim(),
+            type: selectedType,
             courseId: courseId || null,
             dueAt,
             priority: null,
             effort: null,
+            pinned: false,
+            checklist: [],
             notes: '',
             tags: [],
             links: [],
+            files: [],
             status: 'open',
             workingOn: false,
-            updatedAt: new Date().toISOString(),
+            isRecurring: false,
             recurringPatternId: null,
             instanceDate: null,
-            isRecurring: false,
+            canvasAssignmentId: null,
+            canvasSubmissionId: null,
+            canvasPointsPossible: null,
+            canvasPointsEarned: null,
+            canvasGradePostedAt: null,
           });
           break;
         }
@@ -309,9 +301,11 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
             courseId: null,
             taskId: null,
             deadlineId: null,
+            workItemId: null,
             examId: null,
             recurringTaskPatternId: null,
             recurringDeadlinePatternId: null,
+            recurringWorkPatternId: null,
             recurringExamPatternId: null,
             tags: [],
             isPinned: false,
@@ -361,6 +355,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
     switch (selectedType) {
       case 'task':
       case 'assignment':
+      case 'reading':
+      case 'project':
       case 'note':
       case 'shopping':
         return title.trim().length > 0;
@@ -390,6 +386,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
     switch (selectedType) {
       case 'task':
       case 'assignment':
+      case 'reading':
+      case 'project':
         return (
           <>
             <div className={styles.formGroup}>
@@ -398,7 +396,12 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={selectedType === 'task' ? 'What needs to be done?' : 'Assignment name'}
+                placeholder={
+                  selectedType === 'task' ? 'What needs to be done?' :
+                  selectedType === 'assignment' ? 'Assignment name' :
+                  selectedType === 'reading' ? 'What to read?' :
+                  'Project name'
+                }
                 className={styles.input}
               />
             </div>
@@ -613,22 +616,42 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
           <div className={styles.mobileContent}>
             {/* Type Selector Pills */}
             <div className={styles.typeSelector}>
-              {TYPE_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => setSelectedType(option.value)}
-                  className={`${styles.typePill} ${selectedType === option.value ? styles.typePillActive : ''}`}
-                  style={selectedType === option.value ? {
-                    backgroundColor: accentColor,
-                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.15) 100%)',
-                    boxShadow: `0 0 12px ${accentColor}40`,
-                    borderColor: accentColor
-                  } : {}}
-                  type="button"
-                >
-                  {option.label}
-                </button>
-              ))}
+              <div className={styles.typeRow}>
+                {TYPE_OPTIONS_ROW1.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setSelectedType(option.value)}
+                    className={`${styles.typePill} ${selectedType === option.value ? styles.typePillActive : ''}`}
+                    style={selectedType === option.value ? {
+                      backgroundColor: accentColor,
+                      backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.15) 100%)',
+                      boxShadow: `0 0 12px ${accentColor}40`,
+                      borderColor: accentColor
+                    } : {}}
+                    type="button"
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <div className={styles.typeRow}>
+                {TYPE_OPTIONS_ROW2.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setSelectedType(option.value)}
+                    className={`${styles.typePill} ${selectedType === option.value ? styles.typePillActive : ''}`}
+                    style={selectedType === option.value ? {
+                      backgroundColor: accentColor,
+                      backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.15) 100%)',
+                      boxShadow: `0 0 12px ${accentColor}40`,
+                      borderColor: accentColor
+                    } : {}}
+                    type="button"
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Quick Input Box (Premium Feature) */}
@@ -697,22 +720,42 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
 
         {/* Type Selector Pills */}
         <div className={styles.typeSelector}>
-          {TYPE_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => setSelectedType(option.value)}
-              className={`${styles.typePill} ${selectedType === option.value ? styles.typePillActive : ''}`}
-              style={selectedType === option.value ? {
-                backgroundColor: accentColor,
-                backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.15) 100%)',
-                boxShadow: `0 0 12px ${accentColor}40`,
-                borderColor: accentColor
-              } : {}}
-              type="button"
-            >
-              {option.label}
-            </button>
-          ))}
+          <div className={styles.typeRow}>
+            {TYPE_OPTIONS_ROW1.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setSelectedType(option.value)}
+                className={`${styles.typePill} ${selectedType === option.value ? styles.typePillActive : ''}`}
+                style={selectedType === option.value ? {
+                  backgroundColor: accentColor,
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.15) 100%)',
+                  boxShadow: `0 0 12px ${accentColor}40`,
+                  borderColor: accentColor
+                } : {}}
+                type="button"
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <div className={styles.typeRow}>
+            {TYPE_OPTIONS_ROW2.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setSelectedType(option.value)}
+                className={`${styles.typePill} ${selectedType === option.value ? styles.typePillActive : ''}`}
+                style={selectedType === option.value ? {
+                  backgroundColor: accentColor,
+                  backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.15) 100%)',
+                  boxShadow: `0 0 12px ${accentColor}40`,
+                  borderColor: accentColor
+                } : {}}
+                type="button"
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Quick Input Box (Premium Feature) */}

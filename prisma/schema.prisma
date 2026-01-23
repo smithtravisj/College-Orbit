@@ -8,29 +8,29 @@ datasource db {
 }
 
 model User {
-  id                        String                     @id @default(cuid())
-  email                     String                     @unique
-  passwordHash              String
-  name                      String?
-  resetPasswordToken        String?                    @unique
-  resetPasswordTokenExpiry  DateTime?
-  createdAt                 DateTime                   @default(now())
-  updatedAt                 DateTime                   @updatedAt
-  isAdmin                   Boolean                    @default(false)
-  lastLogin                 DateTime?
-  sessionInvalidatedAt      DateTime?
-  calendarToken             String?                    @unique // Token for iCal subscription URL
+  id                       String    @id @default(cuid())
+  email                    String    @unique
+  passwordHash             String
+  name                     String?
+  resetPasswordToken       String?   @unique
+  resetPasswordTokenExpiry DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  isAdmin                  Boolean   @default(false)
+  lastLogin                DateTime?
+  sessionInvalidatedAt     DateTime?
+  calendarToken            String?   @unique // Token for iCal subscription URL
 
   // Subscription fields
-  subscriptionTier          String                     @default("trial")
-  subscriptionStatus        String                     @default("trialing")
-  trialStartedAt            DateTime                   @default(now())
-  trialEndsAt               DateTime?
-  stripeCustomerId          String?                    @unique
-  stripeSubscriptionId      String?                    @unique
-  subscriptionPlan          String?
-  subscriptionExpiresAt     DateTime?
-  lifetimePremium           Boolean                    @default(false)
+  subscriptionTier      String    @default("trial")
+  subscriptionStatus    String    @default("trialing")
+  trialStartedAt        DateTime  @default(now())
+  trialEndsAt           DateTime?
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?   @unique
+  subscriptionPlan      String?
+  subscriptionExpiresAt DateTime?
+  lifetimePremium       Boolean   @default(false)
 
   collegeRequests           CollegeRequest[]
   courses                   Course[]
@@ -54,6 +54,8 @@ model User {
   tasks                     Task[]
   calendarEvents            CalendarEvent[]
   deletedCanvasItems        DeletedCanvasItem[]
+  workItems                 WorkItem[]
+  recurringWorkPatterns     RecurringWorkPattern[]
 
   @@index([email])
   @@index([subscriptionTier])
@@ -61,20 +63,20 @@ model User {
 }
 
 model Course {
-  id            String         @id @default(cuid())
-  userId        String
-  code          String
-  name          String
-  term          String
-  credits       Float?
-  meetingTimes  Json           @default("[]")
-  links         Json           @default("[]")
-  files         Json           @default("[]")
-  colorTag      String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  startDate     DateTime?
-  endDate       DateTime?
+  id           String    @id @default(cuid())
+  userId       String
+  code         String
+  name         String
+  term         String
+  credits      Float?
+  meetingTimes Json      @default("[]")
+  links        Json      @default("[]")
+  files        Json      @default("[]")
+  colorTag     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  startDate    DateTime?
+  endDate      DateTime?
 
   // Canvas LMS Integration
   canvasCourseId     String?
@@ -88,44 +90,45 @@ model Course {
   gpaEntries    GpaEntry[]
   notes         Note[]
   tasks         Task[]
+  workItems     WorkItem[]
 
   @@index([userId])
   @@index([canvasCourseId])
 }
 
 model Deadline {
-  id                 String                    @id @default(cuid())
+  id                 String    @id @default(cuid())
   userId             String
   title              String
   courseId           String?
   dueAt              DateTime?
   priority           Int?
   effort             String?
-  notes              String                    @default("")
-  tags               Json                      @default("[]")
-  status             String                    @default("open")
-  workingOn          Boolean                   @default(false)
-  createdAt          DateTime                  @default(now())
-  updatedAt          DateTime                  @updatedAt
-  links              Json                      @default("[]")
-  files              Json                      @default("[]")
+  notes              String    @default("")
+  tags               Json      @default("[]")
+  status             String    @default("open")
+  workingOn          Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  links              Json      @default("[]")
+  files              Json      @default("[]")
   instanceDate       DateTime?
-  isRecurring        Boolean                   @default(false)
+  isRecurring        Boolean   @default(false)
   recurringPatternId String?
 
   // Canvas LMS Integration
-  canvasAssignmentId  String?
-  canvasSubmissionId  String?
+  canvasAssignmentId   String?
+  canvasSubmissionId   String?
   canvasPointsPossible Float?
   canvasPointsEarned   Float?
   canvasGradePostedAt  DateTime?
 
-  course             Course?                   @relation(fields: [courseId], references: [id])
-  recurringPattern   RecurringDeadlinePattern? @relation(fields: [recurringPatternId], references: [id])
-  user               User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  linkedNotes        Note[]
-  reminders          DeadlineReminder[]
-  notifications      Notification[]
+  course           Course?                   @relation(fields: [courseId], references: [id])
+  recurringPattern RecurringDeadlinePattern? @relation(fields: [recurringPatternId], references: [id])
+  user             User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedNotes      Note[]
+  reminders        DeadlineReminder[]
+  notifications    Notification[]
 
   @@index([userId])
   @@index([courseId])
@@ -315,34 +318,38 @@ model TaskReminder {
 }
 
 model Note {
-  id                          String                    @id @default(cuid())
-  userId                      String
-  title                       String
-  content                     Json                      @default("{}")
-  plainText                   String                    @default("")
-  folderId                    String?
-  courseId                    String?
-  taskId                      String?
-  deadlineId                  String?
-  examId                      String?
-  recurringTaskPatternId      String?
-  recurringDeadlinePatternId  String?
-  recurringExamPatternId      String?
-  tags                        Json                      @default("[]")
-  isPinned                    Boolean                   @default(false)
-  links                       Json                      @default("[]")
-  files                       Json                      @default("[]")
-  createdAt                   DateTime                  @default(now())
-  updatedAt                   DateTime                  @updatedAt
-  course                      Course?                   @relation(fields: [courseId], references: [id])
-  folder                      Folder?                   @relation(fields: [folderId], references: [id])
-  task                        Task?                     @relation(fields: [taskId], references: [id], onDelete: SetNull)
-  deadline                    Deadline?                 @relation(fields: [deadlineId], references: [id], onDelete: SetNull)
-  exam                        Exam?                     @relation(fields: [examId], references: [id], onDelete: SetNull)
-  recurringTaskPattern        RecurringPattern?         @relation(fields: [recurringTaskPatternId], references: [id], onDelete: SetNull)
-  recurringDeadlinePattern    RecurringDeadlinePattern? @relation(fields: [recurringDeadlinePatternId], references: [id], onDelete: SetNull)
-  recurringExamPattern        RecurringExamPattern?     @relation(fields: [recurringExamPatternId], references: [id], onDelete: SetNull)
-  user                        User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                         String                    @id @default(cuid())
+  userId                     String
+  title                      String
+  content                    Json                      @default("{}")
+  plainText                  String                    @default("")
+  folderId                   String?
+  courseId                   String?
+  taskId                     String?
+  deadlineId                 String?
+  examId                     String?
+  workItemId                 String?
+  recurringTaskPatternId     String?
+  recurringDeadlinePatternId String?
+  recurringExamPatternId     String?
+  recurringWorkPatternId     String?
+  tags                       Json                      @default("[]")
+  isPinned                   Boolean                   @default(false)
+  links                      Json                      @default("[]")
+  files                      Json                      @default("[]")
+  createdAt                  DateTime                  @default(now())
+  updatedAt                  DateTime                  @updatedAt
+  course                     Course?                   @relation(fields: [courseId], references: [id])
+  folder                     Folder?                   @relation(fields: [folderId], references: [id])
+  task                       Task?                     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  deadline                   Deadline?                 @relation(fields: [deadlineId], references: [id], onDelete: SetNull)
+  exam                       Exam?                     @relation(fields: [examId], references: [id], onDelete: SetNull)
+  workItem                   WorkItem?                 @relation(fields: [workItemId], references: [id], onDelete: SetNull)
+  recurringTaskPattern       RecurringPattern?         @relation(fields: [recurringTaskPatternId], references: [id], onDelete: SetNull)
+  recurringDeadlinePattern   RecurringDeadlinePattern? @relation(fields: [recurringDeadlinePatternId], references: [id], onDelete: SetNull)
+  recurringExamPattern       RecurringExamPattern?     @relation(fields: [recurringExamPatternId], references: [id], onDelete: SetNull)
+  recurringWorkPattern       RecurringWorkPattern?     @relation(fields: [recurringWorkPatternId], references: [id], onDelete: SetNull)
+  user                       User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([folderId])
@@ -350,9 +357,11 @@ model Note {
   @@index([taskId])
   @@index([deadlineId])
   @@index([examId])
+  @@index([workItemId])
   @@index([recurringTaskPatternId])
   @@index([recurringDeadlinePatternId])
   @@index([recurringExamPatternId])
+  @@index([recurringWorkPatternId])
   @@index([isPinned])
 }
 
@@ -400,81 +409,81 @@ model GpaEntry {
 }
 
 model Settings {
-  id                     String   @id @default(cuid())
-  userId                 String   @unique
-  dueSoonWindowDays      Int      @default(7)
-  weekStartsOn           String   @default("Sun")
-  timeFormat             String   @default("12h")
-  dateFormat             String   @default("MM/DD/YYYY")
-  theme                  String   @default("dark")
-  enableNotifications    Boolean  @default(false)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  university             String?
-  visibleDashboardCards  Json?    @default("[\"nextClass\", \"dueSoon\", \"overview\", \"todayTasks\", \"quickLinks\", \"upcomingWeek\"]")
-  visiblePages           Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Assignments\", \"Exams\", \"Courses\", \"Tools\", \"Settings\"]")
-  visibleToolsCards      Json?    @default("[\"quickLinks\", \"gpaCalculator\"]")
-  hasCompletedOnboarding Boolean  @default(false)
-  examReminders          Json?    @default("[{\"unit\": \"days\", \"value\": 7, \"enabled\": false}, {\"unit\": \"days\", \"value\": 1, \"enabled\": false}, {\"unit\": \"hours\", \"value\": 3, \"enabled\": false}]")
-  deadlineReminders      Json?    @default("[{\"unit\": \"days\", \"value\": 1, \"enabled\": false}, {\"unit\": \"hours\", \"value\": 3, \"enabled\": false}]")
-  taskReminders          Json?    @default("[{\"unit\": \"days\", \"value\": 1, \"enabled\": false}, {\"unit\": \"hours\", \"value\": 3, \"enabled\": false}]")
-  pomodoroBreakDuration  Int      @default(5)
-  pomodoroIsMuted        Boolean  @default(false)
-  pomodoroWorkDuration   Int      @default(25)
-  selectedGradeSemester  String   @default("all")
-  toolsCardsOrder        Json?    @default("[\"pomodoroTimer\", \"gradeTracker\", \"gpaTrendChart\", \"whatIfProjector\", \"gpaCalculator\", \"tools_quickLinks\"]")
-  visiblePagesOrder      Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Assignments\", \"Exams\", \"Notes\", \"Courses\", \"Tools\"]")
-  dashboardCardsCollapsedState Json? @default("[]")
-  hiddenQuickLinks       Json?    @default("{}")
-  courseTermFilter       String   @default("all")
-  emailAnnouncements     Boolean  @default(false)
-  emailExamReminders     Boolean  @default(false)
-  emailAccountAlerts     Boolean  @default(false)
-  emailDeadlineReminders Boolean  @default(false)
-  emailTaskReminders     Boolean  @default(false)
-  notifyAnnouncements    Boolean  @default(false)
-  notifyExamReminders    Boolean  @default(false)
-  notifyAccountAlerts    Boolean  @default(false)
-  notifyDeadlineReminders Boolean @default(false)
-  notifyTaskReminders    Boolean  @default(false)
-  useCustomTheme         Boolean  @default(false)
-  customColors           Json?
-  gradientIntensity      Int      @default(50)
-  glowIntensity          Int      @default(50)
-  autoCreateCourseFolders Boolean @default(false)
-  showCanvasBadges        Boolean @default(true)
-  showRelativeDates       Boolean @default(false)
-  showNavCounts           Boolean @default(false)
-  showNavCountTasks       Boolean @default(true)
-  showNavCountAssignments Boolean @default(true)
-  showNavCountExams       Boolean @default(true)
-  showPriorityIndicators  Boolean @default(true)
-  showEffortIndicators    Boolean @default(true)
-  groupTasksByCourse      Boolean @default(false)
-  groupAssignmentsByCourse Boolean @default(false)
-  showCourseCode          Boolean @default(false)
-  confirmBeforeDelete     Boolean @default(true)
-  enableKeyboardShortcuts Boolean @default(true)
+  id                           String   @id @default(cuid())
+  userId                       String   @unique
+  dueSoonWindowDays            Int      @default(7)
+  weekStartsOn                 String   @default("Sun")
+  timeFormat                   String   @default("12h")
+  dateFormat                   String   @default("MM/DD/YYYY")
+  theme                        String   @default("dark")
+  enableNotifications          Boolean  @default(false)
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
+  university                   String?
+  visibleDashboardCards        Json?    @default("[\"nextClass\", \"dueSoon\", \"overview\", \"todayTasks\", \"quickLinks\", \"upcomingWeek\"]")
+  visiblePages                 Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Assignments\", \"Exams\", \"Courses\", \"Tools\", \"Settings\"]")
+  visibleToolsCards            Json?    @default("[\"quickLinks\", \"gpaCalculator\"]")
+  hasCompletedOnboarding       Boolean  @default(false)
+  examReminders                Json?    @default("[{\"unit\": \"days\", \"value\": 7, \"enabled\": false}, {\"unit\": \"days\", \"value\": 1, \"enabled\": false}, {\"unit\": \"hours\", \"value\": 3, \"enabled\": false}]")
+  deadlineReminders            Json?    @default("[{\"unit\": \"days\", \"value\": 1, \"enabled\": false}, {\"unit\": \"hours\", \"value\": 3, \"enabled\": false}]")
+  taskReminders                Json?    @default("[{\"unit\": \"days\", \"value\": 1, \"enabled\": false}, {\"unit\": \"hours\", \"value\": 3, \"enabled\": false}]")
+  pomodoroBreakDuration        Int      @default(5)
+  pomodoroIsMuted              Boolean  @default(false)
+  pomodoroWorkDuration         Int      @default(25)
+  selectedGradeSemester        String   @default("all")
+  toolsCardsOrder              Json?    @default("[\"pomodoroTimer\", \"gradeTracker\", \"gpaTrendChart\", \"whatIfProjector\", \"gpaCalculator\", \"tools_quickLinks\"]")
+  visiblePagesOrder            Json?    @default("[\"Dashboard\", \"Calendar\", \"Tasks\", \"Assignments\", \"Exams\", \"Notes\", \"Courses\", \"Tools\"]")
+  dashboardCardsCollapsedState Json?    @default("[]")
+  hiddenQuickLinks             Json?    @default("{}")
+  courseTermFilter             String   @default("all")
+  emailAnnouncements           Boolean  @default(false)
+  emailExamReminders           Boolean  @default(false)
+  emailAccountAlerts           Boolean  @default(false)
+  emailDeadlineReminders       Boolean  @default(false)
+  emailTaskReminders           Boolean  @default(false)
+  notifyAnnouncements          Boolean  @default(false)
+  notifyExamReminders          Boolean  @default(false)
+  notifyAccountAlerts          Boolean  @default(false)
+  notifyDeadlineReminders      Boolean  @default(false)
+  notifyTaskReminders          Boolean  @default(false)
+  useCustomTheme               Boolean  @default(false)
+  customColors                 Json?
+  gradientIntensity            Int      @default(50)
+  glowIntensity                Int      @default(50)
+  autoCreateCourseFolders      Boolean  @default(false)
+  showCanvasBadges             Boolean  @default(true)
+  showRelativeDates            Boolean  @default(false)
+  showNavCounts                Boolean  @default(false)
+  showNavCountTasks            Boolean  @default(true)
+  showNavCountAssignments      Boolean  @default(true)
+  showNavCountExams            Boolean  @default(true)
+  showPriorityIndicators       Boolean  @default(true)
+  showEffortIndicators         Boolean  @default(true)
+  groupTasksByCourse           Boolean  @default(false)
+  groupAssignmentsByCourse     Boolean  @default(false)
+  showCourseCode               Boolean  @default(false)
+  confirmBeforeDelete          Boolean  @default(true)
+  enableKeyboardShortcuts      Boolean  @default(true)
 
   // Colorblind Accessibility
-  colorblindMode          String?  // 'protanopia', 'deuteranopia', 'tritanopia', 'achromatopsia', or null for off
-  colorblindStyle         String?  // 'palette', 'patterns', 'both', or null for default
+  colorblindMode  String? // 'protanopia', 'deuteranopia', 'tritanopia', 'achromatopsia', or null for off
+  colorblindStyle String? // 'palette', 'patterns', 'both', or null for default
 
   // Canvas LMS Integration
   canvasInstanceUrl       String?
   canvasAccessToken       String?
   canvasUserId            String?
   canvasUserName          String?
-  canvasSyncEnabled       Boolean  @default(false)
+  canvasSyncEnabled       Boolean   @default(false)
   canvasLastSyncedAt      DateTime?
-  canvasSyncCourses       Boolean  @default(true)
-  canvasSyncAssignments   Boolean  @default(true)
-  canvasSyncGrades        Boolean  @default(true)
-  canvasSyncEvents        Boolean  @default(true)
-  canvasSyncAnnouncements Boolean  @default(true)
-  canvasAutoMarkComplete  Boolean  @default(true)
+  canvasSyncCourses       Boolean   @default(true)
+  canvasSyncAssignments   Boolean   @default(true)
+  canvasSyncGrades        Boolean   @default(true)
+  canvasSyncEvents        Boolean   @default(true)
+  canvasSyncAnnouncements Boolean   @default(true)
+  canvasAutoMarkComplete  Boolean   @default(true)
 
-  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -538,31 +547,33 @@ model ExcludedDate {
 }
 
 model Notification {
-  id               String          @id @default(cuid())
+  id               String   @id @default(cuid())
   userId           String
   title            String
   message          String
   type             String
-  read             Boolean         @default(false)
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  read             Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
   collegeRequestId String?
   featureRequestId String?
   issueReportId    String?
   examId           String?
   deadlineId       String?
   taskId           String?
+  workItemId       String?
 
   // Canvas LMS Integration
   canvasAnnouncementId String?
 
-  collegeRequest   CollegeRequest? @relation(fields: [collegeRequestId], references: [id], onDelete: Cascade)
-  exam             Exam?           @relation(fields: [examId], references: [id], onDelete: Cascade)
-  deadline         Deadline?       @relation(fields: [deadlineId], references: [id], onDelete: Cascade)
-  task             Task?           @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  featureRequest   FeatureRequest? @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
-  issueReport      IssueReport?    @relation(fields: [issueReportId], references: [id], onDelete: Cascade)
-  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collegeRequest CollegeRequest? @relation(fields: [collegeRequestId], references: [id], onDelete: Cascade)
+  exam           Exam?           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  deadline       Deadline?       @relation(fields: [deadlineId], references: [id], onDelete: Cascade)
+  task           Task?           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  workItem       WorkItem?       @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  featureRequest FeatureRequest? @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
+  issueReport    IssueReport?    @relation(fields: [issueReportId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([read])
@@ -572,6 +583,7 @@ model Notification {
   @@index([examId])
   @@index([deadlineId])
   @@index([taskId])
+  @@index([workItemId])
   @@index([canvasAnnouncementId])
 }
 
@@ -621,14 +633,14 @@ model CustomQuickLink {
 model ShoppingItem {
   id          String    @id @default(cuid())
   userId      String
-  listType    String    // "grocery" | "wishlist" | "pantry"
+  listType    String // "grocery" | "wishlist" | "pantry"
   name        String
   quantity    Int       @default(1)
   unit        String?
   category    String
   notes       String    @default("")
   checked     Boolean   @default(false)
-  priority    String?   // "low" | "medium" | "high"
+  priority    String? // "low" | "medium" | "high"
   price       Float?
   perishable  Boolean?  @default(false)
   order       Int       @default(0) // For manual reordering within category
@@ -660,7 +672,7 @@ model CalendarEvent {
   // Canvas LMS Integration
   canvasEventId String?
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([startAt])
@@ -671,10 +683,10 @@ model AuditLog {
   id           String   @id @default(cuid())
   adminId      String
   adminEmail   String
-  action       String   // grant_premium, revoke_premium, grant_admin, revoke_admin, send_announcement, approve_college_request, reject_college_request, approve_issue_report, reject_issue_report, approve_feature_request, reject_feature_request
+  action       String // grant_premium, revoke_premium, grant_admin, revoke_admin, send_announcement, approve_college_request, reject_college_request, approve_issue_report, reject_issue_report, approve_feature_request, reject_feature_request
   targetUserId String?
   targetEmail  String?
-  details      Json?    // Additional context (announcement title, request details, etc.)
+  details      Json? // Additional context (announcement title, request details, etc.)
   createdAt    DateTime @default(now())
 
   @@index([adminId])
@@ -686,10 +698,10 @@ model College {
   id          String   @id @default(cuid())
   fullName    String   @unique
   acronym     String
-  darkAccent  String   // Accent color for dark mode
-  darkLink    String   // Link color for dark mode
-  lightAccent String   // Accent color for light mode
-  lightLink   String   // Link color for light mode
+  darkAccent  String // Accent color for dark mode
+  darkLink    String // Link color for dark mode
+  lightAccent String // Accent color for light mode
+  lightLink   String // Link color for light mode
   quickLinks  Json     @default("[]") // Array of {label, url} objects
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -702,11 +714,11 @@ model College {
 model DeletedCanvasItem {
   id        String   @id @default(cuid())
   userId    String
-  canvasId  String   // The Canvas ID (canvasAssignmentId, canvasCourseId, etc.)
-  type      String   // 'assignment', 'course', 'event', 'announcement'
+  canvasId  String // The Canvas ID (canvasAssignmentId, canvasCourseId, etc.)
+  type      String // 'assignment', 'course', 'event', 'announcement'
   deletedAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, canvasId, type])
   @@index([userId, type])
@@ -729,9 +741,98 @@ model UserSession {
   isCurrent      Boolean   @default(false)
   revokedAt      DateTime? // When set, this session is revoked
 
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([sessionToken])
   @@index([expiresAt])
+}
+
+// Unified Work Item model - replaces Task and Deadline
+model WorkItem {
+  id                 String    @id @default(cuid())
+  userId             String
+  title              String
+  type               String // 'task' | 'assignment' | 'reading' | 'project'
+  courseId           String?
+  dueAt              DateTime?
+  priority           String? // 'low' | 'medium' | 'high' | 'critical'
+  effort             String? // 'small' | 'medium' | 'large'
+  pinned             Boolean   @default(false)
+  checklist          Json      @default("[]")
+  notes              String    @default("")
+  tags               Json      @default("[]")
+  status             String    @default("open")
+  workingOn          Boolean   @default(false)
+  links              Json      @default("[]")
+  files              Json      @default("[]")
+  instanceDate       DateTime?
+  isRecurring        Boolean   @default(false)
+  recurringPatternId String?
+
+  // Canvas LMS Integration
+  canvasAssignmentId   String?
+  canvasSubmissionId   String?
+  canvasPointsPossible Float?
+  canvasPointsEarned   Float?
+  canvasGradePostedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user             User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course           Course?               @relation(fields: [courseId], references: [id])
+  recurringPattern RecurringWorkPattern? @relation(fields: [recurringPatternId], references: [id])
+  linkedNotes      Note[]
+  reminders        WorkItemReminder[]
+  notifications    Notification[]
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([status])
+  @@index([type])
+  @@index([pinned])
+  @@index([recurringPatternId])
+  @@index([isRecurring])
+  @@index([canvasAssignmentId])
+  @@index([dueAt])
+}
+
+model RecurringWorkPattern {
+  id               String    @id @default(cuid())
+  userId           String
+  recurrenceType   String
+  intervalDays     Int?
+  daysOfWeek       Json      @default("[]")
+  daysOfMonth      Json      @default("[]")
+  startDate        DateTime?
+  endDate          DateTime?
+  occurrenceCount  Int?
+  lastGenerated    DateTime  @default(now())
+  instanceCount    Int       @default(0)
+  workItemTemplate Json
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workItems   WorkItem[]
+  linkedNotes Note[]
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+model WorkItemReminder {
+  id             String   @id @default(cuid())
+  workItemId     String
+  reminderType   String
+  sentAt         DateTime @default(now())
+  notificationId String?
+
+  workItem WorkItem @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+
+  @@unique([workItemId, reminderType])
+  @@index([workItemId])
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { X, FolderOpen, Tag, Gauge, Calendar, Clock, Link, CheckCircle, Trash2, MapPin, Check } from 'lucide-react';
+import { X, FolderOpen, Tag, Gauge, Calendar, Clock, Link, CheckCircle, Trash2, MapPin, Check, Layers } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import Button from '@/components/ui/Button';
 
@@ -16,7 +16,8 @@ export type BulkAction =
   | 'complete'
   | 'delete'
   | 'location'
-  | 'term';
+  | 'term'
+  | 'type';
 
 interface BulkEditToolbarProps {
   selectedCount: number;
@@ -27,13 +28,14 @@ interface BulkEditToolbarProps {
 }
 
 const actionConfig: Record<EntityType, BulkAction[]> = {
-  task: ['course', 'tags', 'priority', 'date', 'time', 'link', 'complete', 'delete'],
-  deadline: ['course', 'tags', 'priority', 'date', 'time', 'link', 'complete', 'delete'],
+  task: ['type', 'course', 'tags', 'priority', 'date', 'time', 'link', 'complete', 'delete'],
+  deadline: ['type', 'course', 'tags', 'priority', 'date', 'time', 'link', 'complete', 'delete'],
   exam: ['course', 'tags', 'date', 'time', 'location', 'link', 'delete'],
   course: ['term', 'link', 'delete'],
 };
 
 const actionLabels: Record<BulkAction, { label: string; mobileLabel: string; icon: typeof FolderOpen }> = {
+  type: { label: 'Type', mobileLabel: 'Type', icon: Layers },
   course: { label: 'Course', mobileLabel: 'Course', icon: FolderOpen },
   tags: { label: 'Tags', mobileLabel: 'Tags', icon: Tag },
   priority: { label: 'Priority', mobileLabel: 'Priority', icon: Gauge },

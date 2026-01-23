@@ -1,8 +1,7 @@
 export const PAGES = {
   DASHBOARD: 'Dashboard',
   CALENDAR: 'Calendar',
-  TASKS: 'Tasks',
-  ASSIGNMENTS: 'Assignments',
+  WORK: 'Work',
   EXAMS: 'Exams',
   NOTES: 'Notes',
   COURSES: 'Courses',

@@ -1,10 +1,10 @@
-import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent } from '@/types';
+import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent, WorkItem } from '@/types';
 import { getDayOfWeek } from './utils';
 import { getEventTypeColors, ColorblindMode, ColorblindStyle } from '@/lib/collegeColors';
 
 export interface CalendarEvent {
   id: string;
-  type: 'course' | 'task' | 'deadline' | 'exam' | 'event';
+  type: 'course' | 'task' | 'deadline' | 'exam' | 'event' | 'reading' | 'project';
   title: string;
   time?: string;
   endTime?: string;
@@ -158,17 +158,38 @@ export function getCourseEventsForDate(
     );
 }
 
-// Get all task/deadline events for a specific date
+// Helper to determine calendar type from work item type
+function getCalendarTypeFromWorkItem(item: WorkItem | Task | Deadline): 'task' | 'deadline' | 'reading' | 'project' {
+  // WorkItem has a 'type' field
+  if ('type' in item && typeof item.type === 'string') {
+    // Map WorkItem type to calendar event type
+    switch (item.type) {
+      case 'assignment': return 'deadline';
+      case 'reading': return 'reading';
+      case 'project': return 'project';
+      default: return 'task';
+    }
+  }
+  // Legacy: Task has 'pinned', Deadline doesn't
+  return 'pinned' in item ? 'task' : 'deadline';
+}
+
+// Get all task/deadline/work item events for a specific date
 export function getTaskDeadlineEventsForDate(
   date: Date,
   tasks: Task[],
-  deadlines: Deadline[]
+  deadlines: Deadline[],
+  workItems: WorkItem[] = []
 ): CalendarEvent[] {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   const dateStr = `${year}-${month}-${day}`;
-  const allItems = [...tasks, ...deadlines];
+
+  // Use workItems if available, otherwise fall back to tasks + deadlines
+  const allItems: (Task | Deadline | WorkItem)[] = workItems.length > 0
+    ? workItems
+    : [...tasks, ...deadlines];
 
   return allItems
     .filter((item) => {
@@ -198,8 +219,7 @@ export function getTaskDeadlineEventsForDate(
       return false;
     })
     .map((item) => {
-      const isTask = 'pinned' in item;
-      const type: 'task' | 'deadline' = isTask ? 'task' : 'deadline';
+      const type = getCalendarTypeFromWorkItem(item as any);
 
       // Get time in 24-hour format (HH:MM) if dueAt exists
       let time: string | undefined;
@@ -335,10 +355,11 @@ export function getEventsForDate(
   deadlines: Deadline[],
   exams?: Exam[],
   excludedDates?: ExcludedDate[],
-  calendarEvents?: CustomCalendarEvent[]
+  calendarEvents?: CustomCalendarEvent[],
+  workItems?: WorkItem[]
 ): CalendarEvent[] {
   const courseEvents = getCourseEventsForDate(date, courses, excludedDates);
-  const taskDeadlineEvents = getTaskDeadlineEventsForDate(date, tasks, deadlines);
+  const taskDeadlineEvents = getTaskDeadlineEventsForDate(date, tasks, deadlines, workItems);
   const examEvents = exams ? getExamEventsForDate(date, exams) : [];
   const customEvents = calendarEvents ? getCustomCalendarEventsForDate(date, calendarEvents) : [];
 
@@ -368,7 +389,8 @@ export function getEventsForRange(
   tasks: Task[],
   deadlines: Deadline[],
   exams?: Exam[],
-  excludedDates?: ExcludedDate[]
+  excludedDates?: ExcludedDate[],
+  workItems?: WorkItem[]
 ): Map<string, CalendarEvent[]> {
   const eventsByDate = new Map<string, CalendarEvent[]>();
 
@@ -377,7 +399,7 @@ export function getEventsForRange(
 
   while (current <= endDate) {
     const dateStr = current.toISOString().split('T')[0];
-    const events = getEventsForDate(current, courses, tasks, deadlines, exams, excludedDates);
+    const events = getEventsForDate(current, courses, tasks, deadlines, exams, excludedDates, undefined, workItems);
     if (events.length > 0) {
       eventsByDate.set(dateStr, events);
     }
@@ -472,6 +494,8 @@ export const EVENT_TYPE_COLORS = {
   exam: '#ef4444',     // Red
   deadline: '#ff7d00', // Orange
   event: '#a855f7',    // Purple
+  reading: '#06b6d4',  // Cyan
+  project: '#ec4899',  // Pink
 };
 
 // Raw hex colors for cases where CSS variables can't be used (e.g., color calculations)
@@ -481,6 +505,8 @@ export const EVENT_TYPE_COLORS_HEX = {
   exam: '#ef4444',
   deadline: '#ff7d00',
   event: '#a855f7',
+  reading: '#06b6d4',
+  project: '#ec4899',
 };
 
 // Get the color for an event (supports colorblind mode)
@@ -510,6 +536,14 @@ export function getEventColor(
 
   if (event.type === 'deadline') {
     return colors.deadline;
+  }
+
+  if (event.type === 'reading') {
+    return colors.reading;
+  }
+
+  if (event.type === 'project') {
+    return colors.project;
   }
 
   if (event.type === 'event') {
@@ -595,6 +629,8 @@ export function getMonthViewColor(
     task: colors.task,
     deadline: colors.deadline,
     event: colors.event,
+    reading: colors.reading,
+    project: colors.project,
   };
   return colorMap[event.type] || colors.course;
 }

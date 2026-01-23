@@ -69,7 +69,7 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
           element: '[data-tour="mobile-hamburger"]',
           popover: {
             title: 'Navigation Menu',
-            description: 'Tap the menu icon (☰) to open the navigation drawer. From there, you can navigate to Dashboard, Calendar, Courses, Tasks, Assignments, Exams, Notes, and Settings.',
+            description: 'Tap the menu icon (☰) to open the navigation drawer. From there, you can navigate to Dashboard, Calendar, Work, Exams, Notes, Courses, and Settings.',
             side: 'bottom',
             align: 'center'
           }
@@ -78,7 +78,7 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
           element: '[data-tour="navigation"]',
           popover: {
             title: 'Navigation',
-            description: 'Use the sidebar to navigate to your Dashboard, Calendar, Courses, Tasks, Assignments, Exams, Notes, Tools, and Settings.',
+            description: 'Use the sidebar to navigate to your Dashboard, Calendar, Work, Exams, Notes, Courses, Tools, and Settings.',
             side: 'right',
             align: 'start'
           }
@@ -115,7 +115,7 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
     ];
 
     // Navigation steps - differ between mobile and desktop
-    // Order matches nav: Calendar, Tasks, Assignments, Exams, Notes, Courses, Shopping, Settings
+    // Order matches nav: Calendar, Work, Exams, Notes, Courses, Shopping, Settings
     const navigationSteps = isMobile ? [
       {
         element: '[data-tour="mobile-hamburger"]',
@@ -129,17 +129,8 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
       {
         element: '[data-tour="mobile-hamburger"]',
         popover: {
-          title: 'Tasks',
-          description: 'Create personal to-do items with priorities, due dates, and checklists.',
-          side: 'bottom',
-          align: 'center'
-        }
-      },
-      {
-        element: '[data-tour="mobile-hamburger"]',
-        popover: {
-          title: 'Assignments',
-          description: 'Track homework and course deadlines. Link them to courses and get reminders.',
+          title: 'Work',
+          description: 'Manage all your tasks, assignments, readings, and projects in one place.',
           side: 'bottom',
           align: 'center'
         }
@@ -200,19 +191,10 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
         }
       },
       {
-        element: 'a[href="/tasks"]',
+        element: 'a[href="/work"]',
         popover: {
-          title: 'Tasks',
-          description: 'Create personal to-do items with priorities, due dates, and checklists.',
-          side: 'right',
-          align: 'center'
-        }
-      },
-      {
-        element: 'a[href="/deadlines"]',
-        popover: {
-          title: 'Assignments',
-          description: 'Track homework and course deadlines. Link them to courses and get reminders.',
+          title: 'Work',
+          description: 'Manage all your tasks, assignments, readings, and projects in one place.',
           side: 'right',
           align: 'center'
         }

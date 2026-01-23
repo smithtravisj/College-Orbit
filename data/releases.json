@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "1.3.0",
+      "date": "2026-01-23",
+      "changes": [
+        "Unified Work page - tasks, assignments, readings, and projects now in one place",
+        "Notes can now be linked to readings and projects",
+        "Added 'More options' collapsible section to notes creation/edit form",
+        "Updated Terms of Service and Privacy Policy for unified Work model",
+        "Updated onboarding tour and landing page for unified Work experience",
+        "Added reading and project reminder timing settings"
+      ]
+    },
+    {
       "version": "1.2.18",
       "date": "2026-01-23",
       "changes": [

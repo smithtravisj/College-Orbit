@@ -25,9 +25,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useFormatters } from '@/hooks/useFormatters';
 import { FREE_TIER_LIMITS } from '@/lib/subscription';
 import Link from 'next/link';
-import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { showDeleteToast } from '@/components/ui/DeleteToast';
-import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
 import FilePreviewModal from '@/components/FilePreviewModal';
 
 export default function NotesPage() {
@@ -63,9 +61,11 @@ export default function NotesPage() {
     taskId: '',
     deadlineId: '',
     examId: '',
+    workItemId: '',
     recurringTaskPatternId: '',
     recurringDeadlinePatternId: '',
     recurringExamPatternId: '',
+    recurringWorkPatternId: '',
     tags: [] as string[],
     links: [{ label: '', url: '' }],
     files: [] as Array<{ name: string; url: string; size: number }>,
@@ -74,9 +74,9 @@ export default function NotesPage() {
   const [fileUploading, setFileUploading] = useState(false);
   const [upgradeFeature, setUpgradeFeature] = useState<'notes' | 'files'>('notes');
   const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
-  const [nlpInput, setNlpInput] = useState('');
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
 
-  const { courses, notes, folders, tasks, deadlines, exams, settings, addNote, updateNote, deleteNote, toggleNotePin, initializeStore, updateSettings } = useAppStore();
+  const { courses, notes, folders, tasks, deadlines, exams, workItems, recurringWorkPatterns, settings, addNote, updateNote, deleteNote, toggleNotePin, initializeStore, updateSettings } = useAppStore();
   const confirmBeforeDelete = settings.confirmBeforeDelete ?? true;
 
   useEffect(() => {
@@ -170,9 +170,11 @@ export default function NotesPage() {
         taskId: formData.taskId || null,
         deadlineId: formData.deadlineId || null,
         examId: formData.examId || null,
+        workItemId: formData.workItemId || null,
         recurringTaskPatternId: formData.recurringTaskPatternId || null,
         recurringDeadlinePatternId: formData.recurringDeadlinePatternId || null,
         recurringExamPatternId: formData.recurringExamPatternId || null,
+        recurringWorkPatternId: formData.recurringWorkPatternId || null,
         tags: formData.tags,
         links,
         files: formData.files,
@@ -189,9 +191,11 @@ export default function NotesPage() {
           taskId: formData.taskId || null,
           deadlineId: formData.deadlineId || null,
           examId: formData.examId || null,
+          workItemId: formData.workItemId || null,
           recurringTaskPatternId: formData.recurringTaskPatternId || null,
           recurringDeadlinePatternId: formData.recurringDeadlinePatternId || null,
           recurringExamPatternId: formData.recurringExamPatternId || null,
+          recurringWorkPatternId: formData.recurringWorkPatternId || null,
           tags: formData.tags,
           isPinned: false,
           links,
@@ -222,9 +226,11 @@ export default function NotesPage() {
       taskId: note.taskId || '',
       deadlineId: note.deadlineId || '',
       examId: note.examId || '',
+      workItemId: note.workItemId || '',
       recurringTaskPatternId: note.recurringTaskPatternId || '',
       recurringDeadlinePatternId: note.recurringDeadlinePatternId || '',
       recurringExamPatternId: note.recurringExamPatternId || '',
+      recurringWorkPatternId: note.recurringWorkPatternId || '',
       tags: note.tags || [],
       links: note.links && note.links.length > 0 ? note.links : [{ label: '', url: '' }],
       files: note.files || [],
@@ -234,7 +240,6 @@ export default function NotesPage() {
 
   const resetForm = () => {
     setEditingId(null);
-    setNlpInput('');
     setFormData({
       title: '',
       content: { type: 'doc', content: [] },
@@ -243,9 +248,11 @@ export default function NotesPage() {
       taskId: '',
       deadlineId: '',
       examId: '',
+      workItemId: '',
       recurringTaskPatternId: '',
       recurringDeadlinePatternId: '',
       recurringExamPatternId: '',
+      recurringWorkPatternId: '',
       tags: [],
       links: [{ label: '', url: '' }],
       files: [],
@@ -279,30 +286,6 @@ export default function NotesPage() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  };
-
-  // Handle NLP input change
-  const handleNlpInputChange = (value: string) => {
-    setNlpInput(value);
-
-    if (!value.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        title: '',
-        courseId: '',
-        folderId: '',
-      }));
-      return;
-    }
-
-    const parsed = parseNaturalLanguage(value, { courses, folders, itemType: 'note' });
-
-    setFormData(prev => ({
-      ...prev,
-      title: parsed.title || '',
-      courseId: parsed.courseId || '',
-      folderId: parsed.folderId || '',
-    }));
   };
 
   // Check limit before opening new note form
@@ -723,15 +706,6 @@ export default function NotesPage() {
               <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
                 <Card>
                   <form onSubmit={handleSubmit} className={isMobile ? 'space-y-2' : 'space-y-5'}>
-                  {/* Natural Language Input - only for new notes (premium feature) */}
-                  {!editingId && subscription.isPremium && (
-                    <NaturalLanguageInput
-                      value={nlpInput}
-                      onChange={handleNlpInputChange}
-                      placeholder={NLP_PLACEHOLDERS.note}
-                      autoFocus
-                    />
-                  )}
                   <Input
                     label="Title"
                     value={formData.title}
@@ -758,124 +732,6 @@ export default function NotesPage() {
                     />
                   </div>
 
-                  {/* Link to Task, Assignment, or Exam */}
-                  <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-3 gap-4'}`} style={{ marginTop: isMobile ? '8px' : '16px' }}>
-                    <Select
-                      label="Link to Task"
-                      value={formData.recurringTaskPatternId ? `pattern:${formData.recurringTaskPatternId}` : (formData.taskId ? `task:${formData.taskId}` : '')}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (!val) {
-                          setFormData({ ...formData, taskId: '', recurringTaskPatternId: '' });
-                        } else if (val.startsWith('pattern:')) {
-                          setFormData({ ...formData, taskId: '', recurringTaskPatternId: val.replace('pattern:', '') });
-                        } else if (val.startsWith('task:')) {
-                          setFormData({ ...formData, taskId: val.replace('task:', ''), recurringTaskPatternId: '' });
-                        }
-                      }}
-                      options={[
-                        { value: '', label: 'No Task' },
-                        ...(() => {
-                          // Get non-recurring tasks
-                          const nonRecurring = tasks
-                            .filter((t) => t.status === 'open' && !t.recurringPatternId)
-                            .map((t) => ({ value: `task:${t.id}`, label: t.title }));
-                          // Get one task per recurring pattern (earliest open instance)
-                          const patternMap = new Map<string, { title: string; dueAt: string | null }>();
-                          tasks
-                            .filter((t) => t.status === 'open' && t.recurringPatternId)
-                            .forEach((t) => {
-                              const existing = patternMap.get(t.recurringPatternId!);
-                              if (!existing || (t.dueAt && existing.dueAt && new Date(t.dueAt) < new Date(existing.dueAt))) {
-                                patternMap.set(t.recurringPatternId!, { title: t.title, dueAt: t.dueAt });
-                              }
-                            });
-                          const recurring = Array.from(patternMap.entries()).map(([patternId, { title }]) => ({
-                            value: `pattern:${patternId}`,
-                            label: `${title} (recurring)`,
-                          }));
-                          return [...nonRecurring, ...recurring];
-                        })(),
-                      ]}
-                    />
-                    <Select
-                      label="Link to Assignment"
-                      value={formData.recurringDeadlinePatternId ? `pattern:${formData.recurringDeadlinePatternId}` : (formData.deadlineId ? `deadline:${formData.deadlineId}` : '')}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (!val) {
-                          setFormData({ ...formData, deadlineId: '', recurringDeadlinePatternId: '' });
-                        } else if (val.startsWith('pattern:')) {
-                          setFormData({ ...formData, deadlineId: '', recurringDeadlinePatternId: val.replace('pattern:', '') });
-                        } else if (val.startsWith('deadline:')) {
-                          setFormData({ ...formData, deadlineId: val.replace('deadline:', ''), recurringDeadlinePatternId: '' });
-                        }
-                      }}
-                      options={[
-                        { value: '', label: 'No Assignment' },
-                        ...(() => {
-                          // Get non-recurring deadlines
-                          const nonRecurring = deadlines
-                            .filter((d) => d.status === 'open' && !d.recurringPatternId)
-                            .map((d) => ({ value: `deadline:${d.id}`, label: d.title }));
-                          // Get one deadline per recurring pattern (earliest open instance)
-                          const patternMap = new Map<string, { title: string; dueAt: string | null }>();
-                          deadlines
-                            .filter((d) => d.status === 'open' && d.recurringPatternId)
-                            .forEach((d) => {
-                              const existing = patternMap.get(d.recurringPatternId!);
-                              if (!existing || (d.dueAt && existing.dueAt && new Date(d.dueAt) < new Date(existing.dueAt))) {
-                                patternMap.set(d.recurringPatternId!, { title: d.title, dueAt: d.dueAt });
-                              }
-                            });
-                          const recurring = Array.from(patternMap.entries()).map(([patternId, { title }]) => ({
-                            value: `pattern:${patternId}`,
-                            label: `${title} (recurring)`,
-                          }));
-                          return [...nonRecurring, ...recurring];
-                        })(),
-                      ]}
-                    />
-                    <Select
-                      label="Link to Exam"
-                      value={formData.recurringExamPatternId ? `pattern:${formData.recurringExamPatternId}` : (formData.examId ? `exam:${formData.examId}` : '')}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (!val) {
-                          setFormData({ ...formData, examId: '', recurringExamPatternId: '' });
-                        } else if (val.startsWith('pattern:')) {
-                          setFormData({ ...formData, examId: '', recurringExamPatternId: val.replace('pattern:', '') });
-                        } else if (val.startsWith('exam:')) {
-                          setFormData({ ...formData, examId: val.replace('exam:', ''), recurringExamPatternId: '' });
-                        }
-                      }}
-                      options={[
-                        { value: '', label: 'No Exam' },
-                        ...(() => {
-                          // Get non-recurring exams
-                          const nonRecurring = exams
-                            .filter((e) => e.status === 'scheduled' && !e.recurringPatternId)
-                            .map((e) => ({ value: `exam:${e.id}`, label: e.title }));
-                          // Get one exam per recurring pattern (earliest scheduled instance)
-                          const patternMap = new Map<string, { title: string; examAt: string | null }>();
-                          exams
-                            .filter((e) => e.status === 'scheduled' && e.recurringPatternId)
-                            .forEach((e) => {
-                              const existing = patternMap.get(e.recurringPatternId!);
-                              if (!existing || (e.examAt && existing.examAt && new Date(e.examAt) < new Date(existing.examAt))) {
-                                patternMap.set(e.recurringPatternId!, { title: e.title, examAt: e.examAt });
-                              }
-                            });
-                          const recurring = Array.from(patternMap.entries()).map(([patternId, { title }]) => ({
-                            value: `pattern:${patternId}`,
-                            label: `${title} (recurring)`,
-                          }));
-                          return [...nonRecurring, ...recurring];
-                        })(),
-                      ]}
-                    />
-                  </div>
-
                   <div style={{ marginTop: isMobile ? '8px' : '16px' }}>
                     <RichTextEditor
                       value={formData.content}
@@ -883,16 +739,256 @@ export default function NotesPage() {
                     />
                   </div>
 
-                  {/* Tags input with suggestions */}
-                  <div style={{ marginTop: isMobile ? '4px' : '-6px' }}>
-                    <label className={isMobile ? 'block text-xs font-medium text-[var(--text)]' : 'block text-sm font-medium text-[var(--text)]'} style={{ marginBottom: isMobile ? '4px' : '12px' }}>Tags</label>
-                    <TagInput
-                      tags={formData.tags}
-                      onTagsChange={(tags) => setFormData({ ...formData, tags })}
-                      allAvailableTags={allTags}
-                      placeholder="Add tag..."
+                  {/* More Options Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setShowMoreOptions(!showMoreOptions)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      background: 'none',
+                      border: 'none',
+                      padding: '10px 0',
+                      cursor: 'pointer',
+                      color: 'var(--text)',
+                      fontSize: isMobile ? '14px' : '14px',
+                      fontWeight: 500,
+                    }}
+                  >
+                    <ChevronDown
+                      size={18}
+                      style={{
+                        transform: showMoreOptions ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s ease',
+                      }}
                     />
-                  </div>
+                    More options
+                  </button>
+
+                  {/* More Options Section */}
+                  {showMoreOptions && (
+                    <>
+                      {/* Link to Task, Assignment, or Exam */}
+                      <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-3 gap-4'}`}>
+                        <Select
+                          label="Link to Task"
+                          value={formData.recurringTaskPatternId ? `pattern:${formData.recurringTaskPatternId}` : (formData.taskId ? `task:${formData.taskId}` : '')}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (!val) {
+                              setFormData({ ...formData, taskId: '', recurringTaskPatternId: '' });
+                            } else if (val.startsWith('pattern:')) {
+                              setFormData({ ...formData, taskId: '', recurringTaskPatternId: val.replace('pattern:', '') });
+                            } else if (val.startsWith('task:')) {
+                              setFormData({ ...formData, taskId: val.replace('task:', ''), recurringTaskPatternId: '' });
+                            }
+                          }}
+                          options={[
+                            { value: '', label: 'No Task' },
+                            ...(() => {
+                              // Get non-recurring tasks
+                              const nonRecurring = tasks
+                                .filter((t) => t.status === 'open' && !t.recurringPatternId)
+                                .map((t) => ({ value: `task:${t.id}`, label: t.title }));
+                              // Get one task per recurring pattern (earliest open instance)
+                              const patternMap = new Map<string, { title: string; dueAt: string | null }>();
+                              tasks
+                                .filter((t) => t.status === 'open' && t.recurringPatternId)
+                                .forEach((t) => {
+                                  const existing = patternMap.get(t.recurringPatternId!);
+                                  if (!existing || (t.dueAt && existing.dueAt && new Date(t.dueAt) < new Date(existing.dueAt))) {
+                                    patternMap.set(t.recurringPatternId!, { title: t.title, dueAt: t.dueAt });
+                                  }
+                                });
+                              const recurring = Array.from(patternMap.entries()).map(([patternId, { title }]) => ({
+                                value: `pattern:${patternId}`,
+                                label: `${title} (recurring)`,
+                              }));
+                              return [...nonRecurring, ...recurring];
+                            })(),
+                          ]}
+                        />
+                        <Select
+                          label="Link to Assignment"
+                          value={formData.recurringDeadlinePatternId ? `pattern:${formData.recurringDeadlinePatternId}` : (formData.deadlineId ? `deadline:${formData.deadlineId}` : '')}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (!val) {
+                              setFormData({ ...formData, deadlineId: '', recurringDeadlinePatternId: '' });
+                            } else if (val.startsWith('pattern:')) {
+                              setFormData({ ...formData, deadlineId: '', recurringDeadlinePatternId: val.replace('pattern:', '') });
+                            } else if (val.startsWith('deadline:')) {
+                              setFormData({ ...formData, deadlineId: val.replace('deadline:', ''), recurringDeadlinePatternId: '' });
+                            }
+                          }}
+                          options={[
+                            { value: '', label: 'No Assignment' },
+                            ...(() => {
+                              // Get non-recurring deadlines
+                              const nonRecurring = deadlines
+                                .filter((d) => d.status === 'open' && !d.recurringPatternId)
+                                .map((d) => ({ value: `deadline:${d.id}`, label: d.title }));
+                              // Get one deadline per recurring pattern (earliest open instance)
+                              const patternMap = new Map<string, { title: string; dueAt: string | null }>();
+                              deadlines
+                                .filter((d) => d.status === 'open' && d.recurringPatternId)
+                                .forEach((d) => {
+                                  const existing = patternMap.get(d.recurringPatternId!);
+                                  if (!existing || (d.dueAt && existing.dueAt && new Date(d.dueAt) < new Date(existing.dueAt))) {
+                                    patternMap.set(d.recurringPatternId!, { title: d.title, dueAt: d.dueAt });
+                                  }
+                                });
+                              const recurring = Array.from(patternMap.entries()).map(([patternId, { title }]) => ({
+                                value: `pattern:${patternId}`,
+                                label: `${title} (recurring)`,
+                              }));
+                              return [...nonRecurring, ...recurring];
+                            })(),
+                          ]}
+                        />
+                        <Select
+                          label="Link to Exam"
+                          value={formData.recurringExamPatternId ? `pattern:${formData.recurringExamPatternId}` : (formData.examId ? `exam:${formData.examId}` : '')}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (!val) {
+                              setFormData({ ...formData, examId: '', recurringExamPatternId: '' });
+                            } else if (val.startsWith('pattern:')) {
+                              setFormData({ ...formData, examId: '', recurringExamPatternId: val.replace('pattern:', '') });
+                            } else if (val.startsWith('exam:')) {
+                              setFormData({ ...formData, examId: val.replace('exam:', ''), recurringExamPatternId: '' });
+                            }
+                          }}
+                          options={[
+                            { value: '', label: 'No Exam' },
+                            ...(() => {
+                              // Get non-recurring exams
+                              const nonRecurring = exams
+                                .filter((e) => e.status === 'scheduled' && !e.recurringPatternId)
+                                .map((e) => ({ value: `exam:${e.id}`, label: e.title }));
+                              // Get one exam per recurring pattern (earliest scheduled instance)
+                              const patternMap = new Map<string, { title: string; examAt: string | null }>();
+                              exams
+                                .filter((e) => e.status === 'scheduled' && e.recurringPatternId)
+                                .forEach((e) => {
+                                  const existing = patternMap.get(e.recurringPatternId!);
+                                  if (!existing || (e.examAt && existing.examAt && new Date(e.examAt) < new Date(existing.examAt))) {
+                                    patternMap.set(e.recurringPatternId!, { title: e.title, examAt: e.examAt });
+                                  }
+                                });
+                              const recurring = Array.from(patternMap.entries()).map(([patternId, { title }]) => ({
+                                value: `pattern:${patternId}`,
+                                label: `${title} (recurring)`,
+                              }));
+                              return [...nonRecurring, ...recurring];
+                            })(),
+                          ]}
+                        />
+                      </div>
+
+                      {/* Link to Reading or Project (WorkItems) */}
+                      <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 gap-4'}`} style={{ marginTop: isMobile ? '8px' : '16px' }}>
+                        <Select
+                          label="Link to Reading"
+                          value={formData.recurringWorkPatternId && workItems.find(w => w.recurringPatternId === formData.recurringWorkPatternId && w.type === 'reading') ? `pattern:${formData.recurringWorkPatternId}` : (formData.workItemId && workItems.find(w => w.id === formData.workItemId)?.type === 'reading' ? `workItem:${formData.workItemId}` : '')}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (!val) {
+                              // Only clear if currently linked to a reading
+                              const currentWorkItem = workItems.find(w => w.id === formData.workItemId);
+                              const currentPattern = recurringWorkPatterns.find(p => p.id === formData.recurringWorkPatternId);
+                              if (currentWorkItem?.type === 'reading' || currentPattern?.workItemTemplate?.type === 'reading') {
+                                setFormData({ ...formData, workItemId: '', recurringWorkPatternId: '' });
+                              }
+                            } else if (val.startsWith('pattern:')) {
+                              setFormData({ ...formData, workItemId: '', recurringWorkPatternId: val.replace('pattern:', '') });
+                            } else if (val.startsWith('workItem:')) {
+                              setFormData({ ...formData, workItemId: val.replace('workItem:', ''), recurringWorkPatternId: '' });
+                            }
+                          }}
+                          options={[
+                            { value: '', label: 'No Reading' },
+                            ...(() => {
+                              // Get non-recurring readings
+                              const nonRecurring = workItems
+                                .filter((w) => w.type === 'reading' && w.status === 'open' && !w.recurringPatternId)
+                                .map((w) => ({ value: `workItem:${w.id}`, label: w.title }));
+                              // Get one reading per recurring pattern (earliest open instance)
+                              const patternMap = new Map<string, { title: string; dueAt: string | null }>();
+                              workItems
+                                .filter((w) => w.type === 'reading' && w.status === 'open' && w.recurringPatternId)
+                                .forEach((w) => {
+                                  const existing = patternMap.get(w.recurringPatternId!);
+                                  if (!existing || (w.dueAt && existing.dueAt && new Date(w.dueAt) < new Date(existing.dueAt))) {
+                                    patternMap.set(w.recurringPatternId!, { title: w.title, dueAt: w.dueAt });
+                                  }
+                                });
+                              const recurring = Array.from(patternMap.entries()).map(([patternId, { title }]) => ({
+                                value: `pattern:${patternId}`,
+                                label: `${title} (recurring)`,
+                              }));
+                              return [...nonRecurring, ...recurring];
+                            })(),
+                          ]}
+                        />
+                        <Select
+                          label="Link to Project"
+                          value={formData.recurringWorkPatternId && workItems.find(w => w.recurringPatternId === formData.recurringWorkPatternId && w.type === 'project') ? `pattern:${formData.recurringWorkPatternId}` : (formData.workItemId && workItems.find(w => w.id === formData.workItemId)?.type === 'project' ? `workItem:${formData.workItemId}` : '')}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (!val) {
+                              // Only clear if currently linked to a project
+                              const currentWorkItem = workItems.find(w => w.id === formData.workItemId);
+                              const currentPattern = recurringWorkPatterns.find(p => p.id === formData.recurringWorkPatternId);
+                              if (currentWorkItem?.type === 'project' || currentPattern?.workItemTemplate?.type === 'project') {
+                                setFormData({ ...formData, workItemId: '', recurringWorkPatternId: '' });
+                              }
+                            } else if (val.startsWith('pattern:')) {
+                              setFormData({ ...formData, workItemId: '', recurringWorkPatternId: val.replace('pattern:', '') });
+                            } else if (val.startsWith('workItem:')) {
+                              setFormData({ ...formData, workItemId: val.replace('workItem:', ''), recurringWorkPatternId: '' });
+                            }
+                          }}
+                          options={[
+                            { value: '', label: 'No Project' },
+                            ...(() => {
+                              // Get non-recurring projects
+                              const nonRecurring = workItems
+                                .filter((w) => w.type === 'project' && w.status === 'open' && !w.recurringPatternId)
+                                .map((w) => ({ value: `workItem:${w.id}`, label: w.title }));
+                              // Get one project per recurring pattern (earliest open instance)
+                              const patternMap = new Map<string, { title: string; dueAt: string | null }>();
+                              workItems
+                                .filter((w) => w.type === 'project' && w.status === 'open' && w.recurringPatternId)
+                                .forEach((w) => {
+                                  const existing = patternMap.get(w.recurringPatternId!);
+                                  if (!existing || (w.dueAt && existing.dueAt && new Date(w.dueAt) < new Date(existing.dueAt))) {
+                                    patternMap.set(w.recurringPatternId!, { title: w.title, dueAt: w.dueAt });
+                                  }
+                                });
+                              const recurring = Array.from(patternMap.entries()).map(([patternId, { title }]) => ({
+                                value: `pattern:${patternId}`,
+                                label: `${title} (recurring)`,
+                              }));
+                              return [...nonRecurring, ...recurring];
+                            })(),
+                          ]}
+                        />
+                      </div>
+
+                      {/* Tags input with suggestions */}
+                      <div style={{ marginTop: isMobile ? '8px' : '16px' }}>
+                        <label className={isMobile ? 'block text-xs font-medium text-[var(--text)]' : 'block text-sm font-medium text-[var(--text)]'} style={{ marginBottom: isMobile ? '4px' : '6px' }}>Tags</label>
+                        <TagInput
+                          tags={formData.tags}
+                          onTagsChange={(tags) => setFormData({ ...formData, tags })}
+                          allAvailableTags={allTags}
+                          placeholder="Add tag..."
+                        />
+                      </div>
+                    </>
+                  )}
 
                   {/* File attachments */}
                   {formData.files && formData.files.length > 0 && (
@@ -1065,7 +1161,7 @@ export default function NotesPage() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {(selectedNote.task || selectedNote.recurringTaskPattern) && (
                           <Link
-                            href={`/tasks?task=${selectedNote.taskId || ''}`}
+                            href={`/work?task=${selectedNote.taskId || ''}`}
                             style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--link)', textDecoration: 'none' }}
                             onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
                             onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
@@ -1079,7 +1175,7 @@ export default function NotesPage() {
                         )}
                         {(selectedNote.deadline || selectedNote.recurringDeadlinePattern) && (
                           <Link
-                            href={`/deadlines?deadline=${selectedNote.deadlineId || ''}`}
+                            href={`/work?preview=${selectedNote.deadlineId || ''}`}
                             style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--link)', textDecoration: 'none' }}
                             onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
                             onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}

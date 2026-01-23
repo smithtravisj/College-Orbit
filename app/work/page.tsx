@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -24,13 +24,15 @@ import BulkEditToolbar, { BulkAction } from '@/components/BulkEditToolbar';
 import {
   BulkChangeCourseModal,
   BulkChangeTagsModal,
+  BulkChangeTypeModal,
   BulkChangePriorityModal,
   BulkChangeDateModal,
   BulkChangeTimeModal,
   BulkAddLinkModal,
   BulkDeleteModal,
 } from '@/components/BulkActionModals';
-import { RecurringTaskFormData } from '@/types';
+import { RecurringTaskFormData, WorkItemType, WORK_ITEM_TYPE_LABELS } from '@/types';
+import { CanvasBadge } from '@/components/CanvasBadge';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
@@ -115,10 +117,13 @@ export default function TasksPage() {
   const [toggledTasks, setToggledTasks] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
     title: '',
+    type: 'task' as WorkItemType,
     courseId: '',
     dueDate: '',
     dueTime: '',
     importance: '' as '' | 'low' | 'medium' | 'high',
+    priority: '' as '' | 'low' | 'medium' | 'high' | 'critical',
+    effort: '' as '' | 'small' | 'medium' | 'large',
     notes: '',
     tags: [] as string[],
     links: [{ label: '', url: '' }],
@@ -152,7 +157,30 @@ export default function TasksPage() {
   const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
   const [hideRecurringCompleted, setHideRecurringCompleted] = useState(false);
 
-  const { courses, tasks, notes, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, bulkUpdateTasks, bulkDeleteTasks, initializeStore } = useAppStore();
+  const { courses, tasks, notes, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, bulkUpdateTasks, bulkDeleteTasks, initializeStore, workItems, addWorkItem, updateWorkItem, deleteWorkItem, toggleWorkItemComplete, bulkUpdateWorkItems, bulkDeleteWorkItems, initialized: storeInitialized } = useAppStore();
+
+  // Type filter for unified work items - start with 'all' to avoid hydration mismatch
+  const [typeFilter, setTypeFilter] = useState<WorkItemType | 'all'>('all');
+  const [typeFilterLoaded, setTypeFilterLoaded] = useState(false);
+
+  // Load type filter from localStorage after mount
+  useEffect(() => {
+    const saved = localStorage.getItem('tasksTypeFilter');
+    if (saved && ['all', 'task', 'assignment', 'reading', 'project'].includes(saved)) {
+      setTypeFilter(saved as WorkItemType | 'all');
+    }
+    setTypeFilterLoaded(true);
+  }, []);
+
+  // Save type filter to localStorage when it changes (but only after initial load)
+  useEffect(() => {
+    if (typeFilterLoaded) {
+      localStorage.setItem('tasksTypeFilter', typeFilter);
+    }
+  }, [typeFilter, typeFilterLoaded]);
+
+  // Use workItems if available, otherwise fall back to tasks for backward compatibility
+  const useWorkItems = workItems.length > 0 || tasks.length === 0;
 
   // Handle filters card collapse state changes and save to database
   const handleFiltersCollapseChange = (isOpen: boolean) => {
@@ -191,18 +219,24 @@ export default function TasksPage() {
     setMounted(true);
   }, [initializeStore]);
 
-  // Check for task ID in URL params to open preview modal
+  // Check for task/workItem ID in URL params to open preview modal
   useEffect(() => {
-    const taskId = searchParams.get('task') || searchParams.get('preview');
-    if (taskId && mounted && tasks.length > 0) {
-      const task = tasks.find((t) => t.id === taskId);
+    const itemId = searchParams.get('task') || searchParams.get('preview');
+    if (itemId && mounted && (tasks.length > 0 || workItems.length > 0)) {
+      // Check workItems first (unified model), then fall back to tasks
+      const workItem = workItems.find((w) => w.id === itemId);
+      if (workItem) {
+        setPreviewingTask(workItem);
+        router.replace('/work', { scroll: false });
+        return;
+      }
+      const task = tasks.find((t) => t.id === itemId);
       if (task) {
         setPreviewingTask(task);
-        // Clear the URL parameter to prevent reopening on close
-        router.replace('/tasks', { scroll: false });
+        router.replace('/work', { scroll: false });
       }
     }
-  }, [searchParams, mounted, tasks, router]);
+  }, [searchParams, mounted, tasks, workItems, router]);
 
   // Reset hideRecurringCompleted when filter changes away from 'done'
   useEffect(() => {
@@ -211,7 +245,8 @@ export default function TasksPage() {
     }
   }, [filter]);
 
-  if (!mounted) {
+  // Skip loading state if store is already initialized (navigating from another page)
+  if (!mounted && !storeInitialized) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-[var(--text-muted)]">Loading...</div>
@@ -300,10 +335,13 @@ export default function TasksPage() {
       }
       setFormData({
         title: '',
+        type: 'task',
         courseId: '',
         dueDate: '',
         dueTime: '',
         importance: '',
+        priority: '',
+        effort: '',
         notes: '',
         tags: [],
         links: [{ label: '', url: '' }],
@@ -380,48 +418,88 @@ export default function TasksPage() {
           console.error('Error updating recurring pattern:', error);
         }
       } else {
-        // Update regular task - don't await, optimistic update handles UI
-        console.log('[handleSubmit] Updating as regular task');
-        updateTask(editingId, {
-          title: formData.title,
-          courseId: formData.courseId || null,
-          dueAt,
-          importance: formData.importance || null,
-          notes: formData.notes,
-          tags: formData.tags,
-          links,
-          files: formData.files,
-        });
+        // Update regular task/work item - don't await, optimistic update handles UI
+        console.log('[handleSubmit] Updating as regular task/work item');
+        if (useWorkItems) {
+          updateWorkItem(editingId, {
+            title: formData.title,
+            type: formData.type || 'task',
+            courseId: formData.courseId || null,
+            dueAt,
+            priority: formData.priority || null,
+            effort: formData.effort || null,
+            notes: formData.notes,
+            tags: formData.tags,
+            links,
+            files: formData.files,
+          });
+        } else {
+          updateTask(editingId, {
+            title: formData.title,
+            courseId: formData.courseId || null,
+            dueAt,
+            importance: formData.importance || null,
+            notes: formData.notes,
+            tags: formData.tags,
+            links,
+            files: formData.files,
+          });
+        }
       }
       setEditingId(null);
     } else {
       // Don't await - optimistic update handles UI immediately
-      addTask({
-        title: formData.title,
-        courseId: formData.courseId || null,
-        dueAt,
-        pinned: false,
-        importance: formData.importance || null,
-        checklist: [],
-        notes: formData.notes,
-        tags: formData.tags,
-        links,
-        files: formData.files,
-        status: 'open',
-        recurringPatternId: null,
-        instanceDate: null,
-        isRecurring: false,
-        workingOn: false,
-        updatedAt: new Date().toISOString(),
-      });
+      if (useWorkItems) {
+        addWorkItem({
+          title: formData.title,
+          type: formData.type || 'task',
+          courseId: formData.courseId || null,
+          dueAt,
+          pinned: false,
+          priority: formData.priority || null,
+          effort: formData.effort || null,
+          checklist: [],
+          notes: formData.notes,
+          tags: formData.tags,
+          links,
+          files: formData.files,
+          status: 'open',
+          recurringPatternId: null,
+          instanceDate: null,
+          isRecurring: false,
+          workingOn: false,
+        });
+      } else {
+        addTask({
+          title: formData.title,
+          courseId: formData.courseId || null,
+          dueAt,
+          pinned: false,
+          importance: formData.importance || null,
+          checklist: [],
+          notes: formData.notes,
+          tags: formData.tags,
+          links,
+          files: formData.files,
+          status: 'open',
+          recurringPatternId: null,
+          instanceDate: null,
+          isRecurring: false,
+          workingOn: false,
+          updatedAt: new Date().toISOString(),
+        });
+      }
     }
 
     setFormData({
       title: '',
+      type: 'task',
       courseId: '',
       dueDate: '',
       dueTime: '',
       importance: '',
+      priority: '',
+      effort: '',
       notes: '',
       tags: [],
       links: [{ label: '', url: '' }],
@@ -489,10 +567,13 @@ export default function TasksPage() {
 
     setFormData({
       title: task.title,
+      type: task.type || 'task',
       courseId: task.courseId || '',
       dueDate: dateStr,
       dueTime: timeStr,
       importance: task.importance || '',
+      priority: task.priority || '',
+      effort: task.effort || '',
       notes: task.notes,
       tags: task.tags || [],
       links: task.links && task.links.length > 0 ? task.links : [{ label: '', url: '' }],
@@ -508,10 +589,13 @@ export default function TasksPage() {
     setNlpInput('');
     setFormData({
       title: '',
+      type: 'task',
       courseId: '',
       dueDate: '',
       dueTime: '',
       importance: '',
+      priority: '',
+      effort: '',
       notes: '',
       tags: [],
       links: [{ label: '', url: '' }],
@@ -531,6 +615,33 @@ export default function TasksPage() {
       },
     });
     setShowForm(false);
+  };
+
+  // Helper to delete task/work item based on which API is active
+  const handleDelete = (id: string) => {
+    if (useWorkItems) {
+      deleteWorkItem(id);
+    } else {
+      deleteTask(id);
+    }
+  };
+
+  // Helper to toggle task/work item complete status
+  const handleToggleComplete = (id: string) => {
+    if (useWorkItems) {
+      toggleWorkItemComplete(id);
+    } else {
+      toggleTaskDone(id);
+    }
+  };
+
+  // Helper to update task/work item based on which API is active
+  const handleUpdate = (id: string, updates: Record<string, any>) => {
+    if (useWorkItems) {
+      updateWorkItem(id, updates);
+    } else {
+      updateTask(id, updates);
+    }
   };
 
   // Handle NLP input change
@@ -618,8 +729,11 @@ export default function TasksPage() {
     ];
   };
 
-  // Collect all unique tags from tasks
-  const allTags = Array.from(new Set(tasks.flatMap((t) => t.tags || [])));
+  // Collect all unique tags from tasks (memoized)
+  const allTags = useMemo(() =>
+    Array.from(new Set(tasks.flatMap((t) => t.tags || []))),
+    [tasks]
+  );
 
   // Bulk action handlers
   const handleBulkAction = (action: BulkAction) => {
@@ -632,8 +746,12 @@ export default function TasksPage() {
         ids.forEach(id => newSet.add(id));
         return newSet;
       });
-      // Update the tasks
-      bulkUpdateTasks(ids, { status: 'done' });
+      // Update the tasks/work items
+      if (useWorkItems) {
+        bulkUpdateWorkItems(ids, { status: 'done' });
+      } else {
+        bulkUpdateTasks(ids, { status: 'done' });
+      }
       // Add fade effect after delay
       setTimeout(() => {
         setHidingTasks(prev => {
@@ -649,20 +767,36 @@ export default function TasksPage() {
 
   const handleBulkCourseChange = async (courseId: string | null) => {
     const ids = Array.from(bulkSelect.selectedIds);
-    await bulkUpdateTasks(ids, { courseId });
+    if (useWorkItems) {
+      await bulkUpdateWorkItems(ids, { courseId });
+    } else {
+      await bulkUpdateTasks(ids, { courseId });
+    }
+  };
+
+  const handleBulkTypeChange = async (type: WorkItemType) => {
+    const ids = Array.from(bulkSelect.selectedIds);
+    if (useWorkItems) {
+      await bulkUpdateWorkItems(ids, { type });
+    }
+    // Note: Legacy tasks don't have a type field, so this only works for workItems
   };
 
   const handleBulkTagsChange = async (tags: string[], mode: 'add' | 'replace') => {
     const ids = Array.from(bulkSelect.selectedIds);
+    const items = useWorkItems ? workItems : tasks;
+    const updateFn = useWorkItems ? updateWorkItem : updateTask;
+    const bulkUpdateFn = useWorkItems ? bulkUpdateWorkItems : bulkUpdateTasks;
+
     if (mode === 'replace') {
-      await bulkUpdateTasks(ids, { tags });
+      await bulkUpdateFn(ids, { tags });
     } else {
-      // Add tags to each task's existing tags
+      // Add tags to each item's existing tags
       for (const id of ids) {
-        const task = tasks.find(t => t.id === id);
-        if (task) {
-          const newTags = Array.from(new Set([...(task.tags || []), ...tags]));
-          await updateTask(id, { tags: newTags });
+        const item = items.find(t => t.id === id);
+        if (item) {
+          const newTags = Array.from(new Set([...(item.tags || []), ...tags]));
+          await updateFn(id, { tags: newTags });
         }
       }
     }
@@ -670,162 +804,200 @@ export default function TasksPage() {
 
   const handleBulkPriorityChange = async (value: string | null) => {
     const ids = Array.from(bulkSelect.selectedIds);
-    await bulkUpdateTasks(ids, { importance: value as 'low' | 'medium' | 'high' | null });
+    if (useWorkItems) {
+      await bulkUpdateWorkItems(ids, { priority: value as 'low' | 'medium' | 'high' | 'critical' | null });
+    } else {
+      await bulkUpdateTasks(ids, { importance: value as 'low' | 'medium' | 'high' | null });
+    }
   };
 
   const handleBulkDateChange = async (date: string | null) => {
     const ids = Array.from(bulkSelect.selectedIds);
+    const items = useWorkItems ? workItems : tasks;
+    const updateFn = useWorkItems ? updateWorkItem : updateTask;
+
     for (const id of ids) {
-      const task = tasks.find(t => t.id === id);
-      if (task) {
+      const item = items.find(t => t.id === id);
+      if (item) {
         let dueAt: string | null = null;
         if (date) {
-          const existingTime = task.dueAt ? new Date(task.dueAt).toTimeString().slice(0, 5) : '23:59';
+          const existingTime = item.dueAt ? new Date(item.dueAt).toTimeString().slice(0, 5) : '23:59';
           dueAt = new Date(`${date}T${existingTime}`).toISOString();
         }
-        await updateTask(id, { dueAt });
+        await updateFn(id, { dueAt });
       }
     }
   };
 
   const handleBulkTimeChange = async (time: string | null) => {
     const ids = Array.from(bulkSelect.selectedIds);
+    const items = useWorkItems ? workItems : tasks;
+    const updateFn = useWorkItems ? updateWorkItem : updateTask;
+
     for (const id of ids) {
-      const task = tasks.find(t => t.id === id);
-      if (task && task.dueAt) {
-        const existingDate = new Date(task.dueAt).toISOString().split('T')[0];
-        const dueAt = time ? new Date(`${existingDate}T${time}`).toISOString() : task.dueAt;
-        await updateTask(id, { dueAt });
+      const item = items.find(t => t.id === id);
+      if (item && item.dueAt) {
+        const existingDate = new Date(item.dueAt).toISOString().split('T')[0];
+        const dueAt = time ? new Date(`${existingDate}T${time}`).toISOString() : item.dueAt;
+        await updateFn(id, { dueAt });
       }
     }
   };
 
   const handleBulkAddLink = async (link: { label: string; url: string }) => {
     const ids = Array.from(bulkSelect.selectedIds);
+    const items = useWorkItems ? workItems : tasks;
+    const updateFn = useWorkItems ? updateWorkItem : updateTask;
+
     for (const id of ids) {
-      const task = tasks.find(t => t.id === id);
-      if (task) {
-        const newLinks = [...(task.links || []), link];
-        await updateTask(id, { links: newLinks });
+      const item = items.find(t => t.id === id);
+      if (item) {
+        const newLinks = [...(item.links || []), link];
+        await updateFn(id, { links: newLinks });
       }
     }
   };
 
   const handleBulkDelete = async () => {
     const ids = Array.from(bulkSelect.selectedIds);
-    await bulkDeleteTasks(ids);
+    if (useWorkItems) {
+      await bulkDeleteWorkItems(ids);
+    } else {
+      await bulkDeleteTasks(ids);
+    }
     bulkSelect.clearSelection();
   };
 
-  // For recurring tasks, find the earliest open instance per pattern
-  const earliestRecurringInstanceIds = (() => {
-    const patternToEarliestTask = new Map<string, { id: string; dueAt: string | null }>();
+  // For recurring tasks/work items, find the earliest open instance per pattern (memoized)
+  const earliestRecurringInstanceIds = useMemo(() => {
+    const patternToEarliestItem = new Map<string, { id: string; dueAt: string | null }>();
+    const items = useWorkItems ? workItems : tasks;
 
-    tasks
+    items
       .filter(t => t.recurringPatternId && t.status === 'open')
       .forEach(t => {
-        const existing = patternToEarliestTask.get(t.recurringPatternId!);
+        const existing = patternToEarliestItem.get(t.recurringPatternId!);
         if (!existing) {
-          patternToEarliestTask.set(t.recurringPatternId!, { id: t.id, dueAt: t.dueAt });
+          patternToEarliestItem.set(t.recurringPatternId!, { id: t.id, dueAt: t.dueAt });
         } else {
           // Compare due dates - keep the earliest
           if (t.dueAt && existing.dueAt) {
             if (new Date(t.dueAt) < new Date(existing.dueAt)) {
-              patternToEarliestTask.set(t.recurringPatternId!, { id: t.id, dueAt: t.dueAt });
+              patternToEarliestItem.set(t.recurringPatternId!, { id: t.id, dueAt: t.dueAt });
             }
           } else if (t.dueAt && !existing.dueAt) {
-            // Prefer tasks with due dates
-            patternToEarliestTask.set(t.recurringPatternId!, { id: t.id, dueAt: t.dueAt });
+            // Prefer items with due dates
+            patternToEarliestItem.set(t.recurringPatternId!, { id: t.id, dueAt: t.dueAt });
           }
         }
       });
 
-    return new Set(Array.from(patternToEarliestTask.values()).map(v => v.id));
-  })();
+    return new Set(Array.from(patternToEarliestItem.values()).map(v => v.id));
+  }, [useWorkItems, workItems, tasks]);
 
-  const filtered = tasks
-    .filter((t) => {
-      // Always include toggled tasks (keep them visible after status change)
-      if (toggledTasks.has(t.id)) {
+  // Use workItems if available and populated, otherwise fall back to tasks (memoized)
+  // Convert tasks to work item format for unified filtering
+  const filtered = useMemo(() => {
+    const itemsToFilter = useWorkItems
+      ? workItems
+      : tasks.map(t => ({
+          ...t,
+          type: 'task' as WorkItemType,
+          priority: t.importance, // Map importance to priority
+          effort: null,
+          files: t.files || [],
+        }));
+
+    return itemsToFilter
+      .filter((t) => {
+        // Filter by type if a type is selected
+        if (typeFilter !== 'all' && t.type !== typeFilter) return false;
         return true;
-      }
-
-      // For recurring tasks (not in 'done' filter), only show the earliest open instance
-      if (t.recurringPatternId && t.status === 'open' && filter !== 'done') {
-        if (!earliestRecurringInstanceIds.has(t.id)) {
-          return false;
+      })
+      .filter((t) => {
+        // Always include toggled tasks (keep them visible after status change)
+        if (toggledTasks.has(t.id)) {
+          return true;
         }
-      }
 
-      if (filter === 'today') return t.dueAt && isToday(t.dueAt) && t.status === 'open';
-      if (filter === 'done') {
-        if (hideRecurringCompleted && (t.isRecurring || t.recurringPatternId)) return false;
-        return t.status === 'done';
-      }
-      if (filter === 'working-on') return t.workingOn && t.status === 'open';
-      if (filter === 'overdue') {
-        return t.dueAt && new Date(t.dueAt) < new Date() && t.status === 'open';
-      }
-      if (filter === 'no-date') return !t.dueAt && t.status === 'open';
-      return t.status === 'open';
-    })
-    .filter((t) => {
-      // Filter by course if a course is selected
-      if (courseFilter && t.courseId !== courseFilter) return false;
-      return true;
-    })
-    .filter((t) => {
-      // Filter by importance if selected
-      if (importanceFilter && t.importance !== importanceFilter) return false;
-      return true;
-    })
-    .filter((t) => {
-      // Filter by selected tags
-      if (selectedTags.size > 0 && !t.tags?.some((tag) => selectedTags.has(tag))) return false;
-      return true;
-    })
-    .filter((t) => {
-      if (!searchQuery.trim()) return true;
+        // For recurring items (not in 'done' filter), only show the earliest open instance
+        if (t.recurringPatternId && t.status === 'open' && filter !== 'done') {
+          if (!earliestRecurringInstanceIds.has(t.id)) {
+            return false;
+          }
+        }
 
-      const query = searchQuery.toLowerCase();
-      const course = courses.find((c) => c.id === t.courseId);
-      const dateSearchStrings = getDateSearchStrings(t.dueAt);
-      const timeSearchStrings = getTimeSearchStrings(t.dueAt);
+        if (filter === 'today') return t.dueAt && isToday(t.dueAt) && t.status === 'open';
+        if (filter === 'done') {
+          if (hideRecurringCompleted && (t.isRecurring || t.recurringPatternId)) return false;
+          return t.status === 'done';
+        }
+        if (filter === 'working-on') return t.workingOn && t.status === 'open';
+        if (filter === 'overdue') {
+          return t.dueAt && new Date(t.dueAt) < new Date() && t.status === 'open';
+        }
+        if (filter === 'no-date') return !t.dueAt && t.status === 'open';
+        return t.status === 'open';
+      })
+      .filter((t) => {
+        // Filter by course if a course is selected
+        if (courseFilter && t.courseId !== courseFilter) return false;
+        return true;
+      })
+      .filter((t: any) => {
+        // Filter by importance/priority if selected
+        const priority = t.priority || t.importance;
+        if (importanceFilter && priority !== importanceFilter) return false;
+        return true;
+      })
+      .filter((t) => {
+        // Filter by selected tags
+        if (selectedTags.size > 0 && !t.tags?.some((tag) => selectedTags.has(tag))) return false;
+        return true;
+      })
+      .filter((t) => {
+        if (!searchQuery.trim()) return true;
 
-      return (
-        t.title.toLowerCase().includes(query) ||
-        t.notes.toLowerCase().includes(query) ||
-        (course && course.code.toLowerCase().includes(query)) ||
-        t.links.some((link) => link.label.toLowerCase().includes(query) || link.url.toLowerCase().includes(query)) ||
-        dateSearchStrings.some((dateStr) => dateStr.includes(query)) ||
-        timeSearchStrings.some((timeStr) => timeStr.includes(query))
-      );
-    })
-    .sort((a, b) => {
-      // For completed tasks, sort by most recently completed (updatedAt descending)
-      if (filter === 'done') {
-        const aUpdated = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-        const bUpdated = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-        return bUpdated - aUpdated; // Most recent first
-      }
+        const query = searchQuery.toLowerCase();
+        const course = courses.find((c) => c.id === t.courseId);
+        const dateSearchStrings = getDateSearchStrings(t.dueAt);
+        const timeSearchStrings = getTimeSearchStrings(t.dueAt);
 
-      // Sort by due date first
-      const aHasDue = !!a.dueAt;
-      const bHasDue = !!b.dueAt;
+        return (
+          t.title.toLowerCase().includes(query) ||
+          t.notes.toLowerCase().includes(query) ||
+          (course && course.code.toLowerCase().includes(query)) ||
+          t.links.some((link) => link.label.toLowerCase().includes(query) || link.url.toLowerCase().includes(query)) ||
+          dateSearchStrings.some((dateStr) => dateStr.includes(query)) ||
+          timeSearchStrings.some((timeStr) => timeStr.includes(query))
+        );
+      })
+      .sort((a, b) => {
+        // For completed tasks, sort by most recently completed (updatedAt descending)
+        if (filter === 'done') {
+          const aUpdated = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+          const bUpdated = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+          return bUpdated - aUpdated; // Most recent first
+        }
 
-      if (aHasDue && bHasDue) {
-        return new Date(a.dueAt!).getTime() - new Date(b.dueAt!).getTime();
-      }
+        // Sort by due date first
+        const aHasDue = !!a.dueAt;
+        const bHasDue = !!b.dueAt;
 
-      if (!aHasDue && bHasDue) return -1; // Tasks without dates come first
-      if (aHasDue && !bHasDue) return 1; // Tasks with dates come after
+        if (aHasDue && bHasDue) {
+          return new Date(a.dueAt!).getTime() - new Date(b.dueAt!).getTime();
+        }
 
-      // Both don't have due dates, sort alphabetically
-      return a.title.localeCompare(b.title);
-    });
+        if (!aHasDue && bHasDue) return -1; // Tasks without dates come first
+        if (aHasDue && !bHasDue) return 1; // Tasks with dates come after
 
-  // Group tasks by course if enabled
-  const groupedTasks = (() => {
+        // Both don't have due dates, sort alphabetically
+        return a.title.localeCompare(b.title);
+      });
+  }, [useWorkItems, workItems, tasks, typeFilter, toggledTasks, earliestRecurringInstanceIds, filter, hideRecurringCompleted, courseFilter, importanceFilter, selectedTags, searchQuery, courses]);
+
+  // Group tasks by course if enabled (memoized)
+  const groupedTasks = useMemo(() => {
     if (!groupTasksByCourse) return null;
 
     // Group tasks by courseId
@@ -862,11 +1034,11 @@ export default function TasksPage() {
         tasks: groups[key],
       };
     });
-  })();
+  }, [groupTasksByCourse, filtered, courses, getCourseDisplayName]);
 
   return (
     <>
-      {/* Tasks Header */}
+      {/* Work Header */}
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
@@ -878,10 +1050,10 @@ export default function TasksPage() {
                 letterSpacing: '-0.02em',
               }}
             >
-              Tasks
+              Work
             </h1>
             <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-              Everything you need to do.
+              Manage all your work in one place.
             </p>
           </div>
           <Button variant="secondary" size="md" style={{ marginTop: isMobile ? '12px' : '8px' }} onClick={() => {
@@ -891,10 +1063,13 @@ export default function TasksPage() {
                 setNlpInput('');
                 setFormData({
                   title: '',
+                  type: (typeFilter === 'all' ? 'task' : typeFilter) as WorkItemType,
                   courseId: courseFilter || '',
                   dueDate: '',
                   dueTime: '',
                   importance: (importanceFilter || '') as '' | 'low' | 'medium' | 'high',
+                  priority: '',
+                  effort: '',
                   notes: '',
                   tags: Array.from(selectedTags),
                   links: [{ label: '', url: '' }],
@@ -919,8 +1094,42 @@ export default function TasksPage() {
               }
             }}>
             <Plus size={18} />
-            New Task
+            {isMobile ? 'New' : (typeFilter === 'all' ? 'New Item' : `New ${WORK_ITEM_TYPE_LABELS[typeFilter]}`)}
           </Button>
+        </div>
+
+        {/* Type Filter Tabs */}
+        <div style={{ display: 'flex', gap: isMobile ? '4px' : '8px', marginTop: '16px' }}>
+          {[
+            { key: 'all', label: 'All' },
+            { key: 'task', label: 'Tasks' },
+            { key: 'assignment', label: 'Assignments' },
+            { key: 'reading', label: 'Readings' },
+            { key: 'project', label: 'Projects' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setTypeFilter(tab.key as WorkItemType | 'all')}
+              className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
+                typeFilter === tab.key ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              }`}
+              style={{
+                padding: isMobile ? '6px 10px' : '8px 16px',
+                fontSize: isMobile ? '12px' : '14px',
+                border: 'none',
+                backgroundColor: typeFilter === tab.key ? accentColor : 'transparent',
+                backgroundImage: typeFilter === tab.key
+                  ? (theme === 'light'
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)'
+                    : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)')
+                  : 'none',
+                boxShadow: typeFilter === tab.key ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : undefined,
+                cursor: 'pointer',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
       <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', overflow: 'visible', position: 'relative', zIndex: 1 }}>
@@ -939,7 +1148,7 @@ export default function TasksPage() {
                     label="Search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search tasks..."
+                    placeholder={typeFilter === 'all' ? 'Search work...' : `Search ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()}s...`}
                   />
                 </div>
                 <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
@@ -991,7 +1200,7 @@ export default function TasksPage() {
                 )}
                 <div className="space-y-1">
                   {[
-                    { value: 'all', label: 'All Tasks' },
+                    { value: 'all', label: typeFilter === 'all' ? 'All Work' : `All ${WORK_ITEM_TYPE_LABELS[typeFilter]}s` },
                     { value: 'working-on', label: 'Working On' },
                     { value: 'today', label: 'Today' },
                     { value: 'overdue', label: 'Overdue' },
@@ -1031,7 +1240,7 @@ export default function TasksPage() {
                     label="Search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search tasks..."
+                    placeholder={typeFilter === 'all' ? 'Search work...' : `Search ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()}s...`}
                   />
                 </div>
                 <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
@@ -1083,7 +1292,7 @@ export default function TasksPage() {
                 )}
                 <div className="space-y-1">
                   {[
-                    { value: 'all', label: 'All Tasks' },
+                    { value: 'all', label: typeFilter === 'all' ? 'All Work' : `All ${WORK_ITEM_TYPE_LABELS[typeFilter]}s` },
                     { value: 'working-on', label: 'Working On' },
                     { value: 'today', label: 'Today' },
                     { value: 'overdue', label: 'Overdue' },
@@ -1137,7 +1346,7 @@ export default function TasksPage() {
                 )}
                 <div style={{ paddingBottom: isMobile ? '0px' : '4px' }}>
                   <Input
-                    label="Task title"
+                    label={`${WORK_ITEM_TYPE_LABELS[formData.type]} title`}
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     placeholder="What needs to be done?"
@@ -1145,8 +1354,19 @@ export default function TasksPage() {
                   />
                 </div>
 
-                {/* Course, Importance row */}
-                <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-4 gap-3'} style={{ overflow: 'visible', paddingTop: isMobile ? '4px' : '8px' }}>
+                {/* Type, Course, Priority row - full width */}
+                <div className="grid grid-cols-3 gap-2" style={{ overflow: 'visible', paddingTop: isMobile ? '4px' : '8px' }}>
+                  <Select
+                    label="Type"
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value as WorkItemType })}
+                    options={[
+                      { value: 'task', label: 'Task' },
+                      { value: 'assignment', label: 'Assignment' },
+                      { value: 'reading', label: 'Reading' },
+                      { value: 'project', label: 'Project' },
+                    ]}
+                  />
                   <Select
                     label="Course"
                     value={formData.courseId}
@@ -1154,35 +1374,21 @@ export default function TasksPage() {
                     options={[{ value: '', label: 'No Course' }, ...courses.map((c) => ({ value: c.id, label: getCourseDisplayName(c) }))]}
                   />
                   <Select
-                    label="Importance"
-                    value={formData.importance}
-                    onChange={(e) => setFormData({ ...formData, importance: e.target.value as '' | 'low' | 'medium' | 'high' })}
+                    label="Priority"
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as '' | 'low' | 'medium' | 'high' | 'critical' })}
                     options={[
                       { value: '', label: 'None' },
+                      { value: 'critical', label: 'Critical' },
                       { value: 'high', label: 'High' },
                       { value: 'medium', label: 'Medium' },
                       { value: 'low', label: 'Low' },
                     ]}
                   />
-                  {!isMobile && !formData.isRecurring && (
-                    <>
-                      <CalendarPicker
-                        label="Due Date"
-                        value={formData.dueDate}
-                        onChange={(date) => setFormData({ ...formData, dueDate: date })}
-                      />
-                      <TimePicker
-                        label="Due Time"
-                        value={formData.dueTime}
-                        onChange={(time) => setFormData({ ...formData, dueTime: time })}
-                      />
-                    </>
-                  )}
-                  {!isMobile && formData.isRecurring && <div className="col-span-2" />}
                 </div>
 
-                {/* Due Date and Time row - mobile only */}
-                {isMobile && !formData.isRecurring && (
+                {/* Due Date and Time row */}
+                {!formData.isRecurring && (
                   <div className="grid grid-cols-2 gap-2" style={{ overflow: 'visible', paddingTop: '8px' }}>
                     <CalendarPicker
                       label="Due Date"
@@ -1341,53 +1547,54 @@ export default function TasksPage() {
                       </Button>
                     </div>
 
-                    {/* File list display */}
-                    {formData.files && formData.files.length > 0 && (
-                      <div style={{ paddingTop: isMobile ? '4px' : '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {formData.files.map((file, index) => (
-                          <div
-                            key={index}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '8px',
-                              padding: isMobile ? '4px 8px' : '6px 10px',
-                              backgroundColor: 'var(--panel-2)',
-                              borderRadius: 'var(--radius-control)',
-                              border: '1px solid var(--border)',
-                              fontSize: isMobile ? '0.7rem' : '0.8rem',
-                            }}
-                          >
-                            <input
-                              type="text"
-                              value={file.name}
-                              onChange={(e) => {
-                                const newFiles = [...formData.files];
-                                newFiles[index] = { ...newFiles[index], name: e.target.value };
-                                setFormData({ ...formData, files: newFiles });
-                              }}
-                              style={{
-                                flex: 1,
-                                background: 'transparent',
-                                border: 'none',
-                                outline: 'none',
-                                color: 'var(--text)',
-                                fontSize: 'inherit',
-                                padding: 0,
-                              }}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setFormData({ ...formData, files: formData.files.filter((_, i) => i !== index) })}
-                              style={{ background: 'none', border: 'none', padding: '2px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </>
+                )}
+
+                {/* File list display - outside more options */}
+                {formData.files && formData.files.length > 0 && (
+                  <div style={{ paddingTop: isMobile ? '4px' : '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {formData.files.map((file, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: isMobile ? '4px 8px' : '6px 10px',
+                          backgroundColor: 'var(--panel-2)',
+                          borderRadius: 'var(--radius-control)',
+                          border: '1px solid var(--border)',
+                          fontSize: isMobile ? '0.7rem' : '0.8rem',
+                        }}
+                      >
+                        <input
+                          type="text"
+                          value={file.name}
+                          onChange={(e) => {
+                            const newFiles = [...formData.files];
+                            newFiles[index] = { ...newFiles[index], name: e.target.value };
+                            setFormData({ ...formData, files: newFiles });
+                          }}
+                          style={{
+                            flex: 1,
+                            background: 'transparent',
+                            border: 'none',
+                            outline: 'none',
+                            color: 'var(--text)',
+                            fontSize: 'inherit',
+                            padding: 0,
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, files: formData.files.filter((_, i) => i !== index) })}
+                          style={{ background: 'none', border: 'none', padding: '2px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 )}
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: isMobile ? '6px' : '8px' }}>
@@ -1401,7 +1608,7 @@ export default function TasksPage() {
                         paddingRight: isMobile ? '10px' : '16px'
                       }}
                     >
-                      {editingId ? 'Save Changes' : 'Add Task'}
+                      {editingId ? 'Save Changes' : `Add ${WORK_ITEM_TYPE_LABELS[formData.type]}`}
                     </Button>
                     <Button variant="secondary" size={isMobile ? 'sm' : 'md'} type="button" onClick={cancelEdit}>
                       Cancel
@@ -1499,7 +1706,7 @@ export default function TasksPage() {
                             if (t.status === 'done') {
                               // Unchecking - mark as incomplete
                               setToggledTasks(prev => new Set(prev).add(t.id));
-                              await updateTask(t.id, { status: 'open' });
+                              await handleUpdate(t.id, { status: 'open' });
                               setToggledTasks(prev => {
                                 const newSet = new Set(prev);
                                 newSet.delete(t.id);
@@ -1511,7 +1718,7 @@ export default function TasksPage() {
                               setHidingTasks(prev => new Set(prev).add(t.id));
 
                               setTimeout(async () => {
-                                await updateTask(t.id, { status: 'done', workingOn: false });
+                                await handleUpdate(t.id, { status: 'done', workingOn: false });
                                 setTimeout(() => {
                                   setToggledTasks(prev => {
                                     const newSet = new Set(prev);
@@ -1554,6 +1761,7 @@ export default function TasksPage() {
                             >
                               {t.title}
                             </div>
+                            {(t as any).canvasAssignmentId && <CanvasBadge />}
                             {t.isRecurring && (
                               <Repeat
                                 size={14}
@@ -1594,19 +1802,19 @@ export default function TasksPage() {
                                 {getCourseDisplayName(course)}
                               </span>
                             )}
-                            {showPriorityIndicators && t.importance && (
+                            {showPriorityIndicators && t.priority && (
                               <span
-                                data-priority={t.importance}
+                                data-priority={t.priority}
                                 style={{
                                 position: 'relative',
                                 fontSize: isMobile ? '10px' : '11px',
                                 fontWeight: '600',
                                 padding: '1px 6px',
                                 borderRadius: '3px',
-                                backgroundColor: t.importance === 'high' ? 'var(--danger-bg)' : t.importance === 'medium' ? 'var(--warning-bg)' : 'var(--success-bg)',
-                                color: t.importance === 'high' ? 'var(--danger)' : t.importance === 'medium' ? 'var(--warning)' : 'var(--success)',
+                                backgroundColor: t.priority === 'high' || t.priority === 'critical' ? 'var(--danger-bg)' : t.priority === 'medium' ? 'var(--warning-bg)' : 'var(--success-bg)',
+                                color: t.priority === 'high' || t.priority === 'critical' ? 'var(--danger)' : t.priority === 'medium' ? 'var(--warning)' : 'var(--success)',
                               }}>
-                                {t.importance.charAt(0).toUpperCase() + t.importance.slice(1)}
+                                {t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}
                               </span>
                             )}
                           </div>
@@ -1614,7 +1822,7 @@ export default function TasksPage() {
                         {/* Action buttons */}
                         <div className="flex gap-1 opacity-0 group-hover/task:opacity-100 transition-opacity" style={{ flexShrink: 0 }}>
                           <button
-                            onClick={(e) => { e.stopPropagation(); updateTask(t.id, { workingOn: !t.workingOn }); }}
+                            onClick={(e) => { e.stopPropagation(); handleUpdate(t.id, { workingOn: !t.workingOn }); }}
                             className={`rounded-[var(--radius-control)] transition-colors ${t.workingOn ? 'text-[var(--success)]' : 'text-[var(--muted)] hover:text-[var(--success)]'} hover:bg-white/5`}
                             style={{ padding: isMobile ? '2px' : '6px' }}
                             title={t.workingOn ? 'Stop working on' : 'Mark as working on'}
@@ -1630,7 +1838,7 @@ export default function TasksPage() {
                             <Edit2 size={isMobile ? 14 : 20} />
                           </button>
                           <button
-                            onClick={(e) => { e.stopPropagation(); deleteTask(t.id); }}
+                            onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
                             className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
                             style={{ padding: isMobile ? '2px' : '6px' }}
                             title="Delete task"
@@ -1722,7 +1930,7 @@ export default function TasksPage() {
                             }
                             return newSet;
                           });
-                          toggleTaskDone(t.id);
+                          handleToggleComplete(t.id);
                           // Only fade out when marking as done, not when unchecking
                           if (!isCurrentlyDone) {
                             setTimeout(() => {
@@ -1764,6 +1972,7 @@ export default function TasksPage() {
                           >
                             {t.title}
                           </div>
+                          {(t as any).canvasAssignmentId && <CanvasBadge />}
                           {t.isRecurring && (
                             <Repeat
                               size={14}
@@ -1823,26 +2032,26 @@ export default function TasksPage() {
                               {getCourseDisplayName(course)}
                             </span>
                           )}
-                          {showPriorityIndicators && t.importance && (
+                          {showPriorityIndicators && t.priority && (
                             <span
-                              data-priority={t.importance}
+                              data-priority={t.priority}
                               style={{
                                 position: 'relative',
                                 fontSize: isMobile ? '10px' : '11px',
                                 fontWeight: '600',
                                 padding: '1px 6px',
                                 borderRadius: '3px',
-                                backgroundColor: t.importance === 'high' ? 'var(--danger-bg)' : t.importance === 'medium' ? 'var(--warning-bg)' : 'var(--success-bg)',
-                                color: t.importance === 'high' ? 'var(--danger)' : t.importance === 'medium' ? 'var(--warning)' : 'var(--success)',
+                                backgroundColor: t.priority === 'high' || t.priority === 'critical' ? 'var(--danger-bg)' : t.priority === 'medium' ? 'var(--warning-bg)' : 'var(--success-bg)',
+                                color: t.priority === 'high' || t.priority === 'critical' ? 'var(--danger)' : t.priority === 'medium' ? 'var(--warning)' : 'var(--success)',
                               }}
                             >
-                              {t.importance.charAt(0).toUpperCase() + t.importance.slice(1)}
+                              {t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}
                             </span>
                           )}
                         </div>
                         {t.links && t.links.length > 0 && (
                           <div className="flex flex-col" style={{ gap: '0px' }}>
-                            {t.links.map((link: any) => (
+                            {t.links.slice(0, 3).map((link: any) => (
                               <a
                                 key={link.url}
                                 href={link.url}
@@ -1855,11 +2064,16 @@ export default function TasksPage() {
                                 {link.label}
                               </a>
                             ))}
+                            {t.links.length > 3 && (
+                              <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)' }}>
+                                +{t.links.length - 3} more
+                              </span>
+                            )}
                           </div>
                         )}
                         {t.files && t.files.length > 0 && (
                           <div className="flex flex-col" style={{ gap: '0px' }}>
-                            {t.files.map((file: any, fileIndex: number) => (
+                            {t.files.slice(0, 3).map((file: any, fileIndex: number) => (
                               <button
                                 key={`${fileIndex}-${file.name}`}
                                 type="button"
@@ -1871,12 +2085,18 @@ export default function TasksPage() {
                                 {file.name}
                               </button>
                             ))}
+                            {t.files.length > 3 && (
+                              <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <FileIcon size={12} style={{ flexShrink: 0 }} />
+                                +{t.files.length - 3} more
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>
                       <div className="flex items-center opacity-100 lg:opacity-0 lg:group-hover/task:opacity-100 transition-opacity flex-shrink-0" style={{ gap: isMobile ? '8px' : '12px' }}>
                         <button
-                          onClick={(e) => { e.stopPropagation(); updateTask(t.id, { workingOn: !t.workingOn }); }}
+                          onClick={(e) => { e.stopPropagation(); handleUpdate(t.id, { workingOn: !t.workingOn }); }}
                           className={`rounded-[var(--radius-control)] transition-colors hover:bg-white/5 ${t.workingOn ? 'text-[var(--success)]' : 'text-[var(--muted)] hover:text-[var(--success)]'}`}
                           style={{ padding: isMobile ? '2px' : '6px' }}
                           title={t.workingOn ? 'Stop working on task' : 'Start working on task'}
@@ -1892,7 +2112,7 @@ export default function TasksPage() {
                           <Edit2 size={isMobile ? 14 : 20} />
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); deleteTask(t.id); }}
+                          onClick={(e) => { e.stopPropagation(); handleDelete(t.id); }}
                           className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--danger)] hover:bg-white/5 transition-colors"
                           style={{ padding: isMobile ? '2px' : '6px' }}
                           title="Delete task"
@@ -1909,18 +2129,18 @@ export default function TasksPage() {
             </Card>
           ) : (
             <EmptyState
-              title="No tasks"
+              title={typeFilter === 'all' ? 'No work items' : `No ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()}s`}
               description={
                 filter === 'all'
-                  ? 'Create a new task to get started'
+                  ? typeFilter === 'all' ? 'Create a new item to get started' : `Create a new ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()} to get started`
                   : filter === 'today'
-                    ? 'No tasks due today'
-                    : 'No completed tasks yet'
+                    ? typeFilter === 'all' ? 'No work due today' : `No ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()}s due today`
+                    : typeFilter === 'all' ? 'No completed work yet' : `No completed ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()}s yet`
               }
               action={
                 filter !== 'all'
-                  ? { label: 'View all tasks', onClick: () => setFilter('all') }
-                  : { label: 'Create a task', onClick: () => setShowForm(true) }
+                  ? { label: typeFilter === 'all' ? 'View all work' : `View all ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()}s`, onClick: () => setFilter('all') }
+                  : { label: typeFilter === 'all' ? 'Create an item' : `Create a ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()}`, onClick: () => setShowForm(true) }
               }
             />
           )}
@@ -1953,6 +2173,12 @@ export default function TasksPage() {
         selectedCount={bulkSelect.selectedIds.size}
         allTags={allTags}
         onConfirm={handleBulkTagsChange}
+      />
+      <BulkChangeTypeModal
+        isOpen={bulkModal === 'type'}
+        onClose={() => setBulkModal(null)}
+        selectedCount={bulkSelect.selectedIds.size}
+        onConfirm={handleBulkTypeChange}
       />
       <BulkChangePriorityModal
         isOpen={bulkModal === 'priority'}
@@ -2297,7 +2523,7 @@ export default function TasksPage() {
                     }
                     return newSet;
                   });
-                  toggleTaskDone(task.id);
+                  handleToggleComplete(task.id);
                   // Only fade out when marking as done, not when unchecking
                   if (!isCurrentlyDone) {
                     setTimeout(() => {

@@ -276,18 +276,18 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
           order_by: 'due_at',
         });
 
-        // Get existing deadlines with Canvas IDs for this course (include notes and links for merging)
-        const existingDeadlines = await prisma.deadline.findMany({
+        // Get existing work items with Canvas IDs for this course (include notes, links, type for merging)
+        const existingWorkItems = await prisma.workItem.findMany({
           where: {
             userId,
             courseId: course.id,
             canvasAssignmentId: { not: null },
           },
-          select: { id: true, canvasAssignmentId: true, notes: true, links: true, status: true },
+          select: { id: true, canvasAssignmentId: true, notes: true, links: true, status: true, type: true },
         });
 
-        const existingDeadlineMap = new Map(
-          existingDeadlines.map(d => [d.canvasAssignmentId, { id: d.id, notes: d.notes, links: d.links as Array<{ label: string; url: string }> | null, status: d.status }])
+        const existingWorkItemMap = new Map(
+          existingWorkItems.map(d => [d.canvasAssignmentId, { id: d.id, notes: d.notes, links: d.links as Array<{ label: string; url: string }> | null, status: d.status, type: d.type }])
         );
 
         for (const assignment of assignments) {
@@ -299,7 +299,7 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
               continue;
             }
 
-            const existingDeadline = existingDeadlineMap.get(canvasAssignmentIdStr);
+            const existingWorkItem = existingWorkItemMap.get(canvasAssignmentIdStr);
 
             // Extract links from Canvas description
             const canvasLinks = extractLinksFromHtml(assignment.description);
@@ -318,23 +318,23 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
               submission.submitted_at != null
             );
 
-            if (existingDeadline) {
+            if (existingWorkItem) {
               // Merge user notes with Canvas description (preserves user notes)
-              const mergedNotes = mergeNotes(existingDeadline.notes, assignment.description);
+              const mergedNotes = mergeNotes(existingWorkItem.notes, assignment.description);
               // Merge existing links with Canvas links (avoids duplicates)
-              const mergedLinks = mergeLinks(existingDeadline.links, canvasLinks);
+              const mergedLinks = mergeLinks(existingWorkItem.links, canvasLinks);
 
               // Determine status update:
               // - If Canvas shows complete AND Orbit shows open → mark as done
               // - Otherwise keep existing status (don't override user's manual completion)
-              const statusUpdate = isCanvasComplete && existingDeadline.status === 'open'
+              const statusUpdate = isCanvasComplete && existingWorkItem.status === 'open'
                 ? { status: 'done' as const }
                 : {};
 
-              // Don't override title - user may have customized it
+              // Don't override title or type - user may have customized them
               // Do update dueAt since professors often change due dates
-              await prisma.deadline.update({
-                where: { id: existingDeadline.id },
+              await prisma.workItem.update({
+                where: { id: existingWorkItem.id },
                 data: {
                   dueAt: assignment.due_at ? new Date(assignment.due_at) : null,
                   notes: mergedNotes,
@@ -352,21 +352,25 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
                 ? `${USER_NOTES_HEADER}\n${CANVAS_SEPARATOR}${canvasContent}`
                 : `${USER_NOTES_HEADER}\n`;
 
-              // Create new deadline with status based on Canvas completion
-              await prisma.deadline.create({
+              // Create new work item with status based on Canvas completion
+              // Default type is 'assignment' for Canvas items
+              await prisma.workItem.create({
                 data: {
                   userId,
                   courseId: course.id,
                   title: assignment.name,
+                  type: 'assignment',
                   dueAt: assignment.due_at ? new Date(assignment.due_at) : null,
                   notes: initialNotes,
                   canvasAssignmentId: canvasAssignmentIdStr,
                   canvasPointsPossible: assignment.points_possible,
                   status: isCanvasComplete ? 'done' : 'open',
                   workingOn: false,
+                  pinned: false,
                   tags: [],
                   links: canvasLinks,
                   files: [],
+                  checklist: [],
                 },
               });
               result.created++;

@@ -72,11 +72,15 @@ export default function SettingsPage() {
   const [emailExamReminders, setEmailExamReminders] = useState(false);
   const [emailDeadlineReminders, setEmailDeadlineReminders] = useState(false);
   const [emailTaskReminders, setEmailTaskReminders] = useState(false);
+  const [emailReadingReminders, setEmailReadingReminders] = useState(false);
+  const [emailProjectReminders, setEmailProjectReminders] = useState(false);
   const [notifyAnnouncements, setNotifyAnnouncements] = useState(false);
   const [notifyAccountAlerts, setNotifyAccountAlerts] = useState(false);
   const [notifyExamReminders, setNotifyExamReminders] = useState(false);
   const [notifyDeadlineReminders, setNotifyDeadlineReminders] = useState(false);
   const [notifyTaskReminders, setNotifyTaskReminders] = useState(false);
+  const [notifyReadingReminders, setNotifyReadingReminders] = useState(false);
+  const [notifyProjectReminders, setNotifyProjectReminders] = useState(false);
   const [reminderTimingOpen, setReminderTimingOpen] = useState(false);
   const [examReminders, setExamReminders] = useState<Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>>([
     { enabled: false, value: 7, unit: 'days' },
@@ -84,6 +88,14 @@ export default function SettingsPage() {
     { enabled: false, value: 3, unit: 'hours' }
   ]);
   const [deadlineReminders, setDeadlineReminders] = useState<Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>>([
+    { enabled: false, value: 1, unit: 'days' },
+    { enabled: false, value: 3, unit: 'hours' }
+  ]);
+  const [readingReminders, setReadingReminders] = useState<Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>>([
+    { enabled: false, value: 1, unit: 'days' },
+    { enabled: false, value: 3, unit: 'hours' }
+  ]);
+  const [projectReminders, setProjectReminders] = useState<Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>>([
     { enabled: false, value: 1, unit: 'days' },
     { enabled: false, value: 3, unit: 'hours' }
   ]);
@@ -203,8 +215,12 @@ export default function SettingsPage() {
     setSelectedTheme(settings.theme || 'dark');
     // Use saved visible pages directly - don't merge with defaults
     // as that would add back pages the user explicitly hid
-    // Migrate "Deadlines" to "Assignments"
-    const savedVisiblePages = (settings.visiblePages || []).map((p: string) => p === 'Deadlines' ? 'Assignments' : p);
+    // Migrate legacy page names to unified "Work" page
+    const migratePageName = (p: string) => {
+      if (p === 'Deadlines' || p === 'Assignments' || p === 'Tasks') return 'Work';
+      return p;
+    };
+    const savedVisiblePages = [...new Set((settings.visiblePages || []).map(migratePageName))];
     setVisiblePages(savedVisiblePages.length > 0 ? savedVisiblePages : DEFAULT_VISIBLE_PAGES);
     setVisibleDashboardCards(settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS);
     setVisibleToolsCards(settings.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS);
@@ -221,11 +237,11 @@ export default function SettingsPage() {
 
     // Load pages order from settings
     if (settings.visiblePagesOrder) {
-      const order = typeof settings.visiblePagesOrder === 'string'
+      const order = (typeof settings.visiblePagesOrder === 'string'
         ? JSON.parse(settings.visiblePagesOrder)
-        : settings.visiblePagesOrder;
-      // Migrate "Deadlines" to "Assignments"
-      const migratedOrder = order.map((p: string) => p === 'Deadlines' ? 'Assignments' : p);
+        : settings.visiblePagesOrder) as string[];
+      // Migrate legacy page names to unified "Work" page and remove duplicates
+      const migratedOrder = [...new Set(order.map(migratePageName))];
       // Add any new pages that aren't in the saved order (excluding Settings)
       const allPages = Object.values(PAGES).filter(p => p !== 'Settings');
       const newPages = allPages.filter(p => !migratedOrder.includes(p));
@@ -249,6 +265,8 @@ export default function SettingsPage() {
     setEmailExamReminders(settings.emailExamReminders === true);
     setEmailDeadlineReminders(settings.emailDeadlineReminders === true);
     setEmailTaskReminders(settings.emailTaskReminders === true);
+    setEmailReadingReminders(settings.emailReadingReminders === true);
+    setEmailProjectReminders(settings.emailProjectReminders === true);
 
     // Load in-app notification preferences
     setNotifyAnnouncements(settings.notifyAnnouncements === true);
@@ -256,6 +274,8 @@ export default function SettingsPage() {
     setNotifyExamReminders(settings.notifyExamReminders === true);
     setNotifyDeadlineReminders(settings.notifyDeadlineReminders === true);
     setNotifyTaskReminders(settings.notifyTaskReminders === true);
+    setNotifyReadingReminders(settings.notifyReadingReminders === true);
+    setNotifyProjectReminders(settings.notifyProjectReminders === true);
 
     // Load reminder timing preferences
     if (settings.examReminders) {
@@ -266,6 +286,12 @@ export default function SettingsPage() {
     }
     if (settings.taskReminders) {
       setTaskReminders(settings.taskReminders);
+    }
+    if (settings.readingReminders) {
+      setReadingReminders(settings.readingReminders);
+    }
+    if (settings.projectReminders) {
+      setProjectReminders(settings.projectReminders);
     }
 
     // Load visual effects sliders
@@ -1155,11 +1181,11 @@ export default function SettingsPage() {
               {/* Sub-options when enabled */}
               {(settings.showNavCounts ?? false) && (
                 <div style={{ marginTop: '16px', paddingLeft: '16px', borderLeft: '2px solid var(--border)' }}>
-                  {/* Tasks count toggle */}
+                  {/* Work count toggle */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <p className="text-sm text-[var(--text)]" style={{ margin: 0 }}>Tasks</p>
-                      <HelpTooltip text="Shows count of overdue tasks" size={14} width={180} />
+                      <p className="text-sm text-[var(--text)]" style={{ margin: 0 }}>Work</p>
+                      <HelpTooltip text="Shows count of overdue work items" size={14} width={200} />
                     </div>
                     <button
                       onClick={() => updateSettings({ showNavCountTasks: !(settings.showNavCountTasks ?? true) })}
@@ -1184,41 +1210,6 @@ export default function SettingsPage() {
                           position: 'absolute',
                           top: '2px',
                           left: (settings.showNavCountTasks ?? true) ? '18px' : '2px',
-                          transition: 'left 0.2s ease',
-                        }}
-                      />
-                    </button>
-                  </div>
-
-                  {/* Assignments count toggle */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <p className="text-sm text-[var(--text)]" style={{ margin: 0 }}>Assignments</p>
-                      <HelpTooltip text="Shows count of overdue assignments" size={14} width={200} />
-                    </div>
-                    <button
-                      onClick={() => updateSettings({ showNavCountAssignments: !(settings.showNavCountAssignments ?? true) })}
-                      style={{
-                        width: '36px',
-                        height: '20px',
-                        borderRadius: '10px',
-                        backgroundColor: (settings.showNavCountAssignments ?? true) ? 'var(--accent)' : 'var(--panel-2)',
-                        border: '1px solid var(--border)',
-                        cursor: 'pointer',
-                        position: 'relative',
-                        transition: 'background-color 0.2s ease',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: '14px',
-                          height: '14px',
-                          borderRadius: '50%',
-                          backgroundColor: 'white',
-                          position: 'absolute',
-                          top: '2px',
-                          left: (settings.showNavCountAssignments ?? true) ? '18px' : '2px',
                           transition: 'left 0.2s ease',
                         }}
                       />
@@ -1266,13 +1257,13 @@ export default function SettingsPage() {
 
           {/* List Organization */}
           <Card title="List Organization">
-            {/* Group Tasks by Course */}
+            {/* Group Work by Course */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Group Tasks by Course</p>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Group Work by Course</p>
                   <p className="text-sm text-[var(--text-muted)]">
-                    Auto-group tasks by course in list view
+                    Auto-group work items by course in list view
                   </p>
                 </div>
                 <button
@@ -1305,50 +1296,11 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Group Assignments by Course */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Group Assignments by Course</p>
-                  <p className="text-sm text-[var(--text-muted)]">
-                    Auto-group assignments by course in list view
-                  </p>
-                </div>
-                <button
-                  onClick={() => updateSettings({ groupAssignmentsByCourse: !(settings.groupAssignmentsByCourse ?? false) })}
-                  style={{
-                    width: '44px',
-                    height: '24px',
-                    borderRadius: '12px',
-                    backgroundColor: (settings.groupAssignmentsByCourse ?? false) ? 'var(--accent)' : 'var(--panel-2)',
-                    border: '1px solid var(--border)',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'background-color 0.2s ease',
-                    flexShrink: 0,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '50%',
-                      backgroundColor: 'white',
-                      position: 'absolute',
-                      top: '2px',
-                      left: (settings.groupAssignmentsByCourse ?? false) ? '22px' : '2px',
-                      transition: 'left 0.2s ease',
-                    }}
-                  />
-                </button>
-              </div>
-            </div>
-
             {/* Due Soon Window */}
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
               <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Due Soon Window</p>
               <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                Show deadlines on dashboard within this many days
+                Show work items on dashboard within this many days
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <input
@@ -1701,7 +1653,7 @@ export default function SettingsPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
                       {[
                         { key: 'courses', label: 'Courses', description: 'Creates courses from Canvas', value: canvasSyncCourses },
-                        { key: 'assignments', label: 'Assignments', description: 'Syncs to Assignments page', value: canvasSyncAssignments },
+                        { key: 'assignments', label: 'Assignments', description: 'Syncs to Work page', value: canvasSyncAssignments },
                         { key: 'grades', label: 'Grades', description: 'Updates assignment scores', value: canvasSyncGrades },
                         { key: 'events', label: 'Calendar Events', description: 'Syncs to Calendar', value: canvasSyncEvents },
                         { key: 'announcements', label: 'Announcements', description: 'Creates notifications', value: canvasSyncAnnouncements },
@@ -2083,8 +2035,10 @@ export default function SettingsPage() {
                         <span data-event-type="course" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.course}26`, color: eventColors.course, border: `1px solid ${eventColors.course}` }}>Course</span>
                         <span data-event-type="task" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.task}26`, color: eventColors.task, border: `1px solid ${eventColors.task}` }}>Task</span>
                         <span data-event-type="exam" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.exam}26`, color: eventColors.exam, border: `1px solid ${eventColors.exam}` }}>Exam</span>
-                        <span data-event-type="deadline" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.deadline}26`, color: eventColors.deadline, border: `1px solid ${eventColors.deadline}` }}>Deadline</span>
+                        <span data-event-type="deadline" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.deadline}26`, color: eventColors.deadline, border: `1px solid ${eventColors.deadline}` }}>Assignment</span>
                         <span data-event-type="event" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.event}26`, color: eventColors.event, border: `1px solid ${eventColors.event}` }}>Event</span>
+                        <span data-event-type="reading" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.reading}26`, color: eventColors.reading, border: `1px solid ${eventColors.reading}` }}>Reading</span>
+                        <span data-event-type="project" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.project}26`, color: eventColors.project, border: `1px solid ${eventColors.project}` }}>Project</span>
                       </div>
                     );
                   })()}
@@ -2677,7 +2631,7 @@ export default function SettingsPage() {
                   </label>
                   <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
                     <div>
-                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Deadline Reminders</p>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Assignment Reminders</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before assignment due dates</p>
                     </div>
                     <input
@@ -2701,6 +2655,36 @@ export default function SettingsPage() {
                       onChange={async (e) => {
                         setEmailTaskReminders(e.target.checked);
                         await updateSettings({ emailTaskReminders: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Reading Reminders</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before reading due dates</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={emailReadingReminders}
+                      onChange={async (e) => {
+                        setEmailReadingReminders(e.target.checked);
+                        await updateSettings({ emailReadingReminders: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Project Reminders</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before project due dates</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={emailProjectReminders}
+                      onChange={async (e) => {
+                        setEmailProjectReminders(e.target.checked);
+                        await updateSettings({ emailProjectReminders: e.target.checked });
                       }}
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
@@ -2761,7 +2745,7 @@ export default function SettingsPage() {
                   </label>
                   <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
                     <div>
-                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Deadline Reminders</p>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Assignment Reminders</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before assignment due dates</p>
                     </div>
                     <input
@@ -2785,6 +2769,36 @@ export default function SettingsPage() {
                       onChange={async (e) => {
                         setNotifyTaskReminders(e.target.checked);
                         await updateSettings({ notifyTaskReminders: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Reading Reminders</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before reading due dates</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={notifyReadingReminders}
+                      onChange={async (e) => {
+                        setNotifyReadingReminders(e.target.checked);
+                        await updateSettings({ notifyReadingReminders: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Project Reminders</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before project due dates</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={notifyProjectReminders}
+                      onChange={async (e) => {
+                        setNotifyProjectReminders(e.target.checked);
+                        await updateSettings({ notifyProjectReminders: e.target.checked });
                       }}
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
@@ -2889,7 +2903,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  {/* Deadline Reminders */}
+                  {/* Assignment Reminders */}
                   <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: '8px' }}>
                     <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px' }}>Assignment Reminders</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -2997,6 +3011,132 @@ export default function SettingsPage() {
                               newReminders[index] = { ...reminder, unit: e.target.value as 'hours' | 'days' };
                               setTaskReminders(newReminders);
                               await updateSettings({ taskReminders: newReminders });
+                            }}
+                            style={{
+                              padding: '6px 8px',
+                              fontSize: '14px',
+                              backgroundColor: 'var(--panel)',
+                              color: 'var(--text)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            <option value="hours">hours before</option>
+                            <option value="days">days before</option>
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Reading Reminders */}
+                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: '8px' }}>
+                    <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px' }}>Reading Reminders</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {readingReminders.map((reminder, index) => (
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <input
+                            type="checkbox"
+                            checked={reminder.enabled}
+                            onChange={async (e) => {
+                              const newReminders = [...readingReminders];
+                              newReminders[index] = { ...reminder, enabled: e.target.checked };
+                              setReadingReminders(newReminders);
+                              await updateSettings({ readingReminders: newReminders });
+                            }}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                          />
+                          <input
+                            type="number"
+                            min="1"
+                            value={reminder.value}
+                            onChange={async (e) => {
+                              const value = parseInt(e.target.value) || 1;
+                              const newReminders = [...readingReminders];
+                              newReminders[index] = { ...reminder, value };
+                              setReadingReminders(newReminders);
+                              await updateSettings({ readingReminders: newReminders });
+                            }}
+                            style={{
+                              width: '60px',
+                              padding: '6px 8px',
+                              fontSize: '14px',
+                              backgroundColor: 'var(--panel)',
+                              color: 'var(--text)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '4px',
+                            }}
+                          />
+                          <select
+                            value={reminder.unit}
+                            onChange={async (e) => {
+                              const newReminders = [...readingReminders];
+                              newReminders[index] = { ...reminder, unit: e.target.value as 'hours' | 'days' };
+                              setReadingReminders(newReminders);
+                              await updateSettings({ readingReminders: newReminders });
+                            }}
+                            style={{
+                              padding: '6px 8px',
+                              fontSize: '14px',
+                              backgroundColor: 'var(--panel)',
+                              color: 'var(--text)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            <option value="hours">hours before</option>
+                            <option value="days">days before</option>
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Project Reminders */}
+                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: '8px' }}>
+                    <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px' }}>Project Reminders</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {projectReminders.map((reminder, index) => (
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <input
+                            type="checkbox"
+                            checked={reminder.enabled}
+                            onChange={async (e) => {
+                              const newReminders = [...projectReminders];
+                              newReminders[index] = { ...reminder, enabled: e.target.checked };
+                              setProjectReminders(newReminders);
+                              await updateSettings({ projectReminders: newReminders });
+                            }}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                          />
+                          <input
+                            type="number"
+                            min="1"
+                            value={reminder.value}
+                            onChange={async (e) => {
+                              const value = parseInt(e.target.value) || 1;
+                              const newReminders = [...projectReminders];
+                              newReminders[index] = { ...reminder, value };
+                              setProjectReminders(newReminders);
+                              await updateSettings({ projectReminders: newReminders });
+                            }}
+                            style={{
+                              width: '60px',
+                              padding: '6px 8px',
+                              fontSize: '14px',
+                              backgroundColor: 'var(--panel)',
+                              color: 'var(--text)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '4px',
+                            }}
+                          />
+                          <select
+                            value={reminder.unit}
+                            onChange={async (e) => {
+                              const newReminders = [...projectReminders];
+                              newReminders[index] = { ...reminder, unit: e.target.value as 'hours' | 'days' };
+                              setProjectReminders(newReminders);
+                              await updateSettings({ projectReminders: newReminders });
                             }}
                             style={{
                               padding: '6px 8px',
@@ -3212,7 +3352,7 @@ export default function SettingsPage() {
                   </Link>
                 </div>
                 <p className="text-[var(--text-secondary)]">
-                  A personal, privacy-first dashboard for students to manage courses, deadlines, and tasks.
+                  A personal, privacy-first dashboard for students to manage courses, work, and notes.
                 </p>
                 <p className="text-[var(--text-muted)] text-xs">
                   Your data is stored securely on our servers. We do not share your personal information with third parties.

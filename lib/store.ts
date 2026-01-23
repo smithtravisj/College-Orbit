@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData, ShoppingItem, ShoppingListType, CalendarEvent } from '@/types';
+import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData, ShoppingItem, ShoppingListType, CalendarEvent, WorkItem, WorkItemType, RecurringWorkPattern, RecurringWorkFormData } from '@/types';
 import { applyColorPalette, getCollegeColorPalette, applyCustomColors, getCustomColorSetForTheme, CustomColors, setDatabaseColleges, DatabaseCollege, applyColorblindMode, ColorblindMode, ColorblindStyle } from '@/lib/collegeColors';
 import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
@@ -61,6 +61,8 @@ interface AppStore {
   recurringExamPatterns: RecurringExamPattern[];
   shoppingItems: ShoppingItem[];
   calendarEvents: CalendarEvent[];
+  workItems: WorkItem[];
+  recurringWorkPatterns: RecurringWorkPattern[];
   colleges: DatabaseCollege[];
   loading: boolean;
   initialized: boolean; // True once store has been fully initialized (from cache or database)
@@ -125,6 +127,20 @@ interface AppStore {
   deleteRecurringExamPattern: (patternId: string, deleteInstances: boolean) => Promise<void>;
   pauseRecurringExamPattern: (patternId: string) => Promise<void>;
   resumeRecurringExamPattern: (patternId: string) => Promise<void>;
+
+  // Work Items (unified tasks/assignments)
+  fetchWorkItems: (options?: { type?: WorkItemType; status?: string; showAll?: boolean }) => Promise<void>;
+  addWorkItem: (workItem: Omit<WorkItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateWorkItem: (id: string, workItem: Partial<WorkItem>) => Promise<void>;
+  deleteWorkItem: (id: string) => Promise<void>;
+  toggleWorkItemComplete: (id: string) => Promise<void>;
+  toggleWorkItemChecklistItem: (workItemId: string, itemId: string) => Promise<void>;
+  bulkUpdateWorkItems: (ids: string[], updates: Partial<WorkItem>) => Promise<void>;
+  bulkDeleteWorkItems: (ids: string[]) => Promise<void>;
+  bulkCompleteWorkItems: (ids: string[]) => Promise<void>;
+
+  // Recurring Work Items
+  addRecurringWorkItem: (workItemData: any, recurringData: RecurringWorkFormData) => Promise<void>;
 
   // Exams
   addExam: (exam: Omit<Exam, 'id' | 'createdAt'>) => Promise<void>;
@@ -240,10 +256,12 @@ const saveToLocalStorage = (state: AppStore) => {
       settings: state.settings,
       calendarEvents: state.calendarEvents,
       excludedDates: state.excludedDates,
+      workItems: state.workItems,
       // Exclude to save space - these load from DB when needed:
       // - gpaEntries (only used on GPA page)
       // - shoppingItems (only used on shopping page)
       // - recurringPatterns, recurringDeadlinePatterns, recurringExamPatterns (rarely accessed)
+      // - recurringWorkPatterns (rarely accessed)
     }));
   } catch (error) {
     // If quota exceeded, try to clear old data and save minimal data
@@ -288,6 +306,8 @@ const useAppStore = create<AppStore>((set, get) => ({
   recurringExamPatterns: [],
   shoppingItems: [],
   calendarEvents: [],
+  workItems: [],
+  recurringWorkPatterns: [],
   colleges: [],
   loading: false,
   initialized: false,
@@ -419,8 +439,14 @@ const useAppStore = create<AppStore>((set, get) => ({
     // Step 1: Load from localStorage immediately for instant UI
     const hasLocalData = get().loadFromStorage();
 
-    if (hasLocalData) {
-      // We have cached data, show UI immediately
+    // Check if cache is missing workItems (old cache format) - if so, force sync load
+    const state = get();
+    const hasCacheButMissingWorkItems = hasLocalData &&
+      state.workItems.length === 0 &&
+      (state.courses.length > 0 || state.tasks.length > 0 || state.deadlines.length > 0);
+
+    if (hasLocalData && !hasCacheButMissingWorkItems) {
+      // We have complete cached data, show UI immediately
       set({ loading: false, initialized: true });
       // Refresh data in background to ensure we have fresh data
       // This won't cause UI flash since we already have cached data
@@ -536,6 +562,8 @@ const useAppStore = create<AppStore>((set, get) => ({
         recurringExamPatterns: data.recurringExamPatterns || [],
         shoppingItems: data.shoppingItems || [],
         calendarEvents: data.calendarEvents || [],
+        workItems: data.workItems || [],
+        recurringWorkPatterns: data.recurringWorkPatterns || [],
       };
 
       // Only update fields that have actually changed to prevent unnecessary re-renders
@@ -563,6 +591,8 @@ const useAppStore = create<AppStore>((set, get) => ({
       if (!arraysEqual(newData.recurringExamPatterns, currentState.recurringExamPatterns)) updates.recurringExamPatterns = newData.recurringExamPatterns;
       if (!arraysEqual(newData.shoppingItems, currentState.shoppingItems)) updates.shoppingItems = newData.shoppingItems;
       if (!arraysEqual(newData.calendarEvents || [], currentState.calendarEvents || [])) updates.calendarEvents = newData.calendarEvents;
+      if (!arraysEqual(newData.workItems || [], currentState.workItems || [])) updates.workItems = newData.workItems;
+      if (!arraysEqual(newData.recurringWorkPatterns || [], currentState.recurringWorkPatterns || [])) updates.recurringWorkPatterns = newData.recurringWorkPatterns;
 
       // Always update settings (they're usually different)
       if (JSON.stringify(newData.settings) !== JSON.stringify(currentState.settings)) {
@@ -674,6 +704,7 @@ const useAppStore = create<AppStore>((set, get) => ({
           recurringExamPatterns: data.recurringExamPatterns || [],
           shoppingItems: data.shoppingItems || [],
           calendarEvents: data.calendarEvents || [],
+          workItems: data.workItems || [],
           isPremium: cachedIsPremium, // Set cached premium status
         });
 
@@ -3053,6 +3084,245 @@ const useAppStore = create<AppStore>((set, get) => ({
       await get().loadFromDatabase();
     } catch (error) {
       console.error('Error resuming exam pattern:', error);
+      throw error;
+    }
+  },
+
+  // Work Items (unified tasks/assignments)
+  fetchWorkItems: async (options = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (options.type) params.set('type', options.type);
+      if (options.status) params.set('status', options.status);
+      if (options.showAll) params.set('showAll', 'true');
+
+      const url = `/api/work${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await fetch(url, { credentials: 'include' });
+
+      if (!response.ok) throw new Error('Failed to fetch work items');
+
+      const { workItems } = await response.json();
+      set({ workItems });
+    } catch (error) {
+      console.error('Error fetching work items:', error);
+      throw error;
+    }
+  },
+
+  addWorkItem: async (workItem) => {
+    const tempId = uuidv4();
+    const createdAt = new Date().toISOString();
+    const updatedAt = createdAt;
+
+    // Optimistic update
+    set((state) => ({
+      workItems: [...state.workItems, { ...workItem, id: tempId, createdAt, updatedAt } as WorkItem],
+    }));
+
+    try {
+      const response = await fetch('/api/work', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(workItem),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create work item');
+      }
+
+      const { workItem: newWorkItem } = await response.json();
+
+      // Replace optimistic with real data
+      set((state) => ({
+        workItems: state.workItems.map((w) => (w.id === tempId ? newWorkItem : w)),
+      }));
+      get().invalidateCalendarCache();
+    } catch (error) {
+      // Rollback on error
+      set((state) => ({
+        workItems: state.workItems.filter((w) => w.id !== tempId),
+      }));
+      console.error('Error creating work item:', error);
+      throw error;
+    }
+  },
+
+  updateWorkItem: async (id, workItem) => {
+    // Optimistic update
+    const previousWorkItems = get().workItems;
+    set((state) => ({
+      workItems: state.workItems.map((w) => (w.id === id ? { ...w, ...workItem } : w)),
+    }));
+
+    try {
+      const response = await fetch(`/api/work/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(workItem),
+      });
+
+      if (!response.ok) throw new Error('Failed to update work item');
+
+      const { workItem: updatedWorkItem } = await response.json();
+      set((state) => ({
+        workItems: state.workItems.map((w) => (w.id === id ? updatedWorkItem : w)),
+      }));
+      get().invalidateCalendarCache();
+    } catch (error) {
+      // Rollback on error
+      set({ workItems: previousWorkItems });
+      console.error('Error updating work item:', error);
+      throw error;
+    }
+  },
+
+  deleteWorkItem: async (id) => {
+    // Optimistic update
+    const previousWorkItems = get().workItems;
+    set((state) => ({
+      workItems: state.workItems.filter((w) => w.id !== id),
+    }));
+
+    try {
+      const response = await fetch(`/api/work/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete work item');
+      get().invalidateCalendarCache();
+    } catch (error) {
+      // Rollback on error
+      set({ workItems: previousWorkItems });
+      console.error('Error deleting work item:', error);
+      throw error;
+    }
+  },
+
+  toggleWorkItemComplete: async (id) => {
+    const workItem = get().workItems.find((w) => w.id === id);
+    if (!workItem) return;
+
+    const newStatus = workItem.status === 'done' ? 'open' : 'done';
+    await get().updateWorkItem(id, {
+      status: newStatus,
+      workingOn: newStatus === 'done' ? false : workItem.workingOn,
+    });
+  },
+
+  toggleWorkItemChecklistItem: async (workItemId, itemId) => {
+    const workItem = get().workItems.find((w) => w.id === workItemId);
+    if (!workItem) return;
+
+    const updatedChecklist = workItem.checklist.map((item) =>
+      item.id === itemId ? { ...item, done: !item.done } : item
+    );
+
+    await get().updateWorkItem(workItemId, { checklist: updatedChecklist });
+  },
+
+  bulkUpdateWorkItems: async (ids, updates) => {
+    // Optimistic update
+    const previousWorkItems = get().workItems;
+    set((state) => ({
+      workItems: state.workItems.map((w) => (ids.includes(w.id) ? { ...w, ...updates } : w)),
+    }));
+
+    try {
+      const response = await fetch('/api/work/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ operation: 'update', ids, updates }),
+      });
+
+      if (!response.ok) throw new Error('Failed to bulk update work items');
+      get().invalidateCalendarCache();
+    } catch (error) {
+      // Rollback on error
+      set({ workItems: previousWorkItems });
+      console.error('Error bulk updating work items:', error);
+      throw error;
+    }
+  },
+
+  bulkDeleteWorkItems: async (ids) => {
+    // Optimistic update
+    const previousWorkItems = get().workItems;
+    set((state) => ({
+      workItems: state.workItems.filter((w) => !ids.includes(w.id)),
+    }));
+
+    try {
+      const response = await fetch('/api/work/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ operation: 'delete', ids }),
+      });
+
+      if (!response.ok) throw new Error('Failed to bulk delete work items');
+      get().invalidateCalendarCache();
+    } catch (error) {
+      // Rollback on error
+      set({ workItems: previousWorkItems });
+      console.error('Error bulk deleting work items:', error);
+      throw error;
+    }
+  },
+
+  bulkCompleteWorkItems: async (ids) => {
+    // Optimistic update
+    const previousWorkItems = get().workItems;
+    set((state) => ({
+      workItems: state.workItems.map((w) =>
+        ids.includes(w.id) ? { ...w, status: 'done' as const, workingOn: false } : w
+      ),
+    }));
+
+    try {
+      const response = await fetch('/api/work/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ operation: 'complete', ids }),
+      });
+
+      if (!response.ok) throw new Error('Failed to bulk complete work items');
+      get().invalidateCalendarCache();
+    } catch (error) {
+      // Rollback on error
+      set({ workItems: previousWorkItems });
+      console.error('Error bulk completing work items:', error);
+      throw error;
+    }
+  },
+
+  addRecurringWorkItem: async (workItemData, recurringData) => {
+    try {
+      const response = await fetch('/api/work', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          ...workItemData,
+          recurring: recurringData,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create recurring work item');
+      }
+
+      // Refresh work items to get all generated instances
+      await get().fetchWorkItems();
+      get().invalidateCalendarCache();
+    } catch (error) {
+      console.error('Error creating recurring work item:', error);
       throw error;
     }
   },

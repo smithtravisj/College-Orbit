@@ -10,13 +10,14 @@ import useAppStore from '@/lib/store';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import EmptyState from '@/components/ui/EmptyState';
-import { Task, Deadline, Course, Exam, CalendarEvent } from '@/types';
+import { Task, Deadline, Course, Exam, CalendarEvent, WorkItem } from '@/types';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import { Search } from 'lucide-react';
 
 interface TimelineProps {
   onTaskClick?: (task: Task) => void;
   onDeadlineClick?: (deadline: Deadline) => void;
+  onWorkItemClick?: (workItem: WorkItem) => void;
   onClassClick?: (course: Course, meetingTime: any) => void;
   onExamClick?: (exam: Exam) => void;
   onEventClick?: (event: CalendarEvent) => void;
@@ -31,6 +32,7 @@ interface TimelineProps {
 export const Timeline: React.FC<TimelineProps> = ({
   onTaskClick,
   onDeadlineClick,
+  onWorkItemClick,
   onClassClick,
   onExamClick,
   onEventClick,
@@ -45,6 +47,7 @@ export const Timeline: React.FC<TimelineProps> = ({
   const isMobile = useIsMobile();
   const toggleTaskDone = useAppStore((state) => state.toggleTaskDone);
   const updateDeadline = useAppStore((state) => state.updateDeadline);
+  const toggleWorkItemComplete = useAppStore((state) => state.toggleWorkItemComplete);
 
   // Single selector for all settings to reduce subscriptions
   const settings = useAppStore((state) => state.settings);
@@ -195,7 +198,13 @@ export const Timeline: React.FC<TimelineProps> = ({
   }, [groupedData, isLoading]);
 
   const handleToggleComplete = async (item: TimelineItemType) => {
-    if (item.type === 'task') {
+    // Check if this item came from a WorkItem (has a type field like 'task', 'assignment', 'reading', 'project')
+    const isWorkItem = item.originalItem && 'type' in item.originalItem &&
+      ['task', 'assignment', 'reading', 'project'].includes((item.originalItem as WorkItem).type);
+
+    if (isWorkItem) {
+      await toggleWorkItemComplete(item.originalItem.id);
+    } else if (item.type === 'task') {
       await toggleTaskDone(item.originalItem.id);
     } else if (item.type === 'deadline') {
       const currentStatus = item.originalItem.status;
@@ -210,6 +219,8 @@ export const Timeline: React.FC<TimelineProps> = ({
       onTaskClick(item.originalItem as Task);
     } else if (item.type === 'deadline' && onDeadlineClick) {
       onDeadlineClick(item.originalItem as Deadline);
+    } else if ((item.type === 'reading' || item.type === 'project') && onWorkItemClick) {
+      onWorkItemClick(item.originalItem as WorkItem);
     } else if (item.type === 'class' && onClassClick) {
       onClassClick(item.originalItem, item.originalItem.meetingTime);
     } else if (item.type === 'exam' && onExamClick) {

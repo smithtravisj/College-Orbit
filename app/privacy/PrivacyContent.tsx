@@ -41,7 +41,7 @@ export default function PrivacyContent() {
                 Academic Data
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We store all academic data you create: courses with meeting times and links, assignments with priority and effort levels, tasks with checklists and importance markers, exams with locations, notes with rich text content (which can be linked to courses, tasks, assignments, and exams) and organized in folders, GPA entries, excluded dates (holidays/breaks), custom calendar events, and recurring patterns for tasks, assignments, and exams. This data is entirely user-generated and belongs to you. We do not analyze or process this data beyond providing it back to you.
+                We store all academic data you create: courses with meeting times and links, work items (tasks, assignments, readings, and projects) with priorities, effort levels, checklists, and tags, exams with locations, notes with rich text content (which can be linked to courses, work items, and exams) and organized in folders, GPA entries, excluded dates (holidays/breaks), custom calendar events, and recurring patterns for work items and exams. This data is entirely user-generated and belongs to you. We do not analyze or process this data beyond providing it back to you.
               </p>
             </div>
             <div>
@@ -213,7 +213,7 @@ export default function PrivacyContent() {
                 Calendar Export & Subscription
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                You can export your calendar data (deadlines, exams, tasks, courses, and custom events) as an iCal file for use in external calendar applications like Google Calendar or Apple Calendar. You can also generate a subscription URL that allows external calendars to automatically sync with your College Orbit data. This subscription URL contains a unique, randomly-generated token—anyone with this URL can view your calendar data. You can regenerate this token at any time from Account Settings, which will invalidate the previous URL. We recommend treating your calendar subscription URL as private information.
+                You can export your calendar data (work items, exams, courses, and custom events) as an iCal file for use in external calendar applications like Google Calendar or Apple Calendar. You can also generate a subscription URL that allows external calendars to automatically sync with your College Orbit data. This subscription URL contains a unique, randomly-generated token—anyone with this URL can view your calendar data. You can regenerate this token at any time from Account Settings, which will invalidate the previous URL. We recommend treating your calendar subscription URL as private information.
               </p>
             </div>
             <div>
@@ -251,7 +251,7 @@ export default function PrivacyContent() {
                 Access Your Data
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                You can export all your data at any time from Settings → Data & Backup → Export Data. This provides you with a complete JSON backup of your courses, tasks, deadlines, settings, and all other information.
+                You can export all your data at any time from Settings → Data & Backup → Export Data. This provides you with a complete JSON backup of your courses, work items, exams, notes, settings, and all other information.
               </p>
             </div>
             <div>
@@ -259,7 +259,7 @@ export default function PrivacyContent() {
                 Modify Your Data
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                You have full control to edit, update, or delete any of your academic data, courses, tasks, deadlines, and profile information at any time through the app.
+                You have full control to edit, update, or delete any of your academic data, courses, work items, exams, notes, and profile information at any time through the app.
               </p>
             </div>
             <div>

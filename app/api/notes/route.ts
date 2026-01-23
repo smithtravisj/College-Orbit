@@ -25,9 +25,11 @@ export const GET = withRateLimit(async function(request: NextRequest) {
         task: { select: { id: true, title: true } },
         deadline: { select: { id: true, title: true } },
         exam: { select: { id: true, title: true } },
+        workItem: { select: { id: true, title: true, type: true } },
         recurringTaskPattern: { select: { id: true, taskTemplate: true } },
         recurringDeadlinePattern: { select: { id: true, deadlineTemplate: true } },
         recurringExamPattern: { select: { id: true, examTemplate: true } },
+        recurringWorkPattern: { select: { id: true, workItemTemplate: true } },
       },
       orderBy: [{ isPinned: 'desc' }, { updatedAt: 'desc' }],
     });
@@ -106,6 +108,18 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         return NextResponse.json({ error: 'Recurring exam pattern not found' }, { status: 400 });
       }
     }
+    if (data.workItemId) {
+      const workItem = await prisma.workItem.findFirst({ where: { id: data.workItemId, userId: token.id } });
+      if (!workItem) {
+        return NextResponse.json({ error: 'Work item not found' }, { status: 400 });
+      }
+    }
+    if (data.recurringWorkPatternId) {
+      const pattern = await prisma.recurringWorkPattern.findFirst({ where: { id: data.recurringWorkPatternId, userId: token.id } });
+      if (!pattern) {
+        return NextResponse.json({ error: 'Recurring work pattern not found' }, { status: 400 });
+      }
+    }
 
     // Extract plain text from rich text content for search
     const plainText = extractPlainText(data.content);
@@ -121,9 +135,11 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         taskId: data.taskId || null,
         deadlineId: data.deadlineId || null,
         examId: data.examId || null,
+        workItemId: data.workItemId || null,
         recurringTaskPatternId: data.recurringTaskPatternId || null,
         recurringDeadlinePatternId: data.recurringDeadlinePatternId || null,
         recurringExamPatternId: data.recurringExamPatternId || null,
+        recurringWorkPatternId: data.recurringWorkPatternId || null,
         tags: data.tags || [],
         isPinned: data.isPinned || false,
         links: (data.links || [])
@@ -140,9 +156,11 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         task: { select: { id: true, title: true } },
         deadline: { select: { id: true, title: true } },
         exam: { select: { id: true, title: true } },
+        workItem: { select: { id: true, title: true, type: true } },
         recurringTaskPattern: { select: { id: true, taskTemplate: true } },
         recurringDeadlinePattern: { select: { id: true, deadlineTemplate: true } },
         recurringExamPattern: { select: { id: true, examTemplate: true } },
+        recurringWorkPattern: { select: { id: true, workItemTemplate: true } },
       },
     });
 
