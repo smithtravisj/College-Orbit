@@ -1,6 +1,16 @@
 {
   "releases": [
     {
+      "version": "1.2.14",
+      "date": "2026-01-23",
+      "changes": [
+        "Fixed stale user data persisting after login/logout/signup",
+        "Improved cache clearing to prevent data from previous user showing",
+        "Changed default theme to dark mode for new users",
+        "Added default visible cards for dashboard and tools pages"
+      ]
+    },
+    {
       "version": "1.2.13",
       "date": "2026-01-22",
       "changes": [

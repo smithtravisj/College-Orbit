@@ -29,7 +29,7 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
         weekStartsOn: 'Sun',
         timeFormat: '12h',
         dateFormat: 'MM/DD/YYYY',
-        theme: 'system',
+        theme: 'dark',
         enableNotifications: false,
         university: null,
         hasCompletedOnboarding: false,
@@ -45,6 +45,8 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
         notifyAccountAlerts: false,
         notifyDeadlineReminders: false,
         notifyTaskReminders: false,
+        visibleDashboardCards: ['timeline', 'overview', 'dashboard_quickLinks'],
+        visibleToolsCards: ['pomodoroTimer', 'gradeTracker', 'gpaTrendChart', 'whatIfProjector', 'gpaCalculator', 'tools_quickLinks'],
       },
     };
 

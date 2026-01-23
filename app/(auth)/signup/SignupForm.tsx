@@ -111,7 +111,20 @@ export default function SignupForm() {
       }
 
       if (typeof window !== 'undefined') {
+        // Clear all user-specific cache to prevent stale data from previous user
+        const oldUserId = localStorage.getItem('college-orbit-userId');
+        if (oldUserId) {
+          localStorage.removeItem(`college-orbit-data-${oldUserId}`);
+        }
+        localStorage.removeItem('college-orbit-userId');
         localStorage.removeItem('college-orbit-data');
+        localStorage.removeItem('app-theme');
+        localStorage.removeItem('app-isPremium');
+        localStorage.removeItem('app-customColors');
+        localStorage.removeItem('customQuickLinks');
+        localStorage.removeItem('timeline_cache_today');
+        localStorage.removeItem('timeline_cache_week');
+        localStorage.removeItem('calendarCache');
       }
 
       router.push('/');

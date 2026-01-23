@@ -274,6 +274,22 @@ export default function Navigation() {
   }, [sessionStatus]);
 
   const handleLogout = async () => {
+    // Clear user-specific cache before signing out to prevent stale data for next user
+    if (typeof window !== 'undefined') {
+      const userId = localStorage.getItem('college-orbit-userId');
+      if (userId) {
+        localStorage.removeItem(`college-orbit-data-${userId}`);
+      }
+      localStorage.removeItem('college-orbit-userId');
+      localStorage.removeItem('college-orbit-data');
+      localStorage.removeItem('app-theme');
+      localStorage.removeItem('app-isPremium');
+      localStorage.removeItem('app-customColors');
+      localStorage.removeItem('customQuickLinks');
+      localStorage.removeItem('timeline_cache_today');
+      localStorage.removeItem('timeline_cache_week');
+      localStorage.removeItem('calendarCache');
+    }
     await signOut({ callbackUrl: '/login' });
   };
 

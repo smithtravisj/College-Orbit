@@ -35,6 +35,22 @@ export function LoginForm() {
         return;
       }
 
+      // Clear stale cache from any previous user to ensure fresh data loads
+      if (typeof window !== 'undefined') {
+        const oldUserId = localStorage.getItem('college-orbit-userId');
+        if (oldUserId) {
+          localStorage.removeItem(`college-orbit-data-${oldUserId}`);
+        }
+        localStorage.removeItem('college-orbit-userId');
+        localStorage.removeItem('college-orbit-data');
+        localStorage.removeItem('app-isPremium');
+        localStorage.removeItem('customQuickLinks');
+        localStorage.removeItem('timeline_cache_today');
+        localStorage.removeItem('timeline_cache_week');
+        localStorage.removeItem('calendarCache');
+        // Note: Don't clear app-theme and app-customColors here to avoid theme flash
+      }
+
       const callbackUrl = searchParams.get('callbackUrl') || '/';
       router.push(callbackUrl);
       router.refresh();

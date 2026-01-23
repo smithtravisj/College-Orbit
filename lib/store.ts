@@ -461,6 +461,21 @@ const useAppStore = create<AppStore>((set, get) => ({
       // Extract userId from response
       const userId = data.userId;
 
+      // Check if the actual userId differs from cached userId - if so, clear stale cache
+      if (typeof window !== 'undefined' && userId) {
+        const cachedUserId = localStorage.getItem('college-orbit-userId');
+        if (cachedUserId && cachedUserId !== userId) {
+          console.log('[Store] UserId mismatch - clearing stale cache. Cached:', cachedUserId, 'Actual:', userId);
+          // Clear old user's cache
+          localStorage.removeItem(`college-orbit-data-${cachedUserId}`);
+          localStorage.removeItem('college-orbit-data');
+          localStorage.removeItem('customQuickLinks');
+          localStorage.removeItem('timeline_cache_today');
+          localStorage.removeItem('timeline_cache_week');
+          localStorage.removeItem('calendarCache');
+        }
+      }
+
       const rawSettings = data.settings || DEFAULT_SETTINGS;
 
       console.log('[Store] Loaded settings from DB:', {
@@ -2302,7 +2317,13 @@ const useAppStore = create<AppStore>((set, get) => ({
       // Merge server response with current state to preserve client-side defaults
       // This prevents fields like visibleDashboardCards from being lost if they weren't saved to DB
       const currentState = get().settings;
-      const mergedSettings = { ...currentState, ...updatedSettings };
+
+      // Filter out null values from server response to prevent overwriting client defaults
+      // This is important for fields like visibleDashboardCards that may not be set in DB for new users
+      const filteredSettings = Object.fromEntries(
+        Object.entries(updatedSettings || {}).filter(([, value]) => value !== null)
+      );
+      const mergedSettings = { ...currentState, ...filteredSettings };
       const needsUpdate = JSON.stringify(currentState) !== JSON.stringify(mergedSettings);
       if (needsUpdate) {
         set({ settings: mergedSettings });
