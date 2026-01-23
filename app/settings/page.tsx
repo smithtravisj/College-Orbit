@@ -15,6 +15,7 @@ import { Monitor, RefreshCw, Link2, Unlink, ChevronDown, AlertCircle } from 'luc
 import HelpTooltip from '@/components/ui/HelpTooltip';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useBetaAccess } from '@/hooks/useBetaAccess';
 import { DASHBOARD_CARDS, TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
 interface CanvasStatus {
@@ -34,6 +35,7 @@ interface CanvasStatus {
 
 export default function SettingsPage() {
   const isMobile = useIsMobile();
+  const { isBetaUser } = useBetaAccess();
   const { data: session, status: sessionStatus } = useSession();
   const { isPremium, isLoading: isLoadingSubscription } = useSubscription();
   const [mounted, setMounted] = useState(false);
@@ -3554,24 +3556,26 @@ export default function SettingsPage() {
                   }}>?</kbd> anywhere to view all available shortcuts
                 </p>
               </div>
-              {/* Tutorial Section */}
-              <div style={{ paddingTop: '18px', paddingBottom: '18px', borderTop: '1px solid var(--border)' }}>
-                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
-                  Tutorial
-                </p>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                  New to College Orbit? Take a quick tour of the app.
-                </p>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    updateSettings({ hasCompletedOnboarding: false });
-                    window.location.href = '/';
-                  }}
-                >
-                  Restart Tutorial
-                </Button>
-              </div>
+              {/* Tutorial Section - Beta only */}
+              {isBetaUser && (
+                <div style={{ paddingTop: '18px', paddingBottom: '18px', borderTop: '1px solid var(--border)' }}>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+                    Tutorial
+                  </p>
+                  <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                    New to College Orbit? Take a quick tour of the app.
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      updateSettings({ hasCompletedOnboarding: false });
+                      window.location.href = '/';
+                    }}
+                  >
+                    Restart Tutorial
+                  </Button>
+                </div>
+              )}
               {/* Contact Section */}
               <div style={{ paddingTop: '18px', paddingBottom: '18px', borderTop: '1px solid var(--border)' }}>
                 <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
