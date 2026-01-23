@@ -444,11 +444,19 @@ const useAppStore = create<AppStore>((set, get) => ({
     try {
       console.log('[Store] loadFromDatabase called', new Error().stack?.split('\n').slice(1, 4).join(' <- '));
 
-      // Single API call to fetch all data
-      const response = await fetch('/api/init', { credentials: 'include' });
+      // Single API call to fetch all data - retry on 401 in case session is still being established
+      let response = await fetch('/api/init', { credentials: 'include' });
 
-      // If not authenticated, silently return (user is on login page or session expired)
+      // If not authenticated, retry once after a short delay (session might still be establishing)
       if (response.status === 401) {
+        console.log('[Store] Got 401, retrying after delay...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        response = await fetch('/api/init', { credentials: 'include' });
+      }
+
+      // If still not authenticated, silently return (user is on login page or session expired)
+      if (response.status === 401) {
+        console.log('[Store] Still 401 after retry, returning');
         return;
       }
 

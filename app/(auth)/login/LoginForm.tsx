@@ -35,24 +35,9 @@ export function LoginForm() {
         return;
       }
 
-      // Clear ALL user-specific cache to ensure fresh data loads for new user
-      if (typeof window !== 'undefined') {
-        const oldUserId = localStorage.getItem('college-orbit-userId');
-        if (oldUserId) {
-          localStorage.removeItem(`college-orbit-data-${oldUserId}`);
-        }
-        localStorage.removeItem('college-orbit-userId');
-        localStorage.removeItem('college-orbit-data');
-        localStorage.removeItem('app-isPremium');
-        localStorage.removeItem('app-useCustomTheme');
-        localStorage.removeItem('app-customColors');
-        localStorage.removeItem('customQuickLinks');
-        localStorage.removeItem('timeline_cache_today');
-        localStorage.removeItem('timeline_cache_week');
-        localStorage.removeItem('calendarCache');
-        localStorage.removeItem('pomodoroState');
-        localStorage.removeItem('timelineRange');
-      }
+      // Don't clear cache on login - let the store handle userId mismatches
+      // This allows returning users to get instant cached data loading
+      // The store will detect if the logged-in user differs from cached user and clear appropriately
 
       const callbackUrl = searchParams.get('callbackUrl') || '/';
       router.push(callbackUrl);

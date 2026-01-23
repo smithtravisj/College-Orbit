@@ -4,9 +4,9 @@
       "version": "1.2.14",
       "date": "2026-01-23",
       "changes": [
-        "Fixed stale user data and settings persisting after switching accounts",
-        "Clear all user-specific cache on login/logout/signup including theme settings",
-        "Skip loading from cache if user identity cannot be verified",
+        "Fixed stale user data showing when switching between accounts",
+        "Fixed returning users not seeing their data until page refresh",
+        "Improved cache handling to preserve data for returning users while clearing on account switch",
         "Changed default theme to dark mode for new users",
         "Added default visible cards for dashboard and tools pages"
       ]

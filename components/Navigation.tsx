@@ -274,24 +274,14 @@ export default function Navigation() {
   }, [sessionStatus]);
 
   const handleLogout = async () => {
-    // Clear ALL user-specific cache before signing out
+    // Clear userId on logout so next login doesn't load wrong cache
+    // BUT keep the user's data cache so if they log back in, it loads instantly
     if (typeof window !== 'undefined') {
-      const userId = localStorage.getItem('college-orbit-userId');
-      if (userId) {
-        localStorage.removeItem(`college-orbit-data-${userId}`);
-      }
       localStorage.removeItem('college-orbit-userId');
-      localStorage.removeItem('college-orbit-data');
-      localStorage.removeItem('app-theme');
-      localStorage.removeItem('app-isPremium');
-      localStorage.removeItem('app-useCustomTheme');
-      localStorage.removeItem('app-customColors');
-      localStorage.removeItem('customQuickLinks');
+      // Clear volatile caches that shouldn't persist across sessions
       localStorage.removeItem('timeline_cache_today');
       localStorage.removeItem('timeline_cache_week');
       localStorage.removeItem('calendarCache');
-      localStorage.removeItem('pomodoroState');
-      localStorage.removeItem('timelineRange');
     }
     await signOut({ callbackUrl: '/login' });
   };
