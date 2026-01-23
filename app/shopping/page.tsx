@@ -688,11 +688,13 @@ export default function ShoppingPage() {
 
     if (editingId) {
       // Don't include 'checked' when editing to preserve its current state
-      await updateShoppingItem(editingId, baseItemData);
+      // Don't await - optimistic update handles UI immediately
+      updateShoppingItem(editingId, baseItemData);
       setEditingId(null);
     } else {
       // Only set checked: false for new items
-      await addShoppingItem({ ...baseItemData, checked: false });
+      // Don't await - optimistic update handles UI immediately
+      addShoppingItem({ ...baseItemData, checked: false });
     }
 
     resetForm();

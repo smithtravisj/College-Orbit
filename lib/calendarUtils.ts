@@ -510,6 +510,7 @@ export function getEventColor(event: CalendarEvent): string {
 export function parseColor(colorTag?: string): string {
   if (!colorTag) return 'var(--accent)';
 
+  // Named color to hex mapping
   const colorMap: Record<string, string> = {
     'red': '#ef4444',
     'blue': '#3b82f6',
@@ -521,7 +522,42 @@ export function parseColor(colorTag?: string): string {
     'cyan': '#06b6d4',
   };
 
-  return colorMap[colorTag] || colorTag;
+  // Legacy hex colors from old Canvas sync - map to standard palette
+  const legacyHexMap: Record<string, string> = {
+    '#FF6B6B': '#ef4444', // old red → standard red
+    '#ff6b6b': '#ef4444',
+    '#4ECDC4': '#06b6d4', // old teal → cyan
+    '#4ecdc4': '#06b6d4',
+    '#45B7D1': '#3b82f6', // old blue → standard blue
+    '#45b7d1': '#3b82f6',
+    '#96CEB4': '#10b981', // old green → standard green
+    '#96ceb4': '#10b981',
+    '#FFEAA7': '#f59e0b', // old yellow → standard yellow
+    '#ffeaa7': '#f59e0b',
+    '#DDA0DD': '#ec4899', // old plum → pink
+    '#dda0dd': '#ec4899',
+    '#98D8C8': '#10b981', // old mint → green
+    '#98d8c8': '#10b981',
+    '#F7DC6F': '#f59e0b', // old gold → yellow
+    '#f7dc6f': '#f59e0b',
+    '#BB8FCE': '#a855f7', // old purple → standard purple
+    '#bb8fce': '#a855f7',
+    '#85C1E9': '#3b82f6', // old light blue → standard blue
+    '#85c1e9': '#3b82f6',
+  };
+
+  // Check named colors first
+  if (colorMap[colorTag]) {
+    return colorMap[colorTag];
+  }
+
+  // Check legacy hex colors
+  if (legacyHexMap[colorTag]) {
+    return legacyHexMap[colorTag];
+  }
+
+  // Return as-is for any other value
+  return colorTag;
 }
 
 // Get color for month view dots and legend (supports colorblind mode via CSS variables)

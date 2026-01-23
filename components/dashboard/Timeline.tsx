@@ -95,8 +95,6 @@ export const Timeline: React.FC<TimelineProps> = ({
 
     const handleScroll = () => {
       const nextHeader = nextDayHeaderRef.current;
-      const scrollTop = scrollContainer.scrollTop;
-      const headerHeight = header.offsetHeight;
 
       // If there's no next day header, don't hide the first day header
       if (!nextHeader) {
@@ -104,15 +102,16 @@ export const Timeline: React.FC<TimelineProps> = ({
         return;
       }
 
-      // Get the position of the next day's header relative to scroll container
-      const nextHeaderTop = nextHeader.offsetTop;
+      // Use getBoundingClientRect for accurate visual positioning
+      const headerRect = header.getBoundingClientRect();
+      const nextHeaderRect = nextHeader.getBoundingClientRect();
 
-      // Start hiding before the next header reaches the first header for smoother transition
-      const buffer = 100;
-      const threshold = nextHeaderTop - headerHeight - buffer;
+      // Calculate how much the next header overlaps with the first header
+      const overlap = headerRect.bottom - nextHeaderRect.top;
 
-      if (scrollTop > threshold) {
-        const offset = Math.min(scrollTop - threshold, headerHeight);
+      if (overlap > 0) {
+        // Next header is touching or overlapping - push the first header up
+        const offset = Math.min(overlap, headerRect.height);
         setFirstDayHeaderOffset(offset);
       } else {
         setFirstDayHeaderOffset(0);
@@ -226,9 +225,7 @@ export const Timeline: React.FC<TimelineProps> = ({
                   backgroundColor: 'var(--panel)',
                   paddingBottom: '4px',
                   transform: `translateY(-${firstDayHeaderOffset}px)`,
-                  opacity: 1 - (firstDayHeaderOffset / 24),
                   marginBottom: -firstDayHeaderOffset,
-                  transition: 'opacity 0.1s ease-out',
                 }}
               >
                 <span className="text-sm font-semibold uppercase tracking-wide text-[var(--text)]">

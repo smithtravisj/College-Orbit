@@ -380,9 +380,9 @@ export default function TasksPage() {
           console.error('Error updating recurring pattern:', error);
         }
       } else {
-        // Update regular task
+        // Update regular task - don't await, optimistic update handles UI
         console.log('[handleSubmit] Updating as regular task');
-        await updateTask(editingId, {
+        updateTask(editingId, {
           title: formData.title,
           courseId: formData.courseId || null,
           dueAt,
@@ -395,7 +395,8 @@ export default function TasksPage() {
       }
       setEditingId(null);
     } else {
-      await addTask({
+      // Don't await - optimistic update handles UI immediately
+      addTask({
         title: formData.title,
         courseId: formData.courseId || null,
         dueAt,

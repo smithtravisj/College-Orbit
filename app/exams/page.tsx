@@ -225,7 +225,8 @@ export default function ExamsPage() {
 
     if (editingId) {
       console.log('[Exams] Updating exam:', editingId);
-      await updateExam(editingId, {
+      // Don't await - optimistic update handles UI immediately
+      updateExam(editingId, {
         title: formData.title,
         courseId: formData.courseId || null,
         examAt,
@@ -237,7 +238,8 @@ export default function ExamsPage() {
       setEditingId(null);
     } else {
       console.log('[Exams] Creating new exam');
-      await addExam(payload);
+      // Don't await - optimistic update handles UI immediately
+      addExam(payload);
     }
 
     setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', tags: [], links: [{ label: '', url: '' }] });

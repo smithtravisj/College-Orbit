@@ -390,7 +390,8 @@ export default function EventDetailModal({
           location: editFormData.location || null,
           color: editFormData.color,
         };
-        await updateCalendarEvent(calEvent.id, updatedData);
+        // Don't await - optimistic update handles UI immediately
+        updateCalendarEvent(calEvent.id, updatedData);
 
         // Notify parent of the update for instant UI refresh
         if (onEventUpdate) {

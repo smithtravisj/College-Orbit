@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authConfig } from '@/auth.config';
 import { withRateLimit } from '@/lib/withRateLimit';
-import { createCanvasClient, decryptToken, getColorForCourse, getCurrentTerm, CanvasAuthError } from '@/lib/canvas';
+import { createCanvasClient, decryptToken, getCurrentTerm, CanvasAuthError } from '@/lib/canvas';
 
 // POST - Sync courses from Canvas
 export const POST = withRateLimit(async function(_req: NextRequest) {
@@ -69,13 +69,6 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
         existingCourses.map(c => [c.canvasCourseId, c.id])
       );
 
-      // Get count of existing courses for color assignment
-      const existingCourseCount = await prisma.course.count({
-        where: { userId },
-      });
-
-      let colorIndex = existingCourseCount;
-
       for (const canvasCourse of canvasCourses) {
         try {
           const canvasCourseIdStr = String(canvasCourse.id);
@@ -99,7 +92,7 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
                   : null,
                 startDate: canvasCourse.start_at ? new Date(canvasCourse.start_at) : null,
                 endDate: canvasCourse.end_at ? new Date(canvasCourse.end_at) : null,
-                colorTag: getColorForCourse(colorIndex++),
+                // No colorTag - Canvas courses use the default blue like regular courses
                 meetingTimes: [],
                 links: [],
                 files: [],

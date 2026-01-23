@@ -176,12 +176,14 @@ function Dashboard() {
 
 
   // Get due soon items (for Overview card stats)
+  // Use dueSoonWindowDays - 1 to match timeline's 7-day window (today + 6 more days)
   const dueSoon = deadlines
     .filter((d) => {
       if (!d.dueAt) return false;
       const dueDate = new Date(d.dueAt);
       const windowEnd = new Date();
-      windowEnd.setDate(windowEnd.getDate() + settings.dueSoonWindowDays);
+      windowEnd.setHours(23, 59, 59, 999); // End of today
+      windowEnd.setDate(windowEnd.getDate() + (settings.dueSoonWindowDays - 1));
       return dueDate <= windowEnd && d.status === 'open';
     })
     .sort((a, b) => {

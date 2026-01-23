@@ -226,7 +226,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
             const timeStr = dueTime || '23:59';
             dueAt = new Date(`${dueDate}T${timeStr}`).toISOString();
           }
-          await addTask({
+          // Don't await - optimistic update handles UI immediately
+          addTask({
             title: title.trim(),
             courseId: courseId || null,
             dueAt,
@@ -252,7 +253,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
             const timeStr = dueTime || '23:59';
             dueAt = new Date(`${dueDate}T${timeStr}`).toISOString();
           }
-          await addDeadline({
+          // Don't await - optimistic update handles UI immediately
+          addDeadline({
             title: title.trim(),
             courseId: courseId || null,
             dueAt,
@@ -274,7 +276,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
           if (!title.trim() || !dueDate) return;
           const timeStr = dueTime || '12:00';
           const examAt = new Date(`${dueDate}T${timeStr}`).toISOString();
-          await addExam({
+          // Don't await - optimistic update handles UI immediately
+          addExam({
             title: title.trim(),
             courseId: courseId || null,
             examAt,
@@ -298,7 +301,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
                 })),
               }
             : { type: 'doc', content: [] };
-          await addNote({
+          // Don't await - optimistic update handles UI immediately
+          addNote({
             title: title.trim(),
             content,
             folderId: null,
@@ -317,7 +321,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
         }
         case 'course': {
           if (!courseCode.trim() || !courseName.trim()) return;
-          await addCourse({
+          // Don't await - optimistic update handles UI immediately
+          addCourse({
             code: courseCode.trim(),
             name: courseName.trim(),
             term: '',
@@ -328,7 +333,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
         }
         case 'shopping': {
           if (!title.trim()) return;
-          await addShoppingItem({
+          // Don't await - optimistic update handles UI immediately
+          addShoppingItem({
             listType: shoppingListType,
             name: title.trim(),
             quantity: quantity || 1,

@@ -376,8 +376,8 @@ export default function DeadlinesPage() {
           console.error('Error updating recurring deadline pattern:', error);
         }
       } else {
-        // Update regular deadline
-        await updateDeadline(editingId, {
+        // Update regular deadline - don't await, optimistic update handles UI
+        updateDeadline(editingId, {
           title: formData.title,
           courseId: formData.courseId || null,
           dueAt,
@@ -390,7 +390,8 @@ export default function DeadlinesPage() {
       }
       setEditingId(null);
     } else {
-      await addDeadline({
+      // Don't await - optimistic update handles UI immediately
+      addDeadline({
         title: formData.title,
         courseId: formData.courseId || null,
         dueAt,

@@ -1,8 +1,19 @@
 {
   "releases": [
     {
+      "version": "1.2.15",
+      "date": "2026-01-22",
+      "changes": [
+        "Fixed Canvas courses not matching the blue color of regular courses in calendar",
+        "Fixed slow form closing when saving tasks, deadlines, exams, and other items",
+        "Fixed overview card showing incorrect 'due soon' count compared to timeline",
+        "Fixed release notes showing dates one day earlier than intended",
+        "Improved timeline header scroll behavior on mobile for smoother push effect"
+      ]
+    },
+    {
       "version": "1.2.14",
-      "date": "2026-01-23",
+      "date": "2026-01-22",
       "changes": [
         "Fixed stale user data showing when switching between accounts",
         "Fixed data not loading immediately after login/signup",
@@ -14,14 +25,14 @@
     },
     {
       "version": "1.2.13",
-      "date": "2026-01-22",
+      "date": "2026-01-21",
       "changes": [
         "Updated page header descriptions to be more personal"
       ]
     },
     {
       "version": "1.2.12",
-      "date": "2026-01-22",
+      "date": "2026-01-21",
       "changes": [
         "Fixed empty space at bottom of calendar card on mobile",
         "Changed default calendar view to Week on desktop"
@@ -29,7 +40,7 @@
     },
     {
       "version": "1.2.11",
-      "date": "2026-01-22",
+      "date": "2026-01-21",
       "changes": [
         "Fixed overdue tasks and assignments not showing in week view of timeline",
         "Overdue items now display their original due date",
@@ -40,14 +51,14 @@
     },
     {
       "version": "1.2.10",
-      "date": "2026-01-22",
+      "date": "2026-01-21",
       "changes": [
         "Implemented help circle for links in courses pages"
       ]
     },
     {
       "version": "1.2.9",
-      "date": "2026-01-21",
+      "date": "2026-01-20",
       "changes": [
         "Fixed import/export button icons in Account page",
         "Fixed bulk import button icon in Shopping page"
@@ -55,7 +66,7 @@
     },
     {
       "version": "1.2.8",
-      "date": "2026-01-21",
+      "date": "2026-01-20",
       "changes": [
         "Improved app loading reliability on Chrome and other browsers",
         "Added timeout fallback if loading takes too long",
@@ -64,7 +75,7 @@
     },
     {
       "version": "1.2.7",
-      "date": "2026-01-21",
+      "date": "2026-01-20",
       "changes": [
         "Fixed excluded dates and notes not loading from database",
         "Fixed No School event popup showing invalid date",
@@ -74,7 +85,7 @@
     },
     {
       "version": "1.2.6",
-      "date": "2026-01-21",
+      "date": "2026-01-20",
       "changes": [
         "Simplified theme settings to Light and Dark modes only",
         "Removed System theme option for more reliable color handling"
@@ -82,7 +93,7 @@
     },
     {
       "version": "1.2.5",
-      "date": "2026-01-21",
+      "date": "2026-01-20",
       "changes": [
         "Fixed notes not displaying content until reopened",
         "Note content now loads on-demand from the server for faster page loads"
@@ -90,7 +101,7 @@
     },
     {
       "version": "1.2.4",
-      "date": "2026-01-21",
+      "date": "2026-01-20",
       "changes": [
         "Fixed calendar event colors not displaying correctly",
         "Fixed timeline card disappearing momentarily on settings changes",
@@ -100,7 +111,7 @@
     },
     {
       "version": "1.2.3",
-      "date": "2026-01-20",
+      "date": "2026-01-19",
       "changes": [
         "Updated onboarding tour with new Timeline dashboard and Quick Add button",
         "Onboarding now covers all pages in navigation order",
@@ -109,7 +120,7 @@
     },
     {
       "version": "1.2.2",
-      "date": "2026-01-20",
+      "date": "2026-01-19",
       "changes": [
         "Timeline scrollbar no longer overlaps with day headers",
         "Smooth scroll-away animation for day headers in timeline",
@@ -118,7 +129,7 @@
     },
     {
       "version": "1.2.1",
-      "date": "2026-01-20",
+      "date": "2026-01-19",
       "changes": [
         "Colorblind accessibility now includes calendar and timeline event colors",
         "Event type colors (Course, Task, Exam, Deadline, Event) adapt to colorblind mode",
@@ -127,7 +138,7 @@
     },
     {
       "version": "1.2.0",
-      "date": "2026-01-20",
+      "date": "2026-01-19",
       "changes": [
         "Dashboard redesign with new unified Timeline component",
         "Timeline shows classes, tasks, deadlines, exams, and calendar events in one view",
@@ -139,7 +150,7 @@
     },
     {
       "version": "1.1.0",
-      "date": "2026-01-20",
+      "date": "2026-01-18",
       "changes": [
         "File uploads in Notes - Attach files directly to your notes for better organization",
         "Quick Add improvements for Notes - Faster note creation workflow",
@@ -161,7 +172,7 @@
     },
     {
       "version": "1.0.0",
-      "date": "2026-01-19",
+      "date": "2026-01-18",
       "changes": [
         "Dashboard with at-a-glance view of upcoming tasks, assignments, and exams",
         "Course management with meeting times, locations, links, and custom colors",
