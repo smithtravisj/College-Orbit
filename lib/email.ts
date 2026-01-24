@@ -468,7 +468,7 @@ export async function sendSubscriptionStartedEmail({
 }: SendSubscriptionEmailParams): Promise<void> {
   const displayName = name || 'there';
   const planLabel = plan === 'yearly' ? 'Yearly' : plan === 'semester' ? 'Semester' : 'Monthly';
-  const price = plan === 'yearly' ? '$48/year' : plan === 'semester' ? '$18 (4 months)' : '$5/month';
+  const price = plan === 'yearly' ? '$29/year' : plan === 'semester' ? '$10 (4 months)' : '$3/month';
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -629,7 +629,7 @@ export async function sendPlanChangedEmail({
   const displayName = name || 'there';
   const oldPlanLabel = oldPlan === 'yearly' ? 'Yearly' : 'Monthly';
   const newPlanLabel = newPlan === 'yearly' ? 'Yearly' : 'Monthly';
-  const newPrice = newPlan === 'yearly' ? '$48/year' : '$5/month';
+  const newPrice = newPlan === 'yearly' ? '$29/year' : '$3/month';
 
   const htmlContent = `
     <!DOCTYPE html>

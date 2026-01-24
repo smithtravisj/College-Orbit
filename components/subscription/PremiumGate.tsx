@@ -89,7 +89,7 @@ export default function PremiumGate({ children, feature }: PremiumGateProps) {
           </div>
 
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-            Starting at just <span style={{ fontWeight: 600, color: 'var(--text)' }}>$5/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$18/semester</span>
+            Starting at just <span style={{ fontWeight: 600, color: 'var(--text)' }}>$3/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$10/semester</span>
           </p>
 
           <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>

@@ -11,7 +11,7 @@ export const PRICE_IDS = {
 };
 
 export const PRICES = {
-  monthly: 5,
-  yearly: 48,
-  semester: 18,
+  monthly: 3,
+  yearly: 29,
+  semester: 10,
 };

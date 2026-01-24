@@ -154,7 +154,7 @@ export default function CheckoutPage() {
                 <div>
                   <p style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>Yearly</p>
                   <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-                    $48/year <span style={{ color: 'var(--success)' }}>(Save 20%)</span>
+                    $29/year <span style={{ color: 'var(--success)' }}>(Save 20%)</span>
                   </p>
                 </div>
                 <div
@@ -173,7 +173,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
               <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '8px' }}>
-                That&apos;s just $4/month
+                That&apos;s just $2.42/month
               </p>
             </div>
 
@@ -211,7 +211,7 @@ export default function CheckoutPage() {
                 <div>
                   <p style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>Semester</p>
                   <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-                    $18 one-time <span style={{ color: 'var(--success)' }}>(Save 10%)</span>
+                    $10 one-time <span style={{ color: 'var(--success)' }}>(Save 15%)</span>
                   </p>
                 </div>
                 <div
@@ -249,7 +249,7 @@ export default function CheckoutPage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <p style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>Monthly</p>
-                  <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>$5/month</p>
+                  <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>$3/month</p>
                 </div>
                 <div
                   style={{
@@ -337,7 +337,7 @@ export default function CheckoutPage() {
                   Premium {selectedPlan === 'yearly' ? 'Yearly' : selectedPlan === 'semester' ? 'Semester' : 'Monthly'}
                 </p>
                 <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-                  {selectedPlan === 'yearly' ? '$48.00/year' : selectedPlan === 'semester' ? '$18.00 (4 months)' : '$5.00/month'}
+                  {selectedPlan === 'yearly' ? '$29.00/year' : selectedPlan === 'semester' ? '$10.00 (4 months)' : '$3.00/month'}
                 </p>
               </div>
             </div>
@@ -370,21 +370,21 @@ export default function CheckoutPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Subtotal</span>
                 <span style={{ fontSize: '14px', color: 'var(--text)' }}>
-                  {selectedPlan === 'yearly' ? '$48.00' : selectedPlan === 'semester' ? '$18.00' : '$5.00'}
+                  {selectedPlan === 'yearly' ? '$29.00' : selectedPlan === 'semester' ? '$10.00' : '$3.00'}
                 </span>
               </div>
               {(selectedPlan === 'yearly' || selectedPlan === 'semester') && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ fontSize: '14px', color: 'var(--success)' }}>You save</span>
                   <span style={{ fontSize: '14px', color: 'var(--success)' }}>
-                    {selectedPlan === 'yearly' ? '$12.00' : '$2.00'}
+                    {selectedPlan === 'yearly' ? '$7.00' : '$2.00'}
                   </span>
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
                 <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>Total due today</span>
                 <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>
-                  {selectedPlan === 'yearly' ? '$48.00' : selectedPlan === 'semester' ? '$18.00' : '$5.00'}
+                  {selectedPlan === 'yearly' ? '$29.00' : selectedPlan === 'semester' ? '$10.00' : '$3.00'}
                 </span>
               </div>
             </div>

@@ -166,7 +166,7 @@ export default function SubscriptionPage() {
                 See your semester at a glance, never miss a deadline, and keep everything organized in one place.
               </p>
               <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>
-                Starting at <span style={{ fontWeight: 600, color: 'var(--text)' }}>$5/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$18/semester</span>
+                Starting at <span style={{ fontWeight: 600, color: 'var(--text)' }}>$3/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$10/semester</span>
               </p>
               <Link href="/pricing">
                 <Button variant="primary" size="lg">
@@ -184,8 +184,8 @@ export default function SubscriptionPage() {
   const isCanceled = subscription.status === 'canceled';
   const isSemester = subscription.plan === 'semester';
   const otherPlan = subscription.plan === 'monthly' ? 'yearly' : 'monthly';
-  const otherPlanPrice = otherPlan === 'yearly' ? '$48/year' : '$5/month';
-  const currentPlanPrice = subscription.plan === 'yearly' ? '$48/year' : subscription.plan === 'semester' ? '$18 (4 months)' : '$5/month';
+  const otherPlanPrice = otherPlan === 'yearly' ? '$29/year' : '$3/month';
+  const currentPlanPrice = subscription.plan === 'yearly' ? '$29/year' : subscription.plan === 'semester' ? '$10 (4 months)' : '$3/month';
 
   return (
     <>
@@ -383,7 +383,7 @@ export default function SubscriptionPage() {
                         Premium Yearly
                       </p>
                       <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-                        $48/year <span style={{ color: 'var(--success)', marginLeft: '8px' }}>(Save 20%)</span>
+                        $29/year <span style={{ color: 'var(--success)', marginLeft: '8px' }}>(Save 20%)</span>
                       </p>
                     </div>
                     <Button variant="primary" size="sm">
@@ -409,7 +409,7 @@ export default function SubscriptionPage() {
                         Premium Monthly
                       </p>
                       <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-                        $5/month
+                        $3/month
                       </p>
                     </div>
                     <Button variant="secondary" size="sm">
@@ -528,8 +528,8 @@ export default function SubscriptionPage() {
             </h3>
             <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '14px' }}>
               {otherPlan === 'yearly'
-                ? `Your plan will change to yearly ($48/year) at the end of your current billing period (${formatDate(subscription.expiresAt)}). You won't be charged until then.`
-                : `Your plan will change to monthly ($5/month) at the end of your current billing period (${formatDate(subscription.expiresAt)}). You won't be charged until then.`}
+                ? `Your plan will change to yearly ($29/year) at the end of your current billing period (${formatDate(subscription.expiresAt)}). You won't be charged until then.`
+                : `Your plan will change to monthly ($3/month) at the end of your current billing period (${formatDate(subscription.expiresAt)}). You won't be charged until then.`}
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <Button variant="secondary" onClick={() => setShowChangePlanConfirm(false)} disabled={loading !== null} style={{ backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)' }}>

@@ -294,8 +294,8 @@ export async function GET() {
         freeUsers,
       },
       revenueStats: {
-        // MRR = (monthly * $5) + (yearly * $48/12) + (semester * $18/4)
-        mrr: (premiumMonthly * 5) + (premiumYearly * (48 / 12)) + (premiumSemester * (18 / 4)),
+        // MRR = (monthly * $3) + (yearly * $29/12) + (semester * $10/4)
+        mrr: (premiumMonthly * 3) + (premiumYearly * (29 / 12)) + (premiumSemester * (10 / 4)),
         activeSubscriptions: premiumMonthly + premiumYearly + premiumSemester,
         canceledLast30Days,
         // Churn rate = canceled / (active + canceled) * 100

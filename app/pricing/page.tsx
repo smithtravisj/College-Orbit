@@ -142,11 +142,11 @@ function PublicPricingPage() {
               </h2>
 
               <p style={{ fontSize: isMobile ? '28px' : '32px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>
-                $5
+                $3
                 <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--text-muted)' }}> /month</span>
               </p>
               <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-                or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$48/year</span>{' '}
+                or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$29/year</span>{' '}
                 <span style={{ color: 'var(--success)' }}>(save 20%)</span>
               </p>
 
@@ -327,11 +327,11 @@ function AuthenticatedPricingPage() {
               </h2>
 
               <p style={{ fontSize: isMobile ? '28px' : '32px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>
-                $5
+                $3
                 <span style={{ fontSize: '14px', fontWeight: 400, color: mutedText }}> /month</span>
               </p>
               <p style={{ fontSize: '13px', color: mutedText, marginBottom: '20px' }}>
-                or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$48/year</span>{' '}
+                or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$29/year</span>{' '}
                 <span style={{ color: 'var(--success)' }}>(save 20%)</span>
               </p>
 
@@ -372,7 +372,7 @@ function AuthenticatedPricingPage() {
                       className="w-full"
                     >
                       <Crown size={18} />
-                      Get Yearly - $48/yr
+                      Get Yearly - $29/yr
                     </Button>
                   </Link>
                   <Link href="/checkout?plan=semester">
@@ -380,7 +380,7 @@ function AuthenticatedPricingPage() {
                       variant="secondary"
                       className="w-full"
                     >
-                      Get Semester - $18 (4 months)
+                      Get Semester - $10 (4 months)
                     </Button>
                   </Link>
                   <Link href="/checkout?plan=monthly">
@@ -388,7 +388,7 @@ function AuthenticatedPricingPage() {
                       variant="secondary"
                       className="w-full"
                     >
-                      Get Monthly - $5/mo
+                      Get Monthly - $3/mo
                     </Button>
                   </Link>
                 </div>

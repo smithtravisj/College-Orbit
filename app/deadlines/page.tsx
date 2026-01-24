@@ -2390,7 +2390,7 @@ export default function DeadlinesPage() {
                   : 'Attach assignment sheets, rubrics, and resources directly so everything you need is right there.'}
               </p>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-                Starting at <span style={{ fontWeight: 600, color: 'var(--text)' }}>$5/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$18/semester</span>
+                Starting at <span style={{ fontWeight: 600, color: 'var(--text)' }}>$3/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$10/semester</span>
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <Link href="/pricing" onClick={() => setShowUpgradeModal(false)}>

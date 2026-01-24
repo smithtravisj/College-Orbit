@@ -1732,7 +1732,7 @@ export default function NotesPage() {
                   : "You've hit the free limit. Unlock unlimited notes and never worry about running out of space."}
               </p>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 0 24px 0' }}>
-                Starting at <span style={{ fontWeight: 600, color: 'var(--text)' }}>$5/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$18/semester</span>
+                Starting at <span style={{ fontWeight: 600, color: 'var(--text)' }}>$3/month</span> or <span style={{ fontWeight: 600, color: 'var(--text)' }}>$10/semester</span>
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <Link href="/pricing" style={{ textDecoration: 'none' }}>
