@@ -9,7 +9,7 @@ import { marked } from 'marked';
 
 // Heavy dependencies are dynamically imported when needed
 // mammoth - for .docx files
-// xlsx - for .xlsx files
+// read-excel-file - for .xlsx files
 // jszip - for .pptx files
 
 interface FileItem {
@@ -33,7 +33,7 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
   const [textContent, setTextContent] = useState<string | null>(null);
   const [docxHtml, setDocxHtml] = useState<string | null>(null);
   const [docxLoading, setDocxLoading] = useState(false);
-  const [xlsxHtml, setXlsxHtml] = useState<string | null>(null);
+  const [xlsxData, setXlsxData] = useState<string[][] | null>(null);
   const [xlsxLoading, setXlsxLoading] = useState(false);
   const [csvData, setCsvData] = useState<string[][] | null>(null);
   const [markdownHtml, setMarkdownHtml] = useState<string | null>(null);
@@ -120,37 +120,38 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
     }
   }, [file]);
 
-  // Load xlsx content (xlsx loaded on demand)
+  // Load xlsx content (read-excel-file loaded on demand)
   useEffect(() => {
     if (!file) return;
     const mimeType = getMimeType(file.url);
     if (mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
       setXlsxLoading(true);
-      setXlsxHtml(null);
+      setXlsxData(null);
 
       const loadXlsx = async () => {
         try {
-          const XLSX = await import('xlsx');
+          const readXlsxFile = (await import('read-excel-file')).default;
           const base64Data = file.url.split(',')[1];
           const binaryString = atob(base64Data);
           const bytes = new Uint8Array(binaryString.length);
           for (let i = 0; i < binaryString.length; i++) {
             bytes[i] = binaryString.charCodeAt(i);
           }
-          const workbook = XLSX.read(bytes, { type: 'array' });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const html = XLSX.utils.sheet_to_html(firstSheet, { editable: false });
-          setXlsxHtml(html);
+          const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const rows = await readXlsxFile(blob);
+          // Convert all cell values to strings for display
+          const stringRows = rows.map(row => row.map(cell => cell !== null && cell !== undefined ? String(cell) : ''));
+          setXlsxData(stringRows);
           setXlsxLoading(false);
         } catch {
-          setXlsxHtml(null);
+          setXlsxData(null);
           setXlsxLoading(false);
         }
       };
 
       loadXlsx();
     } else {
-      setXlsxHtml(null);
+      setXlsxData(null);
     }
   }, [file]);
 
@@ -561,33 +562,38 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
                 Loading spreadsheet...
               </div>
             )}
-            {!xlsxLoading && xlsxHtml && (
-              <div
-                dangerouslySetInnerHTML={{ __html: xlsxHtml }}
-                className="xlsx-preview"
-                style={{
-                  backgroundColor: '#fff',
-                  padding: '20px',
-                  borderRadius: '4px',
-                  fontSize: `${13 * scale}px`,
-                  transform: `scale(${scale})`,
-                  transformOrigin: 'top left',
-                }}
-              />
+            {!xlsxLoading && xlsxData && (
+              <div style={{
+                backgroundColor: '#fff',
+                padding: '20px',
+                borderRadius: '4px',
+                fontSize: `${13 * scale}px`,
+                transform: `scale(${scale})`,
+                transformOrigin: 'top left',
+              }}>
+                <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                  <tbody>
+                    {xlsxData.map((row, rowIndex) => (
+                      <tr key={rowIndex} style={{ backgroundColor: rowIndex === 0 ? '#f5f5f5' : rowIndex % 2 === 0 ? '#fafafa' : '#fff' }}>
+                        {row.map((cell, cellIndex) => (
+                          rowIndex === 0 ? (
+                            <th key={cellIndex} style={{ border: '1px solid #ddd', padding: '8px 12px', textAlign: 'left', fontWeight: 'bold' }}>{cell}</th>
+                          ) : (
+                            <td key={cellIndex} style={{ border: '1px solid #ddd', padding: '8px 12px', textAlign: 'left' }}>{cell}</td>
+                          )
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
-            {!xlsxLoading && !xlsxHtml && (
+            {!xlsxLoading && !xlsxData && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#fff' }}>
                 <FileText size={64} style={{ marginBottom: '16px', opacity: 0.5 }} />
                 <p>Could not load spreadsheet</p>
               </div>
             )}
-            <style>{`
-              .xlsx-preview table { border-collapse: collapse; width: 100%; }
-              .xlsx-preview th, .xlsx-preview td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
-              .xlsx-preview th { background-color: #f5f5f5; font-weight: bold; }
-              .xlsx-preview tr:nth-child(even) { background-color: #fafafa; }
-              .xlsx-preview tr:hover { background-color: #f0f0f0; }
-            `}</style>
           </div>
         )}
 
@@ -812,7 +818,7 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
       )}
 
       {/* XLSX toolbar */}
-      {fileType === 'xlsx' && !xlsxLoading && xlsxHtml && (
+      {fileType === 'xlsx' && !xlsxLoading && xlsxData && (
         <div style={{
           display: 'flex',
           alignItems: 'center',
