@@ -23,7 +23,7 @@ import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, Chevr
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useFormatters } from '@/hooks/useFormatters';
-import { FREE_TIER_LIMITS } from '@/lib/subscription';
+import { FREE_TIER_LIMITS } from '@/lib/subscription-constants';
 import Link from 'next/link';
 import { showDeleteToast } from '@/components/ui/DeleteToast';
 import FilePreviewModal from '@/components/FilePreviewModal';

@@ -232,9 +232,46 @@ const migrateLocalStorageKeys = () => {
   }
 };
 
+// Estimate localStorage usage (in bytes)
+const getLocalStorageSize = (): number => {
+  if (typeof window === 'undefined') return 0;
+  let total = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key) {
+      const value = localStorage.getItem(key);
+      if (value) {
+        total += key.length + value.length;
+      }
+    }
+  }
+  return total * 2; // Characters are 2 bytes in UTF-16
+};
+
+// Clear volatile caches when storage is getting full (> 4MB of ~5MB limit)
+const clearVolatileCaches = () => {
+  if (typeof window === 'undefined') return;
+  const size = getLocalStorageSize();
+  const threshold = 4 * 1024 * 1024; // 4MB threshold
+
+  if (size > threshold) {
+    console.log('[Storage] Clearing volatile caches, current size:', Math.round(size / 1024), 'KB');
+    // Clear caches in order of importance (least important first)
+    localStorage.removeItem('timeline_cache_today');
+    localStorage.removeItem('timeline_cache_week');
+    localStorage.removeItem('calendarCache');
+    localStorage.removeItem('app-colleges');
+    localStorage.removeItem('app-subscriptionStatus');
+  }
+};
+
 // Helper to save full state to localStorage
 const saveToLocalStorage = (state: AppStore) => {
   if (typeof window === 'undefined') return;
+
+  // Proactively clear volatile caches if storage is getting full
+  clearVolatileCaches();
+
   try {
     const storageKey = state.getStorageKey();
     if (!storageKey || storageKey === 'college-orbit-') return;

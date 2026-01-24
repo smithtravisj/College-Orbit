@@ -10,7 +10,7 @@ import Card from '@/components/ui/Card';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { FREE_TIER_LIMITS } from '@/lib/subscription';
+import { FREE_TIER_LIMITS } from '@/lib/subscription-constants';
 import Link from 'next/link';
 
 const FREE_FEATURES = [

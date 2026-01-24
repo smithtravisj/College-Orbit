@@ -1,4 +1,7 @@
 import { prisma } from '@/lib/prisma';
+// Import for internal use and re-export for backwards compatibility with server-side code
+import { FREE_TIER_LIMITS } from '@/lib/subscription-constants';
+export { FREE_TIER_LIMITS };
 
 export type SubscriptionTier = 'trial' | 'free' | 'premium';
 
@@ -13,16 +16,6 @@ export interface SubscriptionStatus {
   expiresAt: Date | null;
   status?: 'active' | 'canceled' | 'past_due' | 'none' | 'lifetime';
 }
-
-export const FREE_TIER_LIMITS = {
-  maxNotes: 10,
-  maxCourses: 8,
-  canUploadFiles: false,
-  canUseRecurring: false,
-  canAccessCalendar: false,
-  canAccessShopping: false,
-  canAccessFullTools: false, // Only Quick Links free
-};
 
 export async function getSubscriptionStatus(userId: string): Promise<SubscriptionStatus> {
   const user = await prisma.user.findUnique({

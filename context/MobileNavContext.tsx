@@ -15,21 +15,15 @@ export function MobileNavProvider({ children }: { children: ReactNode }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const openDrawer = useCallback(() => {
-    console.log('[MobileNav] Opening drawer');
     setIsDrawerOpen(true);
   }, []);
 
   const closeDrawer = useCallback(() => {
-    console.log('[MobileNav] Closing drawer');
     setIsDrawerOpen(false);
   }, []);
 
   const toggleDrawer = useCallback(() => {
-    setIsDrawerOpen(prev => {
-      const newState = !prev;
-      console.log('[MobileNav] Toggle drawer:', prev, '->', newState);
-      return newState;
-    });
+    setIsDrawerOpen(prev => !prev);
   }, []);
 
   return (

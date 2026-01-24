@@ -14,7 +14,7 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import { Plus, Crown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
-import { FREE_TIER_LIMITS } from '@/lib/subscription';
+import { FREE_TIER_LIMITS } from '@/lib/subscription-constants';
 import Link from 'next/link';
 import BulkEditToolbar, { BulkAction } from '@/components/BulkEditToolbar';
 import {

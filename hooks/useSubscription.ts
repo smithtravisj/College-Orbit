@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import useAppStore from '@/lib/store';
 
 export interface ClientSubscriptionStatus {
@@ -66,28 +66,95 @@ const getDefaultStatus = (): ClientSubscriptionStatus => {
   };
 };
 
-export function useSubscription(): ClientSubscriptionStatus & { refresh: () => Promise<void> } {
-  const [status, setStatus] = useState<ClientSubscriptionStatus>(getDefaultStatus);
+// Global state for request deduplication
+let pendingFetch: Promise<ClientSubscriptionStatus> | null = null;
+let lastFetchTime = 0;
+let cachedResult: ClientSubscriptionStatus | null = null;
+const CACHE_DURATION = 5000; // 5 seconds cache for deduplication
+const subscribers = new Set<(status: ClientSubscriptionStatus) => void>();
 
-  const fetchStatus = useCallback(async () => {
+// Shared fetch function with deduplication
+const fetchSubscriptionStatus = async (): Promise<ClientSubscriptionStatus> => {
+  const now = Date.now();
+
+  // Return cached result if still fresh
+  if (cachedResult && now - lastFetchTime < CACHE_DURATION) {
+    return cachedResult;
+  }
+
+  // If a fetch is in progress, wait for it
+  if (pendingFetch) {
+    return pendingFetch;
+  }
+
+  // Start new fetch
+  pendingFetch = (async () => {
     try {
       const res = await fetch('/api/subscription/status', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         const newStatus = { ...data, isLoading: false };
-        setStatus(newStatus);
+        cachedResult = newStatus;
+        lastFetchTime = Date.now();
         cacheSubscriptionStatus(newStatus);
-      } else {
-        setStatus({ ...getDefaultStatus(), isLoading: false });
+        // Notify all subscribers
+        subscribers.forEach(cb => cb(newStatus));
+        return newStatus;
       }
     } catch {
-      setStatus({ ...getDefaultStatus(), isLoading: false });
+      // Fall through to default
+    }
+    const defaultStatus = { ...getDefaultStatus(), isLoading: false };
+    cachedResult = defaultStatus;
+    lastFetchTime = Date.now();
+    subscribers.forEach(cb => cb(defaultStatus));
+    return defaultStatus;
+  })();
+
+  try {
+    return await pendingFetch;
+  } finally {
+    pendingFetch = null;
+  }
+};
+
+export function useSubscription(): ClientSubscriptionStatus & { refresh: () => Promise<void> } {
+  const [status, setStatus] = useState<ClientSubscriptionStatus>(getDefaultStatus);
+  const mountedRef = useRef(true);
+
+  const fetchStatus = useCallback(async () => {
+    // Force refresh - clear cache
+    lastFetchTime = 0;
+    cachedResult = null;
+    const result = await fetchSubscriptionStatus();
+    if (mountedRef.current) {
+      setStatus(result);
     }
   }, []);
 
   useEffect(() => {
-    fetchStatus();
-  }, [fetchStatus]);
+    mountedRef.current = true;
+
+    // Subscribe to updates from other hook instances
+    const handleUpdate = (newStatus: ClientSubscriptionStatus) => {
+      if (mountedRef.current) {
+        setStatus(newStatus);
+      }
+    };
+    subscribers.add(handleUpdate);
+
+    // Fetch (will be deduplicated if multiple components mount simultaneously)
+    fetchSubscriptionStatus().then(result => {
+      if (mountedRef.current) {
+        setStatus(result);
+      }
+    });
+
+    return () => {
+      mountedRef.current = false;
+      subscribers.delete(handleUpdate);
+    };
+  }, []);
 
   // Sync premium status to store for color application logic
   const setIsPremium = useAppStore((state) => state.setIsPremium);

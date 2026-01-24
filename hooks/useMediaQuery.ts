@@ -1,19 +1,27 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 
 /**
  * Hook to detect viewport width using matchMedia API
+ * Uses useLayoutEffect to set initial value before paint, preventing layout flash
  * @param query - Media query string (e.g., '(max-width: 767px)')
  * @returns boolean - true if media query matches
  */
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false);
+  // Initialize with actual value if window exists (prevents flash on client navigation)
+  const [matches, setMatches] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia(query).matches;
+    }
+    return false;
+  });
 
-  useEffect(() => {
+  // Use useLayoutEffect to update before paint (prevents visible flash)
+  useLayoutEffect(() => {
     const media = window.matchMedia(query);
 
-    // Set initial value
+    // Set initial value synchronously before paint
     setMatches(media.matches);
 
     // Listen for changes
