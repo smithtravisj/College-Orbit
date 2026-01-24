@@ -125,6 +125,36 @@ export default function RootLayout({
                   },
                   description: 'Stay organized throughout college with College Orbit. Track assignments, deadlines, exams, courses, and more in one privacy-first dashboard.',
                 },
+                {
+                  '@type': 'FAQPage',
+                  '@id': 'https://collegeorbit.app/#faq',
+                  mainEntity: [
+                    {
+                      '@type': 'Question',
+                      name: 'Is College Orbit free?',
+                      acceptedAnswer: {
+                        '@type': 'Answer',
+                        text: 'Yes, College Orbit offers a free tier with core features including dashboard, task tracking, exam scheduling, up to 10 notes, and up to 5 courses. Premium plans start at $3/month for unlimited access.',
+                      },
+                    },
+                    {
+                      '@type': 'Question',
+                      name: 'What features does College Orbit offer?',
+                      acceptedAnswer: {
+                        '@type': 'Answer',
+                        text: 'College Orbit helps you track assignments and deadlines, schedule exams with reminders, manage courses, take notes, use a full calendar view, and access productivity tools like GPA calculator and Pomodoro timer.',
+                      },
+                    },
+                    {
+                      '@type': 'Question',
+                      name: 'Is my data private and secure?',
+                      acceptedAnswer: {
+                        '@type': 'Answer',
+                        text: 'Yes, College Orbit is privacy-first. Your data is encrypted and stored securely. We never sell your data or share it with third parties for advertising purposes.',
+                      },
+                    },
+                  ],
+                },
               ],
             }),
           }}
