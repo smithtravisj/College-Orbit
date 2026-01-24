@@ -2645,10 +2645,277 @@ export default function SettingsPage() {
             )}
           </Card>
 
+          {/* Moodle LMS Integration */}
+          <Card title={
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Moodle Integration
+              <span style={{
+                fontSize: '10px',
+                fontWeight: 600,
+                color: 'var(--warning)',
+                backgroundColor: 'var(--warning-bg)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                Beta
+              </span>
+            </span>
+          }>
+            {!moodleStatus?.connected ? (
+              // Not Connected State
+              <div>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Connect your Moodle account to sync courses, assignments, grades, events, and announcements.
+                  <br />
+                  <span style={{ color: 'var(--warning)', fontSize: '12px' }}>
+                    Note: This integration is in beta. Please report any issues.
+                  </span>
+                </p>
+
+                {/* Moodle Instance URL */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Moodle Instance URL</p>
+                    <HelpTooltip text="Your school's Moodle domain (e.g., moodle.school.edu)" size={14} width={280} />
+                  </div>
+                  <input
+                    type="text"
+                    value={moodleInstanceUrl}
+                    onChange={(e) => setMoodleInstanceUrl(e.target.value)}
+                    placeholder="moodle.school.edu"
+                    style={{
+                      width: '100%',
+                      height: '44px',
+                      padding: '8px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                    }}
+                    disabled={moodleConnecting}
+                  />
+                </div>
+
+                {/* Web Service Token */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Web Service Token</p>
+                    <HelpTooltip text="Get your token from Moodle: Profile → Security Keys → Service (Mobile web service). Never share this token." size={14} width={300} />
+                  </div>
+                  <input
+                    type="password"
+                    value={moodleToken}
+                    onChange={(e) => setMoodleToken(e.target.value)}
+                    placeholder="Your web service token"
+                    style={{
+                      width: '100%',
+                      height: '44px',
+                      padding: '8px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                    }}
+                    disabled={moodleConnecting}
+                  />
+                </div>
+
+                <Button
+                  size={isMobile ? 'sm' : 'lg'}
+                  onClick={handleMoodleConnect}
+                  disabled={moodleConnecting || !moodleInstanceUrl.trim() || !moodleToken.trim()}
+                  style={{
+                    paddingLeft: isMobile ? '12px' : '16px',
+                    paddingRight: isMobile ? '12px' : '16px',
+                  }}
+                >
+                  {moodleConnecting ? (
+                    <>
+                      <RefreshCw size={16} className="animate-spin mr-2" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 size={16} className="mr-2" />
+                      Connect to Moodle
+                    </>
+                  )}
+                </Button>
+
+                {/* Message display */}
+                {moodleMessage && (
+                  <p style={{
+                    marginTop: '12px',
+                    fontSize: '14px',
+                    color: moodleMessage.includes('✗') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {moodleMessage}
+                  </p>
+                )}
+              </div>
+            ) : (
+              // Connected State
+              <div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px',
+                  backgroundColor: 'var(--panel-2)',
+                  borderRadius: '8px',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--success)',
+                  }} />
+                  <span className="text-sm text-[var(--text)]">
+                    Connected as <strong>{moodleStatus.userName}</strong>
+                  </span>
+                </div>
+
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>
+                  Last synced: {formatLastSynced(moodleStatus.lastSyncedAt)}
+                </p>
+
+                <p className="text-xs" style={{ marginBottom: '16px', color: 'var(--warning)' }}>
+                  This integration is in beta. If you encounter issues, please report them in Settings → Feedback.
+                </p>
+
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    onClick={handleMoodleSync}
+                    disabled={moodleSyncing}
+                    style={{
+                      paddingLeft: isMobile ? '12px' : '16px',
+                      paddingRight: isMobile ? '12px' : '16px',
+                    }}
+                  >
+                    {moodleSyncing ? (
+                      <>
+                        <RefreshCw size={16} className="animate-spin mr-2" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw size={16} className="mr-2" />
+                        Sync Now
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    variant="secondary"
+                    onClick={handleMoodleDisconnectClick}
+                    disabled={pendingMoodleDisconnect}
+                    style={{
+                      paddingLeft: isMobile ? '12px' : '16px',
+                      paddingRight: isMobile ? '12px' : '16px',
+                      boxShadow: 'none',
+                      opacity: pendingMoodleDisconnect ? 0.5 : 1,
+                    }}
+                  >
+                    <Unlink size={16} className="mr-2" />
+                    {pendingMoodleDisconnect ? 'Disconnecting...' : 'Disconnect'}
+                  </Button>
+                </div>
+
+                {/* Message display */}
+                {moodleMessage && (
+                  <p style={{
+                    marginBottom: '16px',
+                    fontSize: '14px',
+                    color: moodleMessage.includes('✗') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {moodleMessage}
+                  </p>
+                )}
+
+                {/* Sync Settings Dropdown */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                  <button
+                    onClick={() => setMoodleSyncSettingsOpen(!moodleSyncSettingsOpen)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      padding: '10px 12px',
+                      backgroundColor: 'var(--panel-2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      color: 'var(--text)',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Sync Settings
+                    <ChevronDown
+                      size={18}
+                      style={{
+                        transition: 'transform 0.2s ease',
+                        transform: moodleSyncSettingsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        color: 'var(--text-muted)',
+                      }}
+                    />
+                  </button>
+                  {moodleSyncSettingsOpen && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+                      {[
+                        { key: 'courses', label: 'Courses', description: 'Creates courses from Moodle', value: moodleSyncCourses },
+                        { key: 'assignments', label: 'Assignments', description: 'Syncs assignments to Work page', value: moodleSyncAssignments },
+                        { key: 'grades', label: 'Grades', description: 'Updates assignment scores', value: moodleSyncGrades },
+                        { key: 'events', label: 'Calendar Events', description: 'Syncs to Calendar', value: moodleSyncEvents },
+                        { key: 'announcements', label: 'Announcements', description: 'Syncs forum posts', value: moodleSyncAnnouncements },
+                        { key: 'autoMarkComplete', label: 'Auto-mark complete', description: 'Mark assignments done when submitted', value: moodleAutoMarkComplete },
+                      ].map((setting) => (
+                        <label
+                          key={setting.key}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '10px 12px',
+                            backgroundColor: 'var(--panel-2)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <div>
+                            <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>{setting.label}</p>
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{setting.description}</p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={setting.value}
+                            onChange={(e) => handleMoodleSyncSettingsChange(setting.key, e.target.checked)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </Card>
+
           {/* Blackboard LMS Integration */}
           <Card title={
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               Blackboard Learn Integration
+              <HelpTooltip text="Requires institutional setup. Ask your school's IT department for API credentials (Application Key and Secret)." size={14} width={280} />
               <span style={{
                 fontSize: '10px',
                 fontWeight: 600,
@@ -2936,276 +3203,11 @@ export default function SettingsPage() {
             )}
           </Card>
 
-          {/* Moodle LMS Integration */}
-          <Card title={
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              Moodle Integration
-              <span style={{
-                fontSize: '10px',
-                fontWeight: 600,
-                color: 'var(--warning)',
-                backgroundColor: 'var(--warning-bg)',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}>
-                Beta
-              </span>
-            </span>
-          }>
-            {!moodleStatus?.connected ? (
-              // Not Connected State
-              <div>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
-                  Connect your Moodle account to sync courses, assignments, grades, events, and announcements.
-                  <br />
-                  <span style={{ color: 'var(--warning)', fontSize: '12px' }}>
-                    Note: This integration is in beta. Please report any issues.
-                  </span>
-                </p>
-
-                {/* Moodle Instance URL */}
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Moodle Instance URL</p>
-                    <HelpTooltip text="Your school's Moodle domain (e.g., moodle.school.edu)" size={14} width={280} />
-                  </div>
-                  <input
-                    type="text"
-                    value={moodleInstanceUrl}
-                    onChange={(e) => setMoodleInstanceUrl(e.target.value)}
-                    placeholder="moodle.school.edu"
-                    style={{
-                      width: '100%',
-                      height: '44px',
-                      padding: '8px 12px',
-                      fontSize: '16px',
-                      fontFamily: 'inherit',
-                      backgroundColor: 'var(--panel-2)',
-                      color: 'var(--text)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '6px',
-                    }}
-                    disabled={moodleConnecting}
-                  />
-                </div>
-
-                {/* Web Service Token */}
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Web Service Token</p>
-                    <HelpTooltip text="Get your token from Moodle: Profile → Security Keys → Service (Mobile web service). Never share this token." size={14} width={300} />
-                  </div>
-                  <input
-                    type="password"
-                    value={moodleToken}
-                    onChange={(e) => setMoodleToken(e.target.value)}
-                    placeholder="Your web service token"
-                    style={{
-                      width: '100%',
-                      height: '44px',
-                      padding: '8px 12px',
-                      fontSize: '16px',
-                      fontFamily: 'inherit',
-                      backgroundColor: 'var(--panel-2)',
-                      color: 'var(--text)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '6px',
-                    }}
-                    disabled={moodleConnecting}
-                  />
-                </div>
-
-                <Button
-                  size={isMobile ? 'sm' : 'lg'}
-                  onClick={handleMoodleConnect}
-                  disabled={moodleConnecting || !moodleInstanceUrl.trim() || !moodleToken.trim()}
-                  style={{
-                    paddingLeft: isMobile ? '12px' : '16px',
-                    paddingRight: isMobile ? '12px' : '16px',
-                  }}
-                >
-                  {moodleConnecting ? (
-                    <>
-                      <RefreshCw size={16} className="animate-spin mr-2" />
-                      Connecting...
-                    </>
-                  ) : (
-                    <>
-                      <Link2 size={16} className="mr-2" />
-                      Connect to Moodle
-                    </>
-                  )}
-                </Button>
-
-                {/* Message display */}
-                {moodleMessage && (
-                  <p style={{
-                    marginTop: '12px',
-                    fontSize: '14px',
-                    color: moodleMessage.includes('✗') ? 'var(--danger)' : 'var(--success)',
-                  }}>
-                    {moodleMessage}
-                  </p>
-                )}
-              </div>
-            ) : (
-              // Connected State
-              <div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px',
-                  backgroundColor: 'var(--panel-2)',
-                  borderRadius: '8px',
-                  marginBottom: '16px',
-                }}>
-                  <div style={{
-                    width: '10px',
-                    height: '10px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--success)',
-                  }} />
-                  <span className="text-sm text-[var(--text)]">
-                    Connected as <strong>{moodleStatus.userName}</strong>
-                  </span>
-                </div>
-
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>
-                  Last synced: {formatLastSynced(moodleStatus.lastSyncedAt)}
-                </p>
-
-                <p className="text-xs" style={{ marginBottom: '16px', color: 'var(--warning)' }}>
-                  This integration is in beta. If you encounter issues, please report them in Settings → Feedback.
-                </p>
-
-                {/* Action Buttons */}
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
-                  <Button
-                    size={isMobile ? 'sm' : 'lg'}
-                    onClick={handleMoodleSync}
-                    disabled={moodleSyncing}
-                    style={{
-                      paddingLeft: isMobile ? '12px' : '16px',
-                      paddingRight: isMobile ? '12px' : '16px',
-                    }}
-                  >
-                    {moodleSyncing ? (
-                      <>
-                        <RefreshCw size={16} className="animate-spin mr-2" />
-                        Syncing...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw size={16} className="mr-2" />
-                        Sync Now
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    size={isMobile ? 'sm' : 'lg'}
-                    variant="secondary"
-                    onClick={handleMoodleDisconnectClick}
-                    disabled={pendingMoodleDisconnect}
-                    style={{
-                      paddingLeft: isMobile ? '12px' : '16px',
-                      paddingRight: isMobile ? '12px' : '16px',
-                      boxShadow: 'none',
-                      opacity: pendingMoodleDisconnect ? 0.5 : 1,
-                    }}
-                  >
-                    <Unlink size={16} className="mr-2" />
-                    {pendingMoodleDisconnect ? 'Disconnecting...' : 'Disconnect'}
-                  </Button>
-                </div>
-
-                {/* Message display */}
-                {moodleMessage && (
-                  <p style={{
-                    marginBottom: '16px',
-                    fontSize: '14px',
-                    color: moodleMessage.includes('✗') ? 'var(--danger)' : 'var(--success)',
-                  }}>
-                    {moodleMessage}
-                  </p>
-                )}
-
-                {/* Sync Settings Dropdown */}
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-                  <button
-                    onClick={() => setMoodleSyncSettingsOpen(!moodleSyncSettingsOpen)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                      padding: '10px 12px',
-                      backgroundColor: 'var(--panel-2)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      color: 'var(--text)',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                    }}
-                  >
-                    Sync Settings
-                    <ChevronDown
-                      size={18}
-                      style={{
-                        transition: 'transform 0.2s ease',
-                        transform: moodleSyncSettingsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                        color: 'var(--text-muted)',
-                      }}
-                    />
-                  </button>
-                  {moodleSyncSettingsOpen && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
-                      {[
-                        { key: 'courses', label: 'Courses', description: 'Creates courses from Moodle', value: moodleSyncCourses },
-                        { key: 'assignments', label: 'Assignments', description: 'Syncs assignments to Work page', value: moodleSyncAssignments },
-                        { key: 'grades', label: 'Grades', description: 'Updates assignment scores', value: moodleSyncGrades },
-                        { key: 'events', label: 'Calendar Events', description: 'Syncs to Calendar', value: moodleSyncEvents },
-                        { key: 'announcements', label: 'Announcements', description: 'Syncs forum posts', value: moodleSyncAnnouncements },
-                        { key: 'autoMarkComplete', label: 'Auto-mark complete', description: 'Mark assignments done when submitted', value: moodleAutoMarkComplete },
-                      ].map((setting) => (
-                        <label
-                          key={setting.key}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            padding: '10px 12px',
-                            backgroundColor: 'var(--panel-2)',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <div>
-                            <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>{setting.label}</p>
-                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{setting.description}</p>
-                          </div>
-                          <input
-                            type="checkbox"
-                            checked={setting.value}
-                            onChange={(e) => handleMoodleSyncSettingsChange(setting.key, e.target.checked)}
-                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: colorPalette.accent }}
-                          />
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </Card>
-
           {/* Brightspace (D2L) LMS Integration */}
           <Card title={
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               Brightspace (D2L) Integration
+              <HelpTooltip text="Requires institutional setup. Ask your school's IT department for OAuth credentials (Client ID and Secret)." size={14} width={280} />
               <span style={{
                 fontSize: '10px',
                 fontWeight: 600,

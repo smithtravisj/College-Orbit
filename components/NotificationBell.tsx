@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, X, Check, Clock, AlertCircle, Crown, CreditCard, Megaphone, Gift, Shield, UserPlus, FileText, CheckSquare, MessageCircle, Eye } from 'lucide-react';
+import { Bell, X, Check, Clock, AlertCircle, Crown, CreditCard, Megaphone, Gift, Shield, UserPlus, FileText, CheckSquare, MessageCircle, Eye, Link } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { CanvasBadge } from './CanvasBadge';
 
@@ -229,6 +229,10 @@ export default function NotificationBell() {
     // Task reminder
     if (type === 'task_reminder') {
       return <CheckSquare size={18} style={{ color: '#3b82f6' }} />;
+    }
+    // LMS connection tip
+    if (type === 'lms_tip') {
+      return <Link size={18} style={{ color: '#3b82f6' }} />;
     }
     // Announcement notifications
     if (type === 'announcement') {

@@ -88,18 +88,18 @@ export const POST = withRateLimit(async function(req: NextRequest) {
       // Don't fail signup if notification fails
     }
 
-    // Create Canvas integration notification
+    // Create LMS integration notification
     try {
       await prisma.notification.create({
         data: {
           userId: user.id,
-          title: 'Connect to Canvas LMS',
-          message: 'Sync your courses, assignments, and grades from Canvas. Go to Settings to connect your Canvas account.',
-          type: 'canvas_tip',
+          title: 'Connect Your LMS',
+          message: 'Sync your courses, assignments, and grades automatically. Go to Settings to connect Canvas or Moodle.',
+          type: 'lms_tip',
         },
       });
-    } catch (canvasNotificationError) {
-      console.error('Failed to create Canvas notification:', canvasNotificationError);
+    } catch (lmsNotificationError) {
+      console.error('Failed to create LMS notification:', lmsNotificationError);
       // Don't fail signup if notification fails
     }
 

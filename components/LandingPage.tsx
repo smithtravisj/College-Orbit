@@ -21,7 +21,7 @@ const coreFeatures = [
   {
     icon: RefreshCw,
     title: 'LMS Integration',
-    description: 'Sync courses, assignments, grades, and events from Canvas, Blackboard, Moodle, or Brightspace.',
+    description: 'Sync courses, assignments, grades, and events from Canvas or Moodle.',
   },
   {
     icon: Calendar,
