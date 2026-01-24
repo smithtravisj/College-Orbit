@@ -57,7 +57,26 @@ export async function GET(request: NextRequest) {
       }),
       prisma.note.findMany({
         where: { userId },
-        include: {
+        // Exclude content field - it can be large and is lazy-loaded when note is opened
+        select: {
+          id: true,
+          title: true,
+          tags: true,
+          links: true,
+          files: true,
+          isPinned: true,
+          createdAt: true,
+          updatedAt: true,
+          courseId: true,
+          folderId: true,
+          taskId: true,
+          deadlineId: true,
+          examId: true,
+          workItemId: true,
+          recurringTaskPatternId: true,
+          recurringDeadlinePatternId: true,
+          recurringExamPatternId: true,
+          recurringWorkPatternId: true,
           course: { select: { id: true, code: true, name: true } },
           folder: { select: { id: true, name: true } },
           task: { select: { id: true, title: true } },

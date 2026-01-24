@@ -70,10 +70,10 @@ export default function PrivacyContent() {
             </div>
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
-                Canvas LMS Data (Optional)
+                LMS Data (Optional)
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                If you choose to connect your Canvas LMS account, we store your Canvas instance URL and an encrypted API access token that you generate from your Canvas account settings. When you sync with Canvas, we import and store course information (names, codes, dates), assignments (titles, descriptions, due dates, points), grades and scores, calendar events, and announcements. This data is fetched from Canvas using your API token and stored locally in your College Orbit account. We do not have access to your Canvas login credentials—only the API token you explicitly provide. You can disconnect Canvas at any time, which removes the stored token but preserves any synced data unless you manually delete it.
+                If you choose to connect an LMS account (Canvas, Blackboard, Moodle, or Brightspace), we store your LMS instance URL and encrypted credentials (API token or username/password depending on the platform). When you sync, we import and store course information (names, codes, dates), assignments (titles, descriptions, due dates, points), grades and scores, and calendar events. This data is fetched using your credentials and stored in your College Orbit account. You can disconnect your LMS at any time, which removes the stored credentials but preserves any synced data unless you manually delete it.
               </p>
             </div>
             <div>
@@ -169,10 +169,10 @@ export default function PrivacyContent() {
             </div>
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
-                Canvas API Token Encryption
+                LMS Credential Encryption
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                If you connect your Canvas LMS account, your API access token is encrypted using AES-256 encryption before being stored in our database. The token is only decrypted server-side when making requests to your Canvas instance. We never log or expose your decrypted token. Canvas API tokens expire after 120 days; if your token expires, you will receive an in-app notification prompting you to reconnect.
+                If you connect an LMS account (Canvas, Blackboard, Moodle, or Brightspace), your credentials are encrypted using AES-256 encryption before being stored in our database. Credentials are only decrypted server-side when making requests to your LMS instance. We never log or expose your decrypted credentials.
               </p>
             </div>
             <div>
@@ -210,10 +210,10 @@ export default function PrivacyContent() {
             </div>
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
-                Canvas LMS Integration
+                LMS Integrations
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                If you connect your Canvas LMS account, our servers communicate directly with your school's Canvas instance using the API token you provide. This communication is used solely to fetch your course data, assignments, grades, calendar events, and announcements. We do not share your College Orbit account information with Canvas, and Canvas does not have access to your College Orbit data. All communication with Canvas servers uses secure HTTPS connections. Your Canvas data remains under your school's privacy policies; we simply import a copy for display within College Orbit.
+                If you connect an LMS account (Canvas, Blackboard, Moodle, or Brightspace), our servers communicate directly with your school's LMS instance using the credentials you provide. This communication is used solely to fetch your course data, assignments, grades, and calendar events. We do not share your College Orbit account information with your LMS, and your LMS does not have access to your College Orbit data. All communication uses secure HTTPS connections. Your LMS data remains under your school's privacy policies; we simply import a copy for display within College Orbit.
               </p>
             </div>
             <div>
@@ -233,7 +233,7 @@ export default function PrivacyContent() {
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <li>With our email service provider (Resend) to send password reset and transactional emails</li>
-                <li>With your Canvas LMS instance (only if you connect Canvas) to fetch your academic data</li>
+                <li>With your LMS instance (only if you connect Canvas, Blackboard, Moodle, or Brightspace) to fetch your academic data</li>
                 <li>With service providers who help us operate the platform (hosting, databases) under confidentiality agreements</li>
                 <li>When required by law or legal process</li>
                 <li>To protect against fraud, security threats, or illegal activity</li>

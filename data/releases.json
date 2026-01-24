@@ -1,310 +1,236 @@
 {
   "releases": [
     {
+      "version": "1.3.7",
+      "date": "2026-01-23",
+      "changes": [
+        "Performance optimizations for faster page loads"
+      ]
+    },
+    {
       "version": "1.3.6",
       "date": "2026-01-23",
       "changes": [
-        "Added Moodle LMS integration - sync courses, assignments, grades, and calendar events",
-        "Added Brightspace (D2L) LMS integration - sync courses, assignments, grades, and calendar events",
-        "Added delete functionality for calendar events",
-        "Fixed calendar scroll position resetting when events are updated or deleted",
-        "Fixed clicking on user-created tasks in calendar not opening the detail modal"
+        "Added Moodle LMS integration",
+        "Added Brightspace (D2L) LMS integration",
+        "Bug fixes and improvements"
       ]
     },
     {
       "version": "1.3.5",
       "date": "2026-01-23",
       "changes": [
-        "Lowered pricing for college students - Monthly now $3, Yearly now $29, Semester now $10"
+        "Lowered pricing - Monthly $3, Yearly $29, Semester $10"
       ]
     },
     {
       "version": "1.3.4",
       "date": "2026-01-23",
       "changes": [
-        "Restart tutorial button in Settings to retake the onboarding tour",
-        "Updated Terms of Service with Beta Program section",
-        "Updated Privacy Policy with Beta Program data collection details"
+        "Added restart tutorial button in Settings"
       ]
     },
     {
       "version": "1.3.3",
       "date": "2026-01-23",
       "changes": [
-        "Beta program - Join from Settings to test new features before everyone else",
-        "Submit beta feedback directly to the development team",
-        "Receive notifications when your feedback is reviewed or resolved",
-        "Database-driven release notes with beta version support",
-        "Collapsible notification preferences card in Settings",
-        "Quick Add button moved to top-right on Calendar, Tools, Settings, Admin, and Account pages",
-        "Improved notification icons for beta feedback updates"
+        "Beta program - Join from Settings to test new features early",
+        "Submit feedback directly to the development team"
       ]
     },
     {
       "version": "1.3.2",
       "date": "2026-01-23",
       "changes": [
-        "Fixed timeline auto-scroll not working for all-day items when timed items are completed",
-        "Fixed mark complete/incomplete buttons not working in timeline item modals",
-        "Fixed timeline checkboxes not vertically centered",
-        "Fixed calendar drag and drop not working for work items",
-        "Fixed calendar drop indicator not aligning with drag ghost",
-        "Fixed linked readings, projects, and assignments not displaying in notes detail view",
-        "Fixed 'More options' dropdown not closing by default when creating a new note"
+        "Bug fixes and improvements"
       ]
     },
     {
       "version": "1.3.1",
       "date": "2026-01-23",
       "changes": [
-        "Improved initial page load performance by optimizing authentication and data fetching",
-        "Parallelized session validation queries for faster API responses",
-        "Reduced redundant database calls during app initialization"
+        "Performance improvements"
       ]
     },
     {
       "version": "1.3.0",
       "date": "2026-01-23",
       "changes": [
-        "Unified Work page - tasks, assignments, readings, and projects now in one place",
-        "Notes can now be linked to readings and projects",
-        "Added 'More options' collapsible section to notes creation/edit form",
-        "Updated Terms of Service and Privacy Policy for unified Work model",
-        "Updated onboarding tour and landing page for unified Work experience",
-        "Added reading and project reminder timing settings"
+        "Unified Work page - tasks, assignments, readings, and projects in one place",
+        "Notes can now be linked to readings and projects"
       ]
     },
     {
       "version": "1.2.18",
       "date": "2026-01-23",
       "changes": [
-        "Fixed timeline auto-scroll affecting page scroll on mobile",
-        "Improved search bar sizing and spacing on mobile"
+        "Mobile improvements"
       ]
     },
     {
       "version": "1.2.17",
       "date": "2026-01-23",
       "changes": [
-        "Added search functionality to timeline card (search by title, course, effort, priority, overdue, completed, canvas)",
-        "Timeline card now auto-scrolls to next event on load (prioritizes overdue items)",
-        "Fixed timed items not showing as overdue after their specific time passed",
-        "Added grant semester pass functionality for admins",
-        "College approval notifications now tell users how to set their college in settings",
-        "Reframed premium features with benefit-driven messaging and pricing info"
+        "Added search to timeline",
+        "Timeline auto-scrolls to next event on load"
       ]
     },
     {
       "version": "1.2.16",
       "date": "2026-01-23",
       "changes": [
-        "Fixed overdue items in timeline disappearing immediately when marked complete",
-        "Added file attachments display to timeline items and preview modals",
-        "Fixed colorblind mode not affecting calendar and timeline event colors",
-        "Added colorblind patterns support for calendar events and timeline items",
-        "Fixed 'Patterns only' mode incorrectly changing colors",
-        "Added patterns to 'No School' and 'Class Cancelled' indicators",
-        "Fixed subscription features list showing non-existent feature"
+        "Added file attachments to timeline items",
+        "Improved colorblind mode support"
       ]
     },
     {
       "version": "1.2.15",
       "date": "2026-01-22",
       "changes": [
-        "Fixed Canvas courses not matching the blue color of regular courses in calendar",
-        "Fixed slow form closing when saving tasks, deadlines, exams, and other items",
-        "Fixed overview card showing incorrect 'due soon' count compared to timeline",
-        "Fixed release notes showing dates one day earlier than intended",
-        "Improved timeline header scroll behavior on mobile for smoother push effect"
+        "Bug fixes and improvements"
       ]
     },
     {
       "version": "1.2.14",
       "date": "2026-01-22",
       "changes": [
-        "Fixed stale user data showing when switching between accounts",
-        "Fixed data not loading immediately after login/signup",
-        "Fixed timeline card disappearing when changing settings",
-        "Fixed onboarding tour not appearing for new users",
-        "Improved session handling for more reliable login experience",
-        "Changed default theme to dark mode for new users"
+        "Improved login reliability",
+        "Fixed onboarding tour for new users"
       ]
     },
     {
       "version": "1.2.13",
       "date": "2026-01-21",
       "changes": [
-        "Updated page header descriptions to be more personal"
+        "Updated page descriptions"
       ]
     },
     {
       "version": "1.2.12",
       "date": "2026-01-21",
       "changes": [
-        "Fixed empty space at bottom of calendar card on mobile",
-        "Changed default calendar view to Week on desktop"
+        "Mobile improvements",
+        "Week view now default on desktop"
       ]
     },
     {
       "version": "1.2.11",
       "date": "2026-01-21",
       "changes": [
-        "Fixed overdue tasks and assignments not showing in week view of timeline",
         "Overdue items now display their original due date",
-        "Added help tooltips for Pomodoro Timer, Grade Tracker, GPA Trend, What-If GPA Projector, and GPA Calculator",
-        "Added help tooltips for calendar export, colorblind mode, keyboard shortcuts, and shopping bulk import",
-        "Help tooltips now work on mobile (tap to open, tap away to close)"
+        "Added help tooltips throughout the app"
       ]
     },
     {
       "version": "1.2.10",
       "date": "2026-01-21",
       "changes": [
-        "Implemented help circle for links in courses pages"
+        "Added help tooltips for course links"
       ]
     },
     {
       "version": "1.2.9",
       "date": "2026-01-20",
       "changes": [
-        "Fixed import/export button icons in Account page",
-        "Fixed bulk import button icon in Shopping page"
+        "Bug fixes"
       ]
     },
     {
       "version": "1.2.8",
       "date": "2026-01-20",
       "changes": [
-        "Improved app loading reliability on Chrome and other browsers",
-        "Added timeout fallback if loading takes too long",
-        "Added error banner with refresh option when loading fails"
+        "Improved app loading reliability"
       ]
     },
     {
       "version": "1.2.7",
       "date": "2026-01-20",
       "changes": [
-        "Fixed excluded dates and notes not loading from database",
-        "Fixed No School event popup showing invalid date",
-        "Fixed No School event popup missing rounded corners",
-        "Data now refreshes in background to ensure freshness"
+        "Bug fixes"
       ]
     },
     {
       "version": "1.2.6",
       "date": "2026-01-20",
       "changes": [
-        "Simplified theme settings to Light and Dark modes only",
-        "Removed System theme option for more reliable color handling"
+        "Simplified theme settings to Light and Dark modes"
       ]
     },
     {
       "version": "1.2.5",
       "date": "2026-01-20",
       "changes": [
-        "Fixed notes not displaying content until reopened",
-        "Note content now loads on-demand from the server for faster page loads"
+        "Faster note loading"
       ]
     },
     {
       "version": "1.2.4",
       "date": "2026-01-20",
       "changes": [
-        "Fixed calendar event colors not displaying correctly",
-        "Fixed timeline card disappearing momentarily on settings changes",
-        "Improved performance by reducing localStorage cache size",
-        "Quick Links card now extends to match Timeline card height on desktop"
+        "Bug fixes and performance improvements"
       ]
     },
     {
       "version": "1.2.3",
       "date": "2026-01-19",
       "changes": [
-        "Updated onboarding tour with new Timeline dashboard and Quick Add button",
-        "Onboarding now covers all pages in navigation order",
-        "Landing page feature updated to reflect Timeline Dashboard"
+        "Updated onboarding tour"
       ]
     },
     {
       "version": "1.2.2",
       "date": "2026-01-19",
       "changes": [
-        "Timeline scrollbar no longer overlaps with day headers",
-        "Smooth scroll-away animation for day headers in timeline",
-        "Fixed timeline not appearing immediately on dashboard load"
+        "Timeline visual improvements"
       ]
     },
     {
       "version": "1.2.1",
       "date": "2026-01-19",
       "changes": [
-        "Colorblind accessibility now includes calendar and timeline event colors",
-        "Event type colors (Course, Task, Exam, Deadline, Event) adapt to colorblind mode",
-        "Settings preview now shows event colors alongside status colors"
+        "Colorblind accessibility for calendar and timeline"
       ]
     },
     {
       "version": "1.2.0",
       "date": "2026-01-19",
       "changes": [
-        "Dashboard redesign with new unified Timeline component",
-        "Timeline shows classes, tasks, deadlines, exams, and calendar events in one view",
-        "Instant timeline loading with smart caching",
+        "New Timeline dashboard - see classes, tasks, deadlines, exams, and events in one view",
         "Today/Week view toggle",
-        "Click any timeline item to view details in a modal",
-        "Improved click targets and cleaner card layouts"
+        "Click any item to view details"
       ]
     },
     {
       "version": "1.1.0",
       "date": "2026-01-18",
       "changes": [
-        "File uploads in Notes - Attach files directly to your notes for better organization",
-        "Quick Add improvements for Notes - Faster note creation workflow",
-        "Shopping page improvements - Enhanced grocery, wishlist, and pantry tracking",
-        "Semester pricing option - New one-time payment option for semester access",
-        "Tools page tabs - Better organization with tabbed navigation for GPA tools",
-        "Grade/GPA tracker improvements - Enhanced grade tracking with course credits",
-        "Course credits tracking - Track credit hours for each course with auto-sync to grade tracker",
-        "Notification reminders for exams, tasks, and assignments - Never miss important deadlines",
-        "Session management - View and revoke access from active devices in Account settings",
-        "Calendar export - Export to Google Calendar, Apple Calendar, or any iCal-compatible app",
-        "Calendar subscription URL - Auto-syncing calendar feed for external calendar apps",
-        "Safari mobile performance improvements - Faster loading on iOS devices",
-        "Premium features display - See all premium features on your subscription card",
-        "Updated welcome to premium email with comprehensive feature list",
-        "iOS/iPadOS device detection improvements for active sessions",
-        "Privacy Policy and Terms of Service updates for new features"
+        "File uploads in Notes",
+        "Shopping page improvements",
+        "Semester pricing option",
+        "Grade/GPA tracker improvements with course credits",
+        "Notification reminders for exams, tasks, and assignments",
+        "Session management - view and revoke device access",
+        "Calendar export to Google Calendar, Apple Calendar, and more"
       ]
     },
     {
       "version": "1.0.0",
       "date": "2026-01-18",
       "changes": [
-        "Dashboard with at-a-glance view of upcoming tasks, assignments, and exams",
-        "Course management with meeting times, locations, links, and custom colors",
-        "Task tracking with priority levels, effort estimates, checklists, and importance markers",
-        "Assignment tracking with due dates, effort levels, tags, and file attachments",
-        "Exam scheduling with locations, custom reminders, and countdown timers",
-        "Full calendar with day, week, and month views plus custom events",
-        "Notes with rich text editor, folder organization, tagging, and course linking",
-        "Canvas LMS integration to sync courses, assignments, grades, and announcements",
-        "Grade tracker with semester-based GPA calculation and trend visualization",
-        "GPA tools including What-If projector and grade calculator",
-        "Pomodoro timer with customizable focus and break sessions",
-        "Quick links for fast access to frequently used resources",
-        "Shopping lists with grocery, wishlist, and pantry tracking",
-        "Recurring patterns for tasks, assignments, and exams",
-        "Excluded dates for holidays and breaks",
-        "Light, dark, and system theme modes",
-        "Custom color themes with college color palettes",
-        "Visual effects customization for gradients and glow",
-        "Colorblind accessibility modes with pattern support",
-        "Keyboard shortcuts for power users",
-        "Page and card visibility customization",
-        "File attachments with HEIC/HEIF auto-conversion",
-        "Data export and backup functionality",
-        "Interactive onboarding tour for new users",
+        "Initial release",
+        "Dashboard with upcoming tasks, assignments, and exams",
+        "Course management with meeting times and custom colors",
+        "Task and assignment tracking with priorities and checklists",
+        "Exam scheduling with reminders",
+        "Full calendar with day, week, and month views",
+        "Notes with rich text editor and folder organization",
+        "Canvas LMS integration",
+        "Grade tracker and GPA tools",
+        "Pomodoro timer",
+        "Shopping lists",
+        "Light and dark themes with custom college colors",
+        "Colorblind accessibility",
+        "Keyboard shortcuts",
         "Mobile-responsive design"
       ]
     }

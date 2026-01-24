@@ -13,21 +13,31 @@ export default {
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
 
-  // Reduce bundle size by excluding specific packages from server bundle
+  // Reduce bundle size by optimizing package imports (tree-shaking)
   experimental: {
     optimizePackageImports: [
+      // Icons - large library, only include used icons
       'lucide-react',
+      // Rich text editor packages
       '@tiptap/react',
       '@tiptap/starter-kit',
       '@tiptap/extension-link',
       '@tiptap/extension-character-count',
       '@tiptap/extension-placeholder',
+      '@tiptap/html',
+      // UI utilities
+      '@floating-ui/dom',
+      // Markdown parser
+      'marked',
+      // Date/time utilities if added in future
+      'date-fns',
     ],
   },
 
-  // Security headers
+  // Security and caching headers
   async headers() {
     return [
+      // Security headers for all routes
       {
         source: '/(.*)',
         headers: [
@@ -46,6 +56,64 @@ export default {
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
+          },
+        ],
+      },
+      // Long cache for static assets (fonts, images in _next/static)
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Cache for font files
+      {
+        source: '/fonts/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Cache for static images
+      {
+        source: '/:path*.png',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
+          },
+        ],
+      },
+      {
+        source: '/:path*.svg',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
+          },
+        ],
+      },
+      {
+        source: '/:path*.ico',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
+          },
+        ],
+      },
+      // Service worker and manifest - shorter cache for updates
+      {
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600, stale-while-revalidate=86400',
           },
         ],
       },

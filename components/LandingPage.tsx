@@ -20,8 +20,8 @@ import {
 const coreFeatures = [
   {
     icon: RefreshCw,
-    title: 'Canvas Integration',
-    description: 'Sync your courses, assignments, grades, and calendar events directly from Canvas LMS.',
+    title: 'LMS Integration',
+    description: 'Sync courses, assignments, grades, and events from Canvas, Blackboard, Moodle, or Brightspace.',
   },
   {
     icon: Calendar,

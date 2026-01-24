@@ -44,7 +44,7 @@ export default function TermsContent() {
                 What We Provide
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                <li>Canvas LMS integration to sync courses, assignments, grades, calendar events, and announcements</li>
+                <li>LMS integrations (Canvas, Blackboard, Moodle, Brightspace) to sync courses, assignments, grades, and calendar events</li>
                 <li>Unified work management for tasks, assignments, readings, and projects with priorities, effort levels, checklists, and tags</li>
                 <li>Recurring work items and exams with flexible scheduling</li>
                 <li>Course and calendar organization with meeting schedules</li>
@@ -272,21 +272,20 @@ export default function TermsContent() {
           <div className="space-y-4">
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
-                Canvas LMS Integration
+                LMS Integrations
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                College Orbit offers optional integration with Canvas LMS (Learning Management System). When you connect your Canvas account:
+                College Orbit offers optional integration with Learning Management Systems (Canvas, Blackboard, Moodle, and Brightspace). When you connect your LMS account:
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                <li>You provide your Canvas instance URL and a personal API access token that you generate from your Canvas account settings</li>
-                <li>We use this token to fetch your courses, assignments, grades, calendar events, and announcements from Canvas on your behalf</li>
-                <li>Your Canvas API token is encrypted and stored securely on our servers</li>
-                <li>We only read data from Canvas; we never modify, submit, or delete anything in your Canvas account</li>
-                <li>Canvas API tokens expire after approximately 120 days; you will need to generate a new token and reconnect</li>
-                <li>You can disconnect your Canvas account at any time from Settings, which will delete your stored token</li>
+                <li>You provide your LMS instance URL and credentials (API token or username/password depending on the platform)</li>
+                <li>We use these credentials to fetch your courses, assignments, grades, and calendar events on your behalf</li>
+                <li>Your credentials are encrypted and stored securely on our servers</li>
+                <li>We only read data from your LMS; we never modify, submit, or delete anything in your LMS account</li>
+                <li>You can disconnect your LMS account at any time from Settings, which will delete your stored credentials</li>
               </ul>
               <p className="text-sm" style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>
-                Your use of Canvas is subject to your institution's Canvas terms of service. We are not affiliated with Instructure (the company behind Canvas) and are not responsible for Canvas availability or data accuracy.
+                Your use of any LMS is subject to your institution's terms of service. We are not affiliated with Instructure (Canvas), Anthology (Blackboard), Moodle, or D2L (Brightspace) and are not responsible for LMS availability or data accuracy.
               </p>
             </div>
             <div>

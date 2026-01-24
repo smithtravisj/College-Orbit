@@ -474,8 +474,8 @@ const useAppStore = create<AppStore>((set, get) => ({
       // Single API call to fetch all data - retry on 401 in case session is still being established
       let response = await fetch('/api/init', { credentials: 'include' });
 
-      // If not authenticated, retry with increasing delays (session might still be establishing after login/signup)
-      const retryDelays = [300, 600, 1000];
+      // If not authenticated, retry with short delays (session might still be establishing after login/signup)
+      const retryDelays = [100, 200, 300];
       for (const delay of retryDelays) {
         if (response.status !== 401) break;
         console.log(`[Store] Got 401, retrying after ${delay}ms...`);
