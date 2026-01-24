@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.3.5",
+      "date": "2026-01-23",
+      "changes": [
+        "Lowered pricing for college students - Monthly now $3, Yearly now $29, Semester now $10"
+      ]
+    },
+    {
       "version": "1.3.4",
       "date": "2026-01-23",
       "changes": [
