@@ -18,6 +18,9 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Link from 'next/link';
 import { CanvasBadge } from './CanvasBadge';
+import { BlackboardBadge } from './BlackboardBadge';
+import { MoodleBadge } from './MoodleBadge';
+import { BrightspaceBadge } from './BrightspaceBadge';
 import { useFormatters } from '@/hooks/useFormatters';
 
 interface EventDetailModalProps {
@@ -92,18 +95,20 @@ export default function EventDetailModal({
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
   const courseFormRef = useRef<{ submit: () => void }>(null);
-  const { updateTask, updateDeadline, updateCourse, updateCalendarEvent, settings } = useAppStore();
+  const { updateTask, updateDeadline, updateCourse, updateCalendarEvent, deleteCalendarEvent, settings } = useAppStore();
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState<any>(null);
   const [localStatus, setLocalStatus] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
       setIsEditing(false);
       setEditFormData(null);
       setLocalStatus(null);
+      setShowDeleteConfirm(false);
     }
   }, [isOpen]);
 
@@ -146,24 +151,38 @@ export default function EventDetailModal({
     fullData = courses.find((c) => c.id === event.courseId) || null;
   } else if (event.type === 'task') {
     // For recurring tasks, match both ID and instanceDate to get the correct instance
+    // Check both tasks array and workItems (WorkItems with type='task' are stored in workItems)
     if (event.instanceDate) {
       fullData = tasks.find((t) => t.id === event.id && (t as any).instanceDate === event.instanceDate) || null;
+      if (!fullData) {
+        fullData = workItems.find((w) => w.id === event.id && (w as any).instanceDate === event.instanceDate) || null;
+      }
     } else {
       fullData = tasks.find((t) => t.id === event.id) || null;
+      if (!fullData) {
+        fullData = workItems.find((w) => w.id === event.id) || null;
+      }
     }
     if (fullData && 'courseId' in fullData && fullData.courseId) {
-      const courseId = (fullData as Task).courseId;
+      const courseId = (fullData as Task | WorkItem).courseId;
       relatedCourse = courses.find((c) => c.id === courseId) || null;
     }
   } else if (event.type === 'deadline') {
     // For recurring deadlines, match both ID and instanceDate to get the correct instance
+    // Check both deadlines array and workItems (WorkItems with type='assignment' are stored in workItems)
     if (event.instanceDate) {
       fullData = deadlines.find((d) => d.id === event.id && (d as any).instanceDate === event.instanceDate) || null;
+      if (!fullData) {
+        fullData = workItems.find((w) => w.id === event.id && (w as any).instanceDate === event.instanceDate) || null;
+      }
     } else {
       fullData = deadlines.find((d) => d.id === event.id) || null;
+      if (!fullData) {
+        fullData = workItems.find((w) => w.id === event.id) || null;
+      }
     }
     if (fullData && 'courseId' in fullData && fullData.courseId) {
-      const courseId = (fullData as Deadline).courseId;
+      const courseId = (fullData as Deadline | WorkItem).courseId;
       relatedCourse = courses.find((c) => c.id === courseId) || null;
     }
   } else if (event.type === 'reading' || event.type === 'project') {
@@ -458,6 +477,19 @@ export default function EventDetailModal({
     onClose();
   };
 
+  const handleDeleteEvent = async () => {
+    if (event?.type === 'event' && fullData) {
+      const calEvent = fullData as CustomCalendarEvent;
+      try {
+        await deleteCalendarEvent(calEvent.id);
+        onStatusChange?.();
+        onClose();
+      } catch (error) {
+        console.error('Error deleting event:', error);
+      }
+    }
+  };
+
   const handleSaveEditCourse = async (courseData: any) => {
     if (!fullData || event.type !== 'course') return;
     const course = fullData as Course;
@@ -549,6 +581,9 @@ export default function EventDetailModal({
                       COURSE
                     </div>
                     {fullData && 'canvasCourseId' in fullData && (fullData as Course).canvasCourseId && <CanvasBadge size="md" />}
+                    {fullData && 'blackboardCourseId' in fullData && (fullData as Course).blackboardCourseId && <BlackboardBadge size="md" />}
+                    {fullData && 'moodleCourseId' in fullData && (fullData as Course).moodleCourseId && <MoodleBadge size="md" />}
+                    {fullData && 'brightspaceCourseId' in fullData && (fullData as Course).brightspaceCourseId && <BrightspaceBadge size="md" />}
                   </div>
                   <h2
                     style={{
@@ -577,9 +612,14 @@ export default function EventDetailModal({
                     >
                       {event.type === 'task' ? 'TASK' : event.type === 'deadline' ? 'DEADLINE' : event.type === 'exam' ? 'EXAM' : 'EVENT'}
                     </div>
-                    {/* Canvas badge for synced items */}
+                    {/* LMS badges for synced items */}
                     {event.type === 'deadline' && fullData && 'canvasAssignmentId' in fullData && (fullData as Deadline).canvasAssignmentId && <CanvasBadge size="md" />}
+                    {event.type === 'deadline' && fullData && 'blackboardColumnId' in fullData && (fullData as Deadline).blackboardColumnId && <BlackboardBadge size="md" />}
+                    {event.type === 'deadline' && fullData && 'moodleAssignmentId' in fullData && (fullData as Deadline).moodleAssignmentId && <MoodleBadge size="md" />}
+                    {event.type === 'deadline' && fullData && 'brightspaceActivityId' in fullData && (fullData as Deadline).brightspaceActivityId && <BrightspaceBadge size="md" />}
                     {event.type === 'event' && fullData && 'canvasEventId' in fullData && (fullData as CustomCalendarEvent).canvasEventId && <CanvasBadge size="md" />}
+                    {event.type === 'event' && fullData && 'moodleEventId' in fullData && (fullData as CustomCalendarEvent).moodleEventId && <MoodleBadge size="md" />}
+                    {event.type === 'event' && fullData && 'brightspaceEventId' in fullData && (fullData as CustomCalendarEvent).brightspaceEventId && <BrightspaceBadge size="md" />}
                   </div>
                   <h2
                     style={{
@@ -689,6 +729,27 @@ export default function EventDetailModal({
                 Save
               </Button>
             </>
+          ) : showDeleteConfirm ? (
+            <>
+              <span style={{ fontSize: isMobile ? '12px' : '14px', color: 'var(--text-muted)', marginRight: 'auto' }}>
+                Delete this event?
+              </span>
+              <Button variant="secondary" size={isMobile ? 'sm' : 'md'} onClick={() => setShowDeleteConfirm(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size={isMobile ? 'sm' : 'md'}
+                onClick={handleDeleteEvent}
+                style={{
+                  paddingLeft: isMobile ? '12px' : '16px',
+                  paddingRight: isMobile ? '12px' : '16px',
+                  backgroundColor: '#ef4444',
+                }}
+              >
+                Delete
+              </Button>
+            </>
           ) : (
             <>
               {event.type !== 'course' && event.type !== 'exam' && event.type !== 'event' && (
@@ -696,6 +757,18 @@ export default function EventDetailModal({
                   {(localStatus || (fullData && 'status' in fullData && (fullData as Task | Deadline).status)) === 'done'
                     ? 'Mark Incomplete'
                     : 'Mark Complete'}
+                </Button>
+              )}
+              {event.type === 'event' && (
+                <Button
+                  variant="secondary"
+                  size={isMobile ? 'sm' : 'md'}
+                  onClick={() => setShowDeleteConfirm(true)}
+                  style={{
+                    color: '#ef4444',
+                  }}
+                >
+                  Delete
                 </Button>
               )}
               <Button

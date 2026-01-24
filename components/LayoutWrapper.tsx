@@ -8,6 +8,9 @@ import { MobileHeader } from './MobileHeader';
 import { FloatingMenuButton } from './FloatingMenuButton';
 import { QuickAddButton } from './QuickAddButton';
 import { CanvasSyncManager } from './CanvasSyncManager';
+import { BlackboardSyncManager } from './BlackboardSyncManager';
+import { MoodleSyncManager } from './MoodleSyncManager';
+import { BrightspaceSyncManager } from './BrightspaceSyncManager';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAnalyticsPageView } from '@/lib/useAnalytics';
 import useAppStore from '@/lib/store';
@@ -119,6 +122,9 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
       <KeyboardShortcutsProvider>
         <BackgroundDecoration />
         <CanvasSyncManager />
+        <BlackboardSyncManager />
+        <MoodleSyncManager />
+        <BrightspaceSyncManager />
         <MobileHeader />
         <Navigation />
         <QuickAddButton />
@@ -136,6 +142,9 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
       <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg)' }}>
         <BackgroundDecoration />
         <CanvasSyncManager />
+        <BlackboardSyncManager />
+        <MoodleSyncManager />
+        <BrightspaceSyncManager />
         <Navigation />
         <QuickAddButton />
         <main style={{ marginLeft: '224px', minWidth: 0 }}>

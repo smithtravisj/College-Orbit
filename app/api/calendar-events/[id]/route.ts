@@ -101,7 +101,7 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Verify ownership and get Canvas ID if present
+    // Verify ownership and get LMS IDs if present
     const existingEvent = await prisma.calendarEvent.findFirst({
       where: {
         id,
@@ -110,6 +110,9 @@ export async function DELETE(
       select: {
         id: true,
         canvasEventId: true,
+        blackboardEventId: true,
+        moodleEventId: true,
+        brightspaceEventId: true,
       },
     });
 
@@ -117,7 +120,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
-    // If this is a Canvas event, track the deletion to prevent re-sync
+    // Track deletions for LMS-synced events to prevent re-sync
     if (existingEvent.canvasEventId) {
       await prisma.deletedCanvasItem.upsert({
         where: {
@@ -131,6 +134,60 @@ export async function DELETE(
         create: {
           userId: token.id,
           canvasId: existingEvent.canvasEventId,
+          type: 'event',
+        },
+      });
+    }
+
+    if (existingEvent.blackboardEventId) {
+      await prisma.deletedBlackboardItem.upsert({
+        where: {
+          userId_blackboardId_type: {
+            userId: token.id,
+            blackboardId: existingEvent.blackboardEventId,
+            type: 'event',
+          },
+        },
+        update: { deletedAt: new Date() },
+        create: {
+          userId: token.id,
+          blackboardId: existingEvent.blackboardEventId,
+          type: 'event',
+        },
+      });
+    }
+
+    if (existingEvent.moodleEventId) {
+      await prisma.deletedMoodleItem.upsert({
+        where: {
+          userId_moodleId_type: {
+            userId: token.id,
+            moodleId: existingEvent.moodleEventId,
+            type: 'event',
+          },
+        },
+        update: { deletedAt: new Date() },
+        create: {
+          userId: token.id,
+          moodleId: existingEvent.moodleEventId,
+          type: 'event',
+        },
+      });
+    }
+
+    if (existingEvent.brightspaceEventId) {
+      await prisma.deletedBrightspaceItem.upsert({
+        where: {
+          userId_brightspaceId_type: {
+            userId: token.id,
+            brightspaceId: existingEvent.brightspaceEventId,
+            type: 'event',
+          },
+        },
+        update: { deletedAt: new Date() },
+        create: {
+          userId: token.id,
+          brightspaceId: existingEvent.brightspaceEventId,
           type: 'event',
         },
       });

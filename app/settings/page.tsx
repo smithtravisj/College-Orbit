@@ -33,6 +33,52 @@ interface CanvasStatus {
   autoMarkComplete: boolean;
 }
 
+interface BlackboardStatus {
+  connected: boolean;
+  syncEnabled: boolean;
+  instanceUrl: string | null;
+  userId: string | null;
+  userName: string | null;
+  lastSyncedAt: string | null;
+  tokenExpiresAt: string | null;
+  syncCourses: boolean;
+  syncAssignments: boolean;
+  syncGrades: boolean;
+  syncEvents: boolean;
+  autoMarkComplete: boolean;
+}
+
+interface MoodleStatus {
+  connected: boolean;
+  syncEnabled: boolean;
+  instanceUrl: string | null;
+  userId: string | null;
+  userName: string | null;
+  lastSyncedAt: string | null;
+  syncCourses: boolean;
+  syncAssignments: boolean;
+  syncGrades: boolean;
+  syncEvents: boolean;
+  syncAnnouncements: boolean;
+  autoMarkComplete: boolean;
+}
+
+interface BrightspaceStatus {
+  connected: boolean;
+  syncEnabled: boolean;
+  instanceUrl: string | null;
+  userId: string | null;
+  userName: string | null;
+  lastSyncedAt: string | null;
+  tokenExpiresAt: string | null;
+  syncCourses: boolean;
+  syncAssignments: boolean;
+  syncGrades: boolean;
+  syncEvents: boolean;
+  syncAnnouncements: boolean;
+  autoMarkComplete: boolean;
+}
+
 export default function SettingsPage() {
   const isMobile = useIsMobile();
   const { hasAccessToFeature } = useBetaAccess();
@@ -146,6 +192,61 @@ export default function SettingsPage() {
   const [pendingDisconnect, setPendingDisconnect] = useState(false);
   const pendingDisconnectTimeout = useRef<NodeJS.Timeout | null>(null);
 
+  // Blackboard LMS Integration state
+  const [blackboardStatus, setBlackboardStatus] = useState<BlackboardStatus | null>(null);
+  const [blackboardInstanceUrl, setBlackboardInstanceUrl] = useState('');
+  const [blackboardAppKey, setBlackboardAppKey] = useState('');
+  const [blackboardAppSecret, setBlackboardAppSecret] = useState('');
+  const [blackboardConnecting, setBlackboardConnecting] = useState(false);
+  const [blackboardSyncing, setBlackboardSyncing] = useState(false);
+  const [blackboardMessage, setBlackboardMessage] = useState('');
+  const [blackboardSyncCourses, setBlackboardSyncCourses] = useState(true);
+  const [blackboardSyncAssignments, setBlackboardSyncAssignments] = useState(true);
+  const [blackboardSyncGrades, setBlackboardSyncGrades] = useState(true);
+  const [blackboardSyncEvents, setBlackboardSyncEvents] = useState(true);
+  const [blackboardAutoMarkComplete, setBlackboardAutoMarkComplete] = useState(true);
+  const [showBlackboardDisconnectModal, setShowBlackboardDisconnectModal] = useState(false);
+  const [blackboardSyncSettingsOpen, setBlackboardSyncSettingsOpen] = useState(false);
+  const [pendingBlackboardDisconnect, setPendingBlackboardDisconnect] = useState(false);
+  const pendingBlackboardDisconnectTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Moodle LMS Integration state
+  const [moodleStatus, setMoodleStatus] = useState<MoodleStatus | null>(null);
+  const [moodleInstanceUrl, setMoodleInstanceUrl] = useState('');
+  const [moodleToken, setMoodleToken] = useState('');
+  const [moodleConnecting, setMoodleConnecting] = useState(false);
+  const [moodleSyncing, setMoodleSyncing] = useState(false);
+  const [moodleMessage, setMoodleMessage] = useState('');
+  const [moodleSyncCourses, setMoodleSyncCourses] = useState(true);
+  const [moodleSyncAssignments, setMoodleSyncAssignments] = useState(true);
+  const [moodleSyncGrades, setMoodleSyncGrades] = useState(true);
+  const [moodleSyncEvents, setMoodleSyncEvents] = useState(true);
+  const [moodleSyncAnnouncements, setMoodleSyncAnnouncements] = useState(true);
+  const [moodleAutoMarkComplete, setMoodleAutoMarkComplete] = useState(true);
+  const [showMoodleDisconnectModal, setShowMoodleDisconnectModal] = useState(false);
+  const [moodleSyncSettingsOpen, setMoodleSyncSettingsOpen] = useState(false);
+  const [pendingMoodleDisconnect, setPendingMoodleDisconnect] = useState(false);
+  const pendingMoodleDisconnectTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Brightspace LMS Integration state
+  const [brightspaceStatus, setBrightspaceStatus] = useState<BrightspaceStatus | null>(null);
+  const [brightspaceInstanceUrl, setBrightspaceInstanceUrl] = useState('');
+  const [brightspaceClientId, setBrightspaceClientId] = useState('');
+  const [brightspaceClientSecret, setBrightspaceClientSecret] = useState('');
+  const [brightspaceConnecting, setBrightspaceConnecting] = useState(false);
+  const [brightspaceSyncing, setBrightspaceSyncing] = useState(false);
+  const [brightspaceMessage, setBrightspaceMessage] = useState('');
+  const [brightspaceSyncCourses, setBrightspaceSyncCourses] = useState(true);
+  const [brightspaceSyncAssignments, setBrightspaceSyncAssignments] = useState(true);
+  const [brightspaceSyncGrades, setBrightspaceSyncGrades] = useState(true);
+  const [brightspaceSyncEvents, setBrightspaceSyncEvents] = useState(true);
+  const [brightspaceSyncAnnouncements, setBrightspaceSyncAnnouncements] = useState(true);
+  const [brightspaceAutoMarkComplete, setBrightspaceAutoMarkComplete] = useState(true);
+  const [showBrightspaceDisconnectModal, setShowBrightspaceDisconnectModal] = useState(false);
+  const [brightspaceSyncSettingsOpen, setBrightspaceSyncSettingsOpen] = useState(false);
+  const [pendingBrightspaceDisconnect, setPendingBrightspaceDisconnect] = useState(false);
+  const pendingBrightspaceDisconnectTimeout = useRef<NodeJS.Timeout | null>(null);
+
   // Local state for sliders (smooth UI while debouncing API calls)
   const [localGradientIntensity, setLocalGradientIntensity] = useState(50);
   const [localGlowIntensity, setLocalGlowIntensity] = useState(50);
@@ -229,6 +330,77 @@ export default function SettingsPage() {
     };
     if (session?.user) {
       fetchCanvasStatus();
+    }
+  }, [session]);
+
+  // Fetch Blackboard connection status
+  useEffect(() => {
+    const fetchBlackboardStatus = async () => {
+      try {
+        const response = await fetch('/api/blackboard/status');
+        if (response.ok) {
+          const data = await response.json();
+          setBlackboardStatus(data);
+          setBlackboardSyncCourses(data.syncCourses ?? true);
+          setBlackboardSyncAssignments(data.syncAssignments ?? true);
+          setBlackboardSyncGrades(data.syncGrades ?? true);
+          setBlackboardSyncEvents(data.syncEvents ?? true);
+          setBlackboardAutoMarkComplete(data.autoMarkComplete ?? true);
+        }
+      } catch (error) {
+        console.error('Error fetching Blackboard status:', error);
+      }
+    };
+    if (session?.user) {
+      fetchBlackboardStatus();
+    }
+  }, [session]);
+
+  // Fetch Moodle connection status
+  useEffect(() => {
+    const fetchMoodleStatus = async () => {
+      try {
+        const response = await fetch('/api/moodle/status');
+        if (response.ok) {
+          const data = await response.json();
+          setMoodleStatus(data);
+          setMoodleSyncCourses(data.syncCourses ?? true);
+          setMoodleSyncAssignments(data.syncAssignments ?? true);
+          setMoodleSyncGrades(data.syncGrades ?? true);
+          setMoodleSyncEvents(data.syncEvents ?? true);
+          setMoodleSyncAnnouncements(data.syncAnnouncements ?? true);
+          setMoodleAutoMarkComplete(data.autoMarkComplete ?? true);
+        }
+      } catch (error) {
+        console.error('Error fetching Moodle status:', error);
+      }
+    };
+    if (session?.user) {
+      fetchMoodleStatus();
+    }
+  }, [session]);
+
+  // Fetch Brightspace connection status
+  useEffect(() => {
+    const fetchBrightspaceStatus = async () => {
+      try {
+        const response = await fetch('/api/brightspace/status');
+        if (response.ok) {
+          const data = await response.json();
+          setBrightspaceStatus(data);
+          setBrightspaceSyncCourses(data.syncCourses ?? true);
+          setBrightspaceSyncAssignments(data.syncAssignments ?? true);
+          setBrightspaceSyncGrades(data.syncGrades ?? true);
+          setBrightspaceSyncEvents(data.syncEvents ?? true);
+          setBrightspaceSyncAnnouncements(data.syncAnnouncements ?? true);
+          setBrightspaceAutoMarkComplete(data.autoMarkComplete ?? true);
+        }
+      } catch (error) {
+        console.error('Error fetching Brightspace status:', error);
+      }
+    };
+    if (session?.user) {
+      fetchBrightspaceStatus();
     }
   }, [session]);
 
@@ -780,6 +952,727 @@ export default function SettingsPage() {
       });
     } catch (error) {
       console.error('Failed to save sync settings:', error);
+    }
+  };
+
+  // Blackboard Integration Handlers
+  const handleBlackboardConnect = async () => {
+    if (!blackboardInstanceUrl.trim() || !blackboardAppKey.trim() || !blackboardAppSecret.trim()) {
+      setBlackboardMessage('Please enter Blackboard instance URL, application key, and application secret');
+      setTimeout(() => setBlackboardMessage(''), 3000);
+      return;
+    }
+
+    setBlackboardConnecting(true);
+    setBlackboardMessage('');
+
+    try {
+      const response = await fetch('/api/blackboard/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          instanceUrl: blackboardInstanceUrl,
+          applicationKey: blackboardAppKey,
+          applicationSecret: blackboardAppSecret,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setBlackboardMessage(`✗ ${data.error || 'Failed to connect to Blackboard'}`);
+        setBlackboardConnecting(false);
+        setTimeout(() => setBlackboardMessage(''), 5000);
+        return;
+      }
+
+      setBlackboardMessage(`✓ ${data.message}`);
+      setBlackboardInstanceUrl('');
+      setBlackboardAppKey('');
+      setBlackboardAppSecret('');
+
+      // Refresh Blackboard status
+      const statusResponse = await fetch('/api/blackboard/status');
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json();
+        setBlackboardStatus(statusData);
+
+        // Automatically sync after successful connection
+        setBlackboardMessage('✓ Connected! Starting initial sync...');
+        try {
+          const syncResponse = await fetch('/api/blackboard/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              syncCourses: statusData.syncCourses ?? true,
+              syncAssignments: statusData.syncAssignments ?? true,
+              syncGrades: statusData.syncGrades ?? true,
+              syncEvents: statusData.syncEvents ?? true,
+            }),
+          });
+
+          if (syncResponse.ok) {
+            const syncResult = await syncResponse.json();
+            setBlackboardMessage(`✓ Initial sync complete! ${syncResult.result?.courses?.created || 0} courses, ${syncResult.result?.assignments?.created || 0} assignments synced.`);
+
+            // Refresh Blackboard status again to show last synced time
+            const refreshResponse = await fetch('/api/blackboard/status');
+            if (refreshResponse.ok) {
+              const refreshData = await refreshResponse.json();
+              setBlackboardStatus(refreshData);
+            }
+
+            // Reload the store data to show synced items
+            const { loadFromDatabase } = useAppStore.getState();
+            await loadFromDatabase();
+          } else {
+            setBlackboardMessage('✓ Connected! Initial sync may have had issues - you can try syncing manually.');
+          }
+        } catch (syncError) {
+          console.error('Initial sync error:', syncError);
+          setBlackboardMessage('✓ Connected! You can sync your data using the Sync Now button.');
+        }
+      }
+
+      setBlackboardConnecting(false);
+      setTimeout(() => setBlackboardMessage(''), 5000);
+    } catch (error) {
+      console.error('Blackboard connection error:', error);
+      setBlackboardMessage('✗ Failed to connect to Blackboard. Please try again.');
+      setBlackboardConnecting(false);
+      setTimeout(() => setBlackboardMessage(''), 3000);
+    }
+  };
+
+  const performBlackboardDisconnect = async () => {
+    try {
+      const response = await fetch('/api/blackboard/disconnect', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        setBlackboardStatus(null);
+        setBlackboardMessage('✓ Successfully disconnected from Blackboard');
+        setTimeout(() => setBlackboardMessage(''), 3000);
+      } else {
+        const data = await response.json();
+        setBlackboardMessage(`✗ ${data.error || 'Failed to disconnect'}`);
+        setTimeout(() => setBlackboardMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Blackboard disconnect error:', error);
+      setBlackboardMessage('✗ Failed to disconnect. Please try again.');
+      setTimeout(() => setBlackboardMessage(''), 3000);
+    }
+  };
+
+  const handleBlackboardDisconnect = async () => {
+    setShowBlackboardDisconnectModal(false);
+    await performBlackboardDisconnect();
+  };
+
+  const handleBlackboardDisconnectClick = () => {
+    if (confirmBeforeDelete) {
+      setShowBlackboardDisconnectModal(true);
+    } else {
+      // Show toast with undo
+      setPendingBlackboardDisconnect(true);
+
+      // Clear any existing timeout
+      if (pendingBlackboardDisconnectTimeout.current) {
+        clearTimeout(pendingBlackboardDisconnectTimeout.current);
+      }
+
+      showDeleteToast('Blackboard disconnected', () => {
+        // Undo - cancel the disconnect
+        if (pendingBlackboardDisconnectTimeout.current) {
+          clearTimeout(pendingBlackboardDisconnectTimeout.current);
+          pendingBlackboardDisconnectTimeout.current = null;
+        }
+        setPendingBlackboardDisconnect(false);
+      });
+
+      // Schedule actual disconnect after toast duration
+      pendingBlackboardDisconnectTimeout.current = setTimeout(async () => {
+        await performBlackboardDisconnect();
+        setPendingBlackboardDisconnect(false);
+        pendingBlackboardDisconnectTimeout.current = null;
+      }, 5000);
+    }
+  };
+
+  const handleBlackboardSync = async () => {
+    setBlackboardSyncing(true);
+    setBlackboardMessage('');
+
+    try {
+      const response = await fetch('/api/blackboard/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          syncCourses: blackboardSyncCourses,
+          syncAssignments: blackboardSyncAssignments,
+          syncGrades: blackboardSyncGrades,
+          syncEvents: blackboardSyncEvents,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setBlackboardMessage(`✗ ${data.error || 'Sync failed'}`);
+        setBlackboardSyncing(false);
+        setTimeout(() => setBlackboardMessage(''), 5000);
+        return;
+      }
+
+      // Build success message
+      const result = data.result;
+      const parts = [];
+      if (blackboardSyncCourses && (result.courses.created > 0 || result.courses.updated > 0)) {
+        parts.push(`${result.courses.created + result.courses.updated} courses`);
+      }
+      if (blackboardSyncAssignments && (result.assignments.created > 0 || result.assignments.updated > 0)) {
+        parts.push(`${result.assignments.created + result.assignments.updated} assignments`);
+      }
+      if (blackboardSyncGrades && result.grades.updated > 0) {
+        parts.push(`${result.grades.updated} grades`);
+      }
+      if (blackboardSyncEvents && (result.events.created > 0 || result.events.updated > 0)) {
+        parts.push(`${result.events.created + result.events.updated} events`);
+      }
+
+      const syncedMessage = parts.length > 0 ? `Synced ${parts.join(', ')}` : 'No new data to sync';
+      setBlackboardMessage(`✓ ${syncedMessage}`);
+
+      // Refresh Blackboard status to get new lastSyncedAt
+      const statusResponse = await fetch('/api/blackboard/status');
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json();
+        setBlackboardStatus(statusData);
+      }
+
+      // Refresh store data so users see synced courses/deadlines/events immediately
+      await loadFromDatabase();
+
+      setBlackboardSyncing(false);
+      setTimeout(() => setBlackboardMessage(''), 5000);
+    } catch (error) {
+      console.error('Blackboard sync error:', error);
+      setBlackboardMessage('✗ Sync failed. Please try again.');
+      setBlackboardSyncing(false);
+      setTimeout(() => setBlackboardMessage(''), 3000);
+    }
+  };
+
+  const handleBlackboardSyncSettingsChange = async (setting: string, value: boolean) => {
+    // Update local state immediately
+    switch (setting) {
+      case 'courses': setBlackboardSyncCourses(value); break;
+      case 'assignments': setBlackboardSyncAssignments(value); break;
+      case 'grades': setBlackboardSyncGrades(value); break;
+      case 'events': setBlackboardSyncEvents(value); break;
+      case 'autoMarkComplete': setBlackboardAutoMarkComplete(value); break;
+    }
+
+    // Save to server
+    try {
+      // For autoMarkComplete, use camelCase directly; for others, prefix with 'sync'
+      const key = setting === 'autoMarkComplete'
+        ? 'autoMarkComplete'
+        : `sync${setting.charAt(0).toUpperCase() + setting.slice(1)}`;
+
+      await fetch('/api/blackboard/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value }),
+      });
+    } catch (error) {
+      console.error('Failed to save Blackboard sync settings:', error);
+    }
+  };
+
+  // Moodle Integration Handlers
+  const handleMoodleConnect = async () => {
+    if (!moodleInstanceUrl.trim() || !moodleToken.trim()) {
+      setMoodleMessage('Please enter Moodle instance URL and web service token');
+      setTimeout(() => setMoodleMessage(''), 3000);
+      return;
+    }
+
+    setMoodleConnecting(true);
+    setMoodleMessage('');
+
+    try {
+      const response = await fetch('/api/moodle/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          instanceUrl: moodleInstanceUrl,
+          token: moodleToken,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMoodleMessage(`✗ ${data.error || 'Failed to connect to Moodle'}`);
+        setMoodleConnecting(false);
+        setTimeout(() => setMoodleMessage(''), 5000);
+        return;
+      }
+
+      setMoodleMessage(`✓ ${data.message}`);
+      setMoodleInstanceUrl('');
+      setMoodleToken('');
+
+      // Refresh Moodle status
+      const statusResponse = await fetch('/api/moodle/status');
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json();
+        setMoodleStatus(statusData);
+
+        // Automatically sync after successful connection
+        setMoodleMessage('✓ Connected! Starting initial sync...');
+        try {
+          const syncResponse = await fetch('/api/moodle/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              syncCourses: statusData.syncCourses ?? true,
+              syncAssignments: statusData.syncAssignments ?? true,
+              syncGrades: statusData.syncGrades ?? true,
+              syncEvents: statusData.syncEvents ?? true,
+              syncAnnouncements: statusData.syncAnnouncements ?? true,
+            }),
+          });
+
+          if (syncResponse.ok) {
+            const syncResult = await syncResponse.json();
+            setMoodleMessage(`✓ Initial sync complete! ${syncResult.result?.courses?.created || 0} courses, ${syncResult.result?.assignments?.created || 0} assignments synced.`);
+
+            // Refresh Moodle status again to show last synced time
+            const refreshResponse = await fetch('/api/moodle/status');
+            if (refreshResponse.ok) {
+              const refreshData = await refreshResponse.json();
+              setMoodleStatus(refreshData);
+            }
+
+            // Reload the store data to show synced items
+            const { loadFromDatabase } = useAppStore.getState();
+            await loadFromDatabase();
+          } else {
+            setMoodleMessage('✓ Connected! Initial sync may have had issues - you can try syncing manually.');
+          }
+        } catch (syncError) {
+          console.error('Initial sync error:', syncError);
+          setMoodleMessage('✓ Connected! You can sync your data using the Sync Now button.');
+        }
+      }
+
+      setMoodleConnecting(false);
+      setTimeout(() => setMoodleMessage(''), 5000);
+    } catch (error) {
+      console.error('Moodle connection error:', error);
+      setMoodleMessage('✗ Failed to connect to Moodle. Please try again.');
+      setMoodleConnecting(false);
+      setTimeout(() => setMoodleMessage(''), 3000);
+    }
+  };
+
+  const performMoodleDisconnect = async () => {
+    try {
+      const response = await fetch('/api/moodle/disconnect', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        setMoodleStatus(null);
+        setMoodleMessage('✓ Successfully disconnected from Moodle');
+        setTimeout(() => setMoodleMessage(''), 3000);
+      } else {
+        const data = await response.json();
+        setMoodleMessage(`✗ ${data.error || 'Failed to disconnect'}`);
+        setTimeout(() => setMoodleMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Moodle disconnect error:', error);
+      setMoodleMessage('✗ Failed to disconnect. Please try again.');
+      setTimeout(() => setMoodleMessage(''), 3000);
+    }
+  };
+
+  const handleMoodleDisconnect = async () => {
+    setShowMoodleDisconnectModal(false);
+    await performMoodleDisconnect();
+  };
+
+  const handleMoodleDisconnectClick = () => {
+    if (confirmBeforeDelete) {
+      setShowMoodleDisconnectModal(true);
+    } else {
+      // Show toast with undo
+      setPendingMoodleDisconnect(true);
+
+      // Clear any existing timeout
+      if (pendingMoodleDisconnectTimeout.current) {
+        clearTimeout(pendingMoodleDisconnectTimeout.current);
+      }
+
+      showDeleteToast('Moodle disconnected', () => {
+        // Undo - cancel the disconnect
+        if (pendingMoodleDisconnectTimeout.current) {
+          clearTimeout(pendingMoodleDisconnectTimeout.current);
+          pendingMoodleDisconnectTimeout.current = null;
+        }
+        setPendingMoodleDisconnect(false);
+      });
+
+      // Schedule actual disconnect after toast duration
+      pendingMoodleDisconnectTimeout.current = setTimeout(async () => {
+        await performMoodleDisconnect();
+        setPendingMoodleDisconnect(false);
+        pendingMoodleDisconnectTimeout.current = null;
+      }, 5000);
+    }
+  };
+
+  const handleMoodleSync = async () => {
+    setMoodleSyncing(true);
+    setMoodleMessage('');
+
+    try {
+      const response = await fetch('/api/moodle/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          syncCourses: moodleSyncCourses,
+          syncAssignments: moodleSyncAssignments,
+          syncGrades: moodleSyncGrades,
+          syncEvents: moodleSyncEvents,
+          syncAnnouncements: moodleSyncAnnouncements,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMoodleMessage(`✗ ${data.error || 'Sync failed'}`);
+        setMoodleSyncing(false);
+        setTimeout(() => setMoodleMessage(''), 5000);
+        return;
+      }
+
+      // Build success message
+      const result = data.result;
+      const parts = [];
+      if (moodleSyncCourses && (result.courses.created > 0 || result.courses.updated > 0)) {
+        parts.push(`${result.courses.created + result.courses.updated} courses`);
+      }
+      if (moodleSyncAssignments && (result.assignments.created > 0 || result.assignments.updated > 0)) {
+        parts.push(`${result.assignments.created + result.assignments.updated} assignments`);
+      }
+      if (moodleSyncGrades && result.grades.updated > 0) {
+        parts.push(`${result.grades.updated} grades`);
+      }
+      if (moodleSyncEvents && (result.events.created > 0 || result.events.updated > 0)) {
+        parts.push(`${result.events.created + result.events.updated} events`);
+      }
+      if (moodleSyncAnnouncements && (result.announcements?.created > 0 || result.announcements?.updated > 0)) {
+        parts.push(`${(result.announcements?.created || 0) + (result.announcements?.updated || 0)} announcements`);
+      }
+
+      const syncedMessage = parts.length > 0 ? `Synced ${parts.join(', ')}` : 'No new data to sync';
+      setMoodleMessage(`✓ ${syncedMessage}`);
+
+      // Refresh Moodle status to get new lastSyncedAt
+      const statusResponse = await fetch('/api/moodle/status');
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json();
+        setMoodleStatus(statusData);
+      }
+
+      // Refresh store data so users see synced courses/deadlines/events immediately
+      await loadFromDatabase();
+
+      setMoodleSyncing(false);
+      setTimeout(() => setMoodleMessage(''), 5000);
+    } catch (error) {
+      console.error('Moodle sync error:', error);
+      setMoodleMessage('✗ Sync failed. Please try again.');
+      setMoodleSyncing(false);
+      setTimeout(() => setMoodleMessage(''), 3000);
+    }
+  };
+
+  const handleMoodleSyncSettingsChange = async (setting: string, value: boolean) => {
+    // Update local state immediately
+    switch (setting) {
+      case 'courses': setMoodleSyncCourses(value); break;
+      case 'assignments': setMoodleSyncAssignments(value); break;
+      case 'grades': setMoodleSyncGrades(value); break;
+      case 'events': setMoodleSyncEvents(value); break;
+      case 'announcements': setMoodleSyncAnnouncements(value); break;
+      case 'autoMarkComplete': setMoodleAutoMarkComplete(value); break;
+    }
+
+    // Save to server
+    try {
+      // For autoMarkComplete, use camelCase directly; for others, prefix with 'sync'
+      const key = setting === 'autoMarkComplete'
+        ? 'autoMarkComplete'
+        : `sync${setting.charAt(0).toUpperCase() + setting.slice(1)}`;
+
+      await fetch('/api/moodle/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value }),
+      });
+    } catch (error) {
+      console.error('Failed to save Moodle sync settings:', error);
+    }
+  };
+
+  // Brightspace Integration Handlers
+  const handleBrightspaceConnect = async () => {
+    if (!brightspaceInstanceUrl.trim() || !brightspaceClientId.trim() || !brightspaceClientSecret.trim()) {
+      setBrightspaceMessage('Please enter Brightspace instance URL, client ID, and client secret');
+      setTimeout(() => setBrightspaceMessage(''), 3000);
+      return;
+    }
+
+    setBrightspaceConnecting(true);
+    setBrightspaceMessage('');
+
+    try {
+      const response = await fetch('/api/brightspace/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          instanceUrl: brightspaceInstanceUrl,
+          clientId: brightspaceClientId,
+          clientSecret: brightspaceClientSecret,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setBrightspaceMessage(`✗ ${data.error || 'Failed to connect to Brightspace'}`);
+        setBrightspaceConnecting(false);
+        setTimeout(() => setBrightspaceMessage(''), 5000);
+        return;
+      }
+
+      setBrightspaceMessage(`✓ ${data.message}`);
+      setBrightspaceInstanceUrl('');
+      setBrightspaceClientId('');
+      setBrightspaceClientSecret('');
+
+      // Refresh Brightspace status
+      const statusResponse = await fetch('/api/brightspace/status');
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json();
+        setBrightspaceStatus(statusData);
+
+        // Automatically sync after successful connection
+        setBrightspaceMessage('✓ Connected! Starting initial sync...');
+        try {
+          const syncResponse = await fetch('/api/brightspace/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              syncCourses: statusData.syncCourses ?? true,
+              syncAssignments: statusData.syncAssignments ?? true,
+              syncGrades: statusData.syncGrades ?? true,
+              syncEvents: statusData.syncEvents ?? true,
+              syncAnnouncements: statusData.syncAnnouncements ?? true,
+            }),
+          });
+
+          if (syncResponse.ok) {
+            const syncResult = await syncResponse.json();
+            setBrightspaceMessage(`✓ Initial sync complete! ${syncResult.result?.courses?.created || 0} courses, ${syncResult.result?.assignments?.created || 0} assignments synced.`);
+
+            // Refresh Brightspace status again to show last synced time
+            const refreshResponse = await fetch('/api/brightspace/status');
+            if (refreshResponse.ok) {
+              const refreshData = await refreshResponse.json();
+              setBrightspaceStatus(refreshData);
+            }
+
+            // Reload the store data to show synced items
+            const { loadFromDatabase } = useAppStore.getState();
+            await loadFromDatabase();
+          } else {
+            setBrightspaceMessage('✓ Connected! Initial sync may have had issues - you can try syncing manually.');
+          }
+        } catch (syncError) {
+          console.error('Initial sync error:', syncError);
+          setBrightspaceMessage('✓ Connected! You can sync your data using the Sync Now button.');
+        }
+      }
+
+      setBrightspaceConnecting(false);
+      setTimeout(() => setBrightspaceMessage(''), 5000);
+    } catch (error) {
+      console.error('Brightspace connection error:', error);
+      setBrightspaceMessage('✗ Failed to connect to Brightspace. Please try again.');
+      setBrightspaceConnecting(false);
+      setTimeout(() => setBrightspaceMessage(''), 3000);
+    }
+  };
+
+  const performBrightspaceDisconnect = async () => {
+    try {
+      const response = await fetch('/api/brightspace/disconnect', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        setBrightspaceStatus(null);
+        setBrightspaceMessage('✓ Successfully disconnected from Brightspace');
+        setTimeout(() => setBrightspaceMessage(''), 3000);
+      } else {
+        const data = await response.json();
+        setBrightspaceMessage(`✗ ${data.error || 'Failed to disconnect'}`);
+        setTimeout(() => setBrightspaceMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Brightspace disconnect error:', error);
+      setBrightspaceMessage('✗ Failed to disconnect. Please try again.');
+      setTimeout(() => setBrightspaceMessage(''), 3000);
+    }
+  };
+
+  const handleBrightspaceDisconnect = async () => {
+    setShowBrightspaceDisconnectModal(false);
+    await performBrightspaceDisconnect();
+  };
+
+  const handleBrightspaceDisconnectClick = () => {
+    if (confirmBeforeDelete) {
+      setShowBrightspaceDisconnectModal(true);
+    } else {
+      // Show toast with undo
+      setPendingBrightspaceDisconnect(true);
+
+      // Clear any existing timeout
+      if (pendingBrightspaceDisconnectTimeout.current) {
+        clearTimeout(pendingBrightspaceDisconnectTimeout.current);
+      }
+
+      showDeleteToast('Brightspace disconnected', () => {
+        // Undo - cancel the disconnect
+        if (pendingBrightspaceDisconnectTimeout.current) {
+          clearTimeout(pendingBrightspaceDisconnectTimeout.current);
+          pendingBrightspaceDisconnectTimeout.current = null;
+        }
+        setPendingBrightspaceDisconnect(false);
+      });
+
+      // Schedule actual disconnect after toast duration
+      pendingBrightspaceDisconnectTimeout.current = setTimeout(async () => {
+        await performBrightspaceDisconnect();
+        setPendingBrightspaceDisconnect(false);
+        pendingBrightspaceDisconnectTimeout.current = null;
+      }, 5000);
+    }
+  };
+
+  const handleBrightspaceSync = async () => {
+    setBrightspaceSyncing(true);
+    setBrightspaceMessage('');
+
+    try {
+      const response = await fetch('/api/brightspace/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          syncCourses: brightspaceSyncCourses,
+          syncAssignments: brightspaceSyncAssignments,
+          syncGrades: brightspaceSyncGrades,
+          syncEvents: brightspaceSyncEvents,
+          syncAnnouncements: brightspaceSyncAnnouncements,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setBrightspaceMessage(`✗ ${data.error || 'Sync failed'}`);
+        setBrightspaceSyncing(false);
+        setTimeout(() => setBrightspaceMessage(''), 5000);
+        return;
+      }
+
+      // Build success message
+      const result = data.result;
+      const parts = [];
+      if (brightspaceSyncCourses && (result.courses.created > 0 || result.courses.updated > 0)) {
+        parts.push(`${result.courses.created + result.courses.updated} courses`);
+      }
+      if (brightspaceSyncAssignments && (result.assignments.created > 0 || result.assignments.updated > 0)) {
+        parts.push(`${result.assignments.created + result.assignments.updated} assignments`);
+      }
+      if (brightspaceSyncGrades && result.grades.updated > 0) {
+        parts.push(`${result.grades.updated} grades`);
+      }
+      if (brightspaceSyncEvents && (result.events.created > 0 || result.events.updated > 0)) {
+        parts.push(`${result.events.created + result.events.updated} events`);
+      }
+      if (brightspaceSyncAnnouncements && (result.announcements?.created > 0 || result.announcements?.updated > 0)) {
+        parts.push(`${(result.announcements?.created || 0) + (result.announcements?.updated || 0)} announcements`);
+      }
+
+      const syncedMessage = parts.length > 0 ? `Synced ${parts.join(', ')}` : 'No new data to sync';
+      setBrightspaceMessage(`✓ ${syncedMessage}`);
+
+      // Refresh Brightspace status to get new lastSyncedAt
+      const statusResponse = await fetch('/api/brightspace/status');
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json();
+        setBrightspaceStatus(statusData);
+      }
+
+      // Refresh store data so users see synced courses/deadlines/events immediately
+      await loadFromDatabase();
+
+      setBrightspaceSyncing(false);
+      setTimeout(() => setBrightspaceMessage(''), 5000);
+    } catch (error) {
+      console.error('Brightspace sync error:', error);
+      setBrightspaceMessage('✗ Sync failed. Please try again.');
+      setBrightspaceSyncing(false);
+      setTimeout(() => setBrightspaceMessage(''), 3000);
+    }
+  };
+
+  const handleBrightspaceSyncSettingsChange = async (setting: string, value: boolean) => {
+    // Update local state immediately
+    switch (setting) {
+      case 'courses': setBrightspaceSyncCourses(value); break;
+      case 'assignments': setBrightspaceSyncAssignments(value); break;
+      case 'grades': setBrightspaceSyncGrades(value); break;
+      case 'events': setBrightspaceSyncEvents(value); break;
+      case 'announcements': setBrightspaceSyncAnnouncements(value); break;
+      case 'autoMarkComplete': setBrightspaceAutoMarkComplete(value); break;
+    }
+
+    // Save to server
+    try {
+      // For autoMarkComplete, use camelCase directly; for others, prefix with 'sync'
+      const key = setting === 'autoMarkComplete'
+        ? 'autoMarkComplete'
+        : `sync${setting.charAt(0).toUpperCase() + setting.slice(1)}`;
+
+      await fetch('/api/brightspace/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value }),
+      });
+    } catch (error) {
+      console.error('Failed to save Brightspace sync settings:', error);
     }
   };
 
@@ -1503,8 +2396,14 @@ export default function SettingsPage() {
           </>
           )}
 
-          {/* Integrations Tab - Canvas LMS Integration */}
+          {/* Integrations Tab - LMS Integrations */}
           {activeSettingsTab === 'integrations' && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+            gap: '24px',
+            alignItems: 'stretch',
+          }}>
           <Card title="Canvas LMS Integration">
             {!canvasStatus?.connected ? (
               // Not Connected State
@@ -1586,6 +2485,17 @@ export default function SettingsPage() {
                     </>
                   )}
                 </Button>
+
+                {/* Message display */}
+                {canvasMessage && (
+                  <p style={{
+                    marginTop: '12px',
+                    fontSize: '14px',
+                    color: canvasMessage.includes('✗') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {canvasMessage}
+                  </p>
+                )}
               </div>
             ) : (
               // Connected State
@@ -1734,6 +2644,856 @@ export default function SettingsPage() {
               </div>
             )}
           </Card>
+
+          {/* Blackboard LMS Integration */}
+          <Card title={
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Blackboard Learn Integration
+              <span style={{
+                fontSize: '10px',
+                fontWeight: 600,
+                color: 'var(--warning)',
+                backgroundColor: 'var(--warning-bg)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                Beta
+              </span>
+            </span>
+          }>
+            {!blackboardStatus?.connected ? (
+              // Not Connected State
+              <div>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Connect your Blackboard Learn account to sync courses, assignments, grades, and more.
+                  <br />
+                  <span style={{ color: 'var(--warning)', fontSize: '12px' }}>
+                    Note: This integration is in beta. Please report any issues.
+                  </span>
+                </p>
+
+                {/* Blackboard Instance URL */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Blackboard Instance URL</p>
+                    <HelpTooltip text="Your school's Blackboard domain (e.g., school.blackboard.com)" size={14} width={280} />
+                  </div>
+                  <input
+                    type="text"
+                    value={blackboardInstanceUrl}
+                    onChange={(e) => setBlackboardInstanceUrl(e.target.value)}
+                    placeholder="school.blackboard.com"
+                    style={{
+                      width: '100%',
+                      height: '44px',
+                      padding: '8px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                    }}
+                    disabled={blackboardConnecting}
+                  />
+                </div>
+
+                {/* Application Key */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Application Key</p>
+                    <HelpTooltip text="Create a REST API integration in Blackboard Admin Panel to get your application key." size={14} width={280} />
+                  </div>
+                  <input
+                    type="text"
+                    value={blackboardAppKey}
+                    onChange={(e) => setBlackboardAppKey(e.target.value)}
+                    placeholder="Your application key"
+                    style={{
+                      width: '100%',
+                      height: '44px',
+                      padding: '8px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                    }}
+                    disabled={blackboardConnecting}
+                  />
+                </div>
+
+                {/* Application Secret */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Application Secret</p>
+                    <HelpTooltip text="The secret key from your Blackboard REST API integration. Never share this secret." size={14} width={280} />
+                  </div>
+                  <input
+                    type="password"
+                    value={blackboardAppSecret}
+                    onChange={(e) => setBlackboardAppSecret(e.target.value)}
+                    placeholder="Your application secret"
+                    style={{
+                      width: '100%',
+                      height: '44px',
+                      padding: '8px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                    }}
+                    disabled={blackboardConnecting}
+                  />
+                </div>
+
+                <Button
+                  size={isMobile ? 'sm' : 'lg'}
+                  onClick={handleBlackboardConnect}
+                  disabled={blackboardConnecting || !blackboardInstanceUrl.trim() || !blackboardAppKey.trim() || !blackboardAppSecret.trim()}
+                  style={{
+                    paddingLeft: isMobile ? '12px' : '16px',
+                    paddingRight: isMobile ? '12px' : '16px',
+                  }}
+                >
+                  {blackboardConnecting ? (
+                    <>
+                      <RefreshCw size={16} className="animate-spin mr-2" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 size={16} className="mr-2" />
+                      Connect to Blackboard
+                    </>
+                  )}
+                </Button>
+
+                {/* Message display */}
+                {blackboardMessage && (
+                  <p style={{
+                    marginTop: '12px',
+                    fontSize: '14px',
+                    color: blackboardMessage.includes('✗') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {blackboardMessage}
+                  </p>
+                )}
+              </div>
+            ) : (
+              // Connected State
+              <div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px',
+                  backgroundColor: 'var(--panel-2)',
+                  borderRadius: '8px',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--success)',
+                  }} />
+                  <span className="text-sm text-[var(--text)]">
+                    Connected as <strong>{blackboardStatus.userName}</strong>
+                  </span>
+                </div>
+
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>
+                  Last synced: {formatLastSynced(blackboardStatus.lastSyncedAt)}
+                </p>
+
+                <p className="text-xs" style={{ marginBottom: '16px', color: 'var(--warning)' }}>
+                  This integration is in beta. If you encounter issues, please report them in Settings → Feedback.
+                </p>
+
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    onClick={handleBlackboardSync}
+                    disabled={blackboardSyncing}
+                    style={{
+                      paddingLeft: isMobile ? '12px' : '16px',
+                      paddingRight: isMobile ? '12px' : '16px',
+                    }}
+                  >
+                    {blackboardSyncing ? (
+                      <>
+                        <RefreshCw size={16} className="animate-spin mr-2" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw size={16} className="mr-2" />
+                        Sync Now
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    variant="secondary"
+                    onClick={handleBlackboardDisconnectClick}
+                    disabled={pendingBlackboardDisconnect}
+                    style={{
+                      paddingLeft: isMobile ? '12px' : '16px',
+                      paddingRight: isMobile ? '12px' : '16px',
+                      boxShadow: 'none',
+                      opacity: pendingBlackboardDisconnect ? 0.5 : 1,
+                    }}
+                  >
+                    <Unlink size={16} className="mr-2" />
+                    {pendingBlackboardDisconnect ? 'Disconnecting...' : 'Disconnect'}
+                  </Button>
+                </div>
+
+                {/* Message display */}
+                {blackboardMessage && (
+                  <p style={{
+                    marginBottom: '16px',
+                    fontSize: '14px',
+                    color: blackboardMessage.includes('✗') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {blackboardMessage}
+                  </p>
+                )}
+
+                {/* Sync Settings Dropdown */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                  <button
+                    onClick={() => setBlackboardSyncSettingsOpen(!blackboardSyncSettingsOpen)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      padding: '10px 12px',
+                      backgroundColor: 'var(--panel-2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      color: 'var(--text)',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Sync Settings
+                    <ChevronDown
+                      size={18}
+                      style={{
+                        transition: 'transform 0.2s ease',
+                        transform: blackboardSyncSettingsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        color: 'var(--text-muted)',
+                      }}
+                    />
+                  </button>
+                  {blackboardSyncSettingsOpen && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+                      {[
+                        { key: 'courses', label: 'Courses', description: 'Creates courses from Blackboard', value: blackboardSyncCourses },
+                        { key: 'assignments', label: 'Assignments', description: 'Syncs gradebook columns to Work page', value: blackboardSyncAssignments },
+                        { key: 'grades', label: 'Grades', description: 'Updates assignment scores', value: blackboardSyncGrades },
+                        { key: 'events', label: 'Calendar Events', description: 'Syncs to Calendar', value: blackboardSyncEvents },
+                        { key: 'autoMarkComplete', label: 'Auto-mark complete', description: 'Mark assignments done when submitted', value: blackboardAutoMarkComplete },
+                      ].map((setting) => (
+                        <label
+                          key={setting.key}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '10px 12px',
+                            backgroundColor: 'var(--panel-2)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <div>
+                            <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>{setting.label}</p>
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{setting.description}</p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={setting.value}
+                            onChange={(e) => handleBlackboardSyncSettingsChange(setting.key, e.target.checked)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Moodle LMS Integration */}
+          <Card title={
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Moodle Integration
+              <span style={{
+                fontSize: '10px',
+                fontWeight: 600,
+                color: 'var(--warning)',
+                backgroundColor: 'var(--warning-bg)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                Beta
+              </span>
+            </span>
+          }>
+            {!moodleStatus?.connected ? (
+              // Not Connected State
+              <div>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Connect your Moodle account to sync courses, assignments, grades, events, and announcements.
+                  <br />
+                  <span style={{ color: 'var(--warning)', fontSize: '12px' }}>
+                    Note: This integration is in beta. Please report any issues.
+                  </span>
+                </p>
+
+                {/* Moodle Instance URL */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Moodle Instance URL</p>
+                    <HelpTooltip text="Your school's Moodle domain (e.g., moodle.school.edu)" size={14} width={280} />
+                  </div>
+                  <input
+                    type="text"
+                    value={moodleInstanceUrl}
+                    onChange={(e) => setMoodleInstanceUrl(e.target.value)}
+                    placeholder="moodle.school.edu"
+                    style={{
+                      width: '100%',
+                      height: '44px',
+                      padding: '8px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                    }}
+                    disabled={moodleConnecting}
+                  />
+                </div>
+
+                {/* Web Service Token */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Web Service Token</p>
+                    <HelpTooltip text="Get your token from Moodle: Profile → Security Keys → Service (Mobile web service). Never share this token." size={14} width={300} />
+                  </div>
+                  <input
+                    type="password"
+                    value={moodleToken}
+                    onChange={(e) => setMoodleToken(e.target.value)}
+                    placeholder="Your web service token"
+                    style={{
+                      width: '100%',
+                      height: '44px',
+                      padding: '8px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                    }}
+                    disabled={moodleConnecting}
+                  />
+                </div>
+
+                <Button
+                  size={isMobile ? 'sm' : 'lg'}
+                  onClick={handleMoodleConnect}
+                  disabled={moodleConnecting || !moodleInstanceUrl.trim() || !moodleToken.trim()}
+                  style={{
+                    paddingLeft: isMobile ? '12px' : '16px',
+                    paddingRight: isMobile ? '12px' : '16px',
+                  }}
+                >
+                  {moodleConnecting ? (
+                    <>
+                      <RefreshCw size={16} className="animate-spin mr-2" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 size={16} className="mr-2" />
+                      Connect to Moodle
+                    </>
+                  )}
+                </Button>
+
+                {/* Message display */}
+                {moodleMessage && (
+                  <p style={{
+                    marginTop: '12px',
+                    fontSize: '14px',
+                    color: moodleMessage.includes('✗') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {moodleMessage}
+                  </p>
+                )}
+              </div>
+            ) : (
+              // Connected State
+              <div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px',
+                  backgroundColor: 'var(--panel-2)',
+                  borderRadius: '8px',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--success)',
+                  }} />
+                  <span className="text-sm text-[var(--text)]">
+                    Connected as <strong>{moodleStatus.userName}</strong>
+                  </span>
+                </div>
+
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>
+                  Last synced: {formatLastSynced(moodleStatus.lastSyncedAt)}
+                </p>
+
+                <p className="text-xs" style={{ marginBottom: '16px', color: 'var(--warning)' }}>
+                  This integration is in beta. If you encounter issues, please report them in Settings → Feedback.
+                </p>
+
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    onClick={handleMoodleSync}
+                    disabled={moodleSyncing}
+                    style={{
+                      paddingLeft: isMobile ? '12px' : '16px',
+                      paddingRight: isMobile ? '12px' : '16px',
+                    }}
+                  >
+                    {moodleSyncing ? (
+                      <>
+                        <RefreshCw size={16} className="animate-spin mr-2" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw size={16} className="mr-2" />
+                        Sync Now
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    variant="secondary"
+                    onClick={handleMoodleDisconnectClick}
+                    disabled={pendingMoodleDisconnect}
+                    style={{
+                      paddingLeft: isMobile ? '12px' : '16px',
+                      paddingRight: isMobile ? '12px' : '16px',
+                      boxShadow: 'none',
+                      opacity: pendingMoodleDisconnect ? 0.5 : 1,
+                    }}
+                  >
+                    <Unlink size={16} className="mr-2" />
+                    {pendingMoodleDisconnect ? 'Disconnecting...' : 'Disconnect'}
+                  </Button>
+                </div>
+
+                {/* Message display */}
+                {moodleMessage && (
+                  <p style={{
+                    marginBottom: '16px',
+                    fontSize: '14px',
+                    color: moodleMessage.includes('✗') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {moodleMessage}
+                  </p>
+                )}
+
+                {/* Sync Settings Dropdown */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                  <button
+                    onClick={() => setMoodleSyncSettingsOpen(!moodleSyncSettingsOpen)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      padding: '10px 12px',
+                      backgroundColor: 'var(--panel-2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      color: 'var(--text)',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Sync Settings
+                    <ChevronDown
+                      size={18}
+                      style={{
+                        transition: 'transform 0.2s ease',
+                        transform: moodleSyncSettingsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        color: 'var(--text-muted)',
+                      }}
+                    />
+                  </button>
+                  {moodleSyncSettingsOpen && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+                      {[
+                        { key: 'courses', label: 'Courses', description: 'Creates courses from Moodle', value: moodleSyncCourses },
+                        { key: 'assignments', label: 'Assignments', description: 'Syncs assignments to Work page', value: moodleSyncAssignments },
+                        { key: 'grades', label: 'Grades', description: 'Updates assignment scores', value: moodleSyncGrades },
+                        { key: 'events', label: 'Calendar Events', description: 'Syncs to Calendar', value: moodleSyncEvents },
+                        { key: 'announcements', label: 'Announcements', description: 'Syncs forum posts', value: moodleSyncAnnouncements },
+                        { key: 'autoMarkComplete', label: 'Auto-mark complete', description: 'Mark assignments done when submitted', value: moodleAutoMarkComplete },
+                      ].map((setting) => (
+                        <label
+                          key={setting.key}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '10px 12px',
+                            backgroundColor: 'var(--panel-2)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <div>
+                            <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>{setting.label}</p>
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{setting.description}</p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={setting.value}
+                            onChange={(e) => handleMoodleSyncSettingsChange(setting.key, e.target.checked)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Brightspace (D2L) LMS Integration */}
+          <Card title={
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Brightspace (D2L) Integration
+              <span style={{
+                fontSize: '10px',
+                fontWeight: 600,
+                color: 'var(--warning)',
+                backgroundColor: 'var(--warning-bg)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                Beta
+              </span>
+            </span>
+          }>
+            {!brightspaceStatus?.connected ? (
+              // Not Connected State
+              <div>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Connect your Brightspace (D2L) account to sync courses, assignments, grades, events, and announcements.
+                  <br />
+                  <span style={{ color: 'var(--warning)', fontSize: '12px' }}>
+                    Note: This integration is in beta. Please report any issues.
+                  </span>
+                </p>
+
+                {/* Brightspace Instance URL */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Brightspace Instance URL</p>
+                    <HelpTooltip text="Your school's Brightspace domain (e.g., school.brightspace.com)" size={14} width={280} />
+                  </div>
+                  <input
+                    type="text"
+                    value={brightspaceInstanceUrl}
+                    onChange={(e) => setBrightspaceInstanceUrl(e.target.value)}
+                    placeholder="school.brightspace.com"
+                    style={{
+                      width: '100%',
+                      height: '44px',
+                      padding: '8px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                    }}
+                    disabled={brightspaceConnecting}
+                  />
+                </div>
+
+                {/* Client ID */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Client ID</p>
+                    <HelpTooltip text="Create an OAuth 2.0 application in Brightspace Admin to get your Client ID." size={14} width={280} />
+                  </div>
+                  <input
+                    type="text"
+                    value={brightspaceClientId}
+                    onChange={(e) => setBrightspaceClientId(e.target.value)}
+                    placeholder="Your client ID"
+                    style={{
+                      width: '100%',
+                      height: '44px',
+                      padding: '8px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                    }}
+                    disabled={brightspaceConnecting}
+                  />
+                </div>
+
+                {/* Client Secret */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Client Secret</p>
+                    <HelpTooltip text="The secret key from your Brightspace OAuth 2.0 application. Never share this secret." size={14} width={280} />
+                  </div>
+                  <input
+                    type="password"
+                    value={brightspaceClientSecret}
+                    onChange={(e) => setBrightspaceClientSecret(e.target.value)}
+                    placeholder="Your client secret"
+                    style={{
+                      width: '100%',
+                      height: '44px',
+                      padding: '8px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                    }}
+                    disabled={brightspaceConnecting}
+                  />
+                </div>
+
+                <Button
+                  size={isMobile ? 'sm' : 'lg'}
+                  onClick={handleBrightspaceConnect}
+                  disabled={brightspaceConnecting || !brightspaceInstanceUrl.trim() || !brightspaceClientId.trim() || !brightspaceClientSecret.trim()}
+                  style={{
+                    paddingLeft: isMobile ? '12px' : '16px',
+                    paddingRight: isMobile ? '12px' : '16px',
+                  }}
+                >
+                  {brightspaceConnecting ? (
+                    <>
+                      <RefreshCw size={16} className="animate-spin mr-2" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 size={16} className="mr-2" />
+                      Connect to Brightspace
+                    </>
+                  )}
+                </Button>
+
+                {/* Message display */}
+                {brightspaceMessage && (
+                  <p style={{
+                    marginTop: '12px',
+                    fontSize: '14px',
+                    color: brightspaceMessage.includes('✗') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {brightspaceMessage}
+                  </p>
+                )}
+              </div>
+            ) : (
+              // Connected State
+              <div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px',
+                  backgroundColor: 'var(--panel-2)',
+                  borderRadius: '8px',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--success)',
+                  }} />
+                  <span className="text-sm text-[var(--text)]">
+                    Connected as <strong>{brightspaceStatus.userName}</strong>
+                  </span>
+                </div>
+
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>
+                  Last synced: {formatLastSynced(brightspaceStatus.lastSyncedAt)}
+                </p>
+
+                <p className="text-xs" style={{ marginBottom: '16px', color: 'var(--warning)' }}>
+                  This integration is in beta. If you encounter issues, please report them in Settings → Feedback.
+                </p>
+
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    onClick={handleBrightspaceSync}
+                    disabled={brightspaceSyncing}
+                    style={{
+                      paddingLeft: isMobile ? '12px' : '16px',
+                      paddingRight: isMobile ? '12px' : '16px',
+                    }}
+                  >
+                    {brightspaceSyncing ? (
+                      <>
+                        <RefreshCw size={16} className="animate-spin mr-2" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw size={16} className="mr-2" />
+                        Sync Now
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    variant="secondary"
+                    onClick={handleBrightspaceDisconnectClick}
+                    disabled={pendingBrightspaceDisconnect}
+                    style={{
+                      paddingLeft: isMobile ? '12px' : '16px',
+                      paddingRight: isMobile ? '12px' : '16px',
+                      boxShadow: 'none',
+                      opacity: pendingBrightspaceDisconnect ? 0.5 : 1,
+                    }}
+                  >
+                    <Unlink size={16} className="mr-2" />
+                    {pendingBrightspaceDisconnect ? 'Disconnecting...' : 'Disconnect'}
+                  </Button>
+                </div>
+
+                {/* Message display */}
+                {brightspaceMessage && (
+                  <p style={{
+                    marginBottom: '16px',
+                    fontSize: '14px',
+                    color: brightspaceMessage.includes('✗') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {brightspaceMessage}
+                  </p>
+                )}
+
+                {/* Sync Settings Dropdown */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                  <button
+                    onClick={() => setBrightspaceSyncSettingsOpen(!brightspaceSyncSettingsOpen)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      padding: '10px 12px',
+                      backgroundColor: 'var(--panel-2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      color: 'var(--text)',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Sync Settings
+                    <ChevronDown
+                      size={18}
+                      style={{
+                        transition: 'transform 0.2s ease',
+                        transform: brightspaceSyncSettingsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        color: 'var(--text-muted)',
+                      }}
+                    />
+                  </button>
+                  {brightspaceSyncSettingsOpen && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+                      {[
+                        { key: 'courses', label: 'Courses', description: 'Creates courses from Brightspace', value: brightspaceSyncCourses },
+                        { key: 'assignments', label: 'Assignments', description: 'Syncs dropbox folders to Work page', value: brightspaceSyncAssignments },
+                        { key: 'grades', label: 'Grades', description: 'Updates assignment scores', value: brightspaceSyncGrades },
+                        { key: 'events', label: 'Calendar Events', description: 'Syncs to Calendar', value: brightspaceSyncEvents },
+                        { key: 'announcements', label: 'Announcements', description: 'Syncs news items', value: brightspaceSyncAnnouncements },
+                        { key: 'autoMarkComplete', label: 'Auto-mark complete', description: 'Mark assignments done when submitted', value: brightspaceAutoMarkComplete },
+                      ].map((setting) => (
+                        <label
+                          key={setting.key}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '10px 12px',
+                            backgroundColor: 'var(--panel-2)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <div>
+                            <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>{setting.label}</p>
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{setting.description}</p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={setting.value}
+                            onChange={(e) => handleBrightspaceSyncSettingsChange(setting.key, e.target.checked)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </Card>
+          </div>
           )}
 
           {/* Appearance Tab */}
@@ -3748,6 +5508,42 @@ export default function SettingsPage() {
         isDangerous={true}
         onConfirm={handleCanvasDisconnect}
         onCancel={() => setShowCanvasDisconnectModal(false)}
+      />
+
+      {/* Blackboard Disconnect Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showBlackboardDisconnectModal}
+        title="Disconnect from Blackboard?"
+        message="Your synced courses, assignments, and events will remain in College Orbit, but you won't receive any new updates from Blackboard until you reconnect."
+        confirmText="Disconnect"
+        cancelText="Cancel"
+        isDangerous={true}
+        onConfirm={handleBlackboardDisconnect}
+        onCancel={() => setShowBlackboardDisconnectModal(false)}
+      />
+
+      {/* Moodle Disconnect Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showMoodleDisconnectModal}
+        title="Disconnect from Moodle?"
+        message="Your synced courses, assignments, and events will remain in College Orbit, but you won't receive any new updates from Moodle until you reconnect."
+        confirmText="Disconnect"
+        cancelText="Cancel"
+        isDangerous={true}
+        onConfirm={handleMoodleDisconnect}
+        onCancel={() => setShowMoodleDisconnectModal(false)}
+      />
+
+      {/* Brightspace Disconnect Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showBrightspaceDisconnectModal}
+        title="Disconnect from Brightspace?"
+        message="Your synced courses, assignments, and events will remain in College Orbit, but you won't receive any new updates from Brightspace until you reconnect."
+        confirmText="Disconnect"
+        cancelText="Cancel"
+        isDangerous={true}
+        onConfirm={handleBrightspaceDisconnect}
+        onCancel={() => setShowBrightspaceDisconnectModal(false)}
       />
     </>
   );

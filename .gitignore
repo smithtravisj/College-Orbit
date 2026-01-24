@@ -38,3 +38,4 @@ yarn-error.log*
 # Desktop app downloads (too large for git)
 public/downloads/
 CLAUDE.md
+blackboard-dev-credentials.txt

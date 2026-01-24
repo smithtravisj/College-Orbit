@@ -359,11 +359,12 @@ export default function CalendarContent() {
   };
 
   const handleStatusChange = async () => {
-    // Refresh tasks and deadlines when status changes
+    // Refresh tasks, deadlines, and calendar events when status changes
     try {
-      const [tasksResponse, deadlinesResponse] = await Promise.all([
+      const [tasksResponse, deadlinesResponse, eventsResponse] = await Promise.all([
         fetch('/api/tasks?showAll=true'),
         fetch('/api/deadlines?showAll=true'),
+        fetch('/api/calendar-events'),
       ]);
 
       if (tasksResponse.ok) {
@@ -378,6 +379,11 @@ export default function CalendarContent() {
         const allOpenDeadlines = deadlinesData.deadlines.filter((deadline: any) => deadline.status !== 'done');
         setAllDeadlineInstances(allOpenDeadlines);
         setFilteredDeadlines(allOpenDeadlines);
+      }
+
+      if (eventsResponse.ok) {
+        const eventsData = await eventsResponse.json();
+        setCalendarEvents(eventsData.events || []);
       }
 
       // Clear cache

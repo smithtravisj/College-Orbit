@@ -54,6 +54,9 @@ model User {
   tasks                     Task[]
   calendarEvents            CalendarEvent[]
   deletedCanvasItems        DeletedCanvasItem[]
+  deletedBlackboardItems    DeletedBlackboardItem[]
+  deletedMoodleItems        DeletedMoodleItem[]
+  deletedBrightspaceItems   DeletedBrightspaceItem[]
   workItems                 WorkItem[]
   recurringWorkPatterns     RecurringWorkPattern[]
   betaFeedback              BetaFeedback[]
@@ -83,6 +86,18 @@ model Course {
   canvasCourseId     String?
   canvasEnrollmentId String?
 
+  // Blackboard LMS Integration
+  blackboardCourseId     String?
+  blackboardEnrollmentId String?
+
+  // Moodle LMS Integration
+  moodleCourseId     String?
+  moodleEnrollmentId String?
+
+  // Brightspace LMS Integration
+  brightspaceCourseId     String?
+  brightspaceEnrollmentId String?
+
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   deadlines     Deadline[]
   exams         Exam[]
@@ -95,6 +110,9 @@ model Course {
 
   @@index([userId])
   @@index([canvasCourseId])
+  @@index([blackboardCourseId])
+  @@index([moodleCourseId])
+  @@index([brightspaceCourseId])
 }
 
 model Deadline {
@@ -487,6 +505,54 @@ model Settings {
   canvasSyncAnnouncements Boolean   @default(true)
   canvasAutoMarkComplete  Boolean   @default(true)
 
+  // Blackboard LMS Integration
+  blackboardInstanceUrl       String?
+  blackboardApplicationKey    String?   // OAuth app key
+  blackboardApplicationSecret String?   // OAuth app secret (encrypted)
+  blackboardAccessToken       String?   // OAuth token (encrypted, auto-refreshes)
+  blackboardTokenExpiresAt    DateTime?
+  blackboardUserId            String?
+  blackboardUserName          String?
+  blackboardSyncEnabled       Boolean   @default(false)
+  blackboardLastSyncedAt      DateTime?
+  blackboardSyncCourses       Boolean   @default(true)
+  blackboardSyncAssignments   Boolean   @default(true)
+  blackboardSyncGrades        Boolean   @default(true)
+  blackboardSyncEvents        Boolean   @default(true)
+  blackboardAutoMarkComplete  Boolean   @default(true)
+
+  // Moodle LMS Integration
+  moodleInstanceUrl        String?
+  moodleAccessToken        String?   // Web service token (encrypted)
+  moodleUserId             String?
+  moodleUserName           String?
+  moodleSyncEnabled        Boolean   @default(false)
+  moodleLastSyncedAt       DateTime?
+  moodleSyncCourses        Boolean   @default(true)
+  moodleSyncAssignments    Boolean   @default(true)
+  moodleSyncGrades         Boolean   @default(true)
+  moodleSyncEvents         Boolean   @default(true)
+  moodleSyncAnnouncements  Boolean   @default(true)
+  moodleAutoMarkComplete   Boolean   @default(true)
+
+  // Brightspace (D2L) LMS Integration
+  brightspaceInstanceUrl        String?
+  brightspaceClientId           String?   // OAuth client ID
+  brightspaceClientSecret       String?   // OAuth client secret (encrypted)
+  brightspaceAccessToken        String?   // OAuth access token (encrypted)
+  brightspaceRefreshToken       String?   // OAuth refresh token (encrypted)
+  brightspaceTokenExpiresAt     DateTime?
+  brightspaceUserId             String?
+  brightspaceUserName           String?
+  brightspaceSyncEnabled        Boolean   @default(false)
+  brightspaceLastSyncedAt       DateTime?
+  brightspaceSyncCourses        Boolean   @default(true)
+  brightspaceSyncAssignments    Boolean   @default(true)
+  brightspaceSyncGrades         Boolean   @default(true)
+  brightspaceSyncEvents         Boolean   @default(true)
+  brightspaceSyncAnnouncements  Boolean   @default(true)
+  brightspaceAutoMarkComplete   Boolean   @default(true)
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -679,11 +745,23 @@ model CalendarEvent {
   // Canvas LMS Integration
   canvasEventId String?
 
+  // Blackboard LMS Integration
+  blackboardEventId String?
+
+  // Moodle LMS Integration
+  moodleEventId String?
+
+  // Brightspace LMS Integration
+  brightspaceEventId String?
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([startAt])
   @@index([canvasEventId])
+  @@index([blackboardEventId])
+  @@index([moodleEventId])
+  @@index([brightspaceEventId])
 }
 
 model AuditLog {
@@ -728,6 +806,45 @@ model DeletedCanvasItem {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, canvasId, type])
+  @@index([userId, type])
+}
+
+model DeletedBlackboardItem {
+  id           String   @id @default(cuid())
+  userId       String
+  blackboardId String // The Blackboard ID (blackboardColumnId, blackboardCourseId, etc.)
+  type         String // 'assignment', 'course', 'event'
+  deletedAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, blackboardId, type])
+  @@index([userId, type])
+}
+
+model DeletedMoodleItem {
+  id        String   @id @default(cuid())
+  userId    String
+  moodleId  String // The Moodle ID (moodleAssignmentId, moodleCourseId, etc.)
+  type      String // 'assignment', 'course', 'event', 'announcement'
+  deletedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moodleId, type])
+  @@index([userId, type])
+}
+
+model DeletedBrightspaceItem {
+  id            String   @id @default(cuid())
+  userId        String
+  brightspaceId String // The Brightspace ID (brightspaceActivityId, brightspaceCourseId, etc.)
+  type          String // 'assignment', 'course', 'event', 'announcement'
+  deletedAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, brightspaceId, type])
   @@index([userId, type])
 }
 
@@ -784,6 +901,27 @@ model WorkItem {
   canvasPointsEarned   Float?
   canvasGradePostedAt  DateTime?
 
+  // Blackboard LMS Integration
+  blackboardColumnId       String?   // gradebook column ID
+  blackboardAttemptId      String?   // submission attempt ID
+  blackboardPointsPossible Float?
+  blackboardPointsEarned   Float?
+  blackboardGradePostedAt  DateTime?
+
+  // Moodle LMS Integration
+  moodleAssignmentId     String?
+  moodleSubmissionId     String?
+  moodlePointsPossible   Float?
+  moodlePointsEarned     Float?
+  moodleGradePostedAt    DateTime?
+
+  // Brightspace LMS Integration
+  brightspaceActivityId    String?
+  brightspaceSubmissionId  String?
+  brightspacePointsPossible Float?
+  brightspacePointsEarned   Float?
+  brightspaceGradePostedAt  DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -803,6 +941,9 @@ model WorkItem {
   @@index([recurringPatternId])
   @@index([isRecurring])
   @@index([canvasAssignmentId])
+  @@index([blackboardColumnId])
+  @@index([moodleAssignmentId])
+  @@index([brightspaceActivityId])
   @@index([dueAt])
 }
 

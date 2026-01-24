@@ -6,6 +6,9 @@ import { useFormatters } from '@/hooks/useFormatters';
 import useAppStore from '@/lib/store';
 import { formatTimeString, TimeFormat } from '@/lib/utils';
 import { CanvasBadge } from '@/components/CanvasBadge';
+import { BlackboardBadge } from '@/components/BlackboardBadge';
+import { MoodleBadge } from '@/components/MoodleBadge';
+import { BrightspaceBadge } from '@/components/BrightspaceBadge';
 import { getEventTypeColors } from '@/lib/collegeColors';
 
 interface TimelineItemProps {
@@ -224,6 +227,21 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
           {/* Canvas badge for assignments synced from Canvas */}
           {item.type === 'deadline' && item.originalItem?.canvasAssignmentId && (
             <CanvasBadge size="sm" />
+          )}
+
+          {/* Blackboard badge for assignments synced from Blackboard */}
+          {item.type === 'deadline' && item.originalItem?.blackboardColumnId && (
+            <BlackboardBadge size="sm" />
+          )}
+
+          {/* Moodle badge for assignments synced from Moodle */}
+          {item.type === 'deadline' && item.originalItem?.moodleAssignmentId && (
+            <MoodleBadge size="sm" />
+          )}
+
+          {/* Brightspace badge for assignments synced from Brightspace */}
+          {item.type === 'deadline' && item.originalItem?.brightspaceActivityId && (
+            <BrightspaceBadge size="sm" />
           )}
         </div>
 

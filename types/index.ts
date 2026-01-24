@@ -25,6 +25,15 @@ export interface Course {
   // Canvas LMS Integration
   canvasCourseId?: string | null;
   canvasEnrollmentId?: string | null;
+  // Blackboard LMS Integration
+  blackboardCourseId?: string | null;
+  blackboardEnrollmentId?: string | null;
+  // Moodle LMS Integration
+  moodleCourseId?: string | null;
+  moodleEnrollmentId?: string | null;
+  // Brightspace LMS Integration
+  brightspaceCourseId?: string | null;
+  brightspaceEnrollmentId?: string | null;
 }
 
 export interface Deadline {
@@ -59,6 +68,24 @@ export interface Deadline {
   canvasPointsPossible?: number | null;
   canvasPointsEarned?: number | null;
   canvasGradePostedAt?: string | null;
+  // Blackboard LMS Integration
+  blackboardColumnId?: string | null;
+  blackboardAttemptId?: string | null;
+  blackboardPointsPossible?: number | null;
+  blackboardPointsEarned?: number | null;
+  blackboardGradePostedAt?: string | null;
+  // Moodle LMS Integration
+  moodleAssignmentId?: string | null;
+  moodleSubmissionId?: string | null;
+  moodlePointsPossible?: number | null;
+  moodlePointsEarned?: number | null;
+  moodleGradePostedAt?: string | null;
+  // Brightspace LMS Integration
+  brightspaceActivityId?: string | null;
+  brightspaceSubmissionId?: string | null;
+  brightspacePointsPossible?: number | null;
+  brightspacePointsEarned?: number | null;
+  brightspaceGradePostedAt?: string | null;
 }
 
 export interface Task {
@@ -445,6 +472,12 @@ export interface CalendarEvent {
   updatedAt: string;
   // Canvas LMS Integration
   canvasEventId?: string | null;
+  // Blackboard LMS Integration
+  blackboardEventId?: string | null;
+  // Moodle LMS Integration
+  moodleEventId?: string | null;
+  // Brightspace LMS Integration
+  brightspaceEventId?: string | null;
 }
 
 // Shopping List Types
@@ -555,6 +588,24 @@ export interface WorkItem {
   canvasPointsPossible?: number | null;
   canvasPointsEarned?: number | null;
   canvasGradePostedAt?: string | null;
+  // Blackboard LMS Integration (for type='assignment')
+  blackboardColumnId?: string | null;
+  blackboardAttemptId?: string | null;
+  blackboardPointsPossible?: number | null;
+  blackboardPointsEarned?: number | null;
+  blackboardGradePostedAt?: string | null;
+  // Moodle LMS Integration (for type='assignment')
+  moodleAssignmentId?: string | null;
+  moodleSubmissionId?: string | null;
+  moodlePointsPossible?: number | null;
+  moodlePointsEarned?: number | null;
+  moodleGradePostedAt?: string | null;
+  // Brightspace LMS Integration (for type='assignment')
+  brightspaceActivityId?: string | null;
+  brightspaceSubmissionId?: string | null;
+  brightspacePointsPossible?: number | null;
+  brightspacePointsEarned?: number | null;
+  brightspaceGradePostedAt?: string | null;
   // Optional included course relation
   course?: {
     id: string;

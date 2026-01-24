@@ -74,6 +74,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
   const [currentTime, setCurrentTime] = useState(new Date());
   const [draggedEvent, setDraggedEvent] = useState<CalendarEvent | null>(null);
   const [dropIndicator, setDropIndicator] = useState<{ dateStr: string; top: number; isAllDay: boolean } | null>(null);
+  const lastScrolledWeekRef = useRef<string | null>(null);
 
   // Get colorblind settings
   const settings = useAppStore((state) => state.settings);
@@ -153,10 +154,13 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
   }, [eventsByDay]);
 
   useEffect(() => {
-    // Scroll to the earliest event time on mount or when week changes
-    if (scrollContainerRef.current) {
+    // Scroll to the earliest event time only on mount or when week changes
+    // Don't scroll when events are added/removed (preserves scroll position)
+    const weekKey = weekStart.toISOString().split('T')[0];
+    if (scrollContainerRef.current && lastScrolledWeekRef.current !== weekKey) {
       const scrollPosition = earliestEventHour * HOUR_HEIGHT;
       scrollContainerRef.current.scrollTop = scrollPosition;
+      lastScrolledWeekRef.current = weekKey;
     }
   }, [earliestEventHour, weekStart]);
 

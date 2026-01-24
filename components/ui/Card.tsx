@@ -51,7 +51,7 @@ const Card: React.FC<CardProps> = React.memo(({
 
   return (
     <div
-      className={`group card-hover rounded-[16px] border transition-all duration-300 w-full flex flex-col min-h-0 animate-fade-in-up ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${className}`}
+      className={`group card-hover rounded-[16px] border transition-all duration-300 w-full h-full flex flex-col min-h-0 animate-fade-in-up ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${className}`}
       style={{
         position: 'relative',
         minWidth: isMobile ? '0' : 'auto',
