@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { sendSubscriptionStartedEmail } from '@/lib/email';
+import { log } from '@/lib/logger';
 import Stripe from 'stripe';
 
 // Disable body parsing, we need the raw body for webhook signature verification
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err) {
-    console.error('Webhook signature verification failed:', err);
+    log.error('Webhook signature verification failed', err);
     return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 });
   }
 
@@ -51,12 +52,12 @@ export async function POST(req: NextRequest) {
         break;
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        log.webhook('stripe', event.type, { handled: false });
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Error processing webhook:', error);
+    log.error('Error processing webhook', error);
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
 }
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
 async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId;
   if (!userId) {
-    console.error('No userId in checkout session metadata');
+    log.error('No userId in checkout session metadata', null, { sessionId: session.id });
     return;
   }
 
@@ -105,10 +106,10 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
         plan,
       });
     } catch (emailError) {
-      console.error('Failed to send subscription started email:', emailError);
+      log.error('Failed to send subscription started email', emailError, { userId, plan });
     }
 
-    console.log(`User ${userId} purchased semester pass, expires ${expiresAt.toISOString()}`);
+    log.subscription('semester_purchased', userId, { expiresAt: expiresAt.toISOString() });
     return;
   }
 
@@ -145,10 +146,10 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
       plan,
     });
   } catch (emailError) {
-    console.error('Failed to send subscription started email:', emailError);
+    log.error('Failed to send subscription started email', emailError, { userId, plan });
   }
 
-  console.log(`User ${userId} subscribed to ${plan} plan`);
+  log.subscription('subscribed', userId, { plan });
 }
 
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
@@ -159,7 +160,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
       where: { stripeSubscriptionId: subscription.id },
     });
     if (!user) {
-      console.error('No user found for subscription:', subscription.id);
+      log.error('No user found for subscription', null, { subscriptionId: subscription.id });
       return;
     }
     await updateUserSubscription(user.id, subscription);
@@ -206,7 +207,7 @@ async function updateUserSubscription(userId: string, subscription: Stripe.Subsc
     },
   });
 
-  console.log(`Updated subscription for user ${userId}: ${subscriptionTier}, ${subscriptionStatus}`);
+  log.subscription('updated', userId, { subscriptionTier, subscriptionStatus, plan });
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
@@ -218,7 +219,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     : await prisma.user.findFirst({ where: { stripeSubscriptionId: subscription.id } });
 
   if (!user) {
-    console.error('No user found for deleted subscription:', subscription.id);
+    log.error('No user found for deleted subscription', null, { subscriptionId: subscription.id });
     return;
   }
 
@@ -243,7 +244,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     },
   });
 
-  console.log(`Subscription canceled for user ${user.id}`);
+  log.subscription('canceled', user.id);
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
@@ -254,7 +255,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   });
 
   if (!user) {
-    console.error('No user found for customer:', customerId);
+    log.error('No user found for customer (payment failed)', null, { customerId });
     return;
   }
 
@@ -275,7 +276,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     },
   });
 
-  console.log(`Payment failed for user ${user.id}`);
+  log.subscription('payment_failed', user.id);
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
@@ -289,7 +290,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   });
 
   if (!user) {
-    console.error('No user found for customer:', customerId);
+    log.error('No user found for customer (payment succeeded)', null, { customerId });
     return;
   }
 
@@ -302,6 +303,6 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
       },
     });
 
-    console.log(`Payment succeeded, restored access for user ${user.id}`);
+    log.subscription('payment_succeeded', user.id, { restoredFromPastDue: true });
   }
 }

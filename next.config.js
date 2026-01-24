@@ -1,5 +1,7 @@
+import { withSentryConfig } from "@sentry/nextjs";
+
 /** @type {import('next').NextConfig} */
-export default {
+const nextConfig = {
   reactStrictMode: true,
 
   // Enable compression for better performance
@@ -119,4 +121,25 @@ export default {
       },
     ];
   },
-}
+};
+
+export default withSentryConfig(nextConfig, {
+  // Suppress source map upload logs during build
+  silent: true,
+
+  // Upload source maps for better stack traces
+  widenClientFileUpload: true,
+
+  // Hide source maps from client bundles
+  hideSourceMaps: true,
+
+  // Route to tunnel Sentry events through (avoids ad blockers)
+  tunnelRoute: "/monitoring",
+
+  // Webpack-specific options
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+    excludeReplayIframe: true,
+    excludeReplayShadowDom: true,
+  },
+});
