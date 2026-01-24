@@ -1785,6 +1785,39 @@ export default function AdminPage() {
                 </div>
                 <ExternalLink size={16} style={{ color: 'var(--text-muted)' }} />
               </a>
+
+              <a
+                href="https://college-orbit.sentry.io/issues/errors-outages/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border)',
+                  textDecoration: 'none',
+                  color: 'var(--text)',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-hover)';
+                  e.currentTarget.style.backgroundColor = 'var(--panel)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: '500', fontSize: '14px' }}>Sentry</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Errors</div>
+                </div>
+                <ExternalLink size={16} style={{ color: 'var(--text-muted)' }} />
+              </a>
               </div>
             </Card>
           </div>
