@@ -1220,7 +1220,7 @@ export default function AdminPage() {
   return (
     <>
       {/* Admin Header */}
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div>
           <h1
             style={{
@@ -1239,7 +1239,7 @@ export default function AdminPage() {
       </div>
 
       {/* Main Tabs */}
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '0 20px' : '0 24px', marginBottom: '20px' }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '0 20px' : '0 24px', marginBottom: '20px' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
           {[
             { id: 'management', label: 'Management' },
@@ -1275,19 +1275,19 @@ export default function AdminPage() {
 
       {/* Analytics Tab Content */}
       {activeTab === 'analytics' && (analyticsLoading ? (
-        <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0' }}>
+        <div className="mx-auto w-full max-w-[1800px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0' }}>
           <div className="flex items-center justify-center" style={{ height: '200px' }}>
             <div className="text-[var(--text-muted)]">Loading analytics...</div>
           </div>
         </div>
       ) : analyticsError ? (
-        <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0' }}>
+        <div className="mx-auto w-full max-w-[1800px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0' }}>
           <div className="flex items-center justify-center" style={{ height: '200px' }}>
             <div className="text-[var(--text-muted)]">Error: {analyticsError}</div>
           </div>
         </div>
       ) : analytics && (
-        <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
+        <div className="mx-auto w-full max-w-[1800px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
           <div className="w-full" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 'var(--grid-gap)' }}>
             {/* Summary Stats */}
             <Card title="Summary">
@@ -1649,7 +1649,7 @@ export default function AdminPage() {
 
       {/* Management Tab Content */}
       {activeTab === 'management' && (
-        <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
+        <div className="mx-auto w-full max-w-[1800px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
           {/* External Services Card - Full Width */}
           <div style={{ marginBottom: isMobile ? '8px' : '24px' }}>
             <Card title="External Services">
@@ -2747,7 +2747,7 @@ export default function AdminPage() {
 
       {/* Add College Tab Content */}
       {activeTab === 'addCollege' && (
-        <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
+        <div className="mx-auto w-full max-w-[1800px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 'var(--grid-gap)' }}>
             {/* Form Section */}
             <Card title={editingCollegeId ? 'Edit College' : 'Add New College'}>

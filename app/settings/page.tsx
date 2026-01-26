@@ -1707,7 +1707,7 @@ export default function SettingsPage() {
         }
       `}</style>
       {/* Settings Header */}
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div>
           <h1
             style={{
@@ -1758,7 +1758,7 @@ export default function SettingsPage() {
           ))}
         </div>
       </div>
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
         {/* Desktop App - Hidden for now, uncomment when ready to release */}
         {false && isMacDesktop && (
           <div style={{ marginBottom: '24px' }}>

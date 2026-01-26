@@ -97,7 +97,7 @@
   --space-8: 64px;
 
   /* Layout system */
-  --max-content-width: 1280px;
+  --max-content-width: 1800px;
   --content-padding-desktop: 24px;
   --content-padding-tablet: 24px;
   --content-padding-mobile: 20px;
@@ -107,8 +107,8 @@
   --list-row-height: 60px;
 
   /* Container widths */
-  --container-dashboard: 1280px;
-  --container-standard: 1200px;
+  --container-dashboard: 1800px;
+  --container-standard: 1800px;
   --container-narrow: 768px;
 
   /* Component heights */
@@ -121,7 +121,7 @@
   --radius-card: 16px;
 
   /* Layout dimensions */
-  --container: 1200px;
+  --container: 1800px;
   --header-h: 56px;
   --sidebar-w: 264px;
   --gutter: 24px;

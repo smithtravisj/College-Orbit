@@ -56,7 +56,7 @@ export default function CoursesPage() {
   const bulkSelect = useBulkSelect();
   const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
 
-  const { courses, settings, initializeStore, updateSettings, updateCourse, bulkUpdateCourses, bulkDeleteCourses } = useAppStore();
+  const { courses, settings, updateSettings, updateCourse, bulkUpdateCourses, bulkDeleteCourses } = useAppStore();
 
   const handleTermFilterChange = (newFilter: string) => {
     setTermFilter(newFilter);
@@ -64,14 +64,14 @@ export default function CoursesPage() {
   };
 
   useEffect(() => {
-    initializeStore();
+    // AppLoader already handles initialization
     // Load showEnded from localStorage
     const saved = localStorage.getItem('showEndedCourses');
     if (saved) {
       setShowEnded(JSON.parse(saved));
     }
     setMounted(true);
-  }, [initializeStore]);
+  }, []);
 
   // Sync termFilter from settings on initial load only
   useEffect(() => {
@@ -280,7 +280,7 @@ export default function CoursesPage() {
   return (
     <>
       {/* Courses Header */}
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1
@@ -305,7 +305,7 @@ export default function CoursesPage() {
           )}
         </div>
       </div>
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ position: 'relative', zIndex: 1 }}>
           {/* Filters sidebar - 3 columns (desktop only) */}
           <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', display: isMobile ? 'none' : 'block', position: 'sticky', top: '24px', alignSelf: 'start' }}>

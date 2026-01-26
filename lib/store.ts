@@ -507,7 +507,6 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   loadFromDatabase: async () => {
     try {
-      console.log('[Store] loadFromDatabase called', new Error().stack?.split('\n').slice(1, 4).join(' <- '));
 
       // Single API call to fetch all data - retry on 401 in case session is still being established
       let response = await fetch('/api/init', { credentials: 'include' });

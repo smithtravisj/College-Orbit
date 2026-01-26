@@ -50,7 +50,7 @@ function PublicPricingPage() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {/* Page Header */}
-      <div className="w-full max-w-[1200px]" style={{ padding: isMobile ? '0px 20px 8px' : '0px 24px 12px', position: 'relative', zIndex: 1 }}>
+      <div className="w-full max-w-[1800px]" style={{ padding: isMobile ? '0px 20px 8px' : '0px 24px 12px', position: 'relative', zIndex: 1 }}>
         <button onClick={() => router.back()} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)', marginTop: '22px', marginBottom: '8px', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
           <ArrowLeft size={14} />
           Back
@@ -73,7 +73,7 @@ function PublicPricingPage() {
       </div>
 
       {/* Content */}
-      <div className="w-full max-w-[1200px]" style={{ padding: isMobile ? '12px 20px 24px' : '12px 24px 24px' }}>
+      <div className="w-full max-w-[1800px]" style={{ padding: isMobile ? '12px 20px 24px' : '12px 24px 24px' }}>
         {/* Pricing Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '16px' : '24px', marginBottom: '32px' }}>
           {/* Free Plan */}
@@ -225,7 +225,7 @@ function AuthenticatedPricingPage() {
   return (
     <>
       {/* Page Header */}
-      <div className="mx-auto w-full max-w-[1200px]" style={{ padding: isMobile ? '0px 20px 8px' : '0px 24px 12px', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '0px 20px 8px' : '0px 24px 12px', position: 'relative', zIndex: 1 }}>
         <button onClick={() => router.back()} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)', marginTop: '22px', marginBottom: '8px', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
           <ArrowLeft size={14} />
           Back
@@ -252,7 +252,7 @@ function AuthenticatedPricingPage() {
       </div>
 
       {/* Content */}
-      <div className="mx-auto w-full max-w-[1200px]" style={{ padding: isMobile ? '12px 20px 24px' : '12px 24px 24px' }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '12px 20px 24px' : '12px 24px 24px' }}>
         {/* Pricing Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '16px' : '24px', marginBottom: '32px' }}>
           {/* Free Plan */}

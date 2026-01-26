@@ -8,7 +8,8 @@ import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Shield, Download, Upload, Trash2, Eye, EyeOff, Crown, Monitor, Smartphone, Tablet, X, Calendar, Copy } from 'lucide-react';
+import { Shield, Download, Upload, Trash2, Eye, EyeOff, Crown, Monitor, Smartphone, Tablet, X, Calendar, Copy, FileText } from 'lucide-react';
+import { exportWorkItemsToPDF, exportScheduleToPDF } from '@/lib/pdfExport';
 import HelpTooltip from '@/components/ui/HelpTooltip';
 import { useSubscription } from '@/hooks/useSubscription';
 import Link from 'next/link';
@@ -39,6 +40,8 @@ export default function AccountPage() {
   const [calendarToken, setCalendarToken] = useState<string | null>(null);
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [calendarMessage, setCalendarMessage] = useState('');
+  const [pdfExportLoading, setPdfExportLoading] = useState(false);
+  const [pdfExportMessage, setPdfExportMessage] = useState('');
   const [activeSessions, setActiveSessions] = useState<Array<{
     id: string;
     browser: string | null;
@@ -145,6 +148,171 @@ export default function AccountPage() {
       console.error('Failed to copy URL:', err);
       setCalendarMessage('Failed to copy URL');
       setTimeout(() => setCalendarMessage(''), 3000);
+    }
+  };
+
+  // Helper to format recurring pattern as human-readable text
+  const formatRecurrenceInfo = (pattern: any): string => {
+    if (!pattern) return '';
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    let text = '';
+
+    switch (pattern.recurrenceType) {
+      case 'daily':
+        text = 'Every day';
+        break;
+      case 'weekly': {
+        const days = (pattern.daysOfWeek || [])
+          .sort((a: number, b: number) => a - b)
+          .map((d: number) => dayNames[d]);
+        text = days.length > 0 ? `Every ${days.join(', ')}` : 'Weekly';
+        break;
+      }
+      case 'monthly': {
+        const dates = (pattern.daysOfMonth || [])
+          .sort((a: number, b: number) => a - b)
+          .map((d: number) => {
+            const suffix = ['th', 'st', 'nd', 'rd'][(d % 10 > 3 || Math.floor(d / 10) === 1) ? 0 : d % 10];
+            return `${d}${suffix}`;
+          });
+        text = dates.length > 0 ? `Monthly on the ${dates.join(', ')}` : 'Monthly';
+        break;
+      }
+      case 'custom': {
+        const interval = pattern.intervalDays || 1;
+        text = `Every ${interval} day${interval > 1 ? 's' : ''}`;
+        break;
+      }
+      default:
+        text = 'Recurring';
+    }
+
+    if (pattern.endDate) {
+      const endDate = new Date(pattern.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      text += ` until ${endDate}`;
+    } else if (pattern.occurrenceCount) {
+      text += ` (${pattern.occurrenceCount} times)`;
+    }
+
+    return text;
+  };
+
+  const handleExportWorkItemsPDF = async () => {
+    setPdfExportLoading(true);
+    setPdfExportMessage('');
+    try {
+      // Fetch work items and courses
+      const [workRes, coursesRes] = await Promise.all([
+        fetch('/api/work?showAll=true'),
+        fetch('/api/courses'),
+      ]);
+
+      if (!workRes.ok || !coursesRes.ok) {
+        throw new Error('Failed to fetch data');
+      }
+
+      const workData = await workRes.json();
+      const coursesData = await coursesRes.json();
+      const courses = coursesData.courses || [];
+      const allItems = workData.workItems || [];
+
+      // For recurring items, only keep one instance per pattern (earliest open one)
+      const seenPatterns = new Set<string>();
+      const filteredItems = allItems
+        .filter((item: any) => item.status !== 'done')
+        .sort((a: any, b: any) => {
+          // Sort by due date (earliest first)
+          if (!a.dueAt && !b.dueAt) return 0;
+          if (!a.dueAt) return 1;
+          if (!b.dueAt) return -1;
+          return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
+        })
+        .filter((item: any) => {
+          // For recurring items, only include the first instance per pattern
+          if (item.recurringPatternId) {
+            if (seenPatterns.has(item.recurringPatternId)) {
+              return false;
+            }
+            seenPatterns.add(item.recurringPatternId);
+          }
+          return true;
+        });
+
+      // Map to export format with recurring info
+      const itemsForExport = filteredItems.map((item: any) => {
+        const course = item.courseId ? courses.find((c: any) => c.id === item.courseId) : null;
+        return {
+          title: item.title,
+          type: item.type,
+          dueAt: item.dueAt,
+          priority: item.priority || null,
+          effort: item.effort || null,
+          status: item.status,
+          course: course ? { name: course.name, code: course.code } : null,
+          notes: item.notes || '',
+          tags: item.tags || [],
+          links: item.links || [],
+          checklist: item.checklist || [],
+          isRecurring: item.isRecurring || !!item.recurringPatternId,
+          recurringInfo: item.recurringPattern ? formatRecurrenceInfo(item.recurringPattern) : undefined,
+        };
+      });
+
+      if (itemsForExport.length === 0) {
+        setPdfExportMessage('No open work items to export');
+        setTimeout(() => setPdfExportMessage(''), 3000);
+        return;
+      }
+
+      exportWorkItemsToPDF(itemsForExport, {
+        title: 'Work Items',
+      });
+
+      setPdfExportMessage('Work items exported successfully');
+      setTimeout(() => setPdfExportMessage(''), 3000);
+    } catch (err) {
+      console.error('Failed to export work items PDF:', err);
+      setPdfExportMessage('Failed to export work items');
+      setTimeout(() => setPdfExportMessage(''), 3000);
+    } finally {
+      setPdfExportLoading(false);
+    }
+  };
+
+  const handleExportSchedulePDF = async () => {
+    setPdfExportLoading(true);
+    setPdfExportMessage('');
+    try {
+      const response = await fetch('/api/courses');
+      if (!response.ok) {
+        throw new Error('Failed to fetch courses');
+      }
+
+      const data = await response.json();
+      const coursesForExport = (data.courses || []).map((course: any) => ({
+        name: course.name,
+        code: course.code,
+        meetingTimes: (course.meetingTimes || []) as Array<{
+          days: string[];
+          start: string;
+          end: string;
+          location?: string;
+        }>,
+        colorTag: course.colorTag,
+      }));
+
+      exportScheduleToPDF(coursesForExport, {
+        title: 'Weekly Class Schedule',
+      });
+
+      setPdfExportMessage('Schedule exported successfully');
+      setTimeout(() => setPdfExportMessage(''), 3000);
+    } catch (err) {
+      console.error('Failed to export schedule PDF:', err);
+      setPdfExportMessage('Failed to export schedule');
+      setTimeout(() => setPdfExportMessage(''), 3000);
+    } finally {
+      setPdfExportLoading(false);
     }
   };
 
@@ -369,7 +537,7 @@ export default function AccountPage() {
   return (
     <>
       {/* Account Header */}
-      <div className="mx-auto w-full max-w-[1200px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div>
           <h1
             style={{
@@ -386,7 +554,7 @@ export default function AccountPage() {
           </p>
         </div>
       </div>
-      <div className="mx-auto w-full max-w-[1200px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
         <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-[var(--grid-gap)]">
           <Card title="Account Information">
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -608,6 +776,49 @@ export default function AccountPage() {
                     color: calendarMessage.includes('Failed') ? 'var(--danger)' : 'var(--success)',
                   }}>
                     {calendarMessage}
+                  </p>
+                )}
+              </div>
+
+              {/* PDF Export */}
+              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', paddingBottom: '12px' }}>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FileText size={16} />
+                  Export to PDF
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Download printable PDFs of your work items or weekly class schedule.
+                </p>
+
+                <div style={{ display: 'flex', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    onClick={handleExportWorkItemsPDF}
+                    disabled={pdfExportLoading}
+                    style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}
+                  >
+                    <Download size={18} />
+                    Work Items PDF
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size={isMobile ? 'sm' : 'lg'}
+                    onClick={handleExportSchedulePDF}
+                    disabled={pdfExportLoading}
+                    style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}
+                  >
+                    <Calendar size={18} />
+                    Schedule PDF
+                  </Button>
+                </div>
+
+                {pdfExportMessage && (
+                  <p style={{
+                    marginTop: '8px',
+                    fontSize: '14px',
+                    color: pdfExportMessage.includes('Failed') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {pdfExportMessage}
                   </p>
                 )}
               </div>

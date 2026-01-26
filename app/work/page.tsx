@@ -160,7 +160,7 @@ export default function TasksPage() {
   const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
   const [hideRecurringCompleted, setHideRecurringCompleted] = useState(false);
 
-  const { courses, tasks, notes, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, bulkUpdateTasks, bulkDeleteTasks, initializeStore, workItems, addWorkItem, updateWorkItem, deleteWorkItem, toggleWorkItemComplete, bulkUpdateWorkItems, bulkDeleteWorkItems, initialized: storeInitialized } = useAppStore();
+  const { courses, tasks, notes, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, bulkUpdateTasks, bulkDeleteTasks, workItems, addWorkItem, updateWorkItem, deleteWorkItem, toggleWorkItemComplete, bulkUpdateWorkItems, bulkDeleteWorkItems, initialized: storeInitialized } = useAppStore();
 
   // Type filter for unified work items - start with 'all' to avoid hydration mismatch
   const [typeFilter, setTypeFilter] = useState<WorkItemType | 'all'>('all');
@@ -218,9 +218,9 @@ export default function TasksPage() {
   };
 
   useEffect(() => {
-    initializeStore();
+    // AppLoader already handles initialization
     setMounted(true);
-  }, [initializeStore]);
+  }, []);
 
   // Check for task/workItem ID in URL params to open preview modal
   useEffect(() => {
@@ -652,27 +652,25 @@ export default function TasksPage() {
     setNlpInput(value);
 
     if (!value.trim()) {
-      // Clear parsed fields when input is empty
+      // Only clear the title when input is empty, keep other manual fields
       setFormData(prev => ({
         ...prev,
         title: '',
-        courseId: '',
-        importance: '',
-        dueDate: '',
-        dueTime: '',
       }));
       return;
     }
 
     const parsed = parseNaturalLanguage(value, { courses, itemType: 'task' });
 
+    // Only update fields that were actually parsed from NLP
+    // Keep manually-set fields if NLP didn't detect a value
     setFormData(prev => ({
       ...prev,
       title: parsed.title || '',
-      courseId: parsed.courseId || '',
-      importance: parsed.importance || '',
-      dueDate: parsed.date || '',
-      dueTime: parsed.time || '',
+      courseId: parsed.courseId || prev.courseId,
+      importance: parsed.importance || prev.importance,
+      dueDate: parsed.date || prev.dueDate,
+      dueTime: parsed.time || prev.dueTime,
     }));
   };
 
@@ -1042,7 +1040,7 @@ export default function TasksPage() {
   return (
     <>
       {/* Work Header */}
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1
@@ -1135,7 +1133,7 @@ export default function TasksPage() {
           ))}
         </div>
       </div>
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', overflow: 'visible', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', overflow: 'visible', position: 'relative', zIndex: 1 }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ gap: isMobile ? '16px' : undefined, overflow: 'visible', position: 'relative', zIndex: 1 }}>
           {/* Filters sidebar - 3 columns */}
           <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : '24px', alignSelf: 'start' }}>
@@ -1164,11 +1162,12 @@ export default function TasksPage() {
                 </div>
                 <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
                   <Select
-                    label="Importance"
+                    label="Priority"
                     value={importanceFilter}
                     onChange={(e) => setImportanceFilter(e.target.value)}
                     options={[
                       { value: '', label: 'All' },
+                      { value: 'critical', label: 'Critical' },
                       { value: 'high', label: 'High' },
                       { value: 'medium', label: 'Medium' },
                       { value: 'low', label: 'Low' },
@@ -1256,11 +1255,12 @@ export default function TasksPage() {
                 </div>
                 <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
                   <Select
-                    label="Importance"
+                    label="Priority"
                     value={importanceFilter}
                     onChange={(e) => setImportanceFilter(e.target.value)}
                     options={[
                       { value: '', label: 'All' },
+                      { value: 'critical', label: 'Critical' },
                       { value: 'high', label: 'High' },
                       { value: 'medium', label: 'Medium' },
                       { value: 'low', label: 'Low' },

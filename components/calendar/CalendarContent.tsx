@@ -76,7 +76,7 @@ export default function CalendarContent() {
   const hasFilteredRef = useRef(false);
   const cacheLoadedRef = useRef(false);
 
-  const { courses, tasks, deadlines, workItems, exams, excludedDates, calendarEvents: storeCalendarEvents, initializeStore } = useAppStore();
+  const { courses, tasks, deadlines, workItems, exams, excludedDates, calendarEvents: storeCalendarEvents } = useAppStore();
 
   // Initialize calendar events from store immediately (store loads from localStorage on startup)
   // This provides instant data while fresh data is fetched in the background
@@ -206,9 +206,9 @@ export default function CalendarContent() {
     // Always start at current date on refresh
     setCurrentDate(new Date());
 
-    initializeStore();
+    // AppLoader already handles initialization
     setMounted(true);
-  }, [initializeStore]);
+  }, []);
 
   if (!mounted) {
     return (
@@ -497,7 +497,7 @@ export default function CalendarContent() {
   return (
     <>
       {/* Calendar Header */}
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <h1
           style={{
             fontSize: isMobile ? '26px' : '34px',

@@ -76,13 +76,13 @@ export default function NotesPage() {
   const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
 
-  const { courses, notes, folders, tasks, deadlines, exams, workItems, recurringWorkPatterns, settings, addNote, updateNote, deleteNote, toggleNotePin, initializeStore, updateSettings } = useAppStore();
+  const { courses, notes, folders, tasks, deadlines, exams, workItems, recurringWorkPatterns, settings, addNote, updateNote, deleteNote, toggleNotePin, updateSettings } = useAppStore();
   const confirmBeforeDelete = settings.confirmBeforeDelete ?? true;
 
   useEffect(() => {
-    initializeStore();
+    // AppLoader already handles initialization
     setMounted(true);
-  }, [initializeStore]);
+  }, []);
 
   // Check for noteId in URL params to open a specific note
   useEffect(() => {
@@ -426,7 +426,7 @@ export default function NotesPage() {
   return (
     <>
       {/* Notes Header */}
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1
@@ -461,7 +461,7 @@ export default function NotesPage() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', overflow: 'visible', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', overflow: 'visible', position: 'relative', zIndex: 1 }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
           {/* Sidebar - 3 columns */}
           <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', display: isMobile ? 'none' : 'block', position: 'sticky', top: '24px', alignSelf: 'start' }}>

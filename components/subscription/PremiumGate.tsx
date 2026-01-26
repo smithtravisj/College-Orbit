@@ -27,7 +27,7 @@ export default function PremiumGate({ children, feature }: PremiumGateProps) {
     return (
       <>
         {/* Page Header - matches other pages */}
-        <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+        <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
           <h1
             style={{
               fontSize: isMobile ? '26px' : '34px',

@@ -55,7 +55,11 @@ function Dashboard() {
   const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>([]);
   const [timelineHeight, setTimelineHeight] = useState<number>(500);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const { courses, deadlines, tasks, settings, excludedDates, initializeStore, toggleTaskDone, updateDeadline, toggleWorkItemComplete } = useAppStore();
+  const { courses, deadlines, tasks, workItems, settings, excludedDates, toggleTaskDone, updateDeadline, toggleWorkItemComplete } = useAppStore();
+
+  // Use workItems if available, otherwise fall back to tasks for backward compatibility
+  const useWorkItemsFlag = workItems.length > 0 || tasks.length === 0;
+  const activeTasks = useWorkItemsFlag ? workItems : tasks;
   const { isPremium } = useSubscription();
   // Dashboard card visibility is only customizable for premium users - free users see defaults
   const savedVisibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
@@ -95,11 +99,8 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    // Only run once on mount - initializeStore has its own guard against re-initialization
-    initializeStore().then(() => {
-      setMounted(true);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // AppLoader already handles initialization, just mark as mounted
+    setMounted(true);
   }, []);
 
   // Calculate timeline and quick links height to extend to bottom of viewport
@@ -195,7 +196,7 @@ function Dashboard() {
     });
 
   // Get today's tasks (for Overview card stats)
-  const todayTasks = tasks
+  const todayTasks = activeTasks
     .filter((t) => t.dueAt && (isToday(t.dueAt) || isOverdue(t.dueAt)) && t.status === 'open')
     .sort((a, b) => {
       if (a.dueAt && b.dueAt) {
@@ -248,7 +249,7 @@ function Dashboard() {
   const now = new Date();
   const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-  const overdueTasks = tasks.filter((d) => d.dueAt && isOverdue(d.dueAt) && d.status === 'open');
+  const overdueTasks = activeTasks.filter((d) => d.dueAt && isOverdue(d.dueAt) && d.status === 'open');
 
   // Get quick links - filter out hidden ones and add custom links
   const hiddenLinksForUniversity = settings.university && settings.hiddenQuickLinks
@@ -262,7 +263,8 @@ function Dashboard() {
 
   // Status summary
   const classesLeft = todayClasses.filter((c) => c.end > nowTime).length;
-  const overdueCount = overdueTasks.length + deadlines.filter((d) => d.dueAt && isOverdue(d.dueAt) && d.status === 'open').length;
+  // Note: deadlines array is legacy - all items are now in workItems/tasks
+  const overdueCount = overdueTasks.length;
 
   // Helper function to render card with appropriate component based on device
   const renderCard = (cardId: string, title: string, children: React.ReactNode, className?: string, subtitle?: string, variant: 'primary' | 'secondary' = 'primary') => {
@@ -302,7 +304,7 @@ function Dashboard() {
       />
 
       {/* Dashboard Header */}
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <h1
           style={{
             fontSize: isMobile ? '26px' : '34px',
@@ -318,7 +320,7 @@ function Dashboard() {
         </p>
       </div>
 
-      <div className="mx-auto w-full max-w-[1400px] flex flex-col" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px] flex flex-col" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
         {isMobile ? (
           // Mobile: Stack cards vertically
           <div className="flex flex-col" style={{ gap: '16px' }}>

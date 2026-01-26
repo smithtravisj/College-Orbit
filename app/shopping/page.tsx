@@ -102,7 +102,6 @@ export default function ShoppingPage() {
     loadPurchaseHistory,
     clearPurchaseHistory,
     restorePurchasedItem,
-    initializeStore,
   } = useAppStore();
 
   // Handle filters card collapse state changes and save to database
@@ -163,9 +162,9 @@ export default function ShoppingPage() {
   };
 
   useEffect(() => {
-    initializeStore();
+    // AppLoader already handles initialization
     setMounted(true);
-  }, [initializeStore]);
+  }, []);
 
   // Save active tab to localStorage when it changes
   useEffect(() => {
@@ -900,7 +899,7 @@ export default function ShoppingPage() {
   return (
     <PremiumGate feature="Shopping">
       {/* Shopping Header */}
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1
@@ -949,7 +948,7 @@ export default function ShoppingPage() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
         {/* Tab Navigation */}
         <div className="flex gap-2 mb-4" style={{ marginBottom: isMobile ? '12px' : '20px' }}>
           {TAB_ORDER.map((tab) => {

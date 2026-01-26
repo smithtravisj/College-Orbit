@@ -81,7 +81,7 @@ export default function ExamsPage() {
   const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
   const [showDeleteAllPast, setShowDeleteAllPast] = useState(false);
 
-  const { courses, exams, notes, settings, addExam, updateExam, deleteExam, bulkUpdateExams, bulkDeleteExams, initializeStore } = useAppStore();
+  const { courses, exams, notes, settings, addExam, updateExam, deleteExam, bulkUpdateExams, bulkDeleteExams } = useAppStore();
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -119,9 +119,9 @@ export default function ExamsPage() {
   };
 
   useEffect(() => {
-    initializeStore();
+    // AppLoader already handles initialization
     setMounted(true);
-  }, [initializeStore]);
+  }, []);
 
   // Check for exam ID in URL params to open preview modal
   useEffect(() => {
@@ -528,7 +528,7 @@ export default function ExamsPage() {
   return (
     <>
       {/* Exams Header */}
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1
@@ -561,7 +561,7 @@ export default function ExamsPage() {
           </Button>
         </div>
       </div>
-      <div className="mx-auto w-full max-w-[1400px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', overflow: 'visible', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', overflow: 'visible', position: 'relative', zIndex: 1 }}>
         <div className="grid grid-cols-12 gap-[var(--grid-gap)]" style={{ gap: isMobile ? '16px' : undefined, overflow: 'visible', position: 'relative', zIndex: 1 }}>
           {/* Filters sidebar - 3 columns */}
           <div className="col-span-12 lg:col-span-3" style={{ height: 'fit-content', position: isMobile ? 'static' : 'sticky', top: isMobile ? undefined : '24px', alignSelf: 'start' }}>

@@ -40,7 +40,7 @@ export default function TrialBanner() {
         borderColor: 'var(--border)',
       }}
     >
-      <div className="max-w-[1400px] mx-auto px-4 py-2 flex items-center justify-between gap-4">
+      <div className="max-w-[1800px] mx-auto px-4 py-2 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 text-sm">
           <Crown
             size={16}
