@@ -1653,13 +1653,13 @@ export default function AdminPage() {
           {/* External Services Card - Full Width */}
           <div style={{ marginBottom: isMobile ? '8px' : '24px' }}>
             <Card title="External Services">
-            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, 1fr)', gap: '12px' }}>
               <a
                 href="https://dashboard.stripe.com/acct_1Sr2ZaPr50btBHL1/dashboard"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  flex: 1,
+                  flex: '1 1 150px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',

@@ -355,6 +355,7 @@ export interface Settings {
   emailAccountAlerts?: boolean;
   emailDeadlineReminders?: boolean;
   emailTaskReminders?: boolean;
+  emailWeeklyDigest?: boolean;
   emailReadingReminders?: boolean;
   emailProjectReminders?: boolean;
   notifyAnnouncements?: boolean;

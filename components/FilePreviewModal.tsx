@@ -263,10 +263,26 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
   }, [hasNext, onNavigate, files, currentIndex]);
 
   const toggleFullscreen = useCallback(() => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
+    const elem = containerRef.current;
+    if (!elem) return;
+
+    // Check if already in fullscreen
+    const fullscreenElement = document.fullscreenElement || (document as any).webkitFullscreenElement;
+
+    if (fullscreenElement) {
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      }
     } else {
-      containerRef.current?.requestFullscreen();
+      // Enter fullscreen with cross-browser support
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if ((elem as any).webkitRequestFullscreen) {
+        (elem as any).webkitRequestFullscreen();
+      }
     }
   }, []);
 
@@ -295,11 +311,18 @@ export default function FilePreviewModal({ file, files, currentIndex = 0, onClos
     return () => window.removeEventListener('keydown', handler);
   }, [file, onClose, goPrev, goNext, zoomIn, zoomOut, rotateRight, reset, enableKeyboardShortcuts]);
 
-  // Fullscreen change listener
+  // Fullscreen change listener (with Safari support)
   useEffect(() => {
-    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    const handler = () => {
+      const fullscreenElement = document.fullscreenElement || (document as any).webkitFullscreenElement;
+      setIsFullscreen(!!fullscreenElement);
+    };
     document.addEventListener('fullscreenchange', handler);
-    return () => document.removeEventListener('fullscreenchange', handler);
+    document.addEventListener('webkitfullscreenchange', handler);
+    return () => {
+      document.removeEventListener('fullscreenchange', handler);
+      document.removeEventListener('webkitfullscreenchange', handler);
+    };
   }, []);
 
   // Handle image load to get natural dimensions

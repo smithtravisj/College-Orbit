@@ -126,6 +126,7 @@ export default function SettingsPage() {
   const [emailExamReminders, setEmailExamReminders] = useState(false);
   const [emailDeadlineReminders, setEmailDeadlineReminders] = useState(false);
   const [emailTaskReminders, setEmailTaskReminders] = useState(false);
+  const [emailWeeklyDigest, setEmailWeeklyDigest] = useState(false);
   const [emailReadingReminders, setEmailReadingReminders] = useState(false);
   const [emailProjectReminders, setEmailProjectReminders] = useState(false);
   const [notifyAnnouncements, setNotifyAnnouncements] = useState(false);
@@ -466,6 +467,7 @@ export default function SettingsPage() {
     setEmailTaskReminders(settings.emailTaskReminders === true);
     setEmailReadingReminders(settings.emailReadingReminders === true);
     setEmailProjectReminders(settings.emailProjectReminders === true);
+    setEmailWeeklyDigest(settings.emailWeeklyDigest === true);
 
     // Load in-app notification preferences
     setNotifyAnnouncements(settings.notifyAnnouncements === true);
@@ -4527,6 +4529,21 @@ export default function SettingsPage() {
                       onChange={async (e) => {
                         setEmailProjectReminders(e.target.checked);
                         await updateSettings({ emailProjectReminders: e.target.checked });
+                      }}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Weekly Digest</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Summary of upcoming work, exams, and deadlines</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={emailWeeklyDigest}
+                      onChange={async (e) => {
+                        setEmailWeeklyDigest(e.target.checked);
+                        await updateSettings({ emailWeeklyDigest: e.target.checked });
                       }}
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />

@@ -460,6 +460,7 @@ model Settings {
   emailAccountAlerts           Boolean  @default(false)
   emailDeadlineReminders       Boolean  @default(false)
   emailTaskReminders           Boolean  @default(false)
+  emailWeeklyDigest            Boolean  @default(false)
   notifyAnnouncements          Boolean  @default(false)
   notifyExamReminders          Boolean  @default(false)
   notifyAccountAlerts          Boolean  @default(false)

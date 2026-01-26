@@ -27,6 +27,7 @@ export const TOOLS_CARDS = {
   GPA_TREND_CHART: 'gpaTrendChart',
   WHAT_IF_PROJECTOR: 'whatIfProjector',
   GPA_CALCULATOR: 'gpaCalculator',
+  FINAL_GRADE_CALCULATOR: 'finalGradeCalculator',
   QUICK_LINKS: 'tools_quickLinks',
 } as const;
 
@@ -62,4 +63,5 @@ export const CARD_LABELS: Record<string, string> = {
   [TOOLS_CARDS.WHAT_IF_PROJECTOR]: 'What-If GPA Projector',
   [TOOLS_CARDS.GPA_TREND_CHART]: 'GPA Trend',
   [TOOLS_CARDS.GPA_CALCULATOR]: 'GPA Calculator',
+  [TOOLS_CARDS.FINAL_GRADE_CALCULATOR]: 'Final Grade Calculator',
 };

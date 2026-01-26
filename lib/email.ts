@@ -986,3 +986,189 @@ College Orbit © ${new Date().getFullYear()}
 
   console.log(`Announcement email sent to ${email}, id: ${data.id}`);
 }
+
+interface WeeklyDigestItem {
+  title: string;
+  courseName?: string;
+  dueAt: string;
+  type: 'assignment' | 'exam' | 'task';
+}
+
+interface SendWeeklyDigestEmailParams {
+  email: string;
+  name: string | null;
+  assignments: WeeklyDigestItem[];
+  exams: WeeklyDigestItem[];
+  tasks: WeeklyDigestItem[];
+  weekStart: string;
+  weekEnd: string;
+}
+
+/**
+ * Send weekly digest email to user
+ */
+export async function sendWeeklyDigestEmail({
+  email,
+  name,
+  assignments,
+  exams,
+  tasks,
+  weekStart,
+  weekEnd,
+}: SendWeeklyDigestEmailParams): Promise<void> {
+  const displayName = name || 'there';
+  const totalItems = assignments.length + exams.length + tasks.length;
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const renderItemList = (items: WeeklyDigestItem[], label: string, color: string) => {
+    if (items.length === 0) return '';
+    return `
+      <div style="margin-bottom: 24px;">
+        <p style="margin: 0 0 12px 0; font-size: 14px; color: ${color}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+          ${label} (${items.length})
+        </p>
+        ${items.map(item => `
+          <div style="padding: 12px 16px; background-color: #1a1a1c; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid ${color};">
+            <p style="margin: 0; color: #fafafa; font-weight: 500; font-size: 14px;">${item.title}</p>
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: #71717a;">
+              ${item.courseName ? `${item.courseName} · ` : ''}Due ${formatDate(item.dueAt)}
+            </p>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  };
+
+  const renderItemListText = (items: WeeklyDigestItem[], label: string) => {
+    if (items.length === 0) return '';
+    return `
+${label.toUpperCase()} (${items.length})
+${items.map(item => `  • ${item.title}${item.courseName ? ` - ${item.courseName}` : ''} (Due ${formatDate(item.dueAt)})`).join('\n')}
+`;
+  };
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html style="margin: 0; padding: 0; background-color: #0a0a0b;">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #0a0a0b;" bgcolor="#0a0a0b">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0a0a0b;" bgcolor="#0a0a0b">
+        <tr>
+          <td align="center" style="padding: 40px 20px;" bgcolor="#0a0a0b">
+            <table width="560" cellpadding="0" cellspacing="0" border="0" style="background-color: #111113; border-radius: 20px; border: 1px solid #252528;" bgcolor="#111113">
+              <!-- Header -->
+              <tr>
+                <td style="padding: 40px 40px 20px 40px; text-align: center;" bgcolor="#111113">
+                  <p style="margin: 0 0 8px 0; font-size: 14px; color: #8b5cf6; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">
+                    College Orbit
+                  </p>
+                  <h1 style="margin: 0; color: #fafafa; font-size: 28px; font-weight: 700; letter-spacing: -0.02em;">
+                    Your Week Ahead
+                  </h1>
+                  <p style="margin: 12px 0 0 0; font-size: 14px; color: #71717a;">
+                    ${weekStart} - ${weekEnd}
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Body -->
+              <tr>
+                <td style="padding: 20px 40px 40px 40px; color: #a1a1aa; font-size: 16px; line-height: 1.6;">
+                  <p style="margin: 0 0 24px 0;">Hi ${displayName},</p>
+
+                  ${totalItems === 0 ? `
+                    <div style="text-align: center; padding: 32px 0;">
+                      <p style="margin: 0; color: #71717a; font-size: 16px;">
+                        You have nothing due this week. Enjoy your free time!
+                      </p>
+                    </div>
+                  ` : `
+                    <p style="margin: 0 0 24px 0;">
+                      Here's what's coming up this week: <strong style="color: #fafafa;">${totalItems} item${totalItems !== 1 ? 's' : ''}</strong> due.
+                    </p>
+
+                    ${renderItemList(exams, 'Exams', '#ef4444')}
+                    ${renderItemList(assignments, 'Assignments', '#f59e0b')}
+                    ${renderItemList(tasks, 'Tasks', '#8b5cf6')}
+                  `}
+
+                  <!-- CTA Button -->
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td align="center" style="padding: 20px 0;">
+                        <a href="${APP_URL}/dashboard"
+                           style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+                                  color: #ffffff; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 16px;
+                                  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);">
+                          View Dashboard
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <p style="margin: 24px 0 0 0; font-size: 13px; color: #52525b; text-align: center;">
+                    You're receiving this because you enabled weekly digest emails.
+                    <a href="${APP_URL}/settings" style="color: #8b5cf6;">Manage preferences</a>
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="padding: 20px 40px; background-color: #0f0f11; border-top: 1px solid #252528;
+                           text-align: center; color: #71717a; font-size: 13px; border-radius: 0 0 20px 20px;">
+                  <p style="margin: 0;">
+                    College Orbit &copy; ${new Date().getFullYear()}
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const textContent = `
+Hi ${displayName},
+
+YOUR WEEK AHEAD (${weekStart} - ${weekEnd})
+
+${totalItems === 0 ? 'You have nothing due this week. Enjoy your free time!' : `Here's what's coming up this week: ${totalItems} item${totalItems !== 1 ? 's' : ''} due.
+${renderItemListText(exams, 'Exams')}${renderItemListText(assignments, 'Assignments')}${renderItemListText(tasks, 'Tasks')}`}
+
+View your dashboard: ${APP_URL}/dashboard
+
+You're receiving this because you enabled weekly digest emails.
+Manage preferences: ${APP_URL}/settings
+
+College Orbit © ${new Date().getFullYear()}
+  `.trim();
+
+  try {
+    const resend = getResend();
+    if (!resend) {
+      throw new Error('Resend API key not configured');
+    }
+
+    await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: email,
+      subject: `Your Week Ahead: ${totalItems} item${totalItems !== 1 ? 's' : ''} due`,
+      html: htmlContent,
+      text: textContent,
+    });
+    console.log(`Weekly digest email sent to ${email}`);
+  } catch (error) {
+    console.error('Resend error:', error);
+    throw new Error('Failed to send weekly digest email');
+  }
+}

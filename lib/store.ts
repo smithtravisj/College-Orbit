@@ -34,6 +34,7 @@ const DEFAULT_SETTINGS: Settings = {
   emailAccountAlerts: false,
   emailDeadlineReminders: false,
   emailTaskReminders: false,
+  emailWeeklyDigest: false,
   notifyAnnouncements: false,
   notifyExamReminders: false,
   notifyAccountAlerts: false,

@@ -12,6 +12,7 @@ import PomodoroTimer from '@/components/tools/PomodoroTimer';
 import GradeTracker from '@/components/tools/GradeTracker';
 import WhatIfProjector from '@/components/tools/WhatIfProjector';
 import GpaTrendChart from '@/components/tools/GpaTrendChart';
+import FinalGradeCalculator from '@/components/tools/FinalGradeCalculator';
 import { Plus, Trash2, X, Pencil, Lock, Crown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -35,6 +36,7 @@ const TOOL_TAB_MAPPING: Record<string, ToolsTab> = {
   [TOOLS_CARDS.GPA_CALCULATOR]: 'grades',
   [TOOLS_CARDS.GPA_TREND_CHART]: 'grades',
   [TOOLS_CARDS.WHAT_IF_PROJECTOR]: 'grades',
+  [TOOLS_CARDS.FINAL_GRADE_CALCULATOR]: 'grades',
 };
 
 // Order within productivity tab: Pomodoro first, then Quick Links
@@ -130,16 +132,27 @@ export default function ToolsPage() {
   const confirmBeforeDelete = settings.confirmBeforeDelete ?? true;
 
   // Tools card visibility is only customizable for premium users - free users see defaults
+  // Ensure any new cards added to the system are included in visible cards
+  const allToolsCards = Object.values(TOOLS_CARDS);
   const savedVisibleToolsCards = settings.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS;
-  const visibleToolsCards = subscription.isPremium ? savedVisibleToolsCards : DEFAULT_VISIBLE_TOOLS_CARDS;
+  const mergedVisibleToolsCards = [
+    ...savedVisibleToolsCards,
+    ...allToolsCards.filter((card) => !savedVisibleToolsCards.includes(card)),
+  ];
+  const visibleToolsCards = subscription.isPremium ? mergedVisibleToolsCards : DEFAULT_VISIBLE_TOOLS_CARDS;
 
   // Get the tools cards order from settings, or use the default (only applies to premium users)
+  // Ensure any new cards added to the system are included in the order
   const savedToolsCardsOrder = settings.toolsCardsOrder
     ? (typeof settings.toolsCardsOrder === 'string'
         ? JSON.parse(settings.toolsCardsOrder)
         : settings.toolsCardsOrder)
     : Object.values(TOOLS_CARDS);
-  const toolsCardsOrder = subscription.isPremium ? savedToolsCardsOrder : Object.values(TOOLS_CARDS);
+  const mergedToolsCardsOrder = [
+    ...savedToolsCardsOrder,
+    ...allToolsCards.filter((card) => !savedToolsCardsOrder.includes(card)),
+  ];
+  const toolsCardsOrder = subscription.isPremium ? mergedToolsCardsOrder : Object.values(TOOLS_CARDS);
 
   const gradePoints: { [key: string]: number } = {
     'A': 4.0,
@@ -643,6 +656,8 @@ export default function ToolsPage() {
           return renderLockedCard(cardId, 'What-If GPA Projector', 'See how future grades impact your GPA');
         case TOOLS_CARDS.GPA_CALCULATOR:
           return renderLockedCard(cardId, 'GPA Calculator', 'Calculate your GPA from individual courses');
+        case TOOLS_CARDS.FINAL_GRADE_CALCULATOR:
+          return renderLockedCard(cardId, 'Final Grade Calculator', 'Calculate what you need on your final');
       }
     }
 
@@ -669,6 +684,12 @@ export default function ToolsPage() {
         return visibleToolsCards.includes(cardId) && (
           <CollapsibleCard key={cardId} id="whatif-projector" title="What-If GPA Projector" subtitle="See how future grades impact your GPA" helpTooltip="See how potential future grades would affect your cumulative GPA. Add hypothetical courses to plan your academic goals and see what grades you need.">
             <WhatIfProjector />
+          </CollapsibleCard>
+        );
+      case TOOLS_CARDS.FINAL_GRADE_CALCULATOR:
+        return visibleToolsCards.includes(cardId) && (
+          <CollapsibleCard key={cardId} id="final-grade-calculator" title="Final Grade Calculator" subtitle="Calculate what you need on your final" helpTooltip="Find out exactly what score you need on your final exam to achieve your target grade. Enter your current grade and final exam weight to see the minimum score required.">
+            <FinalGradeCalculator theme={settings.theme} />
           </CollapsibleCard>
         );
       case TOOLS_CARDS.GPA_CALCULATOR:

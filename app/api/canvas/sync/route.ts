@@ -418,6 +418,10 @@ export const POST = withRateLimit(async function(req: NextRequest) {
             existingWorkItems.map(d => [d.canvasAssignmentId, { id: d.id, notes: d.notes, links: d.links as Array<{ label: string; url: string }> | null, status: d.status, type: d.type }])
           );
 
+          // Collect batch operations to avoid N+1 queries
+          const updateOperations: Array<ReturnType<typeof prisma.workItem.update>> = [];
+          const createOperations: Array<ReturnType<typeof prisma.workItem.create>> = [];
+
           for (const assignment of assignments) {
             try {
               const canvasAssignmentIdStr = String(assignment.id);
@@ -470,17 +474,19 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
                 // Don't override title or type - user may have customized them
                 // Do update dueAt since professors often change due dates
-                await prisma.workItem.update({
-                  where: { id: existingWorkItem.id },
-                  data: {
-                    dueAt: assignment.due_at ? new Date(assignment.due_at) : null,
-                    notes: mergedNotesContent,
-                    links: mergedLinksContent,
-                    canvasPointsPossible: assignment.points_possible,
-                    ...gradeData,
-                    ...statusUpdate,
-                  },
-                });
+                updateOperations.push(
+                  prisma.workItem.update({
+                    where: { id: existingWorkItem.id },
+                    data: {
+                      dueAt: assignment.due_at ? new Date(assignment.due_at) : null,
+                      notes: mergedNotesContent,
+                      links: mergedLinksContent,
+                      canvasPointsPossible: assignment.points_possible,
+                      ...gradeData,
+                      ...statusUpdate,
+                    },
+                  })
+                );
                 result.assignments.updated++;
                 if (syncOptions.grades && assignment.submission?.score !== null) {
                   result.grades.updated++;
@@ -494,26 +500,28 @@ export const POST = withRateLimit(async function(req: NextRequest) {
                   : `${USER_NOTES_HEADER}\n`;
 
                 // Create new work item with status based on Canvas completion
-                await prisma.workItem.create({
-                  data: {
-                    userId,
-                    courseId,
-                    title: assignment.name,
-                    type: 'assignment',
-                    dueAt: assignment.due_at ? new Date(assignment.due_at) : null,
-                    notes: initialNotes,
-                    canvasAssignmentId: canvasAssignmentIdStr,
-                    canvasPointsPossible: assignment.points_possible,
-                    status: isCanvasComplete ? 'done' : 'open',
-                    workingOn: false,
-                    pinned: false,
-                    tags: [],
-                    links: canvasLinks,
-                    files: [],
-                    checklist: [],
-                    ...gradeData,
-                  },
-                });
+                createOperations.push(
+                  prisma.workItem.create({
+                    data: {
+                      userId,
+                      courseId,
+                      title: assignment.name,
+                      type: 'assignment',
+                      dueAt: assignment.due_at ? new Date(assignment.due_at) : null,
+                      notes: initialNotes,
+                      canvasAssignmentId: canvasAssignmentIdStr,
+                      canvasPointsPossible: assignment.points_possible,
+                      status: isCanvasComplete ? 'done' : 'open',
+                      workingOn: false,
+                      pinned: false,
+                      tags: [],
+                      links: canvasLinks,
+                      files: [],
+                      checklist: [],
+                      ...gradeData,
+                    },
+                  })
+                );
                 result.assignments.created++;
                 if (syncOptions.grades && assignment.submission?.score !== null) {
                   result.grades.updated++;
@@ -523,6 +531,41 @@ export const POST = withRateLimit(async function(req: NextRequest) {
               result.assignments.errors.push(
                 `Failed to sync assignment ${assignment.name}: ${error instanceof Error ? error.message : 'Unknown error'}`
               );
+            }
+          }
+
+          // Execute all operations in a single transaction to avoid N+1 queries
+          // Falls back to individual operations if transaction fails
+          if (updateOperations.length > 0 || createOperations.length > 0) {
+            try {
+              await prisma.$transaction([...updateOperations, ...createOperations]);
+            } catch (txError) {
+              // Transaction failed - reset counts and retry individually
+              console.warn('[Canvas Sync] Transaction failed, falling back to individual operations:', txError);
+              result.assignments.updated -= updateOperations.length;
+              result.assignments.created -= createOperations.length;
+
+              // Retry each operation individually
+              for (const op of updateOperations) {
+                try {
+                  await op;
+                  result.assignments.updated++;
+                } catch (e) {
+                  result.assignments.errors.push(
+                    `Failed to update assignment: ${e instanceof Error ? e.message : 'Unknown error'}`
+                  );
+                }
+              }
+              for (const op of createOperations) {
+                try {
+                  await op;
+                  result.assignments.created++;
+                } catch (e) {
+                  result.assignments.errors.push(
+                    `Failed to create assignment: ${e instanceof Error ? e.message : 'Unknown error'}`
+                  );
+                }
+              }
             }
           }
         } catch (error) {
@@ -566,6 +609,10 @@ export const POST = withRateLimit(async function(req: NextRequest) {
           existingEvents.map(e => [e.canvasEventId, e.id])
         );
 
+        // Collect batch operations to avoid N+1 queries
+        const eventUpdateOperations: Array<ReturnType<typeof prisma.calendarEvent.update>> = [];
+        const eventCreateOperations: Array<ReturnType<typeof prisma.calendarEvent.create>> = [];
+
         for (const event of events) {
           try {
             const canvasEventIdStr = String(event.id);
@@ -583,36 +630,75 @@ export const POST = withRateLimit(async function(req: NextRequest) {
             if (existingEventId) {
               // Don't override title/description - user may have customized them
               // Do update times and location since those may change
-              await prisma.calendarEvent.update({
-                where: { id: existingEventId },
-                data: {
-                  startAt: new Date(event.start_at),
-                  endAt: event.end_at ? new Date(event.end_at) : null,
-                  allDay: event.all_day,
-                  location: event.location_name,
-                },
-              });
+              eventUpdateOperations.push(
+                prisma.calendarEvent.update({
+                  where: { id: existingEventId },
+                  data: {
+                    startAt: new Date(event.start_at),
+                    endAt: event.end_at ? new Date(event.end_at) : null,
+                    allDay: event.all_day,
+                    location: event.location_name,
+                  },
+                })
+              );
               result.events.updated++;
             } else {
               // Create new event
-              await prisma.calendarEvent.create({
-                data: {
-                  userId,
-                  title: event.title,
-                  description: cleanDescription,
-                  startAt: new Date(event.start_at),
-                  endAt: event.end_at ? new Date(event.end_at) : null,
-                  allDay: event.all_day,
-                  location: event.location_name,
-                  canvasEventId: canvasEventIdStr,
-                },
-              });
+              eventCreateOperations.push(
+                prisma.calendarEvent.create({
+                  data: {
+                    userId,
+                    title: event.title,
+                    description: cleanDescription,
+                    startAt: new Date(event.start_at),
+                    endAt: event.end_at ? new Date(event.end_at) : null,
+                    allDay: event.all_day,
+                    location: event.location_name,
+                    canvasEventId: canvasEventIdStr,
+                  },
+                })
+              );
               result.events.created++;
             }
           } catch (error) {
             result.events.errors.push(
               `Failed to sync event ${event.title}: ${error instanceof Error ? error.message : 'Unknown error'}`
             );
+          }
+        }
+
+        // Execute all event operations in a single transaction
+        // Falls back to individual operations if transaction fails
+        if (eventUpdateOperations.length > 0 || eventCreateOperations.length > 0) {
+          try {
+            await prisma.$transaction([...eventUpdateOperations, ...eventCreateOperations]);
+          } catch (txError) {
+            // Transaction failed - reset counts and retry individually
+            console.warn('[Canvas Sync] Events transaction failed, falling back to individual operations:', txError);
+            result.events.updated -= eventUpdateOperations.length;
+            result.events.created -= eventCreateOperations.length;
+
+            // Retry each operation individually
+            for (const op of eventUpdateOperations) {
+              try {
+                await op;
+                result.events.updated++;
+              } catch (e) {
+                result.events.errors.push(
+                  `Failed to update event: ${e instanceof Error ? e.message : 'Unknown error'}`
+                );
+              }
+            }
+            for (const op of eventCreateOperations) {
+              try {
+                await op;
+                result.events.created++;
+              } catch (e) {
+                result.events.errors.push(
+                  `Failed to create event: ${e instanceof Error ? e.message : 'Unknown error'}`
+                );
+              }
+            }
           }
         }
       } catch (error) {

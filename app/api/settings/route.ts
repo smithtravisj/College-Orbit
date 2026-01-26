@@ -40,6 +40,7 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
         emailAccountAlerts: false,
         emailDeadlineReminders: false,
         emailTaskReminders: false,
+        emailWeeklyDigest: false,
         notifyAnnouncements: false,
         notifyExamReminders: false,
         notifyAccountAlerts: false,
@@ -105,6 +106,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.emailAccountAlerts !== undefined) updateData.emailAccountAlerts = data.emailAccountAlerts;
     if (data.emailDeadlineReminders !== undefined) updateData.emailDeadlineReminders = data.emailDeadlineReminders;
     if (data.emailTaskReminders !== undefined) updateData.emailTaskReminders = data.emailTaskReminders;
+    if (data.emailWeeklyDigest !== undefined) updateData.emailWeeklyDigest = data.emailWeeklyDigest;
     if (data.notifyAnnouncements !== undefined) updateData.notifyAnnouncements = data.notifyAnnouncements;
     if (data.notifyExamReminders !== undefined) updateData.notifyExamReminders = data.notifyExamReminders;
     if (data.notifyAccountAlerts !== undefined) updateData.notifyAccountAlerts = data.notifyAccountAlerts;
