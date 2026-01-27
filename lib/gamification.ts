@@ -246,6 +246,34 @@ export async function processTaskCompletion(
       });
     }
 
+    // Update monthly XP total for college leaderboard (even in vacation mode)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { collegeId: true },
+    });
+
+    if (user?.collegeId) {
+      const now = new Date();
+    const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      await prisma.monthlyXpTotal.upsert({
+        where: {
+          userId_yearMonth: {
+            userId,
+            yearMonth,
+          },
+        },
+        update: {
+          totalXp: { increment: xpEarned },
+        },
+        create: {
+          userId,
+          collegeId: user.collegeId,
+          yearMonth,
+          totalXp: xpEarned,
+        },
+      });
+    }
+
     // Check for achievements (excluding streak-based ones)
     const newAchievements = await checkAchievements(userId, {
       totalTasks: userStreak.totalTasksCompleted + 1,
@@ -339,6 +367,34 @@ export async function processTaskCompletion(
       xpEarned,
     },
   });
+
+  // Update monthly XP total for college leaderboard
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { collegeId: true },
+  });
+
+  if (user?.collegeId) {
+    const now = new Date();
+    const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    await prisma.monthlyXpTotal.upsert({
+      where: {
+        userId_yearMonth: {
+          userId,
+          yearMonth,
+        },
+      },
+      update: {
+        totalXp: { increment: xpEarned },
+      },
+      create: {
+        userId,
+        collegeId: user.collegeId,
+        yearMonth,
+        totalXp: xpEarned,
+      },
+    });
+  }
 
   // Record the credit to prevent future exploits
   if (itemId) {

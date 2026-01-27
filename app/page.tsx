@@ -64,7 +64,7 @@ function Dashboard() {
   const activeTasks = useWorkItemsFlag ? workItems : tasks;
   const { isPremium } = useSubscription();
   const { hasAccessToFeature } = useBetaAccess();
-  const hasGamification = hasAccessToFeature('1.1.0'); // Gamification is beta-only until released
+  const hasGamification = hasAccessToFeature('1.0.0'); // Gamification is beta-only until released
   // Dashboard card visibility is only customizable for premium users - free users see defaults
   const savedVisibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
   const visibleDashboardCards = isPremium ? savedVisibleDashboardCards : DEFAULT_VISIBLE_DASHBOARD_CARDS;

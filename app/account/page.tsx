@@ -8,17 +8,18 @@ import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Shield, Download, Upload, Trash2, Eye, EyeOff, Crown, Monitor, Smartphone, Tablet, X, Calendar, Copy, FileText } from 'lucide-react';
+import { Shield, Download, Upload, Trash2, Eye, EyeOff, Crown, Monitor, Smartphone, Tablet, X, Calendar, Copy, FileText, Camera, Users, UserPlus, UserMinus, Check, Clock } from 'lucide-react';
 import { exportWorkItemsToPDF, exportScheduleToPDF } from '@/lib/pdfExport';
 import HelpTooltip from '@/components/ui/HelpTooltip';
 import { useSubscription } from '@/hooks/useSubscription';
+import { showSuccessToast, showErrorToast } from '@/components/ui/DeleteToast';
 import Link from 'next/link';
 
 export default function AccountPage() {
   const { data: session, update: updateSession } = useSession();
   const router = useRouter();
   const isMobile = useIsMobile();
-  const { exportData, importData, deleteAllData } = useAppStore();
+  const { exportData, importData, deleteAllData, fetchFriends, fetchFriendRequests, sendFriendRequest, acceptFriendRequest, declineFriendRequest, cancelFriendRequest, removeFriend, friends, pendingFriendRequests, sentFriendRequests, colleges, fetchColleges, updateSettings, settings } = useAppStore();
   const subscription = useSubscription();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -27,10 +28,23 @@ export default function AccountPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [securitySuccess, setSecuritySuccess] = useState('');
+
+  // Profile fields
+  const [username, setUsername] = useState('');
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [collegeId, setCollegeId] = useState<string | null>(null);
+  const [collegeLoading, setCollegeLoading] = useState(true);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const profileImageInputRef = useRef<HTMLInputElement>(null);
+
+  // Friends
+  const [friendIdentifier, setFriendIdentifier] = useState('');
+  const [friendRequestLoading, setFriendRequestLoading] = useState(false);
+  const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
+  const [removingFriendId, setRemovingFriendId] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState('');
   const [importMessage, setImportMessage] = useState('');
   const [deleteMessage, setDeleteMessage] = useState('');
@@ -70,6 +84,89 @@ export default function AccountPage() {
       setEmail(session.user.email || '');
     }
   }, [session]);
+
+  // Fetch profile data (including username, profileImage, college)
+  const [profileCollegeId, setProfileCollegeId] = useState<string | null | undefined>(undefined);
+  const hasFetchedProfile = useRef(false);
+
+  useEffect(() => {
+    if (!session?.user || hasFetchedProfile.current) return;
+
+    const fetchProfile = async () => {
+      hasFetchedProfile.current = true;
+      try {
+        const response = await fetch('/api/user/profile');
+        if (response.ok) {
+          const data = await response.json();
+          setUsername(data.user.username || '');
+          setProfileImage(data.user.profileImage || null);
+          setProfileCollegeId(data.user.collegeId || null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile:', err);
+        hasFetchedProfile.current = false; // Allow retry on error
+      }
+    };
+
+    fetchProfile();
+  }, [session?.user]);
+
+  // Initialize collegeId once we have both profile data and colleges loaded
+  useEffect(() => {
+    // Wait for profile fetch to complete and colleges to load
+    if (profileCollegeId === undefined || colleges.length === 0) return;
+
+    // Profile has collegeId - use it
+    if (profileCollegeId) {
+      setCollegeId(profileCollegeId);
+      setCollegeLoading(false);
+      return;
+    }
+
+    // No profile collegeId, try to get from settings.university
+    if (settings.university) {
+      const college = colleges.find(c => c.fullName === settings.university);
+      if (college?.id) {
+        setCollegeId(college.id);
+      }
+    }
+    setCollegeLoading(false);
+  }, [profileCollegeId, settings.university, colleges]);
+
+  // Fetch friends, friend requests, and colleges on mount
+  useEffect(() => {
+    if (!session?.user) return;
+
+    fetchFriends();
+    fetchFriendRequests();
+    fetchColleges();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.email]);
+
+  // Username availability check with debounce
+  useEffect(() => {
+    if (!username || username.length < 3) {
+      setUsernameAvailable(null);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      setCheckingUsername(true);
+      try {
+        const response = await fetch(`/api/user/check-username?username=${encodeURIComponent(username)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setUsernameAvailable(data.available);
+        }
+      } catch (err) {
+        console.error('Failed to check username:', err);
+      } finally {
+        setCheckingUsername(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [username]);
 
   // Fetch active sessions (registration handled globally in SessionRegistrar)
   useEffect(() => {
@@ -357,13 +454,11 @@ export default function AccountPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     setLoading(true);
 
     // Validate passwords match if provided
     if (password && password !== confirmPassword) {
-      setError('Passwords do not match');
+      showErrorToast('Passwords do not match');
       setLoading(false);
       return;
     }
@@ -372,6 +467,15 @@ export default function AccountPage() {
       const updateData: any = { name, email };
       if (password) {
         updateData.password = password;
+      }
+      if (username !== undefined) {
+        updateData.username = username;
+      }
+      if (profileImage !== undefined) {
+        updateData.profileImage = profileImage;
+      }
+      if (collegeId !== undefined) {
+        updateData.collegeId = collegeId || '';
       }
 
       const response = await fetch('/api/user/profile', {
@@ -382,12 +486,12 @@ export default function AccountPage() {
 
       if (!response.ok) {
         const { error } = await response.json();
-        setError(error || 'Failed to update account');
+        showErrorToast(error || 'Failed to update account');
         setLoading(false);
         return;
       }
 
-      setSuccess('Account updated successfully!');
+      showSuccessToast('Account updated successfully!');
       setPassword('');
       setConfirmPassword('');
       setLoading(false);
@@ -398,7 +502,7 @@ export default function AccountPage() {
       // Refresh the page data
       router.refresh();
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      showErrorToast('An error occurred. Please try again.');
       setLoading(false);
     }
   };
@@ -511,6 +615,82 @@ export default function AccountPage() {
     }
   };
 
+  // Profile image upload handler
+  const handleProfileImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      showErrorToast('Profile image must be less than 5MB');
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      showErrorToast('Please upload an image file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setProfileImage(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Send friend request handler
+  const handleSendFriendRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!friendIdentifier.trim()) return;
+
+    setFriendRequestLoading(true);
+
+    const result = await sendFriendRequest(friendIdentifier.trim());
+
+    if (result.success) {
+      showSuccessToast('Friend request sent!');
+      setFriendIdentifier('');
+    } else {
+      showErrorToast(result.error || 'Failed to send request');
+    }
+
+    setFriendRequestLoading(false);
+  };
+
+  // Handle accept/decline friend request
+  const handleFriendRequestAction = async (requestId: string, action: 'accept' | 'decline') => {
+    setProcessingRequestId(requestId);
+    const result = action === 'accept'
+      ? await acceptFriendRequest(requestId)
+      : await declineFriendRequest(requestId);
+
+    if (!result.success) {
+      showErrorToast(result.error || `Failed to ${action} request`);
+    }
+    setProcessingRequestId(null);
+  };
+
+  // Handle cancel sent request
+  const handleCancelRequest = async (requestId: string) => {
+    setProcessingRequestId(requestId);
+    const result = await cancelFriendRequest(requestId);
+    if (!result.success) {
+      showErrorToast(result.error || 'Failed to cancel request');
+    }
+    setProcessingRequestId(null);
+  };
+
+  // Handle remove friend
+  const handleRemoveFriend = async (friendId: string) => {
+    setRemovingFriendId(friendId);
+    const result = await removeFriend(friendId);
+    if (!result.success) {
+      showErrorToast(result.error || 'Failed to remove friend');
+    }
+    setRemovingFriendId(null);
+  };
+
   const formatLastLogin = (dateStr: string | null | undefined) => {
     if (!dateStr) return 'Never';
     const date = new Date(dateStr);
@@ -556,22 +736,78 @@ export default function AccountPage() {
       </div>
       <div className="mx-auto w-full max-w-[1800px]" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
         <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-[var(--grid-gap)]">
-          <Card title="Account Information">
+          <Card title="Profile & Account">
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                  <p className="text-sm text-red-500">{error}</p>
-                </div>
-              )}
 
-              {success && (
-                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-                  <p className="text-sm text-green-500">{success}</p>
+              {/* Profile Photo Section */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div
+                  style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--panel-2)',
+                    border: '2px solid var(--border)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                  }}
+                >
+                  {profileImage ? (
+                    <img
+                      src={profileImage}
+                      alt="Profile"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: '28px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                      {name ? name.charAt(0).toUpperCase() : '?'}
+                    </span>
+                  )}
                 </div>
-              )}
+                <div>
+                  <input
+                    ref={profileImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfileImageUpload}
+                    style={{ display: 'none' }}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => profileImageInputRef.current?.click()}
+                  >
+                    <Camera size={16} />
+                    {profileImage ? 'Change Photo' : 'Upload Photo'}
+                  </Button>
+                  {profileImage && (
+                    <button
+                      type="button"
+                      onClick={() => setProfileImage(null)}
+                      style={{
+                        marginLeft: '8px',
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--danger)',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                    Max 5MB. JPG, PNG, GIF.
+                  </p>
+                </div>
+              </div>
 
               <div>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '8px' }}>
                   Full Name
                 </label>
                 <Input
@@ -582,8 +818,92 @@ export default function AccountPage() {
                 />
               </div>
 
+              {/* Username field */}
               <div>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '8px' }}>
+                  Username
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <Input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                    placeholder="username"
+                    maxLength={20}
+                    style={{ paddingRight: '40px' }}
+                  />
+                  {username.length >= 3 && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                      }}
+                    >
+                      {checkingUsername ? (
+                        <div style={{ width: '16px', height: '16px', border: '2px solid var(--border)', borderTopColor: 'var(--link)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                      ) : usernameAvailable === true ? (
+                        <Check size={16} style={{ color: 'var(--success)' }} />
+                      ) : usernameAvailable === false ? (
+                        <X size={16} style={{ color: 'var(--danger)' }} />
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                  3-20 characters, letters, numbers, and underscores only.
+                  {username.length >= 3 && usernameAvailable === false && (
+                    <span style={{ color: 'var(--danger)' }}> Username taken.</span>
+                  )}
+                </p>
+              </div>
+
+              {/* College selector */}
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '8px' }}>
+                  University / College
+                </label>
+                <select
+                  value={collegeId || ''}
+                  onChange={(e) => {
+                    const newCollegeId = e.target.value || null;
+                    setCollegeId(newCollegeId);
+                    // Sync with settings.university for theming
+                    const selectedCollege = colleges.find(c => c.id === newCollegeId);
+                    updateSettings({ university: selectedCollege?.fullName || null });
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    paddingRight: '40px',
+                    fontSize: '14px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--panel-2)',
+                    color: 'var(--text)',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 12px center',
+                  }}
+                >
+                  <option value="">{collegeLoading ? 'Loading...' : 'Select your school (optional)'}</option>
+                  {colleges.map((college) => (
+                    <option key={college.id} value={college.id}>
+                      {college.fullName} ({college.acronym})
+                    </option>
+                  ))}
+                </select>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                  Used for college leaderboards and community features.
+                </p>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '8px' }}>
                   Email Address
                 </label>
                 <Input
@@ -694,157 +1014,296 @@ export default function AccountPage() {
             </form>
           </Card>
 
-          {/* Data & Backup */}
-          <Card title="Data & Backup">
-            <div className="space-y-4">
-              <div style={{ paddingBottom: '12px' }}>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
-                  Export your data
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
-                  Download a backup of all your data as a JSON file
-                </p>
-                <Button size={isMobile ? 'sm' : 'lg'} onClick={handleExport} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
-                  <Upload size={18} />
-                  Export Data
-                </Button>
-                {exportMessage && (
-                  <p className="text-sm text-[var(--success)]" style={{ marginTop: '8px' }}>{exportMessage}</p>
-                )}
-              </div>
+          {/* Friends & Subscription Column */}
+          <div className="flex flex-col gap-[var(--grid-gap)]">
+          {/* Friends Section */}
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+              <Users size={20} style={{ color: 'var(--text)' }} />
+              <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)', margin: 0 }}>Friends</h2>
+            </div>
 
-              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', paddingBottom: '12px' }}>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
-                  Import your data
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
-                  Restore data from a previous backup
+
+            {/* Pending Friend Requests */}
+            {pendingFriendRequests.length > 0 && (
+              <div style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
+                <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '12px' }}>
+                  Pending Requests ({pendingFriendRequests.length})
                 </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".json"
-                  onChange={handleImport}
-                  className="hidden"
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {pendingFriendRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px',
+                        backgroundColor: 'var(--panel-2)',
+                        borderRadius: '8px',
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div
+                          style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            backgroundColor: 'var(--border)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          {request.sender?.profileImage ? (
+                            <img src={request.sender.profileImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                              {request.sender?.name?.charAt(0) || request.sender?.username?.charAt(0) || '?'}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text)', margin: 0 }}>
+                            {request.sender?.name || request.sender?.username || 'Unknown'}
+                          </p>
+                          {request.sender?.username && request.sender?.name && (
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>@{request.sender.username}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                          onClick={() => handleFriendRequestAction(request.id, 'accept')}
+                          disabled={processingRequestId === request.id}
+                          style={{
+                            padding: '8px',
+                            backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                            color: 'var(--success)',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: processingRequestId === request.id ? 'not-allowed' : 'pointer',
+                            opacity: processingRequestId === request.id ? 0.5 : 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                          title="Accept"
+                        >
+                          <Check size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleFriendRequestAction(request.id, 'decline')}
+                          disabled={processingRequestId === request.id}
+                          style={{
+                            padding: '8px',
+                            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                            color: 'var(--danger)',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: processingRequestId === request.id ? 'not-allowed' : 'pointer',
+                            opacity: processingRequestId === request.id ? 0.5 : 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                          title="Decline"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Add Friend Form */}
+            <div style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
+              <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '12px' }}>
+                Add Friend
+              </p>
+              <form onSubmit={handleSendFriendRequest} style={{ display: 'flex', gap: '8px' }}>
+                <Input
+                  type="text"
+                  value={friendIdentifier}
+                  onChange={(e) => setFriendIdentifier(e.target.value)}
+                  placeholder="Username or email"
+                  style={{ flex: 1 }}
                 />
-                <Button variant="secondary" size={isMobile ? 'sm' : 'lg'} onClick={() => fileInputRef.current?.click()} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
-                  <Download size={18} />
-                  Import Data
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size={isMobile ? 'sm' : 'lg'}
+                  disabled={friendRequestLoading || !friendIdentifier.trim()}
+                  style={{ paddingLeft: '16px', paddingRight: '16px' }}
+                >
+                  <UserPlus size={16} />
+                  {friendRequestLoading ? 'Sending...' : 'Add'}
                 </Button>
-                {importMessage && (
-                  <p style={{ marginTop: '8px', fontSize: '14px', color: importMessage.includes('✓') ? 'var(--success)' : 'var(--danger)' }}>{importMessage}</p>
-                )}
-              </div>
+              </form>
+            </div>
 
-              {/* Calendar Export */}
-              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', paddingBottom: '12px' }}>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Calendar size={16} />
-                  Export to Google Calendar / iCal
-                  <HelpTooltip text="Download .ics: One-time export file to import into any calendar app. Subscription URL: Auto-syncing link that keeps your calendar updated when changes are made." size={14} width={260} />
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
-                  Export your deadlines, exams, tasks, and course schedule to Google Calendar, Apple Calendar, or any calendar app.
+            {/* Sent Requests */}
+            {sentFriendRequests.length > 0 && (
+              <div style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
+                <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '12px' }}>
+                  Sent Requests ({sentFriendRequests.length})
                 </p>
-
-                <div style={{ display: 'flex', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
-                  <Button
-                    size={isMobile ? 'sm' : 'lg'}
-                    onClick={handleCalendarDownload}
-                    disabled={calendarLoading}
-                    style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}
-                  >
-                    <Download size={18} />
-                    Download .ics
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size={isMobile ? 'sm' : 'lg'}
-                    onClick={handleCopyCalendarUrl}
-                    disabled={calendarLoading || !calendarToken}
-                    style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}
-                  >
-                    <Copy size={18} />
-                    Copy Subscription URL
-                  </Button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {sentFriendRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px',
+                        backgroundColor: 'var(--panel-2)',
+                        borderRadius: '8px',
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div
+                          style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            backgroundColor: 'var(--border)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          {request.receiver?.profileImage ? (
+                            <img src={request.receiver.profileImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                              {request.receiver?.name?.charAt(0) || request.receiver?.username?.charAt(0) || '?'}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text)', margin: 0 }}>
+                            {request.receiver?.name || request.receiver?.username || 'Unknown'}
+                          </p>
+                          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Clock size={12} /> Pending
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleCancelRequest(request.id)}
+                        disabled={processingRequestId === request.id}
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: 'transparent',
+                          color: 'var(--text-muted)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          cursor: processingRequestId === request.id ? 'not-allowed' : 'pointer',
+                          opacity: processingRequestId === request.id ? 0.5 : 1,
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ))}
                 </div>
-
-                {calendarMessage && (
-                  <p style={{
-                    marginTop: '8px',
-                    fontSize: '14px',
-                    color: calendarMessage.includes('Failed') ? 'var(--danger)' : 'var(--success)',
-                  }}>
-                    {calendarMessage}
-                  </p>
-                )}
               </div>
+            )}
 
-              {/* PDF Export */}
-              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', paddingBottom: '12px' }}>
-                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FileText size={16} />
-                  Export to PDF
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
-                  Download printable PDFs of your work items or weekly class schedule.
+            {/* Friends List */}
+            <div>
+              <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '12px' }}>
+                Your Friends ({friends.length})
+              </p>
+              {friends.length === 0 ? (
+                <p style={{ fontSize: '14px', color: 'var(--text-muted)', textAlign: 'center', padding: '24px 0' }}>
+                  No friends yet. Add friends to compete on leaderboards!
                 </p>
-
-                <div style={{ display: 'flex', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
-                  <Button
-                    size={isMobile ? 'sm' : 'lg'}
-                    onClick={handleExportWorkItemsPDF}
-                    disabled={pdfExportLoading}
-                    style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}
-                  >
-                    <Download size={18} />
-                    Work Items PDF
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size={isMobile ? 'sm' : 'lg'}
-                    onClick={handleExportSchedulePDF}
-                    disabled={pdfExportLoading}
-                    style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}
-                  >
-                    <Calendar size={18} />
-                    Schedule PDF
-                  </Button>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {friends.map((friend) => (
+                    <div
+                      key={friend.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px',
+                        backgroundColor: 'var(--panel-2)',
+                        borderRadius: '8px',
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            backgroundColor: 'var(--border)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          {friend.profileImage ? (
+                            <img src={friend.profileImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                              {friend.name?.charAt(0) || friend.username?.charAt(0) || '?'}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text)', margin: 0 }}>
+                            {friend.name || friend.username || 'Unknown'}
+                          </p>
+                          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+                            {friend.username && `@${friend.username} · `}
+                            Level {friend.xp.level} · {friend.xp.total.toLocaleString()} XP
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveFriend(friend.id)}
+                        disabled={removingFriendId === friend.id}
+                        style={{
+                          padding: '6px',
+                          backgroundColor: 'transparent',
+                          color: 'var(--text-muted)',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: removingFriendId === friend.id ? 'not-allowed' : 'pointer',
+                          opacity: removingFriendId === friend.id ? 0.5 : 1,
+                        }}
+                        title="Remove friend"
+                        onMouseEnter={(e) => {
+                          if (removingFriendId !== friend.id) {
+                            e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                            e.currentTarget.style.color = '#ef4444';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.color = 'var(--text-muted)';
+                        }}
+                      >
+                        <UserMinus size={16} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-
-                {pdfExportMessage && (
-                  <p style={{
-                    marginTop: '8px',
-                    fontSize: '14px',
-                    color: pdfExportMessage.includes('Failed') ? 'var(--danger)' : 'var(--success)',
-                  }}>
-                    {pdfExportMessage}
-                  </p>
-                )}
-              </div>
-
-              {/* Danger Zone */}
-              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
-                <label className="block text-sm font-medium text-[var(--danger)]" style={{ marginBottom: '8px' }}>
-                  Danger Zone
-                </label>
-                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
-                  Permanently delete your data or account. These actions cannot be undone.
-                </p>
-                <div style={{ display: 'flex', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
-                  <Button variant="danger" size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAllData} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
-                    <Trash2 size={18} />
-                    Delete All Data
-                  </Button>
-                  <Button variant="danger" size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAccount} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
-                    <Trash2 size={18} />
-                    Delete Account
-                  </Button>
-                </div>
-                {deleteMessage && (
-                  <p style={{ marginTop: '8px', fontSize: '14px', color: deleteMessage.includes('✓') ? 'var(--success)' : 'var(--danger)' }}>{deleteMessage}</p>
-                )}
-              </div>
+              )}
             </div>
           </Card>
 
@@ -1000,6 +1459,161 @@ export default function AccountPage() {
                 )}
               </div>
             )}
+          </Card>
+          </div>
+
+          {/* Data & Backup */}
+          <Card title="Data & Backup">
+            <div className="space-y-4">
+              <div style={{ paddingBottom: '12px' }}>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
+                  Export your data
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Download a backup of all your data as a JSON file
+                </p>
+                <Button size={isMobile ? 'sm' : 'lg'} onClick={handleExport} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
+                  <Upload size={18} />
+                  Export Data
+                </Button>
+                {exportMessage && (
+                  <p className="text-sm text-[var(--success)]" style={{ marginTop: '8px' }}>{exportMessage}</p>
+                )}
+              </div>
+
+              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', paddingBottom: '12px' }}>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
+                  Import your data
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Restore data from a previous backup
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleImport}
+                  className="hidden"
+                />
+                <Button variant="secondary" size={isMobile ? 'sm' : 'lg'} onClick={() => fileInputRef.current?.click()} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
+                  <Download size={18} />
+                  Import Data
+                </Button>
+                {importMessage && (
+                  <p style={{ marginTop: '8px', fontSize: '14px', color: importMessage.includes('✓') ? 'var(--success)' : 'var(--danger)' }}>{importMessage}</p>
+                )}
+              </div>
+
+              {/* Calendar Export */}
+              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', paddingBottom: '12px' }}>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Calendar size={16} />
+                  Export to Google Calendar / iCal
+                  <HelpTooltip text="Download .ics: One-time export file to import into any calendar app. Subscription URL: Auto-syncing link that keeps your calendar updated when changes are made." size={14} width={260} />
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Export your deadlines, exams, tasks, and course schedule to Google Calendar, Apple Calendar, or any calendar app.
+                </p>
+
+                <div style={{ display: 'flex', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    onClick={handleCalendarDownload}
+                    disabled={calendarLoading}
+                    style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}
+                  >
+                    <Download size={18} />
+                    Download .ics
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size={isMobile ? 'sm' : 'lg'}
+                    onClick={handleCopyCalendarUrl}
+                    disabled={calendarLoading || !calendarToken}
+                    style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}
+                  >
+                    <Copy size={18} />
+                    Copy Subscription URL
+                  </Button>
+                </div>
+
+                {calendarMessage && (
+                  <p style={{
+                    marginTop: '8px',
+                    fontSize: '14px',
+                    color: calendarMessage.includes('Failed') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {calendarMessage}
+                  </p>
+                )}
+              </div>
+
+              {/* PDF Export */}
+              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', paddingBottom: '12px' }}>
+                <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FileText size={16} />
+                  Export to PDF
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Download printable PDFs of your work items or weekly class schedule.
+                </p>
+
+                <div style={{ display: 'flex', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    onClick={handleExportWorkItemsPDF}
+                    disabled={pdfExportLoading}
+                    style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}
+                  >
+                    <Download size={18} />
+                    Work Items PDF
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size={isMobile ? 'sm' : 'lg'}
+                    onClick={handleExportSchedulePDF}
+                    disabled={pdfExportLoading}
+                    style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}
+                  >
+                    <Calendar size={18} />
+                    Schedule PDF
+                  </Button>
+                </div>
+
+                {pdfExportMessage && (
+                  <p style={{
+                    marginTop: '8px',
+                    fontSize: '14px',
+                    color: pdfExportMessage.includes('Failed') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {pdfExportMessage}
+                  </p>
+                )}
+              </div>
+
+              {/* Danger Zone */}
+              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
+                <label className="block text-sm font-medium text-[var(--danger)]" style={{ marginBottom: '8px' }}>
+                  Danger Zone
+                </label>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Permanently delete your data or account. These actions cannot be undone.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
+                  <Button variant="danger" size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAllData} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
+                    <Trash2 size={18} />
+                    Delete All Data
+                  </Button>
+                  <Button variant="danger" size={isMobile ? 'sm' : 'lg'} onClick={handleDeleteAccount} style={{ paddingLeft: isMobile ? '12px' : '16px', paddingRight: isMobile ? '12px' : '16px' }}>
+                    <Trash2 size={18} />
+                    Delete Account
+                  </Button>
+                </div>
+                {deleteMessage && (
+                  <p style={{ marginTop: '8px', fontSize: '14px', color: deleteMessage.includes('✓') ? 'var(--success)' : 'var(--danger)' }}>{deleteMessage}</p>
+                )}
+              </div>
+            </div>
           </Card>
 
           {/* Security Section */}

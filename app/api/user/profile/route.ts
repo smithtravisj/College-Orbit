@@ -20,6 +20,16 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
         id: true,
         name: true,
         email: true,
+        username: true,
+        profileImage: true,
+        collegeId: true,
+        college: {
+          select: {
+            id: true,
+            fullName: true,
+            acronym: true,
+          },
+        },
       },
     });
 
@@ -37,6 +47,9 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
   }
 });
 
+// Username validation regex: 3-20 chars, alphanumeric + underscores
+const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
+
 // PATCH update user profile
 export const PATCH = withRateLimit(async function(req: NextRequest) {
   try {
@@ -48,8 +61,8 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     }
 
     const data = await req.json();
-    const { name, email, password } = data;
-    console.log('Updating profile for user:', session.user.id, { name, email, password: password ? 'provided' : 'not provided' });
+    const { name, email, password, username, profileImage, collegeId } = data;
+    console.log('Updating profile for user:', session.user.id, { name, email, password: password ? 'provided' : 'not provided', username, collegeId });
 
     // Check if email is already in use by another user
     if (email) {
@@ -61,6 +74,59 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
         return NextResponse.json(
           { error: 'Email already in use' },
           { status: 409 }
+        );
+      }
+    }
+
+    // Validate username if provided
+    if (username !== undefined && username !== null && username !== '') {
+      if (!USERNAME_REGEX.test(username)) {
+        return NextResponse.json(
+          { error: 'Username must be 3-20 characters, alphanumeric and underscores only' },
+          { status: 400 }
+        );
+      }
+
+      // Check if username is already taken by another user
+      const existingUsername = await prisma.user.findUnique({
+        where: { username },
+      });
+
+      if (existingUsername && existingUsername.id !== session.user.id) {
+        return NextResponse.json(
+          { error: 'Username already taken' },
+          { status: 409 }
+        );
+      }
+    }
+
+    // Validate profile image if provided (max 5MB base64)
+    if (profileImage !== undefined && profileImage !== null && profileImage !== '') {
+      if (!profileImage.startsWith('data:image/')) {
+        return NextResponse.json(
+          { error: 'Invalid image format' },
+          { status: 400 }
+        );
+      }
+      // Base64 is ~33% larger than binary, so 5MB binary ≈ 6.7MB base64
+      if (profileImage.length > 7 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: 'Profile image must be less than 5MB' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate collegeId if provided
+    if (collegeId !== undefined && collegeId !== null && collegeId !== '') {
+      const college = await prisma.college.findUnique({
+        where: { id: collegeId },
+      });
+
+      if (!college) {
+        return NextResponse.json(
+          { error: 'Invalid college' },
+          { status: 400 }
         );
       }
     }
@@ -78,8 +144,17 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
       }
       updateData.passwordHash = await bcrypt.hash(password, 10);
     }
+    if (username !== undefined) {
+      updateData.username = username === '' ? null : username;
+    }
+    if (profileImage !== undefined) {
+      updateData.profileImage = profileImage === '' ? null : profileImage;
+    }
+    if (collegeId !== undefined) {
+      updateData.collegeId = collegeId === '' ? null : collegeId;
+    }
 
-    console.log('Update data:', updateData);
+    console.log('Update data:', { ...updateData, profileImage: updateData.profileImage ? '[base64 data]' : undefined });
 
     if (Object.keys(updateData).length === 0) {
       console.log('No fields to update');
@@ -93,10 +168,20 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
         id: true,
         name: true,
         email: true,
+        username: true,
+        profileImage: true,
+        collegeId: true,
+        college: {
+          select: {
+            id: true,
+            fullName: true,
+            acronym: true,
+          },
+        },
       },
     });
 
-    console.log('User updated successfully:', user);
+    console.log('User updated successfully:', { ...user, profileImage: user.profileImage ? '[base64 data]' : null });
     return NextResponse.json({ user });
   } catch (error) {
     console.error('Error updating profile:', error);

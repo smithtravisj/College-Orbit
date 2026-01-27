@@ -12,6 +12,8 @@ model User {
   email                    String    @unique
   passwordHash             String
   name                     String?
+  username                 String?   @unique
+  profileImage             String?   // Base64 data URL
   resetPasswordToken       String?   @unique
   resetPasswordTokenExpiry DateTime?
   createdAt                DateTime  @default(now())
@@ -20,6 +22,10 @@ model User {
   lastLogin                DateTime?
   sessionInvalidatedAt     DateTime?
   calendarToken            String?   @unique // Token for iCal subscription URL
+
+  // College relation
+  collegeId String?
+  college   College? @relation(fields: [collegeId], references: [id])
 
   // Subscription fields
   subscriptionTier      String    @default("trial")
@@ -64,7 +70,16 @@ model User {
   achievements              UserAchievement[]
   dailyActivities           DailyActivity[]
 
+  // Friend relations
+  sentFriendRequests     FriendRequest[] @relation("SentRequests")
+  receivedFriendRequests FriendRequest[] @relation("ReceivedRequests")
+  friendsAsUser1         Friendship[]    @relation("FriendUser1")
+  friendsAsUser2         Friendship[]    @relation("FriendUser2")
+  monthlyXpTotals        MonthlyXpTotal[]
+
   @@index([email])
+  @@index([username])
+  @@index([collegeId])
   @@index([subscriptionTier])
   @@index([stripeCustomerId])
 }
@@ -796,6 +811,9 @@ model College {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  users           User[]
+  monthlyXpTotals MonthlyXpTotal[]
+
   @@index([isActive])
   @@index([fullName])
 }
@@ -1095,4 +1113,51 @@ model DailyActivity {
   @@unique([userId, activityDate])
   @@index([userId])
   @@index([activityDate])
+}
+
+// Friends System Models
+model FriendRequest {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  status     String   @default("pending") // pending, accepted, declined
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sender   User @relation("SentRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  user1Id   String   // Lower lexicographic ID
+  user2Id   String   // Higher lexicographic ID
+  createdAt DateTime @default(now())
+
+  user1 User @relation("FriendUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2 User @relation("FriendUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
+}
+
+model MonthlyXpTotal {
+  id        String   @id @default(cuid())
+  userId    String
+  collegeId String
+  yearMonth String   // Format: "2026-01"
+  totalXp   Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, yearMonth])
+  @@index([collegeId, yearMonth])
 }

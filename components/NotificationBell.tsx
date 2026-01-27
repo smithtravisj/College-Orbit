@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, X, Check, Clock, AlertCircle, Crown, CreditCard, Megaphone, Gift, Shield, UserPlus, FileText, CheckSquare, MessageCircle, Eye, Link } from 'lucide-react';
+import { Bell, X, Check, Clock, AlertCircle, Crown, CreditCard, Megaphone, Gift, Shield, UserPlus, FileText, CheckSquare, MessageCircle, Eye, Link, UserCheck, UserX } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { CanvasBadge } from './CanvasBadge';
 
@@ -213,6 +213,16 @@ export default function NotificationBell() {
     // Admin notifications
     if (type === 'new_user_signup') {
       return <UserPlus size={18} style={{ color: '#10b981' }} />;
+    }
+    // Friend notifications
+    if (type === 'friend_request') {
+      return <UserPlus size={18} style={{ color: '#8b5cf6' }} />; // Purple - someone sent you a request
+    }
+    if (type === 'friend_request_accepted') {
+      return <UserCheck size={18} style={{ color: '#10b981' }} />; // Green - your request accepted
+    }
+    if (type === 'friend_request_declined') {
+      return <UserX size={18} style={{ color: '#6b7280' }} />; // Gray - your request declined
     }
     // Payment notifications
     if (type === 'payment_failed') {

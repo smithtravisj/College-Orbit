@@ -179,3 +179,141 @@ export function useDeleteToast() {
 
   return toasts;
 }
+
+// Simple success toast (no undo)
+interface SuccessToastState {
+  id: string;
+  message: string;
+}
+
+let successToastListeners: ((toasts: SuccessToastState[]) => void)[] = [];
+let currentSuccessToasts: SuccessToastState[] = [];
+
+export function showSuccessToast(message: string, duration = 3000): string {
+  const id = Math.random().toString(36).substring(7);
+  const newToast = { id, message };
+
+  // Only show one success toast at a time
+  currentSuccessToasts = [newToast];
+  successToastListeners.forEach(listener => listener(currentSuccessToasts));
+
+  // Auto-dismiss after duration
+  setTimeout(() => {
+    currentSuccessToasts = currentSuccessToasts.filter(t => t.id !== id);
+    successToastListeners.forEach(listener => listener(currentSuccessToasts));
+  }, duration);
+
+  return id;
+}
+
+export function useSuccessToast() {
+  const [toasts, setToasts] = useState<SuccessToastState[]>([]);
+
+  useEffect(() => {
+    successToastListeners.push(setToasts);
+    if (currentSuccessToasts.length > 0) {
+      setToasts(currentSuccessToasts);
+    }
+    return () => {
+      successToastListeners = successToastListeners.filter(l => l !== setToasts);
+    };
+  }, []);
+
+  return toasts;
+}
+
+export function SuccessToast({ message }: { message: string }) {
+  return (
+    <div
+      style={{
+        backgroundColor: 'rgba(34, 197, 94, 0.15)',
+        border: '1px solid rgba(34, 197, 94, 0.3)',
+        borderRadius: '8px',
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        minWidth: '200px',
+        maxWidth: '400px',
+      }}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+      <span style={{ fontSize: '14px', color: 'var(--text)' }}>
+        {message}
+      </span>
+    </div>
+  );
+}
+
+// Error toast
+interface ErrorToastState {
+  id: string;
+  message: string;
+}
+
+let errorToastListeners: ((toasts: ErrorToastState[]) => void)[] = [];
+let currentErrorToasts: ErrorToastState[] = [];
+
+export function showErrorToast(message: string, duration = 4000): string {
+  const id = Math.random().toString(36).substring(7);
+  const newToast = { id, message };
+
+  // Only show one error toast at a time
+  currentErrorToasts = [newToast];
+  errorToastListeners.forEach(listener => listener(currentErrorToasts));
+
+  // Auto-dismiss after duration
+  setTimeout(() => {
+    currentErrorToasts = currentErrorToasts.filter(t => t.id !== id);
+    errorToastListeners.forEach(listener => listener(currentErrorToasts));
+  }, duration);
+
+  return id;
+}
+
+export function useErrorToast() {
+  const [toasts, setToasts] = useState<ErrorToastState[]>([]);
+
+  useEffect(() => {
+    errorToastListeners.push(setToasts);
+    if (currentErrorToasts.length > 0) {
+      setToasts(currentErrorToasts);
+    }
+    return () => {
+      errorToastListeners = errorToastListeners.filter(l => l !== setToasts);
+    };
+  }, []);
+
+  return toasts;
+}
+
+export function ErrorToast({ message }: { message: string }) {
+  return (
+    <div
+      style={{
+        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+        border: '1px solid rgba(239, 68, 68, 0.3)',
+        borderRadius: '8px',
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        minWidth: '200px',
+        maxWidth: '400px',
+      }}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="15" y1="9" x2="9" y2="15" />
+        <line x1="9" y1="9" x2="15" y2="15" />
+      </svg>
+      <span style={{ fontSize: '14px', color: 'var(--text)' }}>
+        {message}
+      </span>
+    </div>
+  );
+}

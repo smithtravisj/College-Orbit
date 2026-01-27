@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData, ShoppingItem, ShoppingListType, CalendarEvent, WorkItem, WorkItemType, RecurringWorkPattern, RecurringWorkFormData, GamificationData, Achievement, GamificationRecordResult } from '@/types';
+import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData, ShoppingItem, ShoppingListType, CalendarEvent, WorkItem, WorkItemType, RecurringWorkPattern, RecurringWorkFormData, GamificationData, Achievement, GamificationRecordResult, FriendRequest, FriendWithStats, CollegeLeaderboardEntry } from '@/types';
 import { applyColorPalette, getCollegeColorPalette, applyCustomColors, getCustomColorSetForTheme, CustomColors, setDatabaseColleges, DatabaseCollege, applyColorblindMode, ColorblindMode, ColorblindStyle } from '@/lib/collegeColors';
 import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
@@ -76,6 +76,13 @@ interface AppStore {
   pendingAchievements: Achievement[];
   showConfetti: boolean;
   levelUpNotification: number | null;
+
+  // Friends System
+  friends: FriendWithStats[];
+  pendingFriendRequests: FriendRequest[];
+  sentFriendRequests: FriendRequest[];
+  friendsLeaderboard: (FriendWithStats & { rank: number })[];
+  collegeLeaderboard: (CollegeLeaderboardEntry & { rank: number })[];
 
   // Initialization
   setIsPremium: (isPremium: boolean) => void;
@@ -209,6 +216,17 @@ interface AppStore {
   dismissAchievement: (id: string) => void;
   setShowConfetti: (show: boolean) => void;
   dismissLevelUp: () => void;
+
+  // Friends System
+  fetchFriends: () => Promise<void>;
+  fetchFriendRequests: () => Promise<void>;
+  sendFriendRequest: (identifier: string) => Promise<{ success: boolean; error?: string }>;
+  acceptFriendRequest: (id: string) => Promise<{ success: boolean; error?: string }>;
+  declineFriendRequest: (id: string) => Promise<{ success: boolean; error?: string }>;
+  cancelFriendRequest: (id: string) => Promise<{ success: boolean; error?: string }>;
+  removeFriend: (friendId: string) => Promise<{ success: boolean; error?: string }>;
+  fetchFriendsLeaderboard: (month?: string) => Promise<void>;
+  fetchCollegeLeaderboard: (month?: string) => Promise<void>;
 }
 
 // Migrate old localStorage keys to new naming convention
@@ -369,6 +387,13 @@ const useAppStore = create<AppStore>((set, get) => ({
   pendingAchievements: [],
   showConfetti: false,
   levelUpNotification: null,
+
+  // Friends System initial state
+  friends: [],
+  pendingFriendRequests: [],
+  sentFriendRequests: [],
+  friendsLeaderboard: [],
+  collegeLeaderboard: [],
 
   fetchColleges: async () => {
     try {
@@ -3484,6 +3509,175 @@ const useAppStore = create<AppStore>((set, get) => ({
 
   dismissLevelUp: () => {
     set({ levelUpNotification: null });
+  },
+
+  // Friends System actions
+  fetchFriends: async () => {
+    try {
+      const response = await fetch('/api/friends', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        set({ friends: data.friends || [] });
+      }
+    } catch (error) {
+      console.error('Error fetching friends:', error);
+    }
+  },
+
+  fetchFriendRequests: async () => {
+    try {
+      const response = await fetch('/api/friends/requests', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        set({
+          pendingFriendRequests: data.received || [],
+          sentFriendRequests: data.sent || [],
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching friend requests:', error);
+    }
+  },
+
+  sendFriendRequest: async (identifier: string) => {
+    try {
+      const response = await fetch('/api/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ identifier }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        return { success: false, error: data.error || 'Failed to send request' };
+      }
+
+      // Refresh friend requests
+      await get().fetchFriendRequests();
+      return { success: true };
+    } catch (error) {
+      console.error('Error sending friend request:', error);
+      return { success: false, error: 'Failed to send request' };
+    }
+  },
+
+  acceptFriendRequest: async (id: string) => {
+    try {
+      const response = await fetch(`/api/friends/requests/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'accept' }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        return { success: false, error: data.error || 'Failed to accept request' };
+      }
+
+      // Refresh both friends and requests
+      await Promise.all([get().fetchFriends(), get().fetchFriendRequests()]);
+      return { success: true };
+    } catch (error) {
+      console.error('Error accepting friend request:', error);
+      return { success: false, error: 'Failed to accept request' };
+    }
+  },
+
+  declineFriendRequest: async (id: string) => {
+    try {
+      const response = await fetch(`/api/friends/requests/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'decline' }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        return { success: false, error: data.error || 'Failed to decline request' };
+      }
+
+      // Refresh requests
+      await get().fetchFriendRequests();
+      return { success: true };
+    } catch (error) {
+      console.error('Error declining friend request:', error);
+      return { success: false, error: 'Failed to decline request' };
+    }
+  },
+
+  cancelFriendRequest: async (id: string) => {
+    try {
+      const response = await fetch(`/api/friends/requests/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        return { success: false, error: data.error || 'Failed to cancel request' };
+      }
+
+      // Refresh requests
+      await get().fetchFriendRequests();
+      return { success: true };
+    } catch (error) {
+      console.error('Error cancelling friend request:', error);
+      return { success: false, error: 'Failed to cancel request' };
+    }
+  },
+
+  removeFriend: async (friendId: string) => {
+    try {
+      const response = await fetch(`/api/friends/${friendId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        return { success: false, error: data.error || 'Failed to remove friend' };
+      }
+
+      // Refresh friends list
+      await get().fetchFriends();
+      return { success: true };
+    } catch (error) {
+      console.error('Error removing friend:', error);
+      return { success: false, error: 'Failed to remove friend' };
+    }
+  },
+
+  fetchFriendsLeaderboard: async (month?: string) => {
+    try {
+      const url = month
+        ? `/api/leaderboard/friends?month=${month}`
+        : '/api/leaderboard/friends';
+      const response = await fetch(url, { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        set({ friendsLeaderboard: data.leaderboard || [] });
+      }
+    } catch (error) {
+      console.error('Error fetching friends leaderboard:', error);
+    }
+  },
+
+  fetchCollegeLeaderboard: async (month?: string) => {
+    try {
+      const url = month
+        ? `/api/leaderboard/colleges?month=${month}`
+        : '/api/leaderboard/colleges';
+      const response = await fetch(url, { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        set({ collegeLeaderboard: data.leaderboard || [] });
+      }
+    } catch (error) {
+      console.error('Error fetching college leaderboard:', error);
+    }
   },
 }));
 

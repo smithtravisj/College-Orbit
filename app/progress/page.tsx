@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Flame, Trophy, Zap, Lock, Target, Clock, Award, Star, Rocket, Medal, Crown, Sun, Moon, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Flame, Trophy, Zap, Lock, Target, Clock, Award, Star, Rocket, Medal, Crown, Sun, Moon, Sparkles, ChevronLeft, ChevronRight, Users, School } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { GamificationData, Achievement } from '@/types';
 import { useBetaAccess } from '@/hooks/useBetaAccess';
@@ -13,15 +13,24 @@ import useAppStore from '@/lib/store';
 export default function ProgressPage() {
   const { status } = useSession();
   const router = useRouter();
-  const { hasAccessToFeature } = useBetaAccess();
+  const { hasAccessToFeature, loaded: betaLoaded } = useBetaAccess();
   const isMobile = useIsMobile();
 
   // Use store data first for instant display, then fetch fresh data
+  const storeInitialized = useAppStore((state) => state.initialized);
   const storeGamification = useAppStore((state) => state.gamification);
   const fetchGamification = useAppStore((state) => state.fetchGamification);
+  const friendsLeaderboard = useAppStore((state) => state.friendsLeaderboard);
+  const collegeLeaderboard = useAppStore((state) => state.collegeLeaderboard);
+  const fetchFriendsLeaderboard = useAppStore((state) => state.fetchFriendsLeaderboard);
+  const fetchCollegeLeaderboard = useAppStore((state) => state.fetchCollegeLeaderboard);
   const [gamification, setGamification] = useState<GamificationData | null>(storeGamification);
   const [loading, setLoading] = useState(!storeGamification);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [leaderboardMonth, setLeaderboardMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -38,14 +47,19 @@ export default function ProgressPage() {
   }, [storeGamification]);
 
   useEffect(() => {
-    if (!hasAccessToFeature('1.1.0')) {
+    // Wait for store and beta access to be loaded before checking
+    if (!storeInitialized || !betaLoaded) return;
+
+    if (!hasAccessToFeature('1.0.0')) {
       router.push('/');
       return;
     }
 
     // Fetch fresh data (updates store which updates local state)
     fetchGamification().finally(() => setLoading(false));
-  }, [hasAccessToFeature, router, fetchGamification]);
+    fetchFriendsLeaderboard(leaderboardMonth);
+    fetchCollegeLeaderboard(leaderboardMonth);
+  }, [storeInitialized, betaLoaded, hasAccessToFeature, router, fetchGamification, fetchFriendsLeaderboard, fetchCollegeLeaderboard, leaderboardMonth]);
 
   const getStreakColorValue = (streak: number, vacationMode: boolean) => {
     if (vacationMode) return 'var(--text-muted)';
@@ -151,7 +165,7 @@ export default function ProgressPage() {
     setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
   };
 
-  if (loading || !gamification) {
+  if (loading || !gamification || !betaLoaded || !storeInitialized) {
     return (
       <>
         {/* Header skeleton */}
@@ -330,8 +344,288 @@ export default function ProgressPage() {
           </Card>
         </div>
 
+        {/* Leaderboards Section */}
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? '10px' : '16px' }}>
+          {/* Friends Leaderboard */}
+          <Card
+            title="Friends Leaderboard"
+            style={isMobile ? { padding: '12px' } : undefined}
+            action={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <button
+                  onClick={() => {
+                    const [year, month] = leaderboardMonth.split('-').map(Number);
+                    const newMonth = month === 1 ? 12 : month - 1;
+                    const newYear = month === 1 ? year - 1 : year;
+                    setLeaderboardMonth(`${newYear}-${String(newMonth).padStart(2, '0')}`);
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? '3px' : '4px', backgroundColor: 'var(--border)', border: 'none', borderRadius: '4px', color: 'var(--text-muted)', cursor: 'pointer' }}
+                >
+                  <ChevronLeft size={isMobile ? 14 : 16} />
+                </button>
+                <span style={{ fontSize: isMobile ? '11px' : '13px', color: 'var(--text)', minWidth: isMobile ? '70px' : '80px', textAlign: 'center' }}>
+                  {new Date(parseInt(leaderboardMonth.split('-')[0]), parseInt(leaderboardMonth.split('-')[1]) - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                </span>
+                <button
+                  onClick={() => {
+                    const [year, month] = leaderboardMonth.split('-').map(Number);
+                    const newMonth = month === 12 ? 1 : month + 1;
+                    const newYear = month === 12 ? year + 1 : year;
+                    const nextMonth = `${newYear}-${String(newMonth).padStart(2, '0')}`;
+                    const now = new Date();
+                    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                    if (nextMonth <= currentMonth) {
+                      setLeaderboardMonth(nextMonth);
+                    }
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? '3px' : '4px', backgroundColor: 'var(--border)', border: 'none', borderRadius: '4px', color: 'var(--text-muted)', cursor: 'pointer' }}
+                >
+                  <ChevronRight size={isMobile ? 14 : 16} />
+                </button>
+              </div>
+            }
+          >
+            {friendsLeaderboard.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: isMobile ? '16px' : '24px' }}>
+                <Users size={isMobile ? 32 : 40} style={{ color: 'var(--text-muted)', marginBottom: '8px' }} />
+                <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', margin: 0 }}>
+                  Add friends to compete on the leaderboard!
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px', maxHeight: isMobile ? '280px' : '320px', overflowY: 'auto' }}>
+                {friendsLeaderboard.map((entry) => {
+                  const isTop3 = entry.rank <= 3;
+                  const getMedalColor = (rank: number) => {
+                    if (rank === 1) return '#FFD700';
+                    if (rank === 2) return '#C0C0C0';
+                    if (rank === 3) return '#CD7F32';
+                    return 'var(--text-muted)';
+                  };
+
+                  return (
+                    <div
+                      key={entry.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: isMobile ? '8px' : '12px',
+                        padding: isMobile ? '8px' : '12px',
+                        backgroundColor: entry.isCurrentUser ? 'rgba(59, 130, 246, 0.1)' : 'var(--panel-2)',
+                        border: entry.isCurrentUser ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid var(--border)',
+                        borderRadius: isMobile ? '6px' : '8px',
+                      }}
+                    >
+                      {/* Rank */}
+                      <div style={{ width: isMobile ? '24px' : '28px', textAlign: 'center', flexShrink: 0 }}>
+                        {isTop3 ? (
+                          <Medal size={isMobile ? 18 : 22} style={{ color: getMedalColor(entry.rank) }} />
+                        ) : (
+                          <span style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                            #{entry.rank}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Avatar */}
+                      <div
+                        style={{
+                          width: isMobile ? '32px' : '36px',
+                          height: isMobile ? '32px' : '36px',
+                          borderRadius: '50%',
+                          backgroundColor: 'var(--border)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {entry.profileImage ? (
+                          <img src={entry.profileImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <span style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                            {entry.name?.charAt(0) || entry.username?.charAt(0) || '?'}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Name & Stats */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{
+                          fontSize: isMobile ? '13px' : '14px',
+                          fontWeight: entry.isCurrentUser ? 600 : 500,
+                          color: entry.isCurrentUser ? 'var(--link)' : 'var(--text)',
+                          margin: 0,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {entry.name || entry.username || 'Unknown'}
+                          {entry.isCurrentUser && ' (You)'}
+                        </p>
+                        <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', margin: 0 }}>
+                          {entry.username && `@${entry.username} · `}Level {entry.xp.level}
+                        </p>
+                      </div>
+
+                      {/* XP & Streak */}
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <p style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: 600, color: 'var(--link)', margin: 0 }}>
+                          {entry.xp.total.toLocaleString()} XP
+                        </p>
+                        <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '2px' }}>
+                          <Flame size={isMobile ? 10 : 12} style={{ color: entry.streak.currentStreak > 0 ? 'var(--warning)' : 'var(--text-muted)' }} />
+                          {entry.streak.currentStreak}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+
+          {/* College Leaderboard */}
+          <Card
+            title="College Leaderboard"
+            style={isMobile ? { padding: '12px' } : undefined}
+            action={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <button
+                  onClick={() => {
+                    const [year, month] = leaderboardMonth.split('-').map(Number);
+                    const newMonth = month === 1 ? 12 : month - 1;
+                    const newYear = month === 1 ? year - 1 : year;
+                    setLeaderboardMonth(`${newYear}-${String(newMonth).padStart(2, '0')}`);
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? '3px' : '4px', backgroundColor: 'var(--border)', border: 'none', borderRadius: '4px', color: 'var(--text-muted)', cursor: 'pointer' }}
+                >
+                  <ChevronLeft size={isMobile ? 14 : 16} />
+                </button>
+                <span style={{ fontSize: isMobile ? '11px' : '13px', color: 'var(--text)', minWidth: isMobile ? '70px' : '80px', textAlign: 'center' }}>
+                  {new Date(parseInt(leaderboardMonth.split('-')[0]), parseInt(leaderboardMonth.split('-')[1]) - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                </span>
+                <button
+                  onClick={() => {
+                    const [year, month] = leaderboardMonth.split('-').map(Number);
+                    const newMonth = month === 12 ? 1 : month + 1;
+                    const newYear = month === 12 ? year + 1 : year;
+                    const nextMonth = `${newYear}-${String(newMonth).padStart(2, '0')}`;
+                    const now = new Date();
+                    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                    if (nextMonth <= currentMonth) {
+                      setLeaderboardMonth(nextMonth);
+                    }
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? '3px' : '4px', backgroundColor: 'var(--border)', border: 'none', borderRadius: '4px', color: 'var(--text-muted)', cursor: 'pointer' }}
+                >
+                  <ChevronRight size={isMobile ? 14 : 16} />
+                </button>
+              </div>
+            }
+          >
+            {collegeLeaderboard.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: isMobile ? '16px' : '24px' }}>
+                <School size={isMobile ? 32 : 40} style={{ color: 'var(--text-muted)', marginBottom: '8px' }} />
+                <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', margin: 0 }}>
+                  No college data for this month yet.
+                </p>
+                <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                  Set your college in Account settings to participate!
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px', maxHeight: isMobile ? '280px' : '320px', overflowY: 'auto' }}>
+                {collegeLeaderboard.map((entry) => {
+                  const isTop3 = entry.rank <= 3;
+                  const getMedalColor = (rank: number) => {
+                    if (rank === 1) return '#FFD700';
+                    if (rank === 2) return '#C0C0C0';
+                    if (rank === 3) return '#CD7F32';
+                    return 'var(--text-muted)';
+                  };
+
+                  return (
+                    <div
+                      key={entry.collegeId}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: isMobile ? '8px' : '12px',
+                        padding: isMobile ? '8px' : '12px',
+                        backgroundColor: entry.isUserCollege ? 'rgba(59, 130, 246, 0.1)' : 'var(--panel-2)',
+                        border: entry.isUserCollege ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid var(--border)',
+                        borderRadius: isMobile ? '6px' : '8px',
+                      }}
+                    >
+                      {/* Rank */}
+                      <div style={{ width: isMobile ? '24px' : '28px', textAlign: 'center', flexShrink: 0 }}>
+                        {isTop3 ? (
+                          <Medal size={isMobile ? 18 : 22} style={{ color: getMedalColor(entry.rank) }} />
+                        ) : (
+                          <span style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                            #{entry.rank}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* College Icon */}
+                      <div
+                        style={{
+                          width: isMobile ? '32px' : '36px',
+                          height: isMobile ? '32px' : '36px',
+                          borderRadius: '8px',
+                          backgroundColor: 'var(--border)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <span style={{ fontSize: isMobile ? '10px' : '11px', fontWeight: 700, color: 'var(--text-muted)' }}>
+                          {entry.acronym}
+                        </span>
+                      </div>
+
+                      {/* Name & Users */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{
+                          fontSize: isMobile ? '13px' : '14px',
+                          fontWeight: entry.isUserCollege ? 600 : 500,
+                          color: entry.isUserCollege ? 'var(--link)' : 'var(--text)',
+                          margin: 0,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {entry.collegeName}
+                          {entry.isUserCollege && ' (Your School)'}
+                        </p>
+                        <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', margin: 0 }}>
+                          {entry.userCount} student{entry.userCount !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+
+                      {/* Total XP */}
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <p style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: 600, color: 'var(--link)', margin: 0 }}>
+                          {entry.totalXp.toLocaleString()} XP
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <p style={{ fontSize: isMobile ? '10px' : '11px', color: 'var(--text-muted)', marginTop: '12px', textAlign: 'center' }}>
+              Aggregated monthly XP by college. Individual data is anonymous.
+            </p>
+          </Card>
+        </div>
+
         {/* Achievements */}
-        <Card title={`Achievements (${unlockedAchievements.length}/${achievements.length})`} style={isMobile ? { padding: '12px' } : undefined}>
+        <Card title={`Achievements (${unlockedAchievements.length}/${achievements.length})`} style={isMobile ? { padding: '12px', marginTop: '12px' } : { marginTop: '24px' }}>
           {Object.entries(achievementsByCategory).map(([category, categoryAchievements]) => (
             <div key={category} style={{ marginBottom: isMobile ? '14px' : '20px' }}>
               <h3 style={{ fontSize: isMobile ? '11px' : '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: isMobile ? '0 0 8px 0' : '0 0 10px 0' }}>

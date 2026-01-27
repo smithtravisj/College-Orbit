@@ -767,3 +767,37 @@ export interface GamificationRecordResult {
   streakUpdated: boolean;
   newStreak: number;
 }
+
+// Friends System Types
+export interface PublicUserProfile {
+  id: string;
+  username: string | null;
+  name: string | null;
+  profileImage: string | null;
+  college?: { id: string; fullName: string; acronym: string } | null;
+}
+
+export interface FriendRequest {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  status: 'pending' | 'accepted' | 'declined';
+  createdAt: string;
+  sender?: PublicUserProfile;
+  receiver?: PublicUserProfile;
+}
+
+export interface FriendWithStats extends PublicUserProfile {
+  streak: { currentStreak: number; longestStreak: number };
+  xp: { total: number; level: number };
+  isCurrentUser?: boolean;
+}
+
+export interface CollegeLeaderboardEntry {
+  collegeId: string;
+  collegeName: string;
+  acronym: string;
+  totalXp: number;
+  userCount: number;
+  isUserCollege: boolean;
+}
