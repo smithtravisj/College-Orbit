@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Shield, Download, Upload, Trash2, Eye, EyeOff, Crown, Monitor, Smartphone, Tablet, X, Calendar, Copy, FileText, Camera, Users, UserPlus, UserMinus, Check, Clock } from 'lucide-react';
+import { Shield, Download, Upload, Trash2, Eye, EyeOff, Crown, Monitor, Smartphone, Tablet, X, Calendar, Copy, FileText, Camera, Users, UserPlus, UserMinus, Check, Clock, Gift } from 'lucide-react';
 import { exportWorkItemsToPDF, exportScheduleToPDF } from '@/lib/pdfExport';
 import HelpTooltip from '@/components/ui/HelpTooltip';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -71,6 +71,16 @@ export default function AccountPage() {
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Referral program state
+  const [, setReferralCode] = useState<string | null>(null);
+  const [referralLink, setReferralLink] = useState<string | null>(null);
+  const [referralStats, setReferralStats] = useState<{
+    totalReferrals: number;
+    successfulReferrals: number;
+    monthsEarned: number;
+  } | null>(null);
+  const [referralCopied, setReferralCopied] = useState(false);
 
   useEffect(() => {
     // Refresh session on mount to get latest data (including lastLogin)
@@ -207,6 +217,36 @@ export default function AccountPage() {
 
     fetchCalendarToken();
   }, [session]);
+
+  // Fetch referral data
+  useEffect(() => {
+    if (!session?.user) return;
+
+    const fetchReferralData = async () => {
+      try {
+        const response = await fetch('/api/referral');
+        if (response.ok) {
+          const data = await response.json();
+          setReferralCode(data.referralCode);
+          setReferralLink(data.referralLink);
+          setReferralStats(data.stats);
+        }
+      } catch (err) {
+        console.error('Failed to fetch referral data:', err);
+      }
+    };
+
+    fetchReferralData();
+  }, [session]);
+
+  const handleCopyReferralLink = () => {
+    if (referralLink) {
+      navigator.clipboard.writeText(referralLink);
+      setReferralCopied(true);
+      showSuccessToast('Referral link copied!');
+      setTimeout(() => setReferralCopied(false), 2000);
+    }
+  };
 
   const handleCalendarDownload = async () => {
     setCalendarLoading(true);
@@ -1015,9 +1055,9 @@ export default function AccountPage() {
           </Card>
 
           {/* Friends & Subscription Column */}
-          <div className="flex flex-col gap-[var(--grid-gap)]">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--grid-gap)' }}>
           {/* Friends Section */}
-          <Card>
+          <Card style={{ flex: '1 1 auto', height: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <Users size={20} style={{ color: 'var(--text)' }} />
               <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)', margin: 0 }}>Friends</h2>
@@ -1308,7 +1348,7 @@ export default function AccountPage() {
           </Card>
 
           {/* Subscription */}
-          <Card>
+          <Card style={{ flex: '1 1 auto', height: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <Crown size={20} className="text-[var(--text)]" />
               <h2 className="text-lg font-semibold text-[var(--text)]">Subscription</h2>
@@ -1409,6 +1449,73 @@ export default function AccountPage() {
                   </div>
                 )}
 
+                {/* Refer a Friend */}
+                <div style={{ paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <Gift size={16} className="text-[var(--text)]" />
+                    <p className="text-sm font-semibold text-[var(--text)]" style={{ margin: 0 }}>Refer a Friend</p>
+                  </div>
+                  <p className="text-xs text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                    Earn <strong className="text-[var(--text)]">1 month of free premium</strong> for each friend who subscribes.
+                  </p>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <div
+                      style={{
+                        flex: 1,
+                        padding: '10px 12px',
+                        background: 'var(--panel-2)',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--border)',
+                        fontSize: '12px',
+                        color: 'var(--text)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {referralLink || 'Loading...'}
+                    </div>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleCopyReferralLink}
+                      disabled={!referralLink}
+                      style={{ flexShrink: 0 }}
+                    >
+                      {referralCopied ? <Check size={14} /> : <Copy size={14} />}
+                      {referralCopied ? 'Copied' : 'Copy'}
+                    </Button>
+                  </div>
+
+                  {referralStats && (referralStats.totalReferrals > 0 || referralStats.monthsEarned > 0) && (
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '8px',
+                        padding: '12px',
+                        background: 'var(--panel-2)',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      <div style={{ textAlign: 'center' }}>
+                        <p className="text-lg font-bold text-[var(--text)]" style={{ margin: 0 }}>{referralStats.totalReferrals}</p>
+                        <p className="text-xs text-[var(--text-muted)]" style={{ margin: 0 }}>Referred</p>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <p className="text-lg font-bold text-[var(--success)]" style={{ margin: 0 }}>{referralStats.successfulReferrals}</p>
+                        <p className="text-xs text-[var(--text-muted)]" style={{ margin: 0 }}>Successful</p>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <p className="text-lg font-bold" style={{ margin: 0, color: 'var(--link)' }}>{referralStats.monthsEarned}</p>
+                        <p className="text-xs text-[var(--text-muted)]" style={{ margin: 0 }}>Months Earned</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Features List - for premium users */}
                 {subscription.isPremium && (
                   <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
@@ -1460,6 +1567,7 @@ export default function AccountPage() {
               </div>
             )}
           </Card>
+
           </div>
 
           {/* Data & Backup */}

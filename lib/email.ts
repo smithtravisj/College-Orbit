@@ -987,6 +987,140 @@ College Orbit © ${new Date().getFullYear()}
   console.log(`Announcement email sent to ${email}, id: ${data.id}`);
 }
 
+interface SendReferralSuccessEmailParams {
+  email: string;
+  name: string | null;
+  monthsEarned: number;
+}
+
+/**
+ * Send referral success email to the referrer
+ */
+export async function sendReferralSuccessEmail({
+  email,
+  name,
+  monthsEarned,
+}: SendReferralSuccessEmailParams): Promise<void> {
+  const displayName = name || 'there';
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html style="margin: 0; padding: 0; background-color: #0a0a0b;">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #0a0a0b;" bgcolor="#0a0a0b">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0a0a0b;" bgcolor="#0a0a0b">
+        <tr>
+          <td align="center" style="padding: 40px 20px;" bgcolor="#0a0a0b">
+            <table width="560" cellpadding="0" cellspacing="0" border="0" style="background-color: #111113; border-radius: 20px; border: 1px solid #252528;" bgcolor="#111113">
+              <!-- Header -->
+              <tr>
+                <td style="padding: 40px 40px 20px 40px; text-align: center;" bgcolor="#111113">
+                  <p style="margin: 0 0 8px 0; font-size: 14px; color: #22c55e; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">
+                    Referral Reward
+                  </p>
+                  <h1 style="margin: 0; color: #fafafa; font-size: 28px; font-weight: 700; letter-spacing: -0.02em;">
+                    You Earned Free Premium!
+                  </h1>
+                </td>
+              </tr>
+
+              <!-- Body -->
+              <tr>
+                <td style="padding: 20px 40px 40px 40px; color: #a1a1aa; font-size: 16px; line-height: 1.6;">
+                  <p style="margin: 0 0 20px 0;">Hi ${displayName},</p>
+                  <p style="margin: 0 0 24px 0;">
+                    Great news! Your friend just subscribed to College Orbit Premium.
+                  </p>
+
+                  <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 100%);
+                              border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 24px; margin-bottom: 24px; text-align: center;">
+                    <p style="margin: 0 0 8px 0; font-size: 14px; color: #71717a;">Your Reward</p>
+                    <p style="margin: 0; font-size: 32px; color: #22c55e; font-weight: 700;">
+                      ${monthsEarned} Month${monthsEarned !== 1 ? 's' : ''} Free
+                    </p>
+                    <p style="margin: 8px 0 0 0; font-size: 14px; color: #a1a1aa;">
+                      of Premium access
+                    </p>
+                  </div>
+
+                  <p style="margin: 0 0 24px 0;">
+                    This has been automatically added to your account. Keep sharing your referral link to earn more free premium time!
+                  </p>
+
+                  <!-- CTA Button -->
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td align="center" style="padding: 20px 0;">
+                        <a href="${APP_URL}/account"
+                           style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+                                  color: #ffffff; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 16px;
+                                  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.4);">
+                          View Your Referrals
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <p style="margin: 24px 0 0 0; font-size: 14px; color: #71717a; text-align: center;">
+                    Share your link to earn more rewards!
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="padding: 20px 40px; background-color: #0f0f11; border-top: 1px solid #252528;
+                           text-align: center; color: #71717a; font-size: 13px; border-radius: 0 0 20px 20px;">
+                  <p style="margin: 0;">
+                    College Orbit &copy; ${new Date().getFullYear()}
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const textContent = `
+Hi ${displayName},
+
+Great news! Your friend just subscribed to College Orbit Premium.
+
+YOUR REWARD: ${monthsEarned} Month${monthsEarned !== 1 ? 's' : ''} Free Premium
+
+This has been automatically added to your account. Keep sharing your referral link to earn more free premium time!
+
+View your referrals: ${APP_URL}/account
+
+College Orbit © ${new Date().getFullYear()}
+  `.trim();
+
+  try {
+    const resend = getResend();
+    if (!resend) {
+      throw new Error('Resend API key not configured');
+    }
+
+    await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: email,
+      subject: 'You earned free premium!',
+      html: htmlContent,
+      text: textContent,
+    });
+    console.log(`Referral success email sent to ${email}`);
+  } catch (error) {
+    console.error('Resend error:', error);
+    throw new Error('Failed to send referral success email');
+  }
+}
+
 interface WeeklyDigestItem {
   title: string;
   courseName?: string;

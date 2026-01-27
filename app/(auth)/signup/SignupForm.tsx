@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
-import { Eye, EyeOff } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Eye, EyeOff, Gift } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
@@ -16,6 +17,7 @@ interface CollegeData {
 }
 
 export default function SignupForm() {
+  const searchParams = useSearchParams();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,6 +29,11 @@ export default function SignupForm() {
   const [collegeButtonColor, setCollegeButtonColor] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [collegesList, setCollegesList] = useState<CollegeData[]>([]);
+
+  // Referral state
+  const [referralCode, setReferralCode] = useState('');
+  const [referrerName, setReferrerName] = useState<string | null>(null);
+  const [referralValid, setReferralValid] = useState<boolean | null>(null);
 
   // Fetch colleges from API (database is source of truth)
   useEffect(() => {
@@ -44,6 +51,32 @@ export default function SignupForm() {
     };
     fetchColleges();
   }, []);
+
+  // Check for referral code in URL
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      setReferralCode(refCode.toUpperCase());
+      // Validate the referral code
+      const validateReferral = async () => {
+        try {
+          const response = await fetch(`/api/referral/apply?code=${refCode}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.valid) {
+              setReferralValid(true);
+              setReferrerName(data.referrerName);
+            } else {
+              setReferralValid(false);
+            }
+          }
+        } catch {
+          setReferralValid(false);
+        }
+      };
+      validateReferral();
+    }
+  }, [searchParams]);
 
   const handleUniversityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedUni = e.target.value;
@@ -74,7 +107,13 @@ export default function SignupForm() {
       const signupRes = await fetch('/api/user/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, university }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          university,
+          referralCode: referralValid ? referralCode : undefined,
+        }),
       });
 
       if (!signupRes.ok) {
@@ -290,6 +329,24 @@ export default function SignupForm() {
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {/* Referral banner */}
+          {referralValid && referrerName && (
+            <div style={{
+              backgroundColor: 'rgba(34, 197, 94, 0.1)',
+              border: '1px solid rgba(34, 197, 94, 0.25)',
+              borderRadius: '12px',
+              padding: '12px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}>
+              <Gift size={18} style={{ color: '#22c55e', flexShrink: 0 }} />
+              <p style={{ fontSize: '13px', color: '#22c55e', margin: 0 }}>
+                Referred by <strong>{referrerName}</strong>
+              </p>
+            </div>
+          )}
+
           {error && (
             <div style={{
               backgroundColor: 'rgba(220, 38, 38, 0.1)',

@@ -10,7 +10,7 @@ const shouldSendRealEmail = !!process.env.RESEND_API_KEY && process.env.NODE_ENV
 
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const { name, email, password, university } = await req.json();
+    const { name, email, password, university, referralCode } = await req.json();
 
     // Validation
     if (!email || !password) {
@@ -67,6 +67,52 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         },
       },
     });
+
+    // Handle referral code if provided
+    if (referralCode) {
+      try {
+        // Find the referrer by their referral code
+        const referrer = await prisma.user.findUnique({
+          where: { referralCode: referralCode.toUpperCase() },
+          select: { id: true, name: true, email: true },
+        });
+
+        // Only process if referrer exists and is not the same user (self-referral prevention)
+        if (referrer && referrer.id !== user.id) {
+          // Create the referral record and update the user's referredById
+          await prisma.$transaction([
+            prisma.referral.create({
+              data: {
+                referrerId: referrer.id,
+                refereeId: user.id,
+                status: 'pending',
+                rewardMonths: 1,
+              },
+            }),
+            prisma.user.update({
+              where: { id: user.id },
+              data: { referredById: referrer.id },
+            }),
+          ]);
+
+          // Notify referrer that someone signed up with their link
+          const refereeName = user.name || user.email?.split('@')[0] || 'Someone';
+          await prisma.notification.create({
+            data: {
+              userId: referrer.id,
+              title: 'New Referral Signup!',
+              message: `${refereeName} just signed up using your referral link. You'll earn 1 month free when they subscribe to premium!`,
+              type: 'referral_signup',
+            },
+          });
+
+          console.log(`Referral created: ${referrer.email} referred ${user.email}`);
+        }
+      } catch (referralError) {
+        console.error('Failed to process referral code:', referralError);
+        // Don't fail signup if referral processing fails
+      }
+    }
 
     // Create trial started notification
     try {

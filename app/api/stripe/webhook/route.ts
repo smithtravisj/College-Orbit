@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
-import { sendSubscriptionStartedEmail } from '@/lib/email';
+import { sendSubscriptionStartedEmail, sendReferralSuccessEmail } from '@/lib/email';
 import { log } from '@/lib/logger';
 import Stripe from 'stripe';
 
@@ -110,6 +110,9 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     }
 
     log.subscription('semester_purchased', userId, { expiresAt: expiresAt.toISOString() });
+
+    // Process referral reward if applicable
+    await processReferralReward(userId);
     return;
   }
 
@@ -150,6 +153,9 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
   }
 
   log.subscription('subscribed', userId, { plan });
+
+  // Process referral reward if applicable
+  await processReferralReward(userId);
 }
 
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
@@ -304,5 +310,163 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     });
 
     log.subscription('payment_succeeded', user.id, { restoredFromPastDue: true });
+  }
+}
+
+/**
+ * Process referral reward when a referred user converts to premium
+ * Awards 1 month of premium to the referrer
+ */
+async function processReferralReward(refereeId: string) {
+  try {
+    // Find the pending referral for this user
+    const referral = await prisma.referral.findUnique({
+      where: { refereeId },
+      include: {
+        referrer: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            subscriptionTier: true,
+            subscriptionStatus: true,
+            subscriptionPlan: true,
+            trialEndsAt: true,
+            subscriptionExpiresAt: true,
+            lifetimePremium: true,
+            stripeCustomerId: true,
+            stripeSubscriptionId: true,
+          },
+        },
+      },
+    });
+
+    // No referral found or already processed
+    if (!referral || referral.status !== 'pending') {
+      return;
+    }
+
+    const referrer = referral.referrer;
+
+    // Don't reward if referrer has lifetime premium (already unlimited)
+    // But still mark as completed for tracking
+    if (referrer.lifetimePremium) {
+      await prisma.referral.update({
+        where: { id: referral.id },
+        data: {
+          status: 'completed',
+          rewardedAt: new Date(),
+        },
+      });
+      log.subscription('referral_completed_lifetime', referrer.id, { refereeId });
+      return;
+    }
+
+    // Calculate reward based on referrer's current status
+    const now = new Date();
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+    let updateData: {
+      subscriptionTier?: string;
+      subscriptionStatus?: string;
+      trialEndsAt?: Date;
+      subscriptionExpiresAt?: Date;
+    } = {};
+    let appliedStripeCredit = false;
+
+    if (referrer.subscriptionTier === 'premium' && referrer.stripeSubscriptionId && referrer.stripeCustomerId &&
+        referrer.subscriptionStatus === 'active' && referrer.subscriptionPlan !== 'semester') {
+      // Active recurring subscriber: credit their next invoice via Stripe
+      try {
+        const upcomingInvoice = await stripe.invoices.createPreview({
+          customer: referrer.stripeCustomerId,
+        });
+        const creditAmount = upcomingInvoice.amount_due; // in cents
+
+        if (creditAmount > 0) {
+          await stripe.customers.createBalanceTransaction(referrer.stripeCustomerId, {
+            amount: -creditAmount, // negative = credit
+            currency: upcomingInvoice.currency,
+            description: 'Referral reward: 1 month free for referring a friend',
+          });
+          appliedStripeCredit = true;
+          log.subscription('referral_stripe_credit', referrer.id, { refereeId, creditAmount });
+        }
+      } catch (stripeError) {
+        log.error('Failed to apply Stripe credit for referral, falling back to expiry extension', stripeError, { referrerId: referrer.id });
+        // Fall back to extending subscription expiry
+        if (referrer.subscriptionExpiresAt) {
+          const newExpiry = new Date(referrer.subscriptionExpiresAt.getTime() + thirtyDays);
+          updateData.subscriptionExpiresAt = newExpiry;
+        }
+      }
+    } else if (referrer.subscriptionTier === 'trial' && referrer.trialEndsAt) {
+      // Extend trial by 30 days
+      const newTrialEnd = new Date(referrer.trialEndsAt.getTime() + thirtyDays);
+      updateData.trialEndsAt = newTrialEnd;
+    } else if (referrer.subscriptionTier === 'premium' && referrer.subscriptionExpiresAt) {
+      // Non-recurring premium (semester) or canceled: extend expiry
+      const newExpiry = new Date(referrer.subscriptionExpiresAt.getTime() + thirtyDays);
+      updateData.subscriptionExpiresAt = newExpiry;
+    } else if (referrer.subscriptionTier === 'free') {
+      // Grant new 30-day trial
+      const newTrialEnd = new Date(now.getTime() + thirtyDays);
+      updateData = {
+        subscriptionTier: 'trial',
+        subscriptionStatus: 'trialing',
+        trialEndsAt: newTrialEnd,
+      };
+    } else if (!appliedStripeCredit) {
+      // Fallback: extend/set subscription expiry
+      const baseDate = referrer.subscriptionExpiresAt || now;
+      const newExpiry = new Date(Math.max(baseDate.getTime(), now.getTime()) + thirtyDays);
+      updateData.subscriptionExpiresAt = newExpiry;
+    }
+
+    // Update referrer (if needed) and mark referral as completed
+    const transactions = [];
+    if (Object.keys(updateData).length > 0) {
+      transactions.push(
+        prisma.user.update({
+          where: { id: referrer.id },
+          data: updateData,
+        })
+      );
+    }
+    transactions.push(
+      prisma.referral.update({
+        where: { id: referral.id },
+        data: {
+          status: 'completed',
+          rewardedAt: new Date(),
+        },
+      })
+    );
+    await prisma.$transaction(transactions);
+
+    // Create notification for referrer
+    await prisma.notification.create({
+      data: {
+        userId: referrer.id,
+        title: 'Referral Reward!',
+        message: 'Your friend subscribed to premium! You\'ve earned 1 month of free premium.',
+        type: 'referral_reward',
+      },
+    });
+
+    // Send success email to referrer
+    try {
+      await sendReferralSuccessEmail({
+        email: referrer.email,
+        name: referrer.name,
+        monthsEarned: 1,
+      });
+    } catch (emailError) {
+      log.error('Failed to send referral success email', emailError, { referrerId: referrer.id });
+    }
+
+    log.subscription('referral_rewarded', referrer.id, { refereeId, rewardMonths: 1 });
+  } catch (error) {
+    log.error('Failed to process referral reward', error, { refereeId });
+    // Don't throw - referral reward failure shouldn't affect the main checkout flow
   }
 }

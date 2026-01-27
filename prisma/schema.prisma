@@ -77,11 +77,20 @@ model User {
   friendsAsUser2         Friendship[]    @relation("FriendUser2")
   monthlyXpTotals        MonthlyXpTotal[]
 
+  // Referral Program
+  referralCode      String?   @unique  // User's shareable referral code (e.g., "ABCD1234")
+  referredById      String?             // ID of user who referred them
+  referredBy        User?     @relation("ReferralRelation", fields: [referredById], references: [id])
+  referrals         User[]    @relation("ReferralRelation")
+  sentReferrals     Referral[] @relation("SentReferrals")
+  receivedReferral  Referral?  @relation("ReceivedReferral")
+
   @@index([email])
   @@index([username])
   @@index([collegeId])
   @@index([subscriptionTier])
   @@index([stripeCustomerId])
+  @@index([referralCode])
 }
 
 model Course {
@@ -1160,4 +1169,21 @@ model MonthlyXpTotal {
 
   @@unique([userId, yearMonth])
   @@index([collegeId, yearMonth])
+}
+
+// Referral Program
+model Referral {
+  id           String    @id @default(cuid())
+  referrerId   String                          // Who referred
+  refereeId    String    @unique               // Who was referred (1 referral per user)
+  status       String    @default("pending")   // pending, completed, expired
+  rewardMonths Int       @default(1)           // Months awarded
+  rewardedAt   DateTime?                       // When referrer was rewarded
+  createdAt    DateTime  @default(now())
+
+  referrer     User      @relation("SentReferrals", fields: [referrerId], references: [id], onDelete: Cascade)
+  referee      User      @relation("ReceivedReferral", fields: [refereeId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId])
+  @@index([status])
 }

@@ -273,6 +273,13 @@ export default function NotificationBell() {
     if (type === 'beta_feedback_resolved') {
       return <Check size={18} style={{ color: '#10b981' }} />;
     }
+    // Referral notifications
+    if (type === 'referral_signup') {
+      return <UserPlus size={18} style={{ color: '#10b981' }} />;
+    }
+    if (type === 'referral_reward') {
+      return <Gift size={18} style={{ color: '#22c55e' }} />;
+    }
     // Default
     return <Bell size={18} style={{ color: '#6b7280' }} />;
   };
