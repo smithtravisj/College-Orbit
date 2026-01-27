@@ -62,31 +62,15 @@ export function useBetaAccess() {
 
   /**
    * Check if user has access to features from a specific version.
-   * - Released versions (isBetaOnly: false): accessible to everyone
-   * - Beta-only versions: accessible only to beta users
+   *
+   * NOTE: Beta gating is currently disabled - all features are accessible to everyone.
+   * The beta program infrastructure remains in place for future use.
+   * To re-enable gating, restore the version checking logic below.
    */
-  const hasAccessToFeature = useCallback((version: string): boolean => {
-    // If versions not loaded yet, default to showing for beta users only
-    if (!loaded) {
-      return isBetaUser;
-    }
-
-    const versionInfo = versions.find(v => v.version === version);
-
-    // If version not found, assume it's beta-only (safer default for unreleased features)
-    // Only beta users get access to features from unknown versions
-    if (!versionInfo) {
-      return isBetaUser;
-    }
-
-    // If released to all, everyone has access
-    if (!versionInfo.isBetaOnly) {
-      return true;
-    }
-
-    // If beta-only, only beta users have access
-    return isBetaUser;
-  }, [versions, isBetaUser, loaded]);
+  const hasAccessToFeature = useCallback((_version: string): boolean => {
+    // Beta gating disabled - all features accessible to everyone
+    return true;
+  }, []);
 
   return {
     isBetaUser,

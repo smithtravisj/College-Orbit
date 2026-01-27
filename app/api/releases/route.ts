@@ -8,9 +8,8 @@ export async function GET() {
   try {
     const session = await getServerSession(authConfig);
 
+    // Check if user is a beta user (for display purposes only)
     let isBetaUser = false;
-
-    // Check if user is a beta user
     if (session?.user?.id) {
       const settings = await prisma.settings.findUnique({
         where: { userId: session.user.id },
@@ -19,9 +18,8 @@ export async function GET() {
       isBetaUser = settings?.isBetaUser ?? false;
     }
 
-    // Fetch releases - beta users see all, regular users only see released versions
+    // Fetch all releases - beta restriction removed, everyone sees all versions
     const releases = await prisma.appVersion.findMany({
-      where: isBetaUser ? {} : { isBetaOnly: false },
       orderBy: { releasedAt: 'desc' },
       select: {
         id: true,

@@ -15,18 +15,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
-    // Check if user is a beta user
-    const userSettings = await prisma.settings.findUnique({
-      where: { userId: token.id },
-      select: { isBetaUser: true },
-    });
-
-    if (!userSettings?.isBetaUser) {
-      return NextResponse.json(
-        { error: 'You must be enrolled in the beta program to submit feedback' },
-        { status: 403 }
-      );
-    }
+    // Beta feedback is open to all users (beta enrollment check removed)
 
     const data = await req.json();
 

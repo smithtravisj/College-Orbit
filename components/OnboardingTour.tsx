@@ -95,15 +95,6 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
         }
       },
       {
-        element: '[data-tour="overview"]',
-        popover: {
-          title: 'Quick Overview',
-          description: 'See at a glance how many classes you have left today, items due soon, overdue items, and tasks for today.',
-          side: 'left',
-          align: 'start'
-        }
-      },
-      {
         element: '[data-tour="quick-add"]',
         popover: {
           title: 'Quick Add',

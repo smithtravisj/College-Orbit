@@ -246,6 +246,28 @@ export async function processTaskCompletion(
       });
     }
 
+    // Update daily activity (for friends leaderboard)
+    const today = getUtcDateOnly(userLocalTime);
+
+    await prisma.dailyActivity.upsert({
+      where: {
+        userId_activityDate: {
+          userId,
+          activityDate: today,
+        },
+      },
+      update: {
+        tasksCompleted: { increment: 1 },
+        xpEarned: { increment: xpEarned },
+      },
+      create: {
+        userId,
+        activityDate: today,
+        tasksCompleted: 1,
+        xpEarned,
+      },
+    });
+
     // Update monthly XP total for college leaderboard (even in vacation mode)
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -253,8 +275,7 @@ export async function processTaskCompletion(
     });
 
     if (user?.collegeId) {
-      const now = new Date();
-    const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
       await prisma.monthlyXpTotal.upsert({
         where: {
           userId_yearMonth: {
@@ -280,7 +301,7 @@ export async function processTaskCompletion(
       currentStreak: userStreak.currentStreak,
       earlyBirdCount: updatedStreak.earlyBirdCount,
       nightOwlCount: updatedStreak.nightOwlCount,
-    });
+    }, today);
 
     return {
       xpEarned,
@@ -414,7 +435,7 @@ export async function processTaskCompletion(
     currentStreak: newStreak,
     earlyBirdCount: updatedStreak.earlyBirdCount,
     nightOwlCount: updatedStreak.nightOwlCount,
-  });
+  }, today);
 
   return {
     xpEarned,
@@ -437,7 +458,8 @@ async function checkAchievements(
     currentStreak: number;
     earlyBirdCount: number;
     nightOwlCount: number;
-  }
+  },
+  activityDate: Date
 ): Promise<Achievement[]> {
   // Get all achievements and user's existing achievements
   const [allAchievements, existingAchievements] = await Promise.all([
@@ -490,6 +512,53 @@ async function checkAchievements(
           totalXp: { increment: achievement.xpReward },
         },
       });
+
+      // Also update DailyActivity so achievement XP shows in leaderboard
+      await prisma.dailyActivity.upsert({
+        where: {
+          userId_activityDate: {
+            userId,
+            activityDate,
+          },
+        },
+        update: {
+          xpEarned: { increment: achievement.xpReward },
+        },
+        create: {
+          userId,
+          activityDate,
+          tasksCompleted: 0,
+          xpEarned: achievement.xpReward,
+        },
+      });
+
+      // Update monthly XP total for college leaderboard
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { collegeId: true },
+      });
+
+      if (user?.collegeId) {
+        const now = new Date();
+        const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        await prisma.monthlyXpTotal.upsert({
+          where: {
+            userId_yearMonth: {
+              userId,
+              yearMonth,
+            },
+          },
+          update: {
+            totalXp: { increment: achievement.xpReward },
+          },
+          create: {
+            userId,
+            collegeId: user.collegeId,
+            yearMonth,
+            totalXp: achievement.xpReward,
+          },
+        });
+      }
 
       newlyEarned.push({
         id: achievement.id,

@@ -13,7 +13,6 @@ import { MoodleSyncManager } from './MoodleSyncManager';
 import { BrightspaceSyncManager } from './BrightspaceSyncManager';
 import { AchievementToastContainer, LevelUpToast, Confetti } from './gamification';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useBetaAccess } from '@/hooks/useBetaAccess';
 import { useAnalyticsPageView } from '@/lib/useAnalytics';
 import useAppStore from '@/lib/store';
 import styles from './LayoutWrapper.module.css';
@@ -31,8 +30,6 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const dismissAchievement = useAppStore((state) => state.dismissAchievement);
   const setShowConfetti = useAppStore((state) => state.setShowConfetti);
   const dismissLevelUp = useAppStore((state) => state.dismissLevelUp);
-  const { hasAccessToFeature } = useBetaAccess();
-  const hasGamification = hasAccessToFeature('1.0.0');
   const isRefreshing = useRef(false);
 
   // Track page views for analytics
@@ -127,7 +124,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   }
 
   // Gamification overlays (toasts and confetti)
-  const gamificationOverlays = hasGamification && (
+  const gamificationOverlays = (
     <>
       <AchievementToastContainer
         achievements={pendingAchievements}

@@ -33,66 +33,68 @@ export const GET = withRateLimit(async function(request: NextRequest) {
     const startDate = new Date(Date.UTC(year, month - 1, 1));
     const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
-    // Get current user data
-    const currentUser = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        profileImage: true,
-        college: {
-          select: { id: true, fullName: true, acronym: true },
+    // Run queries in parallel for better performance
+    const [currentUser, friendships] = await Promise.all([
+      // Get current user data
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          username: true,
+          name: true,
+          profileImage: true,
+          college: {
+            select: { id: true, fullName: true, acronym: true },
+          },
+          streak: {
+            select: { currentStreak: true, longestStreak: true, totalXp: true, level: true },
+          },
         },
-        streak: {
-          select: { currentStreak: true, longestStreak: true, totalXp: true, level: true },
+      }),
+      // Get all friendships where user is either user1 or user2
+      prisma.friendship.findMany({
+        where: {
+          OR: [
+            { user1Id: userId },
+            { user2Id: userId },
+          ],
         },
-      },
-    });
+        include: {
+          user1: {
+            select: {
+              id: true,
+              username: true,
+              name: true,
+              profileImage: true,
+              college: {
+                select: { id: true, fullName: true, acronym: true },
+              },
+              streak: {
+                select: { currentStreak: true, longestStreak: true, totalXp: true, level: true },
+              },
+            },
+          },
+          user2: {
+            select: {
+              id: true,
+              username: true,
+              name: true,
+              profileImage: true,
+              college: {
+                select: { id: true, fullName: true, acronym: true },
+              },
+              streak: {
+                select: { currentStreak: true, longestStreak: true, totalXp: true, level: true },
+              },
+            },
+          },
+        },
+      }),
+    ]);
 
     if (!currentUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-
-    // Get all friendships where user is either user1 or user2
-    const friendships = await prisma.friendship.findMany({
-      where: {
-        OR: [
-          { user1Id: userId },
-          { user2Id: userId },
-        ],
-      },
-      include: {
-        user1: {
-          select: {
-            id: true,
-            username: true,
-            name: true,
-            profileImage: true,
-            college: {
-              select: { id: true, fullName: true, acronym: true },
-            },
-            streak: {
-              select: { currentStreak: true, longestStreak: true, totalXp: true, level: true },
-            },
-          },
-        },
-        user2: {
-          select: {
-            id: true,
-            username: true,
-            name: true,
-            profileImage: true,
-            college: {
-              select: { id: true, fullName: true, acronym: true },
-            },
-            streak: {
-              select: { currentStreak: true, longestStreak: true, totalXp: true, level: true },
-            },
-          },
-        },
-      },
-    });
 
     // Collect all user IDs (current user + friends)
     const allUserIds = [userId];

@@ -4,14 +4,11 @@ import { useEffect, useState, useRef, useTransition } from 'react';
 import { useSession } from 'next-auth/react';
 import useAppStore from '@/lib/store';
 import OnboardingTour from '@/components/OnboardingTour';
-import { isToday, isOverdue } from '@/lib/utils';
 import { useFormatters } from '@/hooks/useFormatters';
-import { isDateExcluded } from '@/lib/calendarUtils';
 import { getQuickLinks } from '@/lib/quickLinks';
 import { DASHBOARD_CARDS, DEFAULT_VISIBLE_DASHBOARD_CARDS } from '@/lib/customizationConstants';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useBetaAccess } from '@/hooks/useBetaAccess';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
@@ -57,14 +54,8 @@ function Dashboard() {
   const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>([]);
   const [timelineHeight, setTimelineHeight] = useState<number>(500);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const { courses, deadlines, tasks, workItems, settings, excludedDates, toggleTaskDone, updateDeadline, toggleWorkItemComplete, gamification, fetchGamification } = useAppStore();
-
-  // Use workItems if available, otherwise fall back to tasks for backward compatibility
-  const useWorkItemsFlag = workItems.length > 0 || tasks.length === 0;
-  const activeTasks = useWorkItemsFlag ? workItems : tasks;
+  const { courses, settings, toggleTaskDone, updateDeadline, toggleWorkItemComplete, gamification, fetchGamification } = useAppStore();
   const { isPremium } = useSubscription();
-  const { hasAccessToFeature } = useBetaAccess();
-  const hasGamification = hasAccessToFeature('1.0.0'); // Gamification is beta-only until released
   // Dashboard card visibility is only customizable for premium users - free users see defaults
   const savedVisibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
   const visibleDashboardCards = isPremium ? savedVisibleDashboardCards : DEFAULT_VISIBLE_DASHBOARD_CARDS;
@@ -156,12 +147,12 @@ function Dashboard() {
     }
   }, [mounted, settings.university]);
 
-  // Fetch gamification data on mount (beta users only)
+  // Fetch gamification data on mount
   useEffect(() => {
-    if (mounted && hasGamification) {
+    if (mounted) {
       fetchGamification();
     }
-  }, [mounted, hasGamification, fetchGamification]);
+  }, [mounted, fetchGamification]);
 
   // Check if user needs onboarding after mount
   // Use userId to verify data has actually loaded (not just defaults)
@@ -189,79 +180,6 @@ function Dashboard() {
     }
   }, [mounted, storeInitialized, userId, settings.hasCompletedOnboarding]);
 
-
-  // Get due soon items (for Overview card stats)
-  // Use dueSoonWindowDays - 1 to match timeline's 7-day window (today + 6 more days)
-  const dueSoon = deadlines
-    .filter((d) => {
-      if (!d.dueAt) return false;
-      const dueDate = new Date(d.dueAt);
-      const windowEnd = new Date();
-      windowEnd.setHours(23, 59, 59, 999); // End of today
-      windowEnd.setDate(windowEnd.getDate() + (settings.dueSoonWindowDays - 1));
-      return dueDate <= windowEnd && d.status === 'open';
-    })
-    .sort((a, b) => {
-      if (!a.dueAt || !b.dueAt) return 0;
-      return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
-    });
-
-  // Get today's tasks (for Overview card stats)
-  const todayTasks = activeTasks
-    .filter((t) => t.dueAt && (isToday(t.dueAt) || isOverdue(t.dueAt)) && t.status === 'open')
-    .sort((a, b) => {
-      if (a.dueAt && b.dueAt) {
-        return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
-      }
-      return a.title.localeCompare(b.title);
-    });
-
-  // Helper function to check if a course is active on a specific date
-  const isCourseCurrent = (course: any, checkDate?: Date) => {
-    const dateToCheck = checkDate ? new Date(checkDate) : new Date();
-    const dateStr = dateToCheck.toISOString().split('T')[0]; // YYYY-MM-DD format
-
-    if (course.startDate) {
-      const startStr = course.startDate.split('T')[0]; // Handle both timestamp and date string formats
-      if (startStr > dateStr) return false; // Course hasn't started
-    }
-
-    if (course.endDate) {
-      const endStr = course.endDate.split('T')[0]; // Handle both timestamp and date string formats
-      if (endStr < dateStr) return false; // Course has ended (endDate is before this date)
-    }
-
-    // Check if date is excluded
-    if (isDateExcluded(dateToCheck, course.id, excludedDates)) {
-      return false;
-    }
-
-    return true;
-  };
-
-  // Get next class
-  const today = new Date();
-  const todayClasses = courses
-    .filter((course) => isCourseCurrent(course))
-    .flatMap((course) =>
-      (course.meetingTimes || [])
-        .filter((mt) => {
-          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-          return mt.days?.includes(days[today.getDay()]) || false;
-        })
-        .map((mt) => ({
-          ...mt,
-          courseCode: course.code,
-          courseName: course.name,
-          courseLinks: course.links,
-        }))
-    );
-
-  const now = new Date();
-  const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-  const overdueTasks = activeTasks.filter((d) => d.dueAt && isOverdue(d.dueAt) && d.status === 'open');
-
   // Get quick links - filter out hidden ones and add custom links
   const hiddenLinksForUniversity = settings.university && settings.hiddenQuickLinks
     ? (settings.hiddenQuickLinks[settings.university] || [])
@@ -271,11 +189,6 @@ function Dashboard() {
   );
   const universityCustomLinks = customLinks.filter(link => link.university === settings.university);
   const quickLinks = [...defaultQuickLinks, ...universityCustomLinks];
-
-  // Status summary
-  const classesLeft = todayClasses.filter((c) => c.end > nowTime).length;
-  // Note: deadlines array is legacy - all items are now in workItems/tasks
-  const overdueCount = overdueTasks.length;
 
   // Helper function to render card with appropriate component based on device
   const renderCard = (cardId: string, title: string, children: React.ReactNode, className?: string, subtitle?: string, variant: 'primary' | 'secondary' = 'primary') => {
@@ -360,37 +273,8 @@ function Dashboard() {
               </div>
             )}
 
-            {/* Overview - only for non-beta users */}
-            {!hasGamification && visibleDashboardCards.includes(DASHBOARD_CARDS.OVERVIEW) && (
-              <div className="animate-fade-in-up" data-tour="overview">
-                {renderCard(
-                  DASHBOARD_CARDS.OVERVIEW,
-                  'Overview',
-                  <div className="space-y-0">
-                    <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: '8px', paddingBottom: '8px' }}>
-                      <div className="text-sm text-[var(--muted)] leading-relaxed">Classes remaining</div>
-                      <div className="text-base tabular-nums text-[var(--text)]" style={{ fontWeight: classesLeft > 0 ? 700 : 500, marginRight: '8px' }}>{classesLeft}</div>
-                    </div>
-                    <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: '8px', paddingBottom: '8px' }}>
-                      <div className="text-sm text-[var(--muted)] leading-relaxed">Due soon</div>
-                      <div className="text-base tabular-nums text-[var(--text)]" style={{ fontWeight: dueSoon.length > 0 ? 700 : 500, marginRight: '8px' }}>{dueSoon.length}</div>
-                    </div>
-                    <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: '8px', paddingBottom: '8px' }}>
-                      <div className="text-sm text-[var(--muted)] leading-relaxed">Overdue</div>
-                      <div className="text-base tabular-nums" style={{ fontWeight: overdueCount > 0 ? 700 : 500, color: overdueCount > 0 ? 'var(--danger)' : 'var(--text)', marginRight: '8px' }}>{overdueCount}</div>
-                    </div>
-                    <div className="flex items-center justify-between" style={{ paddingTop: '8px', paddingBottom: '8px' }}>
-                      <div className="text-sm text-[var(--muted)] leading-relaxed">Tasks today</div>
-                      <div className="text-base tabular-nums text-[var(--text)]" style={{ fontWeight: todayTasks.length > 0 ? 700 : 500, marginRight: '8px' }}>{todayTasks.length}</div>
-                    </div>
-                  </div>,
-                  'flex flex-col'
-                )}
-              </div>
-            )}
-
-            {/* Progress / Gamification - beta users only */}
-            {hasGamification && visibleDashboardCards.includes(DASHBOARD_CARDS.PROGRESS) && (
+            {/* Progress / Gamification */}
+            {visibleDashboardCards.includes(DASHBOARD_CARDS.PROGRESS) && (
               <div className="animate-fade-in-up">
                 <StreakCard data={gamification} loading={!gamification} />
               </div>
@@ -462,39 +346,10 @@ function Dashboard() {
               </div>
             )}
 
-            {/* Column 2: Overview/Progress and Quick Links stacked */}
+            {/* Column 2: Progress and Quick Links stacked */}
             <div className="flex flex-col gap-6" style={{ width: '320px', flexShrink: 0, height: `${timelineHeight}px` }}>
-              {/* Overview - only for non-beta users */}
-              {!hasGamification && visibleDashboardCards.includes(DASHBOARD_CARDS.OVERVIEW) && (
-                <div className="animate-fade-in-up" data-tour="overview">
-                  {renderCard(
-                    DASHBOARD_CARDS.OVERVIEW,
-                    'Overview',
-                    <div className="space-y-0">
-                      <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: '12px', paddingBottom: '12px' }}>
-                        <div className="text-sm text-[var(--muted)] leading-relaxed">Classes remaining</div>
-                        <div className="text-base tabular-nums text-[var(--text)]" style={{ fontWeight: classesLeft > 0 ? 700 : 500, marginRight: '8px' }}>{classesLeft}</div>
-                      </div>
-                      <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: '12px', paddingBottom: '12px' }}>
-                        <div className="text-sm text-[var(--muted)] leading-relaxed">Due soon</div>
-                        <div className="text-base tabular-nums text-[var(--text)]" style={{ fontWeight: dueSoon.length > 0 ? 700 : 500, marginRight: '8px' }}>{dueSoon.length}</div>
-                      </div>
-                      <div className="flex items-center justify-between border-b border-[var(--border)]" style={{ paddingTop: '12px', paddingBottom: '12px' }}>
-                        <div className="text-sm text-[var(--muted)] leading-relaxed">Overdue</div>
-                        <div className="text-base tabular-nums" style={{ fontWeight: overdueCount > 0 ? 700 : 500, color: overdueCount > 0 ? 'var(--danger)' : 'var(--text)', marginRight: '8px' }}>{overdueCount}</div>
-                      </div>
-                      <div className="flex items-center justify-between" style={{ paddingTop: '12px', paddingBottom: '12px' }}>
-                        <div className="text-sm text-[var(--muted)] leading-relaxed">Tasks today</div>
-                        <div className="text-base tabular-nums text-[var(--text)]" style={{ fontWeight: todayTasks.length > 0 ? 700 : 500, marginRight: '8px' }}>{todayTasks.length}</div>
-                      </div>
-                    </div>,
-                    'flex flex-col'
-                  )}
-                </div>
-              )}
-
-              {/* Progress / Gamification - beta users only */}
-              {hasGamification && visibleDashboardCards.includes(DASHBOARD_CARDS.PROGRESS) && (
+              {/* Progress / Gamification */}
+              {visibleDashboardCards.includes(DASHBOARD_CARDS.PROGRESS) && (
                 <div className="animate-fade-in-up flex-1 min-h-0 flex flex-col">
                   <StreakCard data={gamification} loading={!gamification} />
                 </div>

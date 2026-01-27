@@ -11,7 +11,6 @@ import NotificationBell from '@/components/NotificationBell';
 import { DEFAULT_VISIBLE_PAGES } from '@/lib/customizationConstants';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useBetaAccess } from '@/hooks/useBetaAccess';
 import { useMobileNav } from '@/context/MobileNavContext';
 import { isOverdue } from '@/lib/utils';
 import { useIsLightMode } from '@/hooks/useEffectiveTheme';
@@ -69,8 +68,6 @@ export default function Navigation() {
 
   // Check premium status - premium features use defaults when not premium
   const { isPremium } = useSubscription();
-  const { hasAccessToFeature } = useBetaAccess();
-  const hasGamification = hasAccessToFeature('1.0.0');
 
   // Custom theme and visual effects are only active for premium users
   const useCustomTheme = isPremium ? savedUseCustomTheme : false;
@@ -268,10 +265,8 @@ export default function Navigation() {
     });
   })();
 
-  // Filter out Progress page for non-beta users (gamification is beta-only)
-  const filteredNavItems = hasGamification
-    ? sortedNavItems
-    : sortedNavItems.filter(item => item.href !== '/progress');
+  // All nav items are available to all users
+  const filteredNavItems = sortedNavItems;
 
   // Clear admin status when user logs out, validate in background for logged-in users
   useEffect(() => {

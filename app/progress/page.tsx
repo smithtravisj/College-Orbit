@@ -6,14 +6,12 @@ import { useSession } from 'next-auth/react';
 import { Flame, Trophy, Zap, Lock, Target, Clock, Award, Star, Rocket, Medal, Crown, Sun, Moon, Sparkles, ChevronLeft, ChevronRight, Users, School } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { GamificationData, Achievement } from '@/types';
-import { useBetaAccess } from '@/hooks/useBetaAccess';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import useAppStore from '@/lib/store';
 
 export default function ProgressPage() {
   const { status } = useSession();
   const router = useRouter();
-  const { hasAccessToFeature, loaded: betaLoaded } = useBetaAccess();
   const isMobile = useIsMobile();
 
   // Use store data first for instant display, then fetch fresh data
@@ -31,6 +29,7 @@ export default function ProgressPage() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -47,19 +46,16 @@ export default function ProgressPage() {
   }, [storeGamification]);
 
   useEffect(() => {
-    // Wait for store and beta access to be loaded before checking
-    if (!storeInitialized || !betaLoaded) return;
-
-    if (!hasAccessToFeature('1.0.0')) {
-      router.push('/');
-      return;
-    }
+    if (!storeInitialized) return;
 
     // Fetch fresh data (updates store which updates local state)
     fetchGamification().finally(() => setLoading(false));
-    fetchFriendsLeaderboard(leaderboardMonth);
-    fetchCollegeLeaderboard(leaderboardMonth);
-  }, [storeInitialized, betaLoaded, hasAccessToFeature, router, fetchGamification, fetchFriendsLeaderboard, fetchCollegeLeaderboard, leaderboardMonth]);
+    setLeaderboardLoading(true);
+    Promise.all([
+      fetchFriendsLeaderboard(leaderboardMonth),
+      fetchCollegeLeaderboard(leaderboardMonth),
+    ]).finally(() => setLeaderboardLoading(false));
+  }, [storeInitialized, fetchGamification, fetchFriendsLeaderboard, fetchCollegeLeaderboard, leaderboardMonth]);
 
   const getStreakColorValue = (streak: number, vacationMode: boolean) => {
     if (vacationMode) return 'var(--text-muted)';
@@ -165,7 +161,7 @@ export default function ProgressPage() {
     setSelectedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
   };
 
-  if (loading || !gamification || !betaLoaded || !storeInitialized) {
+  if (loading || !gamification || !storeInitialized) {
     return (
       <>
         {/* Header skeleton */}
@@ -349,6 +345,7 @@ export default function ProgressPage() {
           {/* Friends Leaderboard */}
           <Card
             title="Friends Leaderboard"
+            subtitle="Ranked by XP earned this month"
             style={isMobile ? { padding: '12px' } : undefined}
             action={
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
@@ -385,7 +382,23 @@ export default function ProgressPage() {
               </div>
             }
           >
-            {friendsLeaderboard.length === 0 ? (
+            {leaderboardLoading ? (
+              <div style={{ textAlign: 'center', padding: isMobile ? '16px' : '24px' }}>
+                <div style={{
+                  width: isMobile ? '24px' : '32px',
+                  height: isMobile ? '24px' : '32px',
+                  border: '3px solid var(--border)',
+                  borderTopColor: 'var(--link)',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                  margin: '0 auto 8px'
+                }} />
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', margin: 0 }}>
+                  Loading leaderboard...
+                </p>
+              </div>
+            ) : friendsLeaderboard.length === 0 ? (
               <div style={{ textAlign: 'center', padding: isMobile ? '16px' : '24px' }}>
                 <Users size={isMobile ? 32 : 40} style={{ color: 'var(--text-muted)', marginBottom: '8px' }} />
                 <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', margin: 0 }}>
@@ -469,7 +482,7 @@ export default function ProgressPage() {
                         </p>
                       </div>
 
-                      {/* XP & Streak */}
+                      {/* Monthly XP & Streak */}
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <p style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: 600, color: 'var(--link)', margin: 0 }}>
                           {entry.xp.total.toLocaleString()} XP
@@ -489,6 +502,7 @@ export default function ProgressPage() {
           {/* College Leaderboard */}
           <Card
             title="College Leaderboard"
+            subtitle="Schools ranked by total XP this month"
             style={isMobile ? { padding: '12px' } : undefined}
             action={
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
@@ -525,7 +539,22 @@ export default function ProgressPage() {
               </div>
             }
           >
-            {collegeLeaderboard.length === 0 ? (
+            {leaderboardLoading ? (
+              <div style={{ textAlign: 'center', padding: isMobile ? '16px' : '24px' }}>
+                <div style={{
+                  width: isMobile ? '24px' : '32px',
+                  height: isMobile ? '24px' : '32px',
+                  border: '3px solid var(--border)',
+                  borderTopColor: 'var(--link)',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                  margin: '0 auto 8px'
+                }} />
+                <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', margin: 0 }}>
+                  Loading leaderboard...
+                </p>
+              </div>
+            ) : collegeLeaderboard.length === 0 ? (
               <div style={{ textAlign: 'center', padding: isMobile ? '16px' : '24px' }}>
                 <School size={isMobile ? 32 : 40} style={{ color: 'var(--text-muted)', marginBottom: '8px' }} />
                 <p style={{ fontSize: isMobile ? '13px' : '14px', color: 'var(--text-muted)', margin: 0 }}>
