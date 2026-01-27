@@ -38,7 +38,7 @@ export default function ProgressPage() {
   }, [storeGamification]);
 
   useEffect(() => {
-    if (!hasAccessToFeature('1.2.0')) {
+    if (!hasAccessToFeature('1.1.0')) {
       router.push('/');
       return;
     }

@@ -32,7 +32,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const setShowConfetti = useAppStore((state) => state.setShowConfetti);
   const dismissLevelUp = useAppStore((state) => state.dismissLevelUp);
   const { hasAccessToFeature } = useBetaAccess();
-  const hasGamification = hasAccessToFeature('1.2.0');
+  const hasGamification = hasAccessToFeature('1.1.0');
   const isRefreshing = useRef(false);
 
   // Track page views for analytics

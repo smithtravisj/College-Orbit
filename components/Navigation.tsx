@@ -70,7 +70,7 @@ export default function Navigation() {
   // Check premium status - premium features use defaults when not premium
   const { isPremium } = useSubscription();
   const { hasAccessToFeature } = useBetaAccess();
-  const hasGamification = hasAccessToFeature('1.2.0');
+  const hasGamification = hasAccessToFeature('1.1.0');
 
   // Custom theme and visual effects are only active for premium users
   const useCustomTheme = isPremium ? savedUseCustomTheme : false;

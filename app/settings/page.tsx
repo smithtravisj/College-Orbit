@@ -2425,7 +2425,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Streaks & Gamification - beta users only */}
-          {hasAccessToFeature('1.2.0') && (
+          {hasAccessToFeature('1.1.0') && (
           <Card title="Streak">
             {/* Vacation Mode */}
             <div>
