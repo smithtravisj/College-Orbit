@@ -16,7 +16,7 @@ export default function TermsContent() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Effective Date: January 23, 2026
+                Effective Date: January 27, 2026
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 These Terms of Service ("Terms") govern your use of the College Orbit website and services ("Service"). By creating an account and using the Service, you agree to be legally bound by these Terms. If you do not agree to these Terms, please do not use the Service.
@@ -61,6 +61,10 @@ export default function TermsContent() {
                 <li>School-specific information and branding (universities and high schools)</li>
                 <li>Data export and import functionality for backup and portability</li>
                 <li>Calendar export to iCal format and subscription URLs for external calendar apps</li>
+                <li>Browser extension for Chrome to quick-add assignments from Canvas and Learning Suite</li>
+                <li>Gamification system with XP, levels, streaks, and achievements</li>
+                <li>Friends system and leaderboards for social motivation</li>
+                <li>Referral program to earn free premium time</li>
                 <li>Session management to view and revoke access from logged-in devices</li>
               </ul>
             </div>
@@ -326,6 +330,66 @@ export default function TermsContent() {
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 Your use of third-party services is governed by their own terms of service and privacy policies, not these Terms.
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Browser Extension */}
+        <Card title="Browser Extension">
+          <div className="space-y-4">
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Purpose
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                The College Orbit browser extension for Chrome allows you to quickly add assignments from Canvas and BYU Learning Suite directly to your College Orbit account without leaving the LMS page.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Data Access
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                The extension only accesses data on Canvas (*.instructure.com) and Learning Suite (learningsuite.byu.edu) pages. It reads assignment titles, due dates, point values, descriptions, and course names from pages you visit. The extension does not access, read, or collect data from any other websites. The extension does not modify any data on Canvas or Learning Suite.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Authentication
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                The extension authenticates with your College Orbit account using either your existing session cookie or email/password login. Your credentials are stored securely in Chrome&apos;s local storage and are only transmitted to College Orbit servers over HTTPS.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                No Affiliation
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                The browser extension is not affiliated with, endorsed by, or sponsored by Instructure (Canvas), Brigham Young University, or any other educational institution. Use of the extension is subject to your institution&apos;s acceptable use policies.
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Referral Program */}
+        <Card title="Referral Program">
+          <div className="space-y-4">
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                How It Works
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                You may invite others to College Orbit using your unique referral code. When a new user signs up with your referral code, both you and the referred user may receive rewards such as free premium subscription time, as described in the app.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Restrictions
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                You may not create multiple accounts to exploit the referral program. Referral rewards are subject to change at any time. We reserve the right to revoke referral rewards and suspend accounts that abuse the referral system.
               </p>
             </div>
           </div>

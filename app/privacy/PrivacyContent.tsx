@@ -16,7 +16,7 @@ export default function PrivacyContent() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Last Updated: January 23, 2026
+                Last Updated: January 27, 2026
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 At College Orbit, your privacy is our priority. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our service. We believe in transparency and give you full control over your data.
@@ -74,6 +74,30 @@ export default function PrivacyContent() {
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 If you choose to connect an LMS account (Canvas, Blackboard, Moodle, or Brightspace), we store your LMS instance URL and encrypted credentials (API token or username/password depending on the platform). When you sync, we import and store course information (names, codes, dates), assignments (titles, descriptions, due dates, points), grades and scores, and calendar events. This data is fetched using your credentials and stored in your College Orbit account. You can disconnect your LMS at any time, which removes the stored credentials but preserves any synced data unless you manually delete it.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Browser Extension Data
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                If you use the College Orbit browser extension (available for Chrome), the extension accesses assignment data on Canvas (*.instructure.com) and BYU Learning Suite (learningsuite.byu.edu) pages you visit. The extension scrapes publicly visible assignment information from these pages, including titles, due dates, point values, descriptions, and course names. This data is only collected when you actively interact with the extension (clicking the &quot;Add to Orbit&quot; button or opening the extension popup). The extension stores your authentication token and temporarily cached assignment data in Chrome&apos;s local storage. The extension reads your College Orbit session cookie from collegeorbit.app for automatic sign-in. No browsing history, personal communications, or data from non-LMS websites is ever collected.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Referral Program Data
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                If you participate in the referral program, we store your unique referral code and track when referred users sign up using your code. We record the referral relationship between accounts to issue rewards (free premium time). We do not share your referral activity with other users beyond showing your referral count.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Gamification & Social Data
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                If you use gamification features, we track experience points (XP) earned from completing tasks, streaks, and achievements. If you use the friends and leaderboard features, your display name, avatar, XP, streak, and level are visible to users you have added as friends. You can control your participation in these features through Settings.
               </p>
             </div>
             <div>
@@ -234,6 +258,7 @@ export default function PrivacyContent() {
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <li>With our email service provider (Resend) to send password reset and transactional emails</li>
                 <li>With your LMS instance (only if you connect Canvas, Blackboard, Moodle, or Brightspace) to fetch your academic data</li>
+                <li>Between our browser extension and our servers to save assignments you choose to add from Canvas or Learning Suite pages</li>
                 <li>With service providers who help us operate the platform (hosting, databases) under confidentiality agreements</li>
                 <li>When required by law or legal process</li>
                 <li>To protect against fraud, security threats, or illegal activity</li>
