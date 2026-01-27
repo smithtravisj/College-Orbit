@@ -49,27 +49,24 @@ export default function ProgressPage() {
 
   const getStreakColorValue = (streak: number, vacationMode: boolean) => {
     if (vacationMode) return 'var(--text-muted)';
-    if (streak >= 30) return '#f97316';
-    if (streak >= 14) return '#fb923c';
-    if (streak >= 7) return '#eab308';
-    if (streak >= 1) return '#facc15';
+    if (streak >= 1) return 'var(--warning)';
     return 'var(--text-muted)';
   };
 
   const getActivityColorValue = (count: number) => {
-    return count > 0 ? '#22c55e' : 'var(--border)';
+    return count > 0 ? 'var(--success)' : 'var(--border)';
   };
 
   const getTierColors = (tier: string) => {
     switch (tier) {
       case 'platinum':
-        return { bg: 'rgba(6, 182, 212, 0.1)', border: '#06b6d4', text: '#22d3ee' };
+        return { bg: 'var(--accent-2)', border: 'var(--accent)', text: 'var(--accent)' };
       case 'gold':
-        return { bg: 'rgba(234, 179, 8, 0.1)', border: '#eab308', text: '#facc15' };
+        return { bg: 'var(--warning-bg)', border: 'var(--warning)', text: 'var(--warning)' };
       case 'silver':
-        return { bg: 'rgba(156, 163, 175, 0.1)', border: '#9ca3af', text: '#d1d5db' };
+        return { bg: 'var(--border)', border: 'var(--text-muted)', text: 'var(--text-muted)' };
       default:
-        return { bg: 'rgba(249, 115, 22, 0.1)', border: '#f97316', text: '#fb923c' };
+        return { bg: 'var(--warning-bg)', border: 'var(--warning)', text: 'var(--warning)' };
     }
   };
 
@@ -241,8 +238,8 @@ export default function ProgressPage() {
 
           {/* Tasks Completed */}
           <div style={{ backgroundColor: 'var(--panel)', border: '1px solid var(--border)', borderRadius: isMobile ? '8px' : '12px', padding: isMobile ? '10px 8px' : '16px', textAlign: 'center', gridColumn: isMobile ? 'span 1' : 'auto' }}>
-            <Clock size={isMobile ? 20 : 28} style={{ color: '#34d399' }} />
-            <p style={{ fontSize: isMobile ? '20px' : '28px', fontWeight: 700, color: '#34d399', margin: '2px 0 0 0' }}>
+            <Clock size={isMobile ? 20 : 28} style={{ color: 'var(--success)' }} />
+            <p style={{ fontSize: isMobile ? '20px' : '28px', fontWeight: 700, color: 'var(--success)', margin: '2px 0 0 0' }}>
               {streak.totalTasksCompleted}
             </p>
             <p style={{ fontSize: isMobile ? '10px' : '12px', color: 'var(--text-muted)', margin: '1px 0 0 0' }}>Tasks Done</p>
@@ -250,8 +247,8 @@ export default function ProgressPage() {
 
           {/* Best Streak */}
           <div style={{ backgroundColor: 'var(--panel)', border: '1px solid var(--border)', borderRadius: isMobile ? '8px' : '12px', padding: isMobile ? '10px 8px' : '16px', textAlign: 'center', gridColumn: isMobile ? 'span 2' : 'auto' }}>
-            <Trophy size={isMobile ? 20 : 28} style={{ color: '#eab308' }} />
-            <p style={{ fontSize: isMobile ? '20px' : '28px', fontWeight: 700, color: '#eab308', margin: '2px 0 0 0' }}>
+            <Trophy size={isMobile ? 20 : 28} style={{ color: 'var(--warning)' }} />
+            <p style={{ fontSize: isMobile ? '20px' : '28px', fontWeight: 700, color: 'var(--warning)', margin: '2px 0 0 0' }}>
               {streak.longestStreak}
             </p>
             <p style={{ fontSize: isMobile ? '10px' : '12px', color: 'var(--text-muted)', margin: '1px 0 0 0' }}>Best Streak</p>
@@ -352,7 +349,7 @@ export default function ProgressPage() {
                         padding: isMobile ? '10px' : '16px',
                         borderRadius: isMobile ? '6px' : '8px',
                         backgroundColor: isUnlocked ? tierColors.bg : 'var(--panel)',
-                        border: `1px solid ${isUnlocked ? tierColors.border : '#374151'}`,
+                        border: `1px solid ${isUnlocked ? tierColors.border : 'var(--border)'}`,
                         opacity: isUnlocked ? 1 : 0.5,
                         display: 'flex',
                         alignItems: 'center',
@@ -364,7 +361,7 @@ export default function ProgressPage() {
                           width: isMobile ? '36px' : '48px',
                           height: isMobile ? '36px' : '48px',
                           borderRadius: '50%',
-                          backgroundColor: isUnlocked ? tierColors.bg : '#374151',
+                          backgroundColor: isUnlocked ? tierColors.bg : 'var(--border)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -374,7 +371,7 @@ export default function ProgressPage() {
                         {isUnlocked ? getIconComponent(achievement.icon, isUnlocked, tierColors) : <Lock size={isMobile ? 16 : 20} style={{ color: 'var(--text-muted)' }} />}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: 600, color: isUnlocked ? tierColors.text : '#6b7280', margin: 0 }}>
+                        <p style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: 600, color: isUnlocked ? tierColors.text : 'var(--text-muted)', margin: 0 }}>
                           {achievement.name}
                         </p>
                         <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', margin: '1px 0 0 0' }}>

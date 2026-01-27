@@ -84,15 +84,12 @@ export default function StreakCard({ data, loading = false }: StreakCardProps) {
 
   const getStreakColorValue = () => {
     if (streak.vacationMode) return 'var(--text-muted)';
-    if (streak.currentStreak >= 30) return '#f97316';
-    if (streak.currentStreak >= 14) return '#fb923c';
-    if (streak.currentStreak >= 7) return '#eab308';
-    if (streak.currentStreak >= 1) return '#facc15';
+    if (streak.currentStreak >= 1) return 'var(--warning)';
     return 'var(--text-muted)';
   };
 
   const getActivityColorValue = (count: number) => {
-    return count > 0 ? '#22c55e' : 'var(--border)';
+    return count > 0 ? 'var(--success)' : 'var(--border)';
   };
 
   const hasBestStreak = streak.longestStreak > 0 && streak.longestStreak > streak.currentStreak;
@@ -206,7 +203,7 @@ export default function StreakCard({ data, loading = false }: StreakCardProps) {
       {/* Best Streak */}
       {hasBestStreak && (
         <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '10px', color: 'var(--text-muted)' }}>
-          <Trophy size={12} style={{ color: '#eab308' }} />
+          <Trophy size={12} style={{ color: 'var(--warning)' }} />
           <span>Best: {streak.longestStreak} days</span>
         </div>
       )}

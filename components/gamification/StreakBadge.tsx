@@ -17,19 +17,13 @@ export default function StreakBadge({
 }: StreakBadgeProps) {
   const getStreakColor = () => {
     if (vacationMode) return 'var(--text-muted)';
-    if (streak >= 30) return '#f97316';
-    if (streak >= 14) return '#fb923c';
-    if (streak >= 7) return '#eab308';
-    if (streak >= 1) return '#facc15';
+    if (streak >= 1) return 'var(--warning)';
     return 'var(--text-muted)';
   };
 
   const getBackgroundColor = () => {
     if (vacationMode) return 'var(--bg-secondary, rgba(0,0,0,0.1))';
-    if (streak >= 30) return 'rgba(249, 115, 22, 0.2)';
-    if (streak >= 14) return 'rgba(251, 146, 60, 0.15)';
-    if (streak >= 7) return 'rgba(234, 179, 8, 0.15)';
-    if (streak >= 1) return 'rgba(250, 204, 21, 0.1)';
+    if (streak >= 1) return 'var(--warning-bg)';
     return 'var(--bg-secondary, rgba(0,0,0,0.1))';
   };
 

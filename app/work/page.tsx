@@ -741,13 +741,11 @@ export default function TasksPage() {
     if (action === 'complete') {
       // Mark all selected as done with fade effect (same as individual completion)
       const ids = Array.from(bulkSelect.selectedIds);
-      // Add to toggledTasks to keep them visible
-      startTransition(() => {
-        setToggledTasks(prev => {
-          const newSet = new Set(prev);
-          ids.forEach(id => newSet.add(id));
-          return newSet;
-        });
+      // Add to toggledTasks SYNCHRONOUSLY to keep them visible (prevent flicker)
+      setToggledTasks(prev => {
+        const newSet = new Set(prev);
+        ids.forEach(id => newSet.add(id));
+        return newSet;
       });
       // Update the tasks/work items
       if (useWorkItems) {
@@ -1931,17 +1929,15 @@ export default function TasksPage() {
                         onClick={(e) => e.stopPropagation()}
                         onChange={() => {
                           const isCurrentlyDone = t.status === 'done';
-                          // Use startTransition to batch lower-priority state updates
-                          startTransition(() => {
-                            setToggledTasks(prev => {
-                              const newSet = new Set(prev);
-                              if (newSet.has(t.id)) {
-                                newSet.delete(t.id);
-                              } else {
-                                newSet.add(t.id);
-                              }
-                              return newSet;
-                            });
+                          // Add to toggledTasks SYNCHRONOUSLY before store update to prevent flicker
+                          setToggledTasks(prev => {
+                            const newSet = new Set(prev);
+                            if (newSet.has(t.id)) {
+                              newSet.delete(t.id);
+                            } else {
+                              newSet.add(t.id);
+                            }
+                            return newSet;
                           });
                           handleToggleComplete(t.id);
                           // Only fade out when marking as done, not when unchecking
@@ -2533,17 +2529,15 @@ export default function TasksPage() {
                 onClick={() => {
                   const task = previewingTask;
                   const isCurrentlyDone = task.status === 'done';
-                  // Add to toggledTasks to keep it visible
-                  startTransition(() => {
-                    setToggledTasks(prev => {
-                      const newSet = new Set(prev);
-                      if (newSet.has(task.id)) {
-                        newSet.delete(task.id);
-                      } else {
-                        newSet.add(task.id);
-                      }
-                      return newSet;
-                    });
+                  // Add to toggledTasks SYNCHRONOUSLY to keep it visible (prevent flicker)
+                  setToggledTasks(prev => {
+                    const newSet = new Set(prev);
+                    if (newSet.has(task.id)) {
+                      newSet.delete(task.id);
+                    } else {
+                      newSet.add(task.id);
+                    }
+                    return newSet;
                   });
                   handleToggleComplete(task.id);
                   // Only fade out when marking as done, not when unchecking

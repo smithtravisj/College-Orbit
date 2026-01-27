@@ -35,21 +35,24 @@ export default function LevelUpToast({ level, onDismiss }: LevelUpToastProps) {
     <div
       style={{
         position: 'fixed',
-        bottom: '80px',
-        right: '16px',
-        zIndex: 50,
-        transform: isVisible && !isLeaving ? 'translateX(0)' : 'translateX(100%)',
+        bottom: '20px',
+        left: '20px',
+        zIndex: 9999,
+        transform: isVisible && !isLeaving ? 'translateY(0)' : 'translateY(20px)',
         opacity: isVisible && !isLeaving ? 1 : 0,
         transition: 'all 0.3s ease-out',
+        pointerEvents: isVisible && !isLeaving ? 'auto' : 'none',
       }}
     >
       <div
         style={{
           backgroundColor: 'var(--panel)',
-          borderRadius: '8px',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
-          border: '1px solid var(--link)',
-          padding: '12px 16px',
+          borderRadius: '12px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+          border: '1px solid var(--border)',
+          borderLeftWidth: '3px',
+          borderLeftColor: 'var(--link)',
+          padding: '14px 16px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
@@ -59,20 +62,34 @@ export default function LevelUpToast({ level, onDismiss }: LevelUpToastProps) {
           style={{
             width: '36px',
             height: '36px',
-            borderRadius: '50%',
-            backgroundColor: 'var(--link)',
+            borderRadius: '8px',
+            backgroundColor: 'var(--panel-2)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            flexShrink: 0,
           }}
         >
-          <Zap size={20} style={{ color: 'white' }} fill="white" />
+          <Zap size={20} style={{ color: 'var(--link)' }} />
         </div>
         <div>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
-            Level Up!
+          <p style={{
+            fontSize: '11px',
+            color: 'var(--link)',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.03em',
+            margin: '0 0 2px 0'
+          }}>
+            Level Up
           </p>
-          <p style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)', margin: 0 }}>
+          <p style={{
+            fontSize: '18px',
+            fontWeight: 700,
+            color: 'var(--text)',
+            margin: 0,
+            lineHeight: 1.2,
+          }}>
             Level {level}
           </p>
         </div>
@@ -84,8 +101,16 @@ export default function LevelUpToast({ level, onDismiss }: LevelUpToastProps) {
             background: 'none',
             border: 'none',
             cursor: 'pointer',
+            borderRadius: '4px',
             marginLeft: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background-color 0.2s',
+            flexShrink: 0,
           }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--panel-2)'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
         >
           <X size={16} />
         </button>

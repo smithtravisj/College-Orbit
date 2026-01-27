@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { X, Zap } from 'lucide-react';
+import { X, Zap, Flame, Star, Trophy, Rocket, Target, Medal, Crown, Sun, Moon, Sparkles, Award } from 'lucide-react';
 import { Achievement } from '@/types';
 
 interface AchievementToastProps {
@@ -37,83 +37,92 @@ export default function AchievementToast({
     }, 300);
   };
 
-  const getTierColors = () => {
+  const getAccentColor = () => {
     switch (achievement.tier) {
       case 'platinum':
-        return { from: '#22d3ee', to: '#0891b2', border: 'rgba(6, 182, 212, 0.5)' };
+        return 'var(--accent)';
       case 'gold':
-        return { from: '#facc15', to: '#ca8a04', border: 'rgba(234, 179, 8, 0.5)' };
+        return 'var(--warning)';
       case 'silver':
-        return { from: '#d1d5db', to: '#6b7280', border: 'rgba(156, 163, 175, 0.5)' };
+        return 'var(--text-muted)';
       default:
-        return { from: '#fb923c', to: '#ea580c', border: 'rgba(249, 115, 22, 0.5)' };
+        return 'var(--warning)';
     }
   };
 
-  const tierColors = getTierColors();
-
   const getIcon = () => {
-    const iconMap: Record<string, string> = {
-      'flame': '🔥',
-      'star': '⭐',
-      'trophy': '🏆',
-      'rocket': '🚀',
-      'zap': '⚡',
-      'target': '🎯',
-      'medal': '🏅',
-      'crown': '👑',
-      'fire': '🔥',
-      'sun': '☀️',
-      'moon': '🌙',
-      'sparkles': '✨',
-    };
-    return iconMap[achievement.icon] || '🎖️';
+    const color = getAccentColor();
+    const props = { size: 20, style: { color } };
+
+    switch (achievement.icon) {
+      case 'flame':
+      case 'fire':
+        return <Flame {...props} />;
+      case 'star':
+        return <Star {...props} />;
+      case 'trophy':
+        return <Trophy {...props} />;
+      case 'rocket':
+        return <Rocket {...props} />;
+      case 'zap':
+        return <Zap {...props} />;
+      case 'target':
+        return <Target {...props} />;
+      case 'medal':
+        return <Medal {...props} />;
+      case 'crown':
+        return <Crown {...props} />;
+      case 'sun':
+        return <Sun {...props} />;
+      case 'moon':
+        return <Moon {...props} />;
+      case 'sparkles':
+        return <Sparkles {...props} />;
+      default:
+        return <Award {...props} />;
+    }
   };
+
+  const accentColor = getAccentColor();
 
   return (
     <div
       style={{
         position: 'fixed',
-        bottom: '16px',
-        right: '16px',
-        zIndex: 50,
-        maxWidth: '384px',
-        transform: isVisible && !isLeaving ? 'translateX(0)' : 'translateX(100%)',
+        bottom: '20px',
+        right: '20px',
+        zIndex: 9999,
+        maxWidth: '320px',
+        width: '100%',
+        transform: isVisible && !isLeaving ? 'translateY(0)' : 'translateY(20px)',
         opacity: isVisible && !isLeaving ? 1 : 0,
         transition: 'all 0.3s ease-out',
+        pointerEvents: isVisible && !isLeaving ? 'auto' : 'none',
       }}
     >
       <div
         style={{
           backgroundColor: 'var(--panel)',
-          borderRadius: '8px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          border: `1px solid ${tierColors.border}`,
+          borderRadius: '12px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+          border: '1px solid var(--border)',
+          borderLeftWidth: '3px',
+          borderLeftColor: accentColor,
           overflow: 'hidden',
         }}
       >
-        {/* Gradient header */}
-        <div
-          style={{
-            height: '4px',
-            background: `linear-gradient(to right, ${tierColors.from}, ${tierColors.to})`,
-          }}
-        />
-
-        <div style={{ padding: '16px' }}>
+        <div style={{ padding: '14px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
             {/* Icon */}
             <div
               style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                background: `linear-gradient(to bottom right, ${tierColors.from}, ${tierColors.to})`,
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                backgroundColor: 'var(--panel-2)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '24px',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
                 flexShrink: 0,
               }}
             >
@@ -122,21 +131,47 @@ export default function AchievementToast({
 
             {/* Content */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
-                Achievement Unlocked!
+              <p style={{
+                fontSize: '11px',
+                color: accentColor,
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.03em',
+                margin: '0 0 2px 0'
+              }}>
+                Achievement Unlocked
               </p>
-              <h4 style={{ color: 'var(--text)', fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <p style={{
+                fontSize: '14px',
+                fontWeight: 600,
+                color: 'var(--text)',
+                margin: 0,
+                lineHeight: 1.3,
+              }}>
                 {achievement.name}
-              </h4>
-              <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '4px 0 0 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              </p>
+              <p style={{
+                fontSize: '12px',
+                color: 'var(--text-muted)',
+                margin: '4px 0 0 0',
+                lineHeight: 1.4,
+              }}>
                 {achievement.description}
               </p>
 
               {/* XP Reward */}
               {achievement.xpReward > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px', color: 'var(--link)' }}>
-                  <Zap size={14} />
-                  <span style={{ fontSize: '14px', fontWeight: 500 }}>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  marginTop: '8px',
+                  padding: '3px 8px',
+                  backgroundColor: 'var(--panel-2)',
+                  borderRadius: '4px',
+                }}>
+                  <Zap size={12} style={{ color: 'var(--link)' }} />
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--link)' }}>
                     +{achievement.xpReward} XP
                   </span>
                 </div>
@@ -152,8 +187,15 @@ export default function AchievementToast({
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                transition: 'color 0.2s',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background-color 0.2s',
+                flexShrink: 0,
               }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--panel-2)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               <X size={16} />
             </button>
