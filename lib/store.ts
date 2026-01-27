@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS: Settings = {
   visibleDashboardCards: DEFAULT_VISIBLE_DASHBOARD_CARDS,
   visibleToolsCards: DEFAULT_VISIBLE_TOOLS_CARDS,
   hasCompletedOnboarding: false, // Always show tour on first login
+  hasDemoData: false,
   examReminders: [
     { enabled: false, value: 7, unit: 'days' },
     { enabled: false, value: 1, unit: 'days' },

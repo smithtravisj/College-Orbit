@@ -506,7 +506,7 @@ export default function CoursesPage() {
             ) : (
               <EmptyState
                 title={termFilter === 'all' ? 'No courses yet' : 'No courses in this term'}
-                description={termFilter === 'all' ? 'Add your first course to get started' : 'Try selecting a different term'}
+                description={termFilter === 'all' ? 'Add your first course to get started, or connect Canvas in Settings to import automatically.' : 'Try selecting a different term'}
                 action={
                   termFilter !== 'all'
                     ? { label: 'View all courses', onClick: () => handleTermFilterChange('all') }

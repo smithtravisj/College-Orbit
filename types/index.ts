@@ -338,6 +338,7 @@ export interface Settings {
   toolsCardsOrder?: string[] | string | null;
   visiblePagesOrder?: string[] | string | null;
   hasCompletedOnboarding?: boolean;
+  hasDemoData?: boolean;
   examReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
   deadlineReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
   taskReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;

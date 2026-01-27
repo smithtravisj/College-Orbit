@@ -144,6 +144,7 @@ export async function GET(request: NextRequest) {
         enableNotifications: false,
         university: null,
         hasCompletedOnboarding: false,
+        hasDemoData: false,
         selectedGradeSemester: 'all',
         courseTermFilter: 'all',
         visibleDashboardCards: ['timeline', 'overview', 'dashboard_quickLinks'],

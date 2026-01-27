@@ -22,6 +22,7 @@ import { Timeline } from '@/components/dashboard';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import { Task, Deadline, Course, Exam, CalendarEvent, WorkItem } from '@/types';
 import { StreakCard } from '@/components/gamification';
+import DemoBanner from '@/components/DemoBanner';
 
 export default function AuthenticatedDashboard() {
   const { data: session } = useSession();
@@ -207,6 +208,7 @@ export default function AuthenticatedDashboard() {
       </div>
 
       <div className="mx-auto w-full max-w-[1800px] flex flex-col" style={{ padding: 'clamp(12px, 4%, 24px)', paddingTop: '0', position: 'relative', zIndex: 1 }}>
+        {settings.hasDemoData && <DemoBanner />}
         {isMobile ? (
           // Mobile: Stack cards vertically
           <div className="flex flex-col" style={{ gap: '16px' }}>
@@ -224,7 +226,7 @@ export default function AuthenticatedDashboard() {
                     onExamClick={(exam: Exam) => startTransition(() => setPreviewingExam(exam))}
                     onEventClick={(event: CalendarEvent) => startTransition(() => setPreviewingEvent(event))}
                     onFileClick={(file, allFiles, index) => setPreviewingFile({ file, allFiles, index })}
-                    defaultRange="today"
+                    defaultRange={settings.hasDemoData ? "week" : "today"}
                     showProgress={true}
                     showRangeToggle={true}
                     maxHeight={350}
@@ -298,7 +300,7 @@ export default function AuthenticatedDashboard() {
                     onExamClick={(exam: Exam) => startTransition(() => setPreviewingExam(exam))}
                     onEventClick={(event: CalendarEvent) => startTransition(() => setPreviewingEvent(event))}
                     onFileClick={(file, allFiles, index) => setPreviewingFile({ file, allFiles, index })}
-                    defaultRange="today"
+                    defaultRange={settings.hasDemoData ? "week" : "today"}
                     showProgress={true}
                     showRangeToggle={true}
                   />,

@@ -732,10 +732,13 @@ export default function TasksPage() {
     ];
   };
 
-  // Collect all unique tags from tasks (memoized)
+  // Collect all unique tags from tasks and work items (memoized)
   const allTags = useMemo(() =>
-    Array.from(new Set(tasks.flatMap((t) => t.tags || []))),
-    [tasks]
+    Array.from(new Set([
+      ...tasks.flatMap((t) => t.tags || []),
+      ...workItems.flatMap((w) => w.tags || []),
+    ])),
+    [tasks, workItems]
   );
 
   // Bulk action handlers
@@ -2154,7 +2157,7 @@ export default function TasksPage() {
               title={typeFilter === 'all' ? 'No work items' : `No ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()}s`}
               description={
                 filter === 'all'
-                  ? typeFilter === 'all' ? 'Create a new item to get started' : `Create a new ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()} to get started`
+                  ? typeFilter === 'all' ? 'Create a new item to get started, or connect Canvas in Settings to import automatically.' : `Create a new ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()} to get started, or connect Canvas in Settings to import automatically.`
                   : filter === 'today'
                     ? typeFilter === 'all' ? 'No work due today' : `No ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()}s due today`
                     : typeFilter === 'all' ? 'No completed work yet' : `No completed ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()}s yet`
