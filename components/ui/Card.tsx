@@ -16,6 +16,10 @@ interface CardProps {
   className?: string;
   variant?: 'primary' | 'secondary';
   noAccent?: boolean;
+  style?: React.CSSProperties;
+  onClick?: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 const Card: React.FC<CardProps> = React.memo(({
@@ -27,6 +31,10 @@ const Card: React.FC<CardProps> = React.memo(({
   className = '',
   variant = 'primary',
   noAccent = false,
+  style,
+  onClick,
+  onMouseEnter,
+  onMouseLeave,
 }) => {
   const isMobile = useIsMobile();
   const { isPremium } = useSubscription();
@@ -60,7 +68,11 @@ const Card: React.FC<CardProps> = React.memo(({
         borderLeftWidth: noAccent ? '1px' : '3px',
         borderLeftColor: noAccent ? 'var(--border)' : `${accentColor}55`,
         boxShadow: isLightMode ? '0 1px 4px rgba(0,0,0,0.04)' : '0 2px 8px rgba(0,0,0,0.15)',
+        ...style,
       }}
+      onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <div className="flex flex-col flex-1 min-h-0" style={{ padding: isMobile ? '14px' : isPrimary ? '24px 24px 20px 24px' : '18px 20px 16px 20px' }}>
         {title && (

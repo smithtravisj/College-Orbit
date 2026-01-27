@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData, ShoppingItem, ShoppingListType, CalendarEvent, WorkItem, WorkItemType, RecurringWorkPattern, RecurringWorkFormData } from '@/types';
+import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData, ShoppingItem, ShoppingListType, CalendarEvent, WorkItem, WorkItemType, RecurringWorkPattern, RecurringWorkFormData, GamificationData, Achievement, GamificationRecordResult } from '@/types';
 import { applyColorPalette, getCollegeColorPalette, applyCustomColors, getCustomColorSetForTheme, CustomColors, setDatabaseColleges, DatabaseCollege, applyColorblindMode, ColorblindMode, ColorblindStyle } from '@/lib/collegeColors';
 import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
@@ -70,6 +70,12 @@ interface AppStore {
   initialized: boolean; // True once store has been fully initialized (from cache or database)
   userId: string | null;
   isPremium: boolean; // Track premium status for color application
+
+  // Gamification
+  gamification: GamificationData | null;
+  pendingAchievements: Achievement[];
+  showConfetti: boolean;
+  levelUpNotification: number | null;
 
   // Initialization
   setIsPremium: (isPremium: boolean) => void;
@@ -196,6 +202,13 @@ interface AppStore {
   exportData: () => Promise<AppData>;
   importData: (data: AppData) => Promise<void>;
   deleteAllData: () => void;
+
+  // Gamification
+  fetchGamification: () => Promise<void>;
+  recordTaskCompletion: (itemType: string, itemId: string) => Promise<GamificationRecordResult | null>;
+  dismissAchievement: (id: string) => void;
+  setShowConfetti: (show: boolean) => void;
+  dismissLevelUp: () => void;
 }
 
 // Migrate old localStorage keys to new naming convention
@@ -352,6 +365,10 @@ const useAppStore = create<AppStore>((set, get) => ({
   initialized: false,
   userId: null,
   isPremium: false,
+  gamification: null,
+  pendingAchievements: [],
+  showConfetti: false,
+  levelUpNotification: null,
 
   fetchColleges: async () => {
     try {
@@ -1010,8 +1027,7 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   updateDeadline: async (id, deadline) => {
-    console.log('[Store] updateDeadline called for ID:', id);
-    console.log('[Store] Update payload:', JSON.stringify(deadline, null, 2));
+    const previousDeadlines = get().deadlines;
     try {
       // Optimistic update
       set((state) => ({
@@ -1021,35 +1037,21 @@ const useAppStore = create<AppStore>((set, get) => ({
       }));
 
       // API call
-      const requestBody = JSON.stringify(deadline);
-      console.log('[Store] Sending PATCH request body:', requestBody);
       const response = await fetch(`/api/deadlines/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: requestBody,
+        body: JSON.stringify(deadline),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('[Store] API error response:', errorData);
         throw new Error(`Failed to update deadline: ${response.status}`);
       }
 
-      const responseData = await response.json();
-      console.log('[Store] API response:', JSON.stringify(responseData, null, 2));
-      const { deadline: updatedDeadline } = responseData;
-
-      // Update with server response
-      set((state) => ({
-        deadlines: state.deadlines.map((d) =>
-          d.id === id ? updatedDeadline : d
-        ),
-      }));
       get().invalidateCalendarCache();
     } catch (error) {
-      // Reload from database on error
-      await get().loadFromDatabase();
-      console.error('[Store] Error updating deadline:', error);
+      // Rollback on error
+      set({ deadlines: previousDeadlines });
+      console.error('Error updating deadline:', error);
       throw error;
     }
   },
@@ -1081,10 +1083,16 @@ const useAppStore = create<AppStore>((set, get) => ({
     const deadline = currentDeadlines.find((d) => d.id === id);
     if (deadline) {
       const oldStatus = deadline.status;
+      const newStatus = oldStatus === 'done' ? 'open' : 'done';
 
       await get().updateDeadline(id, {
-        status: oldStatus === 'done' ? 'open' : 'done',
+        status: newStatus,
       });
+
+      // Record gamification if deadline was completed (not uncompleted)
+      if (newStatus === 'done') {
+        await get().recordTaskCompletion('deadline', id);
+      }
 
       // Reload from database to ensure correct recurring deadline instances are shown
       // (when toggling status, the next instance of a pattern might change)
@@ -1132,6 +1140,7 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   updateTask: async (id, task) => {
+    const previousTasks = get().tasks;
     try {
       // Optimistic update
       set((state) => ({
@@ -1146,17 +1155,10 @@ const useAppStore = create<AppStore>((set, get) => ({
       });
 
       if (!response.ok) throw new Error('Failed to update task');
-
-      const { task: updatedTask } = await response.json();
-
-      // Update with server response
-      set((state) => ({
-        tasks: state.tasks.map((t) => (t.id === id ? updatedTask : t)),
-      }));
       get().invalidateCalendarCache();
     } catch (error) {
-      // Reload from database on error
-      await get().loadFromDatabase();
+      // Rollback on error
+      set({ tasks: previousTasks });
       console.error('Error updating task:', error);
       throw error;
     }
@@ -1194,10 +1196,16 @@ const useAppStore = create<AppStore>((set, get) => ({
       // Check if task is still in state before reloading
       // (it might have been deleted)
       const oldStatus = task.status;
+      const newStatus = oldStatus === 'done' ? 'open' : 'done';
 
       await get().updateTask(id, {
-        status: oldStatus === 'done' ? 'open' : 'done',
+        status: newStatus,
       });
+
+      // Record gamification if task was completed (not uncompleted)
+      if (newStatus === 'done') {
+        await get().recordTaskCompletion('task', id);
+      }
 
       // Reload from database to ensure correct recurring task instances are shown
       // (when toggling status, the next instance of a pattern might change)
@@ -1458,6 +1466,7 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   updateExam: async (id, exam) => {
+    const previousExams = get().exams;
     try {
       // Optimistic update
       set((state) => ({
@@ -1472,17 +1481,10 @@ const useAppStore = create<AppStore>((set, get) => ({
       });
 
       if (!response.ok) throw new Error('Failed to update exam');
-
-      const { exam: updatedExam } = await response.json();
-
-      // Update with server response
-      set((state) => ({
-        exams: state.exams.map((e) => (e.id === id ? updatedExam : e)),
-      }));
       get().invalidateCalendarCache();
     } catch (error) {
-      // Reload from database on error
-      await get().loadFromDatabase();
+      // Rollback on error
+      set({ exams: previousExams });
       console.error('Error updating exam:', error);
       throw error;
     }
@@ -1515,10 +1517,16 @@ const useAppStore = create<AppStore>((set, get) => ({
     const exam = currentExams.find((e) => e.id === id);
     if (exam) {
       const oldStatus = exam.status;
+      const newStatus = oldStatus === 'completed' ? 'scheduled' : 'completed';
 
       await get().updateExam(id, {
-        status: oldStatus === 'completed' ? 'scheduled' : 'completed',
+        status: newStatus,
       });
+
+      // Record gamification if exam was completed (not uncompleted)
+      if (newStatus === 'completed') {
+        await get().recordTaskCompletion('exam', id);
+      }
     }
   },
 
@@ -3203,11 +3211,6 @@ const useAppStore = create<AppStore>((set, get) => ({
       });
 
       if (!response.ok) throw new Error('Failed to update work item');
-
-      const { workItem: updatedWorkItem } = await response.json();
-      set((state) => ({
-        workItems: state.workItems.map((w) => (w.id === id ? updatedWorkItem : w)),
-      }));
       get().invalidateCalendarCache();
     } catch (error) {
       // Rollback on error
@@ -3249,6 +3252,11 @@ const useAppStore = create<AppStore>((set, get) => ({
       status: newStatus,
       workingOn: newStatus === 'done' ? false : workItem.workingOn,
     });
+
+    // Record gamification if work item was completed (not uncompleted)
+    if (newStatus === 'done') {
+      await get().recordTaskCompletion('workItem', id);
+    }
   },
 
   toggleWorkItemChecklistItem: async (workItemId, itemId) => {
@@ -3392,6 +3400,10 @@ const useAppStore = create<AppStore>((set, get) => ({
         recurringPatterns: [],
         recurringDeadlinePatterns: [],
         recurringExamPatterns: [],
+        gamification: null,
+        pendingAchievements: [],
+        showConfetti: false,
+        levelUpNotification: null,
       });
 
       // Clear localStorage
@@ -3403,6 +3415,75 @@ const useAppStore = create<AppStore>((set, get) => ({
       console.error('Error deleting all data:', error);
       throw error;
     }
+  },
+
+  // Gamification actions
+  fetchGamification: async () => {
+    try {
+      const response = await fetch('/api/gamification', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        set({ gamification: data });
+      }
+    } catch (error) {
+      console.error('Error fetching gamification data:', error);
+    }
+  },
+
+  recordTaskCompletion: async (itemType: string = 'task', itemId?: string) => {
+    if (!itemId) {
+      console.error('recordTaskCompletion requires an itemId');
+      return null;
+    }
+    try {
+      const timezoneOffset = new Date().getTimezoneOffset();
+      const response = await fetch('/api/gamification/record', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ timezoneOffset, itemType, itemId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to record task completion');
+      }
+
+      const result: GamificationRecordResult = await response.json();
+
+      // Show confetti and notification for level up
+      if (result.levelUp) {
+        set({ showConfetti: true, levelUpNotification: result.newLevel });
+      }
+
+      // Queue new achievements for display
+      if (result.newAchievements && result.newAchievements.length > 0) {
+        set((state) => ({
+          pendingAchievements: [...state.pendingAchievements, ...result.newAchievements],
+        }));
+      }
+
+      // Refresh gamification data
+      await get().fetchGamification();
+
+      return result;
+    } catch (error) {
+      console.error('Error recording task completion:', error);
+      return null;
+    }
+  },
+
+  dismissAchievement: (id: string) => {
+    set((state) => ({
+      pendingAchievements: state.pendingAchievements.filter((a) => a.id !== id),
+    }));
+  },
+
+  setShowConfetti: (show: boolean) => {
+    set({ showConfetti: show });
+  },
+
+  dismissLevelUp: () => {
+    set({ levelUpNotification: null });
   },
 }));
 

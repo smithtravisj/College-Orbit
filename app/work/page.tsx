@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, startTransition } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -742,10 +742,12 @@ export default function TasksPage() {
       // Mark all selected as done with fade effect (same as individual completion)
       const ids = Array.from(bulkSelect.selectedIds);
       // Add to toggledTasks to keep them visible
-      setToggledTasks(prev => {
-        const newSet = new Set(prev);
-        ids.forEach(id => newSet.add(id));
-        return newSet;
+      startTransition(() => {
+        setToggledTasks(prev => {
+          const newSet = new Set(prev);
+          ids.forEach(id => newSet.add(id));
+          return newSet;
+        });
       });
       // Update the tasks/work items
       if (useWorkItems) {
@@ -755,10 +757,12 @@ export default function TasksPage() {
       }
       // Add fade effect after delay
       setTimeout(() => {
-        setHidingTasks(prev => {
-          const newSet = new Set(prev);
-          ids.forEach(id => newSet.add(id));
-          return newSet;
+        startTransition(() => {
+          setHidingTasks(prev => {
+            const newSet = new Set(prev);
+            ids.forEach(id => newSet.add(id));
+            return newSet;
+          });
         });
       }, 50);
     } else {
@@ -1927,27 +1931,34 @@ export default function TasksPage() {
                         onClick={(e) => e.stopPropagation()}
                         onChange={() => {
                           const isCurrentlyDone = t.status === 'done';
-                          setToggledTasks(prev => {
-                            const newSet = new Set(prev);
-                            if (newSet.has(t.id)) {
-                              newSet.delete(t.id);
-                            } else {
-                              newSet.add(t.id);
-                            }
-                            return newSet;
+                          // Use startTransition to batch lower-priority state updates
+                          startTransition(() => {
+                            setToggledTasks(prev => {
+                              const newSet = new Set(prev);
+                              if (newSet.has(t.id)) {
+                                newSet.delete(t.id);
+                              } else {
+                                newSet.add(t.id);
+                              }
+                              return newSet;
+                            });
                           });
                           handleToggleComplete(t.id);
                           // Only fade out when marking as done, not when unchecking
                           if (!isCurrentlyDone) {
                             setTimeout(() => {
-                              setHidingTasks(prev => new Set(prev).add(t.id));
+                              startTransition(() => {
+                                setHidingTasks(prev => new Set(prev).add(t.id));
+                              });
                             }, 50);
                           } else {
                             // Remove from hiding when unchecking
-                            setHidingTasks(prev => {
-                              const newSet = new Set(prev);
-                              newSet.delete(t.id);
-                              return newSet;
+                            startTransition(() => {
+                              setHidingTasks(prev => {
+                                const newSet = new Set(prev);
+                                newSet.delete(t.id);
+                                return newSet;
+                              });
                             });
                           }
                         }}
@@ -2523,27 +2534,33 @@ export default function TasksPage() {
                   const task = previewingTask;
                   const isCurrentlyDone = task.status === 'done';
                   // Add to toggledTasks to keep it visible
-                  setToggledTasks(prev => {
-                    const newSet = new Set(prev);
-                    if (newSet.has(task.id)) {
-                      newSet.delete(task.id);
-                    } else {
-                      newSet.add(task.id);
-                    }
-                    return newSet;
+                  startTransition(() => {
+                    setToggledTasks(prev => {
+                      const newSet = new Set(prev);
+                      if (newSet.has(task.id)) {
+                        newSet.delete(task.id);
+                      } else {
+                        newSet.add(task.id);
+                      }
+                      return newSet;
+                    });
                   });
                   handleToggleComplete(task.id);
                   // Only fade out when marking as done, not when unchecking
                   if (!isCurrentlyDone) {
                     setTimeout(() => {
-                      setHidingTasks(prev => new Set(prev).add(task.id));
+                      startTransition(() => {
+                        setHidingTasks(prev => new Set(prev).add(task.id));
+                      });
                     }, 50);
                   } else {
                     // Remove from hiding when unchecking
-                    setHidingTasks(prev => {
-                      const newSet = new Set(prev);
-                      newSet.delete(task.id);
-                      return newSet;
+                    startTransition(() => {
+                      setHidingTasks(prev => {
+                        const newSet = new Set(prev);
+                        newSet.delete(task.id);
+                        return newSet;
+                      });
                     });
                   }
                   setPreviewingTask(null);

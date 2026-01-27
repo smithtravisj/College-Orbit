@@ -16,7 +16,7 @@ import HelpTooltip from '@/components/ui/HelpTooltip';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useBetaAccess } from '@/hooks/useBetaAccess';
-import { DASHBOARD_CARDS, TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
+import { TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
 interface CanvasStatus {
   connected: boolean;
@@ -111,16 +111,16 @@ export default function SettingsPage() {
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
   // Visibility customization state
-  const [activeCustomizationTab, setActiveCustomizationTab] = useState<'pages' | 'dashboard' | 'tools'>('pages');
+  const [activeCustomizationTab, setActiveCustomizationTab] = useState<'pages' | 'tools'>('pages');
   const [visiblePages, setVisiblePages] = useState<string[]>(DEFAULT_VISIBLE_PAGES);
-  const [visibleDashboardCards, setVisibleDashboardCards] = useState<string[]>(DEFAULT_VISIBLE_DASHBOARD_CARDS);
   const [visibleToolsCards, setVisibleToolsCards] = useState<string[]>(DEFAULT_VISIBLE_TOOLS_CARDS);
-  const [toolsCardsOrder, setToolsCardsOrder] = useState<string[]>(Object.values(TOOLS_CARDS));
   const [visiblePagesOrder, setVisiblePagesOrder] = useState<string[]>(Object.values(PAGES).filter(p => p !== 'Settings'));
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [visibilityMessage, setVisibilityMessage] = useState('');
   const [isMacDesktop, setIsMacDesktop] = useState(false);
+  const [vacationMode, setVacationMode] = useState(false);
+  const [vacationModeLoading, setVacationModeLoading] = useState(false);
   const [emailAnnouncements, setEmailAnnouncements] = useState(false);
   const [emailAccountAlerts, setEmailAccountAlerts] = useState(false);
   const [emailExamReminders, setEmailExamReminders] = useState(false);
@@ -405,6 +405,24 @@ export default function SettingsPage() {
     }
   }, [session]);
 
+  // Fetch gamification/vacation mode status
+  useEffect(() => {
+    const fetchGamificationStatus = async () => {
+      try {
+        const response = await fetch('/api/gamification');
+        if (response.ok) {
+          const data = await response.json();
+          setVacationMode(data.streak?.vacationMode ?? false);
+        }
+      } catch (error) {
+        console.error('Error fetching gamification status:', error);
+      }
+    };
+    if (session?.user) {
+      fetchGamificationStatus();
+    }
+  }, [session]);
+
   useEffect(() => {
     // Only run once on mount to initialize local state from store
     if (mounted) return;
@@ -422,18 +440,7 @@ export default function SettingsPage() {
     };
     const savedVisiblePages = [...new Set((settings.visiblePages || []).map(migratePageName))];
     setVisiblePages(savedVisiblePages.length > 0 ? savedVisiblePages : DEFAULT_VISIBLE_PAGES);
-    setVisibleDashboardCards(settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS);
     setVisibleToolsCards(settings.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS);
-
-    // Load tools cards order from settings
-    if (settings.toolsCardsOrder) {
-      const order = typeof settings.toolsCardsOrder === 'string'
-        ? JSON.parse(settings.toolsCardsOrder)
-        : settings.toolsCardsOrder;
-      setToolsCardsOrder(order);
-    } else {
-      setToolsCardsOrder(Object.values(TOOLS_CARDS));
-    }
 
     // Load pages order from settings
     if (settings.visiblePagesOrder) {
@@ -561,6 +568,27 @@ export default function SettingsPage() {
     glowDebounceRef.current = setTimeout(() => {
       updateSettings({ glowIntensity: value });
     }, 300);
+  };
+
+  // Toggle vacation mode for streaks
+  const handleToggleVacationMode = async () => {
+    if (!session?.user) return;
+    setVacationModeLoading(true);
+    try {
+      const response = await fetch('/api/gamification', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vacationMode: !vacationMode }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setVacationMode(data.vacationMode);
+      }
+    } catch (error) {
+      console.error('Error toggling vacation mode:', error);
+    } finally {
+      setVacationModeLoading(false);
+    }
   };
 
   const handleSubmitCollegeRequest = async () => {
@@ -2395,6 +2423,247 @@ export default function SettingsPage() {
               </div>
             </div>
           </Card>
+
+          {/* Streaks & Gamification - beta users only */}
+          {hasAccessToFeature('1.2.0') && (
+          <Card title="Streak">
+            {/* Vacation Mode */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Vacation Mode</p>
+                    <HelpTooltip text="Enable vacation mode during breaks to pause your streak. Your streak will be preserved and resume when you turn this off." size={14} width={240} />
+                  </div>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Pause your streak during semester breaks or vacations
+                  </p>
+                </div>
+                <button
+                  onClick={handleToggleVacationMode}
+                  disabled={vacationModeLoading || !session?.user}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: vacationMode ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: vacationModeLoading || !session?.user ? 'not-allowed' : 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                    opacity: vacationModeLoading || !session?.user ? 0.5 : 1,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: vacationMode ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+              {vacationMode && (
+                <div style={{
+                  marginTop: '12px',
+                  padding: '10px 12px',
+                  backgroundColor: 'var(--accent-light)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--accent)',
+                }}>
+                  <p className="text-sm text-[var(--link)]" style={{ margin: 0, fontWeight: 500 }}>
+                    Your streak is currently paused. Completing tasks will still earn XP, but your streak won&apos;t be affected until you turn vacation mode off.
+                  </p>
+                </div>
+              )}
+              {!session?.user && (
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginTop: '8px' }}>
+                  Sign in to manage your streak settings
+                </p>
+              )}
+            </div>
+          </Card>
+          )}
+
+          {/* Beta Program */}
+          <Card title="Beta Program">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Beta Toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Join Beta Program</p>
+                    <div ref={betaWarningRef} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setBetaWarningOpen(!betaWarningOpen);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: '2px',
+                          cursor: 'help',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'var(--text-muted)',
+                        }}
+                        aria-label="Warning"
+                      >
+                        <AlertCircle size={15} />
+                      </button>
+                      {betaWarningOpen && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            bottom: '100%',
+                            marginBottom: '8px',
+                            padding: '8px 12px',
+                            fontSize: '12px',
+                            color: 'var(--text)',
+                            backgroundColor: 'var(--panel)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '6px',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                            whiteSpace: 'normal',
+                            width: '240px',
+                            textAlign: 'left',
+                            lineHeight: '1.4',
+                            zIndex: 50,
+                          }}
+                        >
+                          Beta features are experimental and may be unstable. Data loss or unexpected behavior is possible. We recommend backing up important information.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Get early access to new features and help shape College Orbit
+                  </p>
+                </div>
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const newValue = !(settings.isBetaUser ?? false);
+                    await updateSettings({ isBetaUser: newValue });
+                  }}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.isBetaUser ?? false) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.isBetaUser ?? false) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+
+              {/* Beta Feedback Form (only visible when enrolled) */}
+              {(settings.isBetaUser ?? false) && (
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Submit Beta Feedback</p>
+                  <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                    Share your thoughts, report bugs, or suggest improvements for beta features
+                  </p>
+                  <textarea
+                    value={betaFeedbackText}
+                    onChange={(e) => setBetaFeedbackText(e.target.value)}
+                    placeholder="Describe your feedback, bug report, or suggestion..."
+                    maxLength={1000}
+                    style={{
+                      width: '100%',
+                      minHeight: '100px',
+                      padding: '8px 12px',
+                      fontSize: '16px',
+                      fontFamily: 'inherit',
+                      backgroundColor: 'var(--panel-2)',
+                      color: 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                      boxSizing: 'border-box',
+                      marginBottom: '0',
+                      resize: 'vertical',
+                    }}
+                    disabled={betaFeedbackLoading}
+                  />
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                    {betaFeedbackText.length}/1000 characters
+                  </p>
+                  <Button
+                    disabled={!betaFeedbackText.trim() || betaFeedbackLoading}
+                    onClick={async () => {
+                      if (!betaFeedbackText.trim()) return;
+                      setBetaFeedbackLoading(true);
+                      setBetaFeedbackMessage('');
+                      try {
+                        const response = await fetch('/api/beta-feedback', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ description: betaFeedbackText.trim() }),
+                        });
+                        if (response.ok) {
+                          setBetaFeedbackText('');
+                          setBetaFeedbackMessage('Feedback submitted successfully! Thank you for helping improve College Orbit.');
+                          setTimeout(() => setBetaFeedbackMessage(''), 5000);
+                        } else {
+                          const data = await response.json();
+                          setBetaFeedbackMessage(data.error || 'Failed to submit feedback. Please try again.');
+                        }
+                      } catch {
+                        setBetaFeedbackMessage('Failed to submit feedback. Please try again.');
+                      } finally {
+                        setBetaFeedbackLoading(false);
+                      }
+                    }}
+                    style={{
+                      paddingLeft: isMobile ? '12px' : '16px',
+                      paddingRight: isMobile ? '12px' : '16px',
+                    }}
+                  >
+                    {betaFeedbackLoading ? 'Submitting...' : 'Submit Feedback'}
+                  </Button>
+                  {betaFeedbackMessage && (
+                    <p
+                      style={{
+                        marginTop: '8px',
+                        fontSize: '14px',
+                        color: betaFeedbackMessage.includes('Error') || betaFeedbackMessage.includes('Failed') ? 'var(--danger)' : 'var(--success)',
+                      }}
+                    >
+                      {betaFeedbackMessage}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </Card>
           </>
           )}
 
@@ -3927,12 +4196,11 @@ export default function SettingsPage() {
             }}>
               {[
                 { id: 'pages', label: 'Pages' },
-                { id: 'dashboard', label: 'Dashboard Cards' },
-                ...(isMobile ? [] : [{ id: 'tools', label: 'Tools Cards' }]),
+                ...(isMobile ? [] : [{ id: 'tools', label: 'Tools' }]),
               ].map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => isPremium && setActiveCustomizationTab(tab.id as 'pages' | 'dashboard' | 'tools')}
+                  onClick={() => isPremium && setActiveCustomizationTab(tab.id as 'pages' | 'tools')}
                   className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
                     activeCustomizationTab === tab.id ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
                   }`}
@@ -4119,176 +4387,31 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {/* Dashboard Cards Customization */}
-            {activeCustomizationTab === 'dashboard' && (
-              <div style={{ opacity: isPremium ? 1 : 0.5, pointerEvents: isPremium ? 'auto' : 'none' }}>
-                <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px' }}>
-                  Choose which cards appear on the Dashboard
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {Object.values(DASHBOARD_CARDS).map((cardId) => (
-                    <label
-                      key={cardId}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        padding: '8px 12px',
-                        backgroundColor: 'var(--panel-2)',
-                        borderRadius: '6px',
-                        border: '1px solid var(--border)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={visibleDashboardCards.includes(cardId)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setVisibleDashboardCards([...visibleDashboardCards, cardId]);
-                          } else {
-                            setVisibleDashboardCards(visibleDashboardCards.filter((c) => c !== cardId));
-                          }
-                        }}
-                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                      />
-                      <span style={{ color: 'var(--text)', fontSize: '14px' }}>
-                        {CARD_LABELS[cardId] || cardId}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                <Button
-                  size={isMobile ? 'sm' : 'lg'}
-                  variant="secondary"
-                  onClick={() => {
-                    setVisibleDashboardCards(DEFAULT_VISIBLE_DASHBOARD_CARDS);
-                  }}
-                  style={{
-                    marginTop: '16px',
-                    paddingLeft: isMobile ? '12px' : '16px',
-                    paddingRight: isMobile ? '12px' : '16px',
-                    boxShadow: 'none',
-                  }}
-                >
-                  Reset to Defaults
-                </Button>
-              </div>
-            )}
-
             {/* Tools Cards Customization */}
             {activeCustomizationTab === 'tools' && (
               <div style={{ opacity: isPremium ? 1 : 0.5, pointerEvents: isPremium ? 'auto' : 'none' }}>
                 <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px' }}>
-                  Drag to reorder cards or uncheck to hide them from the Tools page
+                  Choose which tools to show on the Tools page
                 </p>
-                <div
-                  style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    if (draggingIndex === null || dragOverIndex === null) return;
-                    if (draggingIndex !== dragOverIndex) {
-                      const newOrder = [...toolsCardsOrder];
-                      const [draggedItem] = newOrder.splice(draggingIndex, 1);
-                      const insertIndex = draggingIndex < dragOverIndex ? dragOverIndex - 1 : dragOverIndex;
-                      newOrder.splice(insertIndex, 0, draggedItem);
-                      setToolsCardsOrder(newOrder);
-                    }
-                    setDraggingIndex(null);
-                    setDragOverIndex(null);
-                  }}
-                >
-                  {toolsCardsOrder.map((cardId, index) => {
-                    const isDragging = draggingIndex === index;
-                    // Calculate if this item should shift up or down
-                    let translateY = 0;
-                    if (draggingIndex !== null && dragOverIndex !== null && !isDragging) {
-                      const itemHeight = 48;
-                      if (draggingIndex < dragOverIndex) {
-                        if (index > draggingIndex && index < dragOverIndex) {
-                          translateY = -itemHeight;
-                        }
-                      } else if (draggingIndex > dragOverIndex) {
-                        if (index >= dragOverIndex && index < draggingIndex) {
-                          translateY = itemHeight;
-                        }
-                      }
-                    }
 
-                    return (
-                      <div
+                {/* Productivity Section */}
+                <div style={{ marginBottom: '20px' }}>
+                  <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Productivity
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {[TOOLS_CARDS.POMODORO_TIMER, TOOLS_CARDS.QUICK_LINKS].map((cardId) => (
+                      <label
                         key={cardId}
-                        data-card-id={cardId}
-                        draggable
-                        onDragStart={(e) => {
-                          setDragOverIndex(index);
-                          e.dataTransfer.effectAllowed = 'move';
-                          e.dataTransfer.setData('text/plain', index.toString());
-
-                          // Create custom drag image with glow effect
-                          const dragEl = e.currentTarget.cloneNode(true) as HTMLElement;
-                          dragEl.style.backgroundColor = 'var(--accent-2)';
-                          dragEl.style.border = '1px solid var(--accent)';
-                          dragEl.style.boxShadow = '0 0 12px var(--accent)';
-                          dragEl.style.opacity = '0.9';
-                          dragEl.style.transform = 'scale(1.02)';
-                          dragEl.style.position = 'absolute';
-                          dragEl.style.top = '-9999px';
-                          dragEl.style.width = `${e.currentTarget.offsetWidth}px`;
-                          document.body.appendChild(dragEl);
-                          e.dataTransfer.setDragImage(dragEl, e.nativeEvent.offsetX, e.nativeEvent.offsetY);
-                          requestAnimationFrame(() => {
-                            document.body.removeChild(dragEl);
-                            setDraggingIndex(index);
-                          });
-                        }}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          e.dataTransfer.dropEffect = 'move';
-
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const midpoint = rect.top + rect.height / 2;
-                          const targetIndex = e.clientY < midpoint ? index : index + 1;
-
-                          if (dragOverIndex !== targetIndex) {
-                            setDragOverIndex(targetIndex);
-                          }
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
-
-                          if (draggedIndex !== dragOverIndex && dragOverIndex !== null) {
-                            const newOrder = [...toolsCardsOrder];
-                            const [draggedItem] = newOrder.splice(draggedIndex, 1);
-                            const insertIndex = draggedIndex < dragOverIndex ? dragOverIndex - 1 : dragOverIndex;
-                            newOrder.splice(insertIndex, 0, draggedItem);
-                            setToolsCardsOrder(newOrder);
-                          }
-                          setDraggingIndex(null);
-                          setDragOverIndex(null);
-                        }}
-                        onDragEnd={() => {
-                          setDraggingIndex(null);
-                          setDragOverIndex(null);
-                        }}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
                           gap: '10px',
                           padding: '10px 12px',
-                          backgroundColor: isDragging ? 'var(--accent-2)' : 'var(--panel-2)',
+                          backgroundColor: 'var(--panel-2)',
                           borderRadius: '8px',
-                          border: isDragging ? '1px solid var(--accent)' : '1px solid var(--border)',
-                          cursor: isDragging ? 'grabbing' : 'grab',
-                          transform: `translateY(${translateY}px)`,
-                          transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.2, 0, 0, 1), background-color 0.15s ease, border-color 0.15s ease',
-                          opacity: isDragging ? 0 : 1,
-                          boxShadow: 'none',
-                          zIndex: isDragging ? 10 : 1,
-                          position: 'relative',
-                          pointerEvents: isDragging ? 'none' : 'auto',
+                          border: '1px solid var(--border)',
+                          cursor: 'pointer',
                         }}
                       >
                         <input
@@ -4301,30 +4424,67 @@ export default function SettingsPage() {
                               setVisibleToolsCards(visibleToolsCards.filter((c) => c !== cardId));
                             }
                           }}
-                          onClick={(e) => e.stopPropagation()}
                           style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                         />
-                        <span style={{ color: 'var(--text)', fontSize: '14px', flex: 1, userSelect: 'none' }}>
+                        <span style={{ color: 'var(--text)', fontSize: '14px', flex: 1 }}>
                           {CARD_LABELS[cardId] || cardId}
                         </span>
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>
-                          <circle cx="5" cy="3" r="1.5" />
-                          <circle cx="11" cy="3" r="1.5" />
-                          <circle cx="5" cy="8" r="1.5" />
-                          <circle cx="11" cy="8" r="1.5" />
-                          <circle cx="5" cy="13" r="1.5" />
-                          <circle cx="11" cy="13" r="1.5" />
-                        </svg>
-                      </div>
-                    );
-                  })}
+                      </label>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Grades & GPA Section */}
+                <div>
+                  <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Grades & GPA
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {[
+                      TOOLS_CARDS.GRADE_TRACKER,
+                      TOOLS_CARDS.GPA_TREND_CHART,
+                      TOOLS_CARDS.WHAT_IF_PROJECTOR,
+                      TOOLS_CARDS.FINAL_GRADE_CALCULATOR,
+                      TOOLS_CARDS.GPA_CALCULATOR,
+                    ].map((cardId) => (
+                      <label
+                        key={cardId}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '10px 12px',
+                          backgroundColor: 'var(--panel-2)',
+                          borderRadius: '8px',
+                          border: '1px solid var(--border)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={visibleToolsCards.includes(cardId)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setVisibleToolsCards([...visibleToolsCards, cardId]);
+                            } else {
+                              setVisibleToolsCards(visibleToolsCards.filter((c) => c !== cardId));
+                            }
+                          }}
+                          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                        />
+                        <span style={{ color: 'var(--text)', fontSize: '14px', flex: 1 }}>
+                          {CARD_LABELS[cardId] || cardId}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
                 <Button
                   size={isMobile ? 'sm' : 'lg'}
                   variant="secondary"
                   onClick={() => {
                     setVisibleToolsCards(DEFAULT_VISIBLE_TOOLS_CARDS);
-                    setToolsCardsOrder(Object.values(TOOLS_CARDS));
                   }}
                   style={{
                     marginTop: '16px',
@@ -4347,9 +4507,7 @@ export default function SettingsPage() {
                 try {
                   await updateSettings({
                     visiblePages,
-                    visibleDashboardCards,
                     visibleToolsCards,
-                    toolsCardsOrder,
                     visiblePagesOrder,
                   });
                   setVisibilityMessage('Saved successfully!');
@@ -5018,184 +5176,6 @@ export default function SettingsPage() {
             </div>
             </>
             )}
-          </Card>
-          </div>
-          )}
-
-          {/* Preferences Tab - Beta Program */}
-          {activeSettingsTab === 'preferences' && (
-          <div style={{ gridColumn: '1 / -1' }}>
-          <Card title="Beta Program">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Beta Toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                    <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Join Beta Program</p>
-                    <div ref={betaWarningRef} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setBetaWarningOpen(!betaWarningOpen);
-                        }}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          padding: '2px',
-                          cursor: 'help',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'var(--text-muted)',
-                        }}
-                        aria-label="Warning"
-                      >
-                        <AlertCircle size={15} />
-                      </button>
-                      {betaWarningOpen && (
-                        <div
-                          style={{
-                            position: 'absolute',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            bottom: '100%',
-                            marginBottom: '8px',
-                            padding: '8px 12px',
-                            fontSize: '12px',
-                            color: 'var(--text)',
-                            backgroundColor: 'var(--panel)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '6px',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                            whiteSpace: 'normal',
-                            width: '240px',
-                            textAlign: 'left',
-                            lineHeight: '1.4',
-                            zIndex: 50,
-                          }}
-                        >
-                          Beta features are experimental and may be unstable. Data loss or unexpected behavior is possible. We recommend backing up important information.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-sm text-[var(--text-muted)]">
-                    Get early access to new features and help shape College Orbit
-                  </p>
-                </div>
-                <button
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    const newValue = !(settings.isBetaUser ?? false);
-                    await updateSettings({ isBetaUser: newValue });
-                  }}
-                  style={{
-                    width: '44px',
-                    height: '24px',
-                    borderRadius: '12px',
-                    backgroundColor: (settings.isBetaUser ?? false) ? 'var(--accent)' : 'var(--panel-2)',
-                    border: '1px solid var(--border)',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'background-color 0.2s ease',
-                    flexShrink: 0,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '50%',
-                      backgroundColor: 'white',
-                      position: 'absolute',
-                      top: '2px',
-                      left: (settings.isBetaUser ?? false) ? '22px' : '2px',
-                      transition: 'left 0.2s ease',
-                    }}
-                  />
-                </button>
-              </div>
-
-              {/* Beta Feedback Form (only visible when enrolled) */}
-              {(settings.isBetaUser ?? false) && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Submit Beta Feedback</p>
-                  <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                    Share your thoughts, report bugs, or suggest improvements for beta features
-                  </p>
-                  <textarea
-                    value={betaFeedbackText}
-                    onChange={(e) => setBetaFeedbackText(e.target.value)}
-                    placeholder="Describe your feedback, bug report, or suggestion..."
-                    maxLength={1000}
-                    style={{
-                      width: '100%',
-                      minHeight: '100px',
-                      padding: '8px 12px',
-                      fontSize: '16px',
-                      fontFamily: 'inherit',
-                      backgroundColor: 'var(--panel-2)',
-                      color: 'var(--text)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '6px',
-                      boxSizing: 'border-box',
-                      marginBottom: '0',
-                      resize: 'vertical',
-                    }}
-                    disabled={betaFeedbackLoading}
-                  />
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                    {betaFeedbackText.length}/1000 characters
-                  </p>
-                  <Button
-                    disabled={!betaFeedbackText.trim() || betaFeedbackLoading}
-                    onClick={async () => {
-                      if (!betaFeedbackText.trim()) return;
-                      setBetaFeedbackLoading(true);
-                      setBetaFeedbackMessage('');
-                      try {
-                        const response = await fetch('/api/beta-feedback', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ description: betaFeedbackText.trim() }),
-                        });
-                        if (response.ok) {
-                          setBetaFeedbackText('');
-                          setBetaFeedbackMessage('Feedback submitted successfully! Thank you for helping improve College Orbit.');
-                          setTimeout(() => setBetaFeedbackMessage(''), 5000);
-                        } else {
-                          const data = await response.json();
-                          setBetaFeedbackMessage(data.error || 'Failed to submit feedback. Please try again.');
-                        }
-                      } catch {
-                        setBetaFeedbackMessage('Failed to submit feedback. Please try again.');
-                      } finally {
-                        setBetaFeedbackLoading(false);
-                      }
-                    }}
-                    style={{
-                      paddingLeft: isMobile ? '12px' : '16px',
-                      paddingRight: isMobile ? '12px' : '16px',
-                    }}
-                  >
-                    {betaFeedbackLoading ? 'Submitting...' : 'Submit Feedback'}
-                  </Button>
-                  {betaFeedbackMessage && (
-                    <p
-                      style={{
-                        marginTop: '8px',
-                        fontSize: '14px',
-                        color: betaFeedbackMessage.includes('Error') || betaFeedbackMessage.includes('Failed') ? 'var(--danger)' : 'var(--success)',
-                      }}
-                    >
-                      {betaFeedbackMessage}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
           </Card>
           </div>
           )}

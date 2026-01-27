@@ -60,6 +60,9 @@ model User {
   workItems                 WorkItem[]
   recurringWorkPatterns     RecurringWorkPattern[]
   betaFeedback              BetaFeedback[]
+  streak                    UserStreak?
+  achievements              UserAchievement[]
+  dailyActivities           DailyActivity[]
 
   @@index([email])
   @@index([subscriptionTier])
@@ -1013,4 +1016,83 @@ model AppVersion {
 
   @@index([isBetaOnly])
   @@index([releasedAt])
+}
+
+// Gamification Models
+model UserStreak {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  currentStreak       Int       @default(0)
+  longestStreak       Int       @default(0)
+  lastActivityDate    DateTime?
+  streakStartDate     DateTime?
+  totalTasksCompleted Int       @default(0)
+  totalXp             Int       @default(0)
+  level               Int       @default(1)
+  vacationMode        Boolean   @default(false)
+  vacationStartedAt   DateTime?
+  earlyBirdCount      Int       @default(0) // Completions before 8 AM
+  nightOwlCount       Int       @default(0) // Completions after 11 PM
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Track which items have already been credited for XP (prevents exploit of toggling done/undone)
+model GamificationCredit {
+  id        String   @id @default(cuid())
+  userId    String
+  itemType  String   // "task", "deadline", "exam", "workItem"
+  itemId    String
+  xpAwarded Int
+  createdAt DateTime @default(now())
+
+  @@unique([userId, itemType, itemId])
+  @@index([userId])
+}
+
+model Achievement {
+  id               String            @id @default(cuid())
+  key              String            @unique
+  name             String
+  description      String
+  icon             String
+  category         String // "streak", "completion", "milestone", "consistency"
+  xpReward         Int               @default(0)
+  tier             String            @default("bronze") // "bronze", "silver", "gold", "platinum"
+  requirement      Json // { type: "streak" | "tasks" | "time", value: number }
+  isSecret         Boolean           @default(false)
+  userAchievements UserAchievement[]
+
+  @@index([category])
+  @@index([tier])
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  achievementId String
+  earnedAt      DateTime    @default(now())
+  notified      Boolean     @default(false)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([achievementId])
+}
+
+model DailyActivity {
+  id             String   @id @default(cuid())
+  userId         String
+  activityDate   DateTime @db.Date
+  tasksCompleted Int      @default(0)
+  xpEarned       Int      @default(0)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, activityDate])
+  @@index([userId])
+  @@index([activityDate])
 }

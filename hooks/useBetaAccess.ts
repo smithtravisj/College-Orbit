@@ -73,9 +73,10 @@ export function useBetaAccess() {
 
     const versionInfo = versions.find(v => v.version === version);
 
-    // If version not found, assume it's released (safe default for old features)
+    // If version not found, assume it's beta-only (safer default for unreleased features)
+    // Only beta users get access to features from unknown versions
     if (!versionInfo) {
-      return true;
+      return isBetaUser;
     }
 
     // If released to all, everyone has access

@@ -7,12 +7,14 @@ export const PAGES = {
   COURSES: 'Courses',
   SHOPPING: 'Shopping',
   TOOLS: 'Tools',
+  PROGRESS: 'Progress',
   SETTINGS: 'Settings',
 } as const;
 
 export const DASHBOARD_CARDS = {
   TIMELINE: 'timeline',
   OVERVIEW: 'overview',
+  PROGRESS: 'progress',
   QUICK_LINKS: 'dashboard_quickLinks',
   // Legacy cards (kept for backwards compatibility / migration)
   NEXT_CLASS: 'nextClass',
@@ -32,10 +34,11 @@ export const TOOLS_CARDS = {
 } as const;
 
 export const DEFAULT_VISIBLE_PAGES = Object.values(PAGES);
-// Default to new timeline-based layout (timeline, overview, quick links)
+// Default to new timeline-based layout (timeline, overview, progress, quick links)
 export const DEFAULT_VISIBLE_DASHBOARD_CARDS = [
   DASHBOARD_CARDS.TIMELINE,
   DASHBOARD_CARDS.OVERVIEW,
+  DASHBOARD_CARDS.PROGRESS,
   DASHBOARD_CARDS.QUICK_LINKS,
 ];
 // Legacy cards list for users who haven't migrated yet
@@ -54,6 +57,7 @@ export const CARD_LABELS: Record<string, string> = {
   [DASHBOARD_CARDS.NEXT_CLASS]: 'Next Class',
   [DASHBOARD_CARDS.DUE_SOON]: 'Due Soon',
   [DASHBOARD_CARDS.OVERVIEW]: 'Overview',
+  [DASHBOARD_CARDS.PROGRESS]: 'Your Progress',
   [DASHBOARD_CARDS.TODAY_TASKS]: "Today's Tasks",
   [DASHBOARD_CARDS.QUICK_LINKS]: 'Quick Links',
   [DASHBOARD_CARDS.UPCOMING_WEEK]: 'Upcoming This Week',

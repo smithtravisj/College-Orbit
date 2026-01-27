@@ -11,6 +11,7 @@ import { getQuickLinks } from '@/lib/quickLinks';
 import { DASHBOARD_CARDS, DEFAULT_VISIBLE_DASHBOARD_CARDS } from '@/lib/customizationConstants';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useBetaAccess } from '@/hooks/useBetaAccess';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
@@ -22,6 +23,7 @@ import LandingPage from '@/components/LandingPage';
 import { Timeline } from '@/components/dashboard';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import { Task, Deadline, Course, Exam, CalendarEvent, WorkItem } from '@/types';
+import { StreakCard } from '@/components/gamification';
 
 export default function HomePage() {
   const { status } = useSession();
@@ -55,12 +57,14 @@ function Dashboard() {
   const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>([]);
   const [timelineHeight, setTimelineHeight] = useState<number>(500);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const { courses, deadlines, tasks, workItems, settings, excludedDates, toggleTaskDone, updateDeadline, toggleWorkItemComplete } = useAppStore();
+  const { courses, deadlines, tasks, workItems, settings, excludedDates, toggleTaskDone, updateDeadline, toggleWorkItemComplete, gamification, fetchGamification } = useAppStore();
 
   // Use workItems if available, otherwise fall back to tasks for backward compatibility
   const useWorkItemsFlag = workItems.length > 0 || tasks.length === 0;
   const activeTasks = useWorkItemsFlag ? workItems : tasks;
   const { isPremium } = useSubscription();
+  const { hasAccessToFeature } = useBetaAccess();
+  const hasGamification = hasAccessToFeature('1.2.0'); // Gamification is beta-only until released
   // Dashboard card visibility is only customizable for premium users - free users see defaults
   const savedVisibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
   const visibleDashboardCards = isPremium ? savedVisibleDashboardCards : DEFAULT_VISIBLE_DASHBOARD_CARDS;
@@ -151,6 +155,13 @@ function Dashboard() {
         .catch(err => console.error('Failed to fetch custom links:', err));
     }
   }, [mounted, settings.university]);
+
+  // Fetch gamification data on mount (beta users only)
+  useEffect(() => {
+    if (mounted && hasGamification) {
+      fetchGamification();
+    }
+  }, [mounted, hasGamification, fetchGamification]);
 
   // Check if user needs onboarding after mount
   // Use userId to verify data has actually loaded (not just defaults)
@@ -349,8 +360,8 @@ function Dashboard() {
               </div>
             )}
 
-            {/* Overview */}
-            {visibleDashboardCards.includes(DASHBOARD_CARDS.OVERVIEW) && (
+            {/* Overview - only for non-beta users */}
+            {!hasGamification && visibleDashboardCards.includes(DASHBOARD_CARDS.OVERVIEW) && (
               <div className="animate-fade-in-up" data-tour="overview">
                 {renderCard(
                   DASHBOARD_CARDS.OVERVIEW,
@@ -375,6 +386,13 @@ function Dashboard() {
                   </div>,
                   'flex flex-col'
                 )}
+              </div>
+            )}
+
+            {/* Progress / Gamification - beta users only */}
+            {hasGamification && visibleDashboardCards.includes(DASHBOARD_CARDS.PROGRESS) && (
+              <div className="animate-fade-in-up">
+                <StreakCard data={gamification} loading={!gamification} />
               </div>
             )}
 
@@ -444,10 +462,10 @@ function Dashboard() {
               </div>
             )}
 
-            {/* Column 2: Overview and Quick Links stacked */}
+            {/* Column 2: Overview/Progress and Quick Links stacked */}
             <div className="flex flex-col gap-6" style={{ width: '320px', flexShrink: 0, height: `${timelineHeight}px` }}>
-              {/* Overview */}
-              {visibleDashboardCards.includes(DASHBOARD_CARDS.OVERVIEW) && (
+              {/* Overview - only for non-beta users */}
+              {!hasGamification && visibleDashboardCards.includes(DASHBOARD_CARDS.OVERVIEW) && (
                 <div className="animate-fade-in-up" data-tour="overview">
                   {renderCard(
                     DASHBOARD_CARDS.OVERVIEW,
@@ -472,6 +490,13 @@ function Dashboard() {
                     </div>,
                     'flex flex-col'
                   )}
+                </div>
+              )}
+
+              {/* Progress / Gamification - beta users only */}
+              {hasGamification && visibleDashboardCards.includes(DASHBOARD_CARDS.PROGRESS) && (
+                <div className="animate-fade-in-up flex-1 min-h-0 flex flex-col">
+                  <StreakCard data={gamification} loading={!gamification} />
                 </div>
               )}
 
@@ -517,6 +542,7 @@ function Dashboard() {
           </div>
         )}
       </div>
+
 
       {/* Task Preview Modal */}
       {previewingTask && (

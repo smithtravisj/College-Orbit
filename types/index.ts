@@ -704,3 +704,66 @@ export interface AppVersion {
   createdAt: string;
   updatedAt: string;
 }
+
+// Gamification Types
+export interface UserStreak {
+  id: string;
+  currentStreak: number;
+  longestStreak: number;
+  lastActivityDate: string | null;
+  streakStartDate: string | null;
+  totalTasksCompleted: number;
+  totalXp: number;
+  level: number;
+  vacationMode: boolean;
+  vacationStartedAt: string | null;
+}
+
+export interface XpStats {
+  total: number;
+  level: number;
+  currentLevelXp: number;
+  nextLevelXp: number;
+  progress: number; // percentage 0-100
+}
+
+export interface Achievement {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: 'streak' | 'completion' | 'milestone' | 'consistency';
+  xpReward: number;
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+  requirement: {
+    type: 'streak' | 'tasks' | 'time';
+    value: number;
+  };
+  isSecret: boolean;
+  earnedAt?: string | null;
+}
+
+export interface DailyActivityRecord {
+  date: string;
+  tasksCompleted: number;
+  xpEarned: number;
+}
+
+export interface GamificationData {
+  streak: UserStreak;
+  xp: XpStats;
+  achievements: Achievement[];
+  unlockedAchievements: Achievement[];
+  recentActivity: DailyActivityRecord[];
+}
+
+export interface GamificationRecordResult {
+  xpEarned: number;
+  newAchievements: Achievement[];
+  levelUp: boolean;
+  previousLevel: number;
+  newLevel: number;
+  streakUpdated: boolean;
+  newStreak: number;
+}

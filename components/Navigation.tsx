@@ -11,6 +11,7 @@ import NotificationBell from '@/components/NotificationBell';
 import { DEFAULT_VISIBLE_PAGES } from '@/lib/customizationConstants';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useBetaAccess } from '@/hooks/useBetaAccess';
 import { useMobileNav } from '@/context/MobileNavContext';
 import { isOverdue } from '@/lib/utils';
 import { useIsLightMode } from '@/hooks/useEffectiveTheme';
@@ -23,6 +24,7 @@ import {
   StickyNote,
   ShoppingCart,
   Wrench,
+  TrendingUp,
   Settings,
   User,
   LogOut,
@@ -39,6 +41,7 @@ export const NAV_ITEMS = [
   { href: '/courses', label: 'Courses', icon: BookOpen },
   { href: '/shopping', label: 'Shopping', icon: ShoppingCart },
   { href: '/tools', label: 'Tools', icon: Wrench },
+  { href: '/progress', label: 'Progress', icon: TrendingUp },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -66,6 +69,8 @@ export default function Navigation() {
 
   // Check premium status - premium features use defaults when not premium
   const { isPremium } = useSubscription();
+  const { hasAccessToFeature } = useBetaAccess();
+  const hasGamification = hasAccessToFeature('1.2.0');
 
   // Custom theme and visual effects are only active for premium users
   const useCustomTheme = isPremium ? savedUseCustomTheme : false;
@@ -263,6 +268,11 @@ export default function Navigation() {
     });
   })();
 
+  // Filter out Progress page for non-beta users (gamification is beta-only)
+  const filteredNavItems = hasGamification
+    ? sortedNavItems
+    : sortedNavItems.filter(item => item.href !== '/progress');
+
   // Clear admin status when user logs out, validate in background for logged-in users
   useEffect(() => {
     if (sessionStatus === 'unauthenticated') {
@@ -374,7 +384,7 @@ export default function Navigation() {
           )}
         </div>
         <div className="space-y-3 flex-1" style={{ position: 'relative', zIndex: 1 }}>
-          {sortedNavItems.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
+          {filteredNavItems.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
             const Icon = item.icon;
             const isActive = (pendingNav ? pendingNav === item.href : pathname === item.href);
             return (
@@ -509,7 +519,7 @@ export default function Navigation() {
           <div className={styles.drawerHeader} style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0' }}>
               <h2 className={styles.drawerTitle}>{getAppTitle(university)}</h2>
-              <div style={{ paddingRight: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingRight: '4px' }}>
                 <NotificationBell />
               </div>
             </div>
@@ -520,7 +530,7 @@ export default function Navigation() {
 
           {/* Navigation links */}
           <nav className={styles.drawerNav} style={{ position: 'relative', zIndex: 1 }}>
-            {sortedNavItems.filter(item => (visiblePages.includes(item.label) || item.label === 'Settings') && item.label !== 'Tools').map((item) => {
+            {filteredNavItems.filter(item => (visiblePages.includes(item.label) || item.label === 'Settings') && item.label !== 'Tools').map((item) => {
               const Icon = item.icon;
               const isActive = (pendingNav ? pendingNav === item.href : pathname === item.href);
               return (

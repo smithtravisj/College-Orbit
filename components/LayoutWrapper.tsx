@@ -11,7 +11,9 @@ import { CanvasSyncManager } from './CanvasSyncManager';
 import { BlackboardSyncManager } from './BlackboardSyncManager';
 import { MoodleSyncManager } from './MoodleSyncManager';
 import { BrightspaceSyncManager } from './BrightspaceSyncManager';
+import { AchievementToastContainer, LevelUpToast, Confetti } from './gamification';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useBetaAccess } from '@/hooks/useBetaAccess';
 import { useAnalyticsPageView } from '@/lib/useAnalytics';
 import useAppStore from '@/lib/store';
 import styles from './LayoutWrapper.module.css';
@@ -23,6 +25,14 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const isMobile = useIsMobile();
   const { status } = useSession();
   const loadFromDatabase = useAppStore((state) => state.loadFromDatabase);
+  const pendingAchievements = useAppStore((state) => state.pendingAchievements);
+  const showConfetti = useAppStore((state) => state.showConfetti);
+  const levelUpNotification = useAppStore((state) => state.levelUpNotification);
+  const dismissAchievement = useAppStore((state) => state.dismissAchievement);
+  const setShowConfetti = useAppStore((state) => state.setShowConfetti);
+  const dismissLevelUp = useAppStore((state) => state.dismissLevelUp);
+  const { hasAccessToFeature } = useBetaAccess();
+  const hasGamification = hasAccessToFeature('1.2.0');
   const isRefreshing = useRef(false);
 
   // Track page views for analytics
@@ -116,6 +126,26 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
     );
   }
 
+  // Gamification overlays (toasts and confetti)
+  const gamificationOverlays = hasGamification && (
+    <>
+      <AchievementToastContainer
+        achievements={pendingAchievements}
+        onDismiss={dismissAchievement}
+      />
+      {levelUpNotification && (
+        <LevelUpToast
+          level={levelUpNotification}
+          onDismiss={dismissLevelUp}
+        />
+      )}
+      <Confetti
+        active={showConfetti}
+        onComplete={() => setShowConfetti(false)}
+      />
+    </>
+  );
+
   // Mobile layout with header
   if (isMobile) {
     return (
@@ -132,6 +162,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
         <main className={styles.mobileMain}>
           {children}
         </main>
+        {gamificationOverlays}
       </KeyboardShortcutsProvider>
     );
   }
@@ -150,6 +181,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
         <main style={{ marginLeft: '224px', minWidth: 0 }}>
           {children}
         </main>
+        {gamificationOverlays}
       </div>
     </KeyboardShortcutsProvider>
   );
