@@ -2556,6 +2556,18 @@ const useAppStore = create<AppStore>((set, get) => ({
       console.error('Failed to fetch notifications for export:', error);
     }
 
+    // Fetch custom quick links from API
+    let customQuickLinks = [];
+    try {
+      const response = await fetch('/api/custom-quick-links', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        customQuickLinks = data.quickLinks || data || [];
+      }
+    } catch (error) {
+      console.error('Failed to fetch custom quick links for export:', error);
+    }
+
     return {
       courses: state.courses,
       deadlines: state.deadlines,
@@ -2570,6 +2582,11 @@ const useAppStore = create<AppStore>((set, get) => ({
       recurringDeadlinePatterns: state.recurringDeadlinePatterns,
       recurringExamPatterns: state.recurringExamPatterns,
       notifications,
+      shoppingItems: state.shoppingItems,
+      calendarEvents: state.calendarEvents,
+      workItems: state.workItems,
+      recurringWorkPatterns: state.recurringWorkPatterns,
+      customQuickLinks,
     };
   },
 
@@ -2772,6 +2789,67 @@ const useAppStore = create<AppStore>((set, get) => ({
           });
           if (!response.ok) {
             console.error('Failed to import recurring exam pattern:', patternData);
+          }
+        }
+      }
+
+      // Import shopping items
+      if (data.shoppingItems && data.shoppingItems.length > 0) {
+        console.log('Importing shopping items:', data.shoppingItems.length);
+        for (const item of data.shoppingItems) {
+          const { id, createdAt, updatedAt, userId, ...itemData } = item as any;
+          await store.addShoppingItem(itemData);
+        }
+      }
+
+      // Import calendar events
+      if (data.calendarEvents && data.calendarEvents.length > 0) {
+        console.log('Importing calendar events:', data.calendarEvents.length);
+        for (const event of data.calendarEvents) {
+          const { id, createdAt, updatedAt, userId, ...eventData } = event as any;
+          await store.addCalendarEvent(eventData);
+        }
+      }
+
+      // Import work items
+      if (data.workItems && data.workItems.length > 0) {
+        console.log('Importing work items:', data.workItems.length);
+        for (const workItem of data.workItems) {
+          const { id, createdAt, updatedAt, userId, ...workItemData } = workItem as any;
+          await store.addWorkItem(workItemData);
+        }
+      }
+
+      // Import recurring work patterns
+      if (data.recurringWorkPatterns && data.recurringWorkPatterns.length > 0) {
+        console.log('Importing recurring work patterns:', data.recurringWorkPatterns.length);
+        for (const pattern of data.recurringWorkPatterns) {
+          const { id, createdAt, updatedAt, userId, ...patternData } = pattern as any;
+          const response = await fetch('/api/work', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ ...patternData.workItemTemplate, recurring: patternData }),
+          });
+          if (!response.ok) {
+            console.error('Failed to import recurring work pattern:', patternData);
+          }
+        }
+      }
+
+      // Import custom quick links
+      if ((data as any).customQuickLinks && (data as any).customQuickLinks.length > 0) {
+        console.log('Importing custom quick links:', (data as any).customQuickLinks.length);
+        for (const link of (data as any).customQuickLinks) {
+          const { id, createdAt, updatedAt, userId, ...linkData } = link as any;
+          const response = await fetch('/api/custom-quick-links', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(linkData),
+          });
+          if (!response.ok) {
+            console.error('Failed to import custom quick link:', linkData);
           }
         }
       }

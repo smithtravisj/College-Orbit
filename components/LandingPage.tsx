@@ -11,17 +11,17 @@ import {
   FileText,
   CalendarDays,
   Target,
-  Repeat,
+  Trophy,
   Palette,
   RefreshCw,
-  Link as LinkIcon
+  ShoppingCart
 } from 'lucide-react';
 
 const coreFeatures = [
   {
     icon: RefreshCw,
-    title: 'LMS Integration',
-    description: 'Sync courses, assignments, grades, and events from Canvas or Moodle.',
+    title: 'Canvas Integration',
+    description: 'Sync courses, assignments, grades, and events directly from Canvas.',
   },
   {
     icon: Calendar,
@@ -52,9 +52,9 @@ const secondaryFeatures = [
     description: 'See classes, tasks, assignments, exams, and events in one unified view with Today and Week toggles.',
   },
   {
-    icon: Repeat,
-    title: 'Recurring Items',
-    description: 'Set up recurring tasks, assignments, readings, projects, or exams that repeat daily, weekly, or on custom schedules.',
+    icon: Trophy,
+    title: 'Progress & Achievements',
+    description: 'Earn XP, unlock achievements, track streaks, and compete on your college\'s leaderboard with friends.',
   },
   {
     icon: FileText,
@@ -63,8 +63,8 @@ const secondaryFeatures = [
   },
   {
     icon: BarChart3,
-    title: 'GPA Calculator',
-    description: 'Track your grades by semester and calculate your GPA automatically.',
+    title: 'GPA & Grade Tools',
+    description: 'Track grades, calculate your GPA, project what-if scenarios, and find what you need on your final.',
   },
   {
     icon: Clock,
@@ -72,14 +72,14 @@ const secondaryFeatures = [
     description: 'Built-in focus timer with customizable work and break intervals to boost productivity.',
   },
   {
-    icon: LinkIcon,
-    title: 'Quick Links',
-    description: 'One-click access to email, registration, and your school\'s most-used resources.',
+    icon: ShoppingCart,
+    title: 'Shopping Lists',
+    description: 'Manage grocery lists, wishlists, and pantry inventory. Move purchased items between lists.',
   },
   {
     icon: Palette,
     title: 'University Themes',
-    description: 'Personalize with your school\'s colors or create your own custom theme.',
+    description: 'Personalize with your school\'s colors, dark or light mode, and colorblind-friendly options.',
   },
 ];
 
