@@ -1653,7 +1653,7 @@ export default function AdminPage() {
           {/* External Services Card - Full Width */}
           <div style={{ marginBottom: isMobile ? '8px' : '24px' }}>
             <Card title="External Services">
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, 1fr)', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px' }}>
               <a
                 href="https://dashboard.stripe.com/acct_1Sr2ZaPr50btBHL1/dashboard"
                 target="_blank"
@@ -1815,6 +1815,138 @@ export default function AdminPage() {
                 <div>
                   <div style={{ fontWeight: '500', fontSize: '14px' }}>Sentry</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Errors</div>
+                </div>
+                <ExternalLink size={16} style={{ color: 'var(--text-muted)' }} />
+              </a>
+
+              <a
+                href="https://search.google.com/u/1/search-console?resource_id=https%3A%2F%2Fcollegeorbit.app%2F"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border)',
+                  textDecoration: 'none',
+                  color: 'var(--text)',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-hover)';
+                  e.currentTarget.style.backgroundColor = 'var(--panel)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: '500', fontSize: '14px' }}>Search Console</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>SEO</div>
+                </div>
+                <ExternalLink size={16} style={{ color: 'var(--text-muted)' }} />
+              </a>
+
+              <a
+                href="https://dash.cloudflare.com/2e0698a162c8bc67e145f78a9587ca30/collegeorbit.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border)',
+                  textDecoration: 'none',
+                  color: 'var(--text)',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-hover)';
+                  e.currentTarget.style.backgroundColor = 'var(--panel)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: '500', fontSize: '14px' }}>Cloudflare</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>DNS & Security</div>
+                </div>
+                <ExternalLink size={16} style={{ color: 'var(--text-muted)' }} />
+              </a>
+
+              <a
+                href="https://websitelaunches.com/site-health/seo.php?domain=collegeorbit.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border)',
+                  textDecoration: 'none',
+                  color: 'var(--text)',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-hover)';
+                  e.currentTarget.style.backgroundColor = 'var(--panel)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: '500', fontSize: '14px' }}>Site Health</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>SEO Audit</div>
+                </div>
+                <ExternalLink size={16} style={{ color: 'var(--text-muted)' }} />
+              </a>
+
+              <a
+                href="https://chrome.google.com/u/1/webstore/devconsole/23a42bdf-0504-4cdf-a3e0-1f7a3699c126"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border)',
+                  textDecoration: 'none',
+                  color: 'var(--text)',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-hover)';
+                  e.currentTarget.style.backgroundColor = 'var(--panel)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: '500', fontSize: '14px' }}>Chrome Store</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Extension</div>
                 </div>
                 <ExternalLink size={16} style={{ color: 'var(--text-muted)' }} />
               </a>
