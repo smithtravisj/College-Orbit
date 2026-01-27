@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { generateAllUserRecurringDeadlineInstances } from '@/lib/recurringDeadlineUtils';
 import { generateRecurringDeadlineInstances } from '@/lib/recurringDeadlineUtils';
 import { checkPremiumAccess } from '@/lib/subscription';
@@ -9,17 +9,14 @@ import { checkPremiumAccess } from '@/lib/subscription';
 // GET all deadlines for authenticated user
 export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
-    console.log('[GET /api/deadlines] Token:', token ? { userId: token.id, email: token.email } : 'null');
+    const userId = await getAuthUserId(request);
+    console.log('[GET /api/deadlines] userId:', userId || 'null');
 
-    if (!token?.id) {
-      console.log('[GET /api/deadlines] No user ID in token, returning 401');
+    if (!userId) {
+      console.log('[GET /api/deadlines] No user ID, returning 401');
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
-    console.log('[GET /api/deadlines] Authorized user:', token.id);
+    console.log('[GET /api/deadlines] Authorized user:', userId);
 
     // Get query parameters
     const url = new URL(request.url);
@@ -28,14 +25,14 @@ export const GET = withRateLimit(async function(request: NextRequest) {
 
     // Generate recurring deadline instances before fetching
     try {
-      await generateAllUserRecurringDeadlineInstances(token.id, windowDays);
+      await generateAllUserRecurringDeadlineInstances(userId, windowDays);
     } catch (genError) {
       console.error('[GET /api/deadlines] Error generating recurring instances:', genError);
       // Continue even if generation fails
     }
 
     const allDeadlines = await prisma.deadline.findMany({
-      where: { userId: token.id },
+      where: { userId: userId },
       orderBy: [
         { instanceDate: 'asc' }, // For recurring deadlines, order by instance date
         { dueAt: 'asc' }, // For other deadlines, order by due date
@@ -88,12 +85,9 @@ export const GET = withRateLimit(async function(request: NextRequest) {
 // POST create new deadline
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -134,7 +128,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     // Check if this is a recurring deadline
     if (data.recurring) {
       // Recurring deadlines require premium
-      const premiumCheck = await checkPremiumAccess(token.id);
+      const premiumCheck = await checkPremiumAccess(userId);
       if (!premiumCheck.allowed) {
         return NextResponse.json(
           { error: 'premium_required', message: 'Recurring assignments are a Premium feature. Upgrade to create recurring assignments.' },
@@ -144,7 +138,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
       const pattern = await prisma.recurringDeadlinePattern.create({
         data: {
-          userId: token.id,
+          userId: userId,
           recurrenceType: data.recurring.recurrenceType,
           intervalDays: data.recurring.recurrenceType === 'custom' ? data.recurring.customIntervalDays : null,
           daysOfWeek: data.recurring.recurrenceType === 'weekly' ? data.recurring.daysOfWeek : [],
@@ -170,7 +164,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
       try {
         await generateRecurringDeadlineInstances({
           patternId: pattern.id,
-          userId: token.id,
+          userId: userId,
           windowDays: 365,
         });
         console.log('[POST /deadlines] Recurring deadline pattern created successfully:', pattern.id);
@@ -186,7 +180,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     const deadline = await prisma.deadline.create({
       data: {
-        userId: token.id,
+        userId: userId,
         title: data.title.trim(),
         courseId: data.courseId || null,
         dueAt: dueAt,

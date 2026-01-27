@@ -9,6 +9,8 @@ import { CanvasBadge } from '@/components/CanvasBadge';
 import { BlackboardBadge } from '@/components/BlackboardBadge';
 import { MoodleBadge } from '@/components/MoodleBadge';
 import { BrightspaceBadge } from '@/components/BrightspaceBadge';
+import { CanvasExtBadge } from '@/components/CanvasExtBadge';
+import { LearningSuiteBadge } from '@/components/LearningSuiteBadge';
 import { getEventTypeColors } from '@/lib/collegeColors';
 
 interface TimelineItemProps {
@@ -242,6 +244,14 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
           {/* Brightspace badge for assignments synced from Brightspace */}
           {item.type === 'deadline' && item.originalItem?.brightspaceActivityId && (
             <BrightspaceBadge size="sm" />
+          )}
+
+          {/* Extension badges (added via browser extension, detected by link labels) */}
+          {item.type === 'deadline' && !item.originalItem?.canvasAssignmentId && (item.originalItem?.links || []).some((l: any) => l.label === 'Canvas') && (
+            <CanvasExtBadge size="sm" />
+          )}
+          {item.type === 'deadline' && (item.originalItem?.links || []).some((l: any) => l.label === 'Learning Suite') && (
+            <LearningSuiteBadge size="sm" />
           )}
         </div>
 

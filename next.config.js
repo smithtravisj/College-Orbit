@@ -39,6 +39,28 @@ const nextConfig = {
   // Security and caching headers
   async headers() {
     return [
+      // CORS headers for API routes (Chrome extension support)
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization',
+          },
+          {
+            key: 'Access-Control-Max-Age',
+            value: '86400',
+          },
+        ],
+      },
       // Security headers for all routes
       {
         source: '/(.*)',

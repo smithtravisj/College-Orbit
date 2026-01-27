@@ -40,7 +40,7 @@ export function BrightspaceBadge({ size = 'sm', className = '' }: BrightspaceBad
         letterSpacing: '0.2px',
       }}
     >
-      Brightspace
+      Brightspace Sync
     </span>
   );
 }

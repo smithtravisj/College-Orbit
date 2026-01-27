@@ -24,7 +24,7 @@ export function CanvasBadge({ size = 'sm', className = '' }: CanvasBadgeProps) {
 
   return (
     <span
-      title="Synced from Canvas LMS"
+      title="Synced from Canvas LMS integration"
       className={className}
       style={{
         display: 'inline-flex',
@@ -40,7 +40,7 @@ export function CanvasBadge({ size = 'sm', className = '' }: CanvasBadgeProps) {
         letterSpacing: '0.2px',
       }}
     >
-      Canvas
+      Canvas Sync
     </span>
   );
 }

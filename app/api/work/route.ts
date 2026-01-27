@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { generateAllUserRecurringWorkInstances } from '@/lib/recurringWorkUtils';
 import { checkPremiumAccess } from '@/lib/subscription';
 
@@ -15,17 +15,14 @@ const VALID_PRIORITIES = ['low', 'medium', 'high', 'critical'] as const;
 // GET all work items for authenticated user
 export const GET = withRateLimit(async function (request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
-    console.log('[GET /api/work] Token:', token ? { userId: token.id, email: token.email } : 'null');
+    const userId = await getAuthUserId(request);
+    console.log('[GET /api/work] userId:', userId || 'null');
 
-    if (!token?.id) {
-      console.log('[GET /api/work] No user ID in token, returning 401');
+    if (!userId) {
+      console.log('[GET /api/work] No user ID, returning 401');
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
-    console.log('[GET /api/work] Authorized user:', token.id);
+    console.log('[GET /api/work] Authorized user:', userId);
 
     // Get query parameters
     const url = new URL(request.url);
@@ -44,7 +41,7 @@ export const GET = withRateLimit(async function (request: NextRequest) {
 
     // Generate recurring instances before fetching work items
     try {
-      await generateAllUserRecurringWorkInstances(token.id, windowDays);
+      await generateAllUserRecurringWorkInstances(userId, windowDays);
     } catch (genError) {
       console.error('[GET /api/work] Error generating recurring instances:', genError);
       // Continue even if generation fails
@@ -52,7 +49,7 @@ export const GET = withRateLimit(async function (request: NextRequest) {
 
     // Build where clause
     const whereClause: any = {
-      userId: token.id,
+      userId: userId,
     };
 
     if (status) {
@@ -129,12 +126,9 @@ export const GET = withRateLimit(async function (request: NextRequest) {
 // POST create new work item
 export const POST = withRateLimit(async function (req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -167,7 +161,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
     // Handle recurring work item creation
     if (data.recurring) {
       // Recurring items require premium
-      const premiumCheck = await checkPremiumAccess(token.id);
+      const premiumCheck = await checkPremiumAccess(userId);
       if (!premiumCheck.allowed) {
         return NextResponse.json(
           {
@@ -182,7 +176,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
         // Create recurring pattern
         const pattern = await prisma.recurringWorkPattern.create({
           data: {
-            userId: token.id,
+            userId: userId,
             recurrenceType: data.recurring.recurrenceType,
             intervalDays: data.recurring.customIntervalDays || null,
             daysOfWeek: data.recurring.daysOfWeek || [],
@@ -225,7 +219,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
         const { generateRecurringWorkInstances } = await import('@/lib/recurringWorkUtils');
         await generateRecurringWorkInstances({
           patternId: pattern.id,
-          userId: token.id,
+          userId: userId,
         });
 
         // Fetch first work item to return
@@ -276,7 +270,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
 
     const workItem = await prisma.workItem.create({
       data: {
-        userId: token.id,
+        userId: userId,
         title: data.title.trim(),
         type: type,
         courseId: data.courseId || null,

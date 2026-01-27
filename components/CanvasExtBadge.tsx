@@ -2,19 +2,18 @@
 
 import useAppStore from '@/lib/store';
 
-interface BlackboardBadgeProps {
+interface CanvasExtBadgeProps {
   size?: 'sm' | 'md';
   className?: string;
 }
 
 /**
- * A small badge/icon indicating an item was synced from Blackboard Learn LMS.
- * Subtle, transparent design that blends with the UI.
+ * A small badge indicating an item was added from Canvas via the browser extension.
+ * Uses the same red Canvas color but says "Canvas" (without "Sync").
  */
-export function BlackboardBadge({ size = 'sm', className = '' }: BlackboardBadgeProps) {
+export function CanvasExtBadge({ size = 'sm', className = '' }: CanvasExtBadgeProps) {
   const { settings } = useAppStore();
 
-  // Check if Canvas badges should be shown (reuse same setting for all LMS badges)
   if (settings.showCanvasBadges === false) {
     return null;
   }
@@ -24,15 +23,15 @@ export function BlackboardBadge({ size = 'sm', className = '' }: BlackboardBadge
 
   return (
     <span
-      title="Synced from Blackboard Learn LMS"
+      title="Added from Canvas via browser extension"
       className={className}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
         padding,
         borderRadius: '4px',
-        backgroundColor: 'var(--warning-bg)',
-        color: 'var(--warning)',
+        backgroundColor: 'var(--danger-bg)',
+        color: 'var(--danger)',
         fontSize,
         fontWeight: 500,
         lineHeight: 1,
@@ -40,7 +39,7 @@ export function BlackboardBadge({ size = 'sm', className = '' }: BlackboardBadge
         letterSpacing: '0.2px',
       }}
     >
-      Blackboard Sync
+      Canvas
     </span>
   );
 }

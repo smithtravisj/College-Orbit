@@ -21,6 +21,8 @@ import { CanvasBadge } from './CanvasBadge';
 import { BlackboardBadge } from './BlackboardBadge';
 import { MoodleBadge } from './MoodleBadge';
 import { BrightspaceBadge } from './BrightspaceBadge';
+import { CanvasExtBadge } from './CanvasExtBadge';
+import { LearningSuiteBadge } from './LearningSuiteBadge';
 import { useFormatters } from '@/hooks/useFormatters';
 
 interface EventDetailModalProps {
@@ -620,6 +622,8 @@ export default function EventDetailModal({
                     {event.type === 'event' && fullData && 'canvasEventId' in fullData && (fullData as CustomCalendarEvent).canvasEventId && <CanvasBadge size="md" />}
                     {event.type === 'event' && fullData && 'moodleEventId' in fullData && (fullData as CustomCalendarEvent).moodleEventId && <MoodleBadge size="md" />}
                     {event.type === 'event' && fullData && 'brightspaceEventId' in fullData && (fullData as CustomCalendarEvent).brightspaceEventId && <BrightspaceBadge size="md" />}
+                    {fullData && !('canvasAssignmentId' in fullData && (fullData as any).canvasAssignmentId) && ((fullData as any).links || []).some((l: any) => l.label === 'Canvas') && <CanvasExtBadge size="md" />}
+                    {fullData && ((fullData as any).links || []).some((l: any) => l.label === 'Learning Suite') && <LearningSuiteBadge size="md" />}
                   </div>
                   <h2
                     style={{

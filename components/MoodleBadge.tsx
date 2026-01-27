@@ -40,7 +40,7 @@ export function MoodleBadge({ size = 'sm', className = '' }: MoodleBadgeProps) {
         letterSpacing: '0.2px',
       }}
     >
-      Moodle
+      Moodle Sync
     </span>
   );
 }

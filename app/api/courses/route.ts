@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { checkFeatureLimit } from '@/lib/subscription';
 
 // GET all courses for authenticated user
-export const GET = withRateLimit(async function(_request: NextRequest) {
+export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(request);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const courses = await prisma.course.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -32,14 +31,14 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
 // POST create new course
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     // Check courses limit for free users
-    const limitCheck = await checkFeatureLimit(session.user.id, 'courses');
+    const limitCheck = await checkFeatureLimit(userId, 'courses');
     if (!limitCheck.allowed) {
       return NextResponse.json(
         { error: 'limit_reached', message: limitCheck.message },
@@ -51,7 +50,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     const course = await prisma.course.create({
       data: {
-        userId: session.user.id,
+        userId: userId,
         code: data.code,
         name: data.name,
         term: data.term,

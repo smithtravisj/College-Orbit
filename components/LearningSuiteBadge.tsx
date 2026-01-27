@@ -2,19 +2,18 @@
 
 import useAppStore from '@/lib/store';
 
-interface BlackboardBadgeProps {
+interface LearningSuiteBadgeProps {
   size?: 'sm' | 'md';
   className?: string;
 }
 
 /**
- * A small badge/icon indicating an item was synced from Blackboard Learn LMS.
- * Subtle, transparent design that blends with the UI.
+ * A small badge indicating an item was added from Learning Suite (BYU).
+ * Blue color matching BYU branding.
  */
-export function BlackboardBadge({ size = 'sm', className = '' }: BlackboardBadgeProps) {
+export function LearningSuiteBadge({ size = 'sm', className = '' }: LearningSuiteBadgeProps) {
   const { settings } = useAppStore();
 
-  // Check if Canvas badges should be shown (reuse same setting for all LMS badges)
   if (settings.showCanvasBadges === false) {
     return null;
   }
@@ -24,15 +23,15 @@ export function BlackboardBadge({ size = 'sm', className = '' }: BlackboardBadge
 
   return (
     <span
-      title="Synced from Blackboard Learn LMS"
+      title="Added from Learning Suite (BYU)"
       className={className}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
         padding,
         borderRadius: '4px',
-        backgroundColor: 'var(--warning-bg)',
-        color: 'var(--warning)',
+        backgroundColor: 'rgba(54, 147, 247, 0.15)',
+        color: '#3693f7',
         fontSize,
         fontWeight: 500,
         lineHeight: 1,
@@ -40,7 +39,7 @@ export function BlackboardBadge({ size = 'sm', className = '' }: BlackboardBadge
         letterSpacing: '0.2px',
       }}
     >
-      Blackboard Sync
+      Learning Suite
     </span>
   );
 }

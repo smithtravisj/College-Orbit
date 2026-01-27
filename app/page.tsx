@@ -16,6 +16,8 @@ import EmptyState from '@/components/ui/EmptyState';
 import Link from 'next/link';
 import { X, FileIcon } from 'lucide-react';
 import { CanvasBadge } from '@/components/CanvasBadge';
+import { CanvasExtBadge } from '@/components/CanvasExtBadge';
+import { LearningSuiteBadge } from '@/components/LearningSuiteBadge';
 import LandingPage from '@/components/LandingPage';
 import { Timeline } from '@/components/dashboard';
 import FilePreviewModal from '@/components/FilePreviewModal';
@@ -642,6 +644,8 @@ function Dashboard() {
                     {previewingDeadline.title}
                   </h2>
                   {previewingDeadline.canvasAssignmentId && <CanvasBadge />}
+                  {!previewingDeadline.canvasAssignmentId && ((previewingDeadline as any).links || []).some((l: any) => l.label === 'Canvas') && <CanvasExtBadge />}
+                  {((previewingDeadline as any).links || []).some((l: any) => l.label === 'Learning Suite') && <LearningSuiteBadge />}
                 </div>
                 {previewingDeadline.courseId && (
                   <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>

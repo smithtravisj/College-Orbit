@@ -36,6 +36,8 @@ import { CanvasBadge } from '@/components/CanvasBadge';
 import { BlackboardBadge } from '@/components/BlackboardBadge';
 import { MoodleBadge } from '@/components/MoodleBadge';
 import { BrightspaceBadge } from '@/components/BrightspaceBadge';
+import { CanvasExtBadge } from '@/components/CanvasExtBadge';
+import { LearningSuiteBadge } from '@/components/LearningSuiteBadge';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
@@ -1770,6 +1772,8 @@ export default function TasksPage() {
                             {(t as any).blackboardColumnId && <BlackboardBadge />}
                             {(t as any).moodleAssignmentId && <MoodleBadge />}
                             {(t as any).brightspaceActivityId && <BrightspaceBadge />}
+                            {!(t as any).canvasAssignmentId && ((t as any).links || []).some((l: any) => l.label === 'Canvas') && <CanvasExtBadge />}
+                            {((t as any).links || []).some((l: any) => l.label === 'Learning Suite') && <LearningSuiteBadge />}
                             {t.isRecurring && (
                               <Repeat
                                 size={14}
@@ -1989,6 +1993,8 @@ export default function TasksPage() {
                           {(t as any).blackboardColumnId && <BlackboardBadge />}
                           {(t as any).moodleAssignmentId && <MoodleBadge />}
                           {(t as any).brightspaceActivityId && <BrightspaceBadge />}
+                          {!(t as any).canvasAssignmentId && ((t as any).links || []).some((l: any) => l.label === 'Canvas') && <CanvasExtBadge />}
+                          {((t as any).links || []).some((l: any) => l.label === 'Learning Suite') && <LearningSuiteBadge />}
                           {t.isRecurring && (
                             <Repeat
                               size={14}
