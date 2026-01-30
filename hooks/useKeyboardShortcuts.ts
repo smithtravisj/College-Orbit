@@ -24,8 +24,9 @@ export const KEYBOARD_SHORTCUTS = {
     title: 'Global',
     shortcuts: [
       { keys: ['⌘', 'K'], description: 'Open Quick Add' },
+      { keys: ['⌘', 'S'], description: 'Open Global Search' },
       { keys: ['?'], description: 'Show keyboard shortcuts' },
-      { keys: ['/'], description: 'Focus search' },
+      { keys: ['/'], description: 'Focus page search' },
       { keys: ['Esc'], description: 'Close modal / Cancel' },
     ],
   },
@@ -66,6 +67,7 @@ const NAV_ROUTES: Record<string, string> = {
 
 interface UseKeyboardShortcutsOptions {
   onQuickAdd?: () => void;
+  onGlobalSearch?: () => void;
   onShowHelp?: () => void;
   onSearch?: () => void;
   onNewItem?: () => void;
@@ -89,6 +91,7 @@ export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions = {}) 
 
   const {
     onQuickAdd,
+    onGlobalSearch,
     onShowHelp,
     onSearch,
     onNewItem,
@@ -160,6 +163,13 @@ export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions = {}) 
       if (lowerKey === 'k' && !shiftKey) {
         event.preventDefault();
         if (onQuickAdd) onQuickAdd();
+        return;
+      }
+
+      // Cmd+S - Global Search (prevent browser save)
+      if (lowerKey === 's' && !shiftKey) {
+        event.preventDefault();
+        if (onGlobalSearch) onGlobalSearch();
         return;
       }
 
@@ -288,6 +298,7 @@ export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions = {}) 
     router,
     isInputFocused,
     onQuickAdd,
+    onGlobalSearch,
     onShowHelp,
     onSearch,
     onNewItem,

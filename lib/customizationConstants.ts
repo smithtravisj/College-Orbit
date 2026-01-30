@@ -24,6 +24,7 @@ export const DASHBOARD_CARDS = {
 
 export const TOOLS_CARDS = {
   POMODORO_TIMER: 'pomodoroTimer',
+  FILE_CONVERTER: 'fileConverter',
   GRADE_TRACKER: 'gradeTracker',
   GPA_TREND_CHART: 'gpaTrendChart',
   WHAT_IF_PROJECTOR: 'whatIfProjector',
@@ -59,6 +60,7 @@ export const CARD_LABELS: Record<string, string> = {
   [DASHBOARD_CARDS.UPCOMING_WEEK]: 'Upcoming This Week',
   [TOOLS_CARDS.QUICK_LINKS]: 'Quick Links',
   [TOOLS_CARDS.POMODORO_TIMER]: 'Pomodoro Timer',
+  [TOOLS_CARDS.FILE_CONVERTER]: 'File Converter',
   [TOOLS_CARDS.GRADE_TRACKER]: 'Grade Tracker',
   [TOOLS_CARDS.WHAT_IF_PROJECTOR]: 'What-If GPA Projector',
   [TOOLS_CARDS.GPA_TREND_CHART]: 'GPA Trend',

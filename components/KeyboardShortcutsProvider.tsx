@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import KeyboardShortcutsModal from './KeyboardShortcutsModal';
+import GlobalSearch from './search/GlobalSearch';
 import useAppStore from '@/lib/store';
 
 interface KeyboardShortcutsContextType {
@@ -11,6 +12,10 @@ interface KeyboardShortcutsContextType {
   isHelpOpen: boolean;
   openQuickAdd: () => void;
   setQuickAddHandler: (handler: () => void) => void;
+  openGlobalSearch: () => void;
+  closeGlobalSearch: () => void;
+  setGlobalSearchHandler: (handler: (() => void) | null) => void;
+  isGlobalSearchOpen: boolean;
   focusSearch: () => void;
   setSearchHandler: (handler: (() => void) | null) => void;
   triggerNewItem: () => void;
@@ -43,7 +48,9 @@ interface KeyboardShortcutsProviderProps {
 export default function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProviderProps) {
   const enableKeyboardShortcuts = useAppStore((state) => state.settings.enableKeyboardShortcuts) ?? true;
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
   const [quickAddHandler, setQuickAddHandlerState] = useState<(() => void) | null>(null);
+  const [globalSearchHandler, setGlobalSearchHandlerState] = useState<(() => void) | null>(null);
   const [searchHandler, setSearchHandlerState] = useState<(() => void) | null>(null);
   const [newItemHandler, setNewItemHandlerState] = useState<(() => void) | null>(null);
   const [submitHandler, setSubmitHandlerState] = useState<(() => void) | null>(null);
@@ -58,6 +65,18 @@ export default function KeyboardShortcutsProvider({ children }: KeyboardShortcut
   const openQuickAdd = useCallback(() => {
     if (quickAddHandler) quickAddHandler();
   }, [quickAddHandler]);
+
+  const openGlobalSearch = useCallback(() => {
+    if (globalSearchHandler) {
+      globalSearchHandler();
+    } else {
+      setIsGlobalSearchOpen(true);
+    }
+  }, [globalSearchHandler]);
+
+  const closeGlobalSearch = useCallback(() => {
+    setIsGlobalSearchOpen(false);
+  }, []);
 
   const focusSearch = useCallback(() => {
     if (searchHandler) searchHandler();
@@ -84,18 +103,24 @@ export default function KeyboardShortcutsProvider({ children }: KeyboardShortcut
   }, [deselectAllHandler]);
 
   const triggerEscape = useCallback(() => {
-    // First close help if open
+    // First close global search if open
+    if (isGlobalSearchOpen) {
+      setIsGlobalSearchOpen(false);
+      return;
+    }
+    // Then close help if open
     if (isHelpOpen) {
       setIsHelpOpen(false);
       return;
     }
     // Otherwise call the escape handler
     if (escapeHandler) escapeHandler();
-  }, [isHelpOpen, escapeHandler]);
+  }, [isGlobalSearchOpen, isHelpOpen, escapeHandler]);
 
   // Register global keyboard shortcuts
   useKeyboardShortcuts({
     onQuickAdd: openQuickAdd,
+    onGlobalSearch: openGlobalSearch,
     onShowHelp: showHelp,
     onSearch: focusSearch,
     onNewItem: triggerNewItem,
@@ -113,6 +138,10 @@ export default function KeyboardShortcutsProvider({ children }: KeyboardShortcut
     isHelpOpen,
     openQuickAdd,
     setQuickAddHandler: (handler) => setQuickAddHandlerState(() => handler),
+    openGlobalSearch,
+    closeGlobalSearch,
+    setGlobalSearchHandler: (handler) => setGlobalSearchHandlerState(() => handler),
+    isGlobalSearchOpen,
     focusSearch,
     setSearchHandler: (handler) => setSearchHandlerState(() => handler),
     triggerNewItem,
@@ -132,6 +161,7 @@ export default function KeyboardShortcutsProvider({ children }: KeyboardShortcut
     <KeyboardShortcutsContext.Provider value={value}>
       {children}
       <KeyboardShortcutsModal isOpen={isHelpOpen} onClose={hideHelp} />
+      <GlobalSearch isOpen={isGlobalSearchOpen} onClose={closeGlobalSearch} />
     </KeyboardShortcutsContext.Provider>
   );
 }

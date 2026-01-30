@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useState, useRef, useTransition } from 'react';
 import useAppStore from '@/lib/store';
 import OnboardingTour from '@/components/OnboardingTour';
+import { useHighlightElement } from '@/hooks/useHighlightElement';
 import { useFormatters } from '@/hooks/useFormatters';
 import { getQuickLinks } from '@/lib/quickLinks';
 import { DASHBOARD_CARDS, DEFAULT_VISIBLE_DASHBOARD_CARDS } from '@/lib/customizationConstants';
@@ -46,6 +47,9 @@ export default function AuthenticatedDashboard() {
   const savedVisibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
   const visibleDashboardCards = isPremium ? savedVisibleDashboardCards : DEFAULT_VISIBLE_DASHBOARD_CARDS;
   const isMobile = useIsMobile();
+
+  // Handle scroll-to and highlight from global search
+  useHighlightElement();
 
   const handleCardCollapseChange = (cardId: string, isOpen: boolean) => {
     const currentCollapsed = settings.dashboardCardsCollapsedState || [];
@@ -177,9 +181,11 @@ export default function AuthenticatedDashboard() {
     }
 
     return (
-      <Card title={title} className={className} variant={variant}>
-        {children}
-      </Card>
+      <div id={cardId} className="h-full flex flex-col">
+        <Card title={title} className={className} variant={variant}>
+          {children}
+        </Card>
+      </div>
     );
   };
 

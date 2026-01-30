@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { useBulkSelect } from '@/hooks/useBulkSelect';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
@@ -26,6 +27,8 @@ import {
 export default function CoursesPage() {
   const isMobile = useIsMobile();
   const subscription = useSubscription();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
@@ -87,6 +90,19 @@ export default function CoursesPage() {
       localStorage.setItem('showEndedCourses', JSON.stringify(showEnded));
     }
   }, [showEnded, mounted]);
+
+  // Check for course ID in URL params to open edit form
+  useEffect(() => {
+    const courseId = searchParams.get('course');
+    if (courseId && mounted && courses.length > 0) {
+      const course = courses.find((c) => c.id === courseId);
+      if (course) {
+        setEditingId(courseId);
+        // Clear the URL parameter to prevent reopening on close
+        router.replace('/courses', { scroll: false });
+      }
+    }
+  }, [searchParams, mounted, courses, router]);
 
   if (!mounted) {
     return (

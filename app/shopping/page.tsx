@@ -1005,7 +1005,7 @@ export default function ShoppingPage() {
           <div className="col-span-12 lg:col-span-9" style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '24px' }}>
             {/* Add Item Form */}
             {showForm && (
-              <Card>
+              <Card style={{ height: 'auto' }}>
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '16px' }}>
                   {/* Natural Language Input - only for new items (premium feature) */}
                   {!editingId && isPremium && (
@@ -1130,7 +1130,7 @@ export default function ShoppingPage() {
 
             {/* Item List */}
             {filteredItems.length > 0 ? (
-              <Card>
+              <Card style={{ height: 'auto' }}>
                 {activeTab === 'pantry' && (
                   <div style={{ marginBottom: '8px' }}>
                     <Button
@@ -1346,7 +1346,7 @@ export default function ShoppingPage() {
 
             {/* Purchase History Section - Only for Grocery Tab */}
             {activeTab === 'grocery' && showPurchaseHistory && (
-              <Card>
+              <Card style={{ height: 'auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '12px' : '16px' }}>
                   <h3 className="text-lg font-semibold text-[var(--text)]">
                     <History size={18} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'text-bottom' }} />

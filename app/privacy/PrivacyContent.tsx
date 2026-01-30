@@ -54,6 +54,14 @@ export default function PrivacyContent() {
             </div>
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                File Converter Tool
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                The File Converter tool allows you to convert files between different formats. Most conversions (images, documents, text files) are processed entirely in your browser and files are never sent to our servers. For HEIC/HEIF image conversions, files are temporarily sent to our servers for processing (since browser-based HEIC conversion is not supported), converted, and immediately deleted after the conversion is complete. Converted files are not stored on our servers.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
                 Shopping & Lifestyle Data
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>

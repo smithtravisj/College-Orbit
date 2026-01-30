@@ -987,3 +987,23 @@ input[type="range"]:disabled::-moz-range-thumb {
   position: relative;
 }
 
+/* ============================================
+   Global Search Highlight Animation
+   ============================================ */
+
+@keyframes searchHighlightPulse {
+  0%, 50% {
+    box-shadow: 0 0 0 3px var(--accent), 0 0 20px 6px color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0px transparent, 0 0 0px 0px transparent;
+  }
+}
+
+.search-highlight {
+  animation: searchHighlightPulse 2s ease-out forwards;
+  border-radius: var(--radius-control);
+  position: relative;
+  z-index: 1;
+}
+

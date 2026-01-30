@@ -78,6 +78,7 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = React.memo(({
 
   return (
     <div
+      id={id}
       className={`card-hover rounded-[16px] border transition-all duration-300 w-full flex flex-col ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${!isOpen ? 'cursor-pointer' : ''} ${className}`}
       style={{
         position: 'relative',

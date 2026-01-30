@@ -14,6 +14,7 @@ import HelpTooltip from '@/components/ui/HelpTooltip';
 import { useSubscription } from '@/hooks/useSubscription';
 import { showSuccessToast, showErrorToast } from '@/components/ui/DeleteToast';
 import Link from 'next/link';
+import { useHighlightElement } from '@/hooks/useHighlightElement';
 
 export default function AccountPage() {
   const { data: session, update: updateSession } = useSession();
@@ -21,6 +22,10 @@ export default function AccountPage() {
   const isMobile = useIsMobile();
   const { exportData, importData, deleteAllData, fetchFriends, fetchFriendRequests, sendFriendRequest, acceptFriendRequest, declineFriendRequest, cancelFriendRequest, removeFriend, friends, pendingFriendRequests, sentFriendRequests, colleges, fetchColleges, updateSettings, settings } = useAppStore();
   const subscription = useSubscription();
+
+  // Handle scroll-to and highlight from global search
+  useHighlightElement();
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -1573,7 +1578,7 @@ export default function AccountPage() {
           {/* Data & Backup */}
           <Card title="Data & Backup">
             <div className="space-y-4">
-              <div style={{ paddingBottom: '12px' }}>
+              <div id="account-export-data" style={{ paddingBottom: '12px' }}>
                 <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
                   Export your data
                 </label>
@@ -1589,7 +1594,7 @@ export default function AccountPage() {
                 )}
               </div>
 
-              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px', paddingBottom: '12px' }}>
+              <div id="account-import-data" className="border-t border-[var(--border)]" style={{ paddingTop: '16px', paddingBottom: '12px' }}>
                 <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>
                   Import your data
                 </label>
@@ -1700,7 +1705,7 @@ export default function AccountPage() {
               </div>
 
               {/* Danger Zone */}
-              <div className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
+              <div id="account-delete-data" className="border-t border-[var(--border)]" style={{ paddingTop: '16px' }}>
                 <label className="block text-sm font-medium text-[var(--danger)]" style={{ marginBottom: '8px' }}>
                   Danger Zone
                 </label>

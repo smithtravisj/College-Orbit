@@ -54,7 +54,7 @@ export default function Confetti({
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
         size: 5 + Math.random() * 10,
         speedX: (Math.random() - 0.5) * 1.2,
-        speedY: 0.1 + Math.random() * 0.4,
+        speedY: 0.2 + Math.random() * 0.5,
         rotationSpeed: (Math.random() - 0.5) * 3,
         isCircle: Math.random() > 0.5,
       });
@@ -88,7 +88,7 @@ export default function Confetti({
           x: p.x + p.speedX,
           y: p.y + p.speedY,
           rotation: p.rotation + p.rotationSpeed,
-          speedY: p.speedY + 0.008,
+          speedY: p.speedY + 0.012,
         })).filter(p => p.y < 120)
       );
       animationFrame = requestAnimationFrame(animate);

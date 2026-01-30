@@ -28,7 +28,9 @@ import {
   User,
   LogOut,
   BarChart3,
+  Search,
 } from 'lucide-react';
+import { useKeyboardShortcutsContext } from '@/components/KeyboardShortcutsProvider';
 import styles from './Navigation.module.css';
 
 export const NAV_ITEMS = [
@@ -314,6 +316,7 @@ export default function Navigation() {
   const isMobile = useIsMobile();
   const { isDrawerOpen, closeDrawer } = useMobileNav();
   const drawerRef = useRef<HTMLDivElement>(null);
+  const { openGlobalSearch } = useKeyboardShortcutsContext();
 
   // Close drawer when pathname changes
   useEffect(() => {
@@ -378,6 +381,15 @@ export default function Navigation() {
             </div>
           )}
         </div>
+        {/* Search button */}
+        <button
+          onClick={openGlobalSearch}
+          className="nav-link-hover flex items-center gap-2.5 w-full h-11 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5 group"
+          style={{ padding: '0 11px', marginBottom: '12px', position: 'relative', zIndex: 1 }}
+        >
+          <Search size={20} className="opacity-80 group-hover:opacity-100" />
+          <span className="truncate">Search</span>
+        </button>
         <div className="space-y-3 flex-1" style={{ position: 'relative', zIndex: 1 }}>
           {filteredNavItems.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
             const Icon = item.icon;
@@ -515,6 +527,26 @@ export default function Navigation() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0' }}>
               <h2 className={styles.drawerTitle}>{getAppTitle(university)}</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingRight: '4px' }}>
+                <button
+                  onClick={() => {
+                    closeDrawer();
+                    openGlobalSearch();
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    padding: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                  }}
+                  aria-label="Search"
+                >
+                  <Search size={20} />
+                </button>
                 <NotificationBell />
               </div>
             </div>

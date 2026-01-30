@@ -54,6 +54,7 @@ export default function TermsContent() {
                 <li>GPA calculation and tracking</li>
                 <li>Shopping lists (grocery, wishlist, and pantry inventory)</li>
                 <li>Pomodoro productivity timer</li>
+                <li>File converter for images, documents, and text files (most processing done in-browser)</li>
                 <li>Dashboard customization (show/hide cards, pages, quick links, and visual effects)</li>
                 <li>Theme customization including custom color themes</li>
                 <li>Notification and reminder system</li>

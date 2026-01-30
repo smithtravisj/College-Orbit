@@ -7,6 +7,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import { useIsLightMode } from '@/hooks/useEffectiveTheme';
+import { useHighlightElement } from '@/hooks/useHighlightElement';
 import CalendarMonthView from './CalendarMonthView';
 import CalendarDayView from './CalendarDayView';
 import CalendarWeekView from './CalendarWeekView';
@@ -38,6 +39,10 @@ export default function CalendarContent() {
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
   const isLightMode = useIsLightMode();
+
+  // Handle scroll-to and highlight from global search
+  useHighlightElement();
+
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
   const savedGlowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
@@ -792,7 +797,7 @@ export default function CalendarContent() {
           {!isMobile && <CalendarLegend />}
         </div>
 
-        <div style={{ marginTop: '24px' }}>
+        <div id="excluded-dates" style={{ marginTop: '24px' }}>
           <ExcludedDatesCard />
         </div>
       </div>

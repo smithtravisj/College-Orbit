@@ -15,6 +15,7 @@ import { Monitor, RefreshCw, Link2, Unlink, ChevronDown, AlertCircle } from 'luc
 import HelpTooltip from '@/components/ui/HelpTooltip';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useHighlightElement, useTabFromSearchParams } from '@/hooks/useHighlightElement';
 import { TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
 interface CanvasStatus {
@@ -172,6 +173,16 @@ export default function SettingsPage() {
   useEffect(() => {
     localStorage.setItem('settingsTab', activeSettingsTab);
   }, [activeSettingsTab]);
+
+  // Handle tab switching from URL params (for global search navigation)
+  useTabFromSearchParams(
+    ['appearance', 'preferences', 'integrations', 'about'],
+    'appearance',
+    (tab) => setActiveSettingsTab(tab as typeof activeSettingsTab)
+  );
+
+  // Handle element highlighting from global search
+  useHighlightElement();
 
   // Canvas LMS Integration state
   const [canvasStatus, setCanvasStatus] = useState<CanvasStatus | null>(null);
@@ -2107,7 +2118,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Show Nav Counts */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+            <div id="setting-nav-counts" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Item Counts in Nav</p>
@@ -2263,7 +2274,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Due Soon Window */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+            <div id="setting-due-soon-days" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
               <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Due Soon Window</p>
               <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
                 Show work items on dashboard within this many days
@@ -2302,7 +2313,7 @@ export default function SettingsPage() {
           {/* Behavior */}
           <Card title="Behavior">
             {/* Confirm Before Delete */}
-            <div style={{ marginBottom: '20px' }}>
+            <div id="setting-confirm-delete" style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Confirm Before Delete</p>
@@ -2341,7 +2352,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Enable Keyboard Shortcuts */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+            <div id="setting-keyboard-shortcuts" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
@@ -2425,7 +2436,7 @@ export default function SettingsPage() {
           {/* Streaks & Gamification */}
           <Card title="Streak">
             {/* Vacation Mode */}
-            <div>
+            <div id="setting-vacation-mode">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
@@ -2671,6 +2682,7 @@ export default function SettingsPage() {
             gap: '24px',
             alignItems: 'stretch',
           }}>
+          <div id="setting-canvas">
           <Card title="Canvas LMS Integration">
             {!canvasStatus?.connected ? (
               // Not Connected State
@@ -2911,8 +2923,10 @@ export default function SettingsPage() {
               </div>
             )}
           </Card>
+          </div>
 
           {/* Moodle LMS Integration */}
+          <div id="setting-moodle">
           <Card title={
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               Moodle Integration
@@ -3177,8 +3191,10 @@ export default function SettingsPage() {
               </div>
             )}
           </Card>
+          </div>
 
           {/* Blackboard LMS Integration */}
+          <div id="setting-blackboard">
           <Card title={
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               Blackboard Learn Integration
@@ -3469,8 +3485,10 @@ export default function SettingsPage() {
               </div>
             )}
           </Card>
+          </div>
 
           {/* Brightspace (D2L) LMS Integration */}
+          <div id="setting-brightspace">
           <Card title={
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               Brightspace (D2L) Integration
@@ -3763,6 +3781,7 @@ export default function SettingsPage() {
             )}
           </Card>
           </div>
+          </div>
           )}
 
           {/* Appearance Tab */}
@@ -3771,7 +3790,7 @@ export default function SettingsPage() {
           {/* Appearance - Theme, University, Custom Theme + Visual Effects */}
           <Card title="Appearance">
             {/* Theme */}
-            <div style={{ marginBottom: '20px' }}>
+            <div id="setting-theme" style={{ marginBottom: '20px' }}>
               <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Theme</p>
               <div style={{
                 display: 'flex',
@@ -3808,7 +3827,7 @@ export default function SettingsPage() {
             </div>
 
             {/* University */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
+            <div id="setting-university" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
               <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>University</p>
               <select
                 value={university || ''}
@@ -3887,7 +3906,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Custom Theme Toggle */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
+            <div id="setting-custom-theme" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
               {!isPremium && !isLoadingSubscription && (
                 <div style={{ marginBottom: '16px' }}>
                   <UpgradePrompt feature="Custom themes and visual effects" />
@@ -3992,7 +4011,7 @@ export default function SettingsPage() {
             })()}
 
             {/* Visual Effects */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', opacity: isPremium ? 1 : 0.5 }}>
+            <div id="setting-gradient-intensity" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', opacity: isPremium ? 1 : 0.5 }}>
               <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '12px' }}>Visual Effects</p>
               <div style={{ marginBottom: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -4016,7 +4035,7 @@ export default function SettingsPage() {
                   }}
                 />
               </div>
-              <div>
+              <div id="setting-glow-intensity">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span className="text-sm text-[var(--text)]">Glow Intensity</span>
                   <span className="text-sm text-[var(--text-muted)]">{localGlowIntensity}%</span>
@@ -4041,7 +4060,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Colorblind Mode */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
+            <div id="setting-colorblind-mode" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                 <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Colorblind Mode</p>
                 <HelpTooltip text="Protanopia: difficulty seeing red. Deuteranopia: difficulty seeing green. Tritanopia: difficulty seeing blue. Achromatopsia: complete color blindness. Choose your type for optimized colors." size={14} width={240} />
@@ -4538,7 +4557,7 @@ export default function SettingsPage() {
 
           {/* Preferences Tab - Notification Preferences */}
           {activeSettingsTab === 'preferences' && (
-          <div style={{ gridColumn: '1 / -1' }}>
+          <div id="setting-notifications" style={{ gridColumn: '1 / -1' }}>
           <Card
             title="Notification Preferences"
             action={
@@ -5183,7 +5202,7 @@ export default function SettingsPage() {
           <Card title="Feedback">
             <div className="space-y-4">
               {/* Request a Feature/Change */}
-              <div>
+              <div id="setting-feature-request">
                 <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
                   Request a Feature/Change
                 </label>
@@ -5235,7 +5254,7 @@ export default function SettingsPage() {
               <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}></div>
 
               {/* Report an Issue */}
-              <div>
+              <div id="setting-report-issue">
                 <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
                   Report an Issue
                 </label>
