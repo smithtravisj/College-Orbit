@@ -16,6 +16,7 @@ import FinalGradeCalculator from '@/components/tools/FinalGradeCalculator';
 import FileConverter from '@/components/tools/FileConverter';
 import UnitConverter from '@/components/tools/UnitConverter';
 import WordCounter from '@/components/tools/WordCounter';
+import CitationGenerator from '@/components/tools/CitationGenerator';
 import { Plus, Trash2, X, Pencil, Lock, Crown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -38,6 +39,7 @@ const TOOL_TAB_MAPPING: Record<string, ToolsTab> = {
   [TOOLS_CARDS.FILE_CONVERTER]: 'productivity',
   [TOOLS_CARDS.UNIT_CONVERTER]: 'productivity',
   [TOOLS_CARDS.WORD_COUNTER]: 'productivity',
+  [TOOLS_CARDS.CITATION_GENERATOR]: 'productivity',
   [TOOLS_CARDS.QUICK_LINKS]: 'productivity',
   [TOOLS_CARDS.GRADE_TRACKER]: 'grades',
   [TOOLS_CARDS.GPA_CALCULATOR]: 'grades',
@@ -46,8 +48,8 @@ const TOOL_TAB_MAPPING: Record<string, ToolsTab> = {
   [TOOLS_CARDS.FINAL_GRADE_CALCULATOR]: 'grades',
 };
 
-// Order within productivity tab: Pomodoro first, then File Converter, Unit Converter, Word Counter, then Quick Links
-const PRODUCTIVITY_ORDER = [TOOLS_CARDS.POMODORO_TIMER, TOOLS_CARDS.FILE_CONVERTER, TOOLS_CARDS.UNIT_CONVERTER, TOOLS_CARDS.WORD_COUNTER, TOOLS_CARDS.QUICK_LINKS];
+// Order within productivity tab: paired for two-column layout
+const PRODUCTIVITY_ORDER = [TOOLS_CARDS.POMODORO_TIMER, TOOLS_CARDS.WORD_COUNTER, TOOLS_CARDS.FILE_CONVERTER, TOOLS_CARDS.UNIT_CONVERTER, TOOLS_CARDS.CITATION_GENERATOR, TOOLS_CARDS.QUICK_LINKS];
 
 interface Course {
   id: string;
@@ -671,6 +673,8 @@ export default function ToolsPage() {
           return renderLockedCard(cardId, 'Unit Converter', 'Length, weight, temperature, volume');
         case TOOLS_CARDS.WORD_COUNTER:
           return renderLockedCard(cardId, 'Word Counter', 'Words, characters, reading time');
+        case TOOLS_CARDS.CITATION_GENERATOR:
+          return renderLockedCard(cardId, 'Citation Generator', 'APA, MLA, Chicago citations');
         case TOOLS_CARDS.GRADE_TRACKER:
           return renderLockedCard(cardId, 'Grade Tracker', 'Track your grades and GPA by semester');
         case TOOLS_CARDS.GPA_TREND_CHART:
@@ -707,6 +711,12 @@ export default function ToolsPage() {
         return visibleToolsCards.includes(cardId) && (
           <CollapsibleCard key={cardId} id="word-counter" title="Word Counter" subtitle="Words, characters, reading time" helpTooltip="Count words, characters, sentences, and paragraphs in your text. Also shows estimated reading and speaking time based on average speeds.">
             <WordCounter theme={settings.theme} />
+          </CollapsibleCard>
+        );
+      case TOOLS_CARDS.CITATION_GENERATOR:
+        return visibleToolsCards.includes(cardId) && (
+          <CollapsibleCard key={cardId} id="citation-generator" title="Citation Generator" subtitle="APA, MLA, Chicago citations" helpTooltip="Generate properly formatted citations for websites, books, and journal articles in APA (7th), MLA (9th), and Chicago (17th) formats.">
+            <CitationGenerator theme={settings.theme} />
           </CollapsibleCard>
         );
       case TOOLS_CARDS.GRADE_TRACKER:
@@ -875,7 +885,7 @@ export default function ToolsPage() {
             {mounted && settings.university ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '16px' }}>
                 {/* Links Grid */}
-                <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-4 gap-3'}>
+                <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-2 gap-3'}>
                   {/* Default Links (visible) */}
                   {visibleDefaultLinks.map((link) => (
                     <div
@@ -1135,7 +1145,7 @@ export default function ToolsPage() {
         </div>
       </div>
       <div className="mx-auto w-full max-w-[1800px]" style={{ paddingLeft: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingRight: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingBottom: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingTop: '0', position: 'relative', zIndex: 1 }}>
-        <div className="grid grid-cols-1 gap-[var(--grid-gap)]">
+        <div className={`grid gap-[var(--grid-gap)] ${activeTab === 'productivity' && !isMobile ? 'grid-cols-2' : 'grid-cols-1'}`} style={{ alignItems: 'stretch' }}>
           {subscription.isPremium ? (
             // Premium users see all tools filtered by active tab
             // Use specific order for productivity tab to ensure Pomodoro comes before Quick Links
@@ -1155,6 +1165,8 @@ export default function ToolsPage() {
                   {renderLockedCard(TOOLS_CARDS.UNIT_CONVERTER, 'Unit Converter', 'Length, weight, temperature, volume')}
                   {/* Locked Word Counter for free users */}
                   {renderLockedCard(TOOLS_CARDS.WORD_COUNTER, 'Word Counter', 'Words, characters, reading time')}
+                  {/* Locked Citation Generator for free users */}
+                  {renderLockedCard(TOOLS_CARDS.CITATION_GENERATOR, 'Citation Generator', 'APA, MLA, Chicago citations')}
                   {/* Quick Links is free */}
                   {renderCard(TOOLS_CARDS.QUICK_LINKS)}
                 </>

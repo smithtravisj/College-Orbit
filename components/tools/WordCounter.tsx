@@ -69,7 +69,6 @@ export default function WordCounter({ theme: _theme }: WordCounterProps) {
   const statItems = [
     { label: 'Words', value: stats.words },
     { label: 'Characters', value: stats.characters },
-    { label: 'Characters (no spaces)', value: stats.charactersNoSpaces },
     { label: 'Sentences', value: stats.sentences },
     { label: 'Paragraphs', value: stats.paragraphs },
     { label: 'Reading Time', value: stats.readingTime },
