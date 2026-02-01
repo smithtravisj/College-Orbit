@@ -11,7 +11,7 @@ import ColorPicker from '@/components/ui/ColorPicker';
 import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { showDeleteToast } from '@/components/ui/DeleteToast';
-import { Monitor, RefreshCw, Link2, Unlink, ChevronDown, AlertCircle } from 'lucide-react';
+import { Monitor, RefreshCw, Link2, Unlink, ChevronDown, AlertCircle, Chrome, ExternalLink } from 'lucide-react';
 import HelpTooltip from '@/components/ui/HelpTooltip';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -2676,7 +2676,68 @@ export default function SettingsPage() {
 
           {/* Integrations Tab - LMS Integrations */}
           {activeSettingsTab === 'integrations' && (
+          <>
+          {/* Browser Extension Card */}
+          <div style={{ gridColumn: '1 / -1' }}>
+          <a
+            href="https://chromewebstore.google.com/detail/college-orbit-quick-add/ocngjdkipbabcfoehkpcifpfiidbilhb"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              padding: '20px 24px',
+              backgroundColor: 'var(--panel)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px',
+              textDecoration: 'none',
+              transition: 'border-color 0.2s, background-color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent)';
+              e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border)';
+              e.currentTarget.style.backgroundColor = 'var(--panel)';
+            }}
+          >
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '48px',
+              height: '48px',
+              backgroundColor: 'var(--accent)',
+              borderRadius: '12px',
+              flexShrink: 0,
+            }}>
+              <Chrome size={24} style={{ color: 'white' }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h3 style={{
+                margin: 0,
+                fontSize: '16px',
+                fontWeight: 600,
+                color: 'var(--text)',
+              }}>
+                Browser Extension
+              </h3>
+              <p style={{
+                margin: '4px 0 0 0',
+                fontSize: '14px',
+                color: 'var(--text-muted)',
+              }}>
+                Quickly add deadlines and notes without leaving your current page
+              </p>
+            </div>
+            <ExternalLink size={20} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          </a>
+          </div>
+
           <div style={{
+            gridColumn: '1 / -1',
             display: 'grid',
             gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
             gap: '24px',
@@ -3782,6 +3843,7 @@ export default function SettingsPage() {
           </Card>
           </div>
           </div>
+          </>
           )}
 
           {/* Appearance Tab */}
