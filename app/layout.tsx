@@ -38,20 +38,11 @@ export const metadata: Metadata = {
     siteName: 'College Orbit',
     title: 'College Orbit - Your Personal College Dashboard',
     description: 'Stay organized throughout college with College Orbit. Track assignments, deadlines, exams, courses, and more in one privacy-first dashboard.',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'College Orbit - Your Personal College Dashboard',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'College Orbit - Your Personal College Dashboard',
     description: 'Stay organized throughout college with College Orbit. Track assignments, deadlines, exams, courses, and more in one privacy-first dashboard.',
-    images: ['/og-image.png'],
   },
   robots: {
     index: true,
@@ -145,7 +136,7 @@ export default function RootLayout({
                   ],
                   description: 'Stay organized throughout college with College Orbit. Track assignments, deadlines, exams, courses, and more in one privacy-first dashboard.',
                   featureList: 'Assignment tracking, Deadline reminders, Exam scheduling, Course management, Note taking, GPA calculator, Flashcards with spaced repetition, Pomodoro timer, File converter, Calendar sync',
-                  screenshot: 'https://collegeorbit.app/og-image.png',
+                  screenshot: 'https://collegeorbit.app/opengraph-image',
                   aggregateRating: {
                     '@type': 'AggregateRating',
                     ratingValue: '4.8',
