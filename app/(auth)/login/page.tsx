@@ -4,9 +4,15 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Log In',
-  description: 'Log in to College Orbit to access your personal college dashboard. Track assignments, deadlines, exams, and courses.',
+  description: 'Log in to College Orbit to access your personal college dashboard. Track assignments, deadlines, exams, courses, and more.',
+  keywords: ['login college orbit', 'student dashboard login', 'college planner login'],
   alternates: {
     canonical: '/login',
+  },
+  openGraph: {
+    title: 'Log In - College Orbit',
+    description: 'Access your personal college dashboard.',
+    url: 'https://collegeorbit.app/login',
   },
 };
 
