@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
-import { collegeColorPalettes, collegeColorPalettesLight, getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -1574,10 +1574,8 @@ export default function AdminPage() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {analytics.universityDistribution.map((item, index) => {
-                    const uniColorPalette = isDarkMode
-                      ? collegeColorPalettes[item.university]
-                      : collegeColorPalettesLight[item.university];
-                    const accentColor = uniColorPalette?.accent || '#666666';
+                    const uniColorPalette = getCollegeColorPalette(item.university, isDarkMode ? 'dark' : 'light');
+                    const uniAccentColor = uniColorPalette.accent;
 
                     return (
                       <div
@@ -1597,7 +1595,7 @@ export default function AdminPage() {
                             width: '16px',
                             height: '16px',
                             borderRadius: '4px',
-                            backgroundColor: accentColor,
+                            backgroundColor: uniAccentColor,
                             flexShrink: 0,
                           }}
                         />

@@ -2,7 +2,6 @@ import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authConfig } from '@/auth.config';
-import { universityTitles } from '@/lib/universityTitles';
 
 export async function GET() {
   try {
@@ -39,6 +38,7 @@ export async function GET() {
       usersWithMultipleSessionsResult,
       newUserIdsResult,
       universityCounts,
+      allColleges,
       premiumMonthly,
       premiumYearly,
       premiumSemester,
@@ -123,6 +123,13 @@ export async function GET() {
       prisma.settings.groupBy({
         by: ['university'],
         _count: { id: true },
+      }),
+
+      // All colleges from database
+      prisma.college.findMany({
+        where: { isActive: true },
+        select: { fullName: true },
+        orderBy: { fullName: 'asc' },
       }),
 
       // Subscription stats
@@ -255,7 +262,8 @@ export async function GET() {
       universityCountMap.set(item.university, item._count.id);
     });
 
-    const allUniversities = Object.keys(universityTitles);
+    // Use colleges from database instead of hardcoded list
+    const allUniversities = allColleges.map((c) => c.fullName);
     const universityDistribution = [
       { university: 'No University Selected', count: universityCountMap.get(null) || 0 },
       ...allUniversities.map((university) => ({

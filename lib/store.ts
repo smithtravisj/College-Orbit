@@ -413,6 +413,21 @@ const useAppStore = create<AppStore>((set, get) => ({
             console.warn('Failed to cache colleges:', e);
           }
         }
+        // Re-apply colors after fetching fresh colleges (in case new colleges were added)
+        const { settings, isPremium } = get();
+        if (settings.university && typeof window !== 'undefined') {
+          const theme = settings.theme || 'dark';
+          const useCustomTheme = settings.useCustomTheme;
+          const customColors = settings.customColors;
+
+          if (isPremium && useCustomTheme && customColors) {
+            const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
+            applyCustomColors(colorSet, theme);
+          } else {
+            const palette = getCollegeColorPalette(settings.university, theme);
+            applyColorPalette(palette);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching colleges:', error);
