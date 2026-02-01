@@ -1,17 +1,12 @@
-'use client';
-
-import { useSession } from 'next-auth/react';
+import { getServerSession } from 'next-auth/next';
+import { authConfig } from '@/auth.config';
 import LandingPage from '@/components/LandingPage';
 import AuthenticatedDashboard from '@/components/AuthenticatedDashboard';
 
-export default function HomePage() {
-  const { status } = useSession();
+export default async function HomePage() {
+  const session = await getServerSession(authConfig);
 
-  if (status === 'loading') {
-    return null;
-  }
-
-  if (status === 'unauthenticated') {
+  if (!session) {
     return <LandingPage />;
   }
 
