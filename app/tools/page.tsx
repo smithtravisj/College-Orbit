@@ -14,6 +14,8 @@ import WhatIfProjector from '@/components/tools/WhatIfProjector';
 import GpaTrendChart from '@/components/tools/GpaTrendChart';
 import FinalGradeCalculator from '@/components/tools/FinalGradeCalculator';
 import FileConverter from '@/components/tools/FileConverter';
+import UnitConverter from '@/components/tools/UnitConverter';
+import WordCounter from '@/components/tools/WordCounter';
 import { Plus, Trash2, X, Pencil, Lock, Crown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -34,6 +36,8 @@ const TOOLS_TABS: { key: ToolsTab; label: string }[] = [
 const TOOL_TAB_MAPPING: Record<string, ToolsTab> = {
   [TOOLS_CARDS.POMODORO_TIMER]: 'productivity',
   [TOOLS_CARDS.FILE_CONVERTER]: 'productivity',
+  [TOOLS_CARDS.UNIT_CONVERTER]: 'productivity',
+  [TOOLS_CARDS.WORD_COUNTER]: 'productivity',
   [TOOLS_CARDS.QUICK_LINKS]: 'productivity',
   [TOOLS_CARDS.GRADE_TRACKER]: 'grades',
   [TOOLS_CARDS.GPA_CALCULATOR]: 'grades',
@@ -42,8 +46,8 @@ const TOOL_TAB_MAPPING: Record<string, ToolsTab> = {
   [TOOLS_CARDS.FINAL_GRADE_CALCULATOR]: 'grades',
 };
 
-// Order within productivity tab: Pomodoro first, then File Converter, then Quick Links
-const PRODUCTIVITY_ORDER = [TOOLS_CARDS.POMODORO_TIMER, TOOLS_CARDS.FILE_CONVERTER, TOOLS_CARDS.QUICK_LINKS];
+// Order within productivity tab: Pomodoro first, then File Converter, Unit Converter, Word Counter, then Quick Links
+const PRODUCTIVITY_ORDER = [TOOLS_CARDS.POMODORO_TIMER, TOOLS_CARDS.FILE_CONVERTER, TOOLS_CARDS.UNIT_CONVERTER, TOOLS_CARDS.WORD_COUNTER, TOOLS_CARDS.QUICK_LINKS];
 
 interface Course {
   id: string;
@@ -663,6 +667,10 @@ export default function ToolsPage() {
           return renderLockedCard(cardId, 'Pomodoro Timer', 'Focus sessions for productive study');
         case TOOLS_CARDS.FILE_CONVERTER:
           return renderLockedCard(cardId, 'File Converter', 'Convert between file formats');
+        case TOOLS_CARDS.UNIT_CONVERTER:
+          return renderLockedCard(cardId, 'Unit Converter', 'Length, weight, temperature, volume');
+        case TOOLS_CARDS.WORD_COUNTER:
+          return renderLockedCard(cardId, 'Word Counter', 'Words, characters, reading time');
         case TOOLS_CARDS.GRADE_TRACKER:
           return renderLockedCard(cardId, 'Grade Tracker', 'Track your grades and GPA by semester');
         case TOOLS_CARDS.GPA_TREND_CHART:
@@ -687,6 +695,18 @@ export default function ToolsPage() {
         return visibleToolsCards.includes(cardId) && (
           <CollapsibleCard key={cardId} id="file-converter" title="File Converter" subtitle="Convert between file formats" helpTooltip="Convert files between formats. Supports images, HEIC, Word, Excel, Markdown, HTML, JSON, CSV, and text files. Convert to PDF, extract text, change image formats, and more.">
             <FileConverter theme={settings.theme} accentColor={accentColor} glowScale={glowScale} glowOpacity={glowOpacity} />
+          </CollapsibleCard>
+        );
+      case TOOLS_CARDS.UNIT_CONVERTER:
+        return visibleToolsCards.includes(cardId) && (
+          <CollapsibleCard key={cardId} id="unit-converter" title="Unit Converter" subtitle="Length, weight, temperature, volume" helpTooltip="Convert between different units of measurement. Supports length (meters, feet, miles), weight (kg, pounds), temperature (Celsius, Fahrenheit, Kelvin), and volume (liters, gallons, cups).">
+            <UnitConverter theme={settings.theme} />
+          </CollapsibleCard>
+        );
+      case TOOLS_CARDS.WORD_COUNTER:
+        return visibleToolsCards.includes(cardId) && (
+          <CollapsibleCard key={cardId} id="word-counter" title="Word Counter" subtitle="Words, characters, reading time" helpTooltip="Count words, characters, sentences, and paragraphs in your text. Also shows estimated reading and speaking time based on average speeds.">
+            <WordCounter theme={settings.theme} />
           </CollapsibleCard>
         );
       case TOOLS_CARDS.GRADE_TRACKER:
@@ -1131,6 +1151,10 @@ export default function ToolsPage() {
                   {renderLockedCard(TOOLS_CARDS.POMODORO_TIMER, 'Pomodoro Timer', 'Focus sessions for productive study')}
                   {/* Locked File Converter for free users */}
                   {renderLockedCard(TOOLS_CARDS.FILE_CONVERTER, 'File Converter', 'Convert between file formats')}
+                  {/* Locked Unit Converter for free users */}
+                  {renderLockedCard(TOOLS_CARDS.UNIT_CONVERTER, 'Unit Converter', 'Length, weight, temperature, volume')}
+                  {/* Locked Word Counter for free users */}
+                  {renderLockedCard(TOOLS_CARDS.WORD_COUNTER, 'Word Counter', 'Words, characters, reading time')}
                   {/* Quick Links is free */}
                   {renderCard(TOOLS_CARDS.QUICK_LINKS)}
                 </>

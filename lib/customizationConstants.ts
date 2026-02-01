@@ -25,6 +25,8 @@ export const DASHBOARD_CARDS = {
 export const TOOLS_CARDS = {
   POMODORO_TIMER: 'pomodoroTimer',
   FILE_CONVERTER: 'fileConverter',
+  UNIT_CONVERTER: 'unitConverter',
+  WORD_COUNTER: 'wordCounter',
   GRADE_TRACKER: 'gradeTracker',
   GPA_TREND_CHART: 'gpaTrendChart',
   WHAT_IF_PROJECTOR: 'whatIfProjector',
@@ -61,6 +63,8 @@ export const CARD_LABELS: Record<string, string> = {
   [TOOLS_CARDS.QUICK_LINKS]: 'Quick Links',
   [TOOLS_CARDS.POMODORO_TIMER]: 'Pomodoro Timer',
   [TOOLS_CARDS.FILE_CONVERTER]: 'File Converter',
+  [TOOLS_CARDS.UNIT_CONVERTER]: 'Unit Converter',
+  [TOOLS_CARDS.WORD_COUNTER]: 'Word Counter',
   [TOOLS_CARDS.GRADE_TRACKER]: 'Grade Tracker',
   [TOOLS_CARDS.WHAT_IF_PROJECTOR]: 'What-If GPA Projector',
   [TOOLS_CARDS.GPA_TREND_CHART]: 'GPA Trend',
