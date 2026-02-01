@@ -5348,6 +5348,22 @@ export default function SettingsPage() {
                   Restart Tutorial
                 </Button>
               </div>
+              {/* Help & FAQs Section */}
+              <div style={{ paddingTop: '18px', paddingBottom: '18px', borderTop: '1px solid var(--border)' }}>
+                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+                  Help & FAQs
+                </p>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>
+                  Learn how everything works and find answers to common questions.
+                </p>
+                <Link
+                  href="/help"
+                  className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
+                  style={{ textDecoration: 'none' }}
+                >
+                  View Help Center
+                </Link>
+              </div>
               {/* Contact Section */}
               <div style={{ paddingTop: '18px', paddingBottom: '18px', borderTop: '1px solid var(--border)' }}>
                 <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
