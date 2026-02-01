@@ -17,6 +17,7 @@ import FileConverter from '@/components/tools/FileConverter';
 import UnitConverter from '@/components/tools/UnitConverter';
 import WordCounter from '@/components/tools/WordCounter';
 import CitationGenerator from '@/components/tools/CitationGenerator';
+import Flashcards from '@/components/tools/Flashcards';
 import { Plus, Trash2, X, Pencil, Lock, Crown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -26,10 +27,11 @@ import { useFormatters } from '@/hooks/useFormatters';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 
 // Tool tab categories
-type ToolsTab = 'productivity' | 'grades';
+type ToolsTab = 'productivity' | 'flashcards' | 'grades';
 
 const TOOLS_TABS: { key: ToolsTab; label: string }[] = [
   { key: 'productivity', label: 'Productivity' },
+  { key: 'flashcards', label: 'Flashcards' },
   { key: 'grades', label: 'Grades & GPA' },
 ];
 
@@ -41,6 +43,7 @@ const TOOL_TAB_MAPPING: Record<string, ToolsTab> = {
   [TOOLS_CARDS.WORD_COUNTER]: 'productivity',
   [TOOLS_CARDS.CITATION_GENERATOR]: 'productivity',
   [TOOLS_CARDS.QUICK_LINKS]: 'productivity',
+  [TOOLS_CARDS.FLASHCARDS]: 'flashcards',
   [TOOLS_CARDS.GRADE_TRACKER]: 'grades',
   [TOOLS_CARDS.GPA_CALCULATOR]: 'grades',
   [TOOLS_CARDS.GPA_TREND_CHART]: 'grades',
@@ -95,7 +98,7 @@ export default function ToolsPage() {
       const saved = localStorage.getItem('toolsTab');
       // Migrate old 'quickAccess' to 'productivity'
       if (saved === 'quickAccess') return 'productivity';
-      if (saved && ['productivity', 'grades'].includes(saved)) {
+      if (saved && ['productivity', 'flashcards', 'grades'].includes(saved)) {
         return saved as ToolsTab;
       }
     }
@@ -109,7 +112,7 @@ export default function ToolsPage() {
 
   // Handle tab switching from URL params (for global search navigation)
   useTabFromSearchParams(
-    ['productivity', 'grades'],
+    ['productivity', 'flashcards', 'grades'],
     'productivity',
     (tab) => setActiveTab(tab as ToolsTab)
   );
@@ -675,6 +678,8 @@ export default function ToolsPage() {
           return renderLockedCard(cardId, 'Word Counter', 'Words, characters, reading time');
         case TOOLS_CARDS.CITATION_GENERATOR:
           return renderLockedCard(cardId, 'Citation Generator', 'APA, MLA, Chicago citations');
+        case TOOLS_CARDS.FLASHCARDS:
+          return renderLockedCard(cardId, 'Flashcards', 'Study with spaced repetition');
         case TOOLS_CARDS.GRADE_TRACKER:
           return renderLockedCard(cardId, 'Grade Tracker', 'Track your grades and GPA by semester');
         case TOOLS_CARDS.GPA_TREND_CHART:
@@ -718,6 +723,12 @@ export default function ToolsPage() {
           <CollapsibleCard key={cardId} id="citation-generator" title="Citation Generator" subtitle="APA, MLA, Chicago citations" helpTooltip="Generate properly formatted citations for websites, books, and journal articles in APA (7th), MLA (9th), and Chicago (17th) formats.">
             <CitationGenerator theme={settings.theme} />
           </CollapsibleCard>
+        );
+      case TOOLS_CARDS.FLASHCARDS:
+        return visibleToolsCards.includes(cardId) && (
+          <div key={cardId} id="flashcards">
+            <Flashcards theme={settings.theme} />
+          </div>
         );
       case TOOLS_CARDS.GRADE_TRACKER:
         return visibleToolsCards.includes(cardId) && (
@@ -1145,7 +1156,7 @@ export default function ToolsPage() {
         </div>
       </div>
       <div className="mx-auto w-full max-w-[1800px]" style={{ paddingLeft: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingRight: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingBottom: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingTop: '0', position: 'relative', zIndex: 1 }}>
-        <div className={`grid gap-[var(--grid-gap)] ${activeTab === 'productivity' && !isMobile ? 'grid-cols-2' : 'grid-cols-1'}`} style={{ alignItems: 'stretch' }}>
+        <div className={`grid gap-[var(--grid-gap)] ${activeTab === 'productivity' && !isMobile ? 'grid-cols-2' : 'grid-cols-1'}`} style={{ alignItems: 'stretch', maxWidth: activeTab === 'flashcards' ? '800px' : undefined }}>
           {subscription.isPremium ? (
             // Premium users see all tools filtered by active tab
             // Use specific order for productivity tab to ensure Pomodoro comes before Quick Links
@@ -1170,6 +1181,9 @@ export default function ToolsPage() {
                   {/* Quick Links is free */}
                   {renderCard(TOOLS_CARDS.QUICK_LINKS)}
                 </>
+              ) : activeTab === 'flashcards' ? (
+                /* Locked Flashcards for free users */
+                renderLockedCard(TOOLS_CARDS.FLASHCARDS, 'Flashcards', 'Study with spaced repetition')
               ) : (
                 /* Premium Tools Info Card - floating over background */
                 <div style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: isMobile ? '40px 0' : '60px 0' }}>
