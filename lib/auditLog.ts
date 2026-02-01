@@ -20,7 +20,8 @@ export type AuditAction =
   | 'update_beta_feedback_status'
   | 'create_app_version'
   | 'update_app_version'
-  | 'release_app_version';
+  | 'release_app_version'
+  | 'clear_analytics';
 
 interface LogAuditParams {
   adminId: string;
@@ -78,6 +79,7 @@ export function getActionLabel(action: string): string {
     create_app_version: 'Created App Version',
     update_app_version: 'Updated App Version',
     release_app_version: 'Released App Version',
+    clear_analytics: 'Cleared Analytics Data',
   };
   return labels[action] || action;
 }
