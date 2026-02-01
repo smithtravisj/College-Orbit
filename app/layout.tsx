@@ -196,6 +196,63 @@ export default function RootLayout({
         `}</style>
       </head>
       <body style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
+        {/* SEO content for crawlers - visually hidden but in initial HTML */}
+        <div
+          id="seo-content"
+          style={{
+            position: 'absolute',
+            width: '1px',
+            height: '1px',
+            padding: 0,
+            margin: '-1px',
+            overflow: 'hidden',
+            clip: 'rect(0, 0, 0, 0)',
+            whiteSpace: 'nowrap',
+            border: 0,
+          }}
+        >
+          <h1>College Orbit - Your Personal College Dashboard</h1>
+          <p>
+            Stay organized throughout college with College Orbit, the privacy-first
+            student dashboard designed to help you succeed. Track assignments, manage
+            deadlines, schedule exams, organize courses, and boost your productivity
+            with powerful tools built specifically for college students.
+          </p>
+          <h2>Key Features</h2>
+          <p>
+            Assignment and deadline tracking with smart reminders keeps you on top of
+            your coursework. Schedule exams with countdown timers so you never miss a
+            test. Manage all your courses with grade tracking and GPA calculation.
+            Take notes with full markdown support and organize them in folders.
+          </p>
+          <p>
+            Study smarter with flashcards featuring spaced repetition learning based
+            on the proven SM-2 algorithm. Stay focused with the Pomodoro timer for
+            productive study sessions. Sync your calendar with Google Calendar and
+            integrate with your school's LMS including Canvas, Blackboard, Moodle,
+            and Brightspace.
+          </p>
+          <h2>Why Choose College Orbit</h2>
+          <p>
+            College Orbit is built for students who value privacy and simplicity.
+            Your data is encrypted and never sold to third parties. Unlike other
+            apps, we focus on what matters most: helping you stay organized and
+            succeed in your academic journey.
+          </p>
+          <p>
+            Start free with core features including the dashboard, task tracking,
+            exam scheduling, up to ten notes, and up to five courses. Upgrade to
+            Premium for unlimited access, custom university themes, file attachments,
+            and advanced features starting at just three dollars per month or
+            twenty-four dollars per year.
+          </p>
+          <h2>Get Started Today</h2>
+          <p>
+            Join thousands of college students who use College Orbit to stay
+            organized and achieve their academic goals. Sign up for free in seconds
+            and take control of your college experience. No credit card required.
+          </p>
+        </div>
         <Providers>
           <LayoutWrapper>
             {children}
