@@ -16,7 +16,7 @@ export default function PrivacyContent() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Last Updated: January 27, 2026
+                Last Updated: February 1, 2026
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 At College Orbit, your privacy is our priority. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our service. We believe in transparency and give you full control over your data.
@@ -41,7 +41,7 @@ export default function PrivacyContent() {
                 Academic Data
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We store all academic data you create: courses with meeting times and links, work items (tasks, assignments, readings, and projects) with priorities, effort levels, checklists, and tags, exams with locations, notes with rich text content (which can be linked to courses, work items, and exams) and organized in folders, GPA entries, excluded dates (holidays/breaks), custom calendar events, and recurring patterns for work items and exams. This data is entirely user-generated and belongs to you. We do not analyze or process this data beyond providing it back to you.
+                We store all academic data you create: courses with meeting times and links, work items (tasks, assignments, readings, and projects) with priorities, effort levels, checklists, and tags, exams with locations, notes with rich text content (which can be linked to courses, work items, and exams) and organized in folders, flashcard decks with cards and spaced repetition study progress, GPA entries, excluded dates (holidays/breaks), custom calendar events, and recurring patterns for work items and exams. This data is entirely user-generated and belongs to you. We do not analyze or process this data beyond providing it back to you.
               </p>
             </div>
             <div>
@@ -58,6 +58,14 @@ export default function PrivacyContent() {
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 The File Converter tool allows you to convert files between different formats. Most conversions (images, documents, text files) are processed entirely in your browser and files are never sent to our servers. For HEIC/HEIF image conversions, files are temporarily sent to our servers for processing (since browser-based HEIC conversion is not supported), converted, and immediately deleted after the conversion is complete. Converted files are not stored on our servers.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Productivity Tools
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Productivity tools including the word counter, citation generator, and unit converter process all data entirely in your browser. No text, citations, or calculations are sent to our servers.
               </p>
             </div>
             <div>

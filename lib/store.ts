@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData, ShoppingItem, ShoppingListType, CalendarEvent, WorkItem, WorkItemType, RecurringWorkPattern, RecurringWorkFormData, GamificationData, Achievement, GamificationRecordResult, FriendRequest, FriendWithStats, CollegeLeaderboardEntry } from '@/types';
+import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData, ShoppingItem, ShoppingListType, CalendarEvent, WorkItem, WorkItemType, RecurringWorkPattern, RecurringWorkFormData, GamificationData, Achievement, GamificationRecordResult, FriendRequest, FriendWithStats, CollegeLeaderboardEntry, FlashcardDeck } from '@/types';
 import { applyColorPalette, getCollegeColorPalette, applyCustomColors, getCustomColorSetForTheme, CustomColors, setDatabaseColleges, DatabaseCollege, applyColorblindMode, ColorblindMode, ColorblindStyle } from '@/lib/collegeColors';
 import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
@@ -2583,6 +2583,33 @@ const useAppStore = create<AppStore>((set, get) => ({
       console.error('Failed to fetch custom quick links for export:', error);
     }
 
+    // Fetch flashcard decks with their cards from API
+    let flashcardDecks: FlashcardDeck[] = [];
+    try {
+      const response = await fetch('/api/flashcards/decks', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        const decks = data.decks || [];
+        // Fetch cards for each deck
+        flashcardDecks = await Promise.all(
+          decks.map(async (deck: FlashcardDeck) => {
+            try {
+              const cardsResponse = await fetch(`/api/flashcards/decks/${deck.id}`, { credentials: 'include' });
+              if (cardsResponse.ok) {
+                const cardsData = await cardsResponse.json();
+                return { ...deck, cards: cardsData.deck?.cards || [] };
+              }
+            } catch (err) {
+              console.error(`Failed to fetch cards for deck ${deck.id}:`, err);
+            }
+            return { ...deck, cards: [] };
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Failed to fetch flashcard decks for export:', error);
+    }
+
     return {
       courses: state.courses,
       deadlines: state.deadlines,
@@ -2602,6 +2629,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       workItems: state.workItems,
       recurringWorkPatterns: state.recurringWorkPatterns,
       customQuickLinks,
+      flashcardDecks,
     };
   },
 
@@ -2865,6 +2893,61 @@ const useAppStore = create<AppStore>((set, get) => ({
           });
           if (!response.ok) {
             console.error('Failed to import custom quick link:', linkData);
+          }
+        }
+      }
+
+      // Import flashcard decks with their cards
+      if ((data as any).flashcardDecks && (data as any).flashcardDecks.length > 0) {
+        console.log('Importing flashcard decks:', (data as any).flashcardDecks.length);
+
+        // Reload courses from database to ensure we have all newly imported courses
+        const coursesRes = await fetch('/api/courses', { credentials: 'include' });
+        const coursesData = await coursesRes.json();
+        const currentCourses = coursesData.courses || [];
+        const courseMap = new Map(currentCourses.map((c: Course) => [c.name, c.id]));
+
+        for (const deck of (data as any).flashcardDecks) {
+          const { id: deckId, createdAt, updatedAt, userId, courseId: originalCourseId, cards, ...deckData } = deck as any;
+
+          // Try to match course by name if courseId was set
+          let newCourseId = null;
+          if (originalCourseId && data.courses) {
+            const originalCourse = data.courses.find(c => c.id === originalCourseId);
+            if (originalCourse && courseMap.has(originalCourse.name)) {
+              newCourseId = courseMap.get(originalCourse.name);
+            }
+          }
+
+          // Create the deck
+          const deckResponse = await fetch('/api/flashcards/decks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ ...deckData, courseId: newCourseId }),
+          });
+
+          if (deckResponse.ok) {
+            const { deck: newDeck } = await deckResponse.json();
+
+            // Import cards for this deck
+            if (cards && cards.length > 0) {
+              console.log(`Importing ${cards.length} cards for deck "${deckData.name}"`);
+              for (const card of cards) {
+                const { id: cardId, deckId: oldDeckId, createdAt: cardCreated, updatedAt: cardUpdated, ...cardData } = card as any;
+                const cardResponse = await fetch('/api/flashcards/cards', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({ ...cardData, deckId: newDeck.id }),
+                });
+                if (!cardResponse.ok) {
+                  console.error('Failed to import flashcard:', cardData);
+                }
+              }
+            }
+          } else {
+            console.error('Failed to import flashcard deck:', deckData);
           }
         }
       }
@@ -3519,6 +3602,10 @@ const useAppStore = create<AppStore>((set, get) => ({
         recurringPatterns: [],
         recurringDeadlinePatterns: [],
         recurringExamPatterns: [],
+        shoppingItems: [],
+        calendarEvents: [],
+        workItems: [],
+        recurringWorkPatterns: [],
         gamification: null,
         pendingAchievements: [],
         showConfetti: false,

@@ -32,6 +32,19 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   const calendarEvents = useAppStore((state) => state.calendarEvents);
   const notes = useAppStore((state) => state.notes);
 
+  // Flashcard decks fetched when search opens
+  const [flashcardDecks, setFlashcardDecks] = useState<{ id: string; name: string; description?: string | null; courseId?: string | null }[]>([]);
+
+  // Fetch flashcard decks when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetch('/api/flashcards/decks', { credentials: 'include' })
+        .then(res => res.ok ? res.json() : [])
+        .then(data => setFlashcardDecks(data || []))
+        .catch(() => setFlashcardDecks([]));
+    }
+  }, [isOpen]);
+
   // Convert dynamic items to SearchableItem format
   const dynamicItems = useMemo(() => {
     const items: SearchableItem[] = [];
@@ -123,8 +136,26 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
       });
     });
 
+    // Add flashcard decks
+    flashcardDecks.forEach((deck: any) => {
+      const courseName = courses.find((c: any) => c.id === deck.courseId)?.name;
+      items.push({
+        id: `deck-${deck.id}`,
+        title: deck.name,
+        description: courseName || deck.description || 'Flashcard Deck',
+        keywords: [deck.name, deck.description, courseName, 'flashcard', 'study'].filter(Boolean),
+        category: 'item',
+        categoryLabel: 'Flashcards',
+        href: '/flashcards',
+        action: 'openModal',
+        itemType: 'deck' as any,
+        itemId: deck.id,
+        itemData: deck,
+      });
+    });
+
     return items;
-  }, [courses, workItems, exams, calendarEvents, notes]);
+  }, [courses, workItems, exams, calendarEvents, notes, flashcardDecks]);
 
   const results = useMemo(() => searchItems(query, isPremium, dynamicItems), [query, isPremium, dynamicItems]);
   const groupedResults = useMemo(() => groupSearchResults(results), [results]);
@@ -272,6 +303,9 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
           return;
         case 'note':
           router.push(`/notes?note=${item.itemId}`);
+          return;
+        case 'deck':
+          router.push(`/flashcards?deck=${item.itemId}`);
           return;
       }
     }
@@ -426,9 +460,9 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
           {!query && recentSearches.length === 0 && (
             <div className={styles.hint}>
-              <p>Search pages, settings, courses, work, exams, and notes</p>
+              <p>Search pages, settings, courses, work, exams, notes, and flashcards</p>
               <div className={styles.hintExamples}>
-                <span>Try: "theme", "pomodoro", or the name of a course or assignment</span>
+                <span>Try: "theme", "pomodoro", "word counter", or the name of a course or flashcard deck</span>
               </div>
             </div>
           )}

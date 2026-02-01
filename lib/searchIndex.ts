@@ -11,7 +11,7 @@ export interface SearchableItem {
   isPremium?: boolean;
   // For dynamic items that open modals
   action?: 'navigate' | 'openModal';
-  itemType?: 'work' | 'exam' | 'event' | 'course' | 'note';
+  itemType?: 'work' | 'exam' | 'event' | 'course' | 'note' | 'deck';
   itemId?: string;
   itemData?: any; // The full item data for modal display
 }
@@ -108,6 +108,15 @@ export const SEARCH_INDEX: SearchableItem[] = [
     categoryLabel: 'Pages',
     href: '/account',
   },
+  {
+    id: 'page-flashcards',
+    title: 'Flashcards',
+    description: 'Create and study flashcards with spaced repetition',
+    keywords: ['flashcards', 'study', 'memorize', 'review', 'spaced repetition', 'sm2', 'decks', 'cards'],
+    category: 'page',
+    categoryLabel: 'Pages',
+    href: '/flashcards',
+  },
 
   // ==================== TOOLS ====================
   {
@@ -142,6 +151,39 @@ export const SEARCH_INDEX: SearchableItem[] = [
     href: '/tools',
     tab: 'productivity',
     elementId: 'quick-links',
+  },
+  {
+    id: 'tool-word-counter',
+    title: 'Word Counter',
+    description: 'Count words, characters, sentences, and paragraphs',
+    keywords: ['word count', 'character count', 'essay', 'writing', 'text analysis', 'reading time'],
+    category: 'tool',
+    categoryLabel: 'Tools > Productivity',
+    href: '/tools',
+    tab: 'productivity',
+    elementId: 'word-counter',
+  },
+  {
+    id: 'tool-unit-converter',
+    title: 'Unit Converter',
+    description: 'Convert between length, weight, temperature, and more',
+    keywords: ['unit', 'convert', 'measurement', 'metric', 'imperial', 'length', 'weight', 'temperature', 'volume'],
+    category: 'tool',
+    categoryLabel: 'Tools > Productivity',
+    href: '/tools',
+    tab: 'productivity',
+    elementId: 'unit-converter',
+  },
+  {
+    id: 'tool-citation-generator',
+    title: 'Citation Generator',
+    description: 'Generate citations in APA, MLA, Chicago, and more formats',
+    keywords: ['citation', 'reference', 'bibliography', 'apa', 'mla', 'chicago', 'harvard', 'works cited'],
+    category: 'tool',
+    categoryLabel: 'Tools > Productivity',
+    href: '/tools',
+    tab: 'productivity',
+    elementId: 'citation-generator',
   },
   {
     id: 'tool-grade-tracker',

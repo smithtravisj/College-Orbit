@@ -1121,6 +1121,129 @@ College Orbit © ${new Date().getFullYear()}
   }
 }
 
+interface SendCollegeRequestApprovedEmailParams {
+  email: string;
+  name: string | null;
+  collegeName: string;
+}
+
+/**
+ * Send college request approved email to user
+ */
+export async function sendCollegeRequestApprovedEmail({
+  email,
+  name,
+  collegeName,
+}: SendCollegeRequestApprovedEmailParams): Promise<void> {
+  const displayName = name || 'there';
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html style="margin: 0; padding: 0; background-color: #0a0a0b;">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #0a0a0b;" bgcolor="#0a0a0b">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0a0a0b;" bgcolor="#0a0a0b">
+        <tr>
+          <td align="center" style="padding: 40px 20px;" bgcolor="#0a0a0b">
+            <table width="560" cellpadding="0" cellspacing="0" border="0" style="background-color: #111113; border-radius: 20px; border: 1px solid #252528;" bgcolor="#111113">
+              <!-- Header -->
+              <tr>
+                <td style="padding: 40px 40px 20px 40px; text-align: center;" bgcolor="#111113">
+                  <p style="margin: 0 0 8px 0; font-size: 14px; color: #22c55e; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">
+                    College Orbit
+                  </p>
+                  <h1 style="margin: 0; color: #fafafa; font-size: 28px; font-weight: 700; letter-spacing: -0.02em;">
+                    College Request Approved!
+                  </h1>
+                </td>
+              </tr>
+
+              <!-- Body -->
+              <tr>
+                <td style="padding: 20px 40px 40px 40px; color: #a1a1aa; font-size: 16px; line-height: 1.6;">
+                  <p style="margin: 0 0 20px 0;">Hi ${displayName},</p>
+                  <p style="margin: 0 0 24px 0;">
+                    Great news! Your request to add <strong style="color: #fafafa;">${collegeName}</strong> has been approved.
+                  </p>
+
+                  <p style="margin: 0 0 24px 0;">
+                    You can now select it as your college in Settings to join the leaderboard and connect with other students.
+                  </p>
+
+                  <!-- CTA Button -->
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td align="center" style="padding: 20px 0;">
+                        <a href="${APP_URL}/settings"
+                           style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+                                  color: #ffffff; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 16px;
+                                  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.4);">
+                          Go to Settings
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <p style="margin: 24px 0 0 0; font-size: 14px; color: #71717a;">
+                    Thank you for helping us expand College Orbit to more schools!
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="padding: 20px 40px; background-color: #0f0f11; border-top: 1px solid #252528;
+                           text-align: center; color: #71717a; font-size: 13px; border-radius: 0 0 20px 20px;">
+                  <p style="margin: 0;">
+                    College Orbit &copy; ${new Date().getFullYear()}
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const textContent = `
+Hi ${displayName},
+
+Great news! Your request to add ${collegeName} has been approved.
+
+You can now select it as your college in Settings to join the leaderboard and connect with other students.
+
+Go to Settings: ${APP_URL}/settings
+
+Thank you for helping us expand College Orbit to more schools!
+
+College Orbit © ${new Date().getFullYear()}
+  `.trim();
+
+  try {
+    const resend = getResend();
+    if (!resend) {
+      throw new Error('Resend API key not configured');
+    }
+
+    await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: email,
+      subject: 'Your college request has been approved!',
+      html: htmlContent,
+      text: textContent,
+    });
+    console.log(`College request approved email sent to ${email}`);
+  } catch (error) {
+    console.error('Resend error:', error);
+    throw new Error('Failed to send college request approved email');
+  }
+}
+
 interface WeeklyDigestItem {
   title: string;
   courseName?: string;

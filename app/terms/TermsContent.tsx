@@ -16,7 +16,7 @@ export default function TermsContent() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Effective Date: January 27, 2026
+                Effective Date: February 1, 2026
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 These Terms of Service ("Terms") govern your use of the College Orbit website and services ("Service"). By creating an account and using the Service, you agree to be legally bound by these Terms. If you do not agree to these Terms, please do not use the Service.
@@ -51,10 +51,13 @@ export default function TermsContent() {
                 <li>Custom calendar events for personal scheduling</li>
                 <li>Exam tracking with customizable reminders</li>
                 <li>Rich text note-taking with folder organization, linking to work items and exams, and file attachments (up to 5MB per file)</li>
+                <li>Flashcards with spaced repetition for effective studying</li>
                 <li>GPA calculation and tracking</li>
                 <li>Shopping lists (grocery, wishlist, and pantry inventory)</li>
-                <li>Pomodoro productivity timer</li>
+                <li>Productivity tools including Pomodoro timer, word counter, citation generator, and unit converter</li>
                 <li>File converter for images, documents, and text files (most processing done in-browser)</li>
+                <li>Global search across courses, notes, tasks, exams, and events</li>
+                <li>Help center with searchable FAQ</li>
                 <li>Dashboard customization (show/hide cards, pages, quick links, and visual effects)</li>
                 <li>Theme customization including custom color themes</li>
                 <li>Notification and reminder system</li>
@@ -144,7 +147,7 @@ export default function TermsContent() {
                 Ownership
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                You retain full ownership of all content, data, and information you create in the Service (courses, work items, exams, notes, file attachments, shopping lists, calendar events, etc.). We do not claim ownership of your data.
+                You retain full ownership of all content, data, and information you create in the Service (courses, work items, exams, notes, flashcard decks, file attachments, shopping lists, calendar events, etc.). We do not claim ownership of your data.
               </p>
             </div>
             <div>

@@ -104,18 +104,6 @@ function isWeekend(date: Date): boolean {
 }
 
 /**
- * Get the previous weekday (Mon-Fri) before a given date
- */
-function getPreviousWeekday(date: Date): Date {
-  const prev = new Date(date);
-  prev.setUTCDate(prev.getUTCDate() - 1);
-  while (isWeekend(prev)) {
-    prev.setUTCDate(prev.getUTCDate() - 1);
-  }
-  return getUtcDateOnly(prev);
-}
-
-/**
  * Check if streak should be broken based on weekday-focused logic
  * - Mon-Fri are "required" days - missing a weekday breaks your streak
  * - Sat-Sun are "bonus" days - activity adds to streak, inactivity doesn't break it
@@ -138,24 +126,23 @@ function shouldBreakStreak(lastActivityDate: Date | null, today: Date): boolean 
     return false;
   }
 
-  // Check if we're on a weekend - weekends don't break streaks
-  if (isWeekend(todayDate)) {
-    // On weekend, just need activity within last 3 days (Friday's activity covers weekend)
-    const threeDaysAgo = new Date(todayDate);
-    threeDaysAgo.setUTCDate(threeDaysAgo.getUTCDate() - 3);
-    return lastActivity < threeDaysAgo;
+  // Count how many weekdays were missed between last activity and today
+  // If any weekday was missed, the streak is broken
+  const dayAfterLastActivity = new Date(lastActivity);
+  dayAfterLastActivity.setUTCDate(dayAfterLastActivity.getUTCDate() + 1);
+
+  let checkDate = new Date(dayAfterLastActivity);
+  while (checkDate < todayDate) {
+    if (!isWeekend(checkDate)) {
+      // Found a weekday that was missed - streak is broken
+      return true;
+    }
+    checkDate.setUTCDate(checkDate.getUTCDate() + 1);
   }
 
-  // On a weekday, check if we missed any required weekdays
-  const previousWeekday = getPreviousWeekday(todayDate);
-
-  // If last activity was on or after the previous weekday, streak is intact
-  if (lastActivity >= previousWeekday) {
-    return false;
-  }
-
-  // Missed a weekday - streak is broken
-  return true;
+  // No weekdays were missed between last activity and today
+  // (only weekends in between, or today is the day after last activity)
+  return false;
 }
 
 /**
@@ -591,6 +578,22 @@ export async function getUserGamificationData(userId: string) {
   if (!userStreak) {
     userStreak = await prisma.userStreak.create({
       data: { userId },
+    });
+  }
+
+  // Check if streak should be broken based on last activity
+  // This ensures the displayed streak is accurate even if the user hasn't completed any tasks
+  const now = new Date();
+  const streakBroken = !userStreak.vacationMode && shouldBreakStreak(userStreak.lastActivityDate, now);
+
+  if (streakBroken && userStreak.currentStreak > 0) {
+    // Update the database to reset the streak
+    userStreak = await prisma.userStreak.update({
+      where: { userId },
+      data: {
+        currentStreak: 0,
+        streakStartDate: null,
+      },
     });
   }
 

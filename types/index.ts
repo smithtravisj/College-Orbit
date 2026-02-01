@@ -458,6 +458,7 @@ export interface AppData {
   calendarEvents?: CalendarEvent[];
   workItems?: WorkItem[];
   recurringWorkPatterns?: RecurringWorkPattern[];
+  flashcardDecks?: FlashcardDeck[];
 }
 
 // Calendar Event Types
@@ -801,4 +802,28 @@ export interface CollegeLeaderboardEntry {
   totalXp: number;
   userCount: number;
   isUserCollege: boolean;
+}
+
+// Flashcard Types
+export interface Flashcard {
+  id: string;
+  deckId: string;
+  front: string;
+  back: string;
+  interval: number;
+  easeFactor: number;
+  repetitions: number;
+  nextReview: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FlashcardDeck {
+  id: string;
+  name: string;
+  description: string | null;
+  courseId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  cards?: Flashcard[];
 }

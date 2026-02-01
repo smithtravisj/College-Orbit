@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   Calendar,
   PenLine,
-  Clock,
   BookOpen,
   BarChart3,
   FileText,
@@ -14,7 +13,8 @@ import {
   Trophy,
   Palette,
   RefreshCw,
-  ShoppingCart
+  Layers,
+  Wrench
 } from 'lucide-react';
 
 const coreFeatures = [
@@ -47,6 +47,11 @@ const secondaryFeatures = [
     description: 'Never miss an exam. Track dates, times, locations, and add notes for each test.',
   },
   {
+    icon: Layers,
+    title: 'Flashcards',
+    description: 'Study with flashcards using spaced repetition. Track mastery and review what you need most.',
+  },
+  {
     icon: Target,
     title: 'Timeline Dashboard',
     description: 'See classes, tasks, assignments, exams, and events in one unified view with Today and Week toggles.',
@@ -67,14 +72,9 @@ const secondaryFeatures = [
     description: 'Track grades, calculate your GPA, project what-if scenarios, and find what you need on your final.',
   },
   {
-    icon: Clock,
-    title: 'Pomodoro Timer',
-    description: 'Built-in focus timer with customizable work and break intervals to boost productivity.',
-  },
-  {
-    icon: ShoppingCart,
-    title: 'Shopping Lists',
-    description: 'Manage grocery lists, wishlists, and pantry inventory. Move purchased items between lists.',
+    icon: Wrench,
+    title: 'Productivity Tools',
+    description: 'Pomodoro timer, word counter, citation generator, unit converter, and file converter all built-in.',
   },
   {
     icon: Palette,

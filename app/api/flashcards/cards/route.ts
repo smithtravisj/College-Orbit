@@ -40,10 +40,15 @@ export async function POST(req: NextRequest) {
         .filter((card: { front: string; back: string }) =>
           card.front?.trim() && card.back?.trim()
         )
-        .map((card: { front: string; back: string }) => ({
+        .map((card: { front: string; back: string; interval?: number; easeFactor?: number; repetitions?: number; nextReview?: string }) => ({
           deckId: data.deckId,
           front: card.front.trim(),
           back: card.back.trim(),
+          // Preserve spaced repetition data if provided (for import)
+          ...(card.interval !== undefined && { interval: card.interval }),
+          ...(card.easeFactor !== undefined && { easeFactor: card.easeFactor }),
+          ...(card.repetitions !== undefined && { repetitions: card.repetitions }),
+          ...(card.nextReview && { nextReview: new Date(card.nextReview) }),
         }));
 
       if (cardsToCreate.length === 0) {
@@ -79,6 +84,11 @@ export async function POST(req: NextRequest) {
           deckId: data.deckId,
           front: data.front.trim(),
           back: data.back.trim(),
+          // Preserve spaced repetition data if provided (for import)
+          ...(data.interval !== undefined && { interval: data.interval }),
+          ...(data.easeFactor !== undefined && { easeFactor: data.easeFactor }),
+          ...(data.repetitions !== undefined && { repetitions: data.repetitions }),
+          ...(data.nextReview && { nextReview: new Date(data.nextReview) }),
         },
       });
 

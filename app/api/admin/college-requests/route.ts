@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { authConfig } from '@/auth.config';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { logAuditEvent } from '@/lib/auditLog';
+import { sendCollegeRequestApprovedEmail } from '@/lib/email';
 
 // GET all college requests (admin only)
 export const GET = withRateLimit(async function() {
@@ -85,7 +86,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
       where: { id: requestId },
       include: {
         user: {
-          select: { id: true },
+          select: { id: true, email: true, name: true },
         },
       },
     });
@@ -115,6 +116,20 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
           type: status === 'added' ? 'college_request_approved' : 'college_request_rejected',
         },
       });
+
+      // Send email notification for approved requests
+      if (status === 'added' && collegeRequest.user.email) {
+        try {
+          await sendCollegeRequestApprovedEmail({
+            email: collegeRequest.user.email,
+            name: collegeRequest.user.name,
+            collegeName: collegeRequest.collegeName,
+          });
+        } catch (emailError) {
+          // Log but don't fail the request if email fails
+          console.error('[PATCH /api/admin/college-requests] Failed to send email:', emailError);
+        }
+      }
 
       // Delete admin notifications for this college request
       await prisma.notification.deleteMany({

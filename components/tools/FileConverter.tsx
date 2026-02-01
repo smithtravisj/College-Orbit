@@ -313,7 +313,7 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
   };
 
   const convertImagesToPdf = async (imageFiles: File[], isHeic: boolean) => {
-    const { jsPDF } = await import('jspdf');
+    const { default: jsPDF } = await import('jspdf');
 
     // Convert all files to image blobs
     const imageBlobs: Blob[] = [];
@@ -587,7 +587,7 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
   };
 
   const textToPdfSingle = async (text: string, filename: string): Promise<{ url: string; filename: string; size: number }> => {
-    const { jsPDF } = await import('jspdf');
+    const { default: jsPDF } = await import('jspdf');
     const pdf = new jsPDF({ unit: 'pt', format: 'letter' });
     const margin = 40;
     const pageWidth = pdf.internal.pageSize.getWidth();
