@@ -2944,7 +2944,7 @@ export default function AdminPage() {
                     <input
                       type="text"
                       value={newCollegeAcronym}
-                      onChange={(e) => setNewCollegeAcronym(e.target.value.toUpperCase())}
+                      onChange={(e) => setNewCollegeAcronym(e.target.value)}
                       placeholder="e.g., BYU"
                       maxLength={10}
                       style={{
