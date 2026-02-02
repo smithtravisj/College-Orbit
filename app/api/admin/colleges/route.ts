@@ -107,7 +107,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     const college = await prisma.college.create({
       data: {
         fullName: fullName.trim(),
-        acronym: acronym.trim().toUpperCase(),
+        acronym: acronym.trim(),
         darkAccent,
         darkLink,
         lightAccent,
@@ -186,7 +186,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     // Build update data
     const updateData: Record<string, any> = {};
     if (fullName !== undefined) updateData.fullName = fullName.trim();
-    if (acronym !== undefined) updateData.acronym = acronym.trim().toUpperCase();
+    if (acronym !== undefined) updateData.acronym = acronym.trim();
     if (darkAccent !== undefined) updateData.darkAccent = darkAccent;
     if (darkLink !== undefined) updateData.darkLink = darkLink;
     if (lightAccent !== undefined) updateData.lightAccent = lightAccent;
