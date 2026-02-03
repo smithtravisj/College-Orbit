@@ -59,7 +59,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         if (foundItem) {
           console.log('[College Orbit SW] Found item:', { id: foundItem.id, status: foundItem.status, title: foundItem.title });
-          sendResponse({ exists: true, workItemId: foundItem.id, status: foundItem.status });
+          // Check if item was synced via LMS API (has canvasAssignmentId, blackboardColumnId, etc.)
+          const isSyncedViaAPI = !!(foundItem.canvasAssignmentId || foundItem.blackboardColumnId || foundItem.moodleAssignmentId || foundItem.brightspaceActivityId);
+          sendResponse({
+            exists: true,
+            workItemId: foundItem.id,
+            status: foundItem.status,
+            isSyncedViaAPI,
+            // Return current data for comparison
+            currentData: {
+              title: foundItem.title || '',
+              dueAt: foundItem.dueAt || null,
+              notes: foundItem.notes || '',
+              links: foundItem.links || [],
+            },
+          });
         } else {
           console.log('[College Orbit SW] Item not found');
           sendResponse({ exists: false });
@@ -80,6 +94,61 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           body: JSON.stringify({ status: newStatus }),
         });
         sendResponse({ success: true, status: newStatus });
+      } catch (e) {
+        sendResponse({ success: false, error: e.message });
+      }
+    })();
+    return true;
+  }
+
+  if (message.type === 'UPDATE_ASSIGNMENT') {
+    (async () => {
+      try {
+        const d = message.data;
+        const workItemId = message.workItemId;
+        const currentNotes = message.currentNotes || '';
+
+        // Build updated notes - preserve user notes section, update LMS section
+        let notes = currentNotes;
+        const sourceLabel = d.source === 'learningsuite' ? 'Learning Suite' : 'Canvas';
+        const lmsSectionRegex = new RegExp(`─── From (Canvas|Learning Suite) ───[\\s\\S]*$`);
+
+        if (d.description) {
+          const newLmsSection = `─── From ${sourceLabel} ───\n${d.description}`;
+          if (lmsSectionRegex.test(notes)) {
+            // Replace existing LMS section
+            notes = notes.replace(lmsSectionRegex, newLmsSection);
+          } else if (notes.includes('─── Your Notes ───')) {
+            // Append after user notes
+            notes = notes + '\n\n' + newLmsSection;
+          } else {
+            // Create new structure
+            notes = `─── Your Notes ───\n${notes}\n\n${newLmsSection}`;
+          }
+        }
+
+        // Build links array - merge existing non-LMS links with new LMS links
+        const existingLinks = message.currentLinks || [];
+        const nonLmsLinks = existingLinks.filter(l => l.label !== 'Canvas' && l.label !== 'Learning Suite' && l.label !== 'Discussion');
+        const newLinks = [
+          ...nonLmsLinks,
+          ...(d.canvasUrl ? [{ label: sourceLabel, url: d.canvasUrl }] : []),
+          ...(d.discussionUrl ? [{ label: 'Discussion', url: d.discussionUrl }] : []),
+        ];
+
+        const body = {
+          title: d.title,
+          dueAt: d.dueDate || null,
+          notes,
+          links: newLinks,
+        };
+
+        await OrbitAPI.fetch(`/api/work/${workItemId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(body),
+        });
+
+        sendResponse({ success: true });
       } catch (e) {
         sendResponse({ success: false, error: e.message });
       }

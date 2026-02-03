@@ -196,8 +196,50 @@ function scrapeAssignment() {
   };
 }
 
-// Track current work item state
-let currentWorkItem = { id: null, status: null };
+// Track current work item state and data
+let currentWorkItem = { id: null, status: null, currentData: null };
+let scrapedData = null;
+
+// Compare scraped data with stored data to detect changes
+function detectChanges(scraped, stored) {
+  if (!scraped || !stored) return false;
+
+  const changes = [];
+
+  // Check title
+  if (scraped.title && scraped.title !== stored.title) {
+    changes.push('title');
+  }
+
+  // Check due date (compare as dates, allow 1 minute tolerance)
+  if (scraped.dueDate && stored.dueAt) {
+    const scrapedDate = new Date(scraped.dueDate).getTime();
+    const storedDate = new Date(stored.dueAt).getTime();
+    if (Math.abs(scrapedDate - storedDate) > 60000) {
+      changes.push('due date');
+    }
+  } else if (scraped.dueDate && !stored.dueAt) {
+    changes.push('due date');
+  }
+
+  // Check if Canvas/LS link exists
+  const sourceLabel = scraped.source === 'learningsuite' ? 'Learning Suite' : 'Canvas';
+  const hasSourceLink = (stored.links || []).some(l => l.label === sourceLabel);
+  if (scraped.canvasUrl && !hasSourceLink) {
+    changes.push('link');
+  }
+
+  // Check description - only if scraped has description and stored doesn't have LMS section
+  if (scraped.description) {
+    const lmsSectionExists = (stored.notes || '').includes(`─── From ${sourceLabel} ───`);
+    if (!lmsSectionExists) {
+      changes.push('description');
+    }
+  }
+
+  console.log('[College Orbit] Detected changes:', changes);
+  return changes.length > 0 ? changes : false;
+}
 
 // Inject floating "Add to College Orbit" button with dropdown
 function injectButton() {
@@ -261,7 +303,7 @@ function injectButton() {
 }
 
 // Update button state and dropdown options
-function updateButtonState(state, workItemId = null, workItemStatus = null) {
+function updateButtonState(state, workItemId = null, workItemStatus = null, currentData = null) {
   console.log('[College Orbit] updateButtonState called with:', { state, workItemId, workItemStatus });
   const btn = document.getElementById('orbit-add-btn');
   const dropdown = document.getElementById('orbit-dropdown');
@@ -270,7 +312,7 @@ function updateButtonState(state, workItemId = null, workItemStatus = null) {
     return;
   }
 
-  currentWorkItem = { id: workItemId, status: workItemStatus };
+  currentWorkItem = { id: workItemId, status: workItemStatus, currentData };
 
   // Clear dropdown
   dropdown.innerHTML = '';
@@ -280,6 +322,44 @@ function updateButtonState(state, workItemId = null, workItemStatus = null) {
       btn.textContent = '+ Add to Orbit';
       btn.className = '';
       btn.disabled = false;
+      break;
+
+    case 'needs-update':
+      btn.textContent = '\u21bb Update in Orbit';
+      btn.className = 'orbit-needs-update has-dropdown';
+      btn.disabled = false;
+
+      // Add dropdown options
+      const updateBtn = document.createElement('button');
+      updateBtn.className = 'orbit-dropdown-item warning';
+      updateBtn.textContent = 'Update Now';
+      updateBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        updateWorkItem();
+      });
+
+      const viewBtnUpdate = document.createElement('button');
+      viewBtnUpdate.className = 'orbit-dropdown-item';
+      viewBtnUpdate.textContent = 'View in Orbit';
+      viewBtnUpdate.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.open(`https://collegeorbit.app/work?task=${workItemId}`, '_blank');
+        dropdown.classList.remove('show');
+      });
+
+      const skipBtn = document.createElement('button');
+      skipBtn.className = 'orbit-dropdown-item';
+      skipBtn.textContent = 'Skip Update';
+      skipBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.remove('show');
+        // Show as "In Orbit" without update indicator
+        updateButtonState(workItemStatus === 'done' ? 'completed' : 'exists', workItemId, workItemStatus, currentData);
+      });
+
+      dropdown.appendChild(updateBtn);
+      dropdown.appendChild(viewBtnUpdate);
+      dropdown.appendChild(skipBtn);
       break;
 
     case 'added':
@@ -346,7 +426,6 @@ function markWorkItem(action) {
   if (!btn || !currentWorkItem.id) return;
 
   dropdown.classList.remove('show');
-  const originalText = btn.textContent;
   btn.textContent = action === 'complete' ? 'Completing...' : 'Updating...';
   btn.disabled = true;
 
@@ -362,7 +441,8 @@ function markWorkItem(action) {
           updateButtonState(
             currentWorkItem.status === 'done' ? 'completed' : 'exists',
             currentWorkItem.id,
-            currentWorkItem.status
+            currentWorkItem.status,
+            currentWorkItem.currentData
           );
         }, 2000);
         return;
@@ -373,8 +453,41 @@ function markWorkItem(action) {
       updateButtonState(
         newStatus === 'done' ? 'completed' : 'exists',
         currentWorkItem.id,
-        newStatus
+        newStatus,
+        currentWorkItem.currentData
       );
+    }
+  );
+}
+
+// Update work item with latest scraped data
+function updateWorkItem() {
+  const btn = document.getElementById('orbit-add-btn');
+  const dropdown = document.getElementById('orbit-dropdown');
+  if (!btn || !currentWorkItem.id || !scrapedData) return;
+
+  dropdown.classList.remove('show');
+  btn.textContent = 'Updating...';
+  btn.disabled = true;
+
+  chrome.runtime.sendMessage(
+    {
+      type: 'UPDATE_ASSIGNMENT',
+      workItemId: currentWorkItem.id,
+      data: scrapedData,
+      currentNotes: currentWorkItem.currentData?.notes || '',
+      currentLinks: currentWorkItem.currentData?.links || [],
+    },
+    (response) => {
+      if (chrome.runtime.lastError || !response?.success) {
+        btn.textContent = 'Error — try again';
+        btn.disabled = false;
+        setTimeout(() => checkIfAlreadyAdded(), 2000);
+        return;
+      }
+
+      // Re-check to refresh state
+      setTimeout(() => checkIfAlreadyAdded(), 500);
     }
   );
 }
@@ -399,6 +512,9 @@ async function checkIfAlreadyAdded() {
     const data = scrapeAssignment();
     if (!data) return;
 
+    // Store scraped data for update functionality
+    scrapedData = data;
+
     // Ask background script to check (it has access to cookies + storage)
     console.log('[College Orbit] Checking if exists:', { assignmentId: data.canvasAssignmentId, title: data.title, canvasUrl: data.canvasUrl });
     const response = await new Promise((resolve) => {
@@ -415,9 +531,24 @@ async function checkIfAlreadyAdded() {
 
     console.log('[College Orbit] checkIfAlreadyAdded response:', response);
     if (response.exists) {
-      const state = response.status === 'done' ? 'completed' : 'exists';
-      console.log('[College Orbit] Item exists, determined state:', state);
-      updateButtonState(state, response.workItemId, response.status);
+      // Skip change detection for items synced via Canvas/LMS API - those are authoritative
+      if (response.isSyncedViaAPI) {
+        console.log('[College Orbit] Item synced via API, skipping change detection');
+        const state = response.status === 'done' ? 'completed' : 'exists';
+        updateButtonState(state, response.workItemId, response.status, response.currentData);
+      } else {
+        // Check if there are changes that need updating (only for extension-added items)
+        const changes = detectChanges(data, response.currentData);
+
+        if (changes) {
+          console.log('[College Orbit] Changes detected, showing update button');
+          updateButtonState('needs-update', response.workItemId, response.status, response.currentData);
+        } else {
+          const state = response.status === 'done' ? 'completed' : 'exists';
+          console.log('[College Orbit] Item exists, no changes, state:', state);
+          updateButtonState(state, response.workItemId, response.status, response.currentData);
+        }
+      }
     } else {
       console.log('[College Orbit] Item does not exist, setting to add');
       updateButtonState('add');

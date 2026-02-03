@@ -338,11 +338,52 @@ function scrapeAssignmentData() {
   return null;
 }
 
-// Track current work item state
-let currentWorkItem = { id: null, status: null };
+// Track current work item state and data
+let currentWorkItem = { id: null, status: null, currentData: null };
+let scrapedData = null;
+
+// Compare scraped data with stored data to detect changes
+function detectChanges(scraped, stored) {
+  if (!scraped || !stored) return false;
+
+  const changes = [];
+
+  // Check title
+  if (scraped.title && scraped.title !== stored.title) {
+    changes.push('title');
+  }
+
+  // Check due date (compare as dates, allow 1 minute tolerance)
+  if (scraped.dueDate && stored.dueAt) {
+    const scrapedDate = new Date(scraped.dueDate).getTime();
+    const storedDate = new Date(stored.dueAt).getTime();
+    if (Math.abs(scrapedDate - storedDate) > 60000) {
+      changes.push('due date');
+    }
+  } else if (scraped.dueDate && !stored.dueAt) {
+    changes.push('due date');
+  }
+
+  // Check if Learning Suite link exists
+  const hasSourceLink = (stored.links || []).some(l => l.label === 'Learning Suite');
+  if (scraped.canvasUrl && !hasSourceLink) {
+    changes.push('link');
+  }
+
+  // Check description - only if scraped has description and stored doesn't have LMS section
+  if (scraped.description) {
+    const lmsSectionExists = (stored.notes || '').includes('─── From Learning Suite ───');
+    if (!lmsSectionExists) {
+      changes.push('description');
+    }
+  }
+
+  console.log('[College Orbit LS] Detected changes:', changes);
+  return changes.length > 0 ? changes : false;
+}
 
 // Update button state and dropdown options
-function updateButtonState(state, workItemId = null, workItemStatus = null) {
+function updateButtonState(state, workItemId = null, workItemStatus = null, currentData = null) {
   console.log('[College Orbit LS] updateButtonState called with:', { state, workItemId, workItemStatus });
   const btn = document.getElementById('orbit-add-btn');
   const dropdown = document.getElementById('orbit-dropdown');
@@ -351,7 +392,7 @@ function updateButtonState(state, workItemId = null, workItemStatus = null) {
     return;
   }
 
-  currentWorkItem = { id: workItemId, status: workItemStatus };
+  currentWorkItem = { id: workItemId, status: workItemStatus, currentData };
 
   // Clear dropdown
   dropdown.innerHTML = '';
@@ -364,6 +405,43 @@ function updateButtonState(state, workItemId = null, workItemStatus = null) {
       // Restore bottom positioning for Learning Suite
       btn.style.top = 'auto';
       btn.style.bottom = '24px';
+      break;
+
+    case 'needs-update':
+      btn.textContent = '\u21bb Update in Orbit';
+      btn.className = 'orbit-needs-update has-dropdown';
+      btn.disabled = false;
+
+      // Add dropdown options
+      const updateBtn = document.createElement('button');
+      updateBtn.className = 'orbit-dropdown-item warning';
+      updateBtn.textContent = 'Update Now';
+      updateBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        updateWorkItem();
+      });
+
+      const viewBtnUpdate = document.createElement('button');
+      viewBtnUpdate.className = 'orbit-dropdown-item';
+      viewBtnUpdate.textContent = 'View in Orbit';
+      viewBtnUpdate.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.open(`https://collegeorbit.app/work?task=${workItemId}`, '_blank');
+        dropdown.classList.remove('show');
+      });
+
+      const skipBtn = document.createElement('button');
+      skipBtn.className = 'orbit-dropdown-item';
+      skipBtn.textContent = 'Skip Update';
+      skipBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.remove('show');
+        updateButtonState(workItemStatus === 'done' ? 'completed' : 'exists', workItemId, workItemStatus, currentData);
+      });
+
+      dropdown.appendChild(updateBtn);
+      dropdown.appendChild(viewBtnUpdate);
+      dropdown.appendChild(skipBtn);
       break;
 
     case 'added':
@@ -445,7 +523,8 @@ function markWorkItem(action) {
           updateButtonState(
             currentWorkItem.status === 'done' ? 'completed' : 'exists',
             currentWorkItem.id,
-            currentWorkItem.status
+            currentWorkItem.status,
+            currentWorkItem.currentData
           );
         }, 2000);
         return;
@@ -455,8 +534,47 @@ function markWorkItem(action) {
       updateButtonState(
         newStatus === 'done' ? 'completed' : 'exists',
         currentWorkItem.id,
-        newStatus
+        newStatus,
+        currentWorkItem.currentData
       );
+    }
+  );
+}
+
+// Update work item with latest scraped data
+function updateWorkItem() {
+  const btn = document.getElementById('orbit-add-btn');
+  const dropdown = document.getElementById('orbit-dropdown');
+  if (!btn || !currentWorkItem.id || !scrapedData) return;
+
+  dropdown.classList.remove('show');
+  btn.textContent = 'Updating...';
+  btn.disabled = true;
+
+  chrome.runtime.sendMessage(
+    {
+      type: 'UPDATE_ASSIGNMENT',
+      workItemId: currentWorkItem.id,
+      data: scrapedData,
+      currentNotes: currentWorkItem.currentData?.notes || '',
+      currentLinks: currentWorkItem.currentData?.links || [],
+    },
+    (response) => {
+      if (chrome.runtime.lastError || !response?.success) {
+        btn.textContent = 'Error — try again';
+        btn.disabled = false;
+        setTimeout(() => {
+          const data = scrapeAssignmentData();
+          checkIfAlreadyAdded(data);
+        }, 2000);
+        return;
+      }
+
+      // Re-check to refresh state
+      setTimeout(() => {
+        const data = scrapeAssignmentData();
+        checkIfAlreadyAdded(data);
+      }, 500);
     }
   );
 }
@@ -469,6 +587,10 @@ function checkIfAlreadyAdded(data) {
     updateButtonState('add');
     return;
   }
+
+  // Store scraped data for update functionality
+  scrapedData = data;
+
   chrome.runtime.sendMessage(
     { type: 'CHECK_ASSIGNMENT_EXISTS', title: data.title, canvasUrl: data.canvasUrl },
     (response) => {
@@ -478,9 +600,24 @@ function checkIfAlreadyAdded(data) {
         return;
       }
       if (response?.exists) {
-        const state = response.status === 'done' ? 'completed' : 'exists';
-        console.log('[College Orbit LS] Item exists, state:', state);
-        updateButtonState(state, response.workItemId, response.status);
+        // Skip change detection for items synced via LMS API - those are authoritative
+        if (response.isSyncedViaAPI) {
+          console.log('[College Orbit LS] Item synced via API, skipping change detection');
+          const state = response.status === 'done' ? 'completed' : 'exists';
+          updateButtonState(state, response.workItemId, response.status, response.currentData);
+        } else {
+          // Check if there are changes that need updating (only for extension-added items)
+          const changes = detectChanges(data, response.currentData);
+
+          if (changes) {
+            console.log('[College Orbit LS] Changes detected, showing update button');
+            updateButtonState('needs-update', response.workItemId, response.status, response.currentData);
+          } else {
+            const state = response.status === 'done' ? 'completed' : 'exists';
+            console.log('[College Orbit LS] Item exists, no changes, state:', state);
+            updateButtonState(state, response.workItemId, response.status, response.currentData);
+          }
+        }
       } else {
         console.log('[College Orbit LS] Item does not exist');
         updateButtonState('add');
