@@ -130,9 +130,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
             if (match) {
               body.courseId = match.id;
-            } else if (d.source === 'learningsuite' && d.courseName) {
-              // Auto-create course for Learning Suite
-              console.log('[College Orbit SW] Creating new course for Learning Suite:', d.courseName);
+            } else if (d.courseName) {
+              // Auto-create course for Learning Suite or Canvas
+              const isLearningsuite = d.source === 'learningsuite';
+              console.log(`[College Orbit SW] Creating new course for ${isLearningsuite ? 'Learning Suite' : 'Canvas'}:`, d.courseName);
 
               // Parse course name - usually "CODE 123 - Course Name" or "CODE 123"
               const courseNameParts = d.courseName.match(/^([A-Z]{2,5}\s*\d{3}\S*)\s*[-–]?\s*(.*)$/i);
@@ -149,6 +150,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               else term = 'Fall';
               term += ' ' + now.getFullYear();
 
+              // Build course links based on source
+              const courseLinks = [];
+              if (isLearningsuite && d.lsCourseId) {
+                courseLinks.push({ label: 'Learning Suite', url: `https://learningsuite.byu.edu/cid-${d.lsCourseId}/student/top` });
+              } else if (!isLearningsuite && d.canvasCourseId) {
+                // Extract Canvas domain from the assignment URL
+                const canvasDomain = d.canvasUrl ? new URL(d.canvasUrl).origin : 'https://canvas.instructure.com';
+                courseLinks.push({ label: 'Canvas', url: `${canvasDomain}/courses/${d.canvasCourseId}` });
+              }
+
               try {
                 const newCourse = await OrbitAPI.fetch('/api/courses', {
                   method: 'POST',
@@ -156,8 +167,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     code,
                     name: courseName,
                     term,
-                    learningSuiteCourseId: d.lsCourseId || null,
-                    links: d.lsCourseId ? [{ label: 'Learning Suite', url: `https://learningsuite.byu.edu/cid-${d.lsCourseId}/student/top` }] : [],
+                    learningSuiteCourseId: isLearningsuite ? (d.lsCourseId || null) : null,
+                    links: courseLinks,
                   }),
                 });
                 if (newCourse.course?.id) {

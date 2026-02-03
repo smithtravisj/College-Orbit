@@ -10,6 +10,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useFormatters } from '@/hooks/useFormatters';
 import { Course } from '@/types';
 import { CanvasBadge } from './CanvasBadge';
+import { CanvasExtBadge } from './CanvasExtBadge';
 import { BlackboardBadge } from './BlackboardBadge';
 import { MoodleBadge } from './MoodleBadge';
 import { BrightspaceBadge } from './BrightspaceBadge';
@@ -173,6 +174,7 @@ export default function CourseList({
                 <h3 className="text-sm font-medium text-[var(--text)]" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span>{course.code}{course.name ? ` - ${course.name}` : ''}</span>
                   {course.canvasCourseId && <CanvasBadge />}
+                  {!course.canvasCourseId && course.links?.some(l => l.label === 'Canvas') && <CanvasExtBadge />}
                   {course.blackboardCourseId && <BlackboardBadge />}
                   {course.moodleCourseId && <MoodleBadge />}
                   {course.brightspaceCourseId && <BrightspaceBadge />}
