@@ -186,22 +186,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             // No new description, keep existing notes as-is
           }
 
-          // Merge links - preserve non-LMS links
-          const existingLinks = message.existingLinks || [];
-          const nonLmsLinks = existingLinks.filter(l => l.label !== 'Canvas' && l.label !== 'Learning Suite' && l.label !== 'Discussion');
-          const newLinks = [
-            ...nonLmsLinks,
-            ...(d.canvasUrl ? [{ label: sourceLabel, url: d.canvasUrl }] : []),
-            ...(d.discussionUrl ? [{ label: 'Discussion', url: d.discussionUrl }] : []),
-          ];
-
+          // Only update title, due date, and notes
+          // Don't touch links - user can manage those manually
           await OrbitAPI.fetch(`/api/work/${message.existingWorkItemId}`, {
             method: 'PATCH',
             body: JSON.stringify({
               title: d.title,
               dueAt: d.dueDate || null,
               notes,
-              links: newLinks,
             }),
           });
 
