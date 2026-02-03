@@ -162,7 +162,54 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const d = message.data;
         const sourceLabel = d.source === 'learningsuite' ? 'Learning Suite' : 'Canvas';
 
-        // First, check if this assignment already exists to prevent duplicates
+        // If we're given an existing work item ID, update it directly
+        // This happens when user clicks "Update Now" from the dropdown
+        if (message.existingWorkItemId) {
+          console.log('[College Orbit SW] Updating existing item directly:', message.existingWorkItemId);
+
+          // Build updated notes - preserve user notes section
+          let notes = message.existingNotes || '';
+          const lmsSectionRegex = new RegExp(`─── From (Canvas|Learning Suite) ───[\\s\\S]*$`);
+
+          if (d.description) {
+            const newLmsSection = `─── From ${sourceLabel} ───\n${d.description}`;
+            if (lmsSectionRegex.test(notes)) {
+              notes = notes.replace(lmsSectionRegex, newLmsSection);
+            } else if (notes.includes('─── Your Notes ───')) {
+              notes = notes + '\n\n' + newLmsSection;
+            } else if (notes.trim()) {
+              notes = `─── Your Notes ───\n${notes}\n\n${newLmsSection}`;
+            } else {
+              notes = `─── Your Notes ───\n\n\n${newLmsSection}`;
+            }
+          } else {
+            // No new description, keep existing notes as-is
+          }
+
+          // Merge links - preserve non-LMS links
+          const existingLinks = message.existingLinks || [];
+          const nonLmsLinks = existingLinks.filter(l => l.label !== 'Canvas' && l.label !== 'Learning Suite' && l.label !== 'Discussion');
+          const newLinks = [
+            ...nonLmsLinks,
+            ...(d.canvasUrl ? [{ label: sourceLabel, url: d.canvasUrl }] : []),
+            ...(d.discussionUrl ? [{ label: 'Discussion', url: d.discussionUrl }] : []),
+          ];
+
+          await OrbitAPI.fetch(`/api/work/${message.existingWorkItemId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              title: d.title,
+              dueAt: d.dueDate || null,
+              notes,
+              links: newLinks,
+            }),
+          });
+
+          sendResponse({ success: true, updated: true });
+          return;
+        }
+
+        // Otherwise, check if this assignment already exists to prevent duplicates
         const existingData = await OrbitAPI.fetch('/api/work');
         const existingItems = existingData.workItems || [];
         const canvasUrl = (d.canvasUrl || '').split('?')[0];

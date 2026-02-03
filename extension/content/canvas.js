@@ -461,20 +461,24 @@ function markWorkItem(action) {
 }
 
 // Update work item with latest scraped data
-// Uses ADD_ASSIGNMENT which has duplicate prevention - will update existing item
 function updateWorkItem() {
   const btn = document.getElementById('orbit-add-btn');
   const dropdown = document.getElementById('orbit-dropdown');
-  if (!btn || !scrapedData) return;
+  if (!btn || !scrapedData || !currentWorkItem.id) return;
 
   dropdown.classList.remove('show');
   btn.textContent = 'Updating...';
   btn.disabled = true;
 
-  // Use ADD_ASSIGNMENT which has built-in duplicate detection
-  // It will find the existing item and update it instead of creating a new one
+  // Pass the existing work item ID so we update that specific item
   chrome.runtime.sendMessage(
-    { type: 'ADD_ASSIGNMENT', data: scrapedData },
+    {
+      type: 'ADD_ASSIGNMENT',
+      data: scrapedData,
+      existingWorkItemId: currentWorkItem.id,
+      existingNotes: currentWorkItem.currentData?.notes || '',
+      existingLinks: currentWorkItem.currentData?.links || [],
+    },
     (response) => {
       if (chrome.runtime.lastError || !response?.success) {
         btn.textContent = 'Error — try again';
