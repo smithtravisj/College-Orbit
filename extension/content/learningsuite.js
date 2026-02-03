@@ -593,7 +593,7 @@ function checkIfAlreadyAdded(data) {
   scrapedData = data;
 
   chrome.runtime.sendMessage(
-    { type: 'CHECK_ASSIGNMENT_EXISTS', title: data.title, canvasUrl: data.canvasUrl },
+    { type: 'CHECK_ASSIGNMENT_EXISTS', title: data.title, canvasUrl: data.canvasUrl, lsCourseId: data.lsCourseId },
     (response) => {
       console.log('[College Orbit LS] checkIfAlreadyAdded response:', response);
       if (chrome.runtime.lastError) {
