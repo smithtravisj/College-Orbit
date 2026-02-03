@@ -23,6 +23,10 @@ model User {
   sessionInvalidatedAt     DateTime?
   calendarToken            String?   @unique // Token for iCal subscription URL
 
+  // UTM tracking
+  utmSource    String?
+  utmCampaign  String?
+
   // College relation
   collegeId String?
   college   College? @relation(fields: [collegeId], references: [id])
@@ -1229,4 +1233,35 @@ model Flashcard {
 
   @@index([deckId])
   @@index([nextReview])
+}
+
+// Partner Program Inquiries (clubs, educators, partners)
+model PartnerInquiry {
+  id           String   @id @default(cuid())
+  type         String   // 'club', 'educator', 'partner'
+  status       String   @default("pending") // 'pending', 'contacted', 'completed', 'declined'
+
+  // Common fields
+  email        String
+  name         String?
+
+  // Club-specific fields
+  clubName     String?
+  school       String?
+  memberCount  String?
+  platform     String?  // discord, groupme, slack, instagram, email, other
+
+  // Partner-specific fields
+  role         String?  // tutor, academic-coach, content-creator, org-leader, ta, other
+  audienceSize String?
+  website      String?
+
+  // Tracking
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([email])
 }

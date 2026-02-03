@@ -67,7 +67,7 @@ const shouldSendRealEmail = !!process.env.RESEND_API_KEY && process.env.NODE_ENV
 
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const { name, email, password, university, referralCode } = await req.json();
+    const { name, email, password, university, referralCode, utmSource, utmCampaign } = await req.json();
 
     // Validation
     if (!email || !password) {
@@ -110,6 +110,8 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         name: name || null,
         passwordHash,
         trialEndsAt,
+        utmSource: utmSource || null,
+        utmCampaign: utmCampaign || null,
         settings: {
           create: {
             dueSoonWindowDays: 7,
@@ -218,11 +220,12 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
       if (admins.length > 0) {
         const userDisplay = user.name || user.email;
+        const utmInfo = utmSource ? ` [${utmSource}${utmCampaign ? `/${utmCampaign}` : ''}]` : '';
         await prisma.notification.createMany({
           data: admins.map((admin) => ({
             userId: admin.id,
             title: 'New User Signup',
-            message: `${userDisplay} just created an account${university ? ` (${university})` : ''}.`,
+            message: `${userDisplay} just created an account${university ? ` (${university})` : ''}${utmInfo}.`,
             type: 'new_user_signup',
           })),
         });

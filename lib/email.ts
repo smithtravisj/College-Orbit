@@ -4,6 +4,7 @@ import crypto from 'crypto';
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 const FROM_NAME = process.env.RESEND_FROM_NAME || 'College Orbit';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'collegeorbit@protonmail.com';
 
 // Create Resend instance only if API key is available
 function getResend() {
@@ -1427,5 +1428,194 @@ College Orbit © ${new Date().getFullYear()}
   } catch (error) {
     console.error('Resend error:', error);
     throw new Error('Failed to send weekly digest email');
+  }
+}
+
+interface SendPartnerInquiryNotificationParams {
+  type: 'club' | 'educator' | 'partner';
+  email: string;
+  name?: string;
+  clubName?: string;
+  school?: string;
+  memberCount?: string;
+  platform?: string;
+  role?: string;
+  audienceSize?: string;
+  website?: string;
+}
+
+/**
+ * Send partner inquiry notification to admin
+ */
+export async function sendPartnerInquiryNotification({
+  type,
+  email,
+  name,
+  clubName,
+  school,
+  memberCount,
+  platform,
+  role,
+  audienceSize,
+  website,
+}: SendPartnerInquiryNotificationParams): Promise<void> {
+  const typeLabels: Record<string, string> = {
+    club: 'Club Partnership',
+    educator: 'Educator Inquiry',
+    partner: 'Partner Application',
+  };
+
+  const typeLabel = typeLabels[type] || 'Partner Inquiry';
+
+  // Generate UTM signup link
+  const sanitize = (str: string) => str?.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || '';
+  let utmCampaign = '';
+  if (type === 'club' && clubName) {
+    utmCampaign = sanitize(clubName);
+    if (school) utmCampaign += '_' + sanitize(school);
+  } else if (type === 'educator' && school) {
+    utmCampaign = sanitize(school);
+    if (name) utmCampaign = sanitize(name) + '_' + utmCampaign;
+  } else if (type === 'partner' && name) {
+    utmCampaign = sanitize(name);
+    if (role) utmCampaign += '_' + sanitize(role);
+  }
+  const utmLink = `${APP_URL}/signup?utm_source=${type}&utm_campaign=${utmCampaign || 'general'}`;
+
+  let detailsHtml = '';
+  let detailsText = '';
+
+  if (type === 'club') {
+    detailsHtml = `
+      <tr><td style="padding: 8px 0; color: #71717a;">Club Name:</td><td style="padding: 8px 0; color: #fafafa; font-weight: 500;">${clubName || 'N/A'}</td></tr>
+      <tr><td style="padding: 8px 0; color: #71717a;">School:</td><td style="padding: 8px 0; color: #fafafa; font-weight: 500;">${school || 'N/A'}</td></tr>
+      <tr><td style="padding: 8px 0; color: #71717a;">Members:</td><td style="padding: 8px 0; color: #fafafa; font-weight: 500;">${memberCount || 'N/A'}</td></tr>
+      <tr><td style="padding: 8px 0; color: #71717a;">Platform:</td><td style="padding: 8px 0; color: #fafafa; font-weight: 500;">${platform || 'N/A'}</td></tr>
+    `;
+    detailsText = `Club Name: ${clubName || 'N/A'}\nSchool: ${school || 'N/A'}\nMembers: ${memberCount || 'N/A'}\nPlatform: ${platform || 'N/A'}`;
+  } else if (type === 'partner') {
+    detailsHtml = `
+      <tr><td style="padding: 8px 0; color: #71717a;">Role:</td><td style="padding: 8px 0; color: #fafafa; font-weight: 500;">${role || 'N/A'}</td></tr>
+      <tr><td style="padding: 8px 0; color: #71717a;">Audience Size:</td><td style="padding: 8px 0; color: #fafafa; font-weight: 500;">${audienceSize || 'N/A'}</td></tr>
+      <tr><td style="padding: 8px 0; color: #71717a;">Website:</td><td style="padding: 8px 0; color: #fafafa; font-weight: 500;">${website || 'N/A'}</td></tr>
+    `;
+    detailsText = `Role: ${role || 'N/A'}\nAudience Size: ${audienceSize || 'N/A'}\nWebsite: ${website || 'N/A'}`;
+  } else if (type === 'educator') {
+    detailsHtml = `
+      <tr><td style="padding: 8px 0; color: #71717a;">Role:</td><td style="padding: 8px 0; color: #fafafa; font-weight: 500;">${role || 'N/A'}</td></tr>
+      <tr><td style="padding: 8px 0; color: #71717a;">School:</td><td style="padding: 8px 0; color: #fafafa; font-weight: 500;">${school || 'N/A'}</td></tr>
+      <tr><td style="padding: 8px 0; color: #71717a;">Students:</td><td style="padding: 8px 0; color: #fafafa; font-weight: 500;">${audienceSize || 'N/A'}</td></tr>
+    `;
+    detailsText = `Role: ${role || 'N/A'}\nSchool: ${school || 'N/A'}\nStudents: ${audienceSize || 'N/A'}`;
+  }
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html style="margin: 0; padding: 0; background-color: #0a0a0b;">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #0a0a0b;" bgcolor="#0a0a0b">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0a0a0b;" bgcolor="#0a0a0b">
+        <tr>
+          <td align="center" style="padding: 40px 20px;" bgcolor="#0a0a0b">
+            <table width="560" cellpadding="0" cellspacing="0" border="0" style="background-color: #111113; border-radius: 20px; border: 1px solid #252528;" bgcolor="#111113">
+              <!-- Header -->
+              <tr>
+                <td style="padding: 40px 40px 20px 40px; text-align: center;" bgcolor="#111113">
+                  <p style="margin: 0 0 8px 0; font-size: 14px; color: #22c55e; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">
+                    New Inquiry
+                  </p>
+                  <h1 style="margin: 0; color: #fafafa; font-size: 28px; font-weight: 700; letter-spacing: -0.02em;">
+                    ${typeLabel}
+                  </h1>
+                </td>
+              </tr>
+
+              <!-- Body -->
+              <tr>
+                <td style="padding: 20px 40px 40px 40px; color: #a1a1aa; font-size: 16px; line-height: 1.6;">
+                  <div style="background-color: #1a1a1c; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px;">
+                      <tr><td style="padding: 8px 0; color: #71717a;">Name:</td><td style="padding: 8px 0; color: #fafafa; font-weight: 500;">${name || 'N/A'}</td></tr>
+                      <tr><td style="padding: 8px 0; color: #71717a;">Email:</td><td style="padding: 8px 0; color: #8b5cf6; font-weight: 500;"><a href="mailto:${email}" style="color: #8b5cf6;">${email}</a></td></tr>
+                      ${detailsHtml}
+                    </table>
+                  </div>
+
+                  <!-- UTM Signup Link -->
+                  <div style="background-color: #1a1a1c; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #71717a; text-transform: uppercase; letter-spacing: 0.05em;">
+                      Share this signup link with them:
+                    </p>
+                    <a href="${utmLink}" style="color: #a5b4fc; font-size: 14px; word-break: break-all;">
+                      ${utmLink}
+                    </a>
+                  </div>
+
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td align="center" style="padding: 20px 0;">
+                        <a href="mailto:${email}"
+                           style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+                                  color: #ffffff; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 16px;
+                                  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);">
+                          Reply to ${name || email}
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="padding: 20px 40px; background-color: #0f0f11; border-top: 1px solid #252528;
+                           text-align: center; color: #71717a; font-size: 13px; border-radius: 0 0 20px 20px;">
+                  <p style="margin: 0;">
+                    College Orbit Partner Program
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const textContent = `
+NEW ${typeLabel.toUpperCase()}
+
+Name: ${name || 'N/A'}
+Email: ${email}
+${detailsText}
+
+SHARE THIS SIGNUP LINK WITH THEM:
+${utmLink}
+
+Reply to this inquiry by emailing ${email}
+  `.trim();
+
+  try {
+    const resend = getResend();
+    if (!resend) {
+      throw new Error('Resend API key not configured');
+    }
+
+    await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: ADMIN_EMAIL,
+      replyTo: email,
+      subject: `[Partner] New ${typeLabel}: ${name || email}`,
+      html: htmlContent,
+      text: textContent,
+    });
+    console.log(`Partner inquiry notification sent for ${email}`);
+  } catch (error) {
+    console.error('Resend error:', error);
+    throw new Error('Failed to send partner inquiry notification');
   }
 }

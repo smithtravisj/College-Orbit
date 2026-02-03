@@ -465,45 +465,37 @@ export default function LandingPage() {
         }
 
         .footer-section {
-          padding: 40px 24px;
-          text-align: center;
+          padding: 48px 24px 32px;
           position: relative;
           z-index: 1;
           border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .footer-content {
-          max-width: 600px;
+          max-width: 500px;
           margin: 0 auto;
         }
 
-        .footer-contact {
-          margin-bottom: 20px;
-        }
-
-        .footer-contact-label {
-          font-size: 13px;
-          color: #64748b;
-          margin-bottom: 6px;
-        }
-
-        .footer-contact-email {
-          font-size: 15px;
-          color: #a5b4fc;
-          text-decoration: none;
-          font-weight: 500;
-          transition: color 0.2s ease;
-        }
-
-        .footer-contact-email:hover {
-          color: #c4b5fd;
-        }
-
-        .footer-links {
+        .footer-columns {
           display: flex;
-          gap: 28px;
           justify-content: center;
-          margin-top: 16px;
+          gap: 80px;
+          margin-bottom: 32px;
+        }
+
+        .footer-column {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .footer-column-title {
+          font-size: 13px;
+          font-weight: 600;
+          color: #94a3b8;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 4px;
         }
 
         .footer-link {
@@ -517,10 +509,31 @@ export default function LandingPage() {
           color: #e2e8f0;
         }
 
+        .footer-bottom {
+          text-align: center;
+          padding-top: 24px;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .footer-contact {
+          margin-bottom: 12px;
+        }
+
+        .footer-contact-email {
+          font-size: 14px;
+          color: #a5b4fc;
+          text-decoration: none;
+          font-weight: 500;
+          transition: color 0.2s ease;
+        }
+
+        .footer-contact-email:hover {
+          color: #c4b5fd;
+        }
+
         .footer-copyright {
           font-size: 12px;
           color: #475569;
-          margin-top: 20px;
         }
 
         @media (max-width: 640px) {
@@ -667,16 +680,28 @@ export default function LandingPage() {
           }
 
           .footer-section {
-            padding: 20px 16px;
+            padding: 32px 16px 24px;
           }
 
-          .footer-links {
-            gap: 20px;
-            margin-top: 0;
+          .footer-columns {
+            gap: 48px;
+            margin-bottom: 24px;
+          }
+
+          .footer-column-title {
+            font-size: 11px;
           }
 
           .footer-link {
-            font-size: 12px;
+            font-size: 13px;
+          }
+
+          .footer-bottom {
+            padding-top: 20px;
+          }
+
+          .footer-contact-email {
+            font-size: 13px;
           }
 
           .bg-orb-1 {
@@ -834,6 +859,14 @@ export default function LandingPage() {
             border-top-color: rgba(99, 102, 241, 0.08);
           }
 
+          .footer-bottom {
+            border-top-color: rgba(99, 102, 241, 0.08);
+          }
+
+          .footer-column-title {
+            color: #64748b;
+          }
+
           .footer-contact-email {
             color: #6366f1;
           }
@@ -970,18 +1003,28 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="footer-section">
         <div className="footer-content">
-          <div className="footer-contact">
-            <p className="footer-contact-label">Questions or feedback?</p>
-            <a href="mailto:collegeorbit@protonmail.com" className="footer-contact-email">
-              collegeorbit@protonmail.com
-            </a>
+          <div className="footer-columns">
+            <div className="footer-column">
+              <p className="footer-column-title">Product</p>
+              <Link href="/pricing" className="footer-link">Pricing</Link>
+              <Link href="/privacy" className="footer-link">Privacy</Link>
+              <Link href="/terms" className="footer-link">Terms</Link>
+            </div>
+            <div className="footer-column">
+              <p className="footer-column-title">Partner With Us</p>
+              <Link href="/clubs" className="footer-link">For Clubs</Link>
+              <Link href="/educators" className="footer-link">For Educators</Link>
+              <Link href="/partners" className="footer-link">For Partners</Link>
+            </div>
           </div>
-          <div className="footer-links">
-            <Link href="/pricing" className="footer-link">Pricing</Link>
-            <Link href="/privacy" className="footer-link">Privacy</Link>
-            <Link href="/terms" className="footer-link">Terms</Link>
+          <div className="footer-bottom">
+            <div className="footer-contact">
+              <a href="mailto:collegeorbit@protonmail.com" className="footer-contact-email">
+                collegeorbit@protonmail.com
+              </a>
+            </div>
+            <p className="footer-copyright">© {new Date().getFullYear()} College Orbit</p>
           </div>
-          <p className="footer-copyright">© {new Date().getFullYear()} College Orbit</p>
         </div>
       </footer>
     </div>

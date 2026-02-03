@@ -75,8 +75,18 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   }, [isMobile, status, loadFromDatabase]);
 
   const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password' || pathname === '/reset-password';
+  const isPartnerPage = pathname === '/clubs' || pathname === '/educators' || pathname === '/partners';
   const isPublicPage = pathname === '/privacy' || pathname === '/terms';
   const isPricingPage = pathname === '/pricing' && status === 'unauthenticated';
+
+  // Partner pages - always full screen, no navigation (even for authenticated users)
+  if (isPartnerPage) {
+    return (
+      <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg)' }}>
+        {children}
+      </div>
+    );
+  }
 
   // Landing page detection - show for unauthenticated users on root path
   // Wait for session to be determined (not loading) before deciding

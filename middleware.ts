@@ -19,7 +19,10 @@ export async function middleware(request: NextRequest) {
   const isPublicPage =
     request.nextUrl.pathname.startsWith('/privacy') ||
     request.nextUrl.pathname.startsWith('/terms') ||
-    request.nextUrl.pathname.startsWith('/pricing');
+    request.nextUrl.pathname.startsWith('/pricing') ||
+    request.nextUrl.pathname.startsWith('/clubs') ||
+    request.nextUrl.pathname.startsWith('/educators') ||
+    request.nextUrl.pathname.startsWith('/partners');
 
   // Landing page is public - unauthenticated users see landing, authenticated see dashboard
   const isLandingPage = request.nextUrl.pathname === '/';

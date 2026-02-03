@@ -35,6 +35,10 @@ export default function SignupForm() {
   const [referrerName, setReferrerName] = useState<string | null>(null);
   const [referralValid, setReferralValid] = useState<boolean | null>(null);
 
+  // UTM tracking
+  const [utmSource, setUtmSource] = useState<string | null>(null);
+  const [utmCampaign, setUtmCampaign] = useState<string | null>(null);
+
   // Fetch colleges from API (database is source of truth)
   useEffect(() => {
     const fetchColleges = async () => {
@@ -52,8 +56,15 @@ export default function SignupForm() {
     fetchColleges();
   }, []);
 
-  // Check for referral code in URL
+  // Check for referral code and UTM params in URL
   useEffect(() => {
+    // Capture UTM params
+    const source = searchParams.get('utm_source');
+    const campaign = searchParams.get('utm_campaign');
+    if (source) setUtmSource(source);
+    if (campaign) setUtmCampaign(campaign);
+
+    // Check referral code
     const refCode = searchParams.get('ref');
     if (refCode) {
       setReferralCode(refCode.toUpperCase());
@@ -113,6 +124,8 @@ export default function SignupForm() {
           password,
           university,
           referralCode: referralValid ? referralCode : undefined,
+          utmSource: utmSource || undefined,
+          utmCampaign: utmCampaign || undefined,
         }),
       });
 
