@@ -13,6 +13,7 @@ import { CanvasBadge } from './CanvasBadge';
 import { BlackboardBadge } from './BlackboardBadge';
 import { MoodleBadge } from './MoodleBadge';
 import { BrightspaceBadge } from './BrightspaceBadge';
+import { LearningSuiteBadge } from './LearningSuiteBadge';
 import { showDeleteToast } from './ui/DeleteToast';
 
 interface CourseListProps {
@@ -175,6 +176,7 @@ export default function CourseList({
                   {course.blackboardCourseId && <BlackboardBadge />}
                   {course.moodleCourseId && <MoodleBadge />}
                   {course.brightspaceCourseId && <BrightspaceBadge />}
+                  {(course.learningSuiteCourseId || course.links?.some(l => l.label === 'Learning Suite')) && <LearningSuiteBadge />}
                 </h3>
               </div>
               {showSemester && course.term && (

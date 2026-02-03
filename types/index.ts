@@ -34,6 +34,8 @@ export interface Course {
   // Brightspace LMS Integration
   brightspaceCourseId?: string | null;
   brightspaceEnrollmentId?: string | null;
+  // Learning Suite (BYU) Integration
+  learningSuiteCourseId?: string | null;
 }
 
 export interface Deadline {

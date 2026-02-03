@@ -338,45 +338,197 @@ function scrapeAssignmentData() {
   return null;
 }
 
+// Track current work item state
+let currentWorkItem = { id: null, status: null };
+
+// Update button state and dropdown options
+function updateButtonState(state, workItemId = null, workItemStatus = null) {
+  console.log('[College Orbit LS] updateButtonState called with:', { state, workItemId, workItemStatus });
+  const btn = document.getElementById('orbit-add-btn');
+  const dropdown = document.getElementById('orbit-dropdown');
+  if (!btn || !dropdown) {
+    console.log('[College Orbit LS] Button or dropdown not found!');
+    return;
+  }
+
+  currentWorkItem = { id: workItemId, status: workItemStatus };
+
+  // Clear dropdown
+  dropdown.innerHTML = '';
+
+  switch (state) {
+    case 'add':
+      btn.textContent = '+ Add to Orbit';
+      btn.className = '';
+      btn.disabled = false;
+      // Restore bottom positioning for Learning Suite
+      btn.style.top = 'auto';
+      btn.style.bottom = '24px';
+      break;
+
+    case 'added':
+    case 'exists':
+      btn.textContent = '\u2713 In Orbit';
+      btn.className = 'orbit-added has-dropdown';
+      btn.disabled = false;
+
+      // Add dropdown options
+      const markCompleteBtn = document.createElement('button');
+      markCompleteBtn.className = 'orbit-dropdown-item success';
+      markCompleteBtn.textContent = 'Mark Complete';
+      markCompleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        markWorkItem('complete');
+      });
+
+      const viewBtn = document.createElement('button');
+      viewBtn.className = 'orbit-dropdown-item';
+      viewBtn.textContent = 'View in Orbit';
+      viewBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.open(`https://collegeorbit.app/work?task=${workItemId}`, '_blank');
+        dropdown.classList.remove('show');
+      });
+
+      dropdown.appendChild(markCompleteBtn);
+      dropdown.appendChild(viewBtn);
+      break;
+
+    case 'completed':
+      btn.textContent = '\u2713 Completed';
+      btn.className = 'orbit-completed has-dropdown';
+      btn.disabled = false;
+
+      // Add dropdown options
+      const markIncompleteBtn = document.createElement('button');
+      markIncompleteBtn.className = 'orbit-dropdown-item warning';
+      markIncompleteBtn.textContent = 'Mark Incomplete';
+      markIncompleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        markWorkItem('incomplete');
+      });
+
+      const viewBtn2 = document.createElement('button');
+      viewBtn2.className = 'orbit-dropdown-item';
+      viewBtn2.textContent = 'View in Orbit';
+      viewBtn2.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.open(`https://collegeorbit.app/work?task=${workItemId}`, '_blank');
+        dropdown.classList.remove('show');
+      });
+
+      dropdown.appendChild(markIncompleteBtn);
+      dropdown.appendChild(viewBtn2);
+      break;
+  }
+}
+
+// Mark work item complete/incomplete
+function markWorkItem(action) {
+  const btn = document.getElementById('orbit-add-btn');
+  const dropdown = document.getElementById('orbit-dropdown');
+  if (!btn || !currentWorkItem.id) return;
+
+  dropdown.classList.remove('show');
+  btn.textContent = action === 'complete' ? 'Completing...' : 'Updating...';
+  btn.disabled = true;
+
+  const messageType = action === 'complete' ? 'MARK_COMPLETE' : 'MARK_INCOMPLETE';
+
+  chrome.runtime.sendMessage(
+    { type: messageType, workItemId: currentWorkItem.id },
+    (response) => {
+      if (chrome.runtime.lastError || !response?.success) {
+        btn.textContent = 'Error — try again';
+        btn.disabled = false;
+        setTimeout(() => {
+          updateButtonState(
+            currentWorkItem.status === 'done' ? 'completed' : 'exists',
+            currentWorkItem.id,
+            currentWorkItem.status
+          );
+        }, 2000);
+        return;
+      }
+
+      const newStatus = response.status;
+      updateButtonState(
+        newStatus === 'done' ? 'completed' : 'exists',
+        currentWorkItem.id,
+        newStatus
+      );
+    }
+  );
+}
+
 function checkIfAlreadyAdded(data) {
   const btn = document.getElementById('orbit-add-btn');
   if (!btn) return;
   if (!data?.title) {
     // Reset button if no assignment expanded
-    btn.textContent = '+ Add to Orbit';
-    btn.classList.remove('orbit-added');
-    btn.disabled = false;
-    btn.onclick = null;
+    updateButtonState('add');
     return;
   }
   chrome.runtime.sendMessage(
     { type: 'CHECK_ASSIGNMENT_EXISTS', title: data.title, canvasUrl: data.canvasUrl },
     (response) => {
-      if (chrome.runtime.lastError) return;
+      console.log('[College Orbit LS] checkIfAlreadyAdded response:', response);
+      if (chrome.runtime.lastError) {
+        console.log('[College Orbit LS] Runtime error:', chrome.runtime.lastError);
+        return;
+      }
       if (response?.exists) {
-        btn.textContent = '\u2713 Already in Orbit';
-        btn.classList.add('orbit-added');
+        const state = response.status === 'done' ? 'completed' : 'exists';
+        console.log('[College Orbit LS] Item exists, state:', state);
+        updateButtonState(state, response.workItemId, response.status);
       } else {
-        btn.textContent = '+ Add to Orbit';
-        btn.classList.remove('orbit-added');
-        btn.disabled = false;
+        console.log('[College Orbit LS] Item does not exist');
+        updateButtonState('add');
       }
     }
   );
 }
 
-// Inject floating button
+// Inject floating button with dropdown
 function injectButton() {
-  if (document.getElementById('orbit-add-btn')) return;
+  if (document.getElementById('orbit-btn-container')) return;
 
+  // Create container
+  const container = document.createElement('div');
+  container.id = 'orbit-btn-container';
+  container.className = 'orbit-btn-container';
+  // Position bottom-right for Learning Suite
+  container.style.top = 'auto';
+  container.style.bottom = '24px';
+
+  // Create main button
   const btn = document.createElement('button');
   btn.id = 'orbit-add-btn';
   btn.textContent = '+ Add to Orbit';
-  btn.addEventListener('click', () => {
-    if (btn.classList.contains('orbit-added')) {
-      window.open('https://collegeorbit.app/work', '_blank');
+
+  // Create dropdown menu
+  const dropdown = document.createElement('div');
+  dropdown.id = 'orbit-dropdown';
+  dropdown.className = 'orbit-dropdown';
+  // Position dropdown above button on Learning Suite
+  dropdown.style.top = 'auto';
+  dropdown.style.bottom = '100%';
+  dropdown.style.marginTop = '0';
+  dropdown.style.marginBottom = '6px';
+
+  container.appendChild(btn);
+  container.appendChild(dropdown);
+
+  // Main button click handler
+  btn.addEventListener('click', (e) => {
+    // If button has dropdown, toggle it
+    if (btn.classList.contains('has-dropdown')) {
+      e.stopPropagation();
+      dropdown.classList.toggle('show');
       return;
     }
+
+    // Otherwise, add to Orbit
     const data = scrapeAssignmentData();
     if (!data || !data.title) {
       btn.textContent = 'Expand an assignment first';
@@ -394,22 +546,22 @@ function injectButton() {
         setTimeout(() => { btn.textContent = '+ Add to Orbit'; }, 3000);
         return;
       }
-      btn.textContent = '\u2713 Added to Orbit';
-      btn.classList.add('orbit-added');
-      // Reset after a few seconds so user can add another assignment
+      // After adding, check for the item to get its ID and show dropdown
       setTimeout(() => {
-        btn.textContent = '+ Add to Orbit';
-        btn.classList.remove('orbit-added');
-        btn.disabled = false;
-      }, 3000);
+        const newData = scrapeAssignmentData();
+        checkIfAlreadyAdded(newData);
+      }, 500);
     });
   });
 
-  // Position bottom-right on Learning Suite (CSS default is top-right for Canvas)
-  btn.style.top = 'auto';
-  btn.style.bottom = '24px';
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!container.contains(e.target)) {
+      dropdown.classList.remove('show');
+    }
+  });
 
-  document.body.appendChild(btn);
+  document.body.appendChild(container);
 }
 
 // Listen for messages from popup
@@ -418,11 +570,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse(scrapeAssignmentData());
   }
   if (message.type === 'ASSIGNMENT_ADDED') {
-    const btn = document.getElementById('orbit-add-btn');
-    if (btn) {
-      btn.textContent = '\u2713 Added to Orbit';
-      btn.classList.add('orbit-added');
-    }
+    // Re-check to get the work item ID and show dropdown
+    setTimeout(() => {
+      const data = scrapeAssignmentData();
+      checkIfAlreadyAdded(data);
+    }, 500);
   }
 });
 
@@ -456,8 +608,8 @@ let lastUrl = window.location.href;
 const observer = new MutationObserver(() => {
   if (window.location.href !== lastUrl) {
     lastUrl = window.location.href;
-    const btn = document.getElementById('orbit-add-btn');
-    if (btn) btn.remove();
+    const container = document.getElementById('orbit-btn-container');
+    if (container) container.remove();
     setTimeout(init, 1000);
   }
 });

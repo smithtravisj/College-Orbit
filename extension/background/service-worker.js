@@ -42,25 +42,46 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const canvasUrl = message.canvasUrl || '';
         const title = (message.title || '').toLowerCase().trim();
 
-        const exists = items.some((w) => {
+        let foundItem = null;
+        for (const w of items) {
           // Check links for matching URL (strip query params for comparison)
           const linkUrls = (w.links || []).map((l) => (l.url || '').split('?')[0]);
-          if (canvasUrl && linkUrls.some((u) => u === canvasUrl)) return true;
-          if (assignmentId && linkUrls.some((u) => u.includes(assignmentId))) return true;
+          if (canvasUrl && linkUrls.some((u) => u === canvasUrl)) { foundItem = w; break; }
+          if (assignmentId && linkUrls.some((u) => u.includes(assignmentId))) { foundItem = w; break; }
           // Check canvasAssignmentId field
-          if (assignmentId && (w.canvasAssignmentId === assignmentId || w.canvasAssignmentId === String(assignmentId))) return true;
-          // Check title match (exact or substring to handle prefix stripping)
+          if (assignmentId && (w.canvasAssignmentId === assignmentId || w.canvasAssignmentId === String(assignmentId))) { foundItem = w; break; }
+          // Check title match - EXACT match only to avoid false positives
           if (title) {
             const wTitle = (w.title || '').toLowerCase().trim();
-            if (wTitle === title) return true;
-            if (wTitle && (wTitle.includes(title) || title.includes(wTitle))) return true;
+            if (wTitle === title) { foundItem = w; break; }
           }
-          return false;
-        });
+        }
 
-        sendResponse({ exists });
+        if (foundItem) {
+          console.log('[College Orbit SW] Found item:', { id: foundItem.id, status: foundItem.status, title: foundItem.title });
+          sendResponse({ exists: true, workItemId: foundItem.id, status: foundItem.status });
+        } else {
+          console.log('[College Orbit SW] Item not found');
+          sendResponse({ exists: false });
+        }
       } catch {
         sendResponse({ exists: false });
+      }
+    })();
+    return true;
+  }
+
+  if (message.type === 'MARK_COMPLETE' || message.type === 'MARK_INCOMPLETE') {
+    (async () => {
+      try {
+        const newStatus = message.type === 'MARK_COMPLETE' ? 'done' : 'open';
+        await OrbitAPI.fetch(`/api/work/${message.workItemId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: newStatus }),
+        });
+        sendResponse({ success: true, status: newStatus });
+      } catch (e) {
+        sendResponse({ success: false, error: e.message });
       }
     })();
     return true;
@@ -79,22 +100,74 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             ...(d.discussionUrl ? [{ label: 'Discussion', url: d.discussionUrl }] : []),
           ],
           type: 'assignment',
+          canvasAssignmentId: d.canvasAssignmentId || null,
         };
 
-        // Try to auto-match course
+        // Try to auto-match course or create it for Learning Suite
         try {
           const courseData = await OrbitAPI.fetch('/api/courses');
           const courses = courseData.courses || [];
-          if (d.courseName && courses.length) {
+
+          if (d.courseName) {
             const name = d.courseName.toLowerCase();
-            const match = courses.find(
-              (c) =>
-                (c.name || '').toLowerCase().includes(name) ||
-                name.includes((c.name || '').toLowerCase()) ||
-                (c.code || '').toLowerCase().includes(name) ||
-                name.includes((c.code || '').toLowerCase())
-            );
-            if (match) body.courseId = match.id;
+
+            // For Learning Suite, also check by lsCourseId
+            let match = null;
+            if (d.source === 'learningsuite' && d.lsCourseId) {
+              match = courses.find((c) => c.learningSuiteCourseId === d.lsCourseId);
+            }
+
+            // If not found by ID, try name matching
+            if (!match) {
+              match = courses.find(
+                (c) =>
+                  (c.name || '').toLowerCase().includes(name) ||
+                  name.includes((c.name || '').toLowerCase()) ||
+                  (c.code || '').toLowerCase().includes(name) ||
+                  name.includes((c.code || '').toLowerCase())
+              );
+            }
+
+            if (match) {
+              body.courseId = match.id;
+            } else if (d.source === 'learningsuite' && d.courseName) {
+              // Auto-create course for Learning Suite
+              console.log('[College Orbit SW] Creating new course for Learning Suite:', d.courseName);
+
+              // Parse course name - usually "CODE 123 - Course Name" or "CODE 123"
+              const courseNameParts = d.courseName.match(/^([A-Z]{2,5}\s*\d{3}\S*)\s*[-–]?\s*(.*)$/i);
+              const code = courseNameParts ? courseNameParts[1].trim() : d.courseName;
+              const courseName = courseNameParts && courseNameParts[2] ? courseNameParts[2].trim() : '';
+
+              // Get current term (e.g., "Winter 2026")
+              const now = new Date();
+              const month = now.getMonth();
+              let term;
+              if (month >= 0 && month <= 3) term = 'Winter';
+              else if (month >= 4 && month <= 5) term = 'Spring';
+              else if (month >= 6 && month <= 7) term = 'Summer';
+              else term = 'Fall';
+              term += ' ' + now.getFullYear();
+
+              try {
+                const newCourse = await OrbitAPI.fetch('/api/courses', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    code,
+                    name: courseName,
+                    term,
+                    learningSuiteCourseId: d.lsCourseId || null,
+                    links: d.lsCourseId ? [{ label: 'Learning Suite', url: `https://learningsuite.byu.edu/cid-${d.lsCourseId}/student/top` }] : [],
+                  }),
+                });
+                if (newCourse.course?.id) {
+                  body.courseId = newCourse.course.id;
+                  console.log('[College Orbit SW] Created course:', newCourse.course.id);
+                }
+              } catch (courseErr) {
+                console.error('[College Orbit SW] Failed to create course:', courseErr);
+              }
+            }
           }
         } catch {}
 

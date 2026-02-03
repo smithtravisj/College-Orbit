@@ -27,18 +27,121 @@
 }
 
 #orbit-add-btn.orbit-added {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
-  cursor: default;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
 }
 
 #orbit-add-btn.orbit-added:hover {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
-  transform: none;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
 }
 
 #orbit-add-btn.orbit-exists {
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   font-size: 12px;
+}
+
+#orbit-add-btn.orbit-completed {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+}
+
+#orbit-add-btn.orbit-completed:hover {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.45);
+}
+
+/* Dropdown container */
+.orbit-btn-container {
+  position: fixed;
+  top: 12px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.orbit-btn-container #orbit-add-btn {
+  position: relative;
+  top: auto;
+  right: auto;
+  z-index: 1;
+}
+
+/* Dropdown arrow */
+#orbit-add-btn.has-dropdown::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: 8px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid rgba(255, 255, 255, 0.8);
+  vertical-align: middle;
+}
+
+/* Dropdown menu */
+.orbit-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  min-width: 160px;
+  overflow: hidden;
+  z-index: 100000;
+}
+
+.orbit-dropdown.show {
+  display: block;
+}
+
+.orbit-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: #fafafa;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.orbit-dropdown-item:hover {
+  background: #27272a;
+}
+
+.orbit-dropdown-item:first-child {
+  border-radius: 9px 9px 0 0;
+}
+
+.orbit-dropdown-item:last-child {
+  border-radius: 0 0 9px 9px;
+}
+
+.orbit-dropdown-item:only-child {
+  border-radius: 9px;
+}
+
+.orbit-dropdown-item.primary {
+  color: #a78bfa;
+}
+
+.orbit-dropdown-item.success {
+  color: #4ade80;
+}
+
+.orbit-dropdown-item.warning {
+  color: #fbbf24;
 }

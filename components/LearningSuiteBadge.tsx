@@ -8,12 +8,13 @@ interface LearningSuiteBadgeProps {
 }
 
 /**
- * A small badge indicating an item was added from Learning Suite (BYU).
- * Blue color matching BYU branding.
+ * A small badge/icon indicating an item was added from Learning Suite.
+ * Uses link color for a subtle appearance.
  */
 export function LearningSuiteBadge({ size = 'sm', className = '' }: LearningSuiteBadgeProps) {
   const { settings } = useAppStore();
 
+  // Check if Canvas badges should be shown (reuse this setting for all LMS badges)
   if (settings.showCanvasBadges === false) {
     return null;
   }
@@ -23,15 +24,15 @@ export function LearningSuiteBadge({ size = 'sm', className = '' }: LearningSuit
 
   return (
     <span
-      title="Added from Learning Suite (BYU)"
+      title="Added from Learning Suite"
       className={className}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
         padding,
         borderRadius: '4px',
-        backgroundColor: 'rgba(54, 147, 247, 0.15)',
-        color: '#3693f7',
+        backgroundColor: 'color-mix(in srgb, var(--link) 15%, transparent)',
+        color: 'var(--link)',
         fontSize,
         fontWeight: 500,
         lineHeight: 1,

@@ -130,6 +130,9 @@ model Course {
   brightspaceCourseId     String?
   brightspaceEnrollmentId String?
 
+  // Learning Suite (BYU) Integration
+  learningSuiteCourseId String?
+
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   deadlines      Deadline[]
   exams          Exam[]
@@ -146,6 +149,7 @@ model Course {
   @@index([blackboardCourseId])
   @@index([moodleCourseId])
   @@index([brightspaceCourseId])
+  @@index([learningSuiteCourseId])
 }
 
 model Deadline {

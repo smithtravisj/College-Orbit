@@ -61,6 +61,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         links: data.links || [],
         files: data.files || [],
         colorTag: data.colorTag,
+        learningSuiteCourseId: data.learningSuiteCourseId ?? null,
       },
     });
 
