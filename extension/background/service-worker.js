@@ -186,14 +186,37 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             // No new description, keep existing notes as-is
           }
 
-          // Only update title, due date, and notes
-          // Don't touch links - user can manage those manually
+          // Fetch current item to get existing links
+          const currentItem = await OrbitAPI.fetch(`/api/work/${message.existingWorkItemId}`);
+          const existingLinks = currentItem?.workItem?.links || [];
+
+          // Check if LMS link already exists
+          const lmsLinkExists = existingLinks.some(l =>
+            l.label === sourceLabel ||
+            (d.canvasUrl && l.url === d.canvasUrl)
+          );
+
+          // Build new links array - keep existing, add LMS link if not present
+          let newLinks = [...existingLinks];
+          if (!lmsLinkExists && d.canvasUrl) {
+            newLinks.push({ label: sourceLabel, url: d.canvasUrl });
+          }
+
+          // Add discussion link if not present
+          if (d.discussionUrl) {
+            const discussionExists = existingLinks.some(l => l.label === 'Discussion' || l.url === d.discussionUrl);
+            if (!discussionExists) {
+              newLinks.push({ label: 'Discussion', url: d.discussionUrl });
+            }
+          }
+
           await OrbitAPI.fetch(`/api/work/${message.existingWorkItemId}`, {
             method: 'PATCH',
             body: JSON.stringify({
               title: d.title,
               dueAt: d.dueDate || null,
               notes,
+              links: newLinks,
             }),
           });
 
