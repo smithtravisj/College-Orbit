@@ -306,6 +306,7 @@ model Exam {
   tags               Json                  @default("[]")
   status             String                @default("scheduled")
   links              Json                  @default("[]")
+  files              Json                  @default("[]")
   createdAt          DateTime              @default(now())
   updatedAt          DateTime              @updatedAt
   instanceDate       DateTime?

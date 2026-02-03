@@ -13,7 +13,8 @@ import FileUpload from '@/components/ui/FileUpload';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import CourseForm from '@/components/CourseForm';
-import { ChevronDown, Crown } from 'lucide-react';
+import { ChevronDown, Crown, FileIcon } from 'lucide-react';
+import FilePreviewModal from '@/components/FilePreviewModal';
 import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
 import Link from 'next/link';
@@ -1881,7 +1882,10 @@ interface ExamContentProps {
 
 function ExamContent({ exam, relatedCourse }: ExamContentProps) {
   const isMobile = useIsMobile();
+  const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
+
   return (
+    <>
     <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
       {relatedCourse && (
         <div>
@@ -1966,7 +1970,54 @@ function ExamContent({ exam, relatedCourse }: ExamContentProps) {
           </div>
         </div>
       )}
+
+      {exam.files && exam.files.length > 0 && (
+        <div>
+          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
+            Files
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
+            {exam.files.map((file, idx) => (
+              <button
+                key={file.url}
+                type="button"
+                onClick={() => setPreviewingFile({ file, allFiles: exam.files!, index: idx })}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  color: 'var(--link)',
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  textAlign: 'left',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.textDecoration = 'underline';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.textDecoration = 'none';
+                }}
+              >
+                <FileIcon size={14} />
+                {file.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <FilePreviewModal
+        file={previewingFile?.file ?? null}
+        files={previewingFile?.allFiles}
+        currentIndex={previewingFile?.index ?? 0}
+        onClose={() => setPreviewingFile(null)}
+        onNavigate={(file, index) => setPreviewingFile(prev => prev ? { ...prev, file, index } : null)}
+      />
     </div>
+    </>
   );
 }
 

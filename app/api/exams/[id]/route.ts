@@ -98,6 +98,11 @@ export async function PATCH(
           label: l.label || new URL(l.url).hostname,
           url: l.url,
         })) : existingExam.links,
+        files: 'files' in data ? (data.files || []).filter((f: any) => f.url).map((f: any) => ({
+          name: f.name,
+          url: f.url,
+          size: f.size || 0,
+        })) : (existingExam as any).files || [],
         status: 'status' in data ? data.status : existingExam.status,
       },
       include: {

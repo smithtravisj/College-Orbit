@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -13,7 +13,7 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, MapPin, Check, X, ChevronDown, StickyNote } from 'lucide-react';
+import { Plus, Trash2, Edit2, MapPin, Check, X, ChevronDown, StickyNote, FileIcon, Upload } from 'lucide-react';
 import Link from 'next/link';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
@@ -30,6 +30,7 @@ import {
 } from '@/components/BulkActionModals';
 import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
+import FilePreviewModal from '@/components/FilePreviewModal';
 
 export default function ExamsPage() {
   const isMobile = useIsMobile();
@@ -66,7 +67,10 @@ export default function ExamsPage() {
     notes: '',
     tags: [] as string[],
     links: [{ label: '', url: '' }],
+    files: [] as Array<{ name: string; url: string; size: number }>,
   });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
   const [filter, setFilter] = useState('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
   const [courseFilter, setCourseFilter] = useState('');
@@ -218,6 +222,7 @@ export default function ExamsPage() {
       notes: formData.notes,
       tags: formData.tags,
       links,
+      files: formData.files,
       status: 'scheduled' as const,
     };
 
@@ -234,6 +239,7 @@ export default function ExamsPage() {
         notes: formData.notes,
         tags: formData.tags,
         links,
+        files: formData.files,
       });
       setEditingId(null);
     } else {
@@ -242,7 +248,7 @@ export default function ExamsPage() {
       addExam(payload);
     }
 
-    setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', tags: [], links: [{ label: '', url: '' }] });
+    setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', tags: [], links: [{ label: '', url: '' }], files: [] });
     setShowForm(false);
   };
 
@@ -268,6 +274,7 @@ export default function ExamsPage() {
       notes: exam.notes,
       tags: exam.tags || [],
       links: exam.links && exam.links.length > 0 ? exam.links : [{ label: '', url: '' }],
+      files: exam.files || [],
     });
     setShowForm(true);
   };
@@ -275,8 +282,38 @@ export default function ExamsPage() {
   const cancelEdit = () => {
     setEditingId(null);
     setNlpInput('');
-    setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', tags: [], links: [{ label: '', url: '' }] });
+    setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', tags: [], links: [{ label: '', url: '' }], files: [] });
     setShowForm(false);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
+
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i];
+      if (file.size > 10 * 1024 * 1024) continue; // 10MB limit
+
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      try {
+        const response = await fetch('/api/files', {
+          method: 'POST',
+          body: formDataUpload,
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setFormData(prev => ({ ...prev, files: [...(prev.files || []), data.file] }));
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+      }
+    }
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   // Handle NLP input change
@@ -550,7 +587,7 @@ export default function ExamsPage() {
               if (editingId || !showForm) {
                 setEditingId(null);
                 setNlpInput('');
-                setFormData({ title: '', courseId: courseFilter || '', examDate: '', examTime: '', location: '', notes: '', tags: Array.from(selectedTags), links: [{ label: '', url: '' }] });
+                setFormData({ title: '', courseId: courseFilter || '', examDate: '', examTime: '', location: '', notes: '', tags: Array.from(selectedTags), links: [{ label: '', url: '' }], files: [] });
                 setShowForm(true);
               } else {
                 setShowForm(false);
@@ -914,6 +951,80 @@ export default function ExamsPage() {
                     Add Link
                   </Button>
                 </div>
+
+                {/* Files */}
+                <div style={{ marginTop: isMobile ? '8px' : '10px' }}>
+                  <label className="block font-semibold text-[var(--text)]" style={{ fontSize: isMobile ? '15px' : '18px', marginBottom: isMobile ? '4px' : '8px' }}>Files</label>
+                  {formData.files && formData.files.length > 0 && (
+                    <div style={{ paddingBottom: isMobile ? '4px' : '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {formData.files.map((file, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '4px 8px',
+                            backgroundColor: 'var(--panel-2)',
+                            borderRadius: '6px',
+                            fontSize: isMobile ? '0.7rem' : '0.8rem',
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setPreviewingFile({ file, allFiles: formData.files, index })}
+                            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', flexShrink: 0 }}
+                            title="Preview file"
+                          >
+                            <FileIcon size={14} />
+                          </button>
+                          <input
+                            type="text"
+                            value={file.name}
+                            onChange={(e) => {
+                              const newFiles = [...formData.files];
+                              newFiles[index] = { ...newFiles[index], name: e.target.value };
+                              setFormData({ ...formData, files: newFiles });
+                            }}
+                            style={{
+                              flex: 1,
+                              background: 'transparent',
+                              border: 'none',
+                              color: 'var(--text)',
+                              fontSize: 'inherit',
+                              outline: 'none',
+                              padding: 0,
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, files: formData.files.filter((_, i) => i !== index) })}
+                            style={{ background: 'none', border: 'none', padding: '2px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileUpload}
+                    style={{ display: 'none' }}
+                  />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{ paddingLeft: isMobile ? '10px' : '16px', paddingRight: isMobile ? '10px' : '16px' }}
+                  >
+                    <Upload size={isMobile ? 12 : 16} />
+                    Upload File
+                  </Button>
+                </div>
                 </>
                 )}
                 <div className={isMobile ? 'flex gap-2' : 'flex gap-3'} style={{ paddingTop: isMobile ? '6px' : '4px' }}>
@@ -1093,6 +1204,35 @@ export default function ExamsPage() {
                               >
                                 {link.label}
                               </a>
+                            ))}
+                          </div>
+                        )}
+                        {exam.files && exam.files.length > 0 && (
+                          <div className="flex flex-wrap" style={{ gap: '4px', marginTop: '4px' }}>
+                            {exam.files.map((file: any, fileIndex: number) => (
+                              <button
+                                key={file.url}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPreviewingFile({ file, allFiles: exam.files!, index: fileIndex });
+                                }}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  fontSize: isMobile ? '10px' : '11px',
+                                  color: 'var(--link)',
+                                  background: 'none',
+                                  border: 'none',
+                                  padding: 0,
+                                  cursor: 'pointer',
+                                }}
+                                className="hover:underline"
+                              >
+                                <FileIcon size={12} />
+                                {file.name}
+                              </button>
                             ))}
                           </div>
                         )}
@@ -1412,6 +1552,42 @@ export default function ExamsPage() {
                 </div>
               )}
 
+              {/* Files */}
+              {previewingExam.files && previewingExam.files.length > 0 && (
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Files</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {previewingExam.files.map((file: { name: string; url: string; size: number }, i: number) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewingFile({ file, allFiles: previewingExam.files, index: i });
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '8px 12px',
+                          backgroundColor: 'var(--panel-2)',
+                          borderRadius: '6px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'background-color 150ms ease',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--nav-active)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
+                      >
+                        <FileIcon size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                        <span style={{ fontSize: '14px', color: 'var(--link)' }}>{file.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Related Notes */}
               {(() => {
                 const relatedNotes = notes.filter(n =>
@@ -1494,6 +1670,15 @@ export default function ExamsPage() {
           </div>
         </div>
       )}
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        file={previewingFile?.file ?? null}
+        files={previewingFile?.allFiles}
+        currentIndex={previewingFile?.index ?? 0}
+        onClose={() => setPreviewingFile(null)}
+        onNavigate={(file, index) => setPreviewingFile(prev => prev ? { ...prev, file, index } : null)}
+      />
     </>
   );
 }
