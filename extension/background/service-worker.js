@@ -160,19 +160,88 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (async () => {
       try {
         const d = message.data;
+        const sourceLabel = d.source === 'learningsuite' ? 'Learning Suite' : 'Canvas';
+
+        // First, check if this assignment already exists to prevent duplicates
+        const existingData = await OrbitAPI.fetch('/api/work');
+        const existingItems = existingData.workItems || [];
+        const canvasUrl = (d.canvasUrl || '').split('?')[0];
+        const title = (d.title || '').toLowerCase().trim();
+
+        let existingItem = null;
+        for (const w of existingItems) {
+          const linkUrls = (w.links || []).map((l) => (l.url || '').split('?')[0]);
+          // Check by URL
+          if (canvasUrl && linkUrls.some((u) => u === canvasUrl)) { existingItem = w; break; }
+          // Check by assignment ID in URL
+          if (d.canvasAssignmentId && linkUrls.some((u) => u.includes(d.canvasAssignmentId))) { existingItem = w; break; }
+          // Check by canvasAssignmentId field
+          if (d.canvasAssignmentId && (w.canvasAssignmentId === d.canvasAssignmentId || w.canvasAssignmentId === String(d.canvasAssignmentId))) { existingItem = w; break; }
+          // Check by exact title match
+          if (title) {
+            const wTitle = (w.title || '').toLowerCase().trim();
+            if (wTitle === title) { existingItem = w; break; }
+          }
+        }
+
+        // If item already exists, update it instead of creating a duplicate
+        if (existingItem) {
+          console.log('[College Orbit SW] Item already exists, updating instead of creating duplicate:', existingItem.id);
+
+          // Build updated notes - preserve user notes section
+          let notes = existingItem.notes || '';
+          const lmsSectionRegex = new RegExp(`─── From (Canvas|Learning Suite) ───[\\s\\S]*$`);
+
+          if (d.description) {
+            const newLmsSection = `─── From ${sourceLabel} ───\n${d.description}`;
+            if (lmsSectionRegex.test(notes)) {
+              notes = notes.replace(lmsSectionRegex, newLmsSection);
+            } else if (notes.includes('─── Your Notes ───')) {
+              notes = notes + '\n\n' + newLmsSection;
+            } else if (notes.trim()) {
+              notes = `─── Your Notes ───\n${notes}\n\n${newLmsSection}`;
+            } else {
+              notes = `─── Your Notes ───\n\n\n${newLmsSection}`;
+            }
+          }
+
+          // Merge links - preserve non-LMS links
+          const existingLinks = existingItem.links || [];
+          const nonLmsLinks = existingLinks.filter(l => l.label !== 'Canvas' && l.label !== 'Learning Suite' && l.label !== 'Discussion');
+          const newLinks = [
+            ...nonLmsLinks,
+            ...(d.canvasUrl ? [{ label: sourceLabel, url: d.canvasUrl }] : []),
+            ...(d.discussionUrl ? [{ label: 'Discussion', url: d.discussionUrl }] : []),
+          ];
+
+          await OrbitAPI.fetch(`/api/work/${existingItem.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              title: d.title,
+              dueAt: d.dueDate || null,
+              notes,
+              links: newLinks,
+            }),
+          });
+
+          sendResponse({ success: true, updated: true });
+          return;
+        }
+
+        // Item doesn't exist, create new one
         const body = {
           title: d.title,
           dueAt: d.dueDate || null,
-          notes: d.description ? `─── Your Notes ───\n\n\n─── From ${d.source === 'learningsuite' ? 'Learning Suite' : 'Canvas'} ───\n${d.description}` : '',
+          notes: d.description ? `─── Your Notes ───\n\n\n─── From ${sourceLabel} ───\n${d.description}` : '',
           links: [
-            ...(d.canvasUrl ? [{ label: d.source === 'learningsuite' ? 'Learning Suite' : 'Canvas', url: d.canvasUrl }] : []),
+            ...(d.canvasUrl ? [{ label: sourceLabel, url: d.canvasUrl }] : []),
             ...(d.discussionUrl ? [{ label: 'Discussion', url: d.discussionUrl }] : []),
           ],
           type: 'assignment',
           canvasAssignmentId: d.canvasAssignmentId || null,
         };
 
-        // Try to auto-match course or create it for Learning Suite
+        // Try to auto-match course or create it
         try {
           const courseData = await OrbitAPI.fetch('/api/courses');
           const courses = courseData.courses || [];
