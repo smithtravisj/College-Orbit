@@ -106,7 +106,7 @@ export default function Confetti({
         position: 'fixed',
         inset: 0,
         pointerEvents: 'none',
-        zIndex: 100,
+        zIndex: 99999,
         overflow: 'hidden',
       }}
     >
