@@ -1,0 +1,99 @@
+<svg width="820" height="312" viewBox="0 0 820 312" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="820" y2="312">
+      <stop offset="0%" stop-color="#0a0e13"/>
+      <stop offset="50%" stop-color="#0f1419"/>
+      <stop offset="100%" stop-color="#0a0e13"/>
+    </linearGradient>
+    <linearGradient id="planetGrad" x1="20" y1="20" x2="44" y2="44">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="orbitGrad" x1="4" y1="32" x2="60" y2="32">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.3"/>
+      <stop offset="50%" stop-color="#8b5cf6" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="moonGrad" x1="50" y1="24" x2="58" y2="32">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#c4b5fd"/>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0" y1="0" x2="100" y2="0">
+      <stop offset="0%" stop-color="#a5b4fc"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="820" height="312" fill="url(#bg)"/>
+
+  <!-- Subtle grid pattern -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(99,102,241,0.05)" stroke-width="1"/>
+  </pattern>
+  <rect width="820" height="312" fill="url(#grid)"/>
+
+  <!-- Logo - Planet with orbit (centered left area) -->
+  <g transform="translate(80, 106)">
+    <circle cx="50" cy="50" r="22" fill="url(#planetGrad)"/>
+    <ellipse cx="50" cy="50" rx="44" ry="16" stroke="url(#orbitGrad)" stroke-width="3" fill="none" transform="rotate(-20 50 50)"/>
+    <circle cx="82" cy="38" r="8" fill="url(#moonGrad)"/>
+  </g>
+
+  <!-- College Orbit text -->
+  <text x="200" y="145" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="700" fill="#e2e8f0">College Orbit</text>
+
+  <!-- Tagline -->
+  <text x="200" y="190" font-family="system-ui, -apple-system, sans-serif" font-size="22" fill="#94a3b8">Syncs with Canvas. Never miss a deadline.</text>
+
+  <!-- Feature pills -->
+  <g transform="translate(200, 210)">
+    <rect x="0" y="0" width="100" height="32" rx="16" fill="rgba(99,102,241,0.15)" stroke="rgba(99,102,241,0.3)" stroke-width="1"/>
+    <text x="50" y="21" font-family="system-ui, sans-serif" font-size="13" font-weight="500" fill="#a5b4fc" text-anchor="middle">Canvas Sync</text>
+
+    <rect x="112" y="0" width="100" height="32" rx="16" fill="rgba(99,102,241,0.15)" stroke="rgba(99,102,241,0.3)" stroke-width="1"/>
+    <text x="162" y="21" font-family="system-ui, sans-serif" font-size="13" font-weight="500" fill="#a5b4fc" text-anchor="middle">Assignments</text>
+
+    <rect x="224" y="0" width="70" height="32" rx="16" fill="rgba(99,102,241,0.15)" stroke="rgba(99,102,241,0.3)" stroke-width="1"/>
+    <text x="259" y="21" font-family="system-ui, sans-serif" font-size="13" font-weight="500" fill="#a5b4fc" text-anchor="middle">Exams</text>
+
+    <rect x="306" y="0" width="80" height="32" rx="16" fill="rgba(99,102,241,0.15)" stroke="rgba(99,102,241,0.3)" stroke-width="1"/>
+    <text x="346" y="21" font-family="system-ui, sans-serif" font-size="13" font-weight="500" fill="#a5b4fc" text-anchor="middle">Calendar</text>
+  </g>
+
+  <!-- Mini dashboard mockup on right -->
+  <g transform="translate(580, 56)">
+    <rect x="0" y="0" width="180" height="200" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+
+    <!-- Header -->
+    <text x="16" y="30" font-family="system-ui, sans-serif" font-size="11" fill="#64748b">Today</text>
+    <text x="16" y="48" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#e2e8f0">Dashboard</text>
+
+    <!-- Task 1 -->
+    <g transform="translate(16, 62)">
+      <rect x="0" y="0" width="148" height="36" rx="6" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <rect x="8" y="8" width="3" height="20" rx="1.5" fill="#ef4444"/>
+      <text x="20" y="18" font-family="system-ui, sans-serif" font-size="10" font-weight="500" fill="#e2e8f0">CS 301 Final Project</text>
+      <text x="20" y="30" font-family="system-ui, sans-serif" font-size="8" fill="#64748b">Due Tomorrow</text>
+    </g>
+
+    <!-- Task 2 -->
+    <g transform="translate(16, 104)">
+      <rect x="0" y="0" width="148" height="36" rx="6" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <rect x="8" y="8" width="3" height="20" rx="1.5" fill="#f59e0b"/>
+      <text x="20" y="18" font-family="system-ui, sans-serif" font-size="10" font-weight="500" fill="#e2e8f0">MATH 240 Problem Set</text>
+      <text x="20" y="30" font-family="system-ui, sans-serif" font-size="8" fill="#64748b">Due in 3 days</text>
+    </g>
+
+    <!-- Task 3 -->
+    <g transform="translate(16, 146)">
+      <rect x="0" y="0" width="148" height="36" rx="6" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <rect x="8" y="8" width="3" height="20" rx="1.5" fill="#22c55e"/>
+      <text x="20" y="18" font-family="system-ui, sans-serif" font-size="10" font-weight="500" fill="#e2e8f0">ENG 102 Essay Draft</text>
+      <text x="20" y="30" font-family="system-ui, sans-serif" font-size="8" fill="#64748b">Due Friday</text>
+    </g>
+  </g>
+
+  <!-- URL -->
+  <text x="200" y="280" font-family="system-ui, sans-serif" font-size="16" font-weight="500" fill="#6366f1">collegeorbit.app</text>
+</svg>
