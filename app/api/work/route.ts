@@ -299,6 +299,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
         isRecurring: false,
         recurringPatternId: null,
         instanceDate: null,
+        canvasAssignmentId: data.canvasAssignmentId || null,
       },
       include: {
         course: {

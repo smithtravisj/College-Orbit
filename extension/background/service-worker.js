@@ -113,9 +113,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 // Don't match - title matches but course doesn't
                 console.log('[College Orbit SW] Title matched but course mismatch:', { wTitle, wCourseId: w.courseId, matchingCourseId });
               } else if (lsCourseId) {
-                // Learning Suite: we have lsCourseId but no matching course - DON'T fall back to title-only
-                // This prevents matching assignments in other courses with the same name
-                console.log('[College Orbit SW] Title matched but LS course not found - not matching:', { wTitle, lsCourseId });
+                // Learning Suite: we have lsCourseId but no matching course in Orbit
+                // Check if the work item has a Learning Suite link with the same course ID
+                const hasMatchingLsLink = (w.links || []).some(l =>
+                  l.url && l.url.includes('learningsuite.byu.edu') && l.url.includes(`cid-${lsCourseId}`)
+                );
+                if (hasMatchingLsLink) {
+                  foundItem = w;
+                  matchReason = 'title + LS link course match';
+                  break;
+                }
+                console.log('[College Orbit SW] Title matched but LS course not found and no matching LS link:', { wTitle, lsCourseId });
               } else {
                 // Canvas or no course info: fall back to title-only match
                 foundItem = w;
@@ -300,7 +308,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }),
           });
 
-          sendResponse({ success: true, updated: true });
+          sendResponse({ success: true, updated: true, workItemId: message.existingWorkItemId, status: currentItem.status || 'open' });
           return;
         }
 
@@ -359,8 +367,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }
                 // Don't match - same title but different course
               } else if (d.lsCourseId) {
-                // Learning Suite: we have lsCourseId but no matching course - DON'T fall back to title-only
-                // This prevents updating assignments in other courses with the same name
+                // Learning Suite: check if work item has LS link with same course ID
+                const hasMatchingLsLink = (w.links || []).some(l =>
+                  l.url && l.url.includes('learningsuite.byu.edu') && l.url.includes(`cid-${d.lsCourseId}`)
+                );
+                if (hasMatchingLsLink) {
+                  existingItem = w;
+                  break;
+                }
               } else {
                 // Canvas or no course info: use title-only match
                 existingItem = w;
