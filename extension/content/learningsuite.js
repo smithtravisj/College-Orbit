@@ -755,11 +755,18 @@ function injectButton() {
         setTimeout(() => { btn.textContent = '+ Add to Orbit'; }, 3000);
         return;
       }
-      // After adding, check for the item to get its ID and show dropdown
-      setTimeout(() => {
-        const newData = scrapeAssignmentData();
-        checkIfAlreadyAdded(newData);
-      }, 500);
+      // Immediately update button state if we got a work item ID back
+      if (response.workItemId) {
+        const state = response.status === 'done' ? 'completed' : (response.updated ? 'exists' : 'added');
+        updateButtonState(state, response.workItemId, response.status || 'open', null);
+        scrapedData = data;
+      } else {
+        // Fallback: check for the item to get its ID and show dropdown
+        setTimeout(() => {
+          const newData = scrapeAssignmentData();
+          checkIfAlreadyAdded(newData);
+        }, 500);
+      }
     });
   });
 

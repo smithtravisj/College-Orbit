@@ -410,7 +410,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }),
           });
 
-          sendResponse({ success: true, updated: true });
+          sendResponse({ success: true, updated: true, workItemId: existingItem.id, status: existingItem.status || 'open' });
           return;
         }
 
@@ -525,12 +525,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
         } catch {}
 
-        await OrbitAPI.fetch('/api/work', {
+        const createResult = await OrbitAPI.fetch('/api/work', {
           method: 'POST',
           body: JSON.stringify(body),
         });
 
-        sendResponse({ success: true });
+        const newWorkItemId = createResult?.workItem?.id || createResult?.id || null;
+        sendResponse({ success: true, workItemId: newWorkItemId, status: 'open' });
       } catch (e) {
         sendResponse({ success: false, error: e.message });
       }
