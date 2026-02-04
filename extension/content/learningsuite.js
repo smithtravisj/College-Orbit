@@ -176,12 +176,31 @@ function scrapeGradebookAssignment() {
     const dt = timeEl.getAttribute('datetime');
     console.log('[College Orbit LS] Found datetime attribute:', dt);
     if (dt) {
-      // If it looks like ISO format (has T separator), use directly - server will handle it
-      // Don't try to convert as we don't know if it's UTC or local
-      if (dt.includes('T')) {
-        dueDate = dt;
+      // Learning Suite calculates UTC using CURRENT timezone offset, but we need the offset
+      // that will be in effect on the due DATE (to handle DST correctly).
+      // Parse the UTC time, then recalculate using the correct offset for that date.
+      const utcDate = new Date(dt);
+      if (!isNaN(utcDate.getTime())) {
+        // Create a date in local time for the same calendar date/time
+        // This ensures DST is calculated for the TARGET date, not today
+        const localDate = new Date(
+          utcDate.getUTCFullYear(),
+          utcDate.getUTCMonth(),
+          utcDate.getUTCDate(),
+          utcDate.getUTCHours(),
+          utcDate.getUTCMinutes(),
+          utcDate.getUTCSeconds()
+        );
+        // Now get the offset for THIS date (which accounts for DST on that date)
+        const targetOffset = localDate.getTimezoneOffset();
+        // The datetime attr was calculated with current offset, recalculate with target offset
+        const currentOffset = new Date().getTimezoneOffset();
+        const offsetDiff = (currentOffset - targetOffset) * 60 * 1000; // in ms
+        const correctedDate = new Date(utcDate.getTime() + offsetDiff);
+        dueDate = correctedDate.toISOString();
+        console.log('[College Orbit LS] DST-corrected date:', dueDate, 'offset diff (hrs):', offsetDiff / 3600000);
       } else {
-        dueDate = formatLocalISO(new Date(dt));
+        dueDate = dt;
       }
     }
   }
@@ -339,11 +358,24 @@ function scrapeDiscussion() {
     if (timeEl) {
       const dt = timeEl.getAttribute('datetime');
       if (dt) {
-        // If datetime already has timezone info, use as-is, otherwise treat as local
-        if (/[Z+-]\d{0,2}:?\d{0,2}$/.test(dt)) {
-          dueDate = dt;
+        // Apply same DST correction as gradebook assignments
+        const utcDate = new Date(dt);
+        if (!isNaN(utcDate.getTime())) {
+          const localDate = new Date(
+            utcDate.getUTCFullYear(),
+            utcDate.getUTCMonth(),
+            utcDate.getUTCDate(),
+            utcDate.getUTCHours(),
+            utcDate.getUTCMinutes(),
+            utcDate.getUTCSeconds()
+          );
+          const targetOffset = localDate.getTimezoneOffset();
+          const currentOffset = new Date().getTimezoneOffset();
+          const offsetDiff = (currentOffset - targetOffset) * 60 * 1000;
+          const correctedDate = new Date(utcDate.getTime() + offsetDiff);
+          dueDate = correctedDate.toISOString();
         } else {
-          dueDate = formatLocalISO(new Date(dt));
+          dueDate = dt;
         }
       }
     }
