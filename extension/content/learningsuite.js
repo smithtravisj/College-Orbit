@@ -174,9 +174,11 @@ function scrapeGradebookAssignment() {
     (rowParent && rowParent.querySelector('time[datetime]'));
   if (timeEl) {
     const dt = timeEl.getAttribute('datetime');
+    console.log('[College Orbit LS] Found datetime attribute:', dt);
     if (dt) {
-      // If datetime already has timezone info (Z or +/-), use as-is, otherwise treat as local
-      if (/[Z+-]\d{0,2}:?\d{0,2}$/.test(dt)) {
+      // If it looks like ISO format (has T separator), use directly - server will handle it
+      // Don't try to convert as we don't know if it's UTC or local
+      if (dt.includes('T')) {
         dueDate = dt;
       } else {
         dueDate = formatLocalISO(new Date(dt));
