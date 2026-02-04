@@ -385,14 +385,20 @@ function detectChanges(scraped, stored) {
   }
 
   // Check due date (compare as dates, allow 1 minute tolerance)
+  console.log('[College Orbit LS] Due date comparison:', { scrapedDueDate: scraped.dueDate, storedDueAt: stored.dueAt });
   if (scraped.dueDate && stored.dueAt) {
     const scrapedDate = new Date(scraped.dueDate).getTime();
     const storedDate = new Date(stored.dueAt).getTime();
-    if (Math.abs(scrapedDate - storedDate) > 60000) {
+    const diff = Math.abs(scrapedDate - storedDate);
+    console.log('[College Orbit LS] Due date diff (ms):', diff, 'scraped:', scrapedDate, 'stored:', storedDate);
+    if (diff > 60000) {
       changes.push('due date');
     }
   } else if (scraped.dueDate && !stored.dueAt) {
     changes.push('due date');
+  } else if (!scraped.dueDate && stored.dueAt) {
+    // Stored has date but scraped doesn't - might be a scraping issue, don't flag as change
+    console.log('[College Orbit LS] Stored has due date but scraped does not');
   }
 
   // Check if Learning Suite link exists
