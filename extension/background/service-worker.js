@@ -415,16 +415,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           const courses = courseData.courses || [];
 
           if (d.courseName) {
-            // Parse course code from name (e.g., "CS 142" from "CS 142 - Intro to Programming")
-            const codeMatch = d.courseName.match(/^([A-Z]{2,5}\s*\d{3}\S*)/i);
+            // Parse course code from name - handle formats like "A HTG 100", "CS 142", "WRTG 150"
+            const codeMatch = d.courseName.match(/^([A-Z][A-Z\s]{0,6}\d{3})/i);
             const searchCode = codeMatch ? codeMatch[1].replace(/\s+/g, ' ').trim().toLowerCase() : '';
 
-            // For Learning Suite, first check by lsCourseId (most reliable)
+            console.log('[College Orbit SW] Course matching - scraped name:', d.courseName, 'extracted code:', searchCode, 'lsCourseId:', d.lsCourseId);
+
+            // For Learning Suite, first check by lsCourseId
             let match = null;
             if (d.source === 'learningsuite' && d.lsCourseId) {
-              match = courses.find((c) => c.learningSuiteCourseId === d.lsCourseId);
-              if (match) {
-                console.log('[College Orbit SW] Matched course by lsCourseId:', d.lsCourseId);
+              const lsMatch = courses.find((c) => c.learningSuiteCourseId === d.lsCourseId);
+              if (lsMatch) {
+                // Sanity check: verify the course codes are similar (first letter or number matches)
+                const matchedCode = (lsMatch.code || '').toLowerCase();
+                const searchFirst = searchCode.charAt(0);
+                const matchedFirst = matchedCode.charAt(0);
+
+                if (searchFirst === matchedFirst || !searchCode) {
+                  match = lsMatch;
+                  console.log('[College Orbit SW] Matched course by lsCourseId:', d.lsCourseId, '->', lsMatch.code);
+                } else {
+                  console.log('[College Orbit SW] lsCourseId matched but codes differ - rejecting:', searchCode, 'vs', matchedCode);
+                  // The stored lsCourseId is wrong on this course, clear it
+                }
               }
             }
 
