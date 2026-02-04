@@ -2000,13 +2000,13 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Show Canvas Badges */}
+            {/* Show LMS Badges */}
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Canvas Badges</p>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show LMS Integration Badges</p>
                   <p className="text-sm text-[var(--text-muted)]">
-                    Display Canvas markers on synced courses and assignments
+                    Display LMS markers on synced courses and assignments
                   </p>
                 </div>
                 <button
@@ -2729,7 +2729,7 @@ export default function SettingsPage() {
                 fontSize: '14px',
                 color: 'var(--text-muted)',
               }}>
-                Quickly add deadlines and notes without leaving your current page
+                Quickly add deadlines from Canvas and Learning Suite without leaving your browser
               </p>
             </div>
             <ExternalLink size={20} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
