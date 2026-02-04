@@ -308,6 +308,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const isGradebookUrl = canvasUrl && canvasUrl.includes('/gradebook');
 
         // If we have an lsCourseId, find the matching Orbit course
+        // But verify the course code matches to catch corrupted data
         let matchingCourseId = null;
         if (d.lsCourseId) {
           try {
@@ -315,8 +316,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const courses = courseData.courses || [];
             const matchedCourse = courses.find(c => c.learningSuiteCourseId === d.lsCourseId);
             if (matchedCourse) {
-              matchingCourseId = matchedCourse.id;
-              console.log('[College Orbit SW] ADD: Found matching course for LS course:', d.lsCourseId, '->', matchingCourseId);
+              // Parse course code from scraped name
+              const codeMatch = d.courseName?.match(/^([A-Z][A-Z\s]{0,6}\d{3})/i);
+              const searchCode = codeMatch ? codeMatch[1].replace(/\s+/g, ' ').trim().toLowerCase() : '';
+              const matchedCode = (matchedCourse.code || '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+              // Sanity check: first letters should match
+              if (searchCode && matchedCode && searchCode.charAt(0) !== matchedCode.charAt(0)) {
+                console.log('[College Orbit SW] ADD: lsCourseId matched but codes differ - NOT using:', searchCode, 'vs', matchedCode);
+              } else {
+                matchingCourseId = matchedCourse.id;
+                console.log('[College Orbit SW] ADD: Found matching course for LS course:', d.lsCourseId, '->', matchingCourseId, matchedCourse.code);
+              }
             }
           } catch (e) {
             console.log('[College Orbit SW] ADD: Failed to fetch courses:', e);
