@@ -12,14 +12,16 @@ function getCourseId() {
 }
 
 function scrapeCourseName() {
+  // Course code patterns - handles "CS 142", "WRTG 150", "A HTG 100", etc.
+  // Pattern: 1-5 letters, optional space + more letters, then space + 3 digits
+  const courseCodePattern = /^[A-Z]{1,5}(?:\s+[A-Z]{1,5})?\s*\d{3}/;
+
   // Learning Suite shows the course name in a dropdown/button in the top header area.
-  // Look for any element whose text matches a course code pattern like "WRTG 150" or "CS 235"
-  // Common selectors: buttons, links, spans in the header/nav area
+  // Look for any element whose text matches a course code pattern
   const candidates = document.querySelectorAll('header *, nav *, [class*="course"], [class*="header"], [class*="nav"], button, .dropdown-toggle, [class*="dropdown"]');
   for (const el of candidates) {
     const t = el.textContent?.trim();
-    if (t && /^[A-Z]{2,5}\s*\d{3}/.test(t) && t.length < 80) {
-      // Found something like "WRTG 150 - Writing" or "CS 235"
+    if (t && courseCodePattern.test(t) && t.length < 80) {
       console.log('[College Orbit] Course name from header element:', t);
       return t;
     }
@@ -31,7 +33,7 @@ function scrapeCourseName() {
     const selected = sel.options?.[sel.selectedIndex];
     if (selected?.textContent?.trim()) {
       const t = selected.textContent.trim();
-      if (/^[A-Z]{2,5}\s*\d{3}/.test(t) || (t.length < 60 && t.length > 3)) {
+      if (courseCodePattern.test(t) || (t.length < 60 && t.length > 3)) {
         return t;
       }
     }
@@ -43,7 +45,7 @@ function scrapeCourseName() {
     // Only direct text (not children) to avoid picking up huge blocks
     if (el.children.length > 3) continue;
     const t = el.textContent?.trim();
-    if (t && /^[A-Z]{2,5}\s+\d{3}\b/.test(t) && t.length < 80 && t.length > 4) {
+    if (t && courseCodePattern.test(t) && t.length < 80 && t.length > 4) {
       console.log('[College Orbit] Course name from page scan:', t);
       return t;
     }

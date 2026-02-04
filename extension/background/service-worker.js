@@ -317,7 +317,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const matchedCourse = courses.find(c => c.learningSuiteCourseId === d.lsCourseId);
             if (matchedCourse) {
               // Parse course code from scraped name
-              const codeMatch = d.courseName?.match(/^([A-Z][A-Z\s]{0,6}\d{3})/i);
+              const codeMatch = d.courseName?.match(/^([A-Z]{1,5}(?:\s+[A-Z]{1,5})?\s*\d{3})/i);
               const searchCode = codeMatch ? codeMatch[1].replace(/\s+/g, ' ').trim().toLowerCase() : '';
               const matchedCode = (matchedCourse.code || '').replace(/\s+/g, ' ').trim().toLowerCase();
 
@@ -427,7 +427,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
           if (d.courseName) {
             // Parse course code from name - handle formats like "A HTG 100", "CS 142", "WRTG 150"
-            const codeMatch = d.courseName.match(/^([A-Z][A-Z\s]{0,6}\d{3})/i);
+            const codeMatch = d.courseName.match(/^([A-Z]{1,5}(?:\s+[A-Z]{1,5})?\s*\d{3})/i);
             const searchCode = codeMatch ? codeMatch[1].replace(/\s+/g, ' ').trim().toLowerCase() : '';
 
             console.log('[College Orbit SW] Course matching - scraped name:', d.courseName, 'extracted code:', searchCode, 'lsCourseId:', d.lsCourseId);
