@@ -112,8 +112,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }
                 // Don't match - title matches but course doesn't
                 console.log('[College Orbit SW] Title matched but course mismatch:', { wTitle, wCourseId: w.courseId, matchingCourseId });
+              } else if (lsCourseId) {
+                // Learning Suite: we have lsCourseId but no matching course - DON'T fall back to title-only
+                // This prevents matching assignments in other courses with the same name
+                console.log('[College Orbit SW] Title matched but LS course not found - not matching:', { wTitle, lsCourseId });
               } else {
-                // No course info, fall back to title-only match (less safe but backwards compatible)
+                // Canvas or no course info: fall back to title-only match
                 foundItem = w;
                 matchReason = 'title only (no course info)';
                 break;
@@ -354,8 +358,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                   break;
                 }
                 // Don't match - same title but different course
+              } else if (d.lsCourseId) {
+                // Learning Suite: we have lsCourseId but no matching course - DON'T fall back to title-only
+                // This prevents updating assignments in other courses with the same name
               } else {
-                // No course info (Canvas or fallback), use title-only match
+                // Canvas or no course info: use title-only match
                 existingItem = w;
                 break;
               }
