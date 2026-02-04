@@ -3,6 +3,23 @@
 // Match assignment, discussion, and quiz pages
 const CANVAS_PAGE_RE = /\/courses\/(\d+)\/(assignments|discussion_topics|quizzes)\/(\d+)/;
 
+// Format date as ISO string preserving local time (not converting to UTC)
+function formatLocalISO(date) {
+  const pad = (n) => String(n).padStart(2, '0');
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const mins = pad(date.getMinutes());
+  const secs = pad(date.getSeconds());
+  // Return ISO format with timezone offset
+  const offset = -date.getTimezoneOffset();
+  const offsetHrs = pad(Math.floor(Math.abs(offset) / 60));
+  const offsetMins = pad(Math.abs(offset) % 60);
+  const offsetSign = offset >= 0 ? '+' : '-';
+  return `${year}-${month}-${day}T${hours}:${mins}:${secs}${offsetSign}${offsetHrs}:${offsetMins}`;
+}
+
 function scrapeAssignment() {
   const url = window.location.href;
   const match = url.match(CANVAS_PAGE_RE);
@@ -82,7 +99,7 @@ function scrapeAssignment() {
     const dt = el.getAttribute('datetime');
     const parsed = parseCanvasDate(dt);
     if (parsed) {
-      dueDate = parsed.toISOString();
+      dueDate = formatLocalISO(parsed);
       break;
     }
   }
@@ -99,7 +116,7 @@ function scrapeAssignment() {
         // Use full container text so we get "Mar 18 at 11:59pm" not just "Mar 18"
         const parsed = parseCanvasDate(containerText.replace(/^[^A-Z]*(Due|due)[:\s]*/i, ''));
         if (parsed) {
-          dueDate = parsed.toISOString();
+          dueDate = formatLocalISO(parsed);
           break;
         }
       }
@@ -110,7 +127,7 @@ function scrapeAssignment() {
       const fullText = (container?.textContent || displayDateEls[0].textContent || '').trim();
       const parsed = parseCanvasDate(fullText.replace(/^[^A-Z]*(Due|due)[:\s]*/i, ''));
       if (parsed) {
-        dueDate = parsed.toISOString();
+        dueDate = formatLocalISO(parsed);
       }
     }
   }
@@ -121,7 +138,7 @@ function scrapeAssignment() {
     for (const el of dateEls) {
       const parsed = parseCanvasDate(el.textContent?.trim());
       if (parsed) {
-        dueDate = parsed.toISOString();
+        dueDate = formatLocalISO(parsed);
         break;
       }
     }
@@ -134,7 +151,7 @@ function scrapeAssignment() {
     if (dateMatch) {
       const parsed = parseCanvasDate(dateMatch[1]);
       if (parsed) {
-        dueDate = parsed.toISOString();
+        dueDate = formatLocalISO(parsed);
       }
     }
   }

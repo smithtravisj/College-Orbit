@@ -82,7 +82,7 @@ function parseLSDate(text) {
   let parsed = new Date(dateOnly);
   if (!isNaN(parsed.getTime()) && parsed.getFullYear() >= 2024) {
     parsed.setHours(hours, minutes, 0, 0);
-    return parsed.toISOString();
+    return formatLocalISO(parsed);
   }
 
   const withYear = dateOnly + ', ' + now.getFullYear();
@@ -94,10 +94,27 @@ function parseLSDate(text) {
       parsed = new Date(dateOnly + ', ' + (now.getFullYear() + 1));
       parsed.setHours(hours, minutes, 0, 0);
     }
-    return parsed.toISOString();
+    return formatLocalISO(parsed);
   }
 
   return null;
+}
+
+// Format date as ISO string preserving local time (not converting to UTC)
+function formatLocalISO(date) {
+  const pad = (n) => String(n).padStart(2, '0');
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const mins = pad(date.getMinutes());
+  const secs = pad(date.getSeconds());
+  // Return ISO format with timezone offset
+  const offset = -date.getTimezoneOffset();
+  const offsetHrs = pad(Math.floor(Math.abs(offset) / 60));
+  const offsetMins = pad(Math.abs(offset) % 60);
+  const offsetSign = offset >= 0 ? '+' : '-';
+  return `${year}-${month}-${day}T${hours}:${mins}:${secs}${offsetSign}${offsetHrs}:${offsetMins}`;
 }
 
 // Find the active/expanded sub-assignment row on the gradebook page.
@@ -158,7 +175,12 @@ function scrapeGradebookAssignment() {
   if (timeEl) {
     const dt = timeEl.getAttribute('datetime');
     if (dt) {
-      dueDate = new Date(dt).toISOString();
+      // If datetime already has timezone info (Z or +/-), use as-is, otherwise treat as local
+      if (/[Z+-]\d{0,2}:?\d{0,2}$/.test(dt)) {
+        dueDate = dt;
+      } else {
+        dueDate = formatLocalISO(new Date(dt));
+      }
     }
   }
 
@@ -314,7 +336,14 @@ function scrapeDiscussion() {
     const timeEl = document.querySelector('time[datetime]');
     if (timeEl) {
       const dt = timeEl.getAttribute('datetime');
-      if (dt) dueDate = new Date(dt).toISOString();
+      if (dt) {
+        // If datetime already has timezone info, use as-is, otherwise treat as local
+        if (/[Z+-]\d{0,2}:?\d{0,2}$/.test(dt)) {
+          dueDate = dt;
+        } else {
+          dueDate = formatLocalISO(new Date(dt));
+        }
+      }
     }
   }
 
