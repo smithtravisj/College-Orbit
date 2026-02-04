@@ -415,27 +415,33 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           const courses = courseData.courses || [];
 
           if (d.courseName) {
-            const name = d.courseName.toLowerCase();
+            // Parse course code from name (e.g., "CS 142" from "CS 142 - Intro to Programming")
+            const codeMatch = d.courseName.match(/^([A-Z]{2,5}\s*\d{3}\S*)/i);
+            const searchCode = codeMatch ? codeMatch[1].replace(/\s+/g, ' ').trim().toLowerCase() : '';
 
-            // For Learning Suite, also check by lsCourseId
+            // For Learning Suite, first check by lsCourseId (most reliable)
             let match = null;
             if (d.source === 'learningsuite' && d.lsCourseId) {
               match = courses.find((c) => c.learningSuiteCourseId === d.lsCourseId);
+              if (match) {
+                console.log('[College Orbit SW] Matched course by lsCourseId:', d.lsCourseId);
+              }
             }
 
-            // If not found by ID, try name matching
-            if (!match) {
-              match = courses.find(
-                (c) =>
-                  (c.name || '').toLowerCase().includes(name) ||
-                  name.includes((c.name || '').toLowerCase()) ||
-                  (c.code || '').toLowerCase().includes(name) ||
-                  name.includes((c.code || '').toLowerCase())
-              );
+            // If not found by ID, try EXACT course code match only
+            if (!match && searchCode) {
+              match = courses.find((c) => {
+                const courseCode = (c.code || '').replace(/\s+/g, ' ').trim().toLowerCase();
+                return courseCode === searchCode;
+              });
+              if (match) {
+                console.log('[College Orbit SW] Matched course by exact code:', searchCode);
+              }
             }
 
             if (match) {
               body.courseId = match.id;
+              console.log('[College Orbit SW] Using course:', match.id, match.code);
             } else if (d.courseName) {
               // Auto-create course for Learning Suite or Canvas
               const isLearningsuite = d.source === 'learningsuite';
