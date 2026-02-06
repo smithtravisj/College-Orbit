@@ -691,7 +691,7 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
             <div style={{
               width: `${dailyProgress.progress}%`,
               height: '100%',
-              backgroundColor: dailyProgress.goalReached ? 'var(--success)' : 'var(--accent)',
+              backgroundColor: dailyProgress.goalReached ? 'var(--success)' : 'var(--link)',
               borderRadius: '3px',
               transition: 'width 0.3s ease',
             }} />
