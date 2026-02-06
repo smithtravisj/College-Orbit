@@ -1414,3 +1414,3298 @@ body.theme-cartoon [class*="notification"],
 body.theme-cartoon [class*="Notification"] {
   animation: cartoon-pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/* ============================================
+   Cyberpunk Theme Animations & Styles
+   ============================================ */
+
+/* Scan line animation - moves top to bottom */
+@keyframes cyberpunk-scan {
+  0% {
+    top: -2px;
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.6;
+  }
+  95% {
+    opacity: 0.6;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+/* Neon glow pulse animation */
+@keyframes cyberpunk-glow {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Glitch flicker for text */
+@keyframes cyberpunk-glitch {
+  0%, 100% {
+    text-shadow: none;
+  }
+  2% {
+    text-shadow: -2px 0 #ff00ff, 2px 0 #00ffff;
+  }
+  4% {
+    text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+  }
+  6% {
+    text-shadow: none;
+  }
+}
+
+/* Neon border pulse */
+@keyframes cyberpunk-border-pulse {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--accent), inset 0 0 5px transparent;
+  }
+  50% {
+    box-shadow: 0 0 15px var(--accent), inset 0 0 8px rgba(0, 255, 255, 0.1);
+  }
+}
+
+/* Cyberpunk font */
+body.theme-cyberpunk {
+  font-family: var(--font-rajdhani), 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  letter-spacing: 0.02em;
+}
+
+/* Cards have neon glow effect */
+body.theme-cyberpunk .card,
+body.theme-cyberpunk [class*="Card"] {
+  border: 1px solid var(--border);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+body.theme-cyberpunk .card:hover,
+body.theme-cyberpunk [class*="Card"]:hover {
+  box-shadow: 0 0 20px rgba(0, 212, 212, 0.15);
+  border-color: var(--accent);
+}
+
+/* Buttons have neon glow on hover */
+body.theme-cyberpunk button:hover {
+  box-shadow: 0 0 15px rgba(0, 212, 212, 0.3);
+}
+
+/* Links have glitch effect on hover */
+body.theme-cyberpunk a:hover {
+  animation: cyberpunk-glitch 0.3s ease;
+}
+
+/* Inputs glow when focused */
+body.theme-cyberpunk input:focus,
+body.theme-cyberpunk select:focus,
+body.theme-cyberpunk textarea:focus {
+  box-shadow: 0 0 10px rgba(0, 212, 212, 0.3);
+  border-color: var(--accent);
+}
+
+/* Navigation items have neon underline effect */
+body.theme-cyberpunk nav a::after,
+body.theme-cyberpunk [class*="nav"] a::after,
+body.theme-cyberpunk [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), var(--link));
+  box-shadow: 0 0 8px var(--accent);
+  transition: width 0.3s ease;
+}
+
+body.theme-cyberpunk nav a:hover::after,
+body.theme-cyberpunk [class*="nav"] a:hover::after,
+body.theme-cyberpunk [class*="Nav"] a:hover::after {
+  width: 100%;
+}
+
+/* Badges have subtle glow */
+body.theme-cyberpunk [class*="badge"],
+body.theme-cyberpunk [class*="Badge"] {
+  box-shadow: 0 0 8px rgba(0, 212, 212, 0.2);
+}
+
+/* Smooth transitions for all interactive elements */
+body.theme-cyberpunk button,
+body.theme-cyberpunk a,
+body.theme-cyberpunk input,
+body.theme-cyberpunk select {
+  transition: all 0.2s ease;
+}
+
+/* ============================================
+   Retro Synthwave Theme Animations & Styles
+   ============================================ */
+
+/* Retro font */
+body.theme-retro {
+  font-family: var(--font-russo), 'Russo One', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  letter-spacing: 0.01em;
+}
+
+/* Star twinkle animation */
+@keyframes retro-twinkle {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.3);
+  }
+}
+
+/* Gradient shimmer for buttons */
+@keyframes retro-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* Soft glow pulse */
+@keyframes retro-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(255, 107, 157, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 107, 157, 0.4);
+  }
+}
+
+/* Cards have warm glow */
+body.theme-retro .card,
+body.theme-retro [class*="Card"] {
+  border: 1px solid var(--border);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+body.theme-retro .card:hover,
+body.theme-retro [class*="Card"]:hover {
+  box-shadow: 0 4px 20px rgba(255, 107, 157, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Buttons have gradient hover effect */
+body.theme-retro button {
+  transition: all 0.3s ease;
+}
+
+body.theme-retro button:hover {
+  box-shadow: 0 0 15px rgba(255, 107, 157, 0.3);
+}
+
+/* Links have warm underline effect */
+body.theme-retro a {
+  transition: color 0.2s ease;
+}
+
+body.theme-retro a:hover {
+  text-shadow: 0 0 8px rgba(0, 217, 255, 0.5);
+}
+
+/* Inputs have soft glow when focused */
+body.theme-retro input:focus,
+body.theme-retro select:focus,
+body.theme-retro textarea:focus {
+  box-shadow: 0 0 12px rgba(255, 107, 157, 0.25);
+  border-color: var(--accent);
+}
+
+/* Badges have subtle shimmer */
+body.theme-retro [class*="badge"],
+body.theme-retro [class*="Badge"] {
+  box-shadow: 0 0 8px rgba(255, 107, 157, 0.2);
+}
+
+/* Smooth transitions */
+body.theme-retro button,
+body.theme-retro a,
+body.theme-retro input,
+body.theme-retro select {
+  transition: all 0.25s ease;
+}
+
+/* ============================================
+   Nature Theme Animations & Styles
+   ============================================ */
+
+/* Nature font - friendly and organic */
+body.theme-nature {
+  font-family: var(--font-nunito), 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Gentle floating animation for leaves */
+@keyframes nature-float {
+  0%, 100% {
+    transform: translateY(0) rotate(var(--rotation, 0deg));
+  }
+  25% {
+    transform: translateY(-8px) rotate(calc(var(--rotation, 0deg) + 5deg));
+  }
+  50% {
+    transform: translateY(-4px) rotate(calc(var(--rotation, 0deg) - 3deg));
+  }
+  75% {
+    transform: translateY(-10px) rotate(calc(var(--rotation, 0deg) + 3deg));
+  }
+}
+
+/* Gentle sway animation */
+@keyframes nature-sway {
+  0%, 100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
+}
+
+/* Cards have organic shadow */
+body.theme-nature .card,
+body.theme-nature [class*="Card"] {
+  border: 1px solid var(--border);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+body.theme-nature .card:hover,
+body.theme-nature [class*="Card"]:hover {
+  box-shadow: 0 8px 24px rgba(74, 159, 74, 0.12);
+  transform: translateY(-1px);
+}
+
+/* Buttons have natural feel */
+body.theme-nature button {
+  transition: all 0.25s ease;
+}
+
+body.theme-nature button:hover {
+  box-shadow: 0 4px 12px rgba(74, 159, 74, 0.2);
+}
+
+/* Links have gentle hover */
+body.theme-nature a:hover {
+  opacity: 0.85;
+}
+
+/* Inputs have soft green glow when focused */
+body.theme-nature input:focus,
+body.theme-nature select:focus,
+body.theme-nature textarea:focus {
+  box-shadow: 0 0 0 3px rgba(74, 159, 74, 0.15);
+  border-color: var(--accent);
+}
+
+/* Checkboxes have gentle animation */
+body.theme-nature input[type="checkbox"]:checked {
+  animation: nature-sway 0.3s ease;
+}
+
+/* Smooth transitions for interactive elements */
+body.theme-nature button,
+body.theme-nature a,
+body.theme-nature input,
+body.theme-nature select {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   Ocean Theme Animations & Styles
+   ============================================ */
+
+/* Ocean font - rounded and flowing */
+body.theme-ocean {
+  font-family: var(--font-comfortaa), 'Comfortaa', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Wave animation */
+@keyframes ocean-wave {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-25%);
+  }
+}
+
+/* Bubble float animation */
+@keyframes ocean-bubble {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-30px) scale(1.1);
+    opacity: 0.5;
+  }
+}
+
+/* Gentle sway for elements */
+@keyframes ocean-sway {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+/* Cards have fluid shadow */
+body.theme-ocean .card,
+body.theme-ocean [class*="Card"] {
+  border: 1px solid var(--border);
+  transition: box-shadow 0.4s ease, transform 0.4s ease;
+}
+
+body.theme-ocean .card:hover,
+body.theme-ocean [class*="Card"]:hover {
+  box-shadow: 0 8px 30px rgba(59, 158, 190, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Buttons have wave-like hover */
+body.theme-ocean button {
+  transition: all 0.3s ease;
+}
+
+body.theme-ocean button:hover {
+  box-shadow: 0 4px 15px rgba(59, 158, 190, 0.25);
+}
+
+/* Links have gentle flow */
+body.theme-ocean a:hover {
+  opacity: 0.85;
+}
+
+/* Inputs have ocean glow when focused */
+body.theme-ocean input:focus,
+body.theme-ocean select:focus,
+body.theme-ocean textarea:focus {
+  box-shadow: 0 0 0 3px rgba(59, 158, 190, 0.2);
+  border-color: var(--accent);
+}
+
+/* Smooth flowing transitions */
+body.theme-ocean button,
+body.theme-ocean a,
+body.theme-ocean input,
+body.theme-ocean select {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   Lavender Theme Animations & Styles
+   ============================================ */
+
+/* Lavender font - soft and modern */
+body.theme-lavender {
+  font-family: var(--font-poppins), 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Soft float animation */
+@keyframes lavender-float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(10px, -15px) scale(1.05);
+  }
+  66% {
+    transform: translate(-5px, 10px) scale(0.95);
+  }
+}
+
+/* Sparkle twinkle */
+@keyframes lavender-sparkle {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.5);
+  }
+}
+
+/* Cards have dreamy shadow */
+body.theme-lavender .card,
+body.theme-lavender [class*="Card"] {
+  border: 1px solid var(--border);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+body.theme-lavender .card:hover,
+body.theme-lavender [class*="Card"]:hover {
+  box-shadow: 0 8px 25px rgba(167, 139, 250, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Buttons have soft glow */
+body.theme-lavender button:hover {
+  box-shadow: 0 4px 15px rgba(167, 139, 250, 0.25);
+}
+
+/* Inputs have lavender glow when focused */
+body.theme-lavender input:focus,
+body.theme-lavender select:focus,
+body.theme-lavender textarea:focus {
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+  border-color: var(--accent);
+}
+
+/* Smooth transitions */
+body.theme-lavender button,
+body.theme-lavender a,
+body.theme-lavender input,
+body.theme-lavender select {
+  transition: all 0.25s ease;
+}
+
+/* ============================================
+   Space Theme Animations & Styles
+   ============================================ */
+
+/* Space font - modern, geometric, futuristic */
+body.theme-space {
+  font-family: var(--font-space-grotesk), 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  letter-spacing: 0.01em;
+}
+
+/* Star twinkle animation */
+@keyframes space-twinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+}
+
+/* Floating animation for planets */
+@keyframes space-float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  33% {
+    transform: translateY(-10px) translateX(5px);
+  }
+  66% {
+    transform: translateY(5px) translateX(-5px);
+  }
+}
+
+/* Shooting star animation */
+@keyframes space-shoot {
+  0%, 70% {
+    opacity: 0;
+    transform: rotate(-35deg) translateX(0);
+  }
+  75% {
+    opacity: 0;
+    transform: rotate(-35deg) translateX(0);
+  }
+  78% {
+    opacity: 0.9;
+    transform: rotate(-35deg) translateX(40px);
+  }
+  90% {
+    opacity: 0.5;
+    transform: rotate(-35deg) translateX(150px);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(-35deg) translateX(200px);
+  }
+}
+
+/* Cards have cosmic glow */
+body.theme-space .card,
+body.theme-space [class*="Card"] {
+  border: 1px solid var(--border);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+body.theme-space .card:hover,
+body.theme-space [class*="Card"]:hover {
+  box-shadow: 0 8px 30px rgba(124, 108, 240, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Buttons have stellar glow */
+body.theme-space button:hover {
+  box-shadow: 0 4px 20px rgba(124, 108, 240, 0.3);
+}
+
+/* Inputs have cosmic glow when focused */
+body.theme-space input:focus,
+body.theme-space select:focus,
+body.theme-space textarea:focus {
+  box-shadow: 0 0 0 3px rgba(124, 108, 240, 0.25);
+  border-color: var(--accent);
+}
+
+/* Smooth transitions */
+body.theme-space button,
+body.theme-space a,
+body.theme-space input,
+body.theme-space select {
+  transition: all 0.25s ease;
+}
+
+/* Space: cards have a starfield shimmer on hover */
+body.theme-space .card:hover {
+  box-shadow: 0 0 30px rgba(100, 140, 255, 0.1), 0 0 60px rgba(100, 140, 255, 0.03), 0 4px 16px rgba(0, 0, 0, 0.15);
+  border-color: rgba(100, 140, 255, 0.2);
+  transition: all 0.5s ease;
+}
+
+/* Space: nav links get an orbit ring on hover */
+body.theme-space nav a::after,
+body.theme-space [class*="nav"] a::after,
+body.theme-space [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+  opacity: 0;
+}
+
+body.theme-space nav a:hover::after,
+body.theme-space [class*="nav"] a:hover::after,
+body.theme-space [class*="Nav"] a:hover::after {
+  width: 6px;
+  height: 6px;
+  left: calc(50% - 3px);
+  opacity: 1;
+  box-shadow: 0 0 10px var(--accent), 0 0 20px rgba(100, 140, 255, 0.2);
+}
+
+/* Space: buttons warp (scale up slightly) on hover */
+body.theme-space button:hover:not(:disabled) {
+  transform: scale(1.02);
+  box-shadow: 0 0 20px rgba(100, 140, 255, 0.15);
+}
+
+body.theme-space button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Space: badges glow like distant stars */
+body.theme-space [class*="badge"],
+body.theme-space [class*="Badge"] {
+  box-shadow: 0 0 6px rgba(100, 140, 255, 0.15);
+  border: 1px solid rgba(100, 140, 255, 0.15);
+}
+
+body.theme-space [class*="badge"]:hover,
+body.theme-space [class*="Badge"]:hover {
+  box-shadow: 0 0 12px rgba(100, 140, 255, 0.25);
+}
+
+
+/* ============================================
+   PIXEL/RETRO GAMING THEME
+   8-bit aesthetic with blocky shapes
+   ============================================ */
+
+/* Pixel theme font - Pixelify Sans */
+body.theme-pixel {
+  font-family: var(--font-pixelify), 'Pixelify Sans', sans-serif;
+}
+
+/* Float animation for pixel elements */
+@keyframes pixel-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* Coin spin animation */
+@keyframes pixel-spin {
+  0%, 100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0.3);
+  }
+}
+
+/* Blocky cards with no rounded corners */
+body.theme-pixel .card,
+body.theme-pixel [class*="Card"] {
+  border-radius: 0 !important;
+  border: 3px solid var(--border);
+  box-shadow: 4px 4px 0 var(--border);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+body.theme-pixel .card:hover,
+body.theme-pixel [class*="Card"]:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--border);
+}
+
+/* Blocky buttons */
+/* Blocky buttons - just remove rounded corners */
+body.theme-pixel button {
+  border-radius: 0 !important;
+}
+
+/* Blocky inputs */
+body.theme-pixel input,
+body.theme-pixel select,
+body.theme-pixel textarea {
+  border-radius: 0 !important;
+  border: 2px solid var(--border);
+}
+
+body.theme-pixel input:focus,
+body.theme-pixel select:focus,
+body.theme-pixel textarea:focus {
+  box-shadow: 3px 3px 0 var(--accent);
+  border-color: var(--accent);
+}
+
+/* Pixel-perfect borders */
+body.theme-pixel * {
+  image-rendering: pixelated;
+}
+
+/* ============================================
+   AQUARIUM THEME
+   Underwater world with swimming fish and bubbles
+   ============================================ */
+
+/* Aquarium font - Comfortaa for rounded, flowing, bubbly feel */
+body.theme-aquarium {
+  font-family: var(--font-comfortaa), 'Comfortaa', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  letter-spacing: 0.02em;
+}
+
+/* Fish swimming right animation - gentle side to side with forward drift */
+@keyframes aquarium-swim-right {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(60px) translateY(-8px);
+  }
+  50% {
+    transform: translateX(120px) translateY(0);
+  }
+  75% {
+    transform: translateX(60px) translateY(8px);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+}
+
+/* Fish swimming left animation */
+@keyframes aquarium-swim-left {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(-60px) translateY(8px);
+  }
+  50% {
+    transform: translateX(-120px) translateY(0);
+  }
+  75% {
+    transform: translateX(-60px) translateY(-8px);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+}
+
+/* Bubble rising animation */
+@keyframes aquarium-bubble {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0.5;
+  }
+  25% {
+    transform: translateY(-100px) translateX(5px) scale(1.05);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-200px) translateX(-3px) scale(1.1);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translateY(-300px) translateX(4px) scale(1.05);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-400px) translateX(0) scale(0.9);
+    opacity: 0;
+  }
+}
+
+/* Seaweed swaying animation */
+@keyframes aquarium-sway {
+  0%, 100% {
+    transform: rotate(-5deg) scaleY(1);
+    transform-origin: bottom center;
+  }
+  50% {
+    transform: rotate(5deg) scaleY(1.02);
+    transform-origin: bottom center;
+  }
+}
+
+/* Caustic light animation */
+@keyframes aquarium-caustic {
+  0%, 100% {
+    opacity: 0.1;
+    transform: scale(1) translateY(0);
+  }
+  25% {
+    opacity: 0.18;
+    transform: scale(1.05) translateY(8px);
+  }
+  50% {
+    opacity: 0.08;
+    transform: scale(0.95) translateY(-5px);
+  }
+  75% {
+    opacity: 0.15;
+    transform: scale(1.02) translateY(3px);
+  }
+}
+
+/* Particle/plankton drift animation */
+@keyframes aquarium-drift {
+  0%, 100% {
+    transform: translate(0, 0);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translate(15px, -20px);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-10px, -40px);
+    opacity: 0.3;
+  }
+  75% {
+    transform: translate(12px, -25px);
+    opacity: 0.4;
+  }
+}
+
+/* ============================================
+   COZY/COTTAGECORE THEME
+   Warm candlelight, fireflies, and falling leaves
+   ============================================ */
+
+/* Cozy font - Nunito for warm, friendly feel */
+body.theme-cozy {
+  font-family: var(--font-nunito), 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Warm card glow effect */
+body.theme-cozy .card,
+body.theme-cozy [class*="Card"] {
+  box-shadow: 0 0 20px rgba(232, 168, 84, 0.08), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Cozy: cards warm up on hover like sitting by a fire */
+body.theme-cozy .card:hover {
+  box-shadow: 0 0 30px rgba(232, 168, 84, 0.14), 0 4px 16px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.5s ease;
+}
+
+/* Cozy: nav links glow warm like embers */
+body.theme-cozy nav a:hover,
+body.theme-cozy [class*="nav"] a:hover,
+body.theme-cozy [class*="Nav"] a:hover {
+  text-shadow: 0 0 12px rgba(232, 168, 84, 0.25);
+  transition: text-shadow 0.3s ease;
+}
+
+/* Cozy: buttons have a candle-warm glow on hover */
+body.theme-cozy button:hover:not(:disabled) {
+  box-shadow: 0 0 12px rgba(232, 168, 84, 0.12);
+  transition: box-shadow 0.3s ease;
+}
+
+/* Cozy: smooth warmth transitions */
+body.theme-cozy button,
+body.theme-cozy a,
+body.theme-cozy input,
+body.theme-cozy select {
+  transition: all 0.3s ease;
+}
+
+/* Falling leaf animation */
+@keyframes cozy-fall {
+  0% {
+    transform: translateY(0) rotate(0deg) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  25% {
+    transform: translateY(25vh) rotate(90deg) translateX(30px);
+  }
+  50% {
+    transform: translateY(50vh) rotate(180deg) translateX(-20px);
+  }
+  75% {
+    transform: translateY(75vh) rotate(270deg) translateX(25px);
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg) translateX(-10px);
+    opacity: 0;
+  }
+}
+
+/* Firefly glow animation - drifting movement with pulsing glow */
+@keyframes cozy-firefly {
+  0% {
+    opacity: 0.3;
+    transform: translate(0, 0) scale(0.8);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(25px, -35px) scale(1.2);
+  }
+  30% {
+    opacity: 0.4;
+    transform: translate(-15px, -20px) scale(0.9);
+  }
+  45% {
+    opacity: 0.9;
+    transform: translate(40px, 10px) scale(1.1);
+  }
+  60% {
+    opacity: 0.3;
+    transform: translate(10px, -45px) scale(0.85);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(-25px, 15px) scale(1.15);
+  }
+  90% {
+    opacity: 0.5;
+    transform: translate(30px, -10px) scale(0.95);
+  }
+  100% {
+    opacity: 0.3;
+    transform: translate(0, 0) scale(0.8);
+  }
+}
+
+/* Candle flicker animation */
+@keyframes cozy-flicker {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  20% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+  40% {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+  60% {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+  80% {
+    opacity: 0.85;
+    transform: scale(1.01);
+  }
+}
+
+/* ============================================
+   WINTER/SNOW THEME
+   Falling snowflakes, aurora borealis, icy vibes
+   ============================================ */
+
+/* Winter font - Nunito for soft, cozy winter feel */
+body.theme-winter {
+  font-family: var(--font-nunito), 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Frosted glass effect on panels */
+body.theme-winter .card,
+body.theme-winter [class*="Card"],
+body.theme-winter [class*="panel"],
+body.theme-winter [class*="Panel"] {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Snowflake falling animation */
+@keyframes winter-snow-fall {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.8;
+  }
+  25% {
+    transform: translateY(25vh) translateX(15px) rotate(90deg);
+  }
+  50% {
+    transform: translateY(50vh) translateX(-10px) rotate(180deg);
+  }
+  75% {
+    transform: translateY(75vh) translateX(20px) rotate(270deg);
+  }
+  95% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(105vh) translateX(-5px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Aurora shifting animation */
+@keyframes winter-aurora-shift {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translateX(0) scaleY(1);
+  }
+  25% {
+    opacity: 0.9;
+    transform: translateX(5%) scaleY(1.1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateX(-3%) scaleY(0.95);
+  }
+  75% {
+    opacity: 1;
+    transform: translateX(2%) scaleY(1.05);
+  }
+}
+
+/* Aurora wave animation */
+@keyframes winter-aurora-wave {
+  0%, 100% {
+    transform: translateX(0) skewX(0deg);
+    opacity: 0.7;
+  }
+  33% {
+    transform: translateX(10%) skewX(2deg);
+    opacity: 1;
+  }
+  66% {
+    transform: translateX(-5%) skewX(-1deg);
+    opacity: 0.8;
+  }
+}
+
+/* Ice sparkle animation */
+@keyframes winter-sparkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* ============================================
+   SAKURA/CHERRY BLOSSOM THEME
+   Drifting petals, soft pinks, Japanese aesthetic
+   ============================================ */
+
+/* Sakura font - Poppins for elegant, modern Japanese aesthetic */
+body.theme-sakura {
+  font-family: var(--font-poppins), 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Cherry blossom petal falling animation - gentle swaying drift */
+@keyframes sakura-fall {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.8;
+  }
+  15% {
+    transform: translateY(15vh) translateX(30px) rotate(45deg) scale(0.95);
+  }
+  30% {
+    transform: translateY(30vh) translateX(-20px) rotate(90deg) scale(1.05);
+  }
+  45% {
+    transform: translateY(45vh) translateX(40px) rotate(180deg) scale(0.9);
+  }
+  60% {
+    transform: translateY(60vh) translateX(-15px) rotate(270deg) scale(1);
+  }
+  75% {
+    transform: translateY(75vh) translateX(25px) rotate(315deg) scale(0.95);
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(105vh) translateX(-10px) rotate(360deg) scale(1);
+    opacity: 0;
+  }
+}
+
+/* Sakura sparkle animation */
+@keyframes sakura-sparkle {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.3);
+  }
+}
+
+/* ============================================
+   HALLOWEEN THEME
+   Bats, pumpkins, cobwebs, spooky vibes
+   ============================================ */
+
+/* Halloween font - Rajdhani for subtle edgy feel without being too intense */
+body.theme-halloween {
+  font-family: var(--font-rajdhani), 'Rajdhani', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Bat flying animation - erratic movement */
+@keyframes halloween-bat-fly {
+  0% {
+    transform: translate(0, 0);
+  }
+  10% {
+    transform: translate(30px, -20px);
+  }
+  25% {
+    transform: translate(-20px, 15px);
+  }
+  40% {
+    transform: translate(50px, -10px);
+  }
+  55% {
+    transform: translate(-30px, -25px);
+  }
+  70% {
+    transform: translate(20px, 20px);
+  }
+  85% {
+    transform: translate(-40px, -5px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+/* Bat wing flapping animation */
+@keyframes halloween-bat-flap {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.7);
+  }
+}
+
+/* Floating spooky particles */
+@keyframes halloween-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-20px) scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+/* Pumpkin glow pulse */
+@keyframes halloween-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 15px rgba(255, 204, 0, 0.9));
+  }
+}
+
+/* ============================================
+   TERMINAL/HACKER THEME
+   Matrix rain, scanlines, command prompt aesthetic
+   ============================================ */
+
+/* Terminal monospace font */
+body.theme-terminal {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Consolas', monospace;
+  letter-spacing: 0;
+}
+
+/* Matrix rain falling animation */
+@keyframes terminal-rain {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+.matrix-rain-column {
+  animation: terminal-rain 12s linear infinite;
+}
+
+/* Terminal theme - smaller nav title to fit monospace font */
+body.theme-terminal h1 {
+  font-size: 24px !important;
+  letter-spacing: -0.5px;
+}
+
+/* Paper/Notebook handwritten font */
+body.theme-paper,
+body.theme-paper * {
+  font-family: var(--font-caveat), 'Caveat', cursive !important;
+}
+
+body.theme-paper {
+  font-size: 18px;
+}
+
+body.theme-paper input,
+body.theme-paper textarea,
+body.theme-paper select,
+body.theme-paper code,
+body.theme-paper pre {
+  font-family: var(--font-caveat), 'Caveat', cursive !important;
+}
+
+/* ============================================
+   AUTUMN/HARVEST THEME
+   Falling leaves, warm harvest, crisp fall energy
+   ============================================ */
+
+/* Autumn font - Nunito for warm, rounded feel */
+body.theme-autumn {
+  font-family: var(--font-nunito), 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Warm card glow for autumn */
+body.theme-autumn .card,
+body.theme-autumn [class*="Card"] {
+  box-shadow: 0 0 18px rgba(212, 128, 42, 0.06), 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Autumn: warm cozy hover glow on cards like firelight */
+body.theme-autumn .card:hover {
+  box-shadow: 0 0 28px rgba(212, 128, 42, 0.12), 0 4px 16px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.4s ease;
+}
+
+/* Autumn: nav links get a warm underline that fades in like falling leaves */
+body.theme-autumn nav a::after,
+body.theme-autumn [class*="nav"] a::after,
+body.theme-autumn [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  border-radius: 1px;
+  transition: width 0.35s ease, left 0.35s ease;
+}
+
+body.theme-autumn nav a:hover::after,
+body.theme-autumn [class*="nav"] a:hover::after,
+body.theme-autumn [class*="Nav"] a:hover::after {
+  width: 80%;
+  left: 10%;
+}
+
+/* Autumn: checkboxes get a warm pulse on check */
+body.theme-autumn input[type="checkbox"]:checked {
+  box-shadow: 0 0 8px rgba(212, 128, 42, 0.3);
+  animation: autumn-check-pulse 0.4s ease;
+}
+
+@keyframes autumn-check-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Autumn: buttons get a subtle warm gradient on hover */
+body.theme-autumn button:hover:not(:disabled) {
+  background-image: linear-gradient(135deg, rgba(212, 128, 42, 0.05) 0%, transparent 60%);
+  transition: all 0.3s ease;
+}
+
+/* Autumn: badges/pills get a leaf-like rounded shape */
+body.theme-autumn [class*="badge"],
+body.theme-autumn [class*="Badge"] {
+  border-radius: 12px 4px 12px 4px;
+  transition: border-radius 0.3s ease;
+}
+
+body.theme-autumn [class*="badge"]:hover,
+body.theme-autumn [class*="Badge"]:hover {
+  border-radius: 4px 12px 4px 12px;
+}
+
+/* Autumn leaf falling animation - wind-blown, tumbling */
+@keyframes autumn-fall {
+  0% {
+    transform: translateY(0) rotate(0deg) translateX(0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.7;
+  }
+  20% {
+    transform: translateY(20vh) rotate(72deg) translateX(40px);
+  }
+  40% {
+    transform: translateY(40vh) rotate(144deg) translateX(-25px);
+  }
+  60% {
+    transform: translateY(60vh) rotate(252deg) translateX(35px);
+  }
+  80% {
+    transform: translateY(80vh) rotate(324deg) translateX(-15px);
+  }
+  92% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(105vh) rotate(400deg) translateX(20px);
+    opacity: 0;
+  }
+}
+
+/* Gentle wind sway for grounded elements */
+@keyframes autumn-sway {
+  0%, 100% {
+    transform: rotate(-2deg) translateX(0);
+  }
+  25% {
+    transform: rotate(1deg) translateX(3px);
+  }
+  50% {
+    transform: rotate(-1deg) translateX(-2px);
+  }
+  75% {
+    transform: rotate(2deg) translateX(4px);
+  }
+}
+
+/* Warm glow pulse for harvest lanterns */
+@keyframes autumn-glow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+}
+
+/* ============================================
+   SPRING THEME
+   Floating butterflies, fresh blooms, gentle breeze
+   ============================================ */
+
+/* Spring font - Poppins for clean, fresh feel */
+body.theme-spring {
+  font-family: var(--font-poppins), 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Fresh card styling */
+body.theme-spring .card,
+body.theme-spring [class*="Card"] {
+  box-shadow: 0 0 16px rgba(92, 184, 112, 0.05), 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Spring: cards bloom open on hover with a fresh green border glow */
+body.theme-spring .card:hover {
+  box-shadow: 0 0 24px rgba(92, 184, 112, 0.1), 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-color: rgba(92, 184, 112, 0.25);
+  transition: all 0.4s ease;
+}
+
+/* Spring: nav links sprout a green dot underneath */
+body.theme-spring nav a::after,
+body.theme-spring [class*="nav"] a::after,
+body.theme-spring [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: var(--accent);
+  border-radius: 50%;
+  transition: width 0.3s ease, height 0.3s ease, left 0.3s ease;
+}
+
+body.theme-spring nav a:hover::after,
+body.theme-spring [class*="nav"] a:hover::after,
+body.theme-spring [class*="Nav"] a:hover::after {
+  width: 5px;
+  height: 5px;
+  left: calc(50% - 2.5px);
+}
+
+/* Spring: buttons get a fresh bloom animation on hover */
+body.theme-spring button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(92, 184, 112, 0.15);
+  transition: all 0.25s ease;
+}
+
+body.theme-spring button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Spring: inputs bloom with green border on focus */
+body.theme-spring input:focus,
+body.theme-spring textarea:focus,
+body.theme-spring select:focus {
+  border-color: rgba(92, 184, 112, 0.4);
+  box-shadow: 0 0 0 3px rgba(92, 184, 112, 0.1), 0 0 16px rgba(92, 184, 112, 0.06);
+}
+
+/* Spring: badges get a petal-soft look */
+body.theme-spring [class*="badge"],
+body.theme-spring [class*="Badge"] {
+  border-radius: 999px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+/* Butterfly floating animation - gentle, wandering path */
+@keyframes spring-butterfly {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 0.7;
+  }
+  10% {
+    transform: translate(15px, -25px) rotate(5deg) scale(1.05);
+  }
+  20% {
+    transform: translate(-10px, -40px) rotate(-3deg) scale(0.95);
+    opacity: 0.8;
+  }
+  30% {
+    transform: translate(25px, -20px) rotate(8deg) scale(1.02);
+  }
+  40% {
+    transform: translate(5px, -55px) rotate(-5deg) scale(0.98);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-20px, -30px) rotate(3deg) scale(1.04);
+    opacity: 0.8;
+  }
+  60% {
+    transform: translate(20px, -50px) rotate(-7deg) scale(0.96);
+  }
+  70% {
+    transform: translate(-5px, -15px) rotate(6deg) scale(1.03);
+    opacity: 0.7;
+  }
+  80% {
+    transform: translate(15px, -45px) rotate(-4deg) scale(0.97);
+  }
+  90% {
+    transform: translate(-15px, -25px) rotate(2deg) scale(1.01);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 0.7;
+  }
+}
+
+/* Raindrop falling animation */
+@keyframes spring-rain {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.6;
+  }
+  88% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+/* Gentle flower sway */
+@keyframes spring-bloom {
+  0%, 100% {
+    transform: rotate(-3deg) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: rotate(3deg) scale(1.08);
+    opacity: 0.65;
+  }
+}
+
+/* ============================================
+   NOIR/FILM NOIR THEME
+   High contrast, gold accent, cinematic shadows
+   ============================================ */
+
+/* Noir font - Space Grotesk for sharp, editorial feel */
+body.theme-noir {
+  font-family: var(--font-space-grotesk), 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Dramatic card shadows with gold border accent */
+body.theme-noir .card,
+body.theme-noir [class*="Card"] {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(200, 168, 74, 0.08);
+  border-left: 2px solid rgba(200, 168, 74, 0.15);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+body.theme-noir .card:hover,
+body.theme-noir [class*="Card"]:hover {
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(200, 168, 74, 0.15), 0 0 20px rgba(200, 168, 74, 0.04);
+  border-left: 2px solid rgba(200, 168, 74, 0.35);
+}
+
+/* Gold underline on buttons */
+body.theme-noir button:not([class*="icon"]):not([class*="Icon"]) {
+  border-bottom: 1px solid rgba(200, 168, 74, 0.12);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+body.theme-noir button:hover:not(:disabled):not([class*="icon"]):not([class*="Icon"]) {
+  border-bottom: 1px solid rgba(200, 168, 74, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Focused inputs get gold glow */
+body.theme-noir input:focus,
+body.theme-noir select:focus,
+body.theme-noir textarea:focus {
+  box-shadow: 0 0 0 2px rgba(200, 168, 74, 0.15), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Badges and pills get cinematic treatment */
+body.theme-noir [class*="badge"],
+body.theme-noir [class*="Badge"],
+body.theme-noir [class*="pill"],
+body.theme-noir [class*="Pill"] {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(200, 168, 74, 0.1);
+}
+
+/* Nav links get gold accent on hover */
+body.theme-noir nav a:hover,
+body.theme-noir [class*="nav"] a:hover,
+body.theme-noir [class*="Nav"] a:hover {
+  text-shadow: 0 0 12px rgba(200, 168, 74, 0.2);
+}
+
+/* Subtle film grain flicker */
+@keyframes noir-grain {
+  0%, 100% {
+    opacity: 0.03;
+  }
+  50% {
+    opacity: 0.05;
+  }
+}
+
+/* Noir spotlight sweep */
+@keyframes noir-spotlight {
+  0%, 100% {
+    opacity: 0.08;
+    transform: translateX(0) scaleX(1);
+  }
+  50% {
+    opacity: 0.14;
+    transform: translateX(5%) scaleX(1.1);
+  }
+}
+
+/* Dust particle float */
+@keyframes noir-dust {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(40px, -60px);
+    opacity: 0;
+  }
+}
+
+/* Lo-fi / Vaporwave Theme */
+body.theme-lofi {
+  font-family: var(--font-comfortaa), system-ui, sans-serif;
+}
+
+body.theme-lofi .card,
+body.theme-lofi [class*="rounded"] {
+  box-shadow: 0 0 20px rgba(232, 145, 197, 0.06), 0 2px 8px rgba(126, 202, 195, 0.04);
+  border-color: rgba(232, 145, 197, 0.12);
+}
+
+body.theme-lofi button:hover {
+  text-shadow: 0 0 8px rgba(232, 145, 197, 0.3);
+}
+
+body.theme-lofi input:focus,
+body.theme-lofi textarea:focus,
+body.theme-lofi select:focus {
+  box-shadow: 0 0 0 2px rgba(232, 145, 197, 0.2), 0 0 12px rgba(126, 202, 195, 0.1);
+}
+
+/* Lo-fi: cards have a cassette-tape vibe with double border on hover */
+body.theme-lofi .card:hover {
+  box-shadow: 0 0 24px rgba(232, 145, 197, 0.08), 0 0 24px rgba(126, 202, 195, 0.05), 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-color: rgba(232, 145, 197, 0.2);
+  transition: all 0.5s ease;
+}
+
+/* Lo-fi: nav links get a dreamy pink-teal gradient underline */
+body.theme-lofi nav a::after,
+body.theme-lofi [class*="nav"] a::after,
+body.theme-lofi [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(232, 145, 197, 0.6), rgba(126, 202, 195, 0.6));
+  border-radius: 1px;
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.theme-lofi nav a:hover::after,
+body.theme-lofi [class*="nav"] a:hover::after,
+body.theme-lofi [class*="Nav"] a:hover::after {
+  width: 100%;
+}
+
+/* Lo-fi: buttons float up gently on hover like a vinyl lifting */
+body.theme-lofi button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.theme-lofi button:active:not(:disabled) {
+  transform: translateY(0);
+  transition: transform 0.1s ease;
+}
+
+/* Lo-fi: inputs get a warm pink/teal alternating focus glow */
+body.theme-lofi [class*="badge"],
+body.theme-lofi [class*="Badge"] {
+  border-radius: 4px;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+/* Lo-fi: smooth transitions on everything */
+body.theme-lofi button,
+body.theme-lofi a,
+body.theme-lofi input,
+body.theme-lofi select {
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes lofi-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.25;
+  }
+  25% {
+    transform: translateY(-30px) rotate(5deg);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateY(-15px) rotate(-3deg);
+    opacity: 0.2;
+  }
+  75% {
+    transform: translateY(-40px) rotate(8deg);
+    opacity: 0.3;
+  }
+}
+
+@keyframes lofi-scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+@keyframes lofi-pulse {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.25;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes lofi-drift {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(20px, -30px) rotate(90deg);
+  }
+  50% {
+    transform: translate(-10px, -50px) rotate(180deg);
+  }
+  75% {
+    transform: translate(30px, -20px) rotate(270deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(360deg);
+  }
+}
+
+@keyframes lofi-note {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.4;
+  }
+  90% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-120px) rotate(15deg);
+    opacity: 0;
+  }
+}
+
+/* Jungle / Safari Theme */
+body.theme-jungle {
+  font-family: var(--font-nunito), system-ui, sans-serif;
+}
+
+body.theme-jungle .card,
+body.theme-jungle [class*="rounded"] {
+  box-shadow: 0 2px 12px rgba(30, 80, 30, 0.06);
+}
+
+/* Jungle: cards get a vine-like left border that grows on hover */
+body.theme-jungle .card {
+  border-left: 3px solid transparent;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+body.theme-jungle .card:hover {
+  border-left: 3px solid var(--accent);
+  box-shadow: 0 4px 20px rgba(78, 201, 78, 0.08), 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Jungle: nav links get a leaf/vine growing underline */
+body.theme-jungle nav a::after,
+body.theme-jungle [class*="nav"] a::after,
+body.theme-jungle [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), rgba(112, 216, 64, 0.5));
+  border-radius: 1px;
+  transition: width 0.35s ease;
+}
+
+body.theme-jungle nav a:hover::after,
+body.theme-jungle [class*="nav"] a:hover::after,
+body.theme-jungle [class*="Nav"] a:hover::after {
+  width: 100%;
+}
+
+/* Jungle: buttons rustle on hover — slight rotation wiggle */
+body.theme-jungle button:hover:not(:disabled) {
+  animation: jungle-button-rustle 0.4s ease;
+}
+
+@keyframes jungle-button-rustle {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-1deg); }
+  50% { transform: rotate(1deg); }
+  75% { transform: rotate(-0.5deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Jungle: badges look like little wooden tags */
+body.theme-jungle [class*="badge"],
+body.theme-jungle [class*="Badge"] {
+  border-radius: 3px;
+  border: 1px solid rgba(78, 201, 78, 0.15);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Jungle: inputs get a natural earthy focus */
+body.theme-jungle input:focus,
+body.theme-jungle textarea:focus,
+body.theme-jungle select:focus {
+  border-color: rgba(78, 201, 78, 0.3);
+  box-shadow: 0 0 0 2px rgba(78, 201, 78, 0.12), 0 0 12px rgba(78, 201, 78, 0.06);
+}
+
+@keyframes jungle-vine {
+  0%, 100% {
+    transform: rotate(-2deg) scaleY(1);
+  }
+  50% {
+    transform: rotate(2deg) scaleY(1.02);
+  }
+}
+
+@keyframes jungle-parrot {
+  0% {
+    transform: translate(0, 0) scaleX(1);
+  }
+  24% {
+    transform: translate(120px, -40px) scaleX(1);
+  }
+  25% {
+    transform: translate(120px, -40px) scaleX(-1);
+  }
+  49% {
+    transform: translate(0, 0) scaleX(-1);
+  }
+  50% {
+    transform: translate(0, 0) scaleX(1);
+  }
+  74% {
+    transform: translate(-80px, -30px) scaleX(1);
+  }
+  75% {
+    transform: translate(-80px, -30px) scaleX(-1);
+  }
+  99% {
+    transform: translate(0, 0) scaleX(-1);
+  }
+  100% {
+    transform: translate(0, 0) scaleX(1);
+  }
+}
+
+@keyframes jungle-sway {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(3deg);
+  }
+  75% {
+    transform: rotate(-3deg);
+  }
+}
+
+@keyframes jungle-firefly {
+  0%, 100% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  20% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate(15px, -20px);
+  }
+  80% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes jungle-butterfly {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0.5;
+  }
+  25% {
+    transform: translate(40px, -30px) rotate(10deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(20px, -60px) rotate(-5deg);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translate(60px, -40px) rotate(15deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0.5;
+  }
+}
+
+/* Glassmorphism / Liquid Glass Theme */
+body.theme-glass {
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+body.theme-glass .card {
+  backdrop-filter: blur(24px) saturate(1.6) brightness(1.05);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6) brightness(1.05);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 40%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+}
+
+body.theme-glass [style*="sticky"] {
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+}
+
+body.theme-glass input:focus,
+body.theme-glass textarea:focus,
+body.theme-glass select:focus {
+  box-shadow: 0 0 0 2px rgba(108, 140, 255, 0.18), 0 0 16px rgba(108, 140, 255, 0.06);
+  border-color: rgba(108, 140, 255, 0.25);
+}
+
+/* Glass: cards refract more on hover — increased blur and brightness */
+body.theme-glass .card:hover {
+  backdrop-filter: blur(28px) saturate(1.8) brightness(1.08);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8) brightness(1.08);
+  border-top-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.4s ease;
+}
+
+/* Glass: nav links get a glowing frosted pill on hover */
+body.theme-glass nav a,
+body.theme-glass [class*="nav"] a,
+body.theme-glass [class*="Nav"] a {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+body.theme-glass nav a:hover,
+body.theme-glass [class*="nav"] a:hover,
+body.theme-glass [class*="Nav"] a:hover {
+  background: rgba(108, 140, 255, 0.06);
+  box-shadow: 0 0 16px rgba(108, 140, 255, 0.06);
+}
+
+/* Glass: buttons get a premium frosted look on hover */
+body.theme-glass button:hover:not(:disabled) {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 16px rgba(108, 140, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+  transition: all 0.3s ease;
+}
+
+body.theme-glass button:active:not(:disabled) {
+  transform: translateY(0);
+  transition: transform 0.1s ease;
+}
+
+/* Glass: badges look like little frosted pills */
+body.theme-glass [class*="badge"],
+body.theme-glass [class*="Badge"] {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Glass: smooth transitions on everything */
+body.theme-glass button,
+body.theme-glass a,
+body.theme-glass input,
+body.theme-glass select {
+  transition: all 0.3s ease;
+}
+
+@keyframes glass-orb {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(40px, -25px) scale(1.08);
+  }
+  66% {
+    transform: translate(-25px, 20px) scale(0.94);
+  }
+}
+
+@keyframes glass-shimmer {
+  0% {
+    transform: translateX(-100%) rotate(25deg);
+  }
+  100% {
+    transform: translateX(200%) rotate(25deg);
+  }
+}
+
+@keyframes glass-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-20px) rotate(3deg);
+    opacity: 0.5;
+  }
+}
+
+/* Steampunk Theme */
+body.theme-steampunk {
+  font-family: var(--font-rajdhani), system-ui, sans-serif;
+}
+
+body.theme-steampunk .card {
+  border: 1.5px solid rgba(200, 144, 64, 0.15);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(200, 144, 64, 0.06);
+}
+
+body.theme-steampunk button:hover:not(:disabled) {
+  text-shadow: 0 0 6px rgba(200, 144, 64, 0.25);
+}
+
+/* Steampunk: cards have rivet-like corners and brass border on hover */
+body.theme-steampunk .card:hover {
+  border-color: rgba(200, 144, 64, 0.3);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(200, 144, 64, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* Steampunk: nav links get a mechanical brass bar that slides in */
+body.theme-steampunk nav a::after,
+body.theme-steampunk [class*="nav"] a::after,
+body.theme-steampunk [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(200, 144, 64, 0.6), rgba(192, 112, 64, 0.6), rgba(200, 144, 64, 0.6));
+  border-radius: 1.5px;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 4px rgba(200, 144, 64, 0.2);
+}
+
+body.theme-steampunk nav a:hover::after,
+body.theme-steampunk [class*="nav"] a:hover::after,
+body.theme-steampunk [class*="Nav"] a:hover::after {
+  width: 100%;
+}
+
+/* Steampunk: buttons click down like a mechanical switch */
+body.theme-steampunk button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+  transition: all 0.1s ease;
+}
+
+/* Steampunk: inputs get a brass-framed look on focus */
+body.theme-steampunk input:focus,
+body.theme-steampunk textarea:focus,
+body.theme-steampunk select:focus {
+  border-color: rgba(200, 144, 64, 0.4);
+  box-shadow: 0 0 0 2px rgba(200, 144, 64, 0.12), inset 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Steampunk: badges look like brass plates */
+body.theme-steampunk [class*="badge"],
+body.theme-steampunk [class*="Badge"] {
+  border: 1px solid rgba(200, 144, 64, 0.2);
+  border-radius: 3px;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 200, 100, 0.08);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.85em;
+}
+
+/* Steampunk: everything has mechanical precision transitions */
+body.theme-steampunk button,
+body.theme-steampunk a,
+body.theme-steampunk input,
+body.theme-steampunk select {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes steam-gear {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes steam-gear-reverse {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+
+@keyframes steam-puff {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.25;
+  }
+  100% {
+    transform: translateY(-80px) scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes steam-flicker {
+  0%, 100% { opacity: 0.3; }
+  25% { opacity: 0.5; }
+  50% { opacity: 0.35; }
+  75% { opacity: 0.45; }
+}
+
+@keyframes steam-gauge {
+  0%, 100% { transform: rotate(-40deg); }
+  30% { transform: rotate(25deg); }
+  60% { transform: rotate(10deg); }
+  80% { transform: rotate(30deg); }
+}
+
+@keyframes steam-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* ============================================
+   WINTER: INTERACTIVE TOUCHES
+   Icy, crystalline, frost-spreading effects
+   ============================================ */
+
+/* Winter: nav links get an icy frost line that crystallizes outward */
+body.theme-winter nav a::after,
+body.theme-winter [class*="nav"] a::after,
+body.theme-winter [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(164, 216, 234, 0.7), rgba(200, 230, 255, 0.9), rgba(164, 216, 234, 0.7), transparent);
+  border-radius: 1px;
+  transition: width 0.4s ease, left 0.4s ease;
+  box-shadow: 0 0 4px rgba(164, 216, 234, 0.3);
+}
+
+body.theme-winter nav a:hover::after,
+body.theme-winter [class*="nav"] a:hover::after,
+body.theme-winter [class*="Nav"] a:hover::after {
+  width: 90%;
+  left: 5%;
+  box-shadow: 0 0 8px rgba(164, 216, 234, 0.5), 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+/* Winter: buttons get frosty lift with icy glow */
+body.theme-winter button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(164, 216, 234, 0.15), 0 0 0 1px rgba(200, 230, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+body.theme-winter button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Winter: badges look like ice crystals */
+body.theme-winter [class*="badge"],
+body.theme-winter [class*="Badge"] {
+  border: 1px solid rgba(164, 216, 234, 0.2);
+  box-shadow: 0 0 6px rgba(164, 216, 234, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+}
+
+body.theme-winter [class*="badge"]:hover,
+body.theme-winter [class*="Badge"]:hover {
+  box-shadow: 0 0 10px rgba(164, 216, 234, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Winter: inputs get a frost ring on focus */
+body.theme-winter input:focus,
+body.theme-winter textarea:focus,
+body.theme-winter select:focus {
+  box-shadow: 0 0 0 2px rgba(164, 216, 234, 0.2), 0 0 12px rgba(164, 216, 234, 0.08);
+  border-color: rgba(164, 216, 234, 0.4);
+}
+
+/* Winter: smooth icy transitions */
+body.theme-winter button,
+body.theme-winter a,
+body.theme-winter input,
+body.theme-winter select {
+  transition: all 0.3s ease;
+}
+
+/* ============================================
+   OCEAN: INTERACTIVE TOUCHES
+   Fluid, wave-like, rippling effects
+   ============================================ */
+
+/* Ocean: nav links get a wave-like ripple underline */
+body.theme-ocean nav a::after,
+body.theme-ocean [class*="nav"] a::after,
+body.theme-ocean [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(26, 138, 156, 0.3), rgba(59, 158, 190, 0.8), rgba(100, 200, 230, 0.8), rgba(59, 158, 190, 0.8), rgba(26, 138, 156, 0.3));
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), left 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+body.theme-ocean nav a:hover::after,
+body.theme-ocean [class*="nav"] a:hover::after,
+body.theme-ocean [class*="Nav"] a:hover::after {
+  width: 100%;
+  left: 0;
+}
+
+/* Ocean: buttons ripple with depth on hover */
+body.theme-ocean button:hover:not(:disabled) {
+  box-shadow: 0 2px 8px rgba(59, 158, 190, 0.2), 0 4px 16px rgba(59, 158, 190, 0.08);
+  transform: translateY(-1px);
+}
+
+body.theme-ocean button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(59, 158, 190, 0.15);
+  transition: all 0.1s ease;
+}
+
+/* Ocean: badges look like polished sea glass */
+body.theme-ocean [class*="badge"],
+body.theme-ocean [class*="Badge"] {
+  border: 1px solid rgba(59, 158, 190, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(59, 158, 190, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+body.theme-ocean [class*="badge"]:hover,
+body.theme-ocean [class*="Badge"]:hover {
+  box-shadow: 0 2px 8px rgba(59, 158, 190, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+  transition: all 0.3s ease;
+}
+
+/* ============================================
+   LAVENDER: INTERACTIVE TOUCHES
+   Dreamy, soft, floating, sparkly effects
+   ============================================ */
+
+/* Lavender: nav links get a soft glowing dot that blooms */
+body.theme-lavender nav a::after,
+body.theme-lavender [class*="nav"] a::after,
+body.theme-lavender [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.8), rgba(183, 148, 244, 0.4), transparent);
+  border-radius: 50%;
+  transition: all 0.4s ease;
+  opacity: 0;
+}
+
+body.theme-lavender nav a:hover::after,
+body.theme-lavender [class*="nav"] a:hover::after,
+body.theme-lavender [class*="Nav"] a:hover::after {
+  width: 8px;
+  height: 8px;
+  left: calc(50% - 4px);
+  opacity: 1;
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.4);
+}
+
+/* Lavender: buttons float up dreamily on hover */
+body.theme-lavender button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(167, 139, 250, 0.15), 0 2px 8px rgba(183, 148, 244, 0.08);
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+body.theme-lavender button:active:not(:disabled) {
+  transform: translateY(0);
+  transition: all 0.15s ease;
+}
+
+/* Lavender: badges have a soft dreamlike glow */
+body.theme-lavender [class*="badge"],
+body.theme-lavender [class*="Badge"] {
+  border: 1px solid rgba(167, 139, 250, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 0 8px rgba(167, 139, 250, 0.06);
+}
+
+body.theme-lavender [class*="badge"]:hover,
+body.theme-lavender [class*="Badge"]:hover {
+  box-shadow: 0 0 14px rgba(167, 139, 250, 0.15);
+  border-color: rgba(167, 139, 250, 0.25);
+}
+
+/* Lavender: inputs bloom softly on focus */
+body.theme-lavender input:focus,
+body.theme-lavender textarea:focus,
+body.theme-lavender select:focus {
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.12), 0 0 20px rgba(167, 139, 250, 0.06);
+  border-color: rgba(167, 139, 250, 0.3);
+}
+
+/* ============================================
+   SAKURA: INTERACTIVE TOUCHES
+   Delicate, petal-like, cherry blossom elegance
+   ============================================ */
+
+/* Sakura: nav links get a delicate pink petal line */
+body.theme-sakura nav a::after,
+body.theme-sakura [class*="nav"] a::after,
+body.theme-sakura [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(240, 164, 192, 0.6), rgba(242, 184, 208, 0.9), rgba(240, 164, 192, 0.6), transparent);
+  border-radius: 1px;
+  transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+body.theme-sakura nav a:hover::after,
+body.theme-sakura [class*="nav"] a:hover::after,
+body.theme-sakura [class*="Nav"] a:hover::after {
+  width: 70%;
+  left: 15%;
+  box-shadow: 0 0 6px rgba(240, 164, 192, 0.25);
+}
+
+/* Sakura: buttons blossom with soft pink aura */
+body.theme-sakura button:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 4px 14px rgba(240, 164, 192, 0.12), 0 0 0 1px rgba(242, 184, 208, 0.06);
+  transition: all 0.35s ease;
+}
+
+body.theme-sakura button:active:not(:disabled) {
+  transform: scale(0.98);
+  transition: all 0.1s ease;
+}
+
+/* Sakura: badges are petal-shaped */
+body.theme-sakura [class*="badge"],
+body.theme-sakura [class*="Badge"] {
+  border-radius: 10px 4px 10px 4px;
+  border: 1px solid rgba(240, 164, 192, 0.15);
+  transition: all 0.3s ease;
+}
+
+body.theme-sakura [class*="badge"]:hover,
+body.theme-sakura [class*="Badge"]:hover {
+  border-radius: 4px 10px 4px 10px;
+  box-shadow: 0 0 8px rgba(240, 164, 192, 0.15);
+}
+
+/* Sakura: checkboxes get a soft petal pulse */
+body.theme-sakura input[type="checkbox"]:checked {
+  box-shadow: 0 0 8px rgba(240, 164, 192, 0.3);
+  animation: sakura-check-bloom 0.4s ease;
+}
+
+@keyframes sakura-check-bloom {
+  0% { transform: scale(1); box-shadow: 0 0 0 rgba(240, 164, 192, 0); }
+  50% { transform: scale(1.12); box-shadow: 0 0 12px rgba(240, 164, 192, 0.4); }
+  100% { transform: scale(1); box-shadow: 0 0 8px rgba(240, 164, 192, 0.3); }
+}
+
+/* Sakura: inputs bloom with pink focus */
+body.theme-sakura input:focus,
+body.theme-sakura textarea:focus,
+body.theme-sakura select:focus {
+  box-shadow: 0 0 0 2px rgba(240, 164, 192, 0.15), 0 0 12px rgba(240, 164, 192, 0.06);
+  border-color: rgba(240, 164, 192, 0.35);
+}
+
+/* Sakura: smooth elegant transitions */
+body.theme-sakura button,
+body.theme-sakura a,
+body.theme-sakura input,
+body.theme-sakura select {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* ============================================
+   HALLOWEEN: INTERACTIVE TOUCHES
+   Spooky, flickering, haunted effects
+   ============================================ */
+
+/* Halloween: nav links get an eerie flicker glow */
+body.theme-halloween nav a::after,
+body.theme-halloween [class*="nav"] a::after,
+body.theme-halloween [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255, 107, 43, 0.6), rgba(255, 170, 0, 0.8), rgba(255, 107, 43, 0.6));
+  border-radius: 1px;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  box-shadow: 0 0 6px rgba(255, 140, 0, 0.3);
+}
+
+body.theme-halloween nav a:hover::after,
+body.theme-halloween [class*="nav"] a:hover::after,
+body.theme-halloween [class*="Nav"] a:hover::after {
+  transform: scaleX(1);
+  animation: halloween-nav-flicker 2s ease infinite;
+}
+
+@keyframes halloween-nav-flicker {
+  0%, 100% { opacity: 1; }
+  10% { opacity: 0.6; }
+  12% { opacity: 1; }
+  40% { opacity: 1; }
+  42% { opacity: 0.5; }
+  44% { opacity: 1; }
+  70% { opacity: 1; }
+  72% { opacity: 0.7; }
+  74% { opacity: 1; }
+}
+
+/* Halloween: cards get an eerie edge glow on hover */
+body.theme-halloween .card:hover {
+  box-shadow: 0 0 20px rgba(255, 140, 0, 0.08), 0 0 40px rgba(74, 200, 74, 0.03), 0 4px 16px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 140, 0, 0.15);
+  transition: all 0.4s ease;
+}
+
+/* Halloween: buttons ghost-lift on hover */
+body.theme-halloween button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3), 0 0 8px rgba(255, 140, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+body.theme-halloween button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  transition: all 0.1s ease;
+}
+
+/* Halloween: badges look like candy with slight tilt on hover */
+body.theme-halloween [class*="badge"],
+body.theme-halloween [class*="Badge"] {
+  border: 1px solid rgba(255, 140, 0, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+body.theme-halloween [class*="badge"]:hover,
+body.theme-halloween [class*="Badge"]:hover {
+  transform: rotate(-3deg) scale(1.05);
+  box-shadow: 0 3px 10px rgba(255, 140, 0, 0.15);
+}
+
+/* Halloween: inputs get a spooky focus */
+body.theme-halloween input:focus,
+body.theme-halloween textarea:focus,
+body.theme-halloween select:focus {
+  box-shadow: 0 0 0 2px rgba(255, 140, 0, 0.12), 0 0 12px rgba(255, 140, 0, 0.05);
+  border-color: rgba(255, 140, 0, 0.3);
+}
+
+/* Halloween: spooky transitions */
+body.theme-halloween button,
+body.theme-halloween a,
+body.theme-halloween input,
+body.theme-halloween select {
+  transition: all 0.25s ease;
+}
+
+/* ============================================
+   TERMINAL: INTERACTIVE TOUCHES
+   Command-line, matrix, hacker vibes
+   ============================================ */
+
+/* Terminal: nav links get a blinking cursor on hover */
+body.theme-terminal nav a,
+body.theme-terminal [class*="nav"] a,
+body.theme-terminal [class*="Nav"] a {
+  position: relative;
+}
+
+body.theme-terminal nav a::after,
+body.theme-terminal [class*="nav"] a::after,
+body.theme-terminal [class*="Nav"] a::after {
+  content: '_';
+  position: absolute;
+  right: -8px;
+  bottom: 0;
+  color: rgba(0, 255, 65, 0.7);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+body.theme-terminal nav a:hover::after,
+body.theme-terminal [class*="nav"] a:hover::after,
+body.theme-terminal [class*="Nav"] a:hover::after {
+  opacity: 1;
+  animation: terminal-cursor-blink 1s step-end infinite;
+}
+
+@keyframes terminal-cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* Terminal: cards get scanline overlay on hover */
+body.theme-terminal .card:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.05), 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-color: rgba(0, 255, 65, 0.15);
+  transition: all 0.2s ease;
+}
+
+/* Terminal: buttons have matrix green glow */
+body.theme-terminal button:hover:not(:disabled) {
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.1), 0 0 2px rgba(0, 255, 65, 0.15);
+  text-shadow: 0 0 4px rgba(0, 255, 65, 0.2);
+  transition: all 0.15s ease;
+}
+
+body.theme-terminal button:active:not(:disabled) {
+  box-shadow: inset 0 0 8px rgba(0, 255, 65, 0.1);
+  transition: all 0.05s ease;
+}
+
+/* Terminal: badges look like [tags] with monospace feel */
+body.theme-terminal [class*="badge"],
+body.theme-terminal [class*="Badge"] {
+  border-radius: 2px;
+  border: 1px solid rgba(0, 255, 65, 0.15);
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 0.8em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Terminal: inputs get green matrix focus */
+body.theme-terminal input:focus,
+body.theme-terminal textarea:focus,
+body.theme-terminal select:focus {
+  box-shadow: 0 0 0 1px rgba(0, 255, 65, 0.3), 0 0 8px rgba(0, 255, 65, 0.06);
+  border-color: rgba(0, 255, 65, 0.4);
+  caret-color: rgba(0, 255, 65, 0.8);
+}
+
+/* Terminal: everything snaps (fast transitions) */
+body.theme-terminal button,
+body.theme-terminal a,
+body.theme-terminal input,
+body.theme-terminal select {
+  transition: all 0.1s linear;
+}
+
+/* ============================================
+   PAPER: INTERACTIVE TOUCHES
+   Handwritten, sketchbook, notebook feel
+   ============================================ */
+
+/* Paper: nav links get a pencil-sketch underline */
+body.theme-paper nav a::after,
+body.theme-paper [class*="nav"] a::after,
+body.theme-paper [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--text-muted);
+  border-radius: 0;
+  transform: scaleX(0) rotate(-0.5deg);
+  transform-origin: left center;
+  transition: transform 0.3s ease;
+  opacity: 0.5;
+}
+
+body.theme-paper nav a:hover::after,
+body.theme-paper [class*="nav"] a:hover::after,
+body.theme-paper [class*="Nav"] a:hover::after {
+  transform: scaleX(1) rotate(-0.5deg);
+  opacity: 0.7;
+}
+
+/* Paper: cards tilt slightly on hover like shuffled pages */
+body.theme-paper .card:hover {
+  transform: rotate(-0.3deg) translateY(-1px);
+  box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+/* Paper: buttons have a paper-press emboss */
+body.theme-paper button:hover:not(:disabled) {
+  box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.2s ease;
+}
+
+body.theme-paper button:active:not(:disabled) {
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
+  transition: all 0.1s ease;
+}
+
+/* Paper: badges look like sticky notes */
+body.theme-paper [class*="badge"],
+body.theme-paper [class*="Badge"] {
+  border-radius: 2px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transform: rotate(-1deg);
+  transition: transform 0.3s ease;
+}
+
+body.theme-paper [class*="badge"]:hover,
+body.theme-paper [class*="Badge"]:hover {
+  transform: rotate(1deg) scale(1.03);
+}
+
+/* Paper: inputs have a pencil-like border on focus */
+body.theme-paper input:focus,
+body.theme-paper textarea:focus,
+body.theme-paper select:focus {
+  border-color: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+  border-style: solid;
+  border-bottom-width: 2px;
+}
+
+/* Paper: organic imperfect transitions */
+body.theme-paper button,
+body.theme-paper a,
+body.theme-paper input,
+body.theme-paper select {
+  transition: all 0.25s ease;
+}
+
+/* ============================================
+   PIXEL: INTERACTIVE TOUCHES
+   8-bit, blocky, retro gaming feel
+   ============================================ */
+
+/* Pixel: nav links get a blocky bar that fills in */
+body.theme-pixel nav a::after,
+body.theme-pixel [class*="nav"] a::after,
+body.theme-pixel [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--accent);
+  border-radius: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.15s steps(4);
+}
+
+body.theme-pixel nav a:hover::after,
+body.theme-pixel [class*="nav"] a:hover::after,
+body.theme-pixel [class*="Nav"] a:hover::after {
+  transform: scaleX(1);
+}
+
+/* Pixel: buttons press down with retro click */
+body.theme-pixel button:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--accent);
+  transition: all 0.1s steps(2);
+}
+
+body.theme-pixel button:active:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--accent);
+  transition: all 0.05s steps(1);
+}
+
+/* Pixel: badges are blocky level chips */
+body.theme-pixel [class*="badge"],
+body.theme-pixel [class*="Badge"] {
+  border-radius: 0;
+  border: 2px solid var(--border);
+  box-shadow: 2px 2px 0 var(--border);
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Pixel: inputs have crisp pixel borders */
+body.theme-pixel input:focus,
+body.theme-pixel textarea:focus,
+body.theme-pixel select:focus {
+  box-shadow: 3px 3px 0 var(--accent);
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* Pixel: everything snaps with stepped transitions */
+body.theme-pixel button,
+body.theme-pixel a {
+  transition: all 0.1s steps(3);
+}
+
+/* ============================================
+   RETRO: INTERACTIVE TOUCHES
+   Neon synthwave, vaporwave glow effects
+   ============================================ */
+
+/* Retro: nav links get a neon glow line */
+body.theme-retro nav a::after,
+body.theme-retro [class*="nav"] a::after,
+body.theme-retro [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255, 107, 157, 0.8), rgba(0, 217, 255, 0.8));
+  border-radius: 1px;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  box-shadow: 0 0 8px rgba(255, 107, 157, 0.4);
+}
+
+body.theme-retro nav a:hover::after,
+body.theme-retro [class*="nav"] a:hover::after,
+body.theme-retro [class*="Nav"] a:hover::after {
+  transform: scaleX(1);
+  box-shadow: 0 0 12px rgba(255, 107, 157, 0.5), 0 0 4px rgba(0, 217, 255, 0.3);
+}
+
+/* Retro: buttons pulse with neon on hover */
+body.theme-retro button:hover:not(:disabled) {
+  box-shadow: 0 0 12px rgba(255, 107, 157, 0.25), 0 0 24px rgba(0, 217, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+body.theme-retro button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 0 6px rgba(255, 107, 157, 0.2);
+  transition: all 0.1s ease;
+}
+
+/* Retro: badges glow like neon signs */
+body.theme-retro [class*="badge"],
+body.theme-retro [class*="Badge"] {
+  border: 1px solid rgba(255, 107, 157, 0.2);
+  box-shadow: 0 0 6px rgba(255, 107, 157, 0.12), inset 0 0 4px rgba(0, 217, 255, 0.04);
+  border-radius: 4px;
+}
+
+body.theme-retro [class*="badge"]:hover,
+body.theme-retro [class*="Badge"]:hover {
+  box-shadow: 0 0 12px rgba(255, 107, 157, 0.25), 0 0 4px rgba(0, 217, 255, 0.1);
+  border-color: rgba(255, 107, 157, 0.35);
+}
+
+/* ============================================
+   AQUARIUM: INTERACTIVE TOUCHES
+   Underwater, bubbly, shimmering effects
+   ============================================ */
+
+/* Aquarium: nav links get a bubble rising effect */
+body.theme-aquarium nav a::after,
+body.theme-aquarium [class*="nav"] a::after,
+body.theme-aquarium [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(32, 178, 170, 0.6), rgba(72, 209, 204, 0.3), transparent);
+  border-radius: 50%;
+  transition: all 0.35s ease;
+  opacity: 0;
+}
+
+body.theme-aquarium nav a:hover::after,
+body.theme-aquarium [class*="nav"] a:hover::after,
+body.theme-aquarium [class*="Nav"] a:hover::after {
+  width: 6px;
+  height: 6px;
+  left: calc(50% - 3px);
+  opacity: 1;
+  box-shadow: 0 0 8px rgba(32, 178, 170, 0.35);
+}
+
+/* Aquarium: cards shimmer like underwater light */
+body.theme-aquarium .card:hover {
+  box-shadow: 0 0 24px rgba(32, 178, 170, 0.1), 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-color: rgba(32, 178, 170, 0.15);
+  transition: all 0.5s ease;
+}
+
+/* Aquarium: buttons shimmer on hover */
+body.theme-aquarium button:hover:not(:disabled) {
+  box-shadow: 0 2px 12px rgba(32, 178, 170, 0.15);
+  transform: translateY(-1px);
+  transition: all 0.3s ease;
+}
+
+body.theme-aquarium button:active:not(:disabled) {
+  transform: translateY(0);
+  transition: all 0.1s ease;
+}
+
+/* Aquarium: badges look like floating bubbles */
+body.theme-aquarium [class*="badge"],
+body.theme-aquarium [class*="Badge"] {
+  border-radius: 14px;
+  border: 1px solid rgba(32, 178, 170, 0.15);
+  box-shadow: 0 1px 4px rgba(32, 178, 170, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body.theme-aquarium [class*="badge"]:hover,
+body.theme-aquarium [class*="Badge"]:hover {
+  box-shadow: 0 2px 8px rgba(32, 178, 170, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  transition: all 0.35s ease;
+}
+
+/* Aquarium: inputs get aqua glow on focus */
+body.theme-aquarium input:focus,
+body.theme-aquarium textarea:focus,
+body.theme-aquarium select:focus {
+  box-shadow: 0 0 0 2px rgba(32, 178, 170, 0.15), 0 0 12px rgba(32, 178, 170, 0.06);
+  border-color: rgba(32, 178, 170, 0.35);
+}
+
+/* Aquarium: fluid smooth transitions */
+body.theme-aquarium button,
+body.theme-aquarium a,
+body.theme-aquarium input,
+body.theme-aquarium select {
+  transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* ============================================
+   NATURE: INTERACTIVE TOUCHES
+   Organic, earthy, growing effects
+   ============================================ */
+
+/* Nature: nav links get a growing vine underline */
+body.theme-nature nav a::after,
+body.theme-nature [class*="nav"] a::after,
+body.theme-nature [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(74, 159, 74, 0.3), rgba(106, 191, 106, 0.7), rgba(74, 159, 74, 0.3));
+  border-radius: 1px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+body.theme-nature nav a:hover::after,
+body.theme-nature [class*="nav"] a:hover::after,
+body.theme-nature [class*="Nav"] a:hover::after {
+  transform: scaleX(1);
+}
+
+/* Nature: buttons sprout on hover */
+body.theme-nature button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 159, 74, 0.12);
+  transition: all 0.35s ease;
+}
+
+body.theme-nature button:active:not(:disabled) {
+  transform: translateY(0);
+  transition: all 0.1s ease;
+}
+
+/* Nature: badges look like leaf tags */
+body.theme-nature [class*="badge"],
+body.theme-nature [class*="Badge"] {
+  border-radius: 8px 4px 8px 4px;
+  border: 1px solid rgba(74, 159, 74, 0.12);
+  box-shadow: 0 1px 3px rgba(74, 159, 74, 0.06);
+}
+
+body.theme-nature [class*="badge"]:hover,
+body.theme-nature [class*="Badge"]:hover {
+  border-radius: 4px 8px 4px 8px;
+  box-shadow: 0 2px 6px rgba(74, 159, 74, 0.12);
+  transition: all 0.3s ease;
+}
+
+/* ============================================
+   NOIR: INTERACTIVE TOUCHES
+   Cinematic, dramatic, film noir spotlight
+   ============================================ */
+
+/* Noir: nav links get a gold spotlight bar sliding in from left */
+body.theme-noir nav a::after,
+body.theme-noir [class*="nav"] a::after,
+body.theme-noir [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(200, 168, 74, 0.6), rgba(200, 168, 74, 0.2), transparent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.theme-noir nav a:hover::after,
+body.theme-noir [class*="nav"] a:hover::after,
+body.theme-noir [class*="Nav"] a:hover::after {
+  transform: scaleX(1);
+}
+
+/* Noir: dramatic card spotlight on hover */
+body.theme-noir .card:hover {
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(200, 168, 74, 0.15), 0 0 30px rgba(200, 168, 74, 0.05);
+  border-left: 2px solid rgba(200, 168, 74, 0.4);
+}
+
+/* Noir: buttons have dramatic press */
+body.theme-noir button:active:not(:disabled):not([class*="icon"]):not([class*="Icon"]) {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  transition: all 0.1s ease;
+}
+
+/* Noir: smooth cinematic transitions */
+body.theme-noir button,
+body.theme-noir a,
+body.theme-noir input,
+body.theme-noir select {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   CARTOON: INTERACTIVE TOUCHES
+   Bouncy, playful, exaggerated animations
+   ============================================ */
+
+/* Cartoon: nav links bounce on hover */
+body.theme-cartoon nav a:hover,
+body.theme-cartoon [class*="nav"] a:hover,
+body.theme-cartoon [class*="Nav"] a:hover {
+  animation: cartoon-nav-bounce 0.4s ease;
+}
+
+@keyframes cartoon-nav-bounce {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(0.95); }
+  75% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+/* Cartoon: buttons squish on press (enhanced) */
+body.theme-cartoon button:active:not(:disabled) {
+  transform: scale(0.92) !important;
+  transition: transform 0.1s ease !important;
+}
+
+/* Cartoon: badges pop and wobble on hover */
+body.theme-cartoon [class*="badge"]:hover,
+body.theme-cartoon [class*="Badge"]:hover {
+  animation: cartoon-badge-pop 0.35s ease;
+}
+
+@keyframes cartoon-badge-pop {
+  0% { transform: scale(1) rotate(0deg); }
+  30% { transform: scale(1.15) rotate(-3deg); }
+  60% { transform: scale(0.95) rotate(2deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Cartoon: checkboxes bounce on check */
+body.theme-cartoon input[type="checkbox"]:checked {
+  animation: cartoon-check-bounce 0.4s ease;
+}
+
+@keyframes cartoon-check-bounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.3); }
+  50% { transform: scale(0.85); }
+  70% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Cartoon: inputs wiggle on focus */
+body.theme-cartoon input:focus,
+body.theme-cartoon textarea:focus,
+body.theme-cartoon select:focus {
+  animation: cartoon-focus-wiggle 0.3s ease;
+}
+
+@keyframes cartoon-focus-wiggle {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-1deg); }
+  50% { transform: rotate(1deg); }
+  75% { transform: rotate(-0.5deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* ============================================
+   SKEUOMORPHISM THEME
+   Textured surfaces, embossed elements, tactile depth
+   ============================================ */
+
+/* Skeuo font - system font for classic iOS feel */
+body.theme-skeuo {
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', sans-serif;
+}
+
+/* Skeuo: entire page has a linen micro-texture */
+body.theme-skeuo {
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 1px,
+      rgba(120, 80, 40, 0.02) 1px,
+      rgba(120, 80, 40, 0.02) 2px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 1px,
+      rgba(120, 80, 40, 0.02) 1px,
+      rgba(120, 80, 40, 0.02) 2px
+    );
+  background-size: 5px 5px;
+}
+
+/* Skeuo: cards look like raised leather-bound surfaces with visible texture */
+body.theme-skeuo .card,
+body.theme-skeuo [class*="Card"] {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 30%, transparent 50%, rgba(0, 0, 0, 0.04) 100%),
+    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(120, 80, 30, 0.015) 2px, rgba(120, 80, 30, 0.015) 3px),
+    repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(120, 80, 30, 0.01) 4px, rgba(120, 80, 30, 0.01) 5px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.1) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.06) inset,
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    0 1px 3px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
+  border-top-color: rgba(255, 255, 255, 0.06);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+body.theme-skeuo .card:hover,
+body.theme-skeuo [class*="Card"]:hover {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.08) inset,
+    0 8px 24px rgba(0, 0, 0, 0.25),
+    0 2px 6px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+/* Skeuo: nav/header bar gets a brushed metal texture */
+body.theme-skeuo nav,
+body.theme-skeuo header {
+  background-image:
+    repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255, 255, 255, 0.015) 1px, rgba(255, 255, 255, 0.015) 2px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 50%, rgba(0, 0, 0, 0.02) 100%);
+  background-size: 3px 3px, 100% 100%;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Skeuo: buttons look glossy and embossed with micro-texture */
+body.theme-skeuo button:not([class*="icon"]):not([class*="Icon"]) {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.05) 48%, transparent 52%, rgba(0, 0, 0, 0.05) 100%),
+    repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255, 255, 255, 0.01) 1px, rgba(255, 255, 255, 0.01) 2px);
+  background-size: 100% 100%, 2px 2px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.1) inset,
+    0 2px 5px rgba(0, 0, 0, 0.14),
+    0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-top-color: rgba(255, 255, 255, 0.06);
+  transition: all 0.15s ease;
+}
+
+body.theme-skeuo button:hover:not(:disabled):not([class*="icon"]):not([class*="Icon"]) {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 48%, transparent 52%, rgba(0, 0, 0, 0.04) 100%),
+    repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255, 255, 255, 0.01) 1px, rgba(255, 255, 255, 0.01) 2px);
+  background-size: 100% 100%, 2px 2px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.15) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.1) inset,
+    0 4px 10px rgba(0, 0, 0, 0.18),
+    0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+body.theme-skeuo button:active:not(:disabled):not([class*="icon"]):not([class*="Icon"]) {
+  background-image:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.03) 48%, transparent 52%, rgba(255, 255, 255, 0.04) 100%),
+    repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(0, 0, 0, 0.01) 1px, rgba(0, 0, 0, 0.01) 2px);
+  background-size: 100% 100%, 2px 2px;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.15) inset,
+    0 1px 1px rgba(0, 0, 0, 0.08);
+  transform: translateY(1px);
+  transition: all 0.05s ease;
+}
+
+/* Skeuo: inputs look recessed/sunken with paper-like texture inside */
+body.theme-skeuo input,
+body.theme-skeuo textarea,
+body.theme-skeuo select {
+  background-image:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.03) 0%, transparent 30%),
+    repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 0, 0, 0.008) 3px, rgba(0, 0, 0, 0.008) 4px);
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.1) inset,
+    0 1px 2px rgba(0, 0, 0, 0.06) inset,
+    0 -1px 0 rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+  transition: all 0.2s ease;
+}
+
+body.theme-skeuo input:focus,
+body.theme-skeuo textarea:focus,
+body.theme-skeuo select:focus {
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.14) inset,
+    0 1px 3px rgba(0, 0, 0, 0.1) inset,
+    0 0 0 2px rgba(212, 162, 74, 0.25);
+  border-color: rgba(212, 162, 74, 0.45);
+}
+
+/* Skeuo: scrollbar gets a leather look */
+body.theme-skeuo ::-webkit-scrollbar {
+  width: 10px;
+}
+
+body.theme-skeuo ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.08);
+}
+
+body.theme-skeuo ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(160, 120, 60, 0.4), rgba(130, 90, 40, 0.5));
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Skeuo: nav links get an embossed text effect on hover */
+body.theme-skeuo nav a:hover,
+body.theme-skeuo [class*="nav"] a:hover,
+body.theme-skeuo [class*="Nav"] a:hover {
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12),
+    0 -1px 0 rgba(0, 0, 0, 0.25);
+  transition: text-shadow 0.2s ease;
+}
+
+/* Skeuo: nav links get a raised bar on hover */
+body.theme-skeuo nav a::after,
+body.theme-skeuo [class*="nav"] a::after,
+body.theme-skeuo [class*="Nav"] a::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 10%;
+  width: 80%;
+  height: 3px;
+  background: linear-gradient(180deg, rgba(212, 162, 74, 0.6), rgba(180, 130, 50, 0.45));
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 -1px 0 rgba(255, 255, 255, 0.06) inset;
+  transform: scaleX(0);
+  transition: transform 0.25s ease;
+}
+
+body.theme-skeuo nav a:hover::after,
+body.theme-skeuo [class*="nav"] a:hover::after,
+body.theme-skeuo [class*="Nav"] a:hover::after {
+  transform: scaleX(1);
+}
+
+/* Skeuo: badges look like embossed metal plates with texture */
+body.theme-skeuo [class*="badge"],
+body.theme-skeuo [class*="Badge"] {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 50%, rgba(0, 0, 0, 0.06) 100%),
+    repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255, 255, 255, 0.008) 1px, rgba(255, 255, 255, 0.008) 2px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.1) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.08) inset,
+    0 1px 3px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-skeuo [class*="badge"]:hover,
+body.theme-skeuo [class*="Badge"]:hover {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.14) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.08) inset,
+    0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+/* Skeuo: checkboxes look like physical toggles */
+body.theme-skeuo input[type="checkbox"] {
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.15) inset,
+    0 -1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body.theme-skeuo input[type="checkbox"]:checked {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.1) inset,
+    0 0 8px rgba(212, 162, 74, 0.25);
+}
+
+/* Skeuo: tables/lists get subtle row texture */
+body.theme-skeuo tr:nth-child(even),
+body.theme-skeuo li:nth-child(even) {
+  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.02) 50%, rgba(0, 0, 0, 0.01) 100%);
+}
+
+/* Skeuo: dividers/separators look embossed */
+body.theme-skeuo hr,
+body.theme-skeuo [class*="divider"],
+body.theme-skeuo [class*="Divider"],
+body.theme-skeuo [class*="separator"],
+body.theme-skeuo [class*="Separator"] {
+  border: none;
+  height: 2px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.03));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Skeuo: smooth tactile transitions */
+body.theme-skeuo button,
+body.theme-skeuo a,
+body.theme-skeuo input,
+body.theme-skeuo select {
+  transition: all 0.2s ease;
+}
+
+/* Cursor blink animation */
+@keyframes terminal-blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}

@@ -90,6 +90,18 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  // Apply visual theme class to body for font styling
+  const visualTheme = useAppStore((state) => state.settings.visualTheme);
+  const isPremium = useAppStore((state) => state.isPremium);
+  useEffect(() => {
+    // Remove all theme classes first
+    document.body.classList.remove('theme-cartoon', 'theme-cyberpunk', 'theme-retro', 'theme-nature', 'theme-cozy', 'theme-winter', 'theme-sakura', 'theme-halloween', 'theme-terminal', 'theme-paper');
+    // Add current theme class if premium
+    if (isPremium && visualTheme && visualTheme !== 'default') {
+      document.body.classList.add(`theme-${visualTheme}`);
+    }
+  }, [visualTheme, isPremium]);
+
   // Don't render loading screen during initial SSR/hydration
   // Only render after hydration completes to avoid mismatch
   if (!isHydrated) {

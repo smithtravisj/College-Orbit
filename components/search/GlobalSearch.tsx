@@ -39,8 +39,8 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   useEffect(() => {
     if (isOpen) {
       fetch('/api/flashcards/decks', { credentials: 'include' })
-        .then(res => res.ok ? res.json() : [])
-        .then(data => setFlashcardDecks(data || []))
+        .then(res => res.ok ? res.json() : { decks: [] })
+        .then(data => setFlashcardDecks(Array.isArray(data?.decks) ? data.decks : []))
         .catch(() => setFlashcardDecks([]));
     }
   }, [isOpen]);
@@ -137,7 +137,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
     });
 
     // Add flashcard decks
-    flashcardDecks.forEach((deck: any) => {
+    (Array.isArray(flashcardDecks) ? flashcardDecks : []).forEach((deck: any) => {
       const courseName = courses.find((c: any) => c.id === deck.courseId)?.name;
       items.push({
         id: `deck-${deck.id}`,

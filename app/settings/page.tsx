@@ -4300,7 +4300,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Custom Theme Toggle */}
-            <div id="setting-custom-theme" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '20px' }}>
+            <div id="setting-custom-theme" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginBottom: '0' }}>
               {!isPremium && !isLoadingSubscription && (
                 <div style={{ marginBottom: '16px' }}>
                   <UpgradePrompt feature="Custom themes and visual effects" />
@@ -4410,50 +4410,64 @@ export default function SettingsPage() {
               <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
                 Fun, personality-driven themes with unique colors and styles
               </p>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-                gap: '12px',
-                opacity: isPremium ? 1 : 0.5,
-              }}>
-                {/* Default Theme */}
-                <button
-                  onClick={() => {
-                    if (!isPremium) return;
-                    updateSettings({ visualTheme: 'default' });
-                  }}
-                  style={{
-                    padding: '12px',
-                    backgroundColor: settings.visualTheme === 'default' || !settings.visualTheme ? 'var(--accent-2)' : 'var(--panel-2)',
-                    border: settings.visualTheme === 'default' || !settings.visualTheme ? '2px solid var(--accent)' : '1px solid var(--border)',
-                    borderRadius: 'var(--radius-control, 12px)',
-                    cursor: isPremium ? 'pointer' : 'not-allowed',
-                    textAlign: 'left',
-                  }}
-                >
-                  <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Default</p>
-                  <p className="text-xs text-[var(--text-muted)]" style={{ margin: 0 }}>Clean & minimal</p>
-                </button>
-
-                {/* Cartoon Theme */}
-                <button
-                  onClick={() => {
-                    if (!isPremium) return;
-                    updateSettings({ visualTheme: 'cartoon' });
-                  }}
-                  style={{
-                    padding: '12px',
-                    backgroundColor: settings.visualTheme === 'cartoon' ? 'rgba(0, 217, 255, 0.15)' : 'var(--panel-2)',
-                    border: settings.visualTheme === 'cartoon' ? '2px solid #00d9ff' : '1px solid var(--border)',
-                    borderRadius: 'var(--radius-control, 12px)',
-                    cursor: isPremium ? 'pointer' : 'not-allowed',
-                    textAlign: 'left',
-                  }}
-                >
-                  <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Cartoon</p>
-                  <p className="text-xs text-[var(--text-muted)]" style={{ margin: 0 }}>Bright & playful</p>
-                </button>
-              </div>
+              <select
+                value={settings.visualTheme || 'default'}
+                onChange={(e) => {
+                  if (!isPremium) return;
+                  updateSettings({ visualTheme: e.target.value });
+                }}
+                disabled={!isPremium}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  backgroundColor: 'var(--panel-2)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-control, 12px)',
+                  color: 'var(--text)',
+                  fontSize: '14px',
+                  cursor: isPremium ? 'pointer' : 'not-allowed',
+                  opacity: isPremium ? 1 : 0.5,
+                  appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                }}
+              >
+                <option value="default">Default — Clean & minimal</option>
+                <optgroup label="Calm & Relaxing">
+                  <option value="cozy">Cozy — Fireflies & candlelight</option>
+                  <option value="nature">Nature — Earthy & calming</option>
+                  <option value="ocean">Ocean — Coastal & serene</option>
+                  <option value="lavender">Lavender — Soft & dreamy</option>
+                  <option value="aquarium">Aquarium — Swimming fish & bubbles</option>
+                </optgroup>
+                <optgroup label="Seasonal">
+                  <option value="spring">Spring — Butterflies & fresh blooms</option>
+                  <option value="sakura">Sakura — Cherry blossoms & soft pinks</option>
+                  <option value="autumn">Autumn — Crisp leaves & harvest warmth</option>
+                  <option value="winter">Winter — Snowflakes & aurora</option>
+                  <option value="halloween">Halloween — Bats, pumpkins & cobwebs</option>
+                </optgroup>
+                <optgroup label="Fun & Playful">
+                  <option value="cartoon">Cartoon — Bright & playful</option>
+                  <option value="pixel">Pixel — 8-bit retro gaming</option>
+                  <option value="paper">Paper — Notebook with doodles</option>
+                  <option value="jungle">Jungle — Tropical wilds & parrots</option>
+                </optgroup>
+                <optgroup label="Aesthetic">
+                  <option value="noir">Noir — Cinematic shadows & gold</option>
+                  <option value="lofi">Lo-fi — Soft pastels & analog vibes</option>
+                  <option value="glass">Glass — Frosted panels & translucent blur</option>
+                  <option value="skeuo">Skeuomorphism — Textured surfaces & tactile depth</option>
+                </optgroup>
+                <optgroup label="Tech & Futuristic">
+                  <option value="cyberpunk">Cyberpunk — Neon & futuristic</option>
+                  <option value="retro">Retro — 80s synthwave</option>
+                  <option value="steampunk">Steampunk — Brass gears & Victorian industry</option>
+                  <option value="space">Space — Cosmic & stellar</option>
+                  <option value="terminal">Terminal — Matrix rain & hacker vibes</option>
+                </optgroup>
+              </select>
             </div>
 
             {/* Visual Effects */}
@@ -4509,7 +4523,7 @@ export default function SettingsPage() {
             <div id="setting-colorblind-mode" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                 <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Colorblind Mode</p>
-                <HelpTooltip text="Protanopia: difficulty seeing red. Deuteranopia: difficulty seeing green. Tritanopia: difficulty seeing blue. Achromatopsia: complete color blindness. Choose your type for optimized colors." size={14} width={240} />
+                <HelpTooltip text="Protanopia: difficulty seeing red. Deuteranopia: difficulty seeing green. Tritanopia: difficulty seeing blue. Achromatopsia: complete color blindness. Choose your type for optimized colors. Note: May not work well with visual themes." size={14} width={260} />
               </div>
               <select
                 value={settings.colorblindMode || ''}

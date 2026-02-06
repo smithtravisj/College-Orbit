@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Quicksand } from 'next/font/google';
+import { Inter, Quicksand, Rajdhani, Russo_One, Nunito, Comfortaa, Poppins, Space_Grotesk, Pixelify_Sans, Caveat, Creepster } from 'next/font/google';
 import { Providers } from './providers';
 import './globals.css';
 import LayoutWrapper from '@/components/LayoutWrapper';
@@ -16,6 +16,69 @@ const quicksand = Quicksand({
   weight: ['400', '500', '600', '700'],
   display: 'swap',
   variable: '--font-quicksand',
+});
+
+const rajdhani = Rajdhani({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-rajdhani',
+});
+
+const russoOne = Russo_One({
+  subsets: ['latin'],
+  weight: ['400'],
+  display: 'swap',
+  variable: '--font-russo',
+});
+
+const nunito = Nunito({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-nunito',
+});
+
+const comfortaa = Comfortaa({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-comfortaa',
+});
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-poppins',
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-space-grotesk',
+});
+
+const pixelifySans = Pixelify_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-pixelify',
+});
+
+const caveat = Caveat({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-caveat',
+});
+
+const creepster = Creepster({
+  subsets: ['latin'],
+  weight: ['400'],
+  display: 'swap',
+  variable: '--font-creepster',
 });
 
 export const viewport: Viewport = {
@@ -76,7 +139,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${quicksand.variable} ${inter.className}`}>
+    <html lang="en" className={`${inter.variable} ${quicksand.variable} ${rajdhani.variable} ${russoOne.variable} ${nunito.variable} ${comfortaa.variable} ${poppins.variable} ${spaceGrotesk.variable} ${pixelifySans.variable} ${caveat.variable} ${creepster.variable} ${inter.className}`}>
       <head>
         <meta name="color-scheme" content="light dark" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
