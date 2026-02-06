@@ -141,7 +141,7 @@ export default function FlashcardMode({
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (studyComplete) return;
+      if (studyComplete || isEditing) return;
 
       switch (e.key) {
         case ' ':
@@ -171,7 +171,7 @@ export default function FlashcardMode({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleFlip, handleRate, handlePrevious, onExit, isFlipped, studyComplete]);
+  }, [handleFlip, handleRate, handlePrevious, onExit, isFlipped, studyComplete, isEditing]);
 
   if (studyComplete) {
     return (
