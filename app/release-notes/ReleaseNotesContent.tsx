@@ -89,7 +89,7 @@ export default function ReleaseNotesContent() {
               key={release.version}
               title={
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>Version {release.version}</span>
+                  <span>Version {release.version.replace(/^v/, '')}</span>
                   {release.isBetaOnly && (
                     <span
                       style={{
