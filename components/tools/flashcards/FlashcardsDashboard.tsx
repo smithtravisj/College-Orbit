@@ -83,7 +83,8 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
   // Fetch daily progress
   const fetchDailyProgress = useCallback(async () => {
     try {
-      const res = await fetch('/api/flashcards/daily-progress');
+      const tz = new Date().getTimezoneOffset();
+      const res = await fetch(`/api/flashcards/daily-progress?tz=${tz}`);
       if (res.ok) {
         const data = await res.json();
         setDailyProgress(data);
