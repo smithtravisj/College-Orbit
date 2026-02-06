@@ -1,12 +1,13 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { ReactNode, useEffect, useRef } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Navigation from './Navigation';
 import { MobileHeader } from './MobileHeader';
 import { FloatingMenuButton } from './FloatingMenuButton';
 import { QuickAddButton } from './QuickAddButton';
+import MiniPomodoroPlayer from './MiniPomodoroPlayer';
 import { CanvasSyncManager } from './CanvasSyncManager';
 import { BlackboardSyncManager } from './BlackboardSyncManager';
 import { MoodleSyncManager } from './MoodleSyncManager';
@@ -15,6 +16,7 @@ import { AchievementToastContainer, LevelUpToast, Confetti } from './gamificatio
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAnalyticsPageView } from '@/lib/useAnalytics';
 import useAppStore from '@/lib/store';
+import { usePomodoroContext } from '@/context/PomodoroContext';
 import styles from './LayoutWrapper.module.css';
 import BackgroundDecoration from './BackgroundDecoration';
 import KeyboardShortcutsProvider from './KeyboardShortcutsProvider';
@@ -31,6 +33,36 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const setShowConfetti = useAppStore((state) => state.setShowConfetti);
   const dismissLevelUp = useAppStore((state) => state.dismissLevelUp);
   const isRefreshing = useRef(false);
+  const { hasActiveSession: hasPomodoroSession, isMiniPlayerDismissed } = usePomodoroContext();
+  const [toolsTab, setToolsTab] = useState<string>('productivity');
+
+  // Track tools tab for mini player visibility
+  useEffect(() => {
+    const updateToolsTab = () => {
+      const saved = localStorage.getItem('toolsTab');
+      if (saved) setToolsTab(saved);
+    };
+
+    updateToolsTab();
+
+    // Listen for storage changes (when tab changes on tools page)
+    window.addEventListener('storage', updateToolsTab);
+
+    // Also poll for changes since storage event doesn't fire in same tab
+    const interval = setInterval(updateToolsTab, 500);
+
+    return () => {
+      window.removeEventListener('storage', updateToolsTab);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Show mini player when timer session is active, not dismissed, and either:
+  // - Not on tools page, OR
+  // - On tools page but on flashcards or grades tab (not productivity where Pomodoro is)
+  const isOnToolsPage = pathname?.startsWith('/tools');
+  const isOnPomodoroTab = isOnToolsPage && toolsTab === 'productivity';
+  const showMiniPlayer = hasPomodoroSession && !isMiniPlayerDismissed && !isOnPomodoroTab;
 
   // Track page views for analytics
   useAnalyticsPageView();
@@ -166,6 +198,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
         <Navigation />
         <QuickAddButton />
         <FloatingMenuButton />
+        {showMiniPlayer && <MiniPomodoroPlayer />}
         <main className={styles.mobileMain}>
           {children}
         </main>
@@ -185,6 +218,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
         <BrightspaceSyncManager />
         <Navigation />
         <QuickAddButton />
+        {showMiniPlayer && <MiniPomodoroPlayer />}
         <main style={{ marginLeft: '224px', minWidth: 0 }}>
           {children}
         </main>
