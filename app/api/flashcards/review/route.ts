@@ -110,9 +110,19 @@ export async function POST(req: NextRequest) {
       card.repetitions
     );
 
-    // Calculate next review date
-    const nextReview = new Date();
-    nextReview.setDate(nextReview.getDate() + interval);
+    // Calculate next review date in user's local timezone
+    // timezoneOffset is in minutes (negative for ahead of UTC, e.g., UTC-5 = 300)
+    const timezoneOffset = data.timezoneOffset ?? 0;
+    const now = new Date();
+
+    // Get the user's local midnight for the target day
+    // First, get current time adjusted to user's timezone
+    const userLocalTime = new Date(now.getTime() - timezoneOffset * 60 * 1000);
+    // Set to start of day in user's timezone, then add interval days
+    userLocalTime.setUTCHours(0, 0, 0, 0);
+    userLocalTime.setUTCDate(userLocalTime.getUTCDate() + interval);
+    // Convert back to UTC for storage
+    const nextReview = new Date(userLocalTime.getTime() + timezoneOffset * 60 * 1000);
 
     // Update card with new spaced repetition values
     const updatedCard = await prisma.flashcard.update({
@@ -126,7 +136,6 @@ export async function POST(req: NextRequest) {
     });
 
     // Award XP for the review (1 XP per card)
-    const timezoneOffset = data.timezoneOffset ?? 0;
     const gamificationResult = await processFlashcardReview(
       session.user.id,
       timezoneOffset,
