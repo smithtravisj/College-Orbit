@@ -4792,7 +4792,54 @@ export default function SettingsPage() {
                     Productivity
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {[TOOLS_CARDS.POMODORO_TIMER, TOOLS_CARDS.QUICK_LINKS].map((cardId) => (
+                    {[
+                      TOOLS_CARDS.POMODORO_TIMER,
+                      TOOLS_CARDS.QUICK_LINKS,
+                      TOOLS_CARDS.FILE_CONVERTER,
+                      TOOLS_CARDS.UNIT_CONVERTER,
+                      TOOLS_CARDS.WORD_COUNTER,
+                      TOOLS_CARDS.CITATION_GENERATOR,
+                    ].map((cardId) => (
+                      <label
+                        key={cardId}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '10px 12px',
+                          backgroundColor: 'var(--panel-2)',
+                          borderRadius: '8px',
+                          border: '1px solid var(--border)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={visibleToolsCards.includes(cardId)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setVisibleToolsCards([...visibleToolsCards, cardId]);
+                            } else {
+                              setVisibleToolsCards(visibleToolsCards.filter((c) => c !== cardId));
+                            }
+                          }}
+                          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                        />
+                        <span style={{ color: 'var(--text)', fontSize: '14px', flex: 1 }}>
+                          {CARD_LABELS[cardId] || cardId}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Study Section */}
+                <div style={{ marginBottom: '20px' }}>
+                  <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Study
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {[TOOLS_CARDS.FLASHCARDS].map((cardId) => (
                       <label
                         key={cardId}
                         style={{

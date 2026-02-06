@@ -154,14 +154,9 @@ export default function ToolsPage() {
   const confirmBeforeDelete = settings.confirmBeforeDelete ?? true;
 
   // Tools card visibility is only customizable for premium users - free users see defaults
-  // Ensure any new cards added to the system are included in visible cards
   const allToolsCards = Object.values(TOOLS_CARDS);
   const savedVisibleToolsCards = settings.visibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS;
-  const mergedVisibleToolsCards = [
-    ...savedVisibleToolsCards,
-    ...allToolsCards.filter((card) => !savedVisibleToolsCards.includes(card)),
-  ];
-  const visibleToolsCards = subscription.isPremium ? mergedVisibleToolsCards : DEFAULT_VISIBLE_TOOLS_CARDS;
+  const visibleToolsCards = subscription.isPremium ? savedVisibleToolsCards : DEFAULT_VISIBLE_TOOLS_CARDS;
 
   // Get the tools cards order from settings, or use the default (only applies to premium users)
   // Ensure any new cards added to the system are included in the order
@@ -1127,9 +1122,17 @@ export default function ToolsPage() {
           </p>
         </div>
 
-        {/* Tab Navigation */}
+        {/* Tab Navigation - only show tabs that have visible tools */}
+        {(() => {
+          const visibleTabs = TOOLS_TABS.filter((tab) => {
+            // Check if any tool in this tab is visible
+            return Object.entries(TOOL_TAB_MAPPING).some(
+              ([toolId, tabKey]) => tabKey === tab.key && visibleToolsCards.includes(toolId)
+            );
+          });
+          return visibleTabs.length > 0 ? (
         <div style={{ display: 'flex', gap: isMobile ? '3px' : '8px', marginTop: '16px', marginBottom: '8px' }}>
-          {TOOLS_TABS.map((tab) => (
+          {visibleTabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
@@ -1155,6 +1158,8 @@ export default function ToolsPage() {
             </button>
           ))}
         </div>
+          ) : null;
+        })()}
       </div>
       <div className="mx-auto w-full max-w-[1800px]" style={{ paddingLeft: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingRight: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingBottom: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingTop: '0', position: 'relative', zIndex: 1 }}>
         <div className={`grid gap-[var(--grid-gap)] ${activeTab === 'productivity' && !isMobile ? 'grid-cols-2' : 'grid-cols-1'}`} style={{ alignItems: 'stretch' }}>

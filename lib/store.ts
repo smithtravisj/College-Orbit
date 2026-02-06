@@ -633,13 +633,13 @@ const useAppStore = create<AppStore>((set, get) => ({
         ? JSON.parse(rawSettings.visibleToolsCards)
         : rawSettings?.visibleToolsCards;
 
-      // Use saved settings directly - don't merge with defaults for visiblePages
-      // as that would add back pages the user explicitly hid
+      // Use saved settings directly - don't merge with defaults
+      // as that would add back items the user explicitly hid
       const parsedSettings = {
         ...rawSettings,
         visiblePages: savedVisiblePages || DEFAULT_VISIBLE_PAGES,
-        visibleDashboardCards: savedVisibleDashboardCards ? [...new Set([...DEFAULT_VISIBLE_DASHBOARD_CARDS, ...savedVisibleDashboardCards])] : DEFAULT_VISIBLE_DASHBOARD_CARDS,
-        visibleToolsCards: savedVisibleToolsCards ? [...new Set([...DEFAULT_VISIBLE_TOOLS_CARDS, ...savedVisibleToolsCards])] : DEFAULT_VISIBLE_TOOLS_CARDS,
+        visibleDashboardCards: savedVisibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS,
+        visibleToolsCards: savedVisibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS,
       };
 
       const newData = {
@@ -2467,19 +2467,8 @@ const useAppStore = create<AppStore>((set, get) => ({
       );
 
       // Ensure visibleDashboardCards always includes new default cards (like 'timeline')
-      // This handles users who saved settings before new cards were added
-      if (filteredSettings.visibleDashboardCards && Array.isArray(filteredSettings.visibleDashboardCards)) {
-        filteredSettings.visibleDashboardCards = [...new Set([
-          ...DEFAULT_VISIBLE_DASHBOARD_CARDS,
-          ...(filteredSettings.visibleDashboardCards as string[])
-        ])];
-      }
-      if (filteredSettings.visibleToolsCards && Array.isArray(filteredSettings.visibleToolsCards)) {
-        filteredSettings.visibleToolsCards = [...new Set([
-          ...DEFAULT_VISIBLE_TOOLS_CARDS,
-          ...(filteredSettings.visibleToolsCards as string[])
-        ])];
-      }
+      // Note: Don't merge visible cards with defaults here - that would add back
+      // cards the user explicitly hid. Just use the saved values as-is.
 
       const mergedSettings = { ...currentState, ...filteredSettings };
       const needsUpdate = JSON.stringify(currentState) !== JSON.stringify(mergedSettings);
