@@ -8,6 +8,7 @@ import { MobileHeader } from './MobileHeader';
 import { FloatingMenuButton } from './FloatingMenuButton';
 import { QuickAddButton } from './QuickAddButton';
 import MiniPomodoroPlayer from './MiniPomodoroPlayer';
+import { MiniSpotifyPlayer, SpotifySyncManager } from './spotify';
 import { CanvasSyncManager } from './CanvasSyncManager';
 import { BlackboardSyncManager } from './BlackboardSyncManager';
 import { MoodleSyncManager } from './MoodleSyncManager';
@@ -194,11 +195,13 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
         <BlackboardSyncManager />
         <MoodleSyncManager />
         <BrightspaceSyncManager />
+        <SpotifySyncManager />
         <MobileHeader />
         <Navigation />
         <QuickAddButton />
         <FloatingMenuButton />
         {showMiniPlayer && <MiniPomodoroPlayer />}
+        <MiniSpotifyPlayer />
         <main className={styles.mobileMain}>
           {children}
         </main>
@@ -216,9 +219,11 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
         <BlackboardSyncManager />
         <MoodleSyncManager />
         <BrightspaceSyncManager />
+        <SpotifySyncManager />
         <Navigation />
         <QuickAddButton />
         {showMiniPlayer && <MiniPomodoroPlayer />}
+        <MiniSpotifyPlayer />
         <main style={{ marginLeft: '224px', minWidth: 0 }}>
           {children}
         </main>

@@ -1448,6 +1448,7 @@ export default function AccountPage() {
                       <li>• Unlimited notes & courses</li>
                       <li>• Calendar & Shopping pages</li>
                       <li>• All Tools (GPA, Pomodoro, etc.)</li>
+                      <li>• Spotify Integration</li>
                       <li>• File uploads & recurring items</li>
                       <li>• Custom themes & visual effects</li>
                     </ul>
@@ -1536,6 +1537,7 @@ export default function AccountPage() {
                         'Calendar page',
                         'Shopping lists',
                         'All Tools access',
+                        'Spotify Integration',
                         'File attachments',
                         'Recurring items',
                         'Custom themes',

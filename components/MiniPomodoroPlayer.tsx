@@ -21,7 +21,7 @@ export default function MiniPomodoroPlayer() {
     isRunning,
     isWorkSession,
     toggle,
-    dismissMiniPlayer,
+    reset,
   } = usePomodoroContext();
 
   const [position, setPosition] = useState<Position | null>(null);
@@ -138,7 +138,7 @@ export default function MiniPomodoroPlayer() {
 
   const handleClose = (e: React.MouseEvent) => {
     e.stopPropagation();
-    dismissMiniPlayer();
+    reset();
   };
 
   // Position styles - use saved position or default to bottom-right

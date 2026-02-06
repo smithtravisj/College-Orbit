@@ -519,11 +519,11 @@ export async function sendSubscriptionStartedEmail({
                       </td>
                       <td style="vertical-align: top; width: 50%;">
                         <ul style="margin: 0; padding-left: 20px; color: #a1a1aa;">
+                          <li style="margin-bottom: 8px;">Spotify Integration</li>
                           <li style="margin-bottom: 8px;">File attachments</li>
                           <li style="margin-bottom: 8px;">Recurring items</li>
                           <li style="margin-bottom: 8px;">Custom themes</li>
                           <li style="margin-bottom: 8px;">Visual effects</li>
-                          <li style="margin-bottom: 8px;">Dashboard customization</li>
                         </ul>
                       </td>
                     </tr>
@@ -576,11 +576,11 @@ You now have access to:
 - Calendar page
 - Shopping lists
 - All Tools access
+- Spotify Integration
 - File attachments
 - Recurring items
 - Custom themes
 - Visual effects
-- Dashboard customization
 
 Go to your dashboard: ${APP_URL}/dashboard
 

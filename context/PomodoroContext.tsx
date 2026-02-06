@@ -81,6 +81,7 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         setTotalWorkTime(state.totalWorkTime || 0);
         setTotalBreakTime(state.totalBreakTime || 0);
         setHasActiveSession(state.hasActiveSession || false);
+        setIsMiniPlayerDismissed(state.isMiniPlayerDismissed || false);
 
         // Restore session timing if timer was running
         if (state.isRunning && state.sessionStartTime) {
@@ -123,10 +124,11 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       totalWorkTime,
       totalBreakTime,
       hasActiveSession,
+      isMiniPlayerDismissed,
       sessionStartTime: sessionStartTimeRef.current,
     };
     localStorage.setItem('pomodoroState', JSON.stringify(state));
-  }, [hasRestored, workDuration, breakDuration, timeLeft, isRunning, isWorkSession, sessionsCompleted, totalWorkTime, totalBreakTime, hasActiveSession]);
+  }, [hasRestored, workDuration, breakDuration, timeLeft, isRunning, isWorkSession, sessionsCompleted, totalWorkTime, totalBreakTime, hasActiveSession, isMiniPlayerDismissed]);
 
   // Debounced function to save timer settings to database
   const savePomodoroSettings = useRef(
@@ -301,8 +303,9 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         }
 
         if (newTimeLeft <= 0) {
-          // Timer ended
+          // Timer ended - show mini player for new session
           playNotification();
+          setIsMiniPlayerDismissed(false);
 
           if (isWorkSession) {
             setSessionsCompleted((s) => s + 1);

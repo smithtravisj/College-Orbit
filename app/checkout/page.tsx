@@ -18,6 +18,7 @@ const FEATURES = [
   'File attachments',
   'Recurring tasks, assignments & exams',
   'All Tools (GPA Calculator, Pomodoro, etc.)',
+  'Spotify Integration',
   'Custom color themes',
   'Visual effects customization',
   'Page & Card visibility customization',

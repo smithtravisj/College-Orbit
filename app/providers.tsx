@@ -7,6 +7,7 @@ import AppLoader from '@/components/AppLoader';
 import SessionRegistrar from '@/components/SessionRegistrar';
 import { MobileNavProvider } from '@/context/MobileNavContext';
 import { PomodoroProvider } from '@/context/PomodoroContext';
+import { SpotifyProvider } from '@/context/SpotifyContext';
 import { DeleteToastProvider } from '@/components/DeleteToastProvider';
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -14,12 +15,14 @@ export function Providers({ children }: { children: ReactNode }) {
     <SessionProvider>
       <MobileNavProvider>
         <PomodoroProvider>
-          <AppLoader>
-            <BrowserTitle />
-            <SessionRegistrar />
-            {children}
-            <DeleteToastProvider />
-          </AppLoader>
+          <SpotifyProvider>
+            <AppLoader>
+              <BrowserTitle />
+              <SessionRegistrar />
+              {children}
+              <DeleteToastProvider />
+            </AppLoader>
+          </SpotifyProvider>
         </PomodoroProvider>
       </MobileNavProvider>
     </SessionProvider>

@@ -606,6 +606,18 @@ model Settings {
   flashcardCelebrations       Boolean   @default(true)
   flashcardDefaultSort        String?   @default("recent")    // 'recent', 'due', 'alpha', 'course', 'mastery', 'created'
 
+  // Spotify Integration
+  spotifyAccessToken        String?   // OAuth access token (encrypted)
+  spotifyRefreshToken       String?   // OAuth refresh token (encrypted)
+  spotifyTokenExpiresAt     DateTime?
+  spotifyUserId             String?
+  spotifyUserName           String?
+  spotifyProfileImage       String?
+  spotifyProduct            String?   // "premium" | "free" | "open"
+  spotifyConnected          Boolean   @default(false)
+  spotifyMiniPlayerSize     String    @default("medium") // "big" | "medium" | "mini"
+  spotifyVisualizerEnabled  Boolean   @default(true)
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
