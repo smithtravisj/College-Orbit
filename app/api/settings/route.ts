@@ -135,6 +135,17 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.colorblindStyle !== undefined) updateData.colorblindStyle = data.colorblindStyle;
     if (data.isBetaUser !== undefined) updateData.isBetaUser = data.isBetaUser;
 
+    // Flashcard settings
+    if (data.flashcardDefaultMode !== undefined) updateData.flashcardDefaultMode = data.flashcardDefaultMode;
+    if (data.flashcardCardsPerSession !== undefined) updateData.flashcardCardsPerSession = data.flashcardCardsPerSession;
+    if (data.flashcardDailyGoal !== undefined) updateData.flashcardDailyGoal = data.flashcardDailyGoal;
+    if (data.flashcardShuffleOrder !== undefined) updateData.flashcardShuffleOrder = data.flashcardShuffleOrder;
+    if (data.flashcardAutoFlipDelay !== undefined) updateData.flashcardAutoFlipDelay = data.flashcardAutoFlipDelay;
+    if (data.flashcardShowKeyboardHints !== undefined) updateData.flashcardShowKeyboardHints = data.flashcardShowKeyboardHints;
+    if (data.flashcardSoundEffects !== undefined) updateData.flashcardSoundEffects = data.flashcardSoundEffects;
+    if (data.flashcardCelebrations !== undefined) updateData.flashcardCelebrations = data.flashcardCelebrations;
+    if (data.flashcardDefaultSort !== undefined) updateData.flashcardDefaultSort = data.flashcardDefaultSort;
+
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 
     // Try to update existing settings
@@ -142,6 +153,28 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
       where: { userId },
       data: updateData,
     });
+
+    // If university was updated, also sync User.collegeId for leaderboard
+    if (data.university !== undefined) {
+      let collegeId: string | null = null;
+
+      if (data.university) {
+        // Look up college by fullName to get its ID
+        const college = await prisma.college.findFirst({
+          where: { fullName: data.university, isActive: true },
+          select: { id: true },
+        });
+        collegeId = college?.id || null;
+      }
+
+      // Update user's collegeId
+      await prisma.user.update({
+        where: { id: userId },
+        data: { collegeId },
+      });
+
+      console.log('[PATCH /api/settings] Synced User.collegeId:', collegeId);
+    }
 
     console.log('[PATCH /api/settings] Updated settings:', settings);
     return NextResponse.json({ settings });
@@ -172,6 +205,21 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
             ...data,
           },
         });
+
+        // If university was set, also sync User.collegeId for leaderboard
+        if (data.university) {
+          const college = await prisma.college.findFirst({
+            where: { fullName: data.university, isActive: true },
+            select: { id: true },
+          });
+          if (college) {
+            await prisma.user.update({
+              where: { id: userId },
+              data: { collegeId: college.id },
+            });
+            console.log('[PATCH /api/settings] Synced User.collegeId on create:', college.id);
+          }
+        }
 
         console.log('[PATCH /api/settings] Created new settings:', newSettings);
         return NextResponse.json({ settings: newSettings });

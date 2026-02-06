@@ -294,14 +294,14 @@ export function ErrorToast({ message }: { message: string }) {
   return (
     <div
       style={{
-        backgroundColor: 'rgba(239, 68, 68, 0.15)',
-        border: '1px solid rgba(239, 68, 68, 0.3)',
+        backgroundColor: 'var(--panel)',
+        border: '1px solid #ef4444',
         borderRadius: '8px',
         padding: '12px 16px',
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
         minWidth: '200px',
         maxWidth: '400px',
       }}

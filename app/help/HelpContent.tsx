@@ -985,9 +985,9 @@ const faqData: FAQ[] = [
   {
     id: 'flashcards',
     question: 'How do I use flashcards?',
-    answer: 'Create flashcard decks from the Tools page. Each deck can be linked to a course for organization. Add cards with front (question) and back (answer) content. When studying, the app uses spaced repetition (SM-2 algorithm) to show cards at optimal intervals—cards you struggle with appear more often, while mastered cards appear less frequently. Rate your recall (Again, Hard, Good, Easy) to adjust the schedule. Track mastery progress for each deck.',
+    answer: 'Create flashcard decks from the Tools page. Each deck can be linked to a course for organization. Add cards individually or use bulk import (front|back format). Choose from three study modes: Flashcards (classic flip-to-reveal), Type Answer (test your recall by typing), or Match (pair terms with definitions). The app uses spaced repetition to optimize review timing—rate cards as Forgot (1 day), Struggled (2 days), Got it (3+ days), or Too easy (5+ days). Customize your study experience in Settings: cards per session, daily goal, shuffle order, and more. Edit or delete cards during study sessions. Earn XP for each card studied to level up and maintain your streak.',
     category: 'Tools',
-    keywords: ['flashcard', 'study', 'memorize', 'cards', 'deck', 'spaced repetition'],
+    keywords: ['flashcard', 'study', 'memorize', 'cards', 'deck', 'spaced repetition', 'match', 'type answer'],
   },
   {
     id: 'citation-generator',

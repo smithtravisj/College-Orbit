@@ -11,7 +11,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const data = await getUserGamificationData(token.id);
+    // Get timezone offset from query params (in minutes)
+    const { searchParams } = new URL(request.url);
+    const timezoneOffset = parseInt(searchParams.get('tz') || '0', 10);
+
+    const data = await getUserGamificationData(token.id, timezoneOffset);
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching gamification data:', error);

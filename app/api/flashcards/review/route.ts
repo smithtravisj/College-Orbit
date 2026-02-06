@@ -19,34 +19,40 @@ function calculateNextReview(
   // Maximum interval cap (14 days for college studying context)
   const MAX_INTERVAL = 14;
 
-  // Quality ratings: 0-2 = Forgot, 3 = Struggled, 4 = Got it, 5 = Too easy
+  // Quality ratings: 0 = Forgot, 3 = Struggled, 4 = Got it, 5 = Too easy
   if (quality < 3) {
-    // Forgot - reset to beginning
+    // Forgot - reset to beginning, review tomorrow
     newInterval = 1;
     newRepetitions = 0;
+    newEaseFactor = Math.max(1.3, currentEaseFactor - 0.2);
   } else if (quality === 3) {
-    // Struggled - reduce current interval (bump down a level)
-    newInterval = Math.max(1, Math.round(currentInterval * 0.5));
-    newRepetitions = Math.max(0, repetitions - 1); // Reduce repetition count
-    // Reduce ease factor
+    // Struggled - always review in 2 days
+    newInterval = 2;
+    newRepetitions = Math.max(0, repetitions - 1);
     newEaseFactor = Math.max(1.3, currentEaseFactor - 0.15);
-  } else {
-    // Got it (4) or Too easy (5) - progress forward
+  } else if (quality === 4) {
+    // Got it - normal progression
     newRepetitions = repetitions + 1;
 
     if (newRepetitions === 1) {
-      newInterval = 1;
+      newInterval = 3; // First time: 3 days
     } else if (newRepetitions === 2) {
-      newInterval = 3;
+      newInterval = 7; // Second time: 1 week
     } else {
       newInterval = Math.round(currentInterval * newEaseFactor);
     }
+  } else {
+    // Too easy (5) - aggressive progression, skip ahead
+    newRepetitions = repetitions + 2; // Skip a level
+    newEaseFactor = currentEaseFactor + 0.15;
 
-    // Adjust ease factor based on quality
-    if (quality === 5) {
-      newEaseFactor = currentEaseFactor + 0.1;
-      // Too easy - slightly longer interval
-      newInterval = Math.round(newInterval * 1.15);
+    if (repetitions === 0) {
+      newInterval = 5; // First time + too easy: 5 days
+    } else if (repetitions === 1) {
+      newInterval = 10; // Second time + too easy: 10 days
+    } else {
+      // Already reviewed multiple times: big jump
+      newInterval = Math.round(currentInterval * newEaseFactor * 1.5);
     }
   }
 

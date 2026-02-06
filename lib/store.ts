@@ -3626,7 +3626,8 @@ const useAppStore = create<AppStore>((set, get) => ({
   // Gamification actions
   fetchGamification: async () => {
     try {
-      const response = await fetch('/api/gamification', { credentials: 'include' });
+      const timezoneOffset = new Date().getTimezoneOffset();
+      const response = await fetch(`/api/gamification?tz=${timezoneOffset}`, { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
         set({ gamification: data });

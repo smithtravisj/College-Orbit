@@ -691,7 +691,7 @@ export default function ProgressPage() {
                           flexShrink: 0,
                         }}
                       >
-                        {isUnlocked ? getIconComponent(achievement.icon, isUnlocked, tierColors) : <Lock size={isMobile ? 16 : 20} style={{ color: 'var(--text-muted)' }} />}
+                        {isUnlocked ? getIconComponent(achievement.icon, isUnlocked, tierColors) : <Lock size={isMobile ? 16 : 20} style={{ color: 'var(--link)' }} />}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: 600, color: isUnlocked ? tierColors.text : 'var(--text-muted)', margin: 0 }}>

@@ -112,7 +112,7 @@ export const SEARCH_INDEX: SearchableItem[] = [
     id: 'page-flashcards',
     title: 'Flashcards',
     description: 'Create and study flashcards with spaced repetition',
-    keywords: ['flashcards', 'study', 'memorize', 'review', 'spaced repetition', 'sm2', 'decks', 'cards'],
+    keywords: ['flashcards', 'study', 'memorize', 'review', 'spaced repetition', 'sm2', 'decks', 'cards', 'match', 'type answer', 'study modes', 'quiz'],
     category: 'page',
     categoryLabel: 'Pages',
     href: '/flashcards',

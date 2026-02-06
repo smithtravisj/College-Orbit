@@ -59,7 +59,7 @@ export default function PremiumGate({ children, feature }: PremiumGateProps) {
                 border: '1px solid var(--border)',
               }}
             >
-              <Lock size={36} className="text-[var(--text-muted)]" />
+              <Lock size={36} className="text-[var(--link)]" />
             </div>
           </div>
 

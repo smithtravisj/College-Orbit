@@ -409,6 +409,16 @@ export interface Settings {
   timelineItemTypes?: ('class' | 'task' | 'deadline' | 'exam' | 'event')[]; // Which item types to show
   // Beta Program
   isBetaUser?: boolean;
+  // Flashcard Settings
+  flashcardDefaultMode?: 'flashcard' | 'type' | 'match';
+  flashcardCardsPerSession?: number;
+  flashcardDailyGoal?: number;
+  flashcardShuffleOrder?: boolean;
+  flashcardAutoFlipDelay?: number;
+  flashcardShowKeyboardHints?: boolean;
+  flashcardSoundEffects?: boolean;
+  flashcardCelebrations?: boolean;
+  flashcardDefaultSort?: 'recent' | 'due' | 'alphabetical' | 'course' | 'mastery' | 'created';
 }
 
 export interface ExcludedDate {

@@ -595,6 +595,17 @@ model Settings {
   brightspaceSyncAnnouncements  Boolean   @default(true)
   brightspaceAutoMarkComplete   Boolean   @default(true)
 
+  // Flashcard Settings
+  flashcardDefaultMode        String?   @default("flashcard") // 'flashcard', 'type', 'match'
+  flashcardCardsPerSession    Int       @default(20)          // 0 = all, otherwise limit
+  flashcardDailyGoal          Int       @default(20)
+  flashcardShuffleOrder       Boolean   @default(true)
+  flashcardAutoFlipDelay      Int       @default(0)           // 0 = off, otherwise seconds
+  flashcardShowKeyboardHints  Boolean   @default(true)
+  flashcardSoundEffects       Boolean   @default(true)
+  flashcardCelebrations       Boolean   @default(true)
+  flashcardDefaultSort        String?   @default("recent")    // 'recent', 'due', 'alpha', 'course', 'mastery', 'created'
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])

@@ -568,8 +568,10 @@ async function checkAchievements(
 
 /**
  * Get user's gamification data
+ * @param userId - The user's ID
+ * @param timezoneOffset - The user's timezone offset in minutes (from getTimezoneOffset())
  */
-export async function getUserGamificationData(userId: string) {
+export async function getUserGamificationData(userId: string, timezoneOffset: number = 0) {
   // Get or create user streak
   let userStreak = await prisma.userStreak.findUnique({
     where: { userId },
@@ -583,8 +585,10 @@ export async function getUserGamificationData(userId: string) {
 
   // Check if streak should be broken based on last activity
   // This ensures the displayed streak is accurate even if the user hasn't completed any tasks
+  // Use the user's local time for accurate date comparison
   const now = new Date();
-  const streakBroken = !userStreak.vacationMode && shouldBreakStreak(userStreak.lastActivityDate, now);
+  const userLocalTime = new Date(now.getTime() - timezoneOffset * 60000);
+  const streakBroken = !userStreak.vacationMode && shouldBreakStreak(userStreak.lastActivityDate, userLocalTime);
 
   if (streakBroken && userStreak.currentStreak > 0) {
     // Update the database to reset the streak

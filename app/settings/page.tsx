@@ -418,7 +418,8 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchGamificationStatus = async () => {
       try {
-        const response = await fetch('/api/gamification');
+        const timezoneOffset = new Date().getTimezoneOffset();
+        const response = await fetch(`/api/gamification?tz=${timezoneOffset}`);
         if (response.ok) {
           const data = await response.json();
           setVacationMode(data.streak?.vacationMode ?? false);
@@ -1951,6 +1952,320 @@ export default function SettingsPage() {
                       position: 'absolute',
                       top: '2px',
                       left: (settings.showRelativeDates ?? false) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
+          </Card>
+
+          {/* Flashcards */}
+          <Card title="Flashcards">
+            {/* Dropdowns in two columns */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '20px' }}>
+              {/* Default Study Mode */}
+              <div>
+                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Default Study Mode</p>
+                <select
+                  value={settings.flashcardDefaultMode ?? 'flashcard'}
+                  onChange={(e) => updateSettings({ flashcardDefaultMode: e.target.value as 'flashcard' | 'type' | 'match' })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    paddingRight: '36px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--panel-2)',
+                    color: 'var(--text)',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${selectedTheme === 'light' ? '%23666666' : 'white'}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 12px center',
+                    backgroundSize: '16px',
+                  }}
+                >
+                  <option value="flashcard">Flashcards</option>
+                  <option value="type">Type Answer</option>
+                  <option value="match">Match</option>
+                </select>
+              </div>
+
+              {/* Cards per Session */}
+              <div>
+                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Cards per Session</p>
+                <select
+                  value={settings.flashcardCardsPerSession ?? 20}
+                  onChange={(e) => updateSettings({ flashcardCardsPerSession: parseInt(e.target.value) })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    paddingRight: '36px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--panel-2)',
+                    color: 'var(--text)',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${selectedTheme === 'light' ? '%23666666' : 'white'}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 12px center',
+                    backgroundSize: '16px',
+                  }}
+                >
+                  <option value="10">10 cards</option>
+                  <option value="20">20 cards</option>
+                  <option value="50">50 cards</option>
+                  <option value="0">All cards</option>
+                </select>
+              </div>
+
+              {/* Daily Goal */}
+              <div>
+                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Daily Goal</p>
+                <select
+                  value={settings.flashcardDailyGoal ?? 20}
+                  onChange={(e) => updateSettings({ flashcardDailyGoal: parseInt(e.target.value) })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    paddingRight: '36px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--panel-2)',
+                    color: 'var(--text)',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${selectedTheme === 'light' ? '%23666666' : 'white'}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 12px center',
+                    backgroundSize: '16px',
+                  }}
+                >
+                  <option value="10">10 cards</option>
+                  <option value="20">20 cards</option>
+                  <option value="30">30 cards</option>
+                  <option value="50">50 cards</option>
+                  <option value="100">100 cards</option>
+                </select>
+              </div>
+
+              {/* Auto-flip Delay */}
+              <div>
+                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Auto-flip Delay</p>
+                <select
+                  value={settings.flashcardAutoFlipDelay ?? 0}
+                  onChange={(e) => updateSettings({ flashcardAutoFlipDelay: parseInt(e.target.value) })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    paddingRight: '36px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--panel-2)',
+                    color: 'var(--text)',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${selectedTheme === 'light' ? '%23666666' : 'white'}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 12px center',
+                    backgroundSize: '16px',
+                  }}
+                >
+                  <option value="0">Off</option>
+                  <option value="3">3 seconds</option>
+                  <option value="5">5 seconds</option>
+                  <option value="10">10 seconds</option>
+                </select>
+              </div>
+
+              {/* Default Sort Order */}
+              <div>
+                <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Default Sort Order</p>
+                <select
+                  value={settings.flashcardDefaultSort ?? 'recent'}
+                  onChange={(e) => updateSettings({ flashcardDefaultSort: e.target.value as 'recent' | 'due' | 'alphabetical' | 'course' | 'mastery' | 'created' })}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    paddingRight: '36px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--panel-2)',
+                    color: 'var(--text)',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${selectedTheme === 'light' ? '%23666666' : 'white'}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 12px center',
+                    backgroundSize: '16px',
+                  }}
+                >
+                  <option value="recent">Recently studied</option>
+                  <option value="due">Most cards due</option>
+                  <option value="alphabetical">Alphabetical</option>
+                  <option value="course">By course</option>
+                  <option value="mastery">Mastery level</option>
+                  <option value="created">Recently created</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Shuffle Cards */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Shuffle Cards</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Randomize the order of cards during study
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ flashcardShuffleOrder: !(settings.flashcardShuffleOrder ?? true) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.flashcardShuffleOrder ?? true) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.flashcardShuffleOrder ?? true) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Show Keyboard Hints */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Show Keyboard Hints</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Display keyboard shortcut hints during study sessions
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ flashcardShowKeyboardHints: !(settings.flashcardShowKeyboardHints ?? true) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.flashcardShowKeyboardHints ?? true) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.flashcardShowKeyboardHints ?? true) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Sound Effects */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Sound Effects</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Play sounds during study sessions
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ flashcardSoundEffects: !(settings.flashcardSoundEffects ?? true) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.flashcardSoundEffects ?? true) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.flashcardSoundEffects ?? true) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Celebration Animations */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Celebration Animations</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Show confetti and animations when completing study sessions
+                  </p>
+                </div>
+                <button
+                  onClick={() => updateSettings({ flashcardCelebrations: !(settings.flashcardCelebrations ?? true) })}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: (settings.flashcardCelebrations ?? true) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.flashcardCelebrations ?? true) ? '22px' : '2px',
                       transition: 'left 0.2s ease',
                     }}
                   />

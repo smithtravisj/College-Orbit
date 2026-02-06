@@ -601,7 +601,7 @@ export default function ToolsPage() {
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-            <Lock size={28} style={{ color: 'var(--accent)' }} />
+            <Lock size={28} style={{ color: 'var(--link)' }} />
           </div>
           <div>
             <h3 style={{
@@ -642,7 +642,7 @@ export default function ToolsPage() {
               alignItems: 'center',
               gap: '8px',
               padding: isMobile ? '10px 20px' : '12px 24px',
-              backgroundColor: 'var(--accent)',
+              background: 'linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 80%, black) 100%)',
               color: 'white',
               border: '1px solid var(--border)',
               borderRadius: '10px',
@@ -650,6 +650,7 @@ export default function ToolsPage() {
               fontWeight: 600,
               cursor: 'pointer',
               transition: 'opacity 0.2s',
+              boxShadow: '0 4px 12px var(--accent)30',
             }}>
               <Crown size={18} />
               Upgrade to Premium
@@ -1156,7 +1157,7 @@ export default function ToolsPage() {
         </div>
       </div>
       <div className="mx-auto w-full max-w-[1800px]" style={{ paddingLeft: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingRight: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingBottom: isMobile ? 'clamp(12px, 4%, 24px)' : '24px', paddingTop: '0', position: 'relative', zIndex: 1 }}>
-        <div className={`grid gap-[var(--grid-gap)] ${activeTab === 'productivity' && !isMobile ? 'grid-cols-2' : 'grid-cols-1'}`} style={{ alignItems: 'stretch', maxWidth: activeTab === 'flashcards' ? '800px' : undefined }}>
+        <div className={`grid gap-[var(--grid-gap)] ${activeTab === 'productivity' && !isMobile ? 'grid-cols-2' : 'grid-cols-1'}`} style={{ alignItems: 'stretch' }}>
           {subscription.isPremium ? (
             // Premium users see all tools filtered by active tab
             // Use specific order for productivity tab to ensure Pomodoro comes before Quick Links
@@ -1201,7 +1202,7 @@ export default function ToolsPage() {
                           border: '1px solid var(--border)',
                         }}
                       >
-                        <Lock size={36} className="text-[var(--text-muted)]" />
+                        <Lock size={36} className="text-[var(--link)]" />
                       </div>
                     </div>
 

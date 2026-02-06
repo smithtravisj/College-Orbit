@@ -103,6 +103,16 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     const trialEndsAt = new Date();
     trialEndsAt.setDate(trialEndsAt.getDate() + 14);
 
+    // Look up collegeId if university is provided
+    let collegeId: string | null = null;
+    if (university) {
+      const college = await prisma.college.findFirst({
+        where: { fullName: university, isActive: true },
+        select: { id: true },
+      });
+      collegeId = college?.id || null;
+    }
+
     // Create user with trial subscription
     const user = await prisma.user.create({
       data: {
@@ -112,6 +122,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         trialEndsAt,
         utmSource: utmSource || null,
         utmCampaign: utmCampaign || null,
+        collegeId,
         settings: {
           create: {
             dueSoonWindowDays: 7,

@@ -34,13 +34,31 @@ export const GET = withRateLimit(async function(request: NextRequest) {
       select: { collegeId: true },
     });
 
-    // Get aggregated monthly XP totals by college
+    // Get aggregated monthly XP totals by college (for users WITH colleges)
     const monthlyTotals = await prisma.monthlyXpTotal.groupBy({
       by: ['collegeId'],
       where: { yearMonth },
       _sum: { totalXp: true },
       _count: { userId: true },
     });
+
+    // Also get XP from users WITHOUT colleges (from DailyActivity)
+    // Parse yearMonth to get date range
+    const [year, month] = yearMonth.split('-').map(Number);
+    const startDate = new Date(Date.UTC(year, month - 1, 1));
+    const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+
+    const unaffiliatedActivity = await prisma.dailyActivity.groupBy({
+      by: ['userId'],
+      where: {
+        activityDate: { gte: startDate, lte: endDate },
+        user: { collegeId: null },
+      },
+      _sum: { xpEarned: true },
+    });
+
+    const unaffiliatedTotalXp = unaffiliatedActivity.reduce((sum, a) => sum + (a._sum.xpEarned || 0), 0);
+    const unaffiliatedUserCount = unaffiliatedActivity.length;
 
     // Get college details
     const collegeIds = monthlyTotals.map(t => t.collegeId);
@@ -65,6 +83,18 @@ export const GET = withRateLimit(async function(request: NextRequest) {
           isUserCollege: t.collegeId === user?.collegeId,
         };
       });
+
+    // Add unaffiliated users if there are any
+    if (unaffiliatedUserCount > 0 && unaffiliatedTotalXp > 0) {
+      entries.push({
+        collegeId: 'unaffiliated',
+        collegeName: 'Unaffiliated',
+        acronym: '—',
+        totalXp: unaffiliatedTotalXp,
+        userCount: unaffiliatedUserCount,
+        isUserCollege: !user?.collegeId,
+      });
+    }
 
     // Sort by total XP descending
     entries.sort((a, b) => b.totalXp - a.totalXp);
