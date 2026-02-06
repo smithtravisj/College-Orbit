@@ -19,7 +19,7 @@ import {
   QuickFilter,
   FlashcardSettings as FlashcardSettingsType,
 } from './types';
-import { sortDecks, calculateDeckStats } from './utils';
+import { sortDecks, calculateDeckStats, shuffleArray } from './utils';
 
 import DeckSidebar from './DeckSidebar';
 import DeckList from './DeckList';
@@ -71,7 +71,6 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
 
   // Study state
   const [studyCards, setStudyCards] = useState<Flashcard[]>([]);
-  const [isStudyAllMode, setIsStudyAllMode] = useState(false);
 
   // Daily goal state
   const [dailyProgress, setDailyProgress] = useState({
@@ -540,9 +539,18 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
       cardsToStudy = [...dueCards, ...notDueCards];
     }
 
+    // Apply shuffle if enabled (do this ONCE at session start)
+    if (settings.shuffleCards) {
+      cardsToStudy = shuffleArray(cardsToStudy);
+    }
+
+    // Apply card limit if not in "study all" mode
+    if (mode === 'due' && settings.cardsPerSession > 0 && cardsToStudy.length > settings.cardsPerSession) {
+      cardsToStudy = cardsToStudy.slice(0, settings.cardsPerSession);
+    }
+
     setSelectedDeck(deck);
     setStudyCards(cardsToStudy);
-    setIsStudyAllMode(mode === 'all');
     setViewMode('study');
   };
 
@@ -626,7 +634,6 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
           onComplete={finishStudy}
           theme={theme}
           isMobile={isMobile}
-          ignoreCardLimit={isStudyAllMode}
         />
       </div>
     );

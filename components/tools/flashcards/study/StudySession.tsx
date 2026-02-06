@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Flashcard, StudyMode, FlashcardSettings } from '../types';
-import { shuffleArray } from '../utils';
 import StudyModeSelector from './StudyModeSelector';
 import FlashcardMode from './FlashcardMode';
 import TypeAnswerMode from './TypeAnswerMode';
@@ -19,7 +18,6 @@ interface StudySessionProps {
   onComplete: () => void;
   theme?: string;
   isMobile?: boolean;
-  ignoreCardLimit?: boolean;
 }
 
 export default function StudySession({
@@ -33,16 +31,11 @@ export default function StudySession({
   onComplete,
   theme = 'dark',
   isMobile = false,
-  ignoreCardLimit = false,
 }: StudySessionProps) {
   const [studyMode, setStudyMode] = useState<StudyMode>(settings.defaultMode);
   const [sessionStarted, setSessionStarted] = useState(false);
 
-  // Apply settings
-  const studyCards = settings.shuffleCards ? shuffleArray(cards) : cards;
-  const limitedCards = (!ignoreCardLimit && settings.cardsPerSession > 0)
-    ? studyCards.slice(0, settings.cardsPerSession)
-    : studyCards;
+  // Cards are already shuffled and limited by the parent (FlashcardsDashboard)
 
   if (!sessionStarted) {
     return (
@@ -57,7 +50,7 @@ export default function StudySession({
             Choose Study Mode
           </div>
           <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-            {limitedCards.length} cards ready to study
+            {cards.length} cards ready to study
           </div>
         </div>
 
@@ -131,7 +124,7 @@ export default function StudySession({
   }
 
   const commonProps = {
-    cards: limitedCards,
+    cards: cards,
     onRate,
     onDeleteCard,
     onRestoreCard,
