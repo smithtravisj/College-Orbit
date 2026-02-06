@@ -15,12 +15,14 @@ interface DeckDetailProps {
   courses: { id: string; name: string; code: string }[];
   onClose: () => void;
   onStudyDue: () => void;
+  onStudySession: () => void;
   onStudyAll: () => void;
   onEditDeck: (data: { name: string; description: string; courseId: string }) => void;
   onCreateCard: (data: { front: string; back: string }) => void;
   onEditCard: (cardId: string, data: { front: string; back: string }) => void;
   onDeleteCard: (cardId: string) => void;
   onBulkImport: (text: string) => void;
+  cardsPerSession: number;
   theme?: string;
   isMobile?: boolean;
 }
@@ -30,12 +32,14 @@ export default function DeckDetail({
   courses,
   onClose,
   onStudyDue,
+  onStudySession,
   onStudyAll,
   onEditDeck,
   onCreateCard,
   onEditCard,
   onDeleteCard,
   onBulkImport,
+  cardsPerSession,
   theme = 'dark',
   isMobile = false,
 }: DeckDetailProps) {
@@ -158,7 +162,17 @@ export default function DeckDetail({
             style={{ opacity: stats.due === 0 ? 0.5 : 1 }}
           >
             <Play size={18} />
-            Study Due
+            Study All Due ({stats.due})
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={onStudySession}
+            size={isMobile ? 'md' : 'lg'}
+            disabled={stats.due === 0}
+            style={{ opacity: stats.due === 0 ? 0.5 : 1 }}
+          >
+            <Play size={18} />
+            Study Session ({Math.min(stats.due, cardsPerSession)})
           </Button>
           <Button
             variant="secondary"
@@ -166,7 +180,7 @@ export default function DeckDetail({
             size={isMobile ? 'md' : 'lg'}
           >
             <Play size={18} />
-            Study All
+            Study All ({stats.total})
           </Button>
         </div>
       )}

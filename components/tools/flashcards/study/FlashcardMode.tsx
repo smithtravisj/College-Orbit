@@ -142,12 +142,12 @@ export default function FlashcardMode({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't handle shortcuts when typing in inputs
-      const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-        return;
-      }
+      const activeElement = document.activeElement;
+      const isTyping = activeElement instanceof HTMLInputElement ||
+                       activeElement instanceof HTMLTextAreaElement ||
+                       (activeElement as HTMLElement)?.isContentEditable;
 
-      if (studyComplete || isEditing) return;
+      if (isTyping || studyComplete || isEditing) return;
 
       switch (e.key) {
         case ' ':

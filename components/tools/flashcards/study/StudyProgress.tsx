@@ -37,11 +37,9 @@ export default function StudyProgress({
         <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
           {current + 1} / {total}
         </div>
-        {xpEarned > 0 && (
-          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--link)' }}>
-            +{xpEarned} XP
-          </div>
-        )}
+        <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--link)' }}>
+          +{xpEarned} XP
+        </div>
       </div>
 
       {/* Progress bar */}

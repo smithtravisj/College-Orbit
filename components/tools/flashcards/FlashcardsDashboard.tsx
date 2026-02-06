@@ -517,7 +517,7 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
   };
 
   // Study functions
-  const startStudy = (mode: 'due' | 'all', deckOverride?: FlashcardDeck) => {
+  const startStudy = (mode: 'due' | 'session' | 'all', deckOverride?: FlashcardDeck) => {
     const deck = deckOverride || selectedDeck;
     if (!deck?.cards || deck.cards.length === 0) {
       showErrorToast('No cards to study!');
@@ -527,13 +527,15 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
     const now = new Date();
     let cardsToStudy: Flashcard[];
 
-    if (mode === 'due') {
+    if (mode === 'due' || mode === 'session') {
+      // Both modes study due cards, but 'session' applies the limit
       cardsToStudy = deck.cards.filter(card => new Date(card.nextReview) <= now);
       if (cardsToStudy.length === 0) {
         showSuccessToast('No cards due for review!');
         return;
       }
     } else {
+      // 'all' mode: due cards first, then not due
       const dueCards = deck.cards.filter(card => new Date(card.nextReview) <= now);
       const notDueCards = deck.cards.filter(card => new Date(card.nextReview) > now);
       cardsToStudy = [...dueCards, ...notDueCards];
@@ -544,8 +546,8 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
       cardsToStudy = shuffleArray(cardsToStudy);
     }
 
-    // Apply card limit if not in "study all" mode
-    if (mode === 'due' && settings.cardsPerSession > 0 && cardsToStudy.length > settings.cardsPerSession) {
+    // Apply card limit only in "session" mode
+    if (mode === 'session' && settings.cardsPerSession > 0 && cardsToStudy.length > settings.cardsPerSession) {
       cardsToStudy = cardsToStudy.slice(0, settings.cardsPerSession);
     }
 
@@ -869,12 +871,14 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
                   setSelectedDeck(null);
                 }}
                 onStudyDue={() => startStudy('due')}
+                onStudySession={() => startStudy('session')}
                 onStudyAll={() => startStudy('all')}
                 onEditDeck={updateDeck}
                 onCreateCard={createCard}
                 onEditCard={updateCard}
                 onDeleteCard={deleteCard}
                 onBulkImport={bulkImportCards}
+                cardsPerSession={settings.cardsPerSession}
                 theme={theme}
                 isMobile={isMobile}
               />
