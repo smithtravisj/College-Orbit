@@ -47,12 +47,9 @@ function calculateNextReview(
     newEaseFactor = currentEaseFactor + 0.15;
 
     if (repetitions === 0) {
-      newInterval = 5; // First time + too easy: 5 days
-    } else if (repetitions === 1) {
-      newInterval = 10; // Second time + too easy: 10 days
+      newInterval = 7; // First time + too easy: 1 week
     } else {
-      // Already reviewed multiple times: big jump
-      newInterval = Math.round(currentInterval * newEaseFactor * 1.5);
+      newInterval = 14; // Second time+: straight to mastered
     }
   }
 
