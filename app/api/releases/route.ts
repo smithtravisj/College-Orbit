@@ -20,7 +20,7 @@ export async function GET() {
 
     // Fetch all releases - beta restriction removed, everyone sees all versions
     const releases = await prisma.appVersion.findMany({
-      orderBy: { releasedAt: 'desc' },
+      orderBy: [{ releasedAt: 'desc' }, { createdAt: 'desc' }],
       select: {
         id: true,
         version: true,

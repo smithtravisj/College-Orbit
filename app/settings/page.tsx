@@ -5834,7 +5834,7 @@ export default function SettingsPage() {
               <div className="space-y-3 text-sm" style={{ paddingTop: '18px', borderTop: '1px solid var(--border)' }}>
                 <div>
                   <p className="font-semibold text-[var(--text)]">College Orbit</p>
-                  <p className="text-[var(--text-muted)]">v{currentVersion}</p>
+                  <p className="text-[var(--text-muted)]">{currentVersion}</p>
                   <Link
                     href="/release-notes"
                     className="text-sm text-[var(--link)] hover:text-blue-400 transition-colors"
