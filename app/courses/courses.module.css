@@ -14,7 +14,7 @@
   /* Course card - minimal padding */
   .courseCard {
     padding: 10px;
-    border-radius: 8px;
+    border-radius: var(--radius-xs, 8px);
     background-color: var(--panel);
     border: 1px solid var(--border);
   }
@@ -74,7 +74,7 @@
   .linkButton {
     font-size: 10px;
     padding: 4px 8px;
-    border-radius: 4px;
+    border-radius: var(--radius-xs, 4px);
   }
 
   /* Filter - full width */

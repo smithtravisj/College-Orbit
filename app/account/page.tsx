@@ -775,7 +775,7 @@ export default function AccountPage() {
             Account
           </h1>
           <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-            Manage your account information.
+            {subscription.isPremium && settings.visualTheme === 'cartoon' ? "Your profile, your way." : "Manage your account information."}
           </p>
         </div>
       </div>

@@ -5,6 +5,7 @@ import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { getThemeColors } from '@/lib/visualThemes';
 import Card from '@/components/ui/Card';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
@@ -40,17 +41,27 @@ export default function ShoppingPage() {
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
+  const savedVisualTheme = useAppStore((state) => state.settings.visualTheme);
   const savedGlowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
 
   // Custom theme and visual effects are only active for premium users
   const useCustomTheme = isPremium ? savedUseCustomTheme : false;
   const customColors = isPremium ? savedCustomColors : null;
+  const visualTheme = isPremium ? savedVisualTheme : null;
   const glowIntensity = isPremium ? savedGlowIntensity : 50;
 
   const colorPalette = getCollegeColorPalette(university || null, theme);
-  const accentColor = useCustomTheme && customColors
-    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
-    : colorPalette.accent;
+  // Visual theme takes priority
+  const accentColor = (() => {
+    if (visualTheme && visualTheme !== 'default') {
+      const themeColors = getThemeColors(visualTheme, theme);
+      if (themeColors.accent) return themeColors.accent;
+    }
+    if (useCustomTheme && customColors) {
+      return getCustomColorSetForTheme(customColors as CustomColors, theme).accent;
+    }
+    return colorPalette.accent;
+  })();
   const glowScale = glowIntensity / 50;
   const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
   const [mounted, setMounted] = useState(false);
@@ -913,7 +924,7 @@ export default function ShoppingPage() {
               Things to Buy
             </h1>
             <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-              Your shopping lists and pantry inventory.
+              {visualTheme === 'cartoon' ? "Never forget the essentials." : "Your shopping lists and pantry inventory."}
             </p>
           </div>
           <div style={{ display: 'flex', gap: '8px', marginTop: isMobile ? '12px' : '8px' }}>

@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { getThemeColors } from '@/lib/visualThemes';
 import { useBulkSelect } from '@/hooks/useBulkSelect';
 import { isToday, isOverdue, formatDate as formatDateUtil } from '@/lib/utils';
 import { useFormatters } from '@/hooks/useFormatters';
@@ -96,6 +97,7 @@ export default function TasksPage() {
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
+  const savedVisualTheme = useAppStore((state) => state.settings.visualTheme);
   const savedGlowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
   const showPriorityIndicators = useAppStore((state) => state.settings.showPriorityIndicators) ?? true;
   const groupTasksByCourse = useAppStore((state) => state.settings.groupTasksByCourse) ?? false;
@@ -103,14 +105,22 @@ export default function TasksPage() {
   // Custom theme and visual effects are only active for premium users
   const useCustomTheme = subscription.isPremium ? savedUseCustomTheme : false;
   const customColors = subscription.isPremium ? savedCustomColors : null;
+  const visualTheme = subscription.isPremium ? savedVisualTheme : null;
   const glowIntensity = subscription.isPremium ? savedGlowIntensity : 50;
 
   const colorPalette = getCollegeColorPalette(university || null, theme);
 
-  // Get accent color (custom or college) and glow settings
-  const accentColor = useCustomTheme && customColors
-    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
-    : colorPalette.accent;
+  // Get accent color - visual theme takes priority
+  const accentColor = (() => {
+    if (visualTheme && visualTheme !== 'default') {
+      const themeColors = getThemeColors(visualTheme, theme);
+      if (themeColors.accent) return themeColors.accent;
+    }
+    if (useCustomTheme && customColors) {
+      return getCustomColorSetForTheme(customColors as CustomColors, theme).accent;
+    }
+    return colorPalette.accent;
+  })();
   const glowScale = glowIntensity / 50;
   const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
   const [mounted, setMounted] = useState(false);
@@ -1061,7 +1071,7 @@ export default function TasksPage() {
               Work
             </h1>
             <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-              Manage all your work in one place.
+              {visualTheme === 'cartoon' ? "Tasks? We got this." : "Manage all your work in one place."}
             </p>
           </div>
           <Button variant="secondary" size="md" style={{ marginTop: isMobile ? '12px' : '8px' }} onClick={() => {

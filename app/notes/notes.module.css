@@ -14,7 +14,7 @@
   .folderItem {
     padding: 10px 12px;
     font-size: var(--font-size-base);
-    border-radius: 6px;
+    border-radius: var(--radius-xs, 6px);
   }
 
   /* Folder name */
@@ -37,7 +37,7 @@
   /* Note card - minimal padding */
   .noteCard {
     padding: 10px;
-    border-radius: 8px;
+    border-radius: var(--radius-xs, 8px);
   }
 
   /* Note title */
@@ -71,7 +71,7 @@
   .tagPill {
     font-size: 10px;
     padding: 2px 6px;
-    border-radius: 3px;
+    border-radius: var(--radius-xs, 3px);
   }
 
   /* Search/filter - full width */

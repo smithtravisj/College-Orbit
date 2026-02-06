@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { useBulkSelect } from '@/hooks/useBulkSelect';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { getThemeColors } from '@/lib/visualThemes';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -33,17 +34,27 @@ export default function CoursesPage() {
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
+  const savedVisualTheme = useAppStore((state) => state.settings.visualTheme);
   const savedGlowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
 
   // Custom theme and visual effects are only active for premium users
   const useCustomTheme = subscription.isPremium ? savedUseCustomTheme : false;
   const customColors = subscription.isPremium ? savedCustomColors : null;
+  const visualTheme = subscription.isPremium ? savedVisualTheme : null;
   const glowIntensity = subscription.isPremium ? savedGlowIntensity : 50;
 
   const colorPalette = getCollegeColorPalette(university || null, theme);
-  const accentColor = useCustomTheme && customColors
-    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
-    : colorPalette.accent;
+  // Visual theme takes priority
+  const accentColor = (() => {
+    if (visualTheme && visualTheme !== 'default') {
+      const themeColors = getThemeColors(visualTheme, theme);
+      if (themeColors.accent) return themeColors.accent;
+    }
+    if (useCustomTheme && customColors) {
+      return getCustomColorSetForTheme(customColors as CustomColors, theme).accent;
+    }
+    return colorPalette.accent;
+  })();
   const glowScale = glowIntensity / 50;
   const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
   const [mounted, setMounted] = useState(false);
@@ -310,7 +321,7 @@ export default function CoursesPage() {
               Courses
             </h1>
             <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-              Your classes and schedules.
+              {visualTheme === 'cartoon' ? "All your classes, neatly organized." : "Your classes and schedules."}
             </p>
           </div>
           {!isMobile && !isAdding && !editingId && (

@@ -6,6 +6,7 @@ import HelpTooltip from './HelpTooltip';
 import React from 'react';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { getThemeColors } from '@/lib/visualThemes';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsLightMode } from '@/hooks/useEffectiveTheme';
 
@@ -45,15 +46,25 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = React.memo(({
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
+  const savedVisualTheme = useAppStore((state) => state.settings.visualTheme);
 
-  // Custom theme only applies for premium users
+  // Custom theme and visual theme only apply for premium users
   const useCustomTheme = isPremium ? savedUseCustomTheme : false;
   const customColors = isPremium ? savedCustomColors : null;
+  const visualTheme = isPremium ? savedVisualTheme : null;
 
   const colorPalette = getCollegeColorPalette(university || null, theme);
-  const accentColor = useCustomTheme && customColors
-    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
-    : colorPalette.accent;
+  // Visual theme takes priority
+  const accentColor = (() => {
+    if (visualTheme && visualTheme !== 'default') {
+      const themeColors = getThemeColors(visualTheme, theme);
+      if (themeColors.accent) return themeColors.accent;
+    }
+    if (useCustomTheme && customColors) {
+      return getCustomColorSetForTheme(customColors as CustomColors, theme).accent;
+    }
+    return colorPalette.accent;
+  })();
   const isPrimary = variant === 'primary';
   const isLightMode = useIsLightMode();
 
@@ -79,7 +90,7 @@ const CollapsibleCard: React.FC<CollapsibleCardProps> = React.memo(({
   return (
     <div
       id={id}
-      className={`card-hover rounded-[16px] border transition-all duration-300 w-full flex flex-col ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${!isOpen ? 'cursor-pointer' : ''} ${className}`}
+      className={`card-hover rounded-[var(--radius-card)] border transition-all duration-300 w-full flex flex-col ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${!isOpen ? 'cursor-pointer' : ''} ${className}`}
       style={{
         position: 'relative',
         overflow: 'visible',

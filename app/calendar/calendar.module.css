@@ -13,7 +13,7 @@
   .dateCell {
     padding: 6px 4px;
     font-size: var(--font-size-sm);
-    border-radius: 6px;
+    border-radius: var(--radius-xs, 6px);
   }
 
   /* Weekday header - smaller text */
@@ -30,7 +30,7 @@
   /* Day cell - minimal */
   .dayCell {
     padding: 8px;
-    border-radius: 6px;
+    border-radius: var(--radius-xs, 6px);
   }
 
   /* Time slot - compact */
@@ -44,7 +44,7 @@
   .eventBadge {
     padding: 4px 6px;
     font-size: 10px;
-    border-radius: 4px;
+    border-radius: var(--radius-xs, 4px);
     margin-bottom: 2px;
   }
 

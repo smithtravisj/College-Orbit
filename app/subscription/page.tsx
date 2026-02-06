@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
+import { getThemeColors } from '@/lib/visualThemes';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import Link from 'next/link';
 
@@ -18,7 +19,17 @@ export default function SubscriptionPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const isMobile = useIsMobile();
   const settings = useAppStore((state) => state.settings);
-  const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
+  const baseColorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
+  // Visual theme takes priority for accent color
+  const colorPalette = (() => {
+    if (subscription.isPremium && settings.visualTheme && settings.visualTheme !== 'default') {
+      const themeColors = getThemeColors(settings.visualTheme, settings.theme || 'dark');
+      if (themeColors.accent) {
+        return { ...baseColorPalette, accent: themeColors.accent };
+      }
+    }
+    return baseColorPalette;
+  })();
 
   const handleChangePlan = async () => {
     const newPlan = subscription.plan === 'monthly' ? 'yearly' : 'monthly';

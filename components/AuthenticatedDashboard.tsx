@@ -209,7 +209,9 @@ export default function AuthenticatedDashboard() {
           Dashboard
         </h1>
         <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-          Welcome back{session?.user?.name ? `, ${session.user.name.split(' ')[0]}` : ''}. Here's the plan for today.
+          {isPremium && settings.visualTheme === 'cartoon'
+            ? `Hey${session?.user?.name ? ` ${session.user.name.split(' ')[0]}` : ''}! Let's make today count.`
+            : `Welcome back${session?.user?.name ? `, ${session.user.name.split(' ')[0]}` : ''}. Here's the plan for today.`}
         </p>
       </div>
 

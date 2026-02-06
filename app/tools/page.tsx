@@ -25,6 +25,7 @@ import { useHighlightElement, useTabFromSearchParams } from '@/hooks/useHighligh
 import Link from 'next/link';
 import { useFormatters } from '@/hooks/useFormatters';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { getThemeColors } from '@/lib/visualThemes';
 
 // Tool tab categories
 type ToolsTab = 'productivity' | 'flashcards' | 'grades';
@@ -124,10 +125,19 @@ export default function ToolsPage() {
   const isPremium = subscription.isPremium;
   const effectiveUseCustomTheme = isPremium && settings.useCustomTheme;
   const effectiveCustomColors = isPremium ? settings.customColors : null;
+  const effectiveVisualTheme = isPremium ? settings.visualTheme : null;
   const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
-  const accentColor = effectiveUseCustomTheme && effectiveCustomColors
-    ? getCustomColorSetForTheme(effectiveCustomColors as CustomColors, settings.theme || 'dark').accent
-    : colorPalette.accent;
+  // Visual theme takes priority
+  const accentColor = (() => {
+    if (effectiveVisualTheme && effectiveVisualTheme !== 'default') {
+      const themeColors = getThemeColors(effectiveVisualTheme, settings.theme || 'dark');
+      if (themeColors.accent) return themeColors.accent;
+    }
+    if (effectiveUseCustomTheme && effectiveCustomColors) {
+      return getCustomColorSetForTheme(effectiveCustomColors as CustomColors, settings.theme || 'dark').accent;
+    }
+    return colorPalette.accent;
+  })();
   const glowIntensity = isPremium ? (settings.glowIntensity ?? 50) : 50;
   const glowScale = glowIntensity / 50;
   const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
@@ -1118,7 +1128,7 @@ export default function ToolsPage() {
             Tools
           </h1>
           <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-            Useful utilities for your semester.
+            {effectiveVisualTheme === 'cartoon' ? "Handy stuff for school life." : "Useful utilities for your semester."}
           </p>
         </div>
 

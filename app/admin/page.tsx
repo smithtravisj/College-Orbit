@@ -1233,7 +1233,7 @@ export default function AdminPage() {
             Admin
           </h1>
           <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-            Manage your application.
+            {isPremium && settings.visualTheme === 'cartoon' ? "The control room." : "Manage your application."}
           </p>
         </div>
       </div>

@@ -151,6 +151,12 @@
   --line-height-tight: 1.4;
   --line-height-base: 1.7;
   --line-height-relaxed: 1.9;
+
+  /* Visual Theme Variables (set by JS) */
+  --theme-radius: 12px;
+  --theme-shadow: soft;
+  --theme-border-width: 1px;
+  --visual-theme: default;
 }
 
 html {
@@ -436,7 +442,7 @@ select {
   border: 1px solid var(--border);
   color: var(--text);
   padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-control, 12px);
 }
 
 input[type="checkbox"] {
@@ -448,7 +454,7 @@ input[type="checkbox"] {
   -moz-appearance: none;
   background: var(--panel-2);
   border: 1.5px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius-xs, 4px);
   outline: none;
   transition: all 150ms ease;
   flex-shrink: 0;
@@ -1007,3 +1013,402 @@ input[type="range"]:disabled::-moz-range-thumb {
   z-index: 1;
 }
 
+
+
+/* ============================================
+   Visual Themes
+   ============================================ */
+
+/* Cartoon Theme - Extra rounded, bold shadows, playful */
+body.theme-cartoon {
+  /* Extra bubbly feel */
+  --radius-xs: 14px;
+  --radius-control: 24px;
+  --radius-card: 28px;
+}
+
+/* Cards, panels, modals */
+body.theme-cartoon .card,
+body.theme-cartoon [class*="Card"],
+body.theme-cartoon [class*="panel"],
+body.theme-cartoon [class*="Panel"],
+body.theme-cartoon [class*="Modal"] > div,
+body.theme-cartoon [class*="modal"] > div,
+body.theme-cartoon [class*="Dialog"],
+body.theme-cartoon [class*="dialog"],
+body.theme-cartoon [class*="Popup"],
+body.theme-cartoon [class*="popup"],
+body.theme-cartoon [role="dialog"] {
+  border-radius: var(--radius-card) !important;
+}
+
+/* Form controls - force bubbly borders */
+body.theme-cartoon button:not([class*="icon"]):not([class*="Icon"]),
+body.theme-cartoon input:not([type="checkbox"]):not([type="radio"]),
+body.theme-cartoon select,
+body.theme-cartoon textarea {
+  border-radius: var(--radius-control) !important;
+}
+
+/* Dropdowns and menus */
+body.theme-cartoon [class*="Dropdown"],
+body.theme-cartoon [class*="dropdown"],
+body.theme-cartoon [class*="Menu"],
+body.theme-cartoon [class*="menu"],
+body.theme-cartoon [class*="Popover"],
+body.theme-cartoon [class*="popover"],
+body.theme-cartoon [role="menu"],
+body.theme-cartoon [role="listbox"] {
+  border-radius: var(--radius-card);
+}
+
+/* Menu items */
+body.theme-cartoon [role="menuitem"],
+body.theme-cartoon [role="option"],
+body.theme-cartoon [class*="MenuItem"],
+body.theme-cartoon [class*="menuItem"],
+body.theme-cartoon [class*="DropdownItem"],
+body.theme-cartoon [class*="dropdownItem"],
+body.theme-cartoon [class*="ListItem"],
+body.theme-cartoon [class*="listItem"] {
+  border-radius: var(--radius-control);
+}
+
+/* Badges, tags, chips, pills */
+body.theme-cartoon [class*="badge"],
+body.theme-cartoon [class*="Badge"],
+body.theme-cartoon [class*="tag"],
+body.theme-cartoon [class*="Tag"],
+body.theme-cartoon [class*="chip"],
+body.theme-cartoon [class*="Chip"],
+body.theme-cartoon [class*="pill"],
+body.theme-cartoon [class*="Pill"] {
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* Nav links */
+body.theme-cartoon nav a,
+body.theme-cartoon [class*="nav"] a,
+body.theme-cartoon [class*="Nav"] a,
+body.theme-cartoon [class*="drawer"] a,
+body.theme-cartoon [class*="Drawer"] a,
+body.theme-cartoon [class*="sidebar"] a,
+body.theme-cartoon [class*="Sidebar"] a {
+  border-radius: var(--radius-control);
+}
+
+/* Checkboxes - fully circular */
+body.theme-cartoon input[type="checkbox"],
+body.theme-cartoon input[type="checkbox"]:checked {
+  border-radius: 50% !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Tabs */
+body.theme-cartoon [role="tab"],
+body.theme-cartoon [class*="Tab"],
+body.theme-cartoon [class*="tab"] {
+  border-radius: var(--radius-control);
+}
+
+/* Tooltips */
+body.theme-cartoon [class*="Tooltip"],
+body.theme-cartoon [class*="tooltip"],
+body.theme-cartoon [role="tooltip"] {
+  border-radius: var(--radius-control);
+}
+
+/* Alerts and toasts */
+body.theme-cartoon [class*="Alert"],
+body.theme-cartoon [class*="alert"],
+body.theme-cartoon [class*="Toast"],
+body.theme-cartoon [class*="toast"],
+body.theme-cartoon [role="alert"] {
+  border-radius: var(--radius-card);
+}
+
+/* Progress bars */
+body.theme-cartoon [class*="Progress"],
+body.theme-cartoon [class*="progress"],
+body.theme-cartoon [role="progressbar"] {
+  border-radius: 999px;
+}
+
+body.theme-cartoon [class*="Progress"] > div,
+body.theme-cartoon [class*="progress"] > div {
+  border-radius: 999px;
+}
+
+/* Avatars and images */
+body.theme-cartoon [class*="Avatar"],
+body.theme-cartoon [class*="avatar"] {
+  border-radius: 999px;
+}
+
+body.theme-cartoon img[class*="rounded"],
+body.theme-cartoon [class*="thumbnail"],
+body.theme-cartoon [class*="Thumbnail"] {
+  border-radius: var(--radius-control);
+}
+
+/* File upload areas */
+body.theme-cartoon [class*="Upload"],
+body.theme-cartoon [class*="upload"],
+body.theme-cartoon [class*="Dropzone"],
+body.theme-cartoon [class*="dropzone"] {
+  border-radius: var(--radius-card);
+}
+
+/* Sliders */
+body.theme-cartoon input[type="range"] {
+  border-radius: 999px;
+}
+
+body.theme-cartoon input[type="range"]::-webkit-slider-thumb {
+  border-radius: 999px;
+}
+
+body.theme-cartoon input[type="range"]::-webkit-slider-runnable-track {
+  border-radius: 999px;
+}
+
+/* Toggle switches */
+body.theme-cartoon [class*="Toggle"],
+body.theme-cartoon [class*="toggle"],
+body.theme-cartoon [class*="Switch"],
+body.theme-cartoon [class*="switch"],
+body.theme-cartoon [role="switch"] {
+  border-radius: 999px;
+}
+
+/* Collapsible sections */
+body.theme-cartoon [class*="Collapsible"],
+body.theme-cartoon [class*="collapsible"],
+body.theme-cartoon [class*="Accordion"],
+body.theme-cartoon [class*="accordion"],
+body.theme-cartoon details {
+  border-radius: var(--radius-card);
+}
+
+body.theme-cartoon details summary {
+  border-radius: var(--radius-control);
+}
+
+/* Calendar cells */
+body.theme-cartoon [class*="calendar"] td,
+body.theme-cartoon [class*="Calendar"] td,
+body.theme-cartoon [class*="day-cell"],
+body.theme-cartoon [class*="DayCell"] {
+  border-radius: var(--radius-control);
+}
+
+/* Skeleton loaders */
+body.theme-cartoon [class*="Skeleton"],
+body.theme-cartoon [class*="skeleton"] {
+  border-radius: var(--radius-control);
+}
+
+/* Code blocks */
+body.theme-cartoon pre,
+body.theme-cartoon code {
+  border-radius: var(--radius-control);
+}
+
+/* Tables */
+body.theme-cartoon table {
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+body.theme-cartoon th:first-child {
+  border-top-left-radius: var(--radius-control);
+}
+
+body.theme-cartoon th:last-child {
+  border-top-right-radius: var(--radius-control);
+}
+
+/* Bold shadows for cartoon theme */
+body.theme-cartoon .card,
+body.theme-cartoon [class*="Card"] {
+  box-shadow: var(--shadow-md);
+}
+
+body.theme-cartoon button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+body.theme-cartoon button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+
+/* Remove borders on timeline items for cleaner look */
+body.theme-cartoon [class*="Timeline"] [class*="item"],
+body.theme-cartoon [class*="timeline"] [class*="item"] {
+  border: none;
+}
+
+/* Softer card borders for cartoon theme */
+body.theme-cartoon .card,
+body.theme-cartoon [class*="Card"],
+body.theme-cartoon .card-hover {
+  border-color: transparent;
+  border-left-color: transparent;
+}
+
+/* ===== CARTOON THEME ANIMATIONS ===== */
+
+/* Floating animation for background shapes */
+@keyframes cartoon-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-12px) rotate(5deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(-3deg);
+  }
+  75% {
+    transform: translateY(-15px) rotate(3deg);
+  }
+}
+
+/* Sparkle animation */
+@keyframes cartoon-sparkle {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.6;
+  }
+  25% {
+    transform: scale(1.2) rotate(15deg);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(0.8) rotate(-10deg);
+    opacity: 0.4;
+  }
+  75% {
+    transform: scale(1.1) rotate(5deg);
+    opacity: 0.8;
+  }
+}
+
+/* Pop-in animation for elements */
+@keyframes cartoon-pop-in {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Wiggle animation for hover effects */
+@keyframes cartoon-wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+
+/* Bounce animation */
+@keyframes cartoon-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Cards pop in on load */
+body.theme-cartoon .card,
+body.theme-cartoon [class*="Card"] {
+  animation: cartoon-pop-in 0.3s ease-out;
+}
+
+/* Navigation items have subtle scale on hover */
+body.theme-cartoon nav a:hover,
+body.theme-cartoon [class*="nav"] a:hover,
+body.theme-cartoon [class*="Nav"] a:hover {
+  transform: scale(1.02);
+}
+
+/* Checkboxes and toggles wiggle when checked */
+body.theme-cartoon input[type="checkbox"]:checked {
+  animation: cartoon-wiggle 0.3s ease-in-out;
+}
+
+/* Badges and pills have a subtle pulse */
+body.theme-cartoon [class*="badge"],
+body.theme-cartoon [class*="Badge"],
+body.theme-cartoon [class*="pill"],
+body.theme-cartoon [class*="Pill"],
+body.theme-cartoon [class*="tag"],
+body.theme-cartoon [class*="Tag"] {
+  transition: transform 0.2s ease;
+}
+
+body.theme-cartoon [class*="badge"]:hover,
+body.theme-cartoon [class*="Badge"]:hover,
+body.theme-cartoon [class*="pill"]:hover,
+body.theme-cartoon [class*="Pill"]:hover,
+body.theme-cartoon [class*="tag"]:hover,
+body.theme-cartoon [class*="Tag"]:hover {
+  transform: scale(1.05);
+}
+
+/* Icons have a playful hover effect */
+body.theme-cartoon svg:not([class*="background"]) {
+  transition: transform 0.2s ease;
+}
+
+body.theme-cartoon button:hover svg,
+body.theme-cartoon a:hover svg {
+  transform: scale(1.1);
+}
+
+/* Smooth transitions for interactive elements */
+body.theme-cartoon button,
+body.theme-cartoon a,
+body.theme-cartoon input,
+body.theme-cartoon select {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Fun focus ring animation */
+body.theme-cartoon *:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  animation: cartoon-pop-in 0.2s ease-out;
+}
+
+/* Calendar day cells bounce on hover */
+body.theme-cartoon [class*="calendar"] [class*="day"]:hover,
+body.theme-cartoon [class*="Calendar"] [class*="day"]:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Toast notifications bounce in */
+body.theme-cartoon [class*="toast"],
+body.theme-cartoon [class*="Toast"],
+body.theme-cartoon [class*="notification"],
+body.theme-cartoon [class*="Notification"] {
+  animation: cartoon-pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}

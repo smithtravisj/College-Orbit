@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import EmptyState from '@/components/ui/EmptyState';
 import { Task, Deadline, Course, Exam, CalendarEvent, WorkItem } from '@/types';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { getThemeColors } from '@/lib/visualThemes';
 import { Search } from 'lucide-react';
 
 interface TimelineProps {
@@ -49,22 +50,32 @@ export const Timeline: React.FC<TimelineProps> = ({
   const updateDeadline = useAppStore((state) => state.updateDeadline);
   const toggleWorkItemComplete = useAppStore((state) => state.toggleWorkItemComplete);
 
-  // Single selector for all settings to reduce subscriptions
-  const settings = useAppStore((state) => state.settings);
-  const theme = settings.theme || 'dark';
+  // Use specific selectors for settings that affect accent color
+  const theme = useAppStore((state) => state.settings.theme) || 'dark';
+  const university = useAppStore((state) => state.settings.university);
+  const useCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
+  const customColors = useAppStore((state) => state.settings.customColors);
+  const visualTheme = useAppStore((state) => state.settings.visualTheme);
+  const glowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
 
-  // Memoize accent color calculation
+  // Calculate accent color - visual theme takes priority
   const { accentColor, glowScale, glowOpacity } = useMemo(() => {
-    const useCustomTheme = isPremium && settings.useCustomTheme;
-    const customColors = isPremium ? settings.customColors : null;
-    const colorPalette = getCollegeColorPalette(settings.university || null, theme);
-    const accent = useCustomTheme && customColors
-      ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
-      : colorPalette.accent;
-    const scale = (settings.glowIntensity ?? 50) / 50;
+    const effectiveUseCustomTheme = isPremium && useCustomTheme;
+    const effectiveCustomColors = isPremium ? customColors : null;
+    const effectiveVisualTheme = isPremium ? visualTheme : null;
+    const colorPalette = getCollegeColorPalette(university || null, theme);
+    // Visual theme takes priority
+    let accent = colorPalette.accent;
+    if (effectiveVisualTheme && effectiveVisualTheme !== 'default') {
+      const themeColors = getThemeColors(effectiveVisualTheme, theme);
+      if (themeColors.accent) accent = themeColors.accent;
+    } else if (effectiveUseCustomTheme && effectiveCustomColors) {
+      accent = getCustomColorSetForTheme(effectiveCustomColors as CustomColors, theme).accent;
+    }
+    const scale = glowIntensity / 50;
     const opacity = Math.round(Math.min(255, 40 * scale)).toString(16).padStart(2, '0');
     return { accentColor: accent, glowScale: scale, glowOpacity: opacity };
-  }, [isPremium, settings, theme]);
+  }, [isPremium, useCustomTheme, customColors, visualTheme, university, glowIntensity, theme]);
 
   // Initialize range from localStorage
   const [range, setRange] = useState<TimelineRange>(() => {

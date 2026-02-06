@@ -8,11 +8,14 @@ import Card from '@/components/ui/Card';
 import { GamificationData, Achievement } from '@/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import useAppStore from '@/lib/store';
+import { useSubscription } from '@/hooks/useSubscription';
 
 export default function ProgressPage() {
   const { status } = useSession();
   const router = useRouter();
   const isMobile = useIsMobile();
+  const { isPremium } = useSubscription();
+  const visualTheme = useAppStore((state) => state.settings.visualTheme);
 
   // Use store data first for instant display, then fetch fresh data
   const storeInitialized = useAppStore((state) => state.initialized);
@@ -207,7 +210,7 @@ export default function ProgressPage() {
             Your Progress
           </h1>
           <p style={{ fontSize: isMobile ? '13px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-            Track your streaks, level, and achievements.
+            {isPremium && visualTheme === 'cartoon' ? "Look how far you've come!" : "Track your streaks, level, and achievements."}
           </p>
         </div>
       </div>

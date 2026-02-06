@@ -3,6 +3,7 @@
 import React from 'react';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { getThemeColors } from '@/lib/visualThemes';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsLightMode } from '@/hooks/useEffectiveTheme';
 
@@ -27,12 +28,19 @@ const Button = React.memo(React.forwardRef<HTMLButtonElement, ButtonProps>(
     // Custom theme and visual effects are only active for premium users
     const useCustomTheme = isPremium ? settings.useCustomTheme : false;
     const customColors = isPremium ? settings.customColors : null;
+    const visualTheme = isPremium ? settings.visualTheme : null;
 
     // Compute accent color (text color uses theme defaults)
     let accentColor = colorPalette.accent;
     const accentTextColor = isLightMode ? '#000000' : '#ffffff';
 
-    if (useCustomTheme && customColors) {
+    // Visual theme takes priority over custom colors
+    if (visualTheme && visualTheme !== 'default') {
+      const themeColors = getThemeColors(visualTheme, theme);
+      if (themeColors.accent) {
+        accentColor = themeColors.accent;
+      }
+    } else if (useCustomTheme && customColors) {
       const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
       accentColor = colorSet.accent;
     }

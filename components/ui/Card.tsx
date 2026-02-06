@@ -5,6 +5,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { getThemeColors } from '@/lib/visualThemes';
 import { useIsLightMode } from '@/hooks/useEffectiveTheme';
 
 interface CardProps {
@@ -43,23 +44,32 @@ const Card: React.FC<CardProps> = React.memo(({
   const isLightMode = useIsLightMode();
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
+  const savedVisualTheme = useAppStore((state) => state.settings.visualTheme);
 
-  // Custom theme only applies for premium users
+  // Custom theme and visual theme only apply for premium users
   const useCustomTheme = isPremium ? savedUseCustomTheme : false;
   const customColors = isPremium ? savedCustomColors : null;
+  const visualTheme = isPremium ? savedVisualTheme : null;
 
   const colorPalette = getCollegeColorPalette(university || null, theme);
 
-  // Use custom accent color if custom theme is enabled
-  const accentColor = useCustomTheme && customColors
-    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
-    : colorPalette.accent;
+  // Visual theme takes priority
+  const accentColor = (() => {
+    if (visualTheme && visualTheme !== 'default') {
+      const themeColors = getThemeColors(visualTheme, theme);
+      if (themeColors.accent) return themeColors.accent;
+    }
+    if (useCustomTheme && customColors) {
+      return getCustomColorSetForTheme(customColors as CustomColors, theme).accent;
+    }
+    return colorPalette.accent;
+  })();
 
   const isPrimary = variant === 'primary';
 
   return (
     <div
-      className={`group card-hover rounded-[16px] border transition-all duration-300 w-full h-full flex flex-col min-h-0 animate-fade-in-up ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${className}`}
+      className={`group card-hover rounded-[var(--radius-card)] border transition-all duration-300 w-full h-full flex flex-col min-h-0 animate-fade-in-up ${hoverable ? 'hover:border-[var(--border-hover)] cursor-pointer' : ''} ${className}`}
       style={{
         position: 'relative',
         minWidth: isMobile ? '0' : 'auto',

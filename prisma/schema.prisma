@@ -618,6 +618,9 @@ model Settings {
   spotifyMiniPlayerSize     String    @default("medium") // "big" | "medium" | "mini"
   spotifyVisualizerEnabled  Boolean   @default(true)
 
+  // Visual Themes (Premium)
+  visualTheme               String?   @default("default")
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])

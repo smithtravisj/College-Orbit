@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { getThemeColors } from '@/lib/visualThemes';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { QuickAddModal } from './QuickAddModal';
 import { useKeyboardShortcutsContext } from './KeyboardShortcutsProvider';
@@ -42,6 +43,7 @@ export function QuickAddButton() {
   const isPremium = useAppStore((state) => state.isPremium);
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
+  const savedVisualTheme = useAppStore((state) => state.settings.visualTheme);
   const glowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
   const gradientIntensity = useAppStore((state) => state.settings.gradientIntensity) ?? 50;
 
@@ -49,10 +51,19 @@ export function QuickAddButton() {
   const useCustomTheme = isPremium ? savedUseCustomTheme : false;
   const customColors = isPremium ? savedCustomColors : null;
 
-  // Determine accent color based on custom theme or college palette
-  const buttonColor = useCustomTheme && customColors
-    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
-    : getCollegeColorPalette(university, theme).accent;
+  // Determine accent color based on visual theme, custom theme, or college palette
+  // Visual theme takes priority
+  const visualTheme = isPremium ? savedVisualTheme : null;
+  const buttonColor = (() => {
+    if (visualTheme && visualTheme !== 'default') {
+      const themeColors = getThemeColors(visualTheme, theme);
+      if (themeColors.accent) return themeColors.accent;
+    }
+    if (useCustomTheme && customColors) {
+      return getCustomColorSetForTheme(customColors as CustomColors, theme).accent;
+    }
+    return getCollegeColorPalette(university, theme).accent;
+  })();
 
   const isLightMode = useIsLightMode();
   const iconColor = isLightMode ? '#000000' : 'white';

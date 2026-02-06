@@ -60,7 +60,7 @@
     justify-content: center;
     cursor: pointer;
     color: var(--text);
-    border-radius: 6px;
+    border-radius: var(--radius-xs, 6px);
     transition: background-color 150ms ease;
     flex-shrink: 0;
     margin-left: 12px;

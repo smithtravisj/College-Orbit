@@ -419,6 +419,8 @@ export interface Settings {
   flashcardSoundEffects?: boolean;
   flashcardCelebrations?: boolean;
   flashcardDefaultSort?: 'recent' | 'due' | 'alphabetical' | 'course' | 'mastery' | 'created';
+  // Visual Themes (Premium)
+  visualTheme?: string | null;
 }
 
 export interface ExcludedDate {

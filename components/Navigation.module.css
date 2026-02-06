@@ -60,7 +60,7 @@
     justify-content: center;
     cursor: pointer;
     color: var(--text);
-    border-radius: 8px;
+    border-radius: var(--radius-xs, 8px);
     transition: background-color 150ms ease;
   }
 
@@ -110,7 +110,7 @@
     font-weight: 500;
     cursor: pointer;
     text-align: left;
-    border-radius: 8px;
+    border-radius: var(--radius-control, 8px);
     transition: all 150ms ease;
     text-decoration: none;
   }

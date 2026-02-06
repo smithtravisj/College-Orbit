@@ -9,7 +9,7 @@
   .taskItem {
     padding: 10px;
     margin-bottom: 8px;
-    border-radius: 8px;
+    border-radius: var(--radius-xs, 8px);
   }
 
   /* Task title - smaller font */
@@ -31,7 +31,7 @@
     display: inline-block;
     font-size: 11px;
     padding: 3px 8px;
-    border-radius: 4px;
+    border-radius: var(--radius-xs, 4px);
   }
 
   /* Course tag - minimal */
@@ -39,7 +39,7 @@
     display: inline-block;
     font-size: 11px;
     padding: 2px 6px;
-    border-radius: 3px;
+    border-radius: var(--radius-xs, 3px);
     margin-left: 6px;
   }
 

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { Course, Deadline, Task, Exam, Note, Folder, Settings, AppData, ExcludedDate, GpaEntry, RecurringPattern, RecurringTaskFormData, RecurringDeadlinePattern, RecurringExamPattern, RecurringDeadlineFormData, RecurringExamFormData, ShoppingItem, ShoppingListType, CalendarEvent, WorkItem, WorkItemType, RecurringWorkPattern, RecurringWorkFormData, GamificationData, Achievement, GamificationRecordResult, FriendRequest, FriendWithStats, CollegeLeaderboardEntry, FlashcardDeck } from '@/types';
 import { applyColorPalette, getCollegeColorPalette, applyCustomColors, getCustomColorSetForTheme, CustomColors, setDatabaseColleges, DatabaseCollege, applyColorblindMode, ColorblindMode, ColorblindStyle } from '@/lib/collegeColors';
+import { applyVisualTheme, clearVisualTheme } from '@/lib/visualThemes';
 import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
 const DEFAULT_SETTINGS: Settings = {
@@ -419,13 +420,23 @@ const useAppStore = create<AppStore>((set, get) => ({
           const theme = settings.theme || 'dark';
           const useCustomTheme = settings.useCustomTheme;
           const customColors = settings.customColors;
+          const visualTheme = settings.visualTheme;
 
+          let basePalette;
           if (isPremium && useCustomTheme && customColors) {
             const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
             applyCustomColors(colorSet, theme);
+            basePalette = getCollegeColorPalette(settings.university, theme);
           } else {
-            const palette = getCollegeColorPalette(settings.university, theme);
-            applyColorPalette(palette);
+            basePalette = getCollegeColorPalette(settings.university, theme);
+            applyColorPalette(basePalette);
+          }
+
+          // Apply visual theme on top (premium only)
+          if (isPremium && visualTheme && visualTheme !== 'default') {
+            applyVisualTheme(visualTheme, theme, basePalette);
+          } else {
+            clearVisualTheme();
           }
         }
       }
@@ -453,15 +464,25 @@ const useAppStore = create<AppStore>((set, get) => ({
       const theme = settings.theme || 'dark';
       const useCustomTheme = settings.useCustomTheme;
       const customColors = settings.customColors;
+      const visualTheme = settings.visualTheme;
 
-      // Only apply custom colors if premium AND custom theme enabled
+      // Get base palette
+      let basePalette;
       if (isPremium && useCustomTheme && customColors) {
         const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
         applyCustomColors(colorSet, theme);
+        basePalette = getCollegeColorPalette(settings.university || null, theme);
       } else {
         // Apply college colors (when not premium or custom theme disabled)
-        const palette = getCollegeColorPalette(settings.university || null, theme);
-        applyColorPalette(palette);
+        basePalette = getCollegeColorPalette(settings.university || null, theme);
+        applyColorPalette(basePalette);
+      }
+
+      // Apply visual theme on top (premium only)
+      if (isPremium && visualTheme && visualTheme !== 'default') {
+        applyVisualTheme(visualTheme, theme, basePalette);
+      } else {
+        clearVisualTheme();
       }
 
       // Apply colorblind mode (skip palette changes if custom theme is active)
@@ -708,19 +729,29 @@ const useAppStore = create<AppStore>((set, get) => ({
         const theme = (rawTheme === 'system' ? 'dark' : rawTheme) as 'light' | 'dark';
         const useCustomTheme = newData.settings?.useCustomTheme || false;
         const customColors = newData.settings?.customColors;
+        const visualTheme = newData.settings?.visualTheme;
 
-        // Only apply custom colors if premium AND custom theme enabled
+        // Get base palette
+        let basePalette;
         if (isPremium && useCustomTheme && customColors) {
           // Apply custom colors for the current theme
           const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
           applyCustomColors(colorSet, theme);
+          basePalette = getCollegeColorPalette(newData.settings?.university || null, theme);
         } else {
           // Apply college colors (when not premium or custom theme disabled)
-          const palette = getCollegeColorPalette(
+          basePalette = getCollegeColorPalette(
             newData.settings?.university || null,
             theme
           );
-          applyColorPalette(palette);
+          applyColorPalette(basePalette);
+        }
+
+        // Apply visual theme on top (premium only)
+        if (isPremium && visualTheme && visualTheme !== 'default') {
+          applyVisualTheme(visualTheme, theme, basePalette);
+        } else {
+          clearVisualTheme();
         }
 
         // Apply colorblind mode (skip palette changes if custom theme is active)
@@ -808,19 +839,29 @@ const useAppStore = create<AppStore>((set, get) => ({
         const theme = settings.theme || 'dark';
         const useCustomTheme = settings.useCustomTheme || false;
         const customColors = settings.customColors;
+        const visualTheme = settings.visualTheme;
 
-        // Only apply custom colors if premium AND custom theme enabled
+        // Get base palette
+        let basePalette;
         if (cachedIsPremium && useCustomTheme && customColors) {
           // Apply custom colors for the current theme
           const colorSet = getCustomColorSetForTheme(customColors as CustomColors, theme);
           applyCustomColors(colorSet, theme);
+          basePalette = getCollegeColorPalette(settings.university || null, theme);
         } else {
           // Apply college colors (when not premium or custom theme disabled)
-          const palette = getCollegeColorPalette(
+          basePalette = getCollegeColorPalette(
             settings.university || null,
             theme
           );
-          applyColorPalette(palette);
+          applyColorPalette(basePalette);
+        }
+
+        // Apply visual theme on top (premium only)
+        if (cachedIsPremium && visualTheme && visualTheme !== 'default') {
+          applyVisualTheme(visualTheme, theme, basePalette);
+        } else {
+          clearVisualTheme();
         }
 
         // Apply colorblind mode (skip palette changes if custom theme is active)
@@ -2391,28 +2432,39 @@ const useAppStore = create<AppStore>((set, get) => ({
         settings: { ...state.settings, ...settings },
       }));
 
-      // Apply colors if college, theme, custom theme, or colorblind settings changed
+      // Apply colors if college, theme, custom theme, visual theme, or colorblind settings changed
       if ((settings.university !== undefined || settings.theme !== undefined ||
            settings.useCustomTheme !== undefined || settings.customColors !== undefined ||
-           settings.colorblindMode !== undefined || settings.colorblindStyle !== undefined) && typeof window !== 'undefined') {
+           settings.colorblindMode !== undefined || settings.colorblindStyle !== undefined ||
+           settings.visualTheme !== undefined) && typeof window !== 'undefined') {
         const currentState = get().settings;
         const { isPremium } = get();
         const newTheme = settings.theme !== undefined ? settings.theme : (currentState.theme || 'dark');
         const newUseCustomTheme = settings.useCustomTheme !== undefined ? settings.useCustomTheme : (currentState.useCustomTheme || false);
         const newCustomColors = settings.customColors !== undefined ? settings.customColors : currentState.customColors;
+        const newVisualTheme = settings.visualTheme !== undefined ? settings.visualTheme : currentState.visualTheme;
 
-        // Only apply custom colors if premium AND custom theme enabled
+        // Get the base palette first
+        let basePalette;
         if (isPremium && newUseCustomTheme && newCustomColors) {
           // Apply custom colors for the current theme
           const colorSet = getCustomColorSetForTheme(newCustomColors as CustomColors, newTheme);
           applyCustomColors(colorSet, newTheme);
+          basePalette = getCollegeColorPalette(currentState.university || null, newTheme);
         } else {
           // Apply college colors (when not premium or custom theme disabled)
-          const palette = getCollegeColorPalette(
+          basePalette = getCollegeColorPalette(
             settings.university !== undefined ? settings.university : (currentState.university || null),
             newTheme
           );
-          applyColorPalette(palette);
+          applyColorPalette(basePalette);
+        }
+
+        // Apply visual theme on top (premium only)
+        if (isPremium && newVisualTheme && newVisualTheme !== 'default') {
+          applyVisualTheme(newVisualTheme, newTheme, basePalette);
+        } else {
+          clearVisualTheme();
         }
 
         // Apply colorblind mode (must be after palette is applied to override semantic colors)
@@ -2507,25 +2559,36 @@ const useAppStore = create<AppStore>((set, get) => ({
       settings: { ...state.settings, ...settings },
     }));
 
-    // Apply colors if theme/university/custom theme/colorblind settings changed
+    // Apply colors if theme/university/custom theme/visual theme/colorblind settings changed
     if ((settings.university !== undefined || settings.theme !== undefined ||
          settings.useCustomTheme !== undefined || settings.customColors !== undefined ||
-         settings.colorblindMode !== undefined || settings.colorblindStyle !== undefined) && typeof window !== 'undefined') {
+         settings.colorblindMode !== undefined || settings.colorblindStyle !== undefined ||
+         settings.visualTheme !== undefined) && typeof window !== 'undefined') {
       const currentState = get().settings;
       const { isPremium } = get();
       const newTheme = settings.theme !== undefined ? settings.theme : (currentState.theme || 'dark');
       const newUseCustomTheme = settings.useCustomTheme !== undefined ? settings.useCustomTheme : (currentState.useCustomTheme || false);
       const newCustomColors = settings.customColors !== undefined ? settings.customColors : currentState.customColors;
+      const newVisualTheme = settings.visualTheme !== undefined ? settings.visualTheme : currentState.visualTheme;
 
+      let basePalette;
       if (isPremium && newUseCustomTheme && newCustomColors) {
         const colorSet = getCustomColorSetForTheme(newCustomColors as CustomColors, newTheme);
         applyCustomColors(colorSet, newTheme);
+        basePalette = getCollegeColorPalette(currentState.university || null, newTheme);
       } else {
-        const palette = getCollegeColorPalette(
+        basePalette = getCollegeColorPalette(
           settings.university !== undefined ? settings.university : (currentState.university || null),
           newTheme
         );
-        applyColorPalette(palette);
+        applyColorPalette(basePalette);
+      }
+
+      // Apply visual theme on top (premium only)
+      if (isPremium && newVisualTheme && newVisualTheme !== 'default') {
+        applyVisualTheme(newVisualTheme, newTheme, basePalette);
+      } else {
+        clearVisualTheme();
       }
 
       // Apply colorblind mode (skip palette changes if custom theme is active)

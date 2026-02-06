@@ -146,6 +146,9 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.flashcardCelebrations !== undefined) updateData.flashcardCelebrations = data.flashcardCelebrations;
     if (data.flashcardDefaultSort !== undefined) updateData.flashcardDefaultSort = data.flashcardDefaultSort;
 
+    // Visual themes
+    if (data.visualTheme !== undefined) updateData.visualTheme = data.visualTheme;
+
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 
     // Try to update existing settings

@@ -13,6 +13,7 @@ import { Plus, Trash2, Upload, X, FileIcon, ChevronDown, Crown } from 'lucide-re
 import HelpTooltip from '@/components/ui/HelpTooltip';
 import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
+import { getThemeColors } from '@/lib/visualThemes';
 import Link from 'next/link';
 import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
@@ -31,7 +32,17 @@ const CourseFormComponent = forwardRef(function CourseForm(
   const isMobile = useIsMobile();
   const subscription = useSubscription();
   const { courses, settings, addCourse, updateCourse } = useAppStore();
-  const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
+  const baseColorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
+  // Visual theme takes priority for accent color
+  const colorPalette = (() => {
+    if (subscription.isPremium && settings.visualTheme && settings.visualTheme !== 'default') {
+      const themeColors = getThemeColors(settings.visualTheme, settings.theme || 'dark');
+      if (themeColors.accent) {
+        return { ...baseColorPalette, accent: themeColors.accent };
+      }
+    }
+    return baseColorPalette;
+  })();
 
   // Get initial course data once on mount - use useMemo to avoid re-fetching on every render
   const initialCourse = useMemo(() => {

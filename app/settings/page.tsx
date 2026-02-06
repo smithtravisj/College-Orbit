@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getDefaultCustomColors, getCustomColorSetForTheme, CustomColors, CustomColorSet, getEventTypeColors } from '@/lib/collegeColors';
+import { getThemeColors } from '@/lib/visualThemes';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import ColorPicker from '@/components/ui/ColorPicker';
@@ -271,9 +272,18 @@ export default function SettingsPage() {
   // Custom theme and visual effects only apply for premium users
   const effectiveUseCustomTheme = isPremium && settings.useCustomTheme;
   const effectiveCustomColors = isPremium ? settings.customColors : null;
-  const accentColor = effectiveUseCustomTheme && effectiveCustomColors
-    ? getCustomColorSetForTheme(effectiveCustomColors as CustomColors, settings.theme || 'dark').accent
-    : colorPalette.accent;
+  const effectiveVisualTheme = isPremium ? settings.visualTheme : null;
+  // Visual theme takes priority
+  const accentColor = (() => {
+    if (effectiveVisualTheme && effectiveVisualTheme !== 'default') {
+      const themeColors = getThemeColors(effectiveVisualTheme, settings.theme || 'dark');
+      if (themeColors.accent) return themeColors.accent;
+    }
+    if (effectiveUseCustomTheme && effectiveCustomColors) {
+      return getCustomColorSetForTheme(effectiveCustomColors as CustomColors, settings.theme || 'dark').accent;
+    }
+    return colorPalette.accent;
+  })();
   const glowIntensity = isPremium ? (settings.glowIntensity ?? 50) : 50;
   const glowScale = glowIntensity / 50;
   const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
@@ -1760,7 +1770,7 @@ export default function SettingsPage() {
             Settings
           </h1>
           <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-            Customize your experience.
+            {effectiveVisualTheme === 'cartoon' ? "Make it your own." : "Customize your experience."}
           </p>
         </div>
 
@@ -1840,7 +1850,7 @@ export default function SettingsPage() {
 
         <div className="w-full" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(400px, 1fr))', gap: isMobile ? '14px' : 'var(--grid-gap)', maxWidth: '100%', boxSizing: 'border-box' }}>
           {!session && sessionStatus !== 'loading' && (
-            <div style={{ gridColumn: '1 / -1', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '6px', padding: '12px', marginBottom: '0px', color: '#856404', fontSize: '14px' }}>
+            <div style={{ gridColumn: '1 / -1', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: 'var(--radius-xs, 6px)', padding: '12px', marginBottom: '0px', color: '#856404', fontSize: '14px' }}>
               ⚠️ You are not logged in. Settings will be saved to your browser only.
             </div>
           )}
@@ -1856,7 +1866,7 @@ export default function SettingsPage() {
                 gap: '8px',
                 padding: '4px',
                 backgroundColor: 'var(--panel-2)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-control, 12px)',
                 border: '1px solid var(--border)',
               }}>
                 {(['12h', '24h'] as const).map((format) => (
@@ -1871,7 +1881,7 @@ export default function SettingsPage() {
                       color: settings.timeFormat === format ? 'var(--text)' : 'var(--text-muted)',
                       backgroundColor: settings.timeFormat === format ? 'var(--panel)' : 'transparent',
                       border: settings.timeFormat === format ? '1px solid var(--border)' : '1px solid transparent',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                     }}
@@ -1893,7 +1903,7 @@ export default function SettingsPage() {
                 gap: '8px',
                 padding: '4px',
                 backgroundColor: 'var(--panel-2)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-control, 12px)',
                 border: '1px solid var(--border)',
               }}>
                 {(['MM/DD/YYYY', 'DD/MM/YYYY'] as const).map((format) => (
@@ -1908,7 +1918,7 @@ export default function SettingsPage() {
                       color: settings.dateFormat === format ? 'var(--text)' : 'var(--text-muted)',
                       backgroundColor: settings.dateFormat === format ? 'var(--panel)' : 'transparent',
                       border: settings.dateFormat === format ? '1px solid var(--border)' : '1px solid transparent',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                     }}
@@ -1936,7 +1946,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.showRelativeDates ?? false) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -1976,7 +1986,7 @@ export default function SettingsPage() {
                     width: '100%',
                     padding: '10px 12px',
                     paddingRight: '36px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-xs, 8px)',
                     border: '1px solid var(--border)',
                     backgroundColor: 'var(--panel-2)',
                     color: 'var(--text)',
@@ -2005,7 +2015,7 @@ export default function SettingsPage() {
                     width: '100%',
                     padding: '10px 12px',
                     paddingRight: '36px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-xs, 8px)',
                     border: '1px solid var(--border)',
                     backgroundColor: 'var(--panel-2)',
                     color: 'var(--text)',
@@ -2035,7 +2045,7 @@ export default function SettingsPage() {
                     width: '100%',
                     padding: '10px 12px',
                     paddingRight: '36px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-xs, 8px)',
                     border: '1px solid var(--border)',
                     backgroundColor: 'var(--panel-2)',
                     color: 'var(--text)',
@@ -2066,7 +2076,7 @@ export default function SettingsPage() {
                     width: '100%',
                     padding: '10px 12px',
                     paddingRight: '36px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-xs, 8px)',
                     border: '1px solid var(--border)',
                     backgroundColor: 'var(--panel-2)',
                     color: 'var(--text)',
@@ -2096,7 +2106,7 @@ export default function SettingsPage() {
                     width: '100%',
                     padding: '10px 12px',
                     paddingRight: '36px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-xs, 8px)',
                     border: '1px solid var(--border)',
                     backgroundColor: 'var(--panel-2)',
                     color: 'var(--text)',
@@ -2133,7 +2143,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.flashcardShuffleOrder ?? true) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -2172,7 +2182,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.flashcardShowKeyboardHints ?? true) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -2211,7 +2221,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.flashcardSoundEffects ?? true) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -2250,7 +2260,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.flashcardCelebrations ?? true) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -2292,7 +2302,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.showCourseCode ?? false) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -2331,7 +2341,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.showCanvasBadges ?? true) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -2370,7 +2380,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.showPriorityIndicators ?? true) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -2409,7 +2419,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.showEffortIndicators ?? true) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -2448,7 +2458,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.showNavCounts ?? false) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -2565,7 +2575,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.groupTasksByCourse ?? false) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -2619,7 +2629,7 @@ export default function SettingsPage() {
                     backgroundColor: 'var(--panel-2)',
                     color: 'var(--text)',
                     border: '1px solid var(--border)',
-                    borderRadius: '6px',
+                    borderRadius: 'var(--radius-xs, 6px)',
                   }}
                 />
                 <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>days</span>
@@ -2643,7 +2653,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.confirmBeforeDelete ?? true) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -2685,7 +2695,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.enableKeyboardShortcuts ?? true) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -2724,7 +2734,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.autoSyncCoursesToGradeTracker ?? true) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -2770,7 +2780,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: vacationMode ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: vacationModeLoading || !session?.user ? 'not-allowed' : 'pointer',
@@ -2799,7 +2809,7 @@ export default function SettingsPage() {
                   marginTop: '12px',
                   padding: '10px 12px',
                   backgroundColor: 'var(--accent-light)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-xs, 8px)',
                   border: '1px solid var(--accent)',
                 }}>
                   <p className="text-sm text-[var(--link)]" style={{ margin: 0, fontWeight: 500 }}>
@@ -2858,7 +2868,7 @@ export default function SettingsPage() {
                             color: 'var(--text)',
                             backgroundColor: 'var(--panel)',
                             border: '1px solid var(--border)',
-                            borderRadius: '6px',
+                            borderRadius: 'var(--radius-xs, 6px)',
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                             whiteSpace: 'normal',
                             width: '240px',
@@ -2885,7 +2895,7 @@ export default function SettingsPage() {
                   style={{
                     width: '44px',
                     height: '24px',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-control, 12px)',
                     backgroundColor: (settings.isBetaUser ?? false) ? 'var(--accent)' : 'var(--panel-2)',
                     border: '1px solid var(--border)',
                     cursor: 'pointer',
@@ -2930,7 +2940,7 @@ export default function SettingsPage() {
                       backgroundColor: 'var(--panel-2)',
                       color: 'var(--text)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                       boxSizing: 'border-box',
                       marginBottom: '0',
                       resize: 'vertical',
@@ -3007,7 +3017,7 @@ export default function SettingsPage() {
               padding: '20px 24px',
               backgroundColor: 'var(--panel)',
               border: '1px solid var(--border)',
-              borderRadius: '12px',
+              borderRadius: 'var(--radius-control, 12px)',
               textDecoration: 'none',
               transition: 'border-color 0.2s, background-color 0.2s',
             }}
@@ -3027,7 +3037,7 @@ export default function SettingsPage() {
               width: '48px',
               height: '48px',
               backgroundColor: 'var(--accent)',
-              borderRadius: '12px',
+              borderRadius: 'var(--radius-control, 12px)',
               flexShrink: 0,
             }}>
               <Chrome size={24} style={{ color: 'white' }} />
@@ -3094,7 +3104,7 @@ export default function SettingsPage() {
                       backgroundColor: 'var(--panel-2)',
                       color: 'var(--text)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                     }}
                     disabled={canvasConnecting}
                   />
@@ -3120,7 +3130,7 @@ export default function SettingsPage() {
                       backgroundColor: 'var(--panel-2)',
                       color: 'var(--text)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                     }}
                     disabled={canvasConnecting}
                   />
@@ -3168,7 +3178,7 @@ export default function SettingsPage() {
                   gap: '8px',
                   padding: '12px',
                   backgroundColor: 'var(--panel-2)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-xs, 8px)',
                   marginBottom: '16px',
                 }}>
                   <div style={{
@@ -3249,7 +3259,7 @@ export default function SettingsPage() {
                       padding: '10px 12px',
                       backgroundColor: 'var(--panel-2)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                       cursor: 'pointer',
                       color: 'var(--text)',
                       fontSize: '14px',
@@ -3284,7 +3294,7 @@ export default function SettingsPage() {
                             justifyContent: 'space-between',
                             padding: '10px 12px',
                             backgroundColor: 'var(--panel-2)',
-                            borderRadius: '6px',
+                            borderRadius: 'var(--radius-xs, 6px)',
                             cursor: 'pointer',
                           }}
                         >
@@ -3319,7 +3329,7 @@ export default function SettingsPage() {
                 color: 'var(--warning)',
                 backgroundColor: 'var(--warning-bg)',
                 padding: '2px 6px',
-                borderRadius: '4px',
+                borderRadius: 'var(--radius-xs, 4px)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
               }}>
@@ -3358,7 +3368,7 @@ export default function SettingsPage() {
                       backgroundColor: 'var(--panel-2)',
                       color: 'var(--text)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                     }}
                     disabled={moodleConnecting}
                   />
@@ -3384,7 +3394,7 @@ export default function SettingsPage() {
                       backgroundColor: 'var(--panel-2)',
                       color: 'var(--text)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                     }}
                     disabled={moodleConnecting}
                   />
@@ -3432,7 +3442,7 @@ export default function SettingsPage() {
                   gap: '8px',
                   padding: '12px',
                   backgroundColor: 'var(--panel-2)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-xs, 8px)',
                   marginBottom: '16px',
                 }}>
                   <div style={{
@@ -3517,7 +3527,7 @@ export default function SettingsPage() {
                       padding: '10px 12px',
                       backgroundColor: 'var(--panel-2)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                       cursor: 'pointer',
                       color: 'var(--text)',
                       fontSize: '14px',
@@ -3552,7 +3562,7 @@ export default function SettingsPage() {
                             justifyContent: 'space-between',
                             padding: '10px 12px',
                             backgroundColor: 'var(--panel-2)',
-                            borderRadius: '6px',
+                            borderRadius: 'var(--radius-xs, 6px)',
                             cursor: 'pointer',
                           }}
                         >
@@ -3588,7 +3598,7 @@ export default function SettingsPage() {
                 color: 'var(--warning)',
                 backgroundColor: 'var(--warning-bg)',
                 padding: '2px 6px',
-                borderRadius: '4px',
+                borderRadius: 'var(--radius-xs, 4px)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
               }}>
@@ -3627,7 +3637,7 @@ export default function SettingsPage() {
                       backgroundColor: 'var(--panel-2)',
                       color: 'var(--text)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                     }}
                     disabled={blackboardConnecting}
                   />
@@ -3653,7 +3663,7 @@ export default function SettingsPage() {
                       backgroundColor: 'var(--panel-2)',
                       color: 'var(--text)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                     }}
                     disabled={blackboardConnecting}
                   />
@@ -3679,7 +3689,7 @@ export default function SettingsPage() {
                       backgroundColor: 'var(--panel-2)',
                       color: 'var(--text)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                     }}
                     disabled={blackboardConnecting}
                   />
@@ -3727,7 +3737,7 @@ export default function SettingsPage() {
                   gap: '8px',
                   padding: '12px',
                   backgroundColor: 'var(--panel-2)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-xs, 8px)',
                   marginBottom: '16px',
                 }}>
                   <div style={{
@@ -3812,7 +3822,7 @@ export default function SettingsPage() {
                       padding: '10px 12px',
                       backgroundColor: 'var(--panel-2)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                       cursor: 'pointer',
                       color: 'var(--text)',
                       fontSize: '14px',
@@ -3846,7 +3856,7 @@ export default function SettingsPage() {
                             justifyContent: 'space-between',
                             padding: '10px 12px',
                             backgroundColor: 'var(--panel-2)',
-                            borderRadius: '6px',
+                            borderRadius: 'var(--radius-xs, 6px)',
                             cursor: 'pointer',
                           }}
                         >
@@ -3882,7 +3892,7 @@ export default function SettingsPage() {
                 color: 'var(--warning)',
                 backgroundColor: 'var(--warning-bg)',
                 padding: '2px 6px',
-                borderRadius: '4px',
+                borderRadius: 'var(--radius-xs, 4px)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
               }}>
@@ -3921,7 +3931,7 @@ export default function SettingsPage() {
                       backgroundColor: 'var(--panel-2)',
                       color: 'var(--text)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                     }}
                     disabled={brightspaceConnecting}
                   />
@@ -3947,7 +3957,7 @@ export default function SettingsPage() {
                       backgroundColor: 'var(--panel-2)',
                       color: 'var(--text)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                     }}
                     disabled={brightspaceConnecting}
                   />
@@ -3973,7 +3983,7 @@ export default function SettingsPage() {
                       backgroundColor: 'var(--panel-2)',
                       color: 'var(--text)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                     }}
                     disabled={brightspaceConnecting}
                   />
@@ -4021,7 +4031,7 @@ export default function SettingsPage() {
                   gap: '8px',
                   padding: '12px',
                   backgroundColor: 'var(--panel-2)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-xs, 8px)',
                   marginBottom: '16px',
                 }}>
                   <div style={{
@@ -4106,7 +4116,7 @@ export default function SettingsPage() {
                       padding: '10px 12px',
                       backgroundColor: 'var(--panel-2)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                       cursor: 'pointer',
                       color: 'var(--text)',
                       fontSize: '14px',
@@ -4141,7 +4151,7 @@ export default function SettingsPage() {
                             justifyContent: 'space-between',
                             padding: '10px 12px',
                             backgroundColor: 'var(--panel-2)',
-                            borderRadius: '6px',
+                            borderRadius: 'var(--radius-xs, 6px)',
                             cursor: 'pointer',
                           }}
                         >
@@ -4179,9 +4189,9 @@ export default function SettingsPage() {
               <div style={{
                 display: 'flex',
                 gap: '8px',
-                padding: '4px',
+                padding: '6px',
                 backgroundColor: 'var(--panel-2)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-card, 16px)',
                 border: '1px solid var(--border)',
               }}>
                 {(['light', 'dark'] as const).map((themeOption) => (
@@ -4199,7 +4209,7 @@ export default function SettingsPage() {
                       color: selectedTheme === themeOption ? 'var(--text)' : 'var(--text-muted)',
                       backgroundColor: selectedTheme === themeOption ? 'var(--panel)' : 'transparent',
                       border: selectedTheme === themeOption ? '1px solid var(--border)' : '1px solid transparent',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                     }}
@@ -4229,7 +4239,7 @@ export default function SettingsPage() {
                   backgroundColor: 'var(--panel-2)',
                   color: 'var(--text)',
                   border: '1px solid var(--border)',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-xs, 6px)',
                   cursor: 'pointer',
                   appearance: 'none',
                   backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${selectedTheme === 'light' ? '%23666666' : 'white'}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
@@ -4271,7 +4281,7 @@ export default function SettingsPage() {
                       backgroundColor: 'var(--panel-2)',
                       color: 'var(--text)',
                       border: '1px solid var(--border)',
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-xs, 6px)',
                     }}
                     disabled={collegeRequestLoading}
                   />
@@ -4302,7 +4312,7 @@ export default function SettingsPage() {
                 gap: '8px',
                 padding: '4px',
                 backgroundColor: 'var(--panel-2)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-control, 12px)',
                 border: '1px solid var(--border)',
                 opacity: isPremium ? 1 : 0.5,
               }}>
@@ -4320,7 +4330,7 @@ export default function SettingsPage() {
                     color: !effectiveUseCustomTheme ? 'var(--text)' : 'var(--text-muted)',
                     backgroundColor: !effectiveUseCustomTheme ? 'var(--panel)' : 'transparent',
                     border: !effectiveUseCustomTheme ? '1px solid var(--border)' : '1px solid transparent',
-                    borderRadius: '6px',
+                    borderRadius: 'var(--radius-xs, 6px)',
                     cursor: isPremium ? 'pointer' : 'not-allowed',
                   }}
                 >
@@ -4342,7 +4352,7 @@ export default function SettingsPage() {
                     color: effectiveUseCustomTheme ? 'var(--text)' : 'var(--text-muted)',
                     backgroundColor: effectiveUseCustomTheme ? 'var(--panel)' : 'transparent',
                     border: effectiveUseCustomTheme ? '1px solid var(--border)' : '1px solid transparent',
-                    borderRadius: '6px',
+                    borderRadius: 'var(--radius-xs, 6px)',
                     cursor: isPremium ? 'pointer' : 'not-allowed',
                   }}
                 >
@@ -4393,6 +4403,58 @@ export default function SettingsPage() {
               </div>
               );
             })()}
+
+            {/* Visual Theme Picker */}
+            <div id="setting-visual-theme" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px', marginBottom: '20px' }}>
+              <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Visual Theme</p>
+              <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
+                Fun, personality-driven themes with unique colors and styles
+              </p>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+                gap: '12px',
+                opacity: isPremium ? 1 : 0.5,
+              }}>
+                {/* Default Theme */}
+                <button
+                  onClick={() => {
+                    if (!isPremium) return;
+                    updateSettings({ visualTheme: 'default' });
+                  }}
+                  style={{
+                    padding: '12px',
+                    backgroundColor: settings.visualTheme === 'default' || !settings.visualTheme ? 'var(--accent-2)' : 'var(--panel-2)',
+                    border: settings.visualTheme === 'default' || !settings.visualTheme ? '2px solid var(--accent)' : '1px solid var(--border)',
+                    borderRadius: 'var(--radius-control, 12px)',
+                    cursor: isPremium ? 'pointer' : 'not-allowed',
+                    textAlign: 'left',
+                  }}
+                >
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Default</p>
+                  <p className="text-xs text-[var(--text-muted)]" style={{ margin: 0 }}>Clean & minimal</p>
+                </button>
+
+                {/* Cartoon Theme */}
+                <button
+                  onClick={() => {
+                    if (!isPremium) return;
+                    updateSettings({ visualTheme: 'cartoon' });
+                  }}
+                  style={{
+                    padding: '12px',
+                    backgroundColor: settings.visualTheme === 'cartoon' ? 'rgba(0, 217, 255, 0.15)' : 'var(--panel-2)',
+                    border: settings.visualTheme === 'cartoon' ? '2px solid #00d9ff' : '1px solid var(--border)',
+                    borderRadius: 'var(--radius-control, 12px)',
+                    cursor: isPremium ? 'pointer' : 'not-allowed',
+                    textAlign: 'left',
+                  }}
+                >
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ margin: 0 }}>Cartoon</p>
+                  <p className="text-xs text-[var(--text-muted)]" style={{ margin: 0 }}>Bright & playful</p>
+                </button>
+              </div>
+            </div>
 
             {/* Visual Effects */}
             <div id="setting-gradient-intensity" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', opacity: isPremium ? 1 : 0.5 }}>
@@ -4464,7 +4526,7 @@ export default function SettingsPage() {
                   backgroundColor: 'var(--panel-2)',
                   color: 'var(--text)',
                   border: '1px solid var(--border)',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-xs, 6px)',
                   cursor: 'pointer',
                   appearance: 'none',
                   backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${selectedTheme === 'light' ? '%23666666' : 'white'}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
@@ -4486,19 +4548,19 @@ export default function SettingsPage() {
 
               {/* Custom theme override notice */}
               {settings.colorblindMode && effectiveUseCustomTheme && (
-                <p className="text-xs" style={{ marginTop: '8px', padding: '8px', backgroundColor: 'var(--warning-bg)', color: 'var(--warning)', borderRadius: '6px', border: '1px solid var(--warning)' }}>
+                <p className="text-xs" style={{ marginTop: '8px', padding: '8px', backgroundColor: 'var(--warning-bg)', color: 'var(--warning)', borderRadius: 'var(--radius-xs, 6px)', border: '1px solid var(--warning)' }}>
                   Custom Theme is enabled, so colorblind color adjustments won't apply. Patterns will still work if selected.
                 </p>
               )}
 
               {/* Color Preview */}
               {settings.colorblindMode && !effectiveUseCustomTheme && (
-                <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                <div style={{ marginTop: '12px', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', border: '1px solid var(--border)' }}>
                   <p className="text-xs text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>Status Colors:</p>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                    <span data-status="success" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: 'var(--success-bg)', color: 'var(--success)', border: '1px solid var(--success)' }}>Success</span>
-                    <span data-status="warning" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: 'var(--warning-bg)', color: 'var(--warning)', border: '1px solid var(--warning)' }}>Warning</span>
-                    <span data-status="danger" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger)' }}>Danger</span>
+                    <span data-status="success" style={{ position: 'relative', padding: '4px 8px', borderRadius: 'var(--radius-xs, 4px)', fontSize: '12px', fontWeight: '500', backgroundColor: 'var(--success-bg)', color: 'var(--success)', border: '1px solid var(--success)' }}>Success</span>
+                    <span data-status="warning" style={{ position: 'relative', padding: '4px 8px', borderRadius: 'var(--radius-xs, 4px)', fontSize: '12px', fontWeight: '500', backgroundColor: 'var(--warning-bg)', color: 'var(--warning)', border: '1px solid var(--warning)' }}>Warning</span>
+                    <span data-status="danger" style={{ position: 'relative', padding: '4px 8px', borderRadius: 'var(--radius-xs, 4px)', fontSize: '12px', fontWeight: '500', backgroundColor: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger)' }}>Danger</span>
                   </div>
                   <p className="text-xs text-[var(--text-muted)]" style={{ marginBottom: '8px' }}>Event Colors (Calendar & Timeline):</p>
                   {(() => {
@@ -4509,13 +4571,13 @@ export default function SettingsPage() {
                     );
                     return (
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <span data-event-type="course" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.course}26`, color: eventColors.course, border: `1px solid ${eventColors.course}` }}>Course</span>
-                        <span data-event-type="task" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.task}26`, color: eventColors.task, border: `1px solid ${eventColors.task}` }}>Task</span>
-                        <span data-event-type="exam" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.exam}26`, color: eventColors.exam, border: `1px solid ${eventColors.exam}` }}>Exam</span>
-                        <span data-event-type="deadline" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.deadline}26`, color: eventColors.deadline, border: `1px solid ${eventColors.deadline}` }}>Assignment</span>
-                        <span data-event-type="event" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.event}26`, color: eventColors.event, border: `1px solid ${eventColors.event}` }}>Event</span>
-                        <span data-event-type="reading" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.reading}26`, color: eventColors.reading, border: `1px solid ${eventColors.reading}` }}>Reading</span>
-                        <span data-event-type="project" style={{ position: 'relative', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.project}26`, color: eventColors.project, border: `1px solid ${eventColors.project}` }}>Project</span>
+                        <span data-event-type="course" style={{ position: 'relative', padding: '4px 8px', borderRadius: 'var(--radius-xs, 4px)', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.course}26`, color: eventColors.course, border: `1px solid ${eventColors.course}` }}>Course</span>
+                        <span data-event-type="task" style={{ position: 'relative', padding: '4px 8px', borderRadius: 'var(--radius-xs, 4px)', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.task}26`, color: eventColors.task, border: `1px solid ${eventColors.task}` }}>Task</span>
+                        <span data-event-type="exam" style={{ position: 'relative', padding: '4px 8px', borderRadius: 'var(--radius-xs, 4px)', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.exam}26`, color: eventColors.exam, border: `1px solid ${eventColors.exam}` }}>Exam</span>
+                        <span data-event-type="deadline" style={{ position: 'relative', padding: '4px 8px', borderRadius: 'var(--radius-xs, 4px)', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.deadline}26`, color: eventColors.deadline, border: `1px solid ${eventColors.deadline}` }}>Assignment</span>
+                        <span data-event-type="event" style={{ position: 'relative', padding: '4px 8px', borderRadius: 'var(--radius-xs, 4px)', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.event}26`, color: eventColors.event, border: `1px solid ${eventColors.event}` }}>Event</span>
+                        <span data-event-type="reading" style={{ position: 'relative', padding: '4px 8px', borderRadius: 'var(--radius-xs, 4px)', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.reading}26`, color: eventColors.reading, border: `1px solid ${eventColors.reading}` }}>Reading</span>
+                        <span data-event-type="project" style={{ position: 'relative', padding: '4px 8px', borderRadius: 'var(--radius-xs, 4px)', fontSize: '12px', fontWeight: '500', backgroundColor: `${eventColors.project}26`, color: eventColors.project, border: `1px solid ${eventColors.project}` }}>Project</span>
                       </div>
                     );
                   })()}
@@ -4546,7 +4608,7 @@ export default function SettingsPage() {
                           backgroundColor: (settings.colorblindStyle || 'palette') === option.value ? 'var(--panel-2)' : 'transparent',
                           border: '1px solid',
                           borderColor: (settings.colorblindStyle || 'palette') === option.value ? 'var(--accent)' : 'var(--border)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-xs, 8px)',
                           cursor: 'pointer',
                           transition: 'all 0.15s ease',
                         }}
@@ -4727,7 +4789,7 @@ export default function SettingsPage() {
                           gap: '10px',
                           padding: '10px 12px',
                           backgroundColor: isDragging ? 'var(--accent-2)' : 'var(--panel-2)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-xs, 8px)',
                           border: isDragging ? '1px solid var(--accent)' : '1px solid var(--border)',
                           cursor: isDragging ? 'grabbing' : 'grab',
                           transform: `translateY(${translateY}px)`,
@@ -4815,7 +4877,7 @@ export default function SettingsPage() {
                           gap: '10px',
                           padding: '10px 12px',
                           backgroundColor: 'var(--panel-2)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-xs, 8px)',
                           border: '1px solid var(--border)',
                           cursor: 'pointer',
                         }}
@@ -4855,7 +4917,7 @@ export default function SettingsPage() {
                           gap: '10px',
                           padding: '10px 12px',
                           backgroundColor: 'var(--panel-2)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-xs, 8px)',
                           border: '1px solid var(--border)',
                           cursor: 'pointer',
                         }}
@@ -4901,7 +4963,7 @@ export default function SettingsPage() {
                           gap: '10px',
                           padding: '10px 12px',
                           backgroundColor: 'var(--panel-2)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-xs, 8px)',
                           border: '1px solid var(--border)',
                           cursor: 'pointer',
                         }}
@@ -5003,7 +5065,7 @@ export default function SettingsPage() {
                   backgroundColor: 'transparent',
                   color: 'var(--text-muted)',
                   border: 'none',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-xs, 6px)',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
                 }}
@@ -5032,7 +5094,7 @@ export default function SettingsPage() {
                   Email
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Announcements</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Updates and news from College Orbit</p>
@@ -5047,7 +5109,7 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Account Alerts</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Password changes and security alerts</p>
@@ -5062,7 +5124,7 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Exam Reminders</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before upcoming exams</p>
@@ -5077,7 +5139,7 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Assignment Reminders</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before assignment due dates</p>
@@ -5092,7 +5154,7 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Task Reminders</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before task due dates</p>
@@ -5107,7 +5169,7 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Reading Reminders</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before reading due dates</p>
@@ -5122,7 +5184,7 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Project Reminders</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before project due dates</p>
@@ -5137,7 +5199,7 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Weekly Digest</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Summary of upcoming work, exams, and deadlines</p>
@@ -5161,7 +5223,7 @@ export default function SettingsPage() {
                   In-App
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Announcements</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Updates and news from College Orbit</p>
@@ -5176,7 +5238,7 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Account Alerts</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Subscription and payment notifications</p>
@@ -5191,7 +5253,7 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Exam Reminders</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before upcoming exams</p>
@@ -5206,7 +5268,7 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Assignment Reminders</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before assignment due dates</p>
@@ -5221,7 +5283,7 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Task Reminders</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before task due dates</p>
@@ -5236,7 +5298,7 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Reading Reminders</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before reading due dates</p>
@@ -5251,7 +5313,7 @@ export default function SettingsPage() {
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: colorPalette.accent }}
                     />
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: '8px', cursor: 'pointer' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)', cursor: 'pointer' }}>
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>Project Reminders</p>
                       <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Reminders before project due dates</p>
@@ -5282,7 +5344,7 @@ export default function SettingsPage() {
                   padding: '10px 12px',
                   backgroundColor: 'var(--panel-2)',
                   border: '1px solid var(--border)',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-xs, 6px)',
                   cursor: 'pointer',
                   color: 'var(--text)',
                   fontSize: '14px',
@@ -5304,7 +5366,7 @@ export default function SettingsPage() {
               {reminderTimingOpen && (
                 <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px' }}>
                   {/* Exam Reminders */}
-                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: '8px' }}>
+                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)' }}>
                     <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px' }}>Exam Reminders</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {examReminders.map((reminder, index) => (
@@ -5338,7 +5400,7 @@ export default function SettingsPage() {
                               backgroundColor: 'var(--panel)',
                               color: 'var(--text)',
                               border: '1px solid var(--border)',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-xs, 4px)',
                             }}
                           />
                           <select
@@ -5355,7 +5417,7 @@ export default function SettingsPage() {
                               backgroundColor: 'var(--panel)',
                               color: 'var(--text)',
                               border: '1px solid var(--border)',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-xs, 4px)',
                             }}
                           >
                             <option value="hours">hours before</option>
@@ -5367,7 +5429,7 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Assignment Reminders */}
-                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: '8px' }}>
+                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)' }}>
                     <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px' }}>Assignment Reminders</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {deadlineReminders.map((reminder, index) => (
@@ -5401,7 +5463,7 @@ export default function SettingsPage() {
                               backgroundColor: 'var(--panel)',
                               color: 'var(--text)',
                               border: '1px solid var(--border)',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-xs, 4px)',
                             }}
                           />
                           <select
@@ -5418,7 +5480,7 @@ export default function SettingsPage() {
                               backgroundColor: 'var(--panel)',
                               color: 'var(--text)',
                               border: '1px solid var(--border)',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-xs, 4px)',
                             }}
                           >
                             <option value="hours">hours before</option>
@@ -5430,7 +5492,7 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Task Reminders */}
-                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: '8px' }}>
+                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)' }}>
                     <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px' }}>Task Reminders</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {taskReminders.map((reminder, index) => (
@@ -5464,7 +5526,7 @@ export default function SettingsPage() {
                               backgroundColor: 'var(--panel)',
                               color: 'var(--text)',
                               border: '1px solid var(--border)',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-xs, 4px)',
                             }}
                           />
                           <select
@@ -5481,7 +5543,7 @@ export default function SettingsPage() {
                               backgroundColor: 'var(--panel)',
                               color: 'var(--text)',
                               border: '1px solid var(--border)',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-xs, 4px)',
                             }}
                           >
                             <option value="hours">hours before</option>
@@ -5493,7 +5555,7 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Reading Reminders */}
-                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: '8px' }}>
+                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)' }}>
                     <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px' }}>Reading Reminders</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {readingReminders.map((reminder, index) => (
@@ -5527,7 +5589,7 @@ export default function SettingsPage() {
                               backgroundColor: 'var(--panel)',
                               color: 'var(--text)',
                               border: '1px solid var(--border)',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-xs, 4px)',
                             }}
                           />
                           <select
@@ -5544,7 +5606,7 @@ export default function SettingsPage() {
                               backgroundColor: 'var(--panel)',
                               color: 'var(--text)',
                               border: '1px solid var(--border)',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-xs, 4px)',
                             }}
                           >
                             <option value="hours">hours before</option>
@@ -5556,7 +5618,7 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Project Reminders */}
-                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: '8px' }}>
+                  <div style={{ padding: '16px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-xs, 8px)' }}>
                     <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text)', marginBottom: '12px' }}>Project Reminders</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {projectReminders.map((reminder, index) => (
@@ -5590,7 +5652,7 @@ export default function SettingsPage() {
                               backgroundColor: 'var(--panel)',
                               color: 'var(--text)',
                               border: '1px solid var(--border)',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-xs, 4px)',
                             }}
                           />
                           <select
@@ -5607,7 +5669,7 @@ export default function SettingsPage() {
                               backgroundColor: 'var(--panel)',
                               color: 'var(--text)',
                               border: '1px solid var(--border)',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-xs, 4px)',
                             }}
                           >
                             <option value="hours">hours before</option>
@@ -5654,7 +5716,7 @@ export default function SettingsPage() {
                     backgroundColor: 'var(--panel-2)',
                     color: 'var(--text)',
                     border: '1px solid var(--border)',
-                    borderRadius: '6px',
+                    borderRadius: 'var(--radius-xs, 6px)',
                     boxSizing: 'border-box',
                     marginBottom: '0',
                     resize: 'vertical',
@@ -5706,7 +5768,7 @@ export default function SettingsPage() {
                     backgroundColor: 'var(--panel-2)',
                     color: 'var(--text)',
                     border: '1px solid var(--border)',
-                    borderRadius: '6px',
+                    borderRadius: 'var(--radius-xs, 6px)',
                     boxSizing: 'border-box',
                     marginBottom: '0',
                     resize: 'vertical',
@@ -5754,7 +5816,7 @@ export default function SettingsPage() {
                     fontWeight: 500,
                     backgroundColor: 'var(--panel-2)',
                     border: '1px solid var(--border)',
-                    borderRadius: '4px',
+                    borderRadius: 'var(--radius-xs, 4px)',
                     color: 'var(--text)',
                     marginLeft: '4px',
                     marginRight: '4px',
@@ -5884,7 +5946,7 @@ export default function SettingsPage() {
           <div style={{
             backgroundColor: 'var(--panel)',
             border: '1px solid var(--border)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-xs, 8px)',
             padding: '24px',
             maxWidth: '400px',
             boxShadow: 'var(--shadow-lg)'
@@ -5907,7 +5969,7 @@ export default function SettingsPage() {
                   backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                   border: '1px solid var(--border)',
                   color: 'var(--text)',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-xs, 6px)',
                   cursor: 'pointer',
                   fontSize: '14px',
                   fontWeight: '500'
@@ -5926,7 +5988,7 @@ export default function SettingsPage() {
                   backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
                   border: '1px solid var(--border)',
                   color: 'var(--text)',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-xs, 6px)',
                   cursor: 'pointer',
                   fontSize: '14px',
                   fontWeight: '500'
@@ -5944,7 +6006,7 @@ export default function SettingsPage() {
                   backgroundColor: 'var(--accent)',
                   color: 'white',
                   border: '1px solid var(--accent)',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-xs, 6px)',
                   cursor: 'pointer',
                   fontSize: '14px',
                   fontWeight: '500'
@@ -6041,7 +6103,7 @@ function SpotifyIntegrationCard({ isMobile, theme }: { isMobile: boolean; theme:
             color: 'var(--accent)',
             backgroundColor: 'var(--accent-muted)',
             padding: '2px 6px',
-            borderRadius: '4px',
+            borderRadius: 'var(--radius-xs, 4px)',
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
           }}>
@@ -6116,7 +6178,7 @@ function SpotifyIntegrationCard({ isMobile, theme }: { isMobile: boolean; theme:
             color: 'var(--text-muted)',
             backgroundColor: 'var(--panel-2)',
             padding: '2px 6px',
-            borderRadius: '4px',
+            borderRadius: 'var(--radius-xs, 4px)',
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
           }}>
@@ -6168,7 +6230,7 @@ function SpotifyIntegrationCard({ isMobile, theme }: { isMobile: boolean; theme:
             gap: '12px',
             padding: '12px',
             backgroundColor: 'var(--panel-2)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-xs, 8px)',
             marginBottom: '16px',
           }}>
             {userProfile?.image && (
@@ -6213,7 +6275,7 @@ function SpotifyIntegrationCard({ isMobile, theme }: { isMobile: boolean; theme:
               gap: '8px',
               padding: '4px',
               backgroundColor: 'var(--panel-2)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-xs, 8px)',
               border: '1px solid var(--border)',
             }}>
               {(['big', 'medium', 'mini'] as const).map((size) => (
@@ -6228,7 +6290,7 @@ function SpotifyIntegrationCard({ isMobile, theme }: { isMobile: boolean; theme:
                     color: miniPlayerSize === size ? 'var(--text)' : 'var(--text-muted)',
                     backgroundColor: miniPlayerSize === size ? 'var(--panel)' : 'transparent',
                     border: miniPlayerSize === size ? '1px solid var(--border)' : '1px solid transparent',
-                    borderRadius: '6px',
+                    borderRadius: 'var(--radius-xs, 6px)',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
                     textTransform: 'capitalize',
@@ -6278,7 +6340,7 @@ function SpotifyIntegrationCard({ isMobile, theme }: { isMobile: boolean; theme:
               color: 'var(--text-muted)',
               backgroundColor: 'var(--panel-2)',
               padding: '10px 12px',
-              borderRadius: '6px',
+              borderRadius: 'var(--radius-xs, 6px)',
             }}>
               Playback controls require Spotify Premium. With a free account, you can still see what's playing.
             </p>

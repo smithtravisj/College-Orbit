@@ -17,6 +17,7 @@ import { ChevronDown, Crown, FileIcon } from 'lucide-react';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
+import { getThemeColors } from '@/lib/visualThemes';
 import Link from 'next/link';
 import { CanvasBadge } from './CanvasBadge';
 import { BlackboardBadge } from './BlackboardBadge';
@@ -99,7 +100,17 @@ export default function EventDetailModal({
   const modalRef = useRef<HTMLDivElement>(null);
   const courseFormRef = useRef<{ submit: () => void }>(null);
   const { updateTask, updateDeadline, updateCourse, updateCalendarEvent, deleteCalendarEvent, settings } = useAppStore();
-  const colorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
+  const baseColorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
+  // Visual theme takes priority for accent color
+  const colorPalette = (() => {
+    if (subscription.isPremium && settings.visualTheme && settings.visualTheme !== 'default') {
+      const themeColors = getThemeColors(settings.visualTheme, settings.theme || 'dark');
+      if (themeColors.accent) {
+        return { ...baseColorPalette, accent: themeColors.accent };
+      }
+    }
+    return baseColorPalette;
+  })();
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState<any>(null);
   const [localStatus, setLocalStatus] = useState<string | null>(null);

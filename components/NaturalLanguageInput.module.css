@@ -49,7 +49,7 @@
   .wrapper {
     padding: 5px 8px;
     gap: 5px;
-    border-radius: 6px;
+    border-radius: var(--radius-xs, 6px);
   }
 
   .input {

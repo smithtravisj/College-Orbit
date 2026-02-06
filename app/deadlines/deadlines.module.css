@@ -9,7 +9,7 @@
   .deadlineItem {
     padding: 10px;
     margin-bottom: 8px;
-    border-radius: 8px;
+    border-radius: var(--radius-xs, 8px);
   }
 
   /* Deadline title - aggressive sizing */
@@ -24,7 +24,7 @@
     display: inline-block;
     font-size: 10px;
     padding: 2px 6px;
-    border-radius: 3px;
+    border-radius: var(--radius-xs, 3px);
     margin-right: 6px;
   }
 
@@ -39,7 +39,7 @@
   .overdueIndicator {
     font-size: 10px;
     padding: 2px 4px;
-    border-radius: 3px;
+    border-radius: var(--radius-xs, 3px);
   }
 
   /* Notes preview - limited */

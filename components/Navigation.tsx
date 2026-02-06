@@ -7,6 +7,7 @@ import { useSession, signOut } from 'next-auth/react';
 import useAppStore from '@/lib/store';
 import { getAppTitle } from '@/lib/universityTitles';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors, applyColorPalette, applyCustomColors, applyColorblindMode, ColorblindMode, ColorblindStyle } from '@/lib/collegeColors';
+import { applyVisualTheme, clearVisualTheme, getThemeColors } from '@/lib/visualThemes';
 import NotificationBell from '@/components/NotificationBell';
 import { DEFAULT_VISIBLE_PAGES } from '@/lib/customizationConstants';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -63,6 +64,7 @@ export default function Navigation() {
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
   const savedCustomColors = useAppStore((state) => state.settings.customColors);
+  const savedVisualTheme = useAppStore((state) => state.settings.visualTheme);
   const savedGradientIntensity = useAppStore((state) => state.settings.gradientIntensity) ?? 50;
   const savedGlowIntensity = useAppStore((state) => state.settings.glowIntensity) ?? 50;
   const colorblindMode = useAppStore((state) => state.settings.colorblindMode);
@@ -80,10 +82,20 @@ export default function Navigation() {
   // Get college color palette for theming
   const colorPalette = getCollegeColorPalette(university || null, theme);
 
-  // Get accent color (custom or college)
-  const accentColor = useCustomTheme && customColors
-    ? getCustomColorSetForTheme(customColors as CustomColors, theme).accent
-    : colorPalette.accent;
+  // Get visual theme (premium only)
+  const visualTheme = isPremium ? savedVisualTheme : null;
+
+  // Get accent color - visual theme takes priority
+  const accentColor = (() => {
+    if (visualTheme && visualTheme !== 'default') {
+      const themeColors = getThemeColors(visualTheme, theme);
+      if (themeColors.accent) return themeColors.accent;
+    }
+    if (useCustomTheme && customColors) {
+      return getCustomColorSetForTheme(customColors as CustomColors, theme).accent;
+    }
+    return colorPalette.accent;
+  })();
 
   // Calculate intensity scales - use quadratic scaling so 50% = 1x, 100% = 4x
   const gradientScale = Math.pow(gradientIntensity / 50, 2);
@@ -177,17 +189,28 @@ export default function Navigation() {
     // Determine effective values based on premium status
     const effectiveUseCustomTheme = isPremium && savedUseCustomTheme;
     const effectiveCustomColors = isPremium ? savedCustomColors : null;
+    const effectiveVisualTheme = isPremium ? savedVisualTheme : null;
 
+    let basePalette;
     if (effectiveUseCustomTheme && effectiveCustomColors) {
       // Apply custom colors for the current theme
       const colorSet = getCustomColorSetForTheme(effectiveCustomColors as CustomColors, theme);
       applyCustomColors(colorSet, theme);
+      basePalette = getCollegeColorPalette(university || null, theme);
     } else {
       // Apply college colors (this includes when user is not premium)
       // Calculate fresh palette to avoid stale references
-      const freshPalette = getCollegeColorPalette(university || null, theme);
-      applyColorPalette(freshPalette);
+      basePalette = getCollegeColorPalette(university || null, theme);
+      applyColorPalette(basePalette);
     }
+
+    // Apply visual theme on top (premium only)
+    if (effectiveVisualTheme && effectiveVisualTheme !== 'default') {
+      applyVisualTheme(effectiveVisualTheme, theme, basePalette);
+    } else {
+      clearVisualTheme();
+    }
+
     // Re-apply colorblind mode after palette (must come after to override semantic colors)
     // Skip palette changes if custom theme is active (custom theme takes priority)
     applyColorblindMode(
@@ -196,7 +219,7 @@ export default function Navigation() {
       theme,
       effectiveUseCustomTheme
     );
-  }, [isPremium, savedUseCustomTheme, savedCustomColors, theme, university, colorblindMode, colorblindStyle]);
+  }, [isPremium, savedUseCustomTheme, savedCustomColors, savedVisualTheme, theme, university, colorblindMode, colorblindStyle]);
 
   // Check localStorage directly after mount for instant display
   const showAdminNav = isAdmin || (mounted && localStorage.getItem('isAdmin') === 'true');
@@ -366,7 +389,7 @@ export default function Navigation() {
           bottom: '16px',
           width: '200px',
           padding: '20px 16px',
-          borderRadius: '16px',
+          borderRadius: 'var(--radius-card)',
           border: '1px solid var(--border)',
           boxShadow: isLightMode ? '0 2px 12px rgba(0,0,0,0.06)' : '0 4px 24px rgba(0,0,0,0.2)',
           zIndex: 50,

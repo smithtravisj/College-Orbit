@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import useAppStore from '@/lib/store';
 import { Note } from '@/types';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
+import { getThemeColors } from '@/lib/visualThemes';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input, { Select } from '@/components/ui/Input';
@@ -35,7 +36,18 @@ export default function NotesPage() {
   const searchParams = useSearchParams();
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
-  const colorPalette = getCollegeColorPalette(university || null, theme);
+  const savedVisualTheme = useAppStore((state) => state.settings.visualTheme);
+  const baseColorPalette = getCollegeColorPalette(university || null, theme);
+  // Visual theme takes priority for accent color
+  const colorPalette = (() => {
+    if (subscription.isPremium && savedVisualTheme && savedVisualTheme !== 'default') {
+      const themeColors = getThemeColors(savedVisualTheme, theme);
+      if (themeColors.accent) {
+        return { ...baseColorPalette, accent: themeColors.accent };
+      }
+    }
+    return baseColorPalette;
+  })();
   const [mounted, setMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
@@ -440,7 +452,7 @@ export default function NotesPage() {
               Notes
             </h1>
             <p style={{ fontSize: isMobile ? '14px' : '15px', color: 'var(--text-muted)', marginTop: '-4px' }}>
-              Your study notes and resources.
+              {savedVisualTheme === 'cartoon' ? "Where all your ideas live." : "Your study notes and resources."}
             </p>
           </div>
           <Button

@@ -186,7 +186,7 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
                 transition: 'all 0.2s',
                 backgroundColor: isSelectedDate ? 'var(--accent-2)' : isCurrentMonth ? 'var(--panel)' : 'var(--bg)',
                 opacity: isCurrentMonth ? 1 : 0.5,
-                boxShadow: isTodayDate && !isSelectedDate ? '0 0 0 1px var(--link)' : isSelectedDate ? '0 0 0 2px var(--accent)' : 'none',
+                boxShadow: isTodayDate && !isSelectedDate ? 'inset 0 0 0 2px var(--link)' : isSelectedDate ? 'inset 0 0 0 2px var(--accent)' : 'none',
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
