@@ -1021,6 +1021,8 @@ input[type="range"]:disabled::-moz-range-thumb {
 
 /* Cartoon Theme - Extra rounded, bold shadows, playful */
 body.theme-cartoon {
+  /* Fun rounded font */
+  font-family: var(--font-quicksand), 'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   /* Extra bubbly feel */
   --radius-xs: 14px;
   --radius-control: 24px;
