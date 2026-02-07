@@ -2231,9 +2231,11 @@ body.theme-cozy {
   font-family: var(--font-nunito), 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Warm card glow effect */
+/* Warm card glow effect with subtle translucency */
 body.theme-cozy .card,
 body.theme-cozy [class*="Card"] {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 0 20px rgba(232, 168, 84, 0.08), 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -2766,6 +2768,8 @@ body.theme-spring {
 /* Fresh card styling */
 body.theme-spring .card,
 body.theme-spring [class*="Card"] {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 0 16px rgba(92, 184, 112, 0.05), 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -3748,6 +3752,13 @@ body.theme-lavender select:focus {
    Delicate, petal-like, cherry blossom elegance
    ============================================ */
 
+/* Sakura: subtle translucent cards to let petals peek through */
+body.theme-sakura .card,
+body.theme-sakura [class*="Card"] {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
 /* Sakura: nav links get a delicate pink petal line */
 body.theme-sakura nav a::after,
 body.theme-sakura [class*="nav"] a::after,
@@ -4234,10 +4245,23 @@ body.theme-aquarium [class*="Nav"] a:hover::after {
   box-shadow: 0 0 8px rgba(32, 178, 170, 0.35);
 }
 
-/* Aquarium: cards shimmer like underwater light */
+/* Aquarium: translucent frosted cards like looking through water */
+body.theme-aquarium .card {
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid rgba(0, 184, 212, 0.12);
+  border-top: 1px solid rgba(0, 184, 212, 0.2);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Aquarium: cards shimmer like underwater light on hover */
 body.theme-aquarium .card:hover {
-  box-shadow: 0 0 24px rgba(32, 178, 170, 0.1), 0 4px 16px rgba(0, 0, 0, 0.1);
-  border-color: rgba(32, 178, 170, 0.15);
+  backdrop-filter: blur(20px) saturate(1.6) brightness(1.05);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6) brightness(1.05);
+  box-shadow: 0 0 24px rgba(0, 184, 212, 0.12), 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 184, 212, 0.2);
   transition: all 0.5s ease;
 }
 

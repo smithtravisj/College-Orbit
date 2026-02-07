@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import useAppStore from '@/lib/store';
 import { applyCustomColors, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
+import { resolveThemeId } from '@/lib/visualThemes';
 
 const MAX_LOAD_TIME = 30000; // 30 seconds max before forcing render
 
@@ -94,11 +95,12 @@ export default function AppLoader({ children }: { children: React.ReactNode }) {
   const visualTheme = useAppStore((state) => state.settings.visualTheme);
   const isPremium = useAppStore((state) => state.isPremium);
   useEffect(() => {
+    const resolved = resolveThemeId(visualTheme);
     // Remove all theme classes first
     document.body.classList.remove('theme-cartoon', 'theme-cyberpunk', 'theme-retro', 'theme-nature', 'theme-cozy', 'theme-winter', 'theme-sakura', 'theme-halloween', 'theme-terminal', 'theme-paper');
     // Add current theme class if premium
-    if (isPremium && visualTheme && visualTheme !== 'default') {
-      document.body.classList.add(`theme-${visualTheme}`);
+    if (isPremium && resolved && resolved !== 'default') {
+      document.body.classList.add(`theme-${resolved}`);
     }
   }, [visualTheme, isPremium]);
 

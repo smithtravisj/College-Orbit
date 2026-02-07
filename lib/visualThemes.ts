@@ -595,8 +595,8 @@ const aquariumTheme: VisualTheme = {
   colors: {
     dark: {
       bg: '#061018',
-      panel: '#0a1820',
-      panel2: '#081418',
+      panel: 'rgba(10, 24, 32, 0.72)',
+      panel2: 'rgba(8, 20, 24, 0.62)',
       accent: '#00b8d4', // Tropical cyan
       accentHover: '#00a0b8',
       accent2: 'rgba(0, 184, 212, 0.12)',
@@ -625,8 +625,8 @@ const aquariumTheme: VisualTheme = {
     },
     light: {
       bg: '#f0f8fa',
-      panel: '#ffffff',
-      panel2: '#e8f4f8',
+      panel: 'rgba(255, 255, 255, 0.72)',
+      panel2: 'rgba(232, 244, 248, 0.62)',
       accent: '#00a0b8', // Darker cyan for readability
       accentHover: '#008899',
       accent2: 'rgba(0, 160, 184, 0.1)',
@@ -749,8 +749,8 @@ const cozyTheme: VisualTheme = {
   colors: {
     dark: {
       bg: '#1a1410',
-      panel: '#24201a',
-      panel2: '#1e1a14',
+      panel: 'rgba(36, 32, 26, 0.93)',
+      panel2: 'rgba(30, 26, 20, 0.88)',
       accent: '#e8a854', // Warm amber/honey
       accentHover: '#d49540',
       accent2: 'rgba(232, 168, 84, 0.12)',
@@ -779,8 +779,8 @@ const cozyTheme: VisualTheme = {
     },
     light: {
       bg: '#faf6f0',
-      panel: '#fffcf7',
-      panel2: '#f5efe5',
+      panel: 'rgba(255, 252, 247, 0.93)',
+      panel2: 'rgba(245, 239, 229, 0.88)',
       accent: '#c88a3a', // Darker amber for readability
       accentHover: '#b07830',
       accent2: 'rgba(200, 138, 58, 0.1)',
@@ -903,8 +903,8 @@ const sakuraTheme: VisualTheme = {
   colors: {
     dark: {
       bg: '#1a1218',
-      panel: '#241c22',
-      panel2: '#1e181c',
+      panel: 'rgba(36, 28, 34, 0.96)',
+      panel2: 'rgba(30, 24, 28, 0.92)',
       accent: '#f9a8d4', // Soft cherry blossom pink
       accentHover: '#f472b6',
       accent2: 'rgba(249, 168, 212, 0.12)',
@@ -933,8 +933,8 @@ const sakuraTheme: VisualTheme = {
     },
     light: {
       bg: '#fff5f7',
-      panel: '#ffffff',
-      panel2: '#fff0f3',
+      panel: 'rgba(255, 255, 255, 0.96)',
+      panel2: 'rgba(255, 240, 243, 0.92)',
       accent: '#ec4899', // Vibrant pink for readability
       accentHover: '#db2777',
       accent2: 'rgba(236, 72, 153, 0.1)',
@@ -1287,8 +1287,8 @@ const springTheme: VisualTheme = {
   colors: {
     dark: {
       bg: '#0a1210',
-      panel: '#121e1a',
-      panel2: '#0e1814',
+      panel: 'rgba(18, 30, 26, 0.93)',
+      panel2: 'rgba(14, 24, 20, 0.88)',
       accent: '#5cb870', // Fresh spring green
       accentHover: '#4aa860',
       accent2: 'rgba(92, 184, 112, 0.12)',
@@ -1317,8 +1317,8 @@ const springTheme: VisualTheme = {
     },
     light: {
       bg: '#f4faf5',
-      panel: '#ffffff',
-      panel2: '#edf7ef',
+      panel: 'rgba(255, 255, 255, 0.93)',
+      panel2: 'rgba(237, 247, 239, 0.88)',
       accent: '#4aad5e', // Vibrant spring green
       accentHover: '#3c9a4e',
       accent2: 'rgba(74, 173, 94, 0.1)',
@@ -1817,11 +1817,34 @@ export const visualThemes: VisualTheme[] = [
 ];
 
 /**
+ * Resolve 'random' theme to a deterministic daily theme based on local date.
+ * Uses a simple hash of the date string to pick a non-default theme.
+ * Returns the original id for all other values.
+ */
+export function resolveThemeId(id: string | null | undefined): string | null | undefined {
+  if (id !== 'random') return id;
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+  // Simple string hash
+  let hash = 0;
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
+    hash |= 0;
+  }
+  // Pick from non-default themes
+  const nonDefault = visualThemes.filter(t => t.id !== 'default');
+  const index = Math.abs(hash) % nonDefault.length;
+  return nonDefault[index].id;
+}
+
+/**
  * Get a visual theme by ID
  */
 export function getVisualTheme(id: string | null | undefined): VisualTheme {
   if (!id || id === 'default') return defaultTheme;
-  return visualThemes.find(t => t.id === id) || defaultTheme;
+  const resolved = resolveThemeId(id);
+  if (!resolved || resolved === 'default') return defaultTheme;
+  return visualThemes.find(t => t.id === resolved) || defaultTheme;
 }
 
 /**

@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getDefaultCustomColors, getCustomColorSetForTheme, CustomColors, CustomColorSet, getEventTypeColors } from '@/lib/collegeColors';
-import { getThemeColors } from '@/lib/visualThemes';
+import { getThemeColors, getVisualTheme } from '@/lib/visualThemes';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import ColorPicker from '@/components/ui/ColorPicker';
@@ -4437,6 +4437,7 @@ export default function SettingsPage() {
                 }}
               >
                 <option value="default">Default — Clean & minimal</option>
+                <option value="random">Random — A new theme every day</option>
                 <optgroup label="Calm & Relaxing">
                   <option value="cozy">Cozy — Fireflies & candlelight</option>
                   <option value="nature">Nature — Earthy & calming</option>
@@ -4471,6 +4472,11 @@ export default function SettingsPage() {
                   <option value="terminal">Terminal — Matrix rain & hacker vibes</option>
                 </optgroup>
               </select>
+              {settings.visualTheme === 'random' && isPremium && (
+                <p className="text-xs text-[var(--text-muted)]" style={{ marginTop: '8px' }}>
+                  Today&apos;s theme: <span className="font-medium text-[var(--accent)]">{getVisualTheme('random').name}</span>
+                </p>
+              )}
             </div>
 
             {/* Pet Companion */}
