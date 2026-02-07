@@ -132,12 +132,12 @@ export async function GET(req: NextRequest) {
 
     // Redirect back to settings with success
     return NextResponse.redirect(
-      new URL('/settings?tab=integrations&spotify_connected=true', req.url)
+      new URL('/admin?tab=integrations&spotify_connected=true', req.url)
     );
   } catch (error) {
     console.error('[Spotify Callback] Error:', error);
     return NextResponse.redirect(
-      new URL('/settings?tab=integrations&spotify_error=unknown', req.url)
+      new URL('/admin?tab=integrations&spotify_error=unknown', req.url)
     );
   }
 }

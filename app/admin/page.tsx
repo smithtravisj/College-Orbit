@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Crown, Shield, ExternalLink, Plus, Trash2, GraduationCap } from 'lucide-react';
+import { Crown, Shield, ExternalLink, Plus, Trash2, GraduationCap, RefreshCw, Link2, Unlink, Music } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import Image from 'next/image';
+import { useSpotifyContext } from '@/context/SpotifyContext';
 
 // ==================== Types ====================
 interface AnalyticsData {
@@ -117,6 +120,7 @@ function getPageColor(index: number, isDarkMode: boolean): string {
 export default function AdminPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isMobile = useIsMobile();
   const { isPremium } = useSubscription();
   const settings = useAppStore((state) => state.settings);
@@ -132,12 +136,18 @@ export default function AdminPage() {
   const glowScale = glowIntensity / 50;
   const glowOpacity = Math.min(255, Math.round(0.5 * glowScale * 255)).toString(16).padStart(2, '0');
 
-  // Main tab state - initialize from localStorage
-  const [activeTab, setActiveTab] = useState<'analytics' | 'management' | 'addCollege' | 'beta'>(() => {
+  // Main tab state - initialize from URL params or localStorage
+  const validTabs = ['analytics', 'management', 'addCollege', 'beta', 'integrations'] as const;
+  type AdminTab = typeof validTabs[number];
+  const [activeTab, setActiveTab] = useState<AdminTab>(() => {
     if (typeof window !== 'undefined') {
+      const urlTab = searchParams.get('tab');
+      if (urlTab && (validTabs as readonly string[]).includes(urlTab)) {
+        return urlTab as AdminTab;
+      }
       const saved = localStorage.getItem('adminTab');
-      if (saved && ['analytics', 'management', 'addCollege', 'beta'].includes(saved)) {
-        return saved as 'analytics' | 'management' | 'addCollege' | 'beta';
+      if (saved && (validTabs as readonly string[]).includes(saved)) {
+        return saved as AdminTab;
       }
     }
     return 'management';
@@ -1245,11 +1255,12 @@ export default function AdminPage() {
             { id: 'management', label: 'Management' },
             { id: 'addCollege', label: 'Add College' },
             { id: 'analytics', label: 'Analytics' },
+            { id: 'integrations', label: 'Integrations' },
             { id: 'beta', label: 'Beta' },
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as 'analytics' | 'management' | 'addCollege' | 'beta')}
+              onClick={() => setActiveTab(tab.id as AdminTab)}
               className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
                 activeTab === tab.id ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
@@ -3861,6 +3872,15 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* ==================== Integrations Tab ==================== */}
+      {activeTab === 'integrations' && (
+        <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '0 16px 32px 16px' : '0 24px 32px 24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
+            <SpotifyIntegrationCard isMobile={isMobile} theme={selectedTheme} />
+          </div>
+        </div>
+      )}
+
       {/* ==================== Beta Tab ==================== */}
       {activeTab === 'beta' && (
         <div style={{ padding: isMobile ? '0 16px 32px 16px' : '0 24px 32px 24px' }}>
@@ -4704,5 +4724,244 @@ export default function AdminPage() {
         </div>
       )}
     </>
+  );
+}
+
+// Spotify Integration Card Component
+function SpotifyIntegrationCard({ isMobile, theme }: { isMobile: boolean; theme: 'light' | 'dark' }) {
+  const spotifyButtonColor = theme === 'dark' ? '#00511e' : '#00d94c';
+  const {
+    isConnected,
+    isPremium: isSpotifyPremium,
+    userProfile,
+    isLoading,
+    miniPlayerSize,
+    setMiniPlayerSize,
+    showMiniPlayer,
+    refreshStatus,
+  } = useSpotifyContext();
+
+  const [_isConnecting, setIsConnecting] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [message, setMessage] = useState('');
+  void _isConnecting;
+
+  const handleConnect = async () => {
+    setIsConnecting(true);
+    setMessage('');
+    try {
+      const response = await fetch('/api/spotify/connect');
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setMessage('Failed to connect to Spotify');
+        setIsConnecting(false);
+      }
+    } catch (error) {
+      console.error('Spotify connect error:', error);
+      setMessage('Failed to connect to Spotify');
+      setIsConnecting(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    setIsDisconnecting(true);
+    setMessage('');
+    try {
+      const response = await fetch('/api/spotify/disconnect', { method: 'POST' });
+      if (response.ok) {
+        setMessage('Successfully disconnected from Spotify');
+        await refreshStatus();
+      } else {
+        setMessage('Failed to disconnect from Spotify');
+      }
+    } catch (error) {
+      console.error('Spotify disconnect error:', error);
+      setMessage('Failed to disconnect from Spotify');
+    } finally {
+      setIsDisconnecting(false);
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card title="Spotify Integration">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <RefreshCw size={20} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card title="Spotify Integration">
+      {!isConnected ? (
+        <div>
+          <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+            Connect your Spotify account to see what&apos;s playing and control playback from anywhere in College Orbit.
+          </p>
+
+          <Button
+            size={isMobile ? 'sm' : 'lg'}
+            onClick={handleConnect}
+            style={{
+              paddingLeft: isMobile ? '12px' : '16px',
+              paddingRight: isMobile ? '12px' : '16px',
+              backgroundColor: spotifyButtonColor,
+              borderColor: spotifyButtonColor,
+            }}
+          >
+            <Link2 size={16} className="mr-2" />
+            Connect to Spotify
+          </Button>
+
+          {message && (
+            <p style={{
+              marginTop: '12px',
+              fontSize: '14px',
+              color: message.includes('Failed') ? 'var(--danger)' : 'var(--success)',
+            }}>
+              {message}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px',
+            backgroundColor: 'var(--panel-2)',
+            borderRadius: 'var(--radius-xs, 8px)',
+            marginBottom: '16px',
+          }}>
+            {userProfile?.image && (
+              <Image
+                src={userProfile.image}
+                alt={userProfile.name}
+                width={40}
+                height={40}
+                style={{ borderRadius: '50%' }}
+              />
+            )}
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  backgroundColor: '#1DB954',
+                }} />
+                <span className="text-sm text-[var(--text)]">
+                  Connected as <strong>{userProfile?.name}</strong>
+                </span>
+              </div>
+              <span style={{
+                fontSize: '12px',
+                color: isSpotifyPremium ? '#1DB954' : 'var(--text-muted)',
+                marginTop: '2px',
+                display: 'block',
+              }}>
+                {isSpotifyPremium ? 'Premium Account' : 'Free Account'}
+              </span>
+            </div>
+          </div>
+
+          {/* Mini Player Size Selector */}
+          <div style={{ marginBottom: '16px' }}>
+            <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+              Mini Player Size
+            </p>
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              padding: '4px',
+              backgroundColor: 'var(--panel-2)',
+              borderRadius: 'var(--radius-xs, 8px)',
+              border: '1px solid var(--border)',
+            }}>
+              {(['big', 'medium', 'mini'] as const).map((size) => (
+                <button
+                  key={size}
+                  onClick={() => setMiniPlayerSize(size)}
+                  style={{
+                    flex: 1,
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: miniPlayerSize === size ? 'var(--text)' : 'var(--text-muted)',
+                    backgroundColor: miniPlayerSize === size ? 'var(--panel)' : 'transparent',
+                    border: miniPlayerSize === size ? '1px solid var(--border)' : '1px solid transparent',
+                    borderRadius: 'var(--radius-xs, 6px)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Show Mini Player Button */}
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            <Button
+              size={isMobile ? 'sm' : 'lg'}
+              onClick={showMiniPlayer}
+              style={{
+                paddingLeft: isMobile ? '12px' : '16px',
+                paddingRight: isMobile ? '12px' : '16px',
+                backgroundColor: spotifyButtonColor,
+                borderColor: spotifyButtonColor,
+              }}
+            >
+              <Music size={16} className="mr-2" />
+              Show Mini Player
+            </Button>
+            <Button
+              size={isMobile ? 'sm' : 'lg'}
+              variant="secondary"
+              onClick={handleDisconnect}
+              disabled={isDisconnecting}
+              style={{
+                paddingLeft: isMobile ? '12px' : '16px',
+                paddingRight: isMobile ? '12px' : '16px',
+                boxShadow: 'none',
+              }}
+            >
+              <Unlink size={16} className="mr-2" />
+              {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+            </Button>
+          </div>
+
+          {/* Spotify Premium info */}
+          {!isSpotifyPremium && (
+            <p style={{
+              fontSize: '12px',
+              color: 'var(--text-muted)',
+              backgroundColor: 'var(--panel-2)',
+              padding: '10px 12px',
+              borderRadius: 'var(--radius-xs, 6px)',
+            }}>
+              Playback controls require Spotify Premium. With a free account, you can still see what&apos;s playing.
+            </p>
+          )}
+
+          {message && (
+            <p style={{
+              marginTop: '12px',
+              fontSize: '14px',
+              color: message.includes('Failed') ? 'var(--danger)' : 'var(--success)',
+            }}>
+              {message}
+            </p>
+          )}
+        </div>
+      )}
+    </Card>
   );
 }
