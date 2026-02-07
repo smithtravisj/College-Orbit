@@ -139,12 +139,16 @@ export default function PetCompanion() {
   }, [petState, transitionToIdle]);
 
   // Walking animation loop
+  const walkDoneRef = useRef(false);
+
   useEffect(() => {
     if (petState !== 'walking') return;
 
     lastTimeRef.current = 0;
+    walkDoneRef.current = false;
 
     const animate = (timestamp: number) => {
+      if (walkDoneRef.current) return;
       if (lastTimeRef.current === 0) lastTimeRef.current = timestamp;
       const dt = (timestamp - lastTimeRef.current) / 1000;
       lastTimeRef.current = timestamp;
@@ -155,13 +159,17 @@ export default function PetCompanion() {
         const step = walkSpeedRef.current * dt;
 
         if (Math.abs(diff) <= step) {
-          setTimeout(() => transitionToIdle(), 0);
+          walkDoneRef.current = true;
           return target;
         }
         return prev + Math.sign(diff) * step;
       });
 
-      rafRef.current = requestAnimationFrame(animate);
+      if (walkDoneRef.current) {
+        transitionToIdle();
+      } else {
+        rafRef.current = requestAnimationFrame(animate);
+      }
     };
 
     rafRef.current = requestAnimationFrame(animate);
@@ -211,11 +219,13 @@ export default function PetCompanion() {
     <div
       style={{
         position: 'fixed',
-        left: posX,
+        left: 0,
         bottom: PET_CONFIG.bottomOffset,
         zIndex: PET_CONFIG.zIndex,
         width: spriteSize,
         height: spriteSize,
+        transform: `translateX(${Math.round(posX)}px)`,
+        willChange: petState === 'walking' ? 'transform' : 'auto',
         pointerEvents: 'none',
       }}
     >
@@ -233,6 +243,7 @@ export default function PetCompanion() {
         onClick={handleClick}
       />
       <PetSprite
+        key={spriteData.src}
         sprite={spriteData}
         size={spriteSize}
         flipX={!facingRight}
