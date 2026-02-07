@@ -214,11 +214,24 @@ export default function PetCompanion() {
         left: posX,
         bottom: PET_CONFIG.bottomOffset,
         zIndex: PET_CONFIG.zIndex,
-        pointerEvents: 'auto',
-        cursor: 'pointer',
+        width: spriteSize,
+        height: spriteSize,
+        pointerEvents: 'none',
       }}
-      onClick={handleClick}
     >
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: spriteSize * 0.5,
+          height: spriteSize * 0.55,
+          pointerEvents: 'auto',
+          cursor: 'pointer',
+        }}
+        onClick={handleClick}
+      />
       <PetSprite
         sprite={spriteData}
         size={spriteSize}
