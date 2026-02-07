@@ -573,6 +573,14 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
         if (data.gamification?.levelUp) {
           useStore.setState({ showConfetti: true, levelUpNotification: data.gamification.newLevel });
         }
+        // Refresh gamification data so streak/XP display updates
+        await useStore.getState().fetchGamification();
+
+        // Auto-claim any completed daily challenges (e.g. "Study 5 flashcards")
+        const gamData = useStore.getState().gamification;
+        if (gamData?.dailyChallenges?.some((c: any) => c.completed && !c.claimed)) {
+          useStore.getState().claimDailyChallenges();
+        }
       }
     } catch (error) {
       console.error('Error rating card:', error);

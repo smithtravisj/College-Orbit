@@ -60,7 +60,7 @@ export default function StreakCard({ data, loading = false }: StreakCardProps) {
 
   const getLast7Days = (): { date: string; activity: number }[] => {
     const days: { date: string; activity: number }[] = [];
-    const activityMap = new Map(recentActivity.map(a => [a.date, a.tasksCompleted]));
+    const activityMap = new Map(recentActivity.map(a => [a.date, Math.max(a.tasksCompleted, a.xpEarned > 0 ? 1 : 0)]));
 
     for (let i = 6; i >= 0; i--) {
       const date = new Date();

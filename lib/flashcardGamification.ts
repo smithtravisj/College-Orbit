@@ -119,6 +119,7 @@ export async function processFlashcardReview(
       where: { userId },
       data: {
         totalXp: newTotalXp,
+        level: newLevel,
       },
     });
 
@@ -222,6 +223,7 @@ export async function processFlashcardReview(
       lastActivityDate: today,
       streakStartDate,
       totalXp: newTotalXp,
+      level: newLevel,
     },
   });
 

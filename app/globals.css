@@ -2364,11 +2364,8 @@ body.theme-winter {
   font-family: var(--font-nunito), 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Frosted glass effect on panels */
-body.theme-winter .card,
-body.theme-winter [class*="Card"],
-body.theme-winter [class*="panel"],
-body.theme-winter [class*="Panel"] {
+/* Frosted glass effect on cards */
+body.theme-winter .card-hover {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -3010,8 +3007,7 @@ body.theme-lofi {
   font-family: var(--font-comfortaa), system-ui, sans-serif;
 }
 
-body.theme-lofi .card,
-body.theme-lofi [class*="rounded"] {
+body.theme-lofi .card-hover {
   box-shadow: 0 0 20px rgba(232, 145, 197, 0.06), 0 2px 8px rgba(126, 202, 195, 0.04);
   border-color: rgba(232, 145, 197, 0.12);
 }
@@ -4612,15 +4608,19 @@ body.theme-skeuo select:focus {
   border-color: rgba(212, 162, 74, 0.45);
 }
 
-/* Skeuo: scrollbar gets a leather look */
+/* Skeuo: thin scrollbar that doesn't take much space */
+body.theme-skeuo {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(160, 120, 60, 0.4) transparent;
+}
+
 body.theme-skeuo ::-webkit-scrollbar {
-  width: 10px;
+  width: 6px;
 }
 
 body.theme-skeuo ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
+  background: transparent;
   border-radius: 5px;
-  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.08);
 }
 
 body.theme-skeuo ::-webkit-scrollbar-thumb {

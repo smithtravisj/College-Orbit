@@ -574,12 +574,12 @@ export default function Navigation() {
 
         {/* Account and Logout */}
         {session?.user && (
-          <div style={{ position: 'relative', zIndex: 1, marginTop: 'auto', paddingTop: 'var(--nav-gap, 12px)', display: 'flex', flexDirection: 'column', gap: 0 }}>
-            <div className="flex items-center justify-between">
+          <div style={{ position: 'relative', zIndex: 1, marginTop: 'auto', paddingTop: 'var(--nav-gap, 12px)', display: 'flex', flexDirection: 'column', gap: 0, isolation: 'isolate' }}>
+            <div className="flex items-center justify-between" style={{ position: 'relative', zIndex: 1 }}>
               <Link
                 href="/account"
                 onClick={() => setPendingNav('/account')}
-                className={`nav-link-hover flex items-center gap-2.5 flex-1 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
+                className={`nav-link-hover relative flex items-center gap-2.5 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   (pendingNav ? pendingNav === '/account' : pathname === '/account')
                     ? 'text-[var(--text)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
@@ -605,7 +605,7 @@ export default function Navigation() {
             </div>
             <button
               onClick={handleLogout}
-              className="nav-link-hover flex items-center gap-2.5 w-full rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 text-[var(--muted)] hover:text-[var(--text)] group"
+              className="nav-link-hover flex items-center gap-2.5 w-full rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5 group"
               style={{ padding: '0 11px', height: 'var(--nav-item-h, 44px)' }}
             >
               <LogOut size={20} className="opacity-80 group-hover:opacity-100" />

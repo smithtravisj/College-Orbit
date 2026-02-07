@@ -131,7 +131,7 @@ export default function ProgressPage() {
 
     // Get activity map
     const activityMap = new Map(
-      gamification?.recentActivity?.map(a => [a.date, a.tasksCompleted]) || []
+      gamification?.recentActivity?.map(a => [a.date, Math.max(a.tasksCompleted, a.xpEarned > 0 ? 1 : 0)]) || []
     );
 
     // Add padding days from previous month
