@@ -13,7 +13,7 @@ import { CanvasSyncManager } from './CanvasSyncManager';
 import { BlackboardSyncManager } from './BlackboardSyncManager';
 import { MoodleSyncManager } from './MoodleSyncManager';
 import { BrightspaceSyncManager } from './BrightspaceSyncManager';
-import { AchievementToastContainer, LevelUpToast, Confetti } from './gamification';
+import { AchievementToastContainer, LevelUpToast, Confetti, ChallengeToastContainer } from './gamification';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAnalyticsPageView } from '@/lib/useAnalytics';
 import useAppStore from '@/lib/store';
@@ -29,9 +29,11 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const { status } = useSession();
   const loadFromDatabase = useAppStore((state) => state.loadFromDatabase);
   const pendingAchievements = useAppStore((state) => state.pendingAchievements);
+  const pendingChallengeToasts = useAppStore((state) => state.pendingChallengeToasts);
   const showConfetti = useAppStore((state) => state.showConfetti);
   const levelUpNotification = useAppStore((state) => state.levelUpNotification);
   const dismissAchievement = useAppStore((state) => state.dismissAchievement);
+  const dismissChallengeToast = useAppStore((state) => state.dismissChallengeToast);
   const setShowConfetti = useAppStore((state) => state.setShowConfetti);
   const dismissLevelUp = useAppStore((state) => state.dismissLevelUp);
   const isRefreshing = useRef(false);
@@ -173,6 +175,10 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
       <AchievementToastContainer
         achievements={pendingAchievements}
         onDismiss={dismissAchievement}
+      />
+      <ChallengeToastContainer
+        toasts={pendingChallengeToasts}
+        onDismiss={dismissChallengeToast}
       />
       {levelUpNotification && (
         <LevelUpToast

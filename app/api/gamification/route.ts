@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { getUserGamificationData, toggleVacationMode } from '@/lib/gamification';
+import { computeChallengeProgress } from '@/lib/dailyChallenges';
 
 // GET user's gamification stats
 export async function GET(request: NextRequest) {
@@ -15,8 +16,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const timezoneOffset = parseInt(searchParams.get('tz') || '0', 10);
 
-    const data = await getUserGamificationData(token.id, timezoneOffset);
-    return NextResponse.json(data);
+    // Get local date key for daily challenges
+    const now = new Date();
+    const userLocalTime = new Date(now.getTime() - timezoneOffset * 60000);
+    const dateKey = `${userLocalTime.getUTCFullYear()}-${String(userLocalTime.getUTCMonth() + 1).padStart(2, '0')}-${String(userLocalTime.getUTCDate()).padStart(2, '0')}`;
+
+    const [data, dailyChallenges] = await Promise.all([
+      getUserGamificationData(token.id, timezoneOffset),
+      computeChallengeProgress(token.id, dateKey, timezoneOffset),
+    ]);
+
+    return NextResponse.json({ ...data, dailyChallenges });
   } catch (error) {
     console.error('Error fetching gamification data:', error);
     return NextResponse.json(

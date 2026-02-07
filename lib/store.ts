@@ -76,6 +76,7 @@ interface AppStore {
   // Gamification
   gamification: GamificationData | null;
   pendingAchievements: Achievement[];
+  pendingChallengeToasts: Array<{ id: string; message: string; xp: number; isSweep?: boolean }>;
   showConfetti: boolean;
   levelUpNotification: number | null;
 
@@ -215,7 +216,9 @@ interface AppStore {
   // Gamification
   fetchGamification: () => Promise<void>;
   recordTaskCompletion: (itemType: string, itemId: string) => Promise<GamificationRecordResult | null>;
+  claimDailyChallenges: () => Promise<void>;
   dismissAchievement: (id: string) => void;
+  dismissChallengeToast: (id: string) => void;
   setShowConfetti: (show: boolean) => void;
   dismissLevelUp: () => void;
 
@@ -387,6 +390,7 @@ const useAppStore = create<AppStore>((set, get) => ({
   isPremium: false,
   gamification: null,
   pendingAchievements: [],
+  pendingChallengeToasts: [],
   showConfetti: false,
   levelUpNotification: null,
 
@@ -3664,6 +3668,7 @@ const useAppStore = create<AppStore>((set, get) => ({
         recurringWorkPatterns: [],
         gamification: null,
         pendingAchievements: [],
+        pendingChallengeToasts: [],
         showConfetti: false,
         levelUpNotification: null,
       });
@@ -3728,6 +3733,12 @@ const useAppStore = create<AppStore>((set, get) => ({
       // Refresh gamification data
       await get().fetchGamification();
 
+      // Auto-claim any completed daily challenges
+      const gamData = get().gamification;
+      if (gamData?.dailyChallenges?.some(c => c.completed && !c.claimed)) {
+        await get().claimDailyChallenges();
+      }
+
       return result;
     } catch (error) {
       console.error('Error recording task completion:', error);
@@ -3735,9 +3746,60 @@ const useAppStore = create<AppStore>((set, get) => ({
     }
   },
 
+  claimDailyChallenges: async () => {
+    try {
+      const timezoneOffset = new Date().getTimezoneOffset();
+      const response = await fetch('/api/gamification/daily-challenges', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ timezoneOffset }),
+      });
+
+      if (!response.ok) return;
+
+      const result = await response.json();
+
+      if (result.xpAwarded > 0) {
+        // Queue toast notifications for each claimed challenge
+        const newToasts: Array<{ id: string; message: string; xp: number; isSweep?: boolean }> = [];
+        if (result.claimedChallenges) {
+          for (const c of result.claimedChallenges) {
+            newToasts.push({ id: `challenge-${c.id}-${Date.now()}`, message: c.title, xp: c.xpReward });
+          }
+        }
+        if (result.sweepBonus) {
+          newToasts.push({ id: `sweep-${Date.now()}`, message: 'All challenges complete!', xp: 25, isSweep: true });
+          set({ showConfetti: true });
+        }
+        if (newToasts.length > 0) {
+          set((state) => ({
+            pendingChallengeToasts: [...state.pendingChallengeToasts, ...newToasts],
+          }));
+        }
+
+        // Show level up notification
+        if (result.levelUp) {
+          set({ showConfetti: true, levelUpNotification: result.newLevel });
+        }
+
+        // Refresh gamification data to get updated XP and challenge status
+        await get().fetchGamification();
+      }
+    } catch (error) {
+      console.error('Error claiming daily challenges:', error);
+    }
+  },
+
   dismissAchievement: (id: string) => {
     set((state) => ({
       pendingAchievements: state.pendingAchievements.filter((a) => a.id !== id),
+    }));
+  },
+
+  dismissChallengeToast: (id: string) => {
+    set((state) => ({
+      pendingChallengeToasts: state.pendingChallengeToasts.filter((t) => t.id !== id),
     }));
   },
 

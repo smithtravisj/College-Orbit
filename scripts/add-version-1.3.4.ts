@@ -4,15 +4,16 @@ const prisma = new PrismaClient();
 
 async function main() {
   const version = await prisma.appVersion.upsert({
-    where: { version: '1.3.3' },
+    where: { version: '1.3.4' },
     update: {},
     create: {
-      version: '1.3.3',
+      version: '1.3.4',
       isBetaOnly: false,
-      releasedAt: new Date('2026-02-06T19:15:00'),
+      releasedAt: new Date('2026-02-06T20:19:00'),
       changes: [
-        'New "Random" option in visual themes that gives you a different theme every day',
-        'Aquarium, Cozy, Spring, and Sakura themes now have translucent frosted cards that let background animations peek through',
+        'New daily challenges system — complete 3 randomized challenges each day for XP rewards',
+        'Sweep bonus: earn +25 XP for completing all 3 daily challenges',
+        'Word counter tool improvements',
       ],
     },
   });

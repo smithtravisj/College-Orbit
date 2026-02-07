@@ -769,12 +769,25 @@ export interface DailyActivityRecord {
   xpEarned: number;
 }
 
+export interface DailyChallengeProgress {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  currentCount: number;
+  targetCount: number;
+  completed: boolean;
+  claimed: boolean;
+  xpReward: number;
+}
+
 export interface GamificationData {
   streak: UserStreak;
   xp: XpStats;
   achievements: Achievement[];
   unlockedAchievements: Achievement[];
   recentActivity: DailyActivityRecord[];
+  dailyChallenges: DailyChallengeProgress[];
 }
 
 export interface GamificationRecordResult {

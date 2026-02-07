@@ -88,7 +88,8 @@ model User {
   referrals         User[]    @relation("ReferralRelation")
   sentReferrals     Referral[] @relation("SentReferrals")
   receivedReferral  Referral?  @relation("ReceivedReferral")
-  flashcardDecks    FlashcardDeck[]
+  flashcardDecks          FlashcardDeck[]
+  dailyChallengeRewards   DailyChallengeReward[]
 
   @@index([email])
   @@index([username])
@@ -1298,4 +1299,19 @@ model PartnerInquiry {
   @@index([type])
   @@index([status])
   @@index([email])
+}
+
+model DailyChallengeReward {
+  id          String   @id @default(cuid())
+  userId      String
+  challengeId String
+  dateKey     String   // YYYY-MM-DD in user's local timezone
+  xpAwarded   Int
+  claimedAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId, dateKey])
+  @@index([userId])
+  @@index([dateKey])
 }

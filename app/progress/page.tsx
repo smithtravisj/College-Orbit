@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Flame, Trophy, Zap, Lock, Target, Clock, Award, Star, Rocket, Medal, Crown, Sun, Moon, Sparkles, ChevronLeft, ChevronRight, Users, School } from 'lucide-react';
+import { Flame, Trophy, Zap, Lock, Target, Clock, Award, Star, Rocket, Medal, Crown, Sun, Moon, Sparkles, ChevronLeft, ChevronRight, Users, School, CheckCircle, BookOpen, FileText, Gift } from 'lucide-react';
 import Card from '@/components/ui/Card';
-import { GamificationData, Achievement } from '@/types';
+import { GamificationData, Achievement, DailyChallengeProgress } from '@/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import useAppStore from '@/lib/store';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -342,6 +342,144 @@ export default function ProgressPage() {
             </div>
           </Card>
         </div>
+
+        {/* Daily Challenges */}
+        {gamification.dailyChallenges && gamification.dailyChallenges.length > 0 && (
+          <Card title="Daily Challenges" style={isMobile ? { padding: '12px', marginBottom: '12px' } : { marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '10px' }}>
+              {gamification.dailyChallenges.map((challenge: DailyChallengeProgress) => {
+                const progress = challenge.targetCount > 0
+                  ? Math.min(100, Math.round((challenge.currentCount / challenge.targetCount) * 100))
+                  : 0;
+
+                const getIcon = (icon: string) => {
+                  const size = isMobile ? 18 : 22;
+                  switch (icon) {
+                    case 'check-circle': return <CheckCircle size={size} />;
+                    case 'book-open': return <BookOpen size={size} />;
+                    case 'file-text': return <FileText size={size} />;
+                    case 'award': return <Award size={size} />;
+                    case 'zap': return <Zap size={size} />;
+                    case 'target': return <Target size={size} />;
+                    case 'flame': return <Flame size={size} />;
+                    default: return <Target size={size} />;
+                  }
+                };
+
+                return (
+                  <div
+                    key={challenge.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: isMobile ? '10px' : '14px',
+                      padding: isMobile ? '10px' : '14px',
+                      borderRadius: isMobile ? '8px' : '10px',
+                      backgroundColor: challenge.claimed
+                        ? 'rgba(34, 197, 94, 0.08)'
+                        : 'var(--panel-2)',
+                      border: challenge.claimed
+                        ? '1px solid rgba(34, 197, 94, 0.2)'
+                        : '1px solid var(--border)',
+                    }}
+                  >
+                    {/* Icon */}
+                    <div style={{
+                      width: isMobile ? '36px' : '44px',
+                      height: isMobile ? '36px' : '44px',
+                      borderRadius: '50%',
+                      backgroundColor: challenge.claimed ? 'rgba(34, 197, 94, 0.12)' : 'var(--border)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      color: challenge.claimed ? 'var(--success)' : challenge.completed ? 'var(--link)' : 'var(--text-muted)',
+                    }}>
+                      {challenge.claimed ? <CheckCircle size={isMobile ? 18 : 22} /> : getIcon(challenge.icon)}
+                    </div>
+
+                    {/* Content */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <span style={{
+                          fontSize: isMobile ? '13px' : '14px',
+                          fontWeight: 600,
+                          color: challenge.claimed ? 'var(--success)' : 'var(--text)',
+                        }}>
+                          {challenge.title}
+                        </span>
+                        <span style={{
+                          fontSize: isMobile ? '12px' : '13px',
+                          fontWeight: 500,
+                          color: challenge.claimed ? 'var(--success)' : 'var(--text-muted)',
+                          flexShrink: 0,
+                          marginLeft: '8px',
+                        }}>
+                          {challenge.currentCount}/{challenge.targetCount}
+                        </span>
+                      </div>
+                      <p style={{
+                        fontSize: isMobile ? '11px' : '12px',
+                        color: 'var(--text-muted)',
+                        margin: '0 0 6px 0',
+                      }}>
+                        {challenge.description}
+                      </p>
+                      <div style={{ height: isMobile ? '4px' : '6px', backgroundColor: 'var(--border)', borderRadius: '9999px', overflow: 'hidden' }}>
+                        <div style={{
+                          width: `${progress}%`,
+                          height: '100%',
+                          backgroundColor: challenge.claimed ? 'var(--success)' : 'var(--link)',
+                          transition: 'width 0.3s ease',
+                          borderRadius: '9999px',
+                        }} />
+                      </div>
+                    </div>
+
+                    {/* XP badge */}
+                    <div style={{ flexShrink: 0 }}>
+                      {challenge.claimed ? (
+                        <span style={{ fontSize: isMobile ? '12px' : '13px', fontWeight: 600, color: 'var(--success)' }}>
+                          +{challenge.xpReward} XP
+                        </span>
+                      ) : (
+                        <span style={{
+                          fontSize: isMobile ? '11px' : '12px',
+                          fontWeight: 500,
+                          color: 'var(--text-muted)',
+                          backgroundColor: 'var(--border)',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                        }}>
+                          {challenge.xpReward} XP
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Sweep bonus */}
+              {gamification.dailyChallenges.every((c: DailyChallengeProgress) => c.completed && c.claimed) && (
+                <div style={{
+                  padding: isMobile ? '8px' : '10px',
+                  borderRadius: isMobile ? '8px' : '10px',
+                  backgroundColor: 'rgba(34, 197, 94, 0.08)',
+                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}>
+                  <Gift size={isMobile ? 16 : 18} style={{ color: 'var(--success)' }} />
+                  <span style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: 600, color: 'var(--success)' }}>
+                    Sweep Bonus +25 XP
+                  </span>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
 
         {/* Leaderboards Section */}
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))', gap: isMobile ? '10px' : '16px' }}>

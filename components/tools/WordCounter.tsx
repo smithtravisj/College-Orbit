@@ -22,8 +22,8 @@ export default function WordCounter({ theme: _theme }: WordCounterProps) {
     // Sentence count - split by sentence-ending punctuation
     const sentences = trimmedText ? (trimmedText.match(/[.!?]+(?:\s|$)/g) || []).length : 0;
 
-    // Paragraph count - split by double newlines or count non-empty lines
-    const paragraphs = trimmedText ? trimmedText.split(/\n\s*\n/).filter(p => p.trim().length > 0).length : 0;
+    // Paragraph count - each non-empty line counts as a paragraph
+    const paragraphs = trimmedText ? trimmedText.split(/\n/).filter(p => p.trim().length > 0).length : 0;
 
     // Reading time (average 200 words per minute)
     const readingTimeMinutes = words / 200;
