@@ -225,6 +225,7 @@ export default function Navigation() {
   const showAdminNav = isAdmin || (mounted && localStorage.getItem('isAdmin') === 'true');
   const titleRef = useRef<HTMLHeadingElement>(null);
   const titleContainerRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
   const [titleFontSize, setTitleFontSize] = useState(32);
 
   // Auto-scale title font size to fit container
@@ -259,6 +260,73 @@ export default function Navigation() {
       window.removeEventListener('resize', calculateTitleSize);
     };
   }, [calculateTitleSize, university, savedVisualTheme]);
+
+  // Dynamically condense nav spacing when sidebar overflows
+  // Pure calculation — no DOM resets, no jitter
+  const visibleItemCount = useMemo(() => {
+    const navCount = NAV_ITEMS.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').length;
+    const adminCount = showAdminNav ? ADMIN_NAV_ITEMS.length : 0;
+    return navCount + adminCount;
+  }, [visiblePages, showAdminNav]);
+
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const adjustGap = () => {
+      // Available height inside the nav (nav is top:16 bottom:16)
+      const navHeight = window.innerHeight - 32;
+
+      // Measure title section height (text + username — doesn't change with condensing)
+      const titleEl = nav.querySelector('[data-nav-title]') as HTMLElement | null;
+      const titleHeight = titleEl ? titleEl.scrollHeight : 60;
+
+      const DEFAULT_GAP = 12;
+      const DEFAULT_ITEM = 44;
+
+      // search(1) + nav items + account(1) + logout(1)
+      const totalItems = 1 + visibleItemCount + 2;
+
+      // Content at default sizes:
+      // topPad(20) + bottomPad(8) + titlePadTop(4) + title + fixedGap(12, after title) + search + gap(after search) + navItems + gap(before footer) + account + logout
+      const defaultContent =
+        20 + 8 +
+        4 + titleHeight +
+        12 +
+        DEFAULT_ITEM +
+        DEFAULT_GAP +
+        visibleItemCount * DEFAULT_ITEM +
+        DEFAULT_GAP +
+        2 * DEFAULT_ITEM;
+
+      let gap = DEFAULT_GAP;
+      let itemH = DEFAULT_ITEM;
+
+      if (defaultContent > navHeight) {
+        let remaining = defaultContent - navHeight;
+
+        // Phase 1: Reduce 2 gaps (after search + before footer, 12 → 0, saves up to 24px)
+        const gapBudget = 2 * DEFAULT_GAP;
+        if (remaining <= gapBudget) {
+          gap = Math.max(0, DEFAULT_GAP - Math.ceil(remaining / 2));
+        } else {
+          gap = 0;
+          remaining -= gapBudget;
+
+          // Phase 2: Reduce item heights (44 → 28, saves up to totalItems * 16)
+          const perItem = Math.min(16, Math.ceil(remaining / totalItems));
+          itemH = Math.max(28, DEFAULT_ITEM - perItem);
+        }
+      }
+
+      nav.style.setProperty('--nav-gap', `${gap}px`);
+      nav.style.setProperty('--nav-item-h', `${itemH}px`);
+    };
+
+    adjustGap();
+    window.addEventListener('resize', adjustGap);
+    return () => window.removeEventListener('resize', adjustGap);
+  }, [visibleItemCount]);
 
   // Sort NAV_ITEMS according to visiblePagesOrder if it exists
   const sortedNavItems = (() => {
@@ -384,14 +452,16 @@ export default function Navigation() {
     <>
       {/* Desktop Sidebar - Floating */}
       <nav
-        className="hidden md:flex flex-col overflow-y-auto bg-[var(--panel)]"
+        ref={navRef}
+        className="hidden md:flex flex-col bg-[var(--panel)]"
         style={{
           position: 'fixed',
           top: '16px',
           left: '16px',
           bottom: '16px',
           width: '200px',
-          padding: '20px 16px',
+          padding: '20px 16px 8px',
+          overflow: 'hidden',
           borderRadius: 'var(--radius-card)',
           border: '1px solid var(--border)',
           boxShadow: isLightMode ? '0 2px 12px rgba(0,0,0,0.06)' : '0 4px 24px rgba(0,0,0,0.2)',
@@ -399,7 +469,7 @@ export default function Navigation() {
         }}
         data-tour="navigation"
       >
-        <div ref={titleContainerRef} style={{ marginBottom: '16px', position: 'relative', zIndex: 1 }}>
+        <div ref={titleContainerRef} data-nav-title style={{ paddingTop: '4px', marginBottom: '12px', position: 'relative', zIndex: 1 }}>
           <h1 ref={titleRef} className="font-semibold text-[var(--text)] leading-tight" style={{ padding: '0 8px', fontSize: `${titleFontSize}px`, whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: '100%' }}>{getAppTitle(university)}</h1>
           {session?.user && (
             <div className="mt-3 text-sm text-[var(--text-muted)] truncate" style={{ paddingLeft: '20px' }}>
@@ -410,13 +480,13 @@ export default function Navigation() {
         {/* Search button */}
         <button
           onClick={openGlobalSearch}
-          className="nav-link-hover flex items-center gap-2.5 w-full h-11 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5 group"
-          style={{ padding: '0 11px', marginBottom: '12px', position: 'relative', zIndex: 1 }}
+          className="nav-link-hover flex items-center gap-2.5 w-full rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5 group"
+          style={{ padding: '0 11px', height: 'var(--nav-item-h, 44px)', marginBottom: 'var(--nav-gap, 12px)', position: 'relative', zIndex: 1 }}
         >
           <Search size={20} className="opacity-80 group-hover:opacity-100" />
           <span className="truncate">Search</span>
         </button>
-        <div className="space-y-3 flex-1" style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 0 }}>
           {filteredNavItems.filter(item => visiblePages.includes(item.label) || item.label === 'Settings').map((item) => {
             const Icon = item.icon;
             const isActive = (pendingNav ? pendingNav === item.href : pathname === item.href);
@@ -427,13 +497,14 @@ export default function Navigation() {
                 onClick={() => setPendingNav(item.href)}
                 aria-current={isActive ? 'page' : undefined}
                 data-tour={item.label === 'Settings' ? 'settings-link' : item.label === 'Courses' ? 'courses-link' : undefined}
-                className={`nav-link-hover relative flex items-center gap-2.5 h-11 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
+                className={`nav-link-hover relative flex items-center gap-2.5 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   isActive
                     ? 'text-[var(--text)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
                 style={{
                   padding: '0 11px',
+                  height: 'var(--nav-item-h, 44px)',
                   backgroundColor: isActive ? accentColor : 'transparent',
                   backgroundImage: isActive
                     ? activeGradient
@@ -477,13 +548,14 @@ export default function Navigation() {
                 href={item.href}
                 onClick={() => setPendingNav(item.href)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`nav-link-hover relative flex items-center gap-2.5 h-11 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
+                className={`nav-link-hover relative flex items-center gap-2.5 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   isActive
                     ? 'text-[var(--text)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
                 style={{
                   padding: '0 11px',
+                  height: 'var(--nav-item-h, 44px)',
                   backgroundColor: isActive ? accentColor : 'transparent',
                   backgroundImage: isActive
                     ? activeGradient
@@ -502,18 +574,19 @@ export default function Navigation() {
 
         {/* Account and Logout */}
         {session?.user && (
-          <div className="mt-4 space-y-2" style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ position: 'relative', zIndex: 1, marginTop: 'auto', paddingTop: 'var(--nav-gap, 12px)', display: 'flex', flexDirection: 'column', gap: 0 }}>
             <div className="flex items-center justify-between">
               <Link
                 href="/account"
                 onClick={() => setPendingNav('/account')}
-                className={`nav-link-hover flex items-center gap-2.5 flex-1 h-11 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
+                className={`nav-link-hover flex items-center gap-2.5 flex-1 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   (pendingNav ? pendingNav === '/account' : pathname === '/account')
                     ? 'text-[var(--text)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
                 style={{
                   padding: '0 16px 0 11px',
+                  height: 'var(--nav-item-h, 44px)',
                   backgroundColor: (pendingNav ? pendingNav === '/account' : pathname === '/account') ? accentColor : 'transparent',
                   backgroundImage: (pendingNav ? pendingNav === '/account' : pathname === '/account')
                     ? activeGradient
@@ -532,8 +605,8 @@ export default function Navigation() {
             </div>
             <button
               onClick={handleLogout}
-              className="nav-link-hover flex items-center gap-2.5 w-full h-11 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 text-[var(--muted)] hover:text-[var(--text)] group"
-              style={{ padding: '0 11px' }}
+              className="nav-link-hover flex items-center gap-2.5 w-full rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 text-[var(--muted)] hover:text-[var(--text)] group"
+              style={{ padding: '0 11px', height: 'var(--nav-item-h, 44px)' }}
             >
               <LogOut size={20} className="opacity-80 group-hover:opacity-100" />
               <span>Log Out</span>
