@@ -2669,6 +2669,18 @@ const useAppStore = create<AppStore>((set, get) => ({
       console.error('Failed to fetch flashcard decks for export:', error);
     }
 
+    // Fetch daily challenge rewards from API
+    let dailyChallengeRewards: any[] = [];
+    try {
+      const response = await fetch('/api/daily-challenge-rewards', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        dailyChallengeRewards = data.rewards || [];
+      }
+    } catch (error) {
+      console.error('Failed to fetch daily challenge rewards for export:', error);
+    }
+
     return {
       courses: state.courses,
       deadlines: state.deadlines,
@@ -2689,6 +2701,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       recurringWorkPatterns: state.recurringWorkPatterns,
       customQuickLinks,
       flashcardDecks,
+      dailyChallengeRewards,
     };
   },
 
@@ -3007,6 +3020,23 @@ const useAppStore = create<AppStore>((set, get) => ({
             }
           } else {
             console.error('Failed to import flashcard deck:', deckData);
+          }
+        }
+      }
+
+      // Import daily challenge rewards
+      if ((data as any).dailyChallengeRewards && (data as any).dailyChallengeRewards.length > 0) {
+        console.log('Importing daily challenge rewards:', (data as any).dailyChallengeRewards.length);
+        for (const reward of (data as any).dailyChallengeRewards) {
+          const { id, createdAt, updatedAt, userId, claimedAt, ...rewardData } = reward as any;
+          const response = await fetch('/api/daily-challenge-rewards', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(rewardData),
+          });
+          if (!response.ok) {
+            console.error('Failed to import daily challenge reward:', rewardData);
           }
         }
       }

@@ -51,6 +51,7 @@ export const DELETE = withRateLimit(async function(_req: NextRequest) {
       prisma.analyticsEvent.deleteMany({ where: { userId } }),
       prisma.betaFeedback.deleteMany({ where: { userId } }),
       prisma.flashcardDeck.deleteMany({ where: { userId } }), // Cards cascade-deleted with decks
+      prisma.dailyChallengeReward.deleteMany({ where: { userId } }),
       prisma.collegeRequest.deleteMany({ where: { userId } }),
       prisma.issueReport.deleteMany({ where: { userId } }),
       prisma.featureRequest.deleteMany({ where: { userId } }),

@@ -1452,6 +1452,7 @@ export default function AccountPage() {
                       <li>• File uploads & recurring items</li>
                       <li>• Custom themes & visual effects</li>
                     </ul>
+                    <div style={{ paddingBottom: '4px' }} />
                   </div>
                 )}
 

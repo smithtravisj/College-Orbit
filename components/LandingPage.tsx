@@ -59,7 +59,7 @@ const secondaryFeatures = [
   {
     icon: Trophy,
     title: 'Progress & Achievements',
-    description: 'Earn XP, unlock achievements, track streaks, and compete on your college\'s leaderboard with friends.',
+    description: 'Earn XP, unlock achievements, complete daily challenges, track streaks, and compete on your college\'s leaderboard.',
   },
   {
     icon: FileText,
@@ -79,7 +79,7 @@ const secondaryFeatures = [
   {
     icon: Palette,
     title: 'University Themes',
-    description: 'Personalize with your school\'s colors, dark or light mode, and colorblind-friendly options.',
+    description: '20+ visual themes, animated pet companions, your school\'s colors, dark or light mode, and colorblind-friendly options.',
   },
 ];
 

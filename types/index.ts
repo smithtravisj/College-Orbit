@@ -457,6 +457,14 @@ export interface Notification {
   canvasAnnouncementId?: string | null;
 }
 
+export interface DailyChallengeReward {
+  id: string;
+  challengeId: string;
+  dateKey: string;
+  xpAwarded: number;
+  claimedAt: string;
+}
+
 export interface AppData {
   courses: Course[];
   deadlines: Deadline[];
@@ -476,6 +484,7 @@ export interface AppData {
   workItems?: WorkItem[];
   recurringWorkPatterns?: RecurringWorkPattern[];
   flashcardDecks?: FlashcardDeck[];
+  dailyChallengeRewards?: DailyChallengeReward[];
 }
 
 // Calendar Event Types

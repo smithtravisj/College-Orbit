@@ -81,6 +81,15 @@ export default function OnboardingTour({ shouldRun, onComplete }: OnboardingTour
         }
       },
       {
+        element: '[data-tour="settings-link"]',
+        popover: {
+          title: 'Make It Yours',
+          description: 'Head to Settings to customize your theme, enable a pet companion, and more.',
+          side: 'right' as const,
+          align: 'center' as const,
+        }
+      },
+      {
         popover: {
           title: 'Connect Your LMS',
           description: 'Connect Canvas or another LMS to import your courses and assignments instantly. Go to Settings to get started.',

@@ -215,6 +215,13 @@ const faqData: FAQ[] = [
     category: 'Progress',
     keywords: ['achievement', 'badge', 'milestone', 'reward', 'gamification'],
   },
+  {
+    id: 'daily-challenges',
+    question: 'What are daily challenges?',
+    answer: 'Each day you get 3 randomized challenges based on your courses, tasks, and study habits. Complete each one to earn XP. If you finish all 3 in a single day you also receive a +25 XP sweep bonus. Challenges reset at midnight in your local timezone.',
+    category: 'Progress',
+    keywords: ['daily', 'challenge', 'sweep', 'bonus', 'xp', 'reward', 'daily challenge'],
+  },
 
   // Settings & Customization
   {
@@ -237,6 +244,20 @@ const faqData: FAQ[] = [
     answer: 'Yes, in Settings > Preferences you can set defaults for new deadlines (default reminder time, priority), notes (default course), and more. This saves time when adding items frequently.',
     category: 'Settings',
     keywords: ['default', 'preset', 'automatic', 'setting', 'preference'],
+  },
+  {
+    id: 'visual-themes',
+    question: 'What are visual themes?',
+    answer: 'Visual themes transform the look of College Orbit with unique backgrounds, animations, and color palettes. Choose from 20+ themes including Ocean, Space, Sakura, Lo-Fi, Pixel, Aquarium, and more. You can also enable a random daily theme that automatically switches each day. Visual themes are a premium feature available in Settings > Appearance.',
+    category: 'Settings',
+    keywords: ['visual', 'theme', 'background', 'animation', 'ocean', 'space', 'sakura', 'pixel', 'lofi', 'random theme', 'appearance'],
+  },
+  {
+    id: 'pet-companion',
+    question: 'What is the pet companion?',
+    answer: 'The pet companion is an animated pixel art animal that walks along the bottom of your screen as you use the app. Choose from 12 different pets including a dog, cat, fox, turtle, parrot, and more. Pets are a premium feature that you can enable in Settings > Appearance.',
+    category: 'Settings',
+    keywords: ['pet', 'companion', 'animal', 'pixel art', 'animated', 'dog', 'cat', 'fox'],
   },
 
   // Data & Privacy
