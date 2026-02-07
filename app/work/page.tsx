@@ -883,7 +883,8 @@ export default function TasksPage() {
     for (const id of ids) {
       const item = items.find(t => t.id === id);
       if (item && item.dueAt) {
-        const existingDate = new Date(item.dueAt).toISOString().split('T')[0];
+        const d = new Date(item.dueAt);
+        const existingDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         const dueAt = time ? new Date(`${existingDate}T${time}`).toISOString() : item.dueAt;
         await updateFn(id, { dueAt });
       }

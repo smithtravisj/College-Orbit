@@ -12,7 +12,7 @@ import {
   getEventColor,
   CalendarEvent,
 } from '@/lib/calendarUtils';
-import { isToday } from '@/lib/utils';
+import { isToday, toLocalDateString } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 import useAppStore from '@/lib/store';
 
@@ -85,7 +85,7 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
   const eventsByDate = useMemo(() => {
     const map = new Map<string, ReturnType<typeof getEventsForDate>>();
     dates.forEach((date) => {
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = toLocalDateString(date);
       const events = getEventsForDate(date, courses, tasks, deadlines, exams, excludedDates, calendarEvents, workItems);
       if (events.length > 0) {
         map.set(dateStr, events);
@@ -166,10 +166,10 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
       {/* Calendar grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', paddingLeft: isMobile ? '6px' : '12px', paddingRight: isMobile ? '6px' : '12px', paddingBottom: isMobile ? '4px' : '8px', flex: isMobile ? 'none' : 1, overflow: 'hidden', gridAutoRows: isMobile ? 'minmax(38px, 1fr)' : 'minmax(0, 1fr)' }}>
         {dates.map((date) => {
-          const dateStr = date.toISOString().split('T')[0];
+          const dateStr = toLocalDateString(date);
           const isCurrentMonth = isInMonth(date, year, month);
           const isTodayDate = isToday(date);
-          const isSelectedDate = selectedDate && date.toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0];
+          const isSelectedDate = selectedDate && toLocalDateString(date) === toLocalDateString(selectedDate);
           const dayEvents = eventsByDate.get(dateStr) || [];
           const exclusionType = getExclusionType(date, excludedDates);
 

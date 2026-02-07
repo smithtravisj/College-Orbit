@@ -50,7 +50,8 @@ export async function generateRecurringExamInstances(
     if (lastExam?.instanceDate) {
       currentDate = new Date(lastExam.instanceDate);
     } else if (pattern.startDate) {
-      currentDate = new Date(pattern.startDate);
+      const sd = new Date(pattern.startDate);
+      currentDate = new Date(sd.getUTCFullYear(), sd.getUTCMonth(), sd.getUTCDate(), 12, 0, 0);
     } else {
       // No startDate set - start from today (go back 1 day so moveToNextOccurrence finds today or later)
       currentDate = new Date(now);
@@ -133,8 +134,10 @@ export async function generateRecurringExamInstances(
     while (currentDate <= windowEnd) {
       // Check end conditions
       if (pattern.endDate) {
-        const currentDateStr = currentDate.toISOString().split('T')[0];
-        const endDateStr = new Date(pattern.endDate).toISOString().split('T')[0];
+        const cd = currentDate;
+        const currentDateStr = `${cd.getFullYear()}-${String(cd.getMonth() + 1).padStart(2, '0')}-${String(cd.getDate()).padStart(2, '0')}`;
+        const ed = new Date(pattern.endDate);
+        const endDateStr = `${ed.getUTCFullYear()}-${String(ed.getUTCMonth() + 1).padStart(2, '0')}-${String(ed.getUTCDate()).padStart(2, '0')}`;
         if (currentDateStr > endDateStr) {
           break;
         }

@@ -459,7 +459,8 @@ export default function ExamsPage() {
     for (const id of ids) {
       const exam = exams.find(e => e.id === id);
       if (exam && exam.examAt) {
-        const existingDate = new Date(exam.examAt).toISOString().split('T')[0];
+        const d = new Date(exam.examAt);
+        const existingDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         const examAt = time ? new Date(`${existingDate}T${time}`).toISOString() : exam.examAt;
         await updateExam(id, { examAt });
       }

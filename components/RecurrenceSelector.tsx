@@ -61,7 +61,7 @@ export default function RecurrenceSelector({ value, onChange, disabled }: Recurr
         end = 'continuing indefinitely';
         break;
       case 'date':
-        end = `until ${new Date(value.endDate).toLocaleDateString()}`;
+        end = `until ${new Date(value.endDate + 'T00:00:00').toLocaleDateString()}`;
         break;
       case 'count':
         end = `for ${value.occurrenceCount} occurrences`;

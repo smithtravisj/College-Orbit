@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { toLocalDateString } from '@/lib/utils';
 
 interface CalendarPickerProps {
   value: string; // ISO date string (YYYY-MM-DD)
@@ -135,7 +136,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
   const handleInputBlur = () => {
     const parsed = parseDateInput(inputValue);
     if (parsed) {
-      const dateString = parsed.toISOString().split('T')[0];
+      const dateString = toLocalDateString(parsed);
       onChange(dateString);
       setCurrentMonth(parsed);
       setInputValue(parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
@@ -215,7 +216,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
 
   const handleSelectDate = (day: number) => {
     const selected = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-    const dateString = selected.toISOString().split('T')[0];
+    const dateString = toLocalDateString(selected);
     onChange(dateString);
     setInputValue(selected.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
     setIsOpen(false);

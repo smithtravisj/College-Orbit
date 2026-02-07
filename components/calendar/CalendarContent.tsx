@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { toLocalDateString } from '@/lib/utils';
 import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import { getThemeColors } from '@/lib/visualThemes';
@@ -239,7 +240,7 @@ export default function CalendarContent() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('calendarView', newView);
     }
-    const dateStr = currentDate.toISOString().split('T')[0];
+    const dateStr = toLocalDateString(currentDate);
     router.push(`/calendar?view=${newView}&date=${dateStr}`);
   };
 

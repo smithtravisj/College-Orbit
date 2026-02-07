@@ -1,8 +1,29 @@
 export type TimeFormat = '12h' | '24h';
 export type DateFormat = 'MM/DD/YYYY' | 'DD/MM/YYYY';
 
+/**
+ * Convert a Date to a YYYY-MM-DD string in LOCAL timezone.
+ * Use this instead of .toISOString().split('T')[0] which returns the UTC date.
+ */
+export function toLocalDateString(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+/**
+ * Parse a YYYY-MM-DD string as LOCAL midnight (not UTC).
+ * new Date("2026-02-07") creates UTC midnight — wrong in US timezones.
+ * This creates local midnight instead.
+ */
+export function parseLocalDate(dateStr: string): Date {
+  if (!dateStr) return new Date();
+  // If it already has a time component, parse as-is
+  if (dateStr.includes('T')) return new Date(dateStr);
+  // Otherwise, append T00:00:00 to force local timezone parsing
+  return new Date(dateStr + 'T00:00:00');
+}
+
 export function formatDate(date: Date | string, dateFormat: DateFormat = 'MM/DD/YYYY'): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? parseLocalDate(date) : date;
 
   if (dateFormat === 'DD/MM/YYYY') {
     return d.toLocaleDateString('en-GB', {
@@ -20,7 +41,7 @@ export function formatDate(date: Date | string, dateFormat: DateFormat = 'MM/DD/
 }
 
 export function formatTime(date: Date | string, timeFormat: TimeFormat = '12h'): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? parseLocalDate(date) : date;
 
   if (timeFormat === '24h') {
     return d.toLocaleTimeString('en-GB', {
@@ -62,7 +83,7 @@ export function formatDateString(dateStr: string, dateFormat: DateFormat = 'MM/D
 
 // Format date as numeric (01/19/2024 or 19/01/2024)
 export function formatDateNumeric(date: Date | string, dateFormat: DateFormat = 'MM/DD/YYYY'): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? parseLocalDate(date) : date;
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
@@ -74,7 +95,7 @@ export function formatDateNumeric(date: Date | string, dateFormat: DateFormat = 
 }
 
 export function isToday(date: Date | string): boolean {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? parseLocalDate(date) : date;
   const today = new Date();
   return (
     d.getDate() === today.getDate() &&
@@ -84,7 +105,7 @@ export function isToday(date: Date | string): boolean {
 }
 
 export function isTomorrow(date: Date | string): boolean {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? parseLocalDate(date) : date;
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   return (
@@ -96,7 +117,7 @@ export function isTomorrow(date: Date | string): boolean {
 
 // Get the number of days from today (0 = today, 1 = tomorrow, etc.)
 export function getDaysFromToday(date: Date | string): number {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? parseLocalDate(date) : date;
   const today = new Date();
   // Reset times to compare just dates
   today.setHours(0, 0, 0, 0);
@@ -119,7 +140,7 @@ export function getRelativeDateString(date: Date | string): string | null {
 }
 
 export function isOverdue(date: Date | string): boolean {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? parseLocalDate(date) : date;
   const now = new Date();
 
   // Check if this is a "no specific time" item (23:59 is the default)
@@ -149,7 +170,7 @@ export function isSoonDeadline(dueAt: string, windowDays: number): boolean {
 }
 
 export function getDayOfWeek(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? parseLocalDate(date) : date;
   return d.toLocaleDateString('en-US', { weekday: 'short' });
 }
 
@@ -166,7 +187,7 @@ export function isCurrentClass(
   end: string,
   date: Date | string
 ): boolean {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? parseLocalDate(date) : date;
   if (!isToday(d)) return false;
 
   const now = new Date();

@@ -13,12 +13,7 @@ async function main() {
       changes: [
         'Fix recurring task start date being off by one day due to timezone parsing',
         'Fix random theme background not loading',
-        'Fix recurring task deletion now removes all instances',
-        'Fix next recurring instance no longer appears immediately after completing one',
         'Recurring instances now generate 6 months out instead of 2 months',
-        'Faster recurring task creation with background processing',
-        'Updated landing page, onboarding tour, FAQ, and search index for recent features',
-        'Daily challenge reward data now included in export/import/delete',
       ],
     },
   });

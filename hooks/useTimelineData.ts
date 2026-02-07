@@ -14,6 +14,7 @@ import {
   TimelineItemType,
 } from '@/types/timeline';
 import { Course, ExcludedDate } from '@/types';
+import { toLocalDateString } from '@/lib/utils';
 
 const CACHE_KEY = 'timeline_cache';
 
@@ -25,7 +26,7 @@ function getCachedData(range: TimelineRange): TimelineGroupedData | null {
     if (cached) {
       const parsed = JSON.parse(cached);
       // Check if cache is from today (invalidate at midnight)
-      const today = new Date().toISOString().split('T')[0];
+      const today = toLocalDateString(new Date());
       if (parsed.date === today) {
         return parsed.data;
       }
@@ -38,7 +39,7 @@ function getCachedData(range: TimelineRange): TimelineGroupedData | null {
 function setCachedData(range: TimelineRange, data: TimelineGroupedData) {
   if (typeof window === 'undefined') return;
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalDateString(new Date());
     localStorage.setItem(`${CACHE_KEY}_${range}`, JSON.stringify({ date: today, data }));
   } catch {}
 }
@@ -59,7 +60,7 @@ function isCourseCurrent(
   checkDate: Date,
   excludedDates: ExcludedDate[]
 ): boolean {
-  const dateStr = checkDate.toISOString().split('T')[0];
+  const dateStr = toLocalDateString(checkDate);
 
   if (course.startDate) {
     const startStr = course.startDate.split('T')[0];
@@ -138,7 +139,7 @@ export function useTimelineData({
     for (let i = 0; i < numDays; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() + i);
-      const dateKey = date.toISOString().split('T')[0];
+      const dateKey = toLocalDateString(date);
       const dayIndex = date.getDay();
       const dayAbbrev = dayNames[dayIndex];
       const isToday = i === 0;

@@ -271,7 +271,7 @@ export default function CoursesPage() {
       if (!course.endDate) return true; // Show courses with no end date
 
       const today = new Date();
-      const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       const endStr = course.endDate.split('T')[0]; // Handle both timestamp and date string formats
 
       return endStr >= dateStr; // Show courses that haven't ended (endDate is today or later)

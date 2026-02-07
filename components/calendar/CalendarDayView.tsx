@@ -3,6 +3,7 @@
 import React, { useMemo, useEffect, useRef, useState } from 'react';
 import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent, WorkItem } from '@/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { toLocalDateString } from '@/lib/utils';
 import {
   getEventsForDate,
   getTimeSlotPosition,
@@ -142,7 +143,7 @@ const CalendarDayView = React.memo(function CalendarDayView({
   useEffect(() => {
     // Scroll to the earliest event time only on mount or when date changes
     // Don't scroll when events are added/removed (preserves scroll position)
-    const dateKey = date.toISOString().split('T')[0];
+    const dateKey = toLocalDateString(date);
     if (scrollContainerRef.current && lastScrolledDateRef.current !== dateKey) {
       const scrollPosition = earliestEventHour * hourHeight;
       scrollContainerRef.current.scrollTop = scrollPosition;

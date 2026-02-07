@@ -4,6 +4,7 @@
  */
 
 import { Course, ShoppingListType, GROCERY_CATEGORIES, WISHLIST_CATEGORIES, PANTRY_CATEGORIES } from '@/types';
+import { toLocalDateString } from '@/lib/utils';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -690,7 +691,7 @@ export function parseNaturalLanguage(
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const formatDate = (d: Date): string => d.toISOString().split('T')[0];
+    const formatDate = (d: Date): string => toLocalDateString(d);
 
     const getNextWeekday = (targetDay: number, includeToday = true): Date => {
       const result = new Date(today);

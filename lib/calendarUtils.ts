@@ -1,5 +1,5 @@
 import { Course, Task, Deadline, Exam, ExcludedDate, CalendarEvent as CustomCalendarEvent, WorkItem } from '@/types';
-import { getDayOfWeek } from './utils';
+import { getDayOfWeek, toLocalDateString } from './utils';
 import { getEventTypeColors, ColorblindMode, ColorblindStyle } from '@/lib/collegeColors';
 
 export interface CalendarEvent {
@@ -398,7 +398,7 @@ export function getEventsForRange(
   current.setHours(0, 0, 0, 0);
 
   while (current <= endDate) {
-    const dateStr = current.toISOString().split('T')[0];
+    const dateStr = toLocalDateString(current);
     const events = getEventsForDate(current, courses, tasks, deadlines, exams, excludedDates, undefined, workItems);
     if (events.length > 0) {
       eventsByDate.set(dateStr, events);
@@ -830,11 +830,11 @@ export function getExclusionType(
 // Generate array of dates between start and end (inclusive)
 export function getDateRange(startDate: string, endDate: string): string[] {
   const dates: string[] = [];
-  const current = new Date(startDate);
-  const end = new Date(endDate);
+  const current = new Date(startDate + (startDate.includes('T') ? '' : 'T00:00:00'));
+  const end = new Date(endDate + (endDate.includes('T') ? '' : 'T00:00:00'));
 
   while (current <= end) {
-    dates.push(current.toISOString().split('T')[0]);
+    dates.push(toLocalDateString(current));
     current.setDate(current.getDate() + 1);
   }
 

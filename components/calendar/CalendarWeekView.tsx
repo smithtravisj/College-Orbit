@@ -13,7 +13,7 @@ import {
   getExclusionType,
   CalendarEvent,
 } from '@/lib/calendarUtils';
-import { getDayOfWeek, isToday } from '@/lib/utils';
+import { getDayOfWeek, isToday, toLocalDateString } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 import useAppStore from '@/lib/store';
 
@@ -107,7 +107,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
     const map = new Map<string, ReturnType<typeof getEventsForDate>>();
     weekDays.forEach((day) => {
       const events = getEventsForDate(day, courses, tasks, deadlines, exams, excludedDates, calendarEvents, workItems);
-      map.set(day.toISOString().split('T')[0], events);
+      map.set(toLocalDateString(day), events);
     });
     return map;
   }, [weekDays, courses, tasks, deadlines, workItems, exams, excludedDates, calendarEvents]);
@@ -115,7 +115,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
   const eventLayoutsByDay = useMemo(() => {
     const map = new Map<string, ReturnType<typeof calculateEventLayout>>();
     weekDays.forEach((day) => {
-      const dateStr = day.toISOString().split('T')[0];
+      const dateStr = toLocalDateString(day);
       const dayEvents = eventsByDay.get(dateStr) || [];
       const courseEvents = dayEvents.filter((e) => e.type === 'course');
       // separateTaskDeadlineEvents now includes custom calendar events with times
@@ -156,7 +156,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
   useEffect(() => {
     // Scroll to the earliest event time only on mount or when week changes
     // Don't scroll when events are added/removed (preserves scroll position)
-    const weekKey = weekStart.toISOString().split('T')[0];
+    const weekKey = toLocalDateString(weekStart);
     if (scrollContainerRef.current && lastScrolledWeekRef.current !== weekKey) {
       const scrollPosition = earliestEventHour * HOUR_HEIGHT;
       scrollContainerRef.current.scrollTop = scrollPosition;
@@ -278,7 +278,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
 
         {/* Day headers */}
         {weekDays.map((day, index) => {
-          const dateStr = day.toISOString().split('T')[0];
+          const dateStr = toLocalDateString(day);
           const isTodayDate = isToday(day);
           const dayName = getDayOfWeek(day);
           const isLastDay = index === weekDays.length - 1;
@@ -318,7 +318,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
 
         {/* All-day events for each day */}
         {weekDays.map((day, index) => {
-          const dateStr = day.toISOString().split('T')[0];
+          const dateStr = toLocalDateString(day);
           const dayEvents = eventsByDay.get(dateStr) || [];
           const { allDay: allDayTaskDeadlineEvents } = separateTaskDeadlineEvents(dayEvents);
           const allDayCustomEvents = dayEvents.filter((e) => e.type === 'event' && e.allDay);
@@ -512,7 +512,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
 
           {/* Day columns */}
           {weekDays.map((day) => {
-            const dateStr = day.toISOString().split('T')[0];
+            const dateStr = toLocalDateString(day);
             const dayEvents = eventsByDay.get(dateStr) || [];
             const courseEvents = dayEvents.filter((e) => e.type === 'course');
             const isTodayDate = isToday(day);
