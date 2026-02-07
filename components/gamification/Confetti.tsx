@@ -1,9 +1,20 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
+
+interface ConfettiProps {
+  active: boolean;
+  duration?: number;
+  particleCount?: number;
+  onComplete?: () => void;
+}
+
+const COLORS = [
+  '#f94144', '#f3722c', '#f8961e', '#f9c74f',
+  '#90be6d', '#43aa8b', '#577590', '#9b5de5', '#f15bb5',
+];
 
 interface Particle {
-  id: number;
   x: number;
   y: number;
   rotation: number;
@@ -15,117 +26,117 @@ interface Particle {
   isCircle: boolean;
 }
 
-interface ConfettiProps {
-  active: boolean;
-  duration?: number;
-  particleCount?: number;
-  onComplete?: () => void;
-}
-
-const COLORS = [
-  '#f94144',
-  '#f3722c',
-  '#f8961e',
-  '#f9c74f',
-  '#90be6d',
-  '#43aa8b',
-  '#577590',
-  '#9b5de5',
-  '#f15bb5',
-];
-
 export default function Confetti({
   active,
   duration = 5000,
-  particleCount = 300,
+  particleCount = 200,
   onComplete,
 }: ConfettiProps) {
-  const [particles, setParticles] = useState<Particle[]>([]);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animatingRef = useRef(false);
+  const particlesRef = useRef<Particle[]>([]);
+  const rafRef = useRef<number>(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const createParticles = useCallback(() => {
-    const newParticles: Particle[] = [];
+  const createParticles = useCallback((): Particle[] => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const particles: Particle[] = [];
     for (let i = 0; i < particleCount; i++) {
-      newParticles.push({
-        id: i,
-        x: Math.random() * 100,
-        y: -40 + Math.random() * 50,
+      particles.push({
+        x: Math.random() * w,
+        y: -(h * 0.4) + Math.random() * (h * 0.5),
         rotation: Math.random() * 360,
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
         size: 5 + Math.random() * 10,
-        speedX: (Math.random() - 0.5) * 1.2,
-        speedY: 0.2 + Math.random() * 0.5,
-        rotationSpeed: (Math.random() - 0.5) * 3,
+        speedX: (Math.random() - 0.5) * 2.5,
+        speedY: 0.6 + Math.random() * 1.5,
+        rotationSpeed: (Math.random() - 0.5) * 4,
         isCircle: Math.random() > 0.5,
       });
     }
-    return newParticles;
+    return particles;
   }, [particleCount]);
 
   useEffect(() => {
-    if (!active || isAnimating) return;
+    if (!active || animatingRef.current) return;
 
-    setIsAnimating(true);
-    setParticles(createParticles());
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    const timer = setTimeout(() => {
-      setIsAnimating(false);
-      setParticles([]);
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    animatingRef.current = true;
+    particlesRef.current = createParticles();
+
+    const animate = () => {
+      if (!animatingRef.current) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const particles = particlesRef.current;
+      let alive = 0;
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.speedX;
+        p.y += p.speedY;
+        p.rotation += p.rotationSpeed;
+        p.speedY += 0.035;
+
+        if (p.y > canvas.height + 50) continue;
+        alive++;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.fillStyle = p.color;
+
+        if (p.isCircle) {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+        }
+
+        ctx.restore();
+      }
+
+      if (alive > 0) {
+        rafRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(animate);
+
+    timerRef.current = setTimeout(() => {
+      animatingRef.current = false;
+      cancelAnimationFrame(rafRef.current);
+      if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height);
       onComplete?.();
     }, duration);
 
-    return () => clearTimeout(timer);
-  }, [active, isAnimating, duration, createParticles, onComplete]);
-
-  useEffect(() => {
-    if (!isAnimating || particles.length === 0) return;
-
-    let animationFrame: number;
-    const animate = () => {
-      setParticles(prev =>
-        prev.map(p => ({
-          ...p,
-          x: p.x + p.speedX,
-          y: p.y + p.speedY,
-          rotation: p.rotation + p.rotationSpeed,
-          speedY: p.speedY + 0.012,
-        })).filter(p => p.y < 120)
-      );
-      animationFrame = requestAnimationFrame(animate);
+    return () => {
+      animatingRef.current = false;
+      cancelAnimationFrame(rafRef.current);
+      if (timerRef.current) clearTimeout(timerRef.current);
     };
-
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [isAnimating, particles.length]);
-
-  if (!isAnimating || particles.length === 0) return null;
+  }, [active, duration, createParticles, onComplete]);
 
   return (
-    <div
+    <canvas
+      ref={canvasRef}
       style={{
         position: 'fixed',
         inset: 0,
         pointerEvents: 'none',
         zIndex: 99999,
-        overflow: 'hidden',
       }}
-    >
-      {particles.map(particle => (
-        <div
-          key={particle.id}
-          style={{
-            position: 'absolute',
-            left: `${particle.x}%`,
-            top: `${particle.y}%`,
-            width: particle.size,
-            height: particle.size,
-            backgroundColor: particle.color,
-            transform: `rotate(${particle.rotation}deg)`,
-            borderRadius: particle.isCircle ? '50%' : '2px',
-          }}
-        />
-      ))}
-    </div>
+    />
   );
 }
 
