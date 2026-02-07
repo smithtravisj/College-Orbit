@@ -8,6 +8,7 @@ import Card from '@/components/ui/Card';
 import { GamificationData, Achievement, DailyChallengeProgress } from '@/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import useAppStore from '@/lib/store';
+import { formatXp } from '@/lib/utils';
 import { useSubscription } from '@/hooks/useSubscription';
 
 export default function ProgressPage() {
@@ -244,7 +245,7 @@ export default function ProgressPage() {
           <div style={{ backgroundColor: 'var(--panel)', border: '1px solid var(--border)', borderRadius: isMobile ? '8px' : '12px', padding: isMobile ? '10px 8px' : '16px', textAlign: 'center' }}>
             <Target size={isMobile ? 20 : 28} style={{ color: 'var(--link)' }} />
             <p style={{ fontSize: isMobile ? '20px' : '28px', fontWeight: 700, color: 'var(--link)', margin: '2px 0 0 0' }}>
-              {xp.total.toLocaleString()}
+              {formatXp(xp.total, 10000)}
             </p>
             <p style={{ fontSize: isMobile ? '10px' : '12px', color: 'var(--text-muted)', margin: '1px 0 0 0' }}>Total XP</p>
           </div>
@@ -626,7 +627,7 @@ export default function ProgressPage() {
                       {/* Monthly XP & Streak */}
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <p style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: 600, color: 'var(--link)', margin: 0 }}>
-                          {entry.xp.total.toLocaleString()} XP
+                          {formatXp(entry.xp.total)} XP
                         </p>
                         <p style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '2px' }}>
                           <Flame size={isMobile ? 10 : 12} style={{ color: entry.streak.currentStreak > 0 ? 'var(--warning)' : 'var(--text-muted)' }} />
@@ -780,7 +781,7 @@ export default function ProgressPage() {
                       {/* Total XP */}
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <p style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: 600, color: 'var(--link)', margin: 0 }}>
-                          {entry.totalXp.toLocaleString()} XP
+                          {formatXp(entry.totalXp)} XP
                         </p>
                       </div>
                     </div>

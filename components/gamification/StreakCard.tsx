@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Flame, Trophy, Zap, ChevronRight } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { GamificationData } from '@/types';
+import { formatXp } from '@/lib/utils';
 
 interface StreakCardProps {
   data: GamificationData | null;
@@ -191,7 +192,7 @@ export default function StreakCard({ data, loading = false }: StreakCardProps) {
           <p style={{ fontSize: '9px', color: 'var(--text-muted)', margin: 0 }}>Tasks Done</p>
         </div>
         <div>
-          <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', margin: 0 }}>{xp.total}</p>
+          <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', margin: 0 }}>{formatXp(xp.total)}</p>
           <p style={{ fontSize: '9px', color: 'var(--text-muted)', margin: 0 }}>Total XP</p>
         </div>
         <div>

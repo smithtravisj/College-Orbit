@@ -198,6 +198,21 @@ export function isCurrentClass(
   return compareTime(start, nowTime) <= 0 && compareTime(nowTime, end) < 0;
 }
 
+/**
+ * Format a number in compact form (1.0k, 10.0k, 100k, 1.0m, etc.)
+ * Only applies formatting at or above the given threshold.
+ */
+export function formatXp(n: number, threshold: number = 1000): string {
+  if (n < threshold) return n.toLocaleString();
+  if (n < 10000) return (n / 1000).toFixed(1) + 'k';
+  if (n < 100000) return (n / 1000).toFixed(1) + 'k';
+  if (n < 1000000) return Math.round(n / 1000) + 'k';
+  if (n < 10000000) return (n / 1000000).toFixed(1) + 'm';
+  if (n < 100000000) return (n / 1000000).toFixed(1) + 'm';
+  if (n < 1000000000) return Math.round(n / 1000000) + 'm';
+  return (n / 1000000000).toFixed(1) + 'b';
+}
+
 export function extractDomain(url: string): string {
   try {
     const urlObj = new URL(url);
