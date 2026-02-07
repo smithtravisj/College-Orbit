@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Undo2 } from 'lucide-react';
 
 interface DeleteToastProps {
@@ -13,6 +13,10 @@ interface DeleteToastProps {
 export function DeleteToast({ message, onUndo, onDismiss, duration = 5000 }: DeleteToastProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [progress, setProgress] = useState(100);
+  const onDismissRef = useRef(onDismiss);
+  const onUndoRef = useRef(onUndo);
+  onDismissRef.current = onDismiss;
+  onUndoRef.current = onUndo;
 
   useEffect(() => {
     const startTime = Date.now();
@@ -24,22 +28,22 @@ export function DeleteToast({ message, onUndo, onDismiss, duration = 5000 }: Del
       if (remaining <= 0) {
         clearInterval(interval);
         setIsVisible(false);
-        onDismiss();
+        onDismissRef.current();
       }
     }, 50);
 
     return () => clearInterval(interval);
-  }, [duration, onDismiss]);
+  }, [duration]);
 
   const handleUndo = useCallback(() => {
     setIsVisible(false);
-    onUndo();
-  }, [onUndo]);
+    onUndoRef.current();
+  }, []);
 
   const handleDismiss = useCallback(() => {
     setIsVisible(false);
-    onDismiss();
-  }, [onDismiss]);
+    onDismissRef.current();
+  }, []);
 
   if (!isVisible) return null;
 
