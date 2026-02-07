@@ -9,8 +9,8 @@ export const PET_CONFIG = {
   idleDurationMax: 15000,
   sittingDurationMin: 15000,
   sittingDurationMax: 30000,
-  sleepingDurationMin: 60000,
-  sleepingDurationMax: 120000,
+  sleepingDurationMin: 120000,
+  sleepingDurationMax: 300000,
 
   // Probabilities
   sleepChance: 0.5,    // chance to sleep after sitting

@@ -278,10 +278,12 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isRunning) return;
 
-    // Set session start time when timer starts
+    // Set session start time when timer starts (or resumes after pause)
     if (sessionStartTimeRef.current === null) {
-      sessionStartTimeRef.current = Date.now();
-      lastMinuteCountedRef.current = 0;
+      const sessionDuration = isWorkSession ? workDuration * 60 : breakDuration * 60;
+      const alreadyElapsed = sessionDuration - timeLeft;
+      sessionStartTimeRef.current = Date.now() - (alreadyElapsed * 1000);
+      lastMinuteCountedRef.current = Math.floor(alreadyElapsed / 60);
     }
 
     timerRef.current = setInterval(() => {
@@ -340,13 +342,17 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
 
   const pause = useCallback(() => {
     setIsRunning(false);
+    sessionStartTimeRef.current = null;
   }, []);
 
   const toggle = useCallback(() => {
     setIsRunning((prev) => {
       if (!prev) {
-        // Starting the timer
+        // Starting/resuming the timer
         setHasActiveSession(true);
+      } else {
+        // Pausing — null out start time so resume backdates correctly
+        sessionStartTimeRef.current = null;
       }
       return !prev;
     });

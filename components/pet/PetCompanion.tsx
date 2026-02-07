@@ -109,11 +109,11 @@ export default function PetCompanion() {
         const vw = window.innerWidth;
         const target = PET_CONFIG.edgePadding + Math.random() * (vw - PET_CONFIG.edgePadding * 2 - spriteSize);
         walkTargetRef.current = target;
-        setFacingRight(target > posX);
+        setFacingRight(target > posXRef.current);
         setPetState('walking');
       }
     }, duration);
-  }, [posX, spriteSize, playOneShot]);
+  }, [spriteSize, playOneShot]);
 
   // Handle click → bark, second click while barking → attack
   const handleClick = useCallback(() => {
@@ -189,9 +189,8 @@ export default function PetCompanion() {
         if (stateTimerRef.current) clearTimeout(stateTimerRef.current);
         if (actionTimerRef.current) clearTimeout(actionTimerRef.current);
       } else if (enabled) {
-        if (petState === 'walking' || petState === 'bark' || petState === 'attack') {
-          transitionToIdle();
-        }
+        // Always restart from idle — timers were cleared when tab went hidden
+        transitionToIdle();
       }
     };
 
