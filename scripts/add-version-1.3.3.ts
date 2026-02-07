@@ -9,7 +9,7 @@ async function main() {
     create: {
       version: '1.3.3',
       isBetaOnly: false,
-      releaseDate: new Date('2026-02-06T19:15:00'),
+      releasedAt: new Date('2026-02-06T19:15:00'),
       changes: [
         {
           type: 'feature',
