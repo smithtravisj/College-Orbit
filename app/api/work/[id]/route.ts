@@ -218,20 +218,16 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
       });
     }
 
-    // If this is a recurring item, delete this instance and all future instances
+    // If this is a recurring item, delete all instances and deactivate the pattern
     if (existingItem.recurringPatternId) {
-      const now = new Date();
       console.log(
-        `[DELETE /api/work/${id}] Deleting future instances of recurring pattern ${existingItem.recurringPatternId}`
+        `[DELETE /api/work/${id}] Deleting all instances of recurring pattern ${existingItem.recurringPatternId}`
       );
 
-      // Delete this item and all future items for this pattern
+      // Delete all items for this pattern
       await prisma.workItem.deleteMany({
         where: {
           recurringPatternId: existingItem.recurringPatternId,
-          dueAt: {
-            gte: now,
-          },
         },
       });
 

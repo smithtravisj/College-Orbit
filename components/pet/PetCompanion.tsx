@@ -28,6 +28,7 @@ export default function PetCompanion() {
   const rafRef = useRef<number>(0);
   const walkTargetRef = useRef(300);
   const lastTimeRef = useRef(0);
+  const posXRef = useRef(100);
   const stateTimerRef = useRef<ReturnType<typeof setTimeout>>(null!);
   const actionTimerRef = useRef<ReturnType<typeof setTimeout>>(null!);
   const reducedMotion = useRef(false);
@@ -57,7 +58,9 @@ export default function PetCompanion() {
   // Set initial position randomly
   useEffect(() => {
     if (enabled) {
-      setPosX(PET_CONFIG.edgePadding + Math.random() * (window.innerWidth - PET_CONFIG.edgePadding * 2 - spriteSize));
+      const initial = PET_CONFIG.edgePadding + Math.random() * (window.innerWidth - PET_CONFIG.edgePadding * 2 - spriteSize);
+      posXRef.current = initial;
+      setPosX(initial);
     }
   }, [enabled, spriteSize]);
 
@@ -139,42 +142,41 @@ export default function PetCompanion() {
   }, [petState, transitionToIdle]);
 
   // Walking animation loop
-  const walkDoneRef = useRef(false);
-
   useEffect(() => {
     if (petState !== 'walking') return;
 
     lastTimeRef.current = 0;
-    walkDoneRef.current = false;
+    let cancelled = false;
 
     const animate = (timestamp: number) => {
-      if (walkDoneRef.current) return;
+      if (cancelled) return;
       if (lastTimeRef.current === 0) lastTimeRef.current = timestamp;
       const dt = (timestamp - lastTimeRef.current) / 1000;
       lastTimeRef.current = timestamp;
 
-      setPosX((prev) => {
-        const target = walkTargetRef.current;
-        const diff = target - prev;
-        const step = walkSpeedRef.current * dt;
+      const target = walkTargetRef.current;
+      const speed = walkSpeedRef.current;
+      const prev = posXRef.current;
+      const diff = target - prev;
+      const step = speed * dt;
 
-        if (Math.abs(diff) <= step) {
-          walkDoneRef.current = true;
-          return target;
-        }
-        return prev + Math.sign(diff) * step;
-      });
-
-      if (walkDoneRef.current) {
+      if (Math.abs(diff) <= step) {
+        posXRef.current = target;
+        setPosX(target);
         transitionToIdle();
-      } else {
-        rafRef.current = requestAnimationFrame(animate);
+        return;
       }
+
+      const next = prev + Math.sign(diff) * step;
+      posXRef.current = next;
+      setPosX(next);
+      rafRef.current = requestAnimationFrame(animate);
     };
 
     rafRef.current = requestAnimationFrame(animate);
 
     return () => {
+      cancelled = true;
       cancelAnimationFrame(rafRef.current);
     };
   }, [petState, transitionToIdle]);

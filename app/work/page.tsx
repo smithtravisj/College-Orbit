@@ -130,6 +130,7 @@ export default function TasksPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [hidingTasks, setHidingTasks] = useState<Set<string>>(new Set());
   const [toggledTasks, setToggledTasks] = useState<Set<string>>(new Set());
+  const [completedPatternIds, setCompletedPatternIds] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
     title: '',
     type: 'task' as WorkItemType,
@@ -172,7 +173,7 @@ export default function TasksPage() {
   const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
   const [hideRecurringCompleted, setHideRecurringCompleted] = useState(false);
 
-  const { courses, tasks, notes, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, bulkUpdateTasks, bulkDeleteTasks, workItems, addWorkItem, updateWorkItem, deleteWorkItem, toggleWorkItemComplete, bulkUpdateWorkItems, bulkDeleteWorkItems, initialized: storeInitialized } = useAppStore();
+  const { courses, tasks, notes, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, bulkUpdateTasks, bulkDeleteTasks, workItems, addWorkItem, updateWorkItem, deleteWorkItem, toggleWorkItemComplete, addRecurringWorkItem, bulkUpdateWorkItems, bulkDeleteWorkItems, initialized: storeInitialized } = useAppStore();
 
   // Type filter for unified work items - start with 'all' to avoid hydration mismatch
   const [typeFilter, setTypeFilter] = useState<WorkItemType | 'all'>('all');
@@ -333,8 +334,23 @@ export default function TasksPage() {
         return;
       }
 
-      try {
-        await addRecurringTask(
+      // Don't await - reset form immediately and let creation happen in background
+      if (useWorkItems) {
+        addRecurringWorkItem(
+          {
+            title: formData.title,
+            type: formData.type || 'task',
+            courseId: formData.courseId || null,
+            notes: formData.notes,
+            tags: formData.tags,
+            links,
+            priority: formData.priority || null,
+            effort: formData.effort || null,
+          },
+          formData.recurring
+        ).catch((error) => console.error('Error creating recurring item:', error));
+      } else {
+        addRecurringTask(
           {
             title: formData.title,
             courseId: formData.courseId || null,
@@ -344,9 +360,7 @@ export default function TasksPage() {
             importance: formData.importance || null,
           },
           formData.recurring
-        );
-      } catch (error) {
-        console.error('Error creating recurring task:', error);
+        ).catch((error) => console.error('Error creating recurring item:', error));
       }
       setFormData({
         title: '',
@@ -643,6 +657,20 @@ export default function TasksPage() {
 
   // Helper to toggle task/work item complete status
   const handleToggleComplete = (id: string) => {
+    // Track recurring pattern completion to prevent next instance from appearing immediately
+    const items = useWorkItems ? workItems : tasks;
+    const item = items.find((t) => t.id === id);
+    if (item?.recurringPatternId && item.status === 'open') {
+      setCompletedPatternIds((prev) => new Set(prev).add(item.recurringPatternId!));
+    } else if (item?.recurringPatternId && item.status === 'done') {
+      // Uncompleting — allow the pattern to show again
+      setCompletedPatternIds((prev) => {
+        const next = new Set(prev);
+        next.delete(item.recurringPatternId!);
+        return next;
+      });
+    }
+
     if (useWorkItems) {
       toggleWorkItemComplete(id);
     } else {
@@ -939,7 +967,11 @@ export default function TasksPage() {
         }
 
         // For recurring items (not in 'done' filter), only show the earliest open instance
+        // Also hide next instances of patterns that were just completed this session
         if (t.recurringPatternId && t.status === 'open' && filter !== 'done') {
+          if (completedPatternIds.has(t.recurringPatternId)) {
+            return false;
+          }
           if (!earliestRecurringInstanceIds.has(t.id)) {
             return false;
           }
@@ -1012,7 +1044,7 @@ export default function TasksPage() {
         // Both don't have due dates, sort alphabetically
         return a.title.localeCompare(b.title);
       });
-  }, [useWorkItems, workItems, tasks, typeFilter, toggledTasks, earliestRecurringInstanceIds, filter, hideRecurringCompleted, courseFilter, importanceFilter, selectedTags, searchQuery, courses]);
+  }, [useWorkItems, workItems, tasks, typeFilter, toggledTasks, completedPatternIds, earliestRecurringInstanceIds, filter, hideRecurringCompleted, courseFilter, importanceFilter, selectedTags, searchQuery, courses]);
 
   // Group tasks by course if enabled (memoized)
   const groupedTasks = useMemo(() => {

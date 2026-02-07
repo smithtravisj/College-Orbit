@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
-import { getVisualTheme } from '@/lib/visualThemes';
+import { getVisualTheme, resolveThemeId } from '@/lib/visualThemes';
 import { useSubscription } from '@/hooks/useSubscription';
 
 export default function BackgroundDecoration() {
@@ -17,7 +17,7 @@ export default function BackgroundDecoration() {
   const { isPremium } = useSubscription();
   const useCustomTheme = isPremium ? savedUseCustomTheme : false;
   const customColors = isPremium ? savedCustomColors : null;
-  const visualTheme = isPremium ? savedVisualTheme : null;
+  const visualTheme = isPremium ? (resolveThemeId(savedVisualTheme) || null) : null;
 
   // Get the visual theme definition
   const themeConfig = getVisualTheme(visualTheme);

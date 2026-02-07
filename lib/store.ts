@@ -3512,10 +3512,18 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   deleteWorkItem: async (id) => {
-    // Optimistic update
+    // Optimistic update — for recurring items, also remove all future instances
     const previousWorkItems = get().workItems;
+    const itemToDelete = previousWorkItems.find((w) => w.id === id);
+    const patternId = itemToDelete?.recurringPatternId;
+
     set((state) => ({
-      workItems: state.workItems.filter((w) => w.id !== id),
+      workItems: state.workItems.filter((w) => {
+        if (w.id === id) return false;
+        // Also remove all instances of the same recurring pattern
+        if (patternId && w.recurringPatternId === patternId) return false;
+        return true;
+      }),
     }));
 
     try {
