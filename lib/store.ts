@@ -3648,6 +3648,64 @@ const useAppStore = create<AppStore>((set, get) => ({
   },
 
   addRecurringWorkItem: async (workItemData, recurringData) => {
+    // Compute the first instance's due date for optimistic UI
+    const computeFirstDueAt = (): string => {
+      const dueTime = recurringData.dueTime || '23:59';
+      const [hours, minutes] = dueTime.split(':').map(Number);
+
+      let startDate: Date;
+      if (recurringData.startDate) {
+        startDate = new Date(recurringData.startDate + 'T00:00:00');
+      } else {
+        startDate = new Date();
+      }
+
+      // For weekly recurrence with specific days, find the first matching day
+      if (recurringData.recurrenceType === 'weekly' && recurringData.daysOfWeek?.length > 0) {
+        for (let i = 0; i < 7; i++) {
+          const check = new Date(startDate);
+          check.setDate(check.getDate() + i);
+          if (recurringData.daysOfWeek.includes(check.getDay())) {
+            startDate = check;
+            break;
+          }
+        }
+      }
+
+      startDate.setHours(hours || 23, minutes || 59, 0, 0);
+      return startDate.toISOString();
+    };
+
+    // Add optimistic first instance immediately so it appears in the UI
+    const optimisticId = `optimistic-${Date.now()}`;
+    const firstDueAt = computeFirstDueAt();
+    const optimisticItem: any = {
+      id: optimisticId,
+      title: workItemData.title,
+      type: workItemData.type || 'task',
+      courseId: workItemData.courseId || null,
+      dueAt: firstDueAt,
+      priority: workItemData.priority || null,
+      effort: workItemData.effort || null,
+      pinned: false,
+      checklist: [],
+      notes: workItemData.notes || '',
+      tags: workItemData.tags || [],
+      links: workItemData.links || [],
+      files: [],
+      status: 'open',
+      workingOn: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      instanceDate: firstDueAt,
+      isRecurring: true,
+      recurringPatternId: null,
+    };
+
+    set((state) => ({
+      workItems: [...state.workItems, optimisticItem],
+    }));
+
     try {
       const response = await fetch('/api/work', {
         method: 'POST',
@@ -3660,14 +3718,22 @@ const useAppStore = create<AppStore>((set, get) => ({
       });
 
       if (!response.ok) {
+        // Remove optimistic item on failure
+        set((state) => ({
+          workItems: state.workItems.filter((w) => w.id !== optimisticId),
+        }));
         const error = await response.json();
         throw new Error(error.error || 'Failed to create recurring work item');
       }
 
-      // Refresh work items to get all generated instances
+      // Refresh work items to replace optimistic item with real instances
       await get().fetchWorkItems();
       get().invalidateCalendarCache();
     } catch (error) {
+      // Remove optimistic item on error
+      set((state) => ({
+        workItems: state.workItems.filter((w) => w.id !== optimisticId),
+      }));
       console.error('Error creating recurring work item:', error);
       throw error;
     }
