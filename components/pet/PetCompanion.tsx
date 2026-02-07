@@ -97,13 +97,11 @@ export default function PetCompanion() {
           }
         }, sitDuration);
       } else if (roll > 0.55) {
-        // Sniff (20%) — duration from sprite data
-        const sniff = spritesRef.current.sniff;
-        playOneShot('sniff', sniff.frameCount * sniff.frameDuration);
+        // Sniff (20%) — hold for 3–7s
+        playOneShot('sniff', randomBetween(PET_CONFIG.sniffDurationMin, PET_CONFIG.sniffDurationMax));
       } else if (roll > 0.4) {
-        // Lie down (15%) — duration from sprite data
-        const lie = spritesRef.current.liedown;
-        playOneShot('liedown', lie.frameCount * lie.frameDuration);
+        // Lie down (15%) — hold for 30s–2min
+        playOneShot('liedown', randomBetween(PET_CONFIG.liedownDurationMin, PET_CONFIG.liedownDurationMax));
       } else {
         // Walk (40%)
         const vw = window.innerWidth;

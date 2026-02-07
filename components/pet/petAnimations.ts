@@ -11,6 +11,10 @@ export const PET_CONFIG = {
   sittingDurationMax: 30000,
   sleepingDurationMin: 120000,
   sleepingDurationMax: 300000,
+  sniffDurationMin: 3000,
+  sniffDurationMax: 7000,
+  liedownDurationMin: 30000,
+  liedownDurationMax: 120000,
 
   // Probabilities
   sleepChance: 0.5,    // chance to sleep after sitting
