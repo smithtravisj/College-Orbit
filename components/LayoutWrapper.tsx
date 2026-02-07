@@ -14,6 +14,10 @@ import { BlackboardSyncManager } from './BlackboardSyncManager';
 import { MoodleSyncManager } from './MoodleSyncManager';
 import { BrightspaceSyncManager } from './BrightspaceSyncManager';
 import { AchievementToastContainer, LevelUpToast, Confetti, ChallengeToastContainer } from './gamification';
+import ConfettiCanvas from './gamification/ConfettiCanvas';
+import ConfettiCSS from './gamification/ConfettiCSS';
+import ConfettiLite from './gamification/ConfettiLite';
+import ConfettiPackage from './gamification/ConfettiPackage';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAnalyticsPageView } from '@/lib/useAnalytics';
 import useAppStore from '@/lib/store';
@@ -38,6 +42,11 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const dismissLevelUp = useAppStore((state) => state.dismissLevelUp);
   const isRefreshing = useRef(false);
   const { hasActiveSession: hasPomodoroSession, isMiniPlayerDismissed } = usePomodoroContext();
+  const [debugOpen, setDebugOpen] = useState(false);
+  const [showCanvasConfetti, setShowCanvasConfetti] = useState(false);
+  const [showCSSConfetti, setShowCSSConfetti] = useState(false);
+  const [showLiteConfetti, setShowLiteConfetti] = useState(false);
+  const [showPackageConfetti, setShowPackageConfetti] = useState(false);
   const [toolsTab, setToolsTab] = useState<string>('productivity');
 
   // Track tools tab for mini player visibility
@@ -190,6 +199,91 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
         active={showConfetti}
         onComplete={() => setShowConfetti(false)}
       />
+
+      {/* Confetti variant components for testing */}
+      <ConfettiCanvas active={showCanvasConfetti} onComplete={() => setShowCanvasConfetti(false)} />
+      <ConfettiCSS active={showCSSConfetti} onComplete={() => setShowCSSConfetti(false)} />
+      <ConfettiLite active={showLiteConfetti} onComplete={() => setShowLiteConfetti(false)} />
+      <ConfettiPackage active={showPackageConfetti} onComplete={() => setShowPackageConfetti(false)} />
+
+      {/* Debug panel - small persistent panel bottom-right */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '12px',
+          right: '12px',
+          zIndex: 100000,
+          backgroundColor: 'var(--panel-2)',
+          border: '1px solid var(--border)',
+          borderRadius: '10px',
+          padding: debugOpen ? '12px' : '0',
+          color: 'var(--text)',
+          fontSize: '12px',
+          maxWidth: '220px',
+        }}
+      >
+        {!debugOpen ? (
+          <button
+            onClick={() => setDebugOpen(true)}
+            style={{
+              padding: '5px 10px',
+              backgroundColor: 'var(--panel-2)',
+              border: '1px solid var(--border)',
+              borderRadius: '10px',
+              color: 'var(--text-muted)',
+              fontSize: '11px',
+              cursor: 'pointer',
+              opacity: 0.6,
+            }}
+          >
+            Debug
+          </button>
+        ) : (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontWeight: 600, fontSize: '12px' }}>Confetti Test</span>
+              <button
+                onClick={() => setDebugOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '14px', padding: '0 2px' }}
+              >
+                x
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <button
+                onClick={() => setShowConfetti(true)}
+                style={{ padding: '6px 10px', backgroundColor: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', cursor: 'pointer', fontSize: '11px', textAlign: 'left' }}
+              >
+                Original (300 DOM)
+              </button>
+              <button
+                onClick={() => setShowCanvasConfetti(true)}
+                style={{ padding: '6px 10px', backgroundColor: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', cursor: 'pointer', fontSize: '11px', textAlign: 'left' }}
+              >
+                Canvas (200)
+              </button>
+              <button
+                onClick={() => setShowCSSConfetti(true)}
+                style={{ padding: '6px 10px', backgroundColor: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', cursor: 'pointer', fontSize: '11px', textAlign: 'left' }}
+              >
+                CSS Keyframes (150)
+              </button>
+              <button
+                onClick={() => setShowLiteConfetti(true)}
+                style={{ padding: '6px 10px', backgroundColor: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', cursor: 'pointer', fontSize: '11px', textAlign: 'left' }}
+              >
+                Lite DOM (60)
+              </button>
+              <button
+                onClick={() => setShowPackageConfetti(true)}
+                style={{ padding: '6px 10px', backgroundColor: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', cursor: 'pointer', fontSize: '11px', textAlign: 'left' }}
+              >
+                Package (canvas-confetti)
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </>
   );
 
