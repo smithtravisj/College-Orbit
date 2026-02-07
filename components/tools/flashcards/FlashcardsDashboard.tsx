@@ -559,7 +559,7 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
 
   const rateCard = async (cardId: string, quality: number) => {
     try {
-      await fetch('/api/flashcards/review', {
+      const res = await fetch('/api/flashcards/review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -568,6 +568,12 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
           timezoneOffset: new Date().getTimezoneOffset(),
         }),
       });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.gamification?.levelUp) {
+          useStore.setState({ showConfetti: true, levelUpNotification: data.gamification.newLevel });
+        }
+      }
     } catch (error) {
       console.error('Error rating card:', error);
     }

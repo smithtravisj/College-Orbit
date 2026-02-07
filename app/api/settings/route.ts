@@ -149,6 +149,10 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     // Visual themes
     if (data.visualTheme !== undefined) updateData.visualTheme = data.visualTheme;
 
+    // Pet companion
+    if (data.petCompanion !== undefined) updateData.petCompanion = data.petCompanion;
+    if (data.petCompanionAnimal !== undefined) updateData.petCompanionAnimal = data.petCompanionAnimal;
+
     console.log('[PATCH /api/settings] Updating with data:', updateData);
 
     // Try to update existing settings

@@ -621,6 +621,10 @@ model Settings {
   // Visual Themes (Premium)
   visualTheme               String?   @default("default")
 
+  // Pet Companion (Premium)
+  petCompanion              Boolean   @default(false)
+  petCompanionAnimal        String?   @default("dog")
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])

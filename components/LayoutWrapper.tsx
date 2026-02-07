@@ -21,6 +21,7 @@ import { usePomodoroContext } from '@/context/PomodoroContext';
 import styles from './LayoutWrapper.module.css';
 import BackgroundDecoration from './BackgroundDecoration';
 import KeyboardShortcutsProvider from './KeyboardShortcutsProvider';
+import PetCompanion from './pet/PetCompanion';
 
 export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -205,6 +206,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
         <main className={styles.mobileMain}>
           {children}
         </main>
+        <PetCompanion />
         {gamificationOverlays}
       </KeyboardShortcutsProvider>
     );
@@ -227,6 +229,7 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
         <main style={{ marginLeft: '224px', minWidth: 0 }}>
           {children}
         </main>
+        <PetCompanion />
         {gamificationOverlays}
       </div>
     </KeyboardShortcutsProvider>

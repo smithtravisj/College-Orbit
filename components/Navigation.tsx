@@ -248,14 +248,17 @@ export default function Navigation() {
   }, []);
 
   useEffect(() => {
-    // Delay calculation to ensure DOM is ready
+    // Delay calculation to ensure DOM and fonts are ready
     const timer = setTimeout(calculateTitleSize, 50);
+    // Recalculate after fonts load (theme fonts like Comfortaa may be wider)
+    const fontTimer = setTimeout(calculateTitleSize, 300);
     window.addEventListener('resize', calculateTitleSize);
     return () => {
       clearTimeout(timer);
+      clearTimeout(fontTimer);
       window.removeEventListener('resize', calculateTitleSize);
     };
-  }, [calculateTitleSize, university]);
+  }, [calculateTitleSize, university, savedVisualTheme]);
 
   // Sort NAV_ITEMS according to visiblePagesOrder if it exists
   const sortedNavItems = (() => {

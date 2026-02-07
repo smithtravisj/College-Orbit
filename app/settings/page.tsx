@@ -20,6 +20,9 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useHighlightElement, useTabFromSearchParams } from '@/hooks/useHighlightElement';
 import { TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
+import { PetSprite } from '@/components/pet/PetSprite';
+import { sprites, animalLabels, animalPreviewSize } from '@/components/pet/petSprites';
+import type { AnimalType } from '@/components/pet/petSprites';
 
 interface CanvasStatus {
   connected: boolean;
@@ -4405,7 +4408,7 @@ export default function SettingsPage() {
             })()}
 
             {/* Visual Theme Picker */}
-            <div id="setting-visual-theme" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px', marginBottom: '20px' }}>
+            <div id="setting-visual-theme" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px' }}>
               <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Visual Theme</p>
               <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
                 Fun, personality-driven themes with unique colors and styles
@@ -4468,6 +4471,84 @@ export default function SettingsPage() {
                   <option value="terminal">Terminal — Matrix rain & hacker vibes</option>
                 </optgroup>
               </select>
+            </div>
+
+            {/* Pet Companion */}
+            <div id="setting-pet-companion" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '20px', marginBottom: (settings.petCompanion ?? false) && isPremium ? '20px' : '12px', opacity: isPremium ? 1 : 0.5 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: (settings.petCompanion ?? false) && isPremium ? '12px' : '0px' }}>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '4px' }}>Pet Companion</p>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    A pixel art pet that walks along the bottom of your screen
+                  </p>
+                </div>
+                <button
+                  onClick={() => isPremium && updateSettings({ petCompanion: !(settings.petCompanion ?? false) })}
+                  disabled={!isPremium}
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: 'var(--radius-control, 12px)',
+                    backgroundColor: (settings.petCompanion ?? false) ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
+                    cursor: isPremium ? 'pointer' : 'not-allowed',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      top: '2px',
+                      left: (settings.petCompanion ?? false) ? '22px' : '2px',
+                      transition: 'left 0.2s ease',
+                    }}
+                  />
+                </button>
+              </div>
+              {(settings.petCompanion ?? false) && isPremium && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginTop: '8px' }}>
+                  {(Object.keys(sprites) as AnimalType[]).map((animal) => {
+                    const animalData = sprites[animal];
+                    if (!animalData) return null;
+                    return (
+                      <button
+                        key={animal}
+                        onClick={() => updateSettings({ petCompanionAnimal: animal })}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '2px',
+                          padding: '2px 4px 6px',
+                          borderRadius: 'var(--radius-control, 12px)',
+                          border: `2px solid ${(settings.petCompanionAnimal || 'rottweiler') === animal ? 'var(--accent)' : 'var(--border)'}`,
+                          backgroundColor: (settings.petCompanionAnimal || 'rottweiler') === animal ? 'var(--accent-faint, rgba(var(--accent-rgb, 99,102,241), 0.1))' : 'var(--panel-2)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <div style={{ height: 40, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                          <PetSprite sprite={animalData.idle} size={animalPreviewSize[animal] ?? 48} />
+                        </div>
+                        <span className="text-xs text-[var(--text)]" style={{ fontWeight: (settings.petCompanionAnimal || 'rottweiler') === animal ? 600 : 400 }}>
+                          {animalLabels[animal]}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {!isPremium && (
+                <div style={{ marginTop: '8px' }}>
+                  <UpgradePrompt feature="Pet companion" />
+                </div>
+              )}
             </div>
 
             {/* Visual Effects */}

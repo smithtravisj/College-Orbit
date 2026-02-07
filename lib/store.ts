@@ -1172,8 +1172,9 @@ const useAppStore = create<AppStore>((set, get) => ({
       });
 
       // Record gamification if deadline was completed (not uncompleted)
+      // Fire without awaiting so the level up toast appears promptly
       if (newStatus === 'done') {
-        await get().recordTaskCompletion('deadline', id);
+        get().recordTaskCompletion('deadline', id);
       }
 
       // Reload from database to ensure correct recurring deadline instances are shown
@@ -1285,8 +1286,9 @@ const useAppStore = create<AppStore>((set, get) => ({
       });
 
       // Record gamification if task was completed (not uncompleted)
+      // Fire without awaiting so the level up toast appears promptly
       if (newStatus === 'done') {
-        await get().recordTaskCompletion('task', id);
+        get().recordTaskCompletion('task', id);
       }
 
       // Reload from database to ensure correct recurring task instances are shown
@@ -1606,8 +1608,9 @@ const useAppStore = create<AppStore>((set, get) => ({
       });
 
       // Record gamification if exam was completed (not uncompleted)
+      // Fire without awaiting so the level up toast appears promptly
       if (newStatus === 'completed') {
-        await get().recordTaskCompletion('exam', id);
+        get().recordTaskCompletion('exam', id);
       }
     }
   },
@@ -3508,8 +3511,9 @@ const useAppStore = create<AppStore>((set, get) => ({
     });
 
     // Record gamification if work item was completed (not uncompleted)
+    // Fire without awaiting so the level up toast appears promptly
     if (newStatus === 'done') {
-      await get().recordTaskCompletion('workItem', id);
+      get().recordTaskCompletion('workItem', id);
     }
   },
 

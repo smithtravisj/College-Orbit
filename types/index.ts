@@ -421,6 +421,9 @@ export interface Settings {
   flashcardDefaultSort?: 'recent' | 'due' | 'alphabetical' | 'course' | 'mastery' | 'created';
   // Visual Themes (Premium)
   visualTheme?: string | null;
+  // Pet Companion (Premium)
+  petCompanion?: boolean;
+  petCompanionAnimal?: string;
 }
 
 export interface ExcludedDate {

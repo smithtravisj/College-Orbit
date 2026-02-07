@@ -4709,3 +4709,19 @@ body.theme-skeuo select {
     opacity: 0;
   }
 }
+
+/* Pet Companion Animations */
+@keyframes pet-zzz {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(4px, -8px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(8px, -16px) scale(0.8);
+  }
+}

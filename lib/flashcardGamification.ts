@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { calculateLevel } from '@/lib/gamification';
 
 const FLASHCARD_XP = 1; // 1 XP per flashcard review
 
@@ -55,6 +56,8 @@ export interface FlashcardReviewResult {
   streakUpdated: boolean;
   newStreak: number;
   alreadyCredited: boolean;
+  levelUp: boolean;
+  newLevel: number;
 }
 
 /**
@@ -90,11 +93,14 @@ export async function processFlashcardReview(
 
   // If already credited, still return the current streak but no XP
   if (existingCredit) {
+    const currentLevel = calculateLevel(userStreak.totalXp);
     return {
       xpEarned: 0,
       streakUpdated: false,
       newStreak: userStreak.currentStreak,
       alreadyCredited: true,
+      levelUp: false,
+      newLevel: currentLevel,
     };
   }
 
@@ -105,7 +111,9 @@ export async function processFlashcardReview(
 
   // If vacation mode is enabled, only award XP but don't affect streak
   if (userStreak.vacationMode) {
+    const previousLevel = calculateLevel(userStreak.totalXp);
     const newTotalXp = userStreak.totalXp + FLASHCARD_XP;
+    const newLevel = calculateLevel(newTotalXp);
 
     await prisma.userStreak.update({
       where: { userId },
@@ -175,6 +183,8 @@ export async function processFlashcardReview(
       streakUpdated: false,
       newStreak: userStreak.currentStreak,
       alreadyCredited: false,
+      levelUp: newLevel > previousLevel,
+      newLevel,
     };
   }
 
@@ -199,7 +209,9 @@ export async function processFlashcardReview(
   }
 
   const longestStreak = Math.max(userStreak.longestStreak, newStreak);
+  const previousLevel = calculateLevel(userStreak.totalXp);
   const newTotalXp = userStreak.totalXp + FLASHCARD_XP;
+  const newLevel = calculateLevel(newTotalXp);
 
   // Update user streak
   await prisma.userStreak.update({
@@ -274,5 +286,7 @@ export async function processFlashcardReview(
     streakUpdated,
     newStreak,
     alreadyCredited: false,
+    levelUp: newLevel > previousLevel,
+    newLevel,
   };
 }
