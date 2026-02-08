@@ -37,6 +37,8 @@ const PREMIUM_FEATURES = [
   'Visual effects customization',
   'Page & Card visibility customization',
   'Smart form filling',
+  'Google Calendar Sync',
+  'AI Flashcard Generation',
 ];
 
 // Public pricing page for unauthenticated users

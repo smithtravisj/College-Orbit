@@ -113,6 +113,7 @@ export async function DELETE(
         blackboardEventId: true,
         moodleEventId: true,
         brightspaceEventId: true,
+        googleEventId: true,
       },
     });
 
@@ -189,6 +190,41 @@ export async function DELETE(
           userId: token.id,
           brightspaceId: existingEvent.brightspaceEventId,
           type: 'event',
+        },
+      });
+    }
+
+    if (existingEvent.googleEventId) {
+      // Track deletion to prevent re-import
+      await prisma.deletedGoogleCalendarItem.upsert({
+        where: {
+          userId_googleEventId_type: {
+            userId: token.id,
+            googleEventId: existingEvent.googleEventId,
+            type: 'event',
+          },
+        },
+        update: { deletedAt: new Date() },
+        create: {
+          userId: token.id,
+          googleEventId: existingEvent.googleEventId,
+          type: 'event',
+        },
+      });
+      // Also queue deletion from Google Calendar
+      await prisma.deletedGoogleCalendarItem.upsert({
+        where: {
+          userId_googleEventId_type: {
+            userId: token.id,
+            googleEventId: existingEvent.googleEventId,
+            type: 'pending_google_delete',
+          },
+        },
+        update: { deletedAt: new Date() },
+        create: {
+          userId: token.id,
+          googleEventId: existingEvent.googleEventId,
+          type: 'pending_google_delete',
         },
       });
     }

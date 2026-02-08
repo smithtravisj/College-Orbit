@@ -24,6 +24,8 @@ const FEATURES = [
   'Visual effects customization',
   'Page & Card visibility customization',
   'Smart form filling',
+  'Google Calendar Sync',
+  'AI Flashcard Generation',
 ];
 
 export default function CheckoutPage() {

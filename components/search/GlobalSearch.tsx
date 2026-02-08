@@ -31,6 +31,8 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   const exams = useAppStore((state) => state.exams);
   const calendarEvents = useAppStore((state) => state.calendarEvents);
   const notes = useAppStore((state) => state.notes);
+  const shoppingItems = useAppStore((state) => state.shoppingItems);
+  const folders = useAppStore((state) => state.folders);
 
   // Flashcard decks fetched when search opens
   const [flashcardDecks, setFlashcardDecks] = useState<{ id: string; name: string; description?: string | null; courseId?: string | null }[]>([]);
@@ -125,7 +127,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
         id: `note-${note.id}`,
         title: note.title,
         description: note.folderId ? 'Note' : 'Note',
-        keywords: [note.title, note.content?.substring(0, 100)].filter(Boolean),
+        keywords: [note.title, note.plainText?.substring(0, 100)].filter(Boolean),
         category: 'item',
         categoryLabel: 'Notes',
         href: '/notes',
@@ -133,6 +135,40 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
         itemType: 'note',
         itemId: note.id,
         itemData: note,
+      });
+    });
+
+    // Add shopping items
+    shoppingItems.forEach((item: any) => {
+      items.push({
+        id: `shopping-${item.id}`,
+        title: item.name,
+        description: `${item.listType}${item.category ? ` • ${item.category}` : ''}`,
+        keywords: [item.name, item.listType, item.category, 'shopping', 'grocery', 'list'].filter(Boolean),
+        category: 'item',
+        categoryLabel: item.listType === 'grocery' ? 'Grocery' : item.listType === 'wishlist' ? 'Wishlist' : item.listType === 'pantry' ? 'Pantry' : 'Shopping',
+        href: '/shopping',
+        action: 'openModal',
+        itemType: 'shopping',
+        itemId: item.id,
+        itemData: item,
+      });
+    });
+
+    // Add folders
+    folders.forEach((folder: any) => {
+      items.push({
+        id: `folder-${folder.id}`,
+        title: folder.name,
+        description: 'Note Folder',
+        keywords: [folder.name, 'folder', 'notes', 'organize'].filter(Boolean),
+        category: 'item',
+        categoryLabel: 'Folders',
+        href: '/notes',
+        action: 'openModal',
+        itemType: 'folder',
+        itemId: folder.id,
+        itemData: folder,
       });
     });
 
@@ -148,14 +184,14 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
         categoryLabel: 'Flashcards',
         href: '/flashcards',
         action: 'openModal',
-        itemType: 'deck' as any,
+        itemType: 'deck',
         itemId: deck.id,
         itemData: deck,
       });
     });
 
     return items;
-  }, [courses, workItems, exams, calendarEvents, notes, flashcardDecks]);
+  }, [courses, workItems, exams, calendarEvents, notes, shoppingItems, folders, flashcardDecks]);
 
   const results = useMemo(() => searchItems(query, isPremium, dynamicItems), [query, isPremium, dynamicItems]);
   const groupedResults = useMemo(() => groupSearchResults(results), [results]);
@@ -306,6 +342,12 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
           return;
         case 'deck':
           router.push(`/flashcards?deck=${item.itemId}`);
+          return;
+        case 'shopping':
+          router.push('/shopping');
+          return;
+        case 'folder':
+          router.push(`/notes?folder=${item.itemId}`);
           return;
       }
     }
@@ -460,7 +502,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
           {!query && recentSearches.length === 0 && (
             <div className={styles.hint}>
-              <p>Search pages, settings, courses, work, exams, notes, and flashcards</p>
+              <p>Search pages, settings, courses, work, exams, notes, flashcards, and shopping</p>
               <div className={styles.hintExamples}>
                 <span>Try: "theme", "pomodoro", "word counter", or the name of a course or flashcard deck</span>
               </div>

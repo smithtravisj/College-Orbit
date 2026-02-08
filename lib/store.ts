@@ -649,8 +649,6 @@ const useAppStore = create<AppStore>((set, get) => ({
       const rawSavedVisiblePages = typeof rawSettings?.visiblePages === 'string'
         ? JSON.parse(rawSettings.visiblePages)
         : rawSettings?.visiblePages;
-      // Migrate "Deadlines" to "Assignments"
-      const savedVisiblePages = rawSavedVisiblePages?.map((p: string) => p === 'Deadlines' ? 'Assignments' : p);
       const savedVisibleDashboardCards = typeof rawSettings?.visibleDashboardCards === 'string'
         ? JSON.parse(rawSettings.visibleDashboardCards)
         : rawSettings?.visibleDashboardCards;
@@ -658,13 +656,79 @@ const useAppStore = create<AppStore>((set, get) => ({
         ? JSON.parse(rawSettings.visibleToolsCards)
         : rawSettings?.visibleToolsCards;
 
-      // Use saved settings directly - don't merge with defaults
-      // as that would add back items the user explicitly hid
+      // --- Migrate settings for users with outdated configs ---
+
+      // 1. Migrate page names: "Tasks"/"Assignments"/"Deadlines" → "Work", add new pages
+      const migratePageName = (p: string) => {
+        if (p === 'Deadlines' || p === 'Assignments' || p === 'Tasks') return 'Work';
+        return p;
+      };
+      const migratedPages = rawSavedVisiblePages
+        ? [...new Set(rawSavedVisiblePages.map(migratePageName))]
+        : DEFAULT_VISIBLE_PAGES;
+      // Add new pages that the user has never seen
+      const newPages = DEFAULT_VISIBLE_PAGES.filter((p: string) => !migratedPages.includes(p));
+      const finalVisiblePages = newPages.length > 0 ? [...migratedPages, ...newPages] : migratedPages;
+
+      // 2. Migrate dashboard cards: if user only has legacy cards, give them new layout
+      const LEGACY_CARDS = ['nextClass', 'dueSoon', 'overview', 'todayTasks', 'upcomingWeek'];
+      let finalDashboardCards = savedVisibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
+      if (savedVisibleDashboardCards) {
+        const hasOnlyLegacy = savedVisibleDashboardCards.every((c: string) =>
+          LEGACY_CARDS.includes(c) || c === 'quickLinks' || c === 'dashboard_quickLinks'
+        );
+        const hasNewCards = savedVisibleDashboardCards.some((c: string) =>
+          ['timeline', 'progress'].includes(c)
+        );
+        if (hasOnlyLegacy && !hasNewCards) {
+          finalDashboardCards = DEFAULT_VISIBLE_DASHBOARD_CARDS;
+        }
+      }
+
+      // 3. Migrate tools cards: add any new tools the user doesn't have yet
+      let finalToolsCards = savedVisibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS;
+      if (savedVisibleToolsCards) {
+        const newTools = DEFAULT_VISIBLE_TOOLS_CARDS.filter(
+          (t: string) => !savedVisibleToolsCards.includes(t)
+        );
+        if (newTools.length > 0) {
+          finalToolsCards = [...savedVisibleToolsCards, ...newTools];
+        }
+      }
+
+      // 4. Migrate visiblePagesOrder: add new pages
+      let finalPagesOrder = rawSettings?.visiblePagesOrder;
+      if (finalPagesOrder) {
+        const parsedOrder = typeof finalPagesOrder === 'string'
+          ? JSON.parse(finalPagesOrder)
+          : finalPagesOrder;
+        const migratedOrder = [...new Set(parsedOrder.map(migratePageName))];
+        const allPages = DEFAULT_VISIBLE_PAGES.filter((p: string) => p !== 'Settings');
+        const missingPages = allPages.filter((p: string) => !migratedOrder.includes(p));
+        finalPagesOrder = missingPages.length > 0 ? [...migratedOrder, ...missingPages] : migratedOrder;
+      }
+
+      // 5. Migrate toolsCardsOrder: add new tools
+      let finalToolsOrder = rawSettings?.toolsCardsOrder;
+      if (finalToolsOrder) {
+        const parsedToolsOrder = typeof finalToolsOrder === 'string'
+          ? JSON.parse(finalToolsOrder)
+          : finalToolsOrder;
+        const missingTools = DEFAULT_VISIBLE_TOOLS_CARDS.filter(
+          (t: string) => !parsedToolsOrder.includes(t)
+        );
+        if (missingTools.length > 0) {
+          finalToolsOrder = [...parsedToolsOrder, ...missingTools];
+        }
+      }
+
       const parsedSettings = {
         ...rawSettings,
-        visiblePages: savedVisiblePages || DEFAULT_VISIBLE_PAGES,
-        visibleDashboardCards: savedVisibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS,
-        visibleToolsCards: savedVisibleToolsCards || DEFAULT_VISIBLE_TOOLS_CARDS,
+        visiblePages: finalVisiblePages,
+        visibleDashboardCards: finalDashboardCards,
+        visibleToolsCards: finalToolsCards,
+        ...(finalPagesOrder && { visiblePagesOrder: finalPagesOrder }),
+        ...(finalToolsOrder && { toolsCardsOrder: finalToolsOrder }),
       };
 
       const newData = {

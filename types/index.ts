@@ -349,6 +349,9 @@ export interface Settings {
   pomodoroWorkDuration?: number;
   pomodoroBreakDuration?: number;
   pomodoroIsMuted?: boolean;
+  pomodoroAmbientSound?: string | null;
+  pomodoroAmbientVolume?: number;
+  pomodoroAmbientAutoPlay?: boolean;
   selectedGradeSemester?: string;
   dashboardCardsCollapsedState?: string[] | null;
   hiddenQuickLinks?: Record<string, string[]> | null;

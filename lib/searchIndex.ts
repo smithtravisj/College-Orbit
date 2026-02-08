@@ -11,7 +11,7 @@ export interface SearchableItem {
   isPremium?: boolean;
   // For dynamic items that open modals
   action?: 'navigate' | 'openModal';
-  itemType?: 'work' | 'exam' | 'event' | 'course' | 'note' | 'deck';
+  itemType?: 'work' | 'exam' | 'event' | 'course' | 'note' | 'deck' | 'shopping' | 'folder';
   itemId?: string;
   itemData?: any; // The full item data for modal display
 }

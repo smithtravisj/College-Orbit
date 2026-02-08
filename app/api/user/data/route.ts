@@ -56,6 +56,7 @@ export const DELETE = withRateLimit(async function(_req: NextRequest) {
       prisma.issueReport.deleteMany({ where: { userId } }),
       prisma.featureRequest.deleteMany({ where: { userId } }),
       prisma.rateLimit.deleteMany({ where: { userId } }),
+      prisma.auditLog.deleteMany({ where: { OR: [{ adminId: userId }, { targetUserId: userId }] } }),
     ]);
 
     return NextResponse.json({ success: true });

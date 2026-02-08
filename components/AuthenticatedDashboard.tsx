@@ -15,7 +15,7 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
 import Link from 'next/link';
-import { X, FileIcon } from 'lucide-react';
+import { X, FileIcon, Sparkles, Trash2 } from 'lucide-react';
 import { CanvasBadge } from '@/components/CanvasBadge';
 import { CanvasExtBadge } from '@/components/CanvasExtBadge';
 import { LearningSuiteBadge } from '@/components/LearningSuiteBadge';
@@ -24,6 +24,7 @@ import FilePreviewModal from '@/components/FilePreviewModal';
 import { Task, Deadline, Course, Exam, CalendarEvent, WorkItem } from '@/types';
 import { StreakCard } from '@/components/gamification';
 import DemoBanner from '@/components/DemoBanner';
+import AIBreakdownModal from '@/components/AIBreakdownModal';
 
 export default function AuthenticatedDashboard() {
   const { data: session } = useSession();
@@ -33,6 +34,7 @@ export default function AuthenticatedDashboard() {
   const [previewingTask, setPreviewingTask] = useState<any>(null);
   const [previewingDeadline, setPreviewingDeadline] = useState<any>(null);
   const [previewingWorkItem, setPreviewingWorkItem] = useState<WorkItem | null>(null);
+  const [showBreakdownModal, setShowBreakdownModal] = useState(false);
   const [previewingClass, setPreviewingClass] = useState<{ course: any; meetingTime: any } | null>(null);
   const [previewingExam, setPreviewingExam] = useState<any>(null);
   const [previewingEvent, setPreviewingEvent] = useState<any>(null);
@@ -42,7 +44,7 @@ export default function AuthenticatedDashboard() {
   const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>([]);
   const [timelineHeight, setTimelineHeight] = useState<number>(500);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const { courses, settings, toggleTaskDone, updateDeadline, toggleWorkItemComplete, gamification, fetchGamification } = useAppStore();
+  const { courses, settings, toggleTaskDone, updateDeadline, toggleWorkItemComplete, updateWorkItem, toggleWorkItemChecklistItem, gamification, fetchGamification } = useAppStore();
   const { isPremium } = useSubscription();
   const savedVisibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
   const visibleDashboardCards = isPremium ? savedVisibleDashboardCards : DEFAULT_VISIBLE_DASHBOARD_CARDS;
@@ -394,7 +396,7 @@ export default function AuthenticatedDashboard() {
               backgroundColor: 'var(--panel)',
               borderRadius: 'var(--radius-card)',
               width: '100%',
-              maxWidth: '500px',
+              maxWidth: '600px',
               maxHeight: '80vh',
               overflow: 'hidden',
               border: '1px solid var(--border)',
@@ -474,6 +476,62 @@ export default function AuthenticatedDashboard() {
                 </div>
               )}
 
+              {/* Checklist */}
+              {previewingTask.checklist && previewingTask.checklist.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Checklist</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        onClick={() => {
+                          const isWI = previewingTask.type && ['task', 'assignment', 'reading', 'project'].includes(previewingTask.type);
+                          if (isWI) {
+                            updateWorkItem(previewingTask.id, { checklist: [] });
+                          } else {
+                            useAppStore.getState().updateTask(previewingTask.id, { checklist: [] });
+                          }
+                          setPreviewingTask((prev: any) => prev ? { ...prev, checklist: [] } : prev);
+                        }}
+                        title="Delete checklist"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', opacity: 0.5 }}
+                        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                      <span>{previewingTask.checklist.filter((i: any) => i.done).length}/{previewingTask.checklist.length}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {previewingTask.checklist.map((item: any) => (
+                      <div
+                        key={item.id}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px', borderRadius: '4px', cursor: 'pointer' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                        onClick={() => {
+                          const isWI = previewingTask.type && ['task', 'assignment', 'reading', 'project'].includes(previewingTask.type);
+                          if (isWI) {
+                            toggleWorkItemChecklistItem(previewingTask.id, item.id);
+                          } else {
+                            useAppStore.getState().toggleChecklistItem(previewingTask.id, item.id);
+                          }
+                          setPreviewingTask((prev: any) => prev ? {
+                            ...prev,
+                            checklist: prev.checklist.map((ci: any) => ci.id === item.id ? { ...ci, done: !ci.done } : ci),
+                          } : prev);
+                        }}
+                      >
+                        <input type="checkbox" checked={item.done} onChange={() => {}} style={{ width: '14px', height: '14px', cursor: 'pointer', flexShrink: 0 }} />
+                        <span style={{ fontSize: '13px', color: item.done ? 'var(--text-muted)' : 'var(--text)', textDecoration: item.done ? 'line-through' : 'none' }}>
+                          {item.text}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Notes */}
               {previewingTask.notes && (
                 <div style={{ marginBottom: '12px' }}>
@@ -528,7 +586,8 @@ export default function AuthenticatedDashboard() {
             {/* Footer - Sticky */}
             <div style={{
               display: 'flex',
-              gap: '8px',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '6px' : '8px',
               padding: isMobile ? '10px 12px' : '12px 16px',
               borderTop: '1px solid var(--border)',
               flexShrink: 0,
@@ -536,6 +595,7 @@ export default function AuthenticatedDashboard() {
             }}>
               <Button
                 variant="secondary"
+                size={isMobile ? 'sm' : 'md'}
                 onClick={() => {
                   const isWorkItem = previewingTask.type && ['task', 'assignment', 'reading', 'project'].includes(previewingTask.type);
                   if (isWorkItem) {
@@ -545,18 +605,48 @@ export default function AuthenticatedDashboard() {
                   }
                   setPreviewingTask(null);
                 }}
-                style={{ flex: 1 }}
+                style={{ flex: isMobile ? undefined : 1 }}
               >
-                {previewingTask.status === 'done' ? 'Mark Incomplete' : 'Mark Complete'}
+                {previewingTask.status === 'done' ? 'Incomplete' : 'Complete'}
               </Button>
-              <Link href={`/work?preview=${previewingTask.id}`} style={{ flex: 1 }}>
-                <Button variant="primary" style={{ width: '100%' }} onClick={() => setPreviewingTask(null)}>
+              <Button
+                variant="secondary"
+                size={isMobile ? 'sm' : 'md'}
+                onClick={() => setShowBreakdownModal(true)}
+                style={{ flex: isMobile ? undefined : 1 }}
+              >
+                <Sparkles size={isMobile ? 14 : 16} />
+                Breakdown
+              </Button>
+              <Link href={`/work?preview=${previewingTask.id}`} style={{ flex: isMobile ? undefined : 1 }}>
+                <Button variant="primary" size={isMobile ? 'sm' : 'md'} style={{ width: '100%' }} onClick={() => setPreviewingTask(null)}>
                   View in Work
                 </Button>
               </Link>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Breakdown Modal for Tasks */}
+      {showBreakdownModal && previewingTask && (
+        <AIBreakdownModal
+          existingTitle={previewingTask.title}
+          existingDescription={previewingTask.notes || previewingTask.title}
+          onClose={() => setShowBreakdownModal(false)}
+          onPremiumRequired={() => setShowBreakdownModal(false)}
+          onSave={(newItems) => {
+            const existing = Array.isArray(previewingTask.checklist) ? previewingTask.checklist : [];
+            const merged = [...newItems, ...existing];
+            const isWI = previewingTask.type && ['task', 'assignment', 'reading', 'project'].includes(previewingTask.type);
+            if (isWI) {
+              updateWorkItem(previewingTask.id, { checklist: merged });
+            } else {
+              useAppStore.getState().updateTask(previewingTask.id, { checklist: merged });
+            }
+            setPreviewingTask((prev: any) => prev ? { ...prev, checklist: merged } : prev);
+          }}
+        />
       )}
 
       {/* Deadline Preview Modal */}
@@ -582,7 +672,7 @@ export default function AuthenticatedDashboard() {
               backgroundColor: 'var(--panel)',
               borderRadius: 'var(--radius-card)',
               width: '100%',
-              maxWidth: '500px',
+              maxWidth: '600px',
               maxHeight: '80vh',
               overflow: 'hidden',
               border: '1px solid var(--border)',
@@ -667,6 +757,62 @@ export default function AuthenticatedDashboard() {
                 </div>
               )}
 
+              {/* Checklist */}
+              {previewingDeadline.checklist && previewingDeadline.checklist.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Checklist</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        onClick={() => {
+                          const isWI = previewingDeadline.type === 'assignment';
+                          if (isWI) {
+                            updateWorkItem(previewingDeadline.id, { checklist: [] });
+                          } else {
+                            updateDeadline(previewingDeadline.id, { checklist: [] } as any);
+                          }
+                          setPreviewingDeadline((prev: any) => prev ? { ...prev, checklist: [] } : prev);
+                        }}
+                        title="Delete checklist"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', opacity: 0.5 }}
+                        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                      <span>{previewingDeadline.checklist.filter((i: any) => i.done).length}/{previewingDeadline.checklist.length}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {previewingDeadline.checklist.map((item: any) => (
+                      <div
+                        key={item.id}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px', borderRadius: '4px', cursor: 'pointer' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                        onClick={() => {
+                          const isWI = previewingDeadline.type === 'assignment';
+                          if (isWI) {
+                            toggleWorkItemChecklistItem(previewingDeadline.id, item.id);
+                          } else {
+                            useAppStore.getState().toggleChecklistItem(previewingDeadline.id, item.id);
+                          }
+                          setPreviewingDeadline((prev: any) => prev ? {
+                            ...prev,
+                            checklist: prev.checklist.map((ci: any) => ci.id === item.id ? { ...ci, done: !ci.done } : ci),
+                          } : prev);
+                        }}
+                      >
+                        <input type="checkbox" checked={item.done} onChange={() => {}} style={{ width: '14px', height: '14px', cursor: 'pointer', flexShrink: 0 }} />
+                        <span style={{ fontSize: '13px', color: item.done ? 'var(--text-muted)' : 'var(--text)', textDecoration: item.done ? 'line-through' : 'none' }}>
+                          {item.text}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Notes */}
               {previewingDeadline.notes && (
                 <div style={{ marginBottom: '12px' }}>
@@ -721,7 +867,8 @@ export default function AuthenticatedDashboard() {
             {/* Footer - Sticky */}
             <div style={{
               display: 'flex',
-              gap: '8px',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '6px' : '8px',
               padding: isMobile ? '10px 12px' : '12px 16px',
               borderTop: '1px solid var(--border)',
               flexShrink: 0,
@@ -729,6 +876,7 @@ export default function AuthenticatedDashboard() {
             }}>
               <Button
                 variant="secondary"
+                size={isMobile ? 'sm' : 'md'}
                 onClick={() => {
                   const isWorkItem = previewingDeadline.type === 'assignment';
                   if (isWorkItem) {
@@ -740,18 +888,48 @@ export default function AuthenticatedDashboard() {
                   }
                   setPreviewingDeadline(null);
                 }}
-                style={{ flex: 1 }}
+                style={{ flex: isMobile ? undefined : 1 }}
               >
-                {previewingDeadline.status === 'done' ? 'Mark Incomplete' : 'Mark Complete'}
+                {previewingDeadline.status === 'done' ? 'Incomplete' : 'Complete'}
               </Button>
-              <Link href={`/work?preview=${previewingDeadline.id}`} style={{ flex: 1 }}>
-                <Button variant="primary" style={{ width: '100%' }} onClick={() => setPreviewingDeadline(null)}>
+              <Button
+                variant="secondary"
+                size={isMobile ? 'sm' : 'md'}
+                onClick={() => setShowBreakdownModal(true)}
+                style={{ flex: isMobile ? undefined : 1 }}
+              >
+                <Sparkles size={isMobile ? 14 : 16} />
+                Breakdown
+              </Button>
+              <Link href={`/work?preview=${previewingDeadline.id}`} style={{ flex: isMobile ? undefined : 1 }}>
+                <Button variant="primary" size={isMobile ? 'sm' : 'md'} style={{ width: '100%' }} onClick={() => setPreviewingDeadline(null)}>
                   View in Work
                 </Button>
               </Link>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Breakdown Modal for Deadlines */}
+      {showBreakdownModal && previewingDeadline && (
+        <AIBreakdownModal
+          existingTitle={previewingDeadline.title}
+          existingDescription={previewingDeadline.notes || previewingDeadline.title}
+          onClose={() => setShowBreakdownModal(false)}
+          onPremiumRequired={() => setShowBreakdownModal(false)}
+          onSave={(newItems) => {
+            const existing = Array.isArray(previewingDeadline.checklist) ? previewingDeadline.checklist : [];
+            const merged = [...newItems, ...existing];
+            const isWI = previewingDeadline.type === 'assignment';
+            if (isWI) {
+              updateWorkItem(previewingDeadline.id, { checklist: merged });
+            } else {
+              updateDeadline(previewingDeadline.id, { checklist: merged } as any);
+            }
+            setPreviewingDeadline((prev: any) => prev ? { ...prev, checklist: merged } : prev);
+          }}
+        />
       )}
 
       {/* WorkItem Preview Modal (for readings and projects) */}
@@ -777,7 +955,7 @@ export default function AuthenticatedDashboard() {
               backgroundColor: 'var(--panel)',
               borderRadius: '12px',
               border: '1px solid var(--border)',
-              width: isMobile ? '100%' : '400px',
+              width: isMobile ? '100%' : '600px',
               maxHeight: isMobile ? '80vh' : '70vh',
               overflow: 'auto',
             }}
@@ -868,6 +1046,52 @@ export default function AuthenticatedDashboard() {
                 </div>
               )}
 
+              {/* Checklist */}
+              {previewingWorkItem.checklist && previewingWorkItem.checklist.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Checklist</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        onClick={() => {
+                          updateWorkItem(previewingWorkItem.id, { checklist: [] });
+                          setPreviewingWorkItem(prev => prev ? { ...prev, checklist: [] } : prev);
+                        }}
+                        title="Delete checklist"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', opacity: 0.5 }}
+                        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                      <span>{previewingWorkItem.checklist.filter(i => i.done).length}/{previewingWorkItem.checklist.length}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {previewingWorkItem.checklist.map((item) => (
+                      <div
+                        key={item.id}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px', borderRadius: '4px', cursor: 'pointer' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                        onClick={() => {
+                          toggleWorkItemChecklistItem(previewingWorkItem.id, item.id);
+                          setPreviewingWorkItem(prev => prev ? {
+                            ...prev,
+                            checklist: prev.checklist.map(ci => ci.id === item.id ? { ...ci, done: !ci.done } : ci),
+                          } : prev);
+                        }}
+                      >
+                        <input type="checkbox" checked={item.done} onChange={() => {}} style={{ width: '14px', height: '14px', cursor: 'pointer', flexShrink: 0 }} />
+                        <span style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: item.done ? 'var(--text-muted)' : 'var(--text)', textDecoration: item.done ? 'line-through' : 'none' }}>
+                          {item.text}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {previewingWorkItem.notes && (
                 <div style={{ marginBottom: '12px' }}>
                   <p style={{ color: 'var(--text)', fontSize: isMobile ? '0.75rem' : '0.875rem', whiteSpace: 'pre-wrap', margin: 0 }}>
@@ -922,25 +1146,51 @@ export default function AuthenticatedDashboard() {
             </div>
 
             {/* Actions */}
-            <div style={{ display: 'flex', gap: '8px', padding: isMobile ? '12px' : '16px', borderTop: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '6px' : '8px', padding: isMobile ? '12px' : '16px', borderTop: '1px solid var(--border)' }}>
               <Button
                 variant="secondary"
+                size={isMobile ? 'sm' : 'md'}
                 onClick={() => {
                   toggleWorkItemComplete(previewingWorkItem.id);
                   setPreviewingWorkItem(null);
                 }}
-                style={{ flex: 1 }}
+                style={{ flex: isMobile ? undefined : 1 }}
               >
-                {previewingWorkItem.status === 'done' ? 'Mark Incomplete' : 'Mark Complete'}
+                {previewingWorkItem.status === 'done' ? 'Incomplete' : 'Complete'}
               </Button>
-              <Link href={`/work?preview=${previewingWorkItem.id}`} style={{ flex: 1 }}>
-                <Button variant="primary" style={{ width: '100%' }} onClick={() => setPreviewingWorkItem(null)}>
+              <Button
+                variant="secondary"
+                size={isMobile ? 'sm' : 'md'}
+                onClick={() => setShowBreakdownModal(true)}
+                style={{ flex: isMobile ? undefined : 1 }}
+              >
+                <Sparkles size={isMobile ? 14 : 16} />
+                Breakdown
+              </Button>
+              <Link href={`/work?preview=${previewingWorkItem.id}`} style={{ flex: isMobile ? undefined : 1 }}>
+                <Button variant="primary" size={isMobile ? 'sm' : 'md'} style={{ width: '100%' }} onClick={() => setPreviewingWorkItem(null)}>
                   View in Work
                 </Button>
               </Link>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Breakdown Modal for WorkItems */}
+      {showBreakdownModal && previewingWorkItem && (
+        <AIBreakdownModal
+          existingTitle={previewingWorkItem.title}
+          existingDescription={previewingWorkItem.notes || previewingWorkItem.title}
+          onClose={() => setShowBreakdownModal(false)}
+          onPremiumRequired={() => setShowBreakdownModal(false)}
+          onSave={(newItems) => {
+            const existing = Array.isArray(previewingWorkItem.checklist) ? previewingWorkItem.checklist : [];
+            const merged = [...newItems, ...existing];
+            updateWorkItem(previewingWorkItem.id, { checklist: merged });
+            setPreviewingWorkItem(prev => prev ? { ...prev, checklist: merged } : prev);
+          }}
+        />
       )}
 
       {/* Class Preview Modal */}
@@ -966,7 +1216,7 @@ export default function AuthenticatedDashboard() {
               backgroundColor: 'var(--panel)',
               borderRadius: 'var(--radius-card)',
               width: '100%',
-              maxWidth: '500px',
+              maxWidth: '600px',
               maxHeight: '80vh',
               overflow: 'hidden',
               border: '1px solid var(--border)',
@@ -1090,7 +1340,7 @@ export default function AuthenticatedDashboard() {
               backgroundColor: 'var(--panel)',
               borderRadius: 'var(--radius-card)',
               width: '100%',
-              maxWidth: '500px',
+              maxWidth: '600px',
               maxHeight: '80vh',
               overflow: 'hidden',
               border: '1px solid var(--border)',
@@ -1206,7 +1456,7 @@ export default function AuthenticatedDashboard() {
               backgroundColor: 'var(--panel)',
               borderRadius: 'var(--radius-card)',
               width: '100%',
-              maxWidth: '500px',
+              maxWidth: '600px',
               maxHeight: '80vh',
               overflow: 'hidden',
               border: '1px solid var(--border)',

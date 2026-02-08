@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Help & FAQs',
-  description: 'Get help with College Orbit. Find answers to frequently asked questions about assignments, deadlines, exams, flashcards, GPA calculator, and more.',
+  description: 'Get help with College Orbit. Find answers to frequently asked questions about assignments, work items, exams, flashcards, GPA calculator, and more.',
   keywords: ['college orbit help', 'student planner faq', 'how to use college orbit', 'college dashboard help', 'assignment tracker help'],
   alternates: {
     canonical: '/help',

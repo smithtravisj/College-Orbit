@@ -14,6 +14,7 @@ import {
   Flashcard,
   Course,
   ViewMode,
+  QuizQuestion,
   SortOption,
   StatusFilter,
   QuickFilter,
@@ -26,6 +27,7 @@ import DeckList from './DeckList';
 import DeckDetail from './DeckDetail';
 import CreateDeckModal from './CreateDeckModal';
 import StudySession from './study/StudySession';
+import QuizSession from './quiz/QuizSession';
 
 interface FlashcardsDashboardProps {
   theme?: string;
@@ -34,6 +36,7 @@ interface FlashcardsDashboardProps {
 export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashboardProps) {
   const isMobile = useIsMobile();
   const globalSettings = useStore((state) => state.settings);
+  const isPremium = useStore((state) => state.isPremium);
 
   // View state
   const [viewMode, setViewMode] = useState<ViewMode>('decks');
@@ -71,6 +74,11 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
 
   // Study state
   const [studyCards, setStudyCards] = useState<Flashcard[]>([]);
+
+  // Quiz state
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [quizDeckName, setQuizDeckName] = useState('');
+  const [quizLoading, setQuizLoading] = useState(false);
 
   // Daily goal state
   const [dailyProgress, setDailyProgress] = useState({
@@ -517,6 +525,46 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
     }
   };
 
+  const aiGenerateCards = async (cards: { front: string; back: string }[]) => {
+    if (!selectedDeck) return;
+
+    if (cards.length === 0) {
+      showErrorToast('No cards to save');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/flashcards/cards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deckId: selectedDeck.id,
+          cards,
+        }),
+      });
+
+      if (res.ok) {
+        const { count } = await res.json();
+        const deckRes = await fetch(`/api/flashcards/decks/${selectedDeck.id}`);
+        if (deckRes.ok) {
+          const { deck: fullDeck } = await deckRes.json();
+          setSelectedDeck(fullDeck);
+          setDecks(prev => prev.map(d => d.id === fullDeck.id ? {
+            ...d,
+            cardCount: fullDeck.cardCount,
+            dueCount: fullDeck.dueCount,
+          } : d));
+        }
+        showSuccessToast(`Generated and saved ${count} flashcards`);
+      } else {
+        showErrorToast('Failed to save generated cards');
+      }
+    } catch (error) {
+      console.error('Error saving AI-generated cards:', error);
+      showErrorToast('Failed to save generated cards');
+    }
+  };
+
   // Study functions
   const startStudy = (mode: 'due' | 'session' | 'all', deckOverride?: FlashcardDeck) => {
     const deck = deckOverride || selectedDeck;
@@ -610,6 +658,85 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
     setStudyCards([]);
   };
 
+  // Quiz functions
+  const startQuiz = async (deck: FlashcardDeck) => {
+    if (quizLoading) return;
+    setQuizLoading(true);
+    try {
+      const res = await fetch('/api/flashcards/quiz/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deckId: deck.id }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.questions?.length > 0) {
+          setQuizQuestions(data.questions);
+          setQuizDeckName(deck.name);
+          setSelectedDeck(deck);
+          setViewMode('quiz');
+        } else {
+          showErrorToast('No questions generated. Try again.');
+        }
+      } else {
+        const data = await res.json();
+        if (data.error === 'premium_required') {
+          showErrorToast('Practice Quiz requires a premium subscription');
+        } else {
+          showErrorToast(data.error || 'Failed to generate quiz');
+        }
+      }
+    } catch (error) {
+      console.error('Error generating quiz:', error);
+      showErrorToast('Failed to generate quiz');
+    } finally {
+      setQuizLoading(false);
+    }
+  };
+
+  const completeQuiz = async (score: number, total: number): Promise<{ xpEarned: number }> => {
+    try {
+      const res = await fetch('/api/flashcards/quiz/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deckId: selectedDeck?.id,
+          score,
+          total,
+          timezoneOffset: new Date().getTimezoneOffset(),
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.levelUp) {
+          useStore.setState({ showConfetti: true, levelUpNotification: data.newLevel });
+        }
+        await useStore.getState().fetchGamification();
+
+        // Auto-claim any completed daily challenges
+        const gamData = useStore.getState().gamification;
+        if (gamData?.dailyChallenges?.some((c: any) => c.completed && !c.claimed)) {
+          useStore.getState().claimDailyChallenges();
+        }
+
+        return { xpEarned: data.xpEarned };
+      }
+      return { xpEarned: 0 };
+    } catch (error) {
+      console.error('Error completing quiz:', error);
+      return { xpEarned: 0 };
+    }
+  };
+
+  const exitQuiz = () => {
+    setViewMode('deck');
+    setQuizQuestions([]);
+    setQuizDeckName('');
+    fetchDailyProgress();
+  };
+
   const handleCourseToggle = (courseId: string) => {
     setSelectedCourses(prev => {
       const next = new Set(prev);
@@ -630,6 +757,29 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
     { value: 'mastery', label: 'Mastery level' },
     { value: 'created', label: 'Recently created' },
   ];
+
+  // Render quiz mode
+  if (viewMode === 'quiz' && quizQuestions.length > 0) {
+    return (
+      <div style={{
+        padding: isMobile ? '16px' : '20px',
+        backgroundColor: 'var(--panel)',
+        borderRadius: '16px',
+        border: '1px solid var(--border)',
+        position: 'relative',
+        zIndex: 1,
+      }}>
+        <QuizSession
+          questions={quizQuestions}
+          deckName={quizDeckName}
+          onComplete={completeQuiz}
+          onExit={exitQuiz}
+          isMobile={isMobile}
+          theme={theme}
+        />
+      </div>
+    );
+  }
 
   // Render study mode
   if (viewMode === 'study' && studyCards.length > 0) {
@@ -893,6 +1043,10 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
                 onEditCard={updateCard}
                 onDeleteCard={deleteCard}
                 onBulkImport={bulkImportCards}
+                onAIGenerate={aiGenerateCards}
+                onQuiz={() => selectedDeck && startQuiz(selectedDeck)}
+                quizLoading={quizLoading}
+                isPremium={isPremium}
                 cardsPerSession={settings.cardsPerSession}
                 theme={theme}
                 isMobile={isMobile}

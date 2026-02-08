@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Play, Upload, Pencil, X } from 'lucide-react';
+import { Plus, Play, Upload, Pencil, X, Sparkles, Crown, ClipboardList } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { FlashcardDeck, Flashcard, DeckStats } from './types';
 import { calculateDeckStats } from './utils';
@@ -9,6 +9,7 @@ import DeckStatsCard from './DeckStatsCard';
 import CardListItem from './CardListItem';
 import CreateCardModal from './CreateCardModal';
 import CreateDeckModal from './CreateDeckModal';
+import AIGenerateModal from './AIGenerateModal';
 
 interface DeckDetailProps {
   deck: FlashcardDeck;
@@ -22,6 +23,10 @@ interface DeckDetailProps {
   onEditCard: (cardId: string, data: { front: string; back: string }) => void;
   onDeleteCard: (cardId: string) => void;
   onBulkImport: (text: string) => void;
+  onAIGenerate: (cards: { front: string; back: string }[]) => void;
+  onQuiz: () => void;
+  quizLoading?: boolean;
+  isPremium?: boolean;
   cardsPerSession: number;
   theme?: string;
   isMobile?: boolean;
@@ -39,12 +44,17 @@ export default function DeckDetail({
   onEditCard,
   onDeleteCard,
   onBulkImport,
+  onAIGenerate,
+  onQuiz,
+  quizLoading = false,
+  isPremium = false,
   cardsPerSession,
   theme = 'dark',
   isMobile = false,
 }: DeckDetailProps) {
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [showAIGenerate, setShowAIGenerate] = useState(false);
   const [showEditDeck, setShowEditDeck] = useState(false);
   const [editingCard, setEditingCard] = useState<Flashcard | null>(null);
   const [bulkImportText, setBulkImportText] = useState('');
@@ -182,11 +192,23 @@ export default function DeckDetail({
             <Play size={18} />
             Study All ({stats.total})
           </Button>
+          {cards.length >= 4 && (
+            <Button
+              variant="secondary"
+              onClick={onQuiz}
+              size={isMobile ? 'md' : 'lg'}
+              disabled={quizLoading}
+              style={{ opacity: quizLoading ? 0.6 : 1 }}
+            >
+              {isPremium ? <ClipboardList size={18} /> : <Crown size={18} />}
+              {quizLoading ? 'Generating...' : 'Practice Quiz'}
+            </Button>
+          )}
         </div>
       )}
 
       {/* Add card buttons */}
-      {!showNewCardForm && !showBulkImport && !editingCard && (
+      {!showNewCardForm && !showBulkImport && !showAIGenerate && !editingCard && (
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <Button
             variant="secondary"
@@ -203,6 +225,14 @@ export default function DeckDetail({
           >
             <Upload size={isMobile ? 14 : 18} />
             Bulk Import
+          </Button>
+          <Button
+            variant="secondary"
+            size={isMobile ? 'sm' : 'md'}
+            onClick={() => setShowAIGenerate(true)}
+          >
+            <Sparkles size={isMobile ? 14 : 18} />
+            AI Generate
           </Button>
         </div>
       )}
@@ -280,6 +310,18 @@ export default function DeckDetail({
             </div>
           </div>
         </div>
+      )}
+
+      {/* AI Generate form */}
+      {showAIGenerate && (
+        <AIGenerateModal
+          onSave={(cards) => {
+            onAIGenerate(cards);
+            setShowAIGenerate(false);
+          }}
+          onClose={() => setShowAIGenerate(false)}
+          isMobile={isMobile}
+        />
       )}
 
       {/* Card list */}

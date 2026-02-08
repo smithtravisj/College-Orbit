@@ -13,7 +13,7 @@ import FileUpload from '@/components/ui/FileUpload';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import CourseForm from '@/components/CourseForm';
-import { ChevronDown, Crown, FileIcon } from 'lucide-react';
+import { ChevronDown, Crown, FileIcon, Sparkles, Trash2 } from 'lucide-react';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
@@ -23,9 +23,8 @@ import { CanvasBadge } from './CanvasBadge';
 import { BlackboardBadge } from './BlackboardBadge';
 import { MoodleBadge } from './MoodleBadge';
 import { BrightspaceBadge } from './BrightspaceBadge';
-import { CanvasExtBadge } from './CanvasExtBadge';
-import { LearningSuiteBadge } from './LearningSuiteBadge';
 import { useFormatters } from '@/hooks/useFormatters';
+import AIBreakdownModal from '@/components/AIBreakdownModal';
 
 interface EventDetailModalProps {
   isOpen: boolean;
@@ -99,7 +98,7 @@ export default function EventDetailModal({
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
   const courseFormRef = useRef<{ submit: () => void }>(null);
-  const { updateTask, updateDeadline, updateCourse, updateCalendarEvent, deleteCalendarEvent, settings } = useAppStore();
+  const { updateTask, updateDeadline, updateCourse, updateCalendarEvent, deleteCalendarEvent, updateWorkItem, toggleWorkItemChecklistItem, settings } = useAppStore();
   const baseColorPalette = getCollegeColorPalette(settings.university || null, settings.theme || 'dark');
   // Visual theme takes priority for accent color
   const colorPalette = (() => {
@@ -116,6 +115,7 @@ export default function EventDetailModal({
   const [localStatus, setLocalStatus] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showBreakdownModal, setShowBreakdownModal] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -123,6 +123,7 @@ export default function EventDetailModal({
       setEditFormData(null);
       setLocalStatus(null);
       setShowDeleteConfirm(false);
+      setShowBreakdownModal(false);
     }
   }, [isOpen]);
 
@@ -548,7 +549,7 @@ export default function EventDetailModal({
           border: '1px solid var(--border)',
           borderRadius: 'var(--radius-card)',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          maxWidth: '450px',
+          maxWidth: '600px',
           width: '100%',
           maxHeight: '90vh',
           overflow: 'hidden',
@@ -626,16 +627,6 @@ export default function EventDetailModal({
                     >
                       {event.type === 'task' ? 'TASK' : event.type === 'deadline' ? 'DEADLINE' : event.type === 'exam' ? 'EXAM' : 'EVENT'}
                     </div>
-                    {/* LMS badges for synced items */}
-                    {event.type === 'deadline' && fullData && 'canvasAssignmentId' in fullData && (fullData as Deadline).canvasAssignmentId && <CanvasBadge size="md" />}
-                    {event.type === 'deadline' && fullData && 'blackboardColumnId' in fullData && (fullData as Deadline).blackboardColumnId && <BlackboardBadge size="md" />}
-                    {event.type === 'deadline' && fullData && 'moodleAssignmentId' in fullData && (fullData as Deadline).moodleAssignmentId && <MoodleBadge size="md" />}
-                    {event.type === 'deadline' && fullData && 'brightspaceActivityId' in fullData && (fullData as Deadline).brightspaceActivityId && <BrightspaceBadge size="md" />}
-                    {event.type === 'event' && fullData && 'canvasEventId' in fullData && (fullData as CustomCalendarEvent).canvasEventId && <CanvasBadge size="md" />}
-                    {event.type === 'event' && fullData && 'moodleEventId' in fullData && (fullData as CustomCalendarEvent).moodleEventId && <MoodleBadge size="md" />}
-                    {event.type === 'event' && fullData && 'brightspaceEventId' in fullData && (fullData as CustomCalendarEvent).brightspaceEventId && <BrightspaceBadge size="md" />}
-                    {fullData && !('canvasAssignmentId' in fullData && (fullData as any).canvasAssignmentId) && ((fullData as any).links || []).some((l: any) => l.label === 'Canvas') && <CanvasExtBadge size="md" />}
-                    {fullData && ((fullData as any).links || []).some((l: any) => l.label === 'Learning Suite') && <LearningSuiteBadge size="md" />}
                   </div>
                   <h2
                     style={{
@@ -704,9 +695,23 @@ export default function EventDetailModal({
           ) : event.type === 'course' && 'meetingTimes' in fullData ? (
             <CourseContent event={event} course={fullData} />
           ) : event.type === 'task' && 'checklist' in fullData ? (
-            <TaskContent task={fullData as Task} relatedCourse={relatedCourse} />
+            <TaskContent task={fullData as Task} relatedCourse={relatedCourse} onToggleChecklistItem={(itemId) => {
+              if (workItems.some(w => w.id === event.id)) {
+                toggleWorkItemChecklistItem(event.id, itemId);
+              } else {
+                useAppStore.getState().toggleChecklistItem(event.id, itemId);
+              }
+            }} onDeleteChecklist={() => {
+              if (workItems.some(w => w.id === event.id)) {
+                updateWorkItem(event.id, { checklist: [] });
+              } else {
+                updateTask(event.id, { checklist: [] });
+              }
+            }} />
           ) : (event.type === 'reading' || event.type === 'project') && 'type' in fullData ? (
-            <WorkItemContent workItem={fullData as WorkItem} relatedCourse={relatedCourse} eventType={event.type} />
+            <WorkItemContent workItem={fullData as WorkItem} relatedCourse={relatedCourse} eventType={event.type} onToggleChecklistItem={(itemId) => toggleWorkItemChecklistItem(event.id, itemId)} onDeleteChecklist={() => {
+              updateWorkItem(event.id, { checklist: [] });
+            }} />
           ) : event.type === 'deadline' ? (
             <DeadlineContent deadline={fullData as Deadline} relatedCourse={relatedCourse} />
           ) : event.type === 'exam' ? (
@@ -720,7 +725,8 @@ export default function EventDetailModal({
         <div
           style={{
             display: 'flex',
-            gap: isMobile ? '8px' : '12px',
+            flexWrap: 'wrap',
+            gap: isMobile ? '6px' : '12px',
             justifyContent: 'flex-end',
             padding: isMobile ? '8px 12px' : '12px 16px',
             borderTop: '1px solid var(--border)',
@@ -771,8 +777,18 @@ export default function EventDetailModal({
               {event.type !== 'course' && event.type !== 'exam' && event.type !== 'event' && (
                 <Button variant="secondary" size={isMobile ? 'sm' : 'md'} onClick={handleMarkDoneClick}>
                   {(localStatus || (fullData && 'status' in fullData && (fullData as Task | Deadline).status)) === 'done'
-                    ? 'Mark Incomplete'
-                    : 'Mark Complete'}
+                    ? (isMobile ? 'Incomplete' : 'Mark Incomplete')
+                    : (isMobile ? 'Complete' : 'Mark Complete')}
+                </Button>
+              )}
+              {event.type !== 'course' && event.type !== 'exam' && event.type !== 'event' && (
+                <Button
+                  variant="secondary"
+                  size={isMobile ? 'sm' : 'md'}
+                  onClick={() => setShowBreakdownModal(true)}
+                >
+                  <Sparkles size={14} />
+                  {!isMobile && 'Breakdown'}
                 </Button>
               )}
               {event.type === 'event' && (
@@ -813,6 +829,35 @@ export default function EventDetailModal({
           )}
         </div>
       </div>
+
+      {/* Breakdown Modal */}
+      {showBreakdownModal && fullData && event && (
+        <AIBreakdownModal
+          existingTitle={event.title}
+          existingDescription={(fullData as any).notes || (fullData as any).description || event.title}
+          onClose={() => setShowBreakdownModal(false)}
+          onPremiumRequired={() => { setShowBreakdownModal(false); setShowUpgradeModal(true); }}
+          onSave={(newItems) => {
+            const existing = Array.isArray((fullData as any).checklist) ? (fullData as any).checklist : [];
+            const merged = [...newItems, ...existing];
+            if (event.type === 'task') {
+              if (workItems.some(w => w.id === event.id)) {
+                updateWorkItem(event.id, { checklist: merged });
+              } else {
+                updateTask(event.id, { checklist: merged });
+              }
+            } else if (event.type === 'deadline') {
+              if (workItems.some(w => w.id === event.id)) {
+                updateWorkItem(event.id, { checklist: merged });
+              } else {
+                updateDeadline(event.id, { checklist: merged } as any);
+              }
+            } else if (event.type === 'reading' || event.type === 'project') {
+              updateWorkItem(event.id, { checklist: merged });
+            }
+          }}
+        />
+      )}
 
       {/* Upgrade Modal */}
       {showUpgradeModal && (
@@ -1423,9 +1468,11 @@ function CourseContent({ event, course }: CourseContentProps) {
 interface TaskContentProps {
   task: Task;
   relatedCourse: Course | null;
+  onToggleChecklistItem?: (itemId: string) => void;
+  onDeleteChecklist?: () => void;
 }
 
-function TaskContent({ task, relatedCourse }: TaskContentProps) {
+function TaskContent({ task, relatedCourse, onToggleChecklistItem, onDeleteChecklist }: TaskContentProps) {
   const isMobile = useIsMobile();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
@@ -1451,6 +1498,49 @@ function TaskContent({ task, relatedCourse }: TaskContentProps) {
         </div>
       )}
 
+      {task.checklist && task.checklist.length > 0 && (
+        <div>
+          <div style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 8px 0' : '0 0 12px 0', display: 'flex', justifyContent: 'space-between' }}>
+            <span>Checklist</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={() => onDeleteChecklist?.()}
+                title="Delete checklist"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', opacity: 0.5 }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; }}
+              >
+                <Trash2 size={15} />
+              </button>
+              <span>{task.checklist.filter(i => i.done).length}/{task.checklist.length}</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
+            {task.checklist.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: isMobile ? '8px' : '10px',
+                  padding: isMobile ? '4px' : '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                onClick={() => onToggleChecklistItem?.(item.id)}
+              >
+                <input type="checkbox" checked={item.done} onChange={() => {}} style={{ width: isMobile ? '14px' : '16px', height: isMobile ? '14px' : '16px', cursor: 'pointer', flexShrink: 0 }} />
+                <span style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: item.done ? 'var(--text-muted)' : 'var(--text)', textDecoration: item.done ? 'line-through' : 'none' }}>
+                  {item.text}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {task.notes && (
         <div>
           <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
@@ -1467,56 +1557,6 @@ function TaskContent({ task, relatedCourse }: TaskContentProps) {
           >
             {task.notes}
           </p>
-        </div>
-      )}
-
-      {task.checklist && task.checklist.length > 0 && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 8px 0' : '0 0 12px 0' }}>
-            Checklist
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
-            {task.checklist.map((item) => (
-              <label
-                key={item.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: isMobile ? '8px' : '10px',
-                  cursor: 'pointer',
-                  padding: isMobile ? '4px' : '8px',
-                  borderRadius: '4px',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={item.done}
-                  readOnly
-                  style={{
-                    width: isMobile ? '14px' : '16px',
-                    height: isMobile ? '14px' : '16px',
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: isMobile ? '0.75rem' : '0.875rem',
-                    color: item.done ? 'var(--text-muted)' : 'var(--text)',
-                    textDecoration: item.done ? 'line-through' : 'none',
-                  }}
-                >
-                  {item.text}
-                </span>
-              </label>
-            ))}
-          </div>
         </div>
       )}
 
@@ -1598,9 +1638,11 @@ interface WorkItemContentProps {
   workItem: WorkItem;
   relatedCourse: Course | null;
   eventType: 'reading' | 'project';
+  onToggleChecklistItem?: (itemId: string) => void;
+  onDeleteChecklist?: () => void;
 }
 
-function WorkItemContent({ workItem, relatedCourse, eventType }: WorkItemContentProps) {
+function WorkItemContent({ workItem, relatedCourse, eventType, onToggleChecklistItem, onDeleteChecklist }: WorkItemContentProps) {
   const isMobile = useIsMobile();
   const typeLabel = eventType === 'reading' ? 'Reading' : 'Project';
 
@@ -1637,6 +1679,49 @@ function WorkItemContent({ workItem, relatedCourse, eventType }: WorkItemContent
         </div>
       )}
 
+      {workItem.checklist && workItem.checklist.length > 0 && (
+        <div>
+          <div style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 8px 0' : '0 0 12px 0', display: 'flex', justifyContent: 'space-between' }}>
+            <span>Checklist</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={() => onDeleteChecklist?.()}
+                title="Delete checklist"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', opacity: 0.5 }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; }}
+              >
+                <Trash2 size={15} />
+              </button>
+              <span>{workItem.checklist.filter(i => i.done).length}/{workItem.checklist.length}</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
+            {workItem.checklist.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: isMobile ? '8px' : '10px',
+                  padding: isMobile ? '4px' : '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                onClick={() => onToggleChecklistItem?.(item.id)}
+              >
+                <input type="checkbox" checked={item.done} onChange={() => {}} style={{ width: isMobile ? '14px' : '16px', height: isMobile ? '14px' : '16px', cursor: 'pointer', flexShrink: 0 }} />
+                <span style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: item.done ? 'var(--text-muted)' : 'var(--text)', textDecoration: item.done ? 'line-through' : 'none' }}>
+                  {item.text}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {workItem.notes && (
         <div>
           <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
@@ -1653,56 +1738,6 @@ function WorkItemContent({ workItem, relatedCourse, eventType }: WorkItemContent
           >
             {workItem.notes}
           </p>
-        </div>
-      )}
-
-      {workItem.checklist && workItem.checklist.length > 0 && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 8px 0' : '0 0 12px 0' }}>
-            Checklist
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
-            {workItem.checklist.map((item) => (
-              <label
-                key={item.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: isMobile ? '8px' : '10px',
-                  cursor: 'pointer',
-                  padding: isMobile ? '4px' : '8px',
-                  borderRadius: '4px',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={item.done}
-                  readOnly
-                  style={{
-                    width: isMobile ? '14px' : '16px',
-                    height: isMobile ? '14px' : '16px',
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: isMobile ? '0.75rem' : '0.875rem',
-                    color: item.done ? 'var(--text-muted)' : 'var(--text)',
-                    textDecoration: item.done ? 'line-through' : 'none',
-                  }}
-                >
-                  {item.text}
-                </span>
-              </label>
-            ))}
-          </div>
         </div>
       )}
 

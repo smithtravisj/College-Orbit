@@ -5,6 +5,7 @@ import { Play, Pause, RotateCcw, SkipForward } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import useAppStore from '@/lib/store';
 import { usePomodoroContext } from '@/context/PomodoroContext';
+import AmbientSoundPicker from '@/components/tools/AmbientSoundPicker';
 
 interface Props {
   theme?: string;
@@ -385,6 +386,9 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
               Reset
             </button>
           </div>
+
+          {/* Focus Sounds */}
+          <AmbientSoundPicker />
 
           {/* Stats */}
           <div style={{

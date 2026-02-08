@@ -11,7 +11,7 @@ import {
   CalendarDays,
   Target,
   Trophy,
-  Palette,
+  Sparkles,
   RefreshCw,
   Layers,
   Wrench
@@ -20,27 +20,32 @@ import {
 const coreFeatures = [
   {
     icon: RefreshCw,
-    title: 'Canvas Integration',
-    description: 'Sync courses, assignments, grades, and events directly from Canvas.',
+    title: 'LMS Integration',
+    description: 'Sync courses, assignments, grades, and events from Canvas, Blackboard, Moodle, and Brightspace.',
   },
+  {
+    icon: Sparkles,
+    title: 'Orbi AI Assistant',
+    description: 'Ask Orbi about your schedule, assignments, and progress. AI-powered flashcard generation, note summarization, and work breakdown.',
+  },
+  {
+    icon: PenLine,
+    title: 'Work Management',
+    description: 'Manage tasks, assignments, readings, and projects with priorities, checklists, tags, and AI-powered breakdown.',
+  },
+  {
+    icon: CalendarDays,
+    title: 'Calendar',
+    description: 'See your schedule with month, week, and day views. Sync with Google Calendar or export to Apple Calendar.',
+  },
+];
+
+const secondaryFeatures = [
   {
     icon: Calendar,
     title: 'Course Management',
     description: 'Track your classes with meeting times, locations, and quick links to course resources.',
   },
-  {
-    icon: PenLine,
-    title: 'Work',
-    description: 'Manage tasks, assignments, readings, and projects with priorities, checklists, tags, and links to notes and files.',
-  },
-  {
-    icon: CalendarDays,
-    title: 'Calendar',
-    description: 'See your schedule with month, week, and day views. Export to Google Calendar or Apple Calendar.',
-  },
-];
-
-const secondaryFeatures = [
   {
     icon: BookOpen,
     title: 'Exam Tracker',
@@ -48,8 +53,8 @@ const secondaryFeatures = [
   },
   {
     icon: Layers,
-    title: 'Flashcards',
-    description: 'Study with flashcards using spaced repetition. Track mastery and review what you need most.',
+    title: 'Flashcards & Quizzes',
+    description: 'Study with AI-generated flashcards and quizzes. Spaced repetition tracks what you need to review most.',
   },
   {
     icon: Target,
@@ -64,22 +69,17 @@ const secondaryFeatures = [
   {
     icon: FileText,
     title: 'Rich Notes',
-    description: 'Rich text editor with formatting, folders, course organization, and links to work items.',
+    description: 'Rich text editor with formatting, folders, course organization, and AI-powered summarization.',
+  },
+  {
+    icon: Wrench,
+    title: 'Productivity Tools',
+    description: 'Pomodoro timer with ambient focus sounds, word counter, citation generator, unit converter, and file converter.',
   },
   {
     icon: BarChart3,
     title: 'GPA & Grade Tools',
     description: 'Track grades, calculate your GPA, project what-if scenarios, and find what you need on your final.',
-  },
-  {
-    icon: Wrench,
-    title: 'Productivity Tools',
-    description: 'Pomodoro timer, word counter, citation generator, unit converter, and file converter all built-in.',
-  },
-  {
-    icon: Palette,
-    title: 'University Themes',
-    description: '20+ visual themes, animated pet companions, your school\'s colors, dark or light mode, and colorblind-friendly options.',
   },
 ];
 

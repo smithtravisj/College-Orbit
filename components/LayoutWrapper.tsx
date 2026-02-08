@@ -7,12 +7,14 @@ import Navigation from './Navigation';
 import { MobileHeader } from './MobileHeader';
 import { FloatingMenuButton } from './FloatingMenuButton';
 import { QuickAddButton } from './QuickAddButton';
+import { AIChatButton } from './AIChatButton';
 import MiniPomodoroPlayer from './MiniPomodoroPlayer';
 import { MiniSpotifyPlayer, SpotifySyncManager } from './spotify';
 import { CanvasSyncManager } from './CanvasSyncManager';
 import { BlackboardSyncManager } from './BlackboardSyncManager';
 import { MoodleSyncManager } from './MoodleSyncManager';
 import { BrightspaceSyncManager } from './BrightspaceSyncManager';
+import { GoogleCalendarSyncManager } from './GoogleCalendarSyncManager';
 import { AchievementToastContainer, LevelUpToast, Confetti, ChallengeToastContainer } from './gamification';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAnalyticsPageView } from '@/lib/useAnalytics';
@@ -203,9 +205,11 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
         <BlackboardSyncManager />
         <MoodleSyncManager />
         <BrightspaceSyncManager />
+        <GoogleCalendarSyncManager />
         <SpotifySyncManager />
         <MobileHeader />
         <Navigation />
+        <AIChatButton />
         <QuickAddButton />
         <FloatingMenuButton />
         {showMiniPlayer && <MiniPomodoroPlayer />}
@@ -228,8 +232,10 @@ export default function LayoutWrapper({ children }: { children: ReactNode }) {
         <BlackboardSyncManager />
         <MoodleSyncManager />
         <BrightspaceSyncManager />
+        <GoogleCalendarSyncManager />
         <SpotifySyncManager />
         <Navigation />
+        <AIChatButton />
         <QuickAddButton />
         {showMiniPlayer && <MiniPomodoroPlayer />}
         <MiniSpotifyPlayer />

@@ -106,6 +106,7 @@ export default function PremiumGate({ children, feature }: PremiumGateProps) {
                 'Track groceries and never run out',
                 'Calculate your GPA and plan ahead',
                 'Make the app truly yours with themes',
+                'Generate flashcards with AI from notes',
               ].map((item) => (
                 <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.3 }}>
                   <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'var(--accent)', flexShrink: 0 }} />

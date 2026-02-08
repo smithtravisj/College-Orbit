@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useLayoutEffect, useRef, useCallback, ReactNode } from 'react';
 import useAppStore from '@/lib/store';
+import { AmbientSoundEngine, AmbientSoundType } from '@/lib/ambientSoundEngine';
 
 // Simple debounce utility
 function debounce<T extends (...args: any[]) => any>(
@@ -28,6 +29,12 @@ interface PomodoroContextType {
   isMuted: boolean;
   hasActiveSession: boolean;
 
+  // Ambient sound state
+  ambientSound: AmbientSoundType | null;
+  ambientVolume: number;
+  ambientAutoPlay: boolean;
+  isAmbientPlaying: boolean;
+
   // Actions
   start: () => void;
   pause: () => void;
@@ -38,6 +45,10 @@ interface PomodoroContextType {
   setBreakDuration: (mins: number) => void;
   setIsMuted: (muted: boolean) => void;
   applySettings: (workMins: number, breakMins: number, muted: boolean) => void;
+  setAmbientSound: (sound: AmbientSoundType | null) => void;
+  setAmbientVolume: (volume: number) => void;
+  setAmbientAutoPlay: (auto: boolean) => void;
+  toggleAmbientSound: () => void;
 
   // Mini player state
   isMiniPlayerDismissed: boolean;
@@ -62,6 +73,15 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   const [isMiniPlayerDismissed, setIsMiniPlayerDismissed] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
 
+  // Ambient sound state
+  const [ambientSound, setAmbientSoundState] = useState<AmbientSoundType | null>(
+    (settings?.pomodoroAmbientSound as AmbientSoundType) || null
+  );
+  const [ambientVolume, setAmbientVolumeState] = useState(settings?.pomodoroAmbientVolume ?? 0.5);
+  const [ambientAutoPlay, setAmbientAutoPlayState] = useState(settings?.pomodoroAmbientAutoPlay ?? true);
+  const [isAmbientPlaying, setIsAmbientPlaying] = useState(false);
+
+  const ambientEngineRef = useRef<AmbientSoundEngine | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartTimeRef = useRef<number | null>(null);
   const lastMinuteCountedRef = useRef(0);
@@ -82,6 +102,9 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         setTotalBreakTime(state.totalBreakTime || 0);
         setHasActiveSession(state.hasActiveSession || false);
         setIsMiniPlayerDismissed(state.isMiniPlayerDismissed || false);
+        if (state.ambientSound) setAmbientSoundState(state.ambientSound);
+        if (state.ambientVolume !== undefined) setAmbientVolumeState(state.ambientVolume);
+        if (state.ambientAutoPlay !== undefined) setAmbientAutoPlayState(state.ambientAutoPlay);
 
         // Restore session timing if timer was running
         if (state.isRunning && state.sessionStartTime) {
@@ -108,7 +131,10 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     if (settings?.pomodoroWorkDuration) setWorkDurationState(settings.pomodoroWorkDuration);
     if (settings?.pomodoroBreakDuration) setBreakDurationState(settings.pomodoroBreakDuration);
     if (settings?.pomodoroIsMuted !== undefined) setIsMutedState(settings.pomodoroIsMuted);
-  }, [settings?.pomodoroWorkDuration, settings?.pomodoroBreakDuration, settings?.pomodoroIsMuted]);
+    if (settings?.pomodoroAmbientSound !== undefined) setAmbientSoundState(settings.pomodoroAmbientSound as AmbientSoundType | null);
+    if (settings?.pomodoroAmbientVolume !== undefined) setAmbientVolumeState(settings.pomodoroAmbientVolume);
+    if (settings?.pomodoroAmbientAutoPlay !== undefined) setAmbientAutoPlayState(settings.pomodoroAmbientAutoPlay);
+  }, [settings?.pomodoroWorkDuration, settings?.pomodoroBreakDuration, settings?.pomodoroIsMuted, settings?.pomodoroAmbientSound, settings?.pomodoroAmbientVolume, settings?.pomodoroAmbientAutoPlay]);
 
   // Save timer state to localStorage whenever it changes
   useEffect(() => {
@@ -126,19 +152,26 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
       hasActiveSession,
       isMiniPlayerDismissed,
       sessionStartTime: sessionStartTimeRef.current,
+      ambientSound,
+      ambientVolume,
+      ambientAutoPlay,
     };
     localStorage.setItem('pomodoroState', JSON.stringify(state));
-  }, [hasRestored, workDuration, breakDuration, timeLeft, isRunning, isWorkSession, sessionsCompleted, totalWorkTime, totalBreakTime, hasActiveSession, isMiniPlayerDismissed]);
+  }, [hasRestored, workDuration, breakDuration, timeLeft, isRunning, isWorkSession, sessionsCompleted, totalWorkTime, totalBreakTime, hasActiveSession, isMiniPlayerDismissed, ambientSound, ambientVolume, ambientAutoPlay]);
 
   // Debounced function to save timer settings to database
   const savePomodoroSettings = useRef(
     debounce(
-      (work: number, breakDur: number, muted: boolean) => {
-        updateSettings({
+      (work: number, breakDur: number, muted: boolean, ambSound?: string | null, ambVol?: number, ambAuto?: boolean) => {
+        const update: Record<string, any> = {
           pomodoroWorkDuration: work,
           pomodoroBreakDuration: breakDur,
           pomodoroIsMuted: muted,
-        }).catch((error) => {
+        };
+        if (ambSound !== undefined) update.pomodoroAmbientSound = ambSound;
+        if (ambVol !== undefined) update.pomodoroAmbientVolume = ambVol;
+        if (ambAuto !== undefined) update.pomodoroAmbientAutoPlay = ambAuto;
+        updateSettings(update).catch((error) => {
           console.error('Error saving Pomodoro settings:', error);
         });
       },
@@ -274,6 +307,99 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     }
   }, [isMuted]);
 
+  // Initialize ambient engine
+  useEffect(() => {
+    ambientEngineRef.current = new AmbientSoundEngine();
+    return () => {
+      ambientEngineRef.current?.cleanup();
+      ambientEngineRef.current = null;
+    };
+  }, []);
+
+  // Sync volume to engine whenever it changes (including after restore)
+  useEffect(() => {
+    ambientEngineRef.current?.setVolume(ambientVolume);
+  }, [ambientVolume]);
+
+  // Resume ambient playback after restore — needs user gesture for AudioContext
+  const hasResumedAmbientRef = useRef(false);
+  useEffect(() => {
+    if (hasResumedAmbientRef.current) return;
+
+    // Read directly from localStorage since React state may not be settled yet
+    let shouldPlay = false;
+    let savedSound: AmbientSoundType | null = null;
+    let savedVolume = 0.5;
+    try {
+      const raw = localStorage.getItem('pomodoroState');
+      if (raw) {
+        const state = JSON.parse(raw);
+        shouldPlay = state.isRunning && (state.ambientAutoPlay ?? true) && !!state.ambientSound && !state.isMuted;
+        savedSound = state.ambientSound || null;
+        savedVolume = state.ambientVolume ?? 0.5;
+      }
+    } catch {
+      // ignore
+    }
+
+    if (!shouldPlay || !savedSound) {
+      hasResumedAmbientRef.current = true;
+      return;
+    }
+
+    // Browser requires a user gesture to start AudioContext — listen for first interaction
+    const resumeOnInteraction = () => {
+      if (hasResumedAmbientRef.current) return;
+      hasResumedAmbientRef.current = true;
+      const engine = ambientEngineRef.current;
+      if (engine) {
+        engine.setVolume(savedVolume);
+        engine.play(savedSound!);
+        setIsAmbientPlaying(true);
+      }
+      document.removeEventListener('click', resumeOnInteraction);
+      document.removeEventListener('keydown', resumeOnInteraction);
+      document.removeEventListener('touchstart', resumeOnInteraction);
+    };
+
+    document.addEventListener('click', resumeOnInteraction);
+    document.addEventListener('keydown', resumeOnInteraction);
+    document.addEventListener('touchstart', resumeOnInteraction);
+
+    return () => {
+      document.removeEventListener('click', resumeOnInteraction);
+      document.removeEventListener('keydown', resumeOnInteraction);
+      document.removeEventListener('touchstart', resumeOnInteraction);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Helper to start ambient playback
+  const startAmbient = useCallback(() => {
+    const engine = ambientEngineRef.current;
+    if (!engine || !ambientSound || isMuted) return;
+    engine.play(ambientSound);
+    setIsAmbientPlaying(true);
+  }, [ambientSound, isMuted]);
+
+  // Helper to stop ambient playback
+  const stopAmbient = useCallback(() => {
+    const engine = ambientEngineRef.current;
+    if (!engine) return;
+    engine.stop();
+    setIsAmbientPlaying(false);
+  }, []);
+
+  // Tab visibility: resume audio context on focus
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        ambientEngineRef.current?.resume();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
+
   // Timer logic
   useEffect(() => {
     if (!isRunning) return;
@@ -346,17 +472,22 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggle = useCallback(() => {
-    setIsRunning((prev) => {
-      if (!prev) {
-        // Starting/resuming the timer
-        setHasActiveSession(true);
-      } else {
-        // Pausing — null out start time so resume backdates correctly
-        sessionStartTimeRef.current = null;
+    if (!isRunning) {
+      // Starting/resuming the timer
+      setIsRunning(true);
+      setHasActiveSession(true);
+      if (ambientAutoPlay && ambientSound && !isMuted) {
+        startAmbient();
       }
-      return !prev;
-    });
-  }, []);
+    } else {
+      // Pausing — null out start time so resume backdates correctly
+      setIsRunning(false);
+      sessionStartTimeRef.current = null;
+      if (ambientAutoPlay) {
+        stopAmbient();
+      }
+    }
+  }, [isRunning, ambientAutoPlay, ambientSound, isMuted, startAmbient, stopAmbient]);
 
   const reset = useCallback(() => {
     setIsRunning(false);
@@ -369,7 +500,8 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     setIsMiniPlayerDismissed(false);
     sessionStartTimeRef.current = null;
     lastMinuteCountedRef.current = 0;
-  }, [workDuration]);
+    stopAmbient();
+  }, [workDuration, stopAmbient]);
 
   const skip = useCallback(() => {
     if (isWorkSession) {
@@ -396,7 +528,12 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
   const setIsMuted = useCallback((muted: boolean) => {
     setIsMutedState(muted);
     savePomodoroSettings(workDuration, breakDuration, muted);
-  }, [workDuration, breakDuration, savePomodoroSettings]);
+    if (muted) {
+      stopAmbient();
+    } else if (isRunning && ambientAutoPlay && ambientSound) {
+      startAmbient();
+    }
+  }, [workDuration, breakDuration, savePomodoroSettings, stopAmbient, startAmbient, isRunning, ambientAutoPlay, ambientSound]);
 
   const applySettings = useCallback((workMins: number, breakMins: number, muted: boolean) => {
     setWorkDurationState(workMins);
@@ -407,6 +544,39 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
     lastMinuteCountedRef.current = 0;
     savePomodoroSettings(workMins, breakMins, muted);
   }, [savePomodoroSettings]);
+
+  const setAmbientSound = useCallback((sound: AmbientSoundType | null) => {
+    setAmbientSoundState(sound);
+    if (!sound) {
+      stopAmbient();
+    } else if (isRunning && ambientAutoPlay && !isMuted) {
+      const engine = ambientEngineRef.current;
+      if (engine) {
+        engine.play(sound);
+        setIsAmbientPlaying(true);
+      }
+    }
+    savePomodoroSettings(workDuration, breakDuration, isMuted, sound, undefined, undefined);
+  }, [isRunning, ambientAutoPlay, isMuted, stopAmbient, savePomodoroSettings, workDuration, breakDuration]);
+
+  const setAmbientVolume = useCallback((vol: number) => {
+    setAmbientVolumeState(vol);
+    ambientEngineRef.current?.setVolume(vol);
+    savePomodoroSettings(workDuration, breakDuration, isMuted, undefined, vol, undefined);
+  }, [savePomodoroSettings, workDuration, breakDuration, isMuted]);
+
+  const setAmbientAutoPlay = useCallback((auto: boolean) => {
+    setAmbientAutoPlayState(auto);
+    savePomodoroSettings(workDuration, breakDuration, isMuted, undefined, undefined, auto);
+  }, [savePomodoroSettings, workDuration, breakDuration, isMuted]);
+
+  const toggleAmbientSound = useCallback(() => {
+    if (isAmbientPlaying) {
+      stopAmbient();
+    } else if (ambientSound && !isMuted) {
+      startAmbient();
+    }
+  }, [isAmbientPlaying, ambientSound, isMuted, startAmbient, stopAmbient]);
 
   const dismissMiniPlayer = useCallback(() => {
     setIsMiniPlayerDismissed(true);
@@ -429,6 +599,10 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         totalBreakTime,
         isMuted,
         hasActiveSession,
+        ambientSound,
+        ambientVolume,
+        ambientAutoPlay,
+        isAmbientPlaying,
         start,
         pause,
         toggle,
@@ -438,6 +612,10 @@ export function PomodoroProvider({ children }: { children: ReactNode }) {
         setBreakDuration,
         setIsMuted,
         applySettings,
+        setAmbientSound,
+        setAmbientVolume,
+        setAmbientAutoPlay,
+        toggleAmbientSound,
         isMiniPlayerDismissed,
         dismissMiniPlayer,
         showMiniPlayer,

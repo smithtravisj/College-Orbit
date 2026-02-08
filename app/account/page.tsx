@@ -1451,6 +1451,7 @@ export default function AccountPage() {
                       <li>• Spotify Integration</li>
                       <li>• File uploads & recurring items</li>
                       <li>• Custom themes & visual effects</li>
+                      <li>• AI Flashcard Generation</li>
                     </ul>
                     <div style={{ paddingBottom: '4px' }} />
                   </div>
@@ -1543,6 +1544,7 @@ export default function AccountPage() {
                         'Recurring items',
                         'Custom themes',
                         'Visual effects',
+                        'AI Flashcards',
                       ].map((feature) => (
                         <div
                           key={feature}

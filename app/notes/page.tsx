@@ -20,7 +20,7 @@ const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), {
 import FolderTree from '@/components/notes/FolderTree';
 import TagInput from '@/components/notes/TagInput';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
-import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown, Crown, Save, CheckSquare, FileText, Clock, Upload, File, X, BookOpen, FolderKanban, Hammer } from 'lucide-react';
+import { Plus, Trash2, Edit2, Pin, Folder as FolderIcon, Link as LinkIcon, ChevronDown, Crown, Save, CheckSquare, FileText, Clock, Upload, File, X, BookOpen, FolderKanban, Hammer, Sparkles, Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useFormatters } from '@/hooks/useFormatters';
@@ -87,6 +87,12 @@ export default function NotesPage() {
   const [upgradeFeature, setUpgradeFeature] = useState<'notes' | 'files'>('notes');
   const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [showSavedIndicator, setShowSavedIndicator] = useState(false);
+  const [showSummarizeModal, setShowSummarizeModal] = useState(false);
+  const [summarizeInput, setSummarizeInput] = useState('');
+  const [summarizeTitle, setSummarizeTitle] = useState('');
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [summarizeError, setSummarizeError] = useState<string | null>(null);
 
   const { courses, notes, folders, tasks, deadlines, exams, workItems, recurringWorkPatterns, settings, addNote, updateNote, deleteNote, toggleNotePin, updateSettings } = useAppStore();
   const confirmBeforeDelete = settings.confirmBeforeDelete ?? true;
@@ -224,6 +230,96 @@ export default function NotesPage() {
 
     resetForm();
     setShowForm(false);
+  };
+
+  const handleSummarizeSubmit = async () => {
+    if (!summarizeInput.trim() || isSummarizing) return;
+    setIsSummarizing(true);
+    setSummarizeError(null);
+    try {
+      const res = await fetch('/api/notes/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: summarizeInput, title: summarizeTitle }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.error === 'premium_required') {
+          setShowSummarizeModal(false);
+          setUpgradeFeature('notes');
+          setShowUpgradeModal(true);
+          return;
+        }
+        throw new Error(data.error || 'Failed to summarize');
+      }
+      // Create a new note with the summary (use AI-generated title if user left it blank)
+      const title = summarizeTitle.trim() || data.title || 'AI Summary';
+      // Convert plain-text summary into TipTap JSON nodes
+      const summaryLines = (data.summary as string).split('\n');
+      const tiptapContent: any[] = [];
+      let bulletBuffer: any[] = [];
+      const flushBullets = () => {
+        if (bulletBuffer.length > 0) {
+          tiptapContent.push({
+            type: 'bulletList',
+            content: bulletBuffer.map((item: any) => ({
+              type: 'listItem',
+              content: [{ type: 'paragraph', content: [{ type: 'text', text: item }] }],
+            })),
+          });
+          bulletBuffer = [];
+        }
+      };
+      for (const line of summaryLines) {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          flushBullets();
+          continue;
+        }
+        if (trimmed.startsWith('HEADING: ')) {
+          flushBullets();
+          tiptapContent.push({
+            type: 'heading',
+            attrs: { level: 3 },
+            content: [{ type: 'text', text: trimmed.replace('HEADING: ', '') }],
+          });
+        } else if (trimmed.startsWith('• ') || trimmed.startsWith('- ')) {
+          bulletBuffer.push(trimmed.replace(/^[•\-]\s*/, ''));
+        } else {
+          flushBullets();
+          tiptapContent.push({
+            type: 'paragraph',
+            content: [{ type: 'text', text: trimmed }],
+          });
+        }
+      }
+      flushBullets();
+      await addNote({
+        title,
+        content: { type: 'doc', content: tiptapContent.length > 0 ? tiptapContent : [{ type: 'paragraph', content: [{ type: 'text', text: data.summary }] }] },
+        folderId: null,
+        courseId: null,
+        taskId: null,
+        deadlineId: null,
+        examId: null,
+        workItemId: null,
+        recurringTaskPatternId: null,
+        recurringDeadlinePatternId: null,
+        recurringExamPatternId: null,
+        recurringWorkPatternId: null,
+        tags: ['ai-summary'],
+        isPinned: false,
+        links: [],
+        files: [],
+      });
+      setShowSummarizeModal(false);
+      setSummarizeInput('');
+      setSummarizeTitle('');
+    } catch (err: any) {
+      setSummarizeError(err.message || 'Failed to summarize');
+    } finally {
+      setIsSummarizing(false);
+    }
   };
 
   const startEdit = (note: Note) => {
@@ -377,6 +473,8 @@ export default function NotesPage() {
     if (!selectedNoteId || !hasUnsavedChanges) return;
     await updateNote(selectedNoteId, { content: detailViewContent });
     setHasUnsavedChanges(false);
+    setShowSavedIndicator(true);
+    setTimeout(() => setShowSavedIndicator(false), 2000);
   };
 
   const confirmDeleteNote = async () => {
@@ -455,21 +553,30 @@ export default function NotesPage() {
               {savedVisualTheme === 'cartoon' ? "Where all your ideas live." : "Your study notes and resources."}
             </p>
           </div>
-          <Button
-            variant="secondary"
-            size="md"
-            style={{ marginTop: isMobile ? '12px' : '8px' }}
-            onClick={() => {
-              if (showForm) {
-                setShowForm(false);
-              } else {
-                handleNewNote();
-              }
-            }}
-          >
-            <Plus size={18} />
-            {isMobile ? 'Note' : 'New Note'}
-          </Button>
+          <div style={{ display: 'flex', gap: '8px', marginTop: isMobile ? '12px' : '8px' }}>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setShowSummarizeModal(true)}
+            >
+              <Sparkles size={18} />
+              {!isMobile && 'Summarize'}
+            </Button>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => {
+                if (showForm) {
+                  setShowForm(false);
+                } else {
+                  handleNewNote();
+                }
+              }}
+            >
+              <Plus size={18} />
+              {isMobile ? 'Note' : 'New Note'}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -1255,16 +1362,21 @@ export default function NotesPage() {
 
                   {/* Content */}
                   <div style={{ marginTop: '16px' }}>
-                    {hasUnsavedChanges && (
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={saveDetailViewContent}
-                        >
-                          <Save size={14} />
-                          Save Changes
-                        </Button>
+                    {(hasUnsavedChanges || showSavedIndicator) && (
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '8px', gap: '8px' }}>
+                        {showSavedIndicator && (
+                          <span style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: 500 }}>Saved!</span>
+                        )}
+                        {hasUnsavedChanges && (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={saveDetailViewContent}
+                          >
+                            <Save size={14} />
+                            Save Changes
+                          </Button>
+                        )}
                       </div>
                     )}
                     <RichTextEditor
@@ -1791,6 +1903,68 @@ export default function NotesPage() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Summarize Modal */}
+      {showSummarizeModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={() => { if (!isSummarizing) { setShowSummarizeModal(false); setSummarizeError(null); } }} />
+          <div style={{ position: 'relative', backgroundColor: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px', width: '90%', maxWidth: '600px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={20} style={{ color: 'var(--accent)' }} />
+                <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)', margin: 0 }}>AI Summarize</h3>
+              </div>
+              <button
+                onClick={() => { if (!isSummarizing) { setShowSummarizeModal(false); setSummarizeError(null); } }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '4px', display: 'flex', alignItems: 'center' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <Input
+              label="Note title (optional)"
+              value={summarizeTitle}
+              onChange={(e) => setSummarizeTitle(e.target.value)}
+              placeholder="AI Summary"
+            />
+            <div style={{ marginTop: '12px', flex: 1 }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+                Paste your content
+              </label>
+              <textarea
+                value={summarizeInput}
+                onChange={(e) => setSummarizeInput(e.target.value)}
+                placeholder="Paste your lecture notes, textbook content, or study material here..."
+                style={{
+                  width: '100%',
+                  minHeight: '200px',
+                  padding: '12px',
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  backgroundColor: 'var(--panel-2)',
+                  color: 'var(--text)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '8px',
+                  resize: 'vertical',
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                }}
+              />
+            </div>
+            {summarizeError && (
+              <p style={{ color: 'var(--danger)', fontSize: '13px', marginTop: '8px' }}>{summarizeError}</p>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
+              <Button variant="secondary" size="md" onClick={() => { setShowSummarizeModal(false); setSummarizeError(null); }} disabled={isSummarizing}>
+                Cancel
+              </Button>
+              <Button variant="primary" size="md" onClick={handleSummarizeSubmit} disabled={isSummarizing || !summarizeInput.trim()}>
+                {isSummarizing ? <><Loader2 size={16} className="animate-spin" /> Summarizing...</> : <><Sparkles size={16} /> Create Summary</>}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* File Preview Modal */}

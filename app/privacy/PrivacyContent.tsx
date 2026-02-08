@@ -16,7 +16,7 @@ export default function PrivacyContent() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Last Updated: February 1, 2026
+                Last Updated: February 8, 2026
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 At College Orbit, your privacy is our priority. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our service. We believe in transparency and give you full control over your data.
@@ -90,6 +90,30 @@ export default function PrivacyContent() {
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 If you choose to connect an LMS account (Canvas, Blackboard, Moodle, or Brightspace), we store your LMS instance URL and encrypted credentials (API token or username/password depending on the platform). When you sync, we import and store course information (names, codes, dates), assignments (titles, descriptions, due dates, points), grades and scores, and calendar events. This data is fetched using your credentials and stored in your College Orbit account. You can disconnect your LMS at any time, which removes the stored credentials but preserves any synced data unless you manually delete it.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                AI Features Data (Optional, Premium)
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                If you use AI-powered features (available to premium subscribers), certain data is sent to OpenAI&apos;s API (GPT-4o-mini) for processing. The Orbi AI chat assistant sends your academic data (courses, work items, exams, notes, calendar events, shopping items, and gamification stats) to provide contextual responses. AI flashcard generation sends your note content or uploaded PDF text. AI note summarization sends your note content. AI work breakdown sends your task details. Per OpenAI&apos;s API data usage policies, data submitted through the API is not used to train their models and is not retained after processing. We do not store AI conversation history or AI-generated responses on our servers beyond the immediate session. Your prompts and AI responses are not logged or used for any purpose other than delivering the feature to you.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Google Calendar Data (Optional)
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                If you choose to connect your Google Calendar, we store encrypted OAuth 2.0 tokens (access and refresh tokens) to maintain the connection. When you sync, we import and store your Google Calendar events (titles, dates, times, and descriptions) in your College Orbit account. Your OAuth tokens are encrypted using AES-256 encryption before being stored in our database and are only decrypted server-side when making requests to Google&apos;s API. We only read calendar events from your Google account; we never create, modify, or delete events in your Google Calendar. You can disconnect your Google account at any time from Settings, which removes the stored tokens. Synced calendar events remain in your account unless you manually delete them.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Ambient & Focus Sounds
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                The ambient and focus sounds feature plays audio files entirely within your browser. No audio data, sound preferences, or listening activity is collected, transmitted to our servers, or shared with any third party.
               </p>
             </div>
             <div>
@@ -176,6 +200,12 @@ export default function PrivacyContent() {
                 <span className="font-medium" style={{ color: 'var(--text)' }}>Analytics & Improvement</span>: We analyze usage patterns, page visits, and feedback to improve features, identify bugs, understand user needs, and develop new functionality. Only administrators can view analytics data.
               </li>
               <li>
+                <span className="font-medium" style={{ color: 'var(--text)' }}>AI-Powered Features</span>: If you use premium AI features, we send relevant portions of your academic data to OpenAI&apos;s API to generate contextual chat responses, flashcards, note summaries, and task breakdowns. This data is processed by OpenAI solely to fulfill your request and is not retained by OpenAI after processing.
+              </li>
+              <li>
+                <span className="font-medium" style={{ color: 'var(--text)' }}>Google Calendar Sync</span>: If you connect Google Calendar, we use your encrypted OAuth tokens to read and import your calendar events into College Orbit for unified schedule management.
+              </li>
+              <li>
                 <span className="font-medium" style={{ color: 'var(--text)' }}>Notifications & Reminders</span>: We use your data to send you in-app notifications about exam reminders, feature request status updates, and other service-related information.
               </li>
               <li>
@@ -213,6 +243,14 @@ export default function PrivacyContent() {
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 If you connect an LMS account (Canvas, Blackboard, Moodle, or Brightspace), your credentials are encrypted using AES-256 encryption before being stored in our database. Credentials are only decrypted server-side when making requests to your LMS instance. We never log or expose your decrypted credentials.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Google Calendar Token Encryption
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                If you connect your Google Calendar, your OAuth tokens (access and refresh tokens) are encrypted using AES-256 encryption before being stored in our database. Tokens are only decrypted server-side when making requests to Google&apos;s API on your behalf. We never log or expose your decrypted tokens.
               </p>
             </div>
             <div>
@@ -258,6 +296,22 @@ export default function PrivacyContent() {
             </div>
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                AI Processing (OpenAI)
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                If you use AI-powered features (premium only), portions of your academic data are sent to OpenAI&apos;s API for processing. This includes note content (for summarization and flashcard generation), task details (for work breakdown), and academic context data (for Orbi AI chat responses). OpenAI processes this data solely to generate responses and, per their API terms, does not use API data to train their models or retain it after processing. We do not share any personally identifiable information (such as your name, email, or account details) with OpenAI. Only the academic content necessary to fulfill your AI request is transmitted.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Google Calendar
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                If you connect your Google Calendar, our servers communicate with Google&apos;s API using encrypted OAuth tokens you authorize. This communication is used solely to read and import your calendar events. We do not share your College Orbit account information with Google, and Google does not have access to your College Orbit data beyond the standard OAuth authorization. All communication uses secure HTTPS connections. Your Google Calendar data remains under Google&apos;s privacy policies; we simply import a copy for display within College Orbit.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
                 Calendar Export & Subscription
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
@@ -273,6 +327,8 @@ export default function PrivacyContent() {
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <li>With our email service provider (Resend) to send password reset and transactional emails</li>
+                <li>With OpenAI&apos;s API (only if you use premium AI features) to process academic content for chat responses, flashcard generation, note summaries, and task breakdowns</li>
+                <li>With Google&apos;s API (only if you connect Google Calendar) to read and sync your calendar events</li>
                 <li>With your LMS instance (only if you connect Canvas, Blackboard, Moodle, or Brightspace) to fetch your academic data</li>
                 <li>Between our browser extension and our servers to save assignments you choose to add from Canvas or Learning Suite pages</li>
                 <li>With service providers who help us operate the platform (hosting, databases) under confidentiality agreements</li>

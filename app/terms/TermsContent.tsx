@@ -16,7 +16,7 @@ export default function TermsContent() {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Effective Date: February 1, 2026
+                Effective Date: February 8, 2026
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 These Terms of Service ("Terms") govern your use of the College Orbit website and services ("Service"). By creating an account and using the Service, you agree to be legally bound by these Terms. If you do not agree to these Terms, please do not use the Service.
@@ -51,9 +51,12 @@ export default function TermsContent() {
                 <li>Custom calendar events for personal scheduling</li>
                 <li>Exam tracking with customizable reminders</li>
                 <li>Rich text note-taking with folder organization, linking to work items and exams, and file attachments (up to 5MB per file)</li>
-                <li>Flashcards with spaced repetition for effective studying</li>
+                <li>Flashcards with spaced repetition for effective studying, including AI-powered flashcard generation</li>
                 <li>GPA calculation and tracking</li>
                 <li>Shopping lists (grocery, wishlist, and pantry inventory)</li>
+                <li>AI-powered features (premium) including Orbi AI chat assistant, note summarization, flashcard generation, and work item breakdown</li>
+                <li>Google Calendar integration for syncing calendar events via OAuth 2.0</li>
+                <li>Ambient and focus sounds for studying (played locally in your browser)</li>
                 <li>Productivity tools including Pomodoro timer, word counter, citation generator, and unit converter</li>
                 <li>File converter for images, documents, and text files (most processing done in-browser)</li>
                 <li>Global search across courses, notes, tasks, exams, and events</li>
@@ -294,6 +297,49 @@ export default function TermsContent() {
               </ul>
               <p className="text-sm" style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>
                 Your use of any LMS is subject to your institution's terms of service. We are not affiliated with Instructure (Canvas), Anthology (Blackboard), Moodle, or D2L (Brightspace) and are not responsible for LMS availability or data accuracy.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                AI Features (Orbi)
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                College Orbit offers AI-powered features as part of the premium subscription. These features use OpenAI&apos;s API (GPT-4o-mini) to process your requests. When you use AI features:
+              </p>
+              <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <li>Orbi AI chat assistant sends relevant academic data (courses, work items, exams, notes, calendar events, shopping items, and gamification stats) to OpenAI for contextual responses</li>
+                <li>AI flashcard generation sends your notes or uploaded PDF content to OpenAI to generate study flashcards</li>
+                <li>AI note summarization sends your note content to OpenAI to produce concise summaries</li>
+                <li>AI work breakdown sends your task details to OpenAI to generate subtask suggestions</li>
+              </ul>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>
+                Data sent to OpenAI is processed according to OpenAI&apos;s API data usage policies. Per OpenAI&apos;s API terms, data submitted through the API is not used to train their models and is not stored after processing. AI-generated content is provided as-is and may not always be accurate. You are responsible for verifying any AI-generated information. AI features are available exclusively to premium subscribers.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Google Calendar Integration
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                College Orbit offers optional integration with Google Calendar. When you connect your Google account:
+              </p>
+              <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <li>You authenticate via Google&apos;s OAuth 2.0 flow, granting College Orbit permission to read your calendar events</li>
+                <li>We read and sync your Google Calendar events into your College Orbit calendar</li>
+                <li>Your OAuth tokens are encrypted using AES-256 encryption and stored securely on our servers</li>
+                <li>We only read calendar data from your Google account; we do not create, modify, or delete events in your Google Calendar</li>
+                <li>You can disconnect your Google account at any time from Settings, which will remove your stored tokens</li>
+              </ul>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>
+                Your use of Google Calendar is subject to Google&apos;s Terms of Service and Privacy Policy. We are not affiliated with Google and are not responsible for Google Calendar availability or data accuracy.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
+                Ambient & Focus Sounds
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                College Orbit provides ambient and focus sounds to help you study. Audio files are played entirely within your browser. No audio data or listening activity is collected, transmitted, or stored on our servers.
               </p>
             </div>
             <div>

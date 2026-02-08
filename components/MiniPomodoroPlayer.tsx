@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Play, Pause, X, Timer, Coffee } from 'lucide-react';
+import { Play, Pause, X, Timer, Coffee, Volume2 } from 'lucide-react';
 import { usePomodoroContext } from '@/context/PomodoroContext';
 import { useRouter } from 'next/navigation';
 
@@ -20,6 +20,7 @@ export default function MiniPomodoroPlayer() {
     timeLeft,
     isRunning,
     isWorkSession,
+    isAmbientPlaying,
     toggle,
     reset,
   } = usePomodoroContext();
@@ -195,9 +196,15 @@ export default function MiniPomodoroPlayer() {
           fontVariantNumeric: 'tabular-nums',
           color: isWorkSession ? 'var(--link)' : 'var(--success, #6bc96b)',
           minWidth: '52px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
         }}
       >
         {formatTime(timeLeft)}
+        {isAmbientPlaying && (
+          <Volume2 size={12} style={{ opacity: 0.7 }} />
+        )}
       </span>
 
       {/* Play/Pause button */}

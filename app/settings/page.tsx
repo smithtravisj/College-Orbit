@@ -12,7 +12,7 @@ import ColorPicker from '@/components/ui/ColorPicker';
 import UpgradePrompt from '@/components/subscription/UpgradePrompt';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { showDeleteToast } from '@/components/ui/DeleteToast';
-import { Monitor, RefreshCw, Link2, Unlink, ChevronDown, AlertCircle, Chrome, ExternalLink } from 'lucide-react';
+import { Monitor, RefreshCw, Link2, Unlink, ChevronDown, AlertCircle, Chrome, ExternalLink, Calendar } from 'lucide-react';
 import HelpTooltip from '@/components/ui/HelpTooltip';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -83,6 +83,18 @@ interface BrightspaceStatus {
   autoMarkComplete: boolean;
 }
 
+interface GoogleCalendarStatus {
+  connected: boolean;
+  email: string | null;
+  lastSyncedAt: string | null;
+  syncImportEvents: boolean;
+  syncExportEvents: boolean;
+  syncExportDeadlines: boolean;
+  syncExportExams: boolean;
+  importCalendarId: string | null;
+  exportCalendarId: string | null;
+}
+
 export default function SettingsPage() {
   const isMobile = useIsMobile();
   const { data: session, status: sessionStatus } = useSession();
@@ -109,7 +121,7 @@ export default function SettingsPage() {
   const [notificationPrefsExpanded, setNotificationPrefsExpanded] = useState(false);
   const [betaWarningOpen, setBetaWarningOpen] = useState(false);
   const betaWarningRef = useRef<HTMLDivElement>(null);
-  const [currentVersion, setCurrentVersion] = useState<string>('1.0.0');
+  const [currentVersion, setCurrentVersion] = useState<string>('1.4.0');
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
   const dueSoonInputRef = useRef<HTMLInputElement>(null);
 
@@ -260,6 +272,16 @@ export default function SettingsPage() {
   const [brightspaceSyncSettingsOpen, setBrightspaceSyncSettingsOpen] = useState(false);
   const [pendingBrightspaceDisconnect, setPendingBrightspaceDisconnect] = useState(false);
   const pendingBrightspaceDisconnectTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Google Calendar Integration state
+  const [googleCalendarStatus, setGoogleCalendarStatus] = useState<GoogleCalendarStatus | null>(null);
+  const [googleCalendarConnecting, setGoogleCalendarConnecting] = useState(false);
+  const [googleCalendarSyncing, setGoogleCalendarSyncing] = useState(false);
+  const [googleCalendarMessage, setGoogleCalendarMessage] = useState('');
+  const [googleCalendarSyncSettingsOpen, setGoogleCalendarSyncSettingsOpen] = useState(false);
+  const [showGoogleCalendarDisconnectModal, setShowGoogleCalendarDisconnectModal] = useState(false);
+  const [pendingGoogleCalendarDisconnect, setPendingGoogleCalendarDisconnect] = useState(false);
+  const pendingGoogleCalendarDisconnectTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Local state for sliders (smooth UI while debouncing API calls)
   const [localGradientIntensity, setLocalGradientIntensity] = useState(50);
@@ -424,6 +446,24 @@ export default function SettingsPage() {
     };
     if (session?.user) {
       fetchBrightspaceStatus();
+    }
+  }, [session]);
+
+  // Fetch Google Calendar connection status
+  useEffect(() => {
+    const fetchGoogleCalendarStatus = async () => {
+      try {
+        const response = await fetch('/api/google-calendar/status');
+        if (response.ok) {
+          const data = await response.json();
+          setGoogleCalendarStatus(data);
+        }
+      } catch (error) {
+        console.error('Error fetching Google Calendar status:', error);
+      }
+    };
+    if (session?.user) {
+      fetchGoogleCalendarStatus();
     }
   }, [session]);
 
@@ -1005,6 +1045,167 @@ export default function SettingsPage() {
       });
     } catch (error) {
       console.error('Failed to save sync settings:', error);
+    }
+  };
+
+  // Google Calendar Integration Handlers
+  const handleGoogleCalendarConnect = async () => {
+    setGoogleCalendarConnecting(true);
+    setGoogleCalendarMessage('');
+
+    try {
+      const response = await fetch('/api/google-calendar/connect');
+      const data = await response.json();
+
+      if (!response.ok) {
+        setGoogleCalendarMessage(`✗ ${data.error || 'Failed to connect'}`);
+        setGoogleCalendarConnecting(false);
+        setTimeout(() => setGoogleCalendarMessage(''), 5000);
+        return;
+      }
+
+      // Redirect to Google OAuth
+      window.location.href = data.url;
+    } catch (error) {
+      console.error('Google Calendar connection error:', error);
+      setGoogleCalendarMessage('✗ Failed to connect to Google Calendar. Please try again.');
+      setGoogleCalendarConnecting(false);
+      setTimeout(() => setGoogleCalendarMessage(''), 3000);
+    }
+  };
+
+  const performGoogleCalendarDisconnect = async () => {
+    try {
+      const response = await fetch('/api/google-calendar/disconnect', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        setGoogleCalendarStatus(null);
+        setGoogleCalendarMessage('✓ Successfully disconnected from Google Calendar');
+        setTimeout(() => setGoogleCalendarMessage(''), 3000);
+      } else {
+        const data = await response.json();
+        setGoogleCalendarMessage(`✗ ${data.error || 'Failed to disconnect'}`);
+        setTimeout(() => setGoogleCalendarMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Google Calendar disconnect error:', error);
+      setGoogleCalendarMessage('✗ Failed to disconnect. Please try again.');
+      setTimeout(() => setGoogleCalendarMessage(''), 3000);
+    }
+  };
+
+  const handleGoogleCalendarDisconnect = async () => {
+    setShowGoogleCalendarDisconnectModal(false);
+    await performGoogleCalendarDisconnect();
+  };
+
+  const handleGoogleCalendarDisconnectClick = () => {
+    if (confirmBeforeDelete) {
+      setShowGoogleCalendarDisconnectModal(true);
+    } else {
+      setPendingGoogleCalendarDisconnect(true);
+
+      if (pendingGoogleCalendarDisconnectTimeout.current) {
+        clearTimeout(pendingGoogleCalendarDisconnectTimeout.current);
+      }
+
+      showDeleteToast('Google Calendar disconnected', () => {
+        if (pendingGoogleCalendarDisconnectTimeout.current) {
+          clearTimeout(pendingGoogleCalendarDisconnectTimeout.current);
+          pendingGoogleCalendarDisconnectTimeout.current = null;
+        }
+        setPendingGoogleCalendarDisconnect(false);
+      });
+
+      pendingGoogleCalendarDisconnectTimeout.current = setTimeout(async () => {
+        await performGoogleCalendarDisconnect();
+        setPendingGoogleCalendarDisconnect(false);
+        pendingGoogleCalendarDisconnectTimeout.current = null;
+      }, 5000);
+    }
+  };
+
+  const handleGoogleCalendarSync = async () => {
+    setGoogleCalendarSyncing(true);
+    setGoogleCalendarMessage('');
+
+    try {
+      const response = await fetch('/api/google-calendar/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      const data = await response.json();
+      console.log('[GoogleCalendarSync] Sync response:', JSON.stringify(data.debug, null, 2), data.result);
+
+      if (!response.ok) {
+        setGoogleCalendarMessage(`✗ ${data.error || 'Sync failed'}`);
+        setGoogleCalendarSyncing(false);
+        setTimeout(() => setGoogleCalendarMessage(''), 5000);
+        return;
+      }
+
+      // Build success message
+      const r = data.result;
+      const parts = [];
+      if (r.imported.created > 0 || r.imported.updated > 0) {
+        parts.push(`${r.imported.created + r.imported.updated} imported`);
+      }
+      if (r.exportedEvents.created > 0 || r.exportedEvents.updated > 0) {
+        parts.push(`${r.exportedEvents.created + r.exportedEvents.updated} events exported`);
+      }
+      if (r.exportedDeadlines.created > 0 || r.exportedDeadlines.updated > 0) {
+        parts.push(`${r.exportedDeadlines.created + r.exportedDeadlines.updated} deadlines exported`);
+      }
+      if (r.exportedExams.created > 0 || r.exportedExams.updated > 0) {
+        parts.push(`${r.exportedExams.created + r.exportedExams.updated} exams exported`);
+      }
+      if (r.exportedWork?.created > 0 || r.exportedWork?.updated > 0) {
+        parts.push(`${(r.exportedWork?.created || 0) + (r.exportedWork?.updated || 0)} work items exported`);
+      }
+      if (r.exportedClasses?.created > 0 || r.exportedClasses?.updated > 0) {
+        parts.push(`${(r.exportedClasses?.created || 0) + (r.exportedClasses?.updated || 0)} classes exported`);
+      }
+
+      const syncedMessage = parts.length > 0 ? `Synced ${parts.join(', ')}` : 'No new data to sync';
+      setGoogleCalendarMessage(`✓ ${syncedMessage}`);
+
+      // Refresh status
+      const statusResponse = await fetch('/api/google-calendar/status');
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json();
+        setGoogleCalendarStatus(statusData);
+      }
+
+      // Refresh store data
+      await loadFromDatabase();
+
+      setGoogleCalendarSyncing(false);
+      setTimeout(() => setGoogleCalendarMessage(''), 5000);
+    } catch (error) {
+      console.error('Google Calendar sync error:', error);
+      setGoogleCalendarMessage('✗ Sync failed. Please try again.');
+      setGoogleCalendarSyncing(false);
+      setTimeout(() => setGoogleCalendarMessage(''), 3000);
+    }
+  };
+
+  const handleGoogleCalendarSyncSettingChange = async (setting: string, value: boolean) => {
+    // Update local state immediately
+    setGoogleCalendarStatus(prev => prev ? { ...prev, [setting]: value } : prev);
+
+    // Save to server
+    try {
+      await fetch('/api/google-calendar/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [setting]: value }),
+      });
+    } catch (error) {
+      console.error('Failed to save Google Calendar sync settings:', error);
     }
   };
 
@@ -3062,6 +3263,217 @@ export default function SettingsPage() {
             </div>
             <ExternalLink size={20} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
           </a>
+          </div>
+
+          {/* Google Calendar Integration Card */}
+          <div id="setting-google-calendar" style={{ gridColumn: '1 / -1' }}>
+          <Card title={
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Google Calendar Sync
+              <span style={{
+                fontSize: '10px',
+                fontWeight: 600,
+                color: 'var(--warning)',
+                backgroundColor: 'var(--warning-bg)',
+                padding: '2px 6px',
+                borderRadius: 'var(--radius-xs, 4px)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                Beta
+              </span>
+            </span>
+          }>
+            {!googleCalendarStatus?.connected ? (
+              // Not Connected State
+              <div>
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Sync your Google Calendar with College Orbit. Import Google events and export your deadlines, exams, and events back to Google Calendar.
+                </p>
+
+                {!isPremium && !isLoadingSubscription ? (
+                  <UpgradePrompt feature="Google Calendar Sync" />
+                ) : (
+                  <>
+                    <Button
+                      size={isMobile ? 'sm' : 'lg'}
+                      onClick={handleGoogleCalendarConnect}
+                      disabled={googleCalendarConnecting}
+                      style={{
+                        paddingLeft: isMobile ? '12px' : '16px',
+                        paddingRight: isMobile ? '12px' : '16px',
+                      }}
+                    >
+                      {googleCalendarConnecting ? (
+                        <>
+                          <RefreshCw size={16} className="animate-spin mr-2" />
+                          Connecting...
+                        </>
+                      ) : (
+                        <>
+                          <Calendar size={16} className="mr-2" />
+                          Connect Google Calendar
+                        </>
+                      )}
+                    </Button>
+                  </>
+                )}
+
+                {googleCalendarMessage && (
+                  <p style={{
+                    marginTop: '12px',
+                    fontSize: '14px',
+                    color: googleCalendarMessage.includes('✗') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {googleCalendarMessage}
+                  </p>
+                )}
+              </div>
+            ) : (
+              // Connected State
+              <div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px',
+                  backgroundColor: 'var(--panel-2)',
+                  borderRadius: 'var(--radius-xs, 8px)',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--success)',
+                  }} />
+                  <span className="text-sm text-[var(--text)]">
+                    Connected as <strong>{googleCalendarStatus.email}</strong>
+                  </span>
+                </div>
+
+                <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+                  Last synced: {formatLastSynced(googleCalendarStatus.lastSyncedAt)}
+                </p>
+
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    onClick={handleGoogleCalendarSync}
+                    disabled={googleCalendarSyncing}
+                    style={{
+                      paddingLeft: isMobile ? '12px' : '16px',
+                      paddingRight: isMobile ? '12px' : '16px',
+                    }}
+                  >
+                    {googleCalendarSyncing ? (
+                      <>
+                        <RefreshCw size={16} className="animate-spin mr-2" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw size={16} className="mr-2" />
+                        Sync Now
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size={isMobile ? 'sm' : 'lg'}
+                    variant="secondary"
+                    onClick={handleGoogleCalendarDisconnectClick}
+                    disabled={pendingGoogleCalendarDisconnect}
+                    style={{
+                      paddingLeft: isMobile ? '12px' : '16px',
+                      paddingRight: isMobile ? '12px' : '16px',
+                      boxShadow: 'none',
+                      opacity: pendingGoogleCalendarDisconnect ? 0.5 : 1,
+                    }}
+                  >
+                    <Unlink size={16} className="mr-2" />
+                    {pendingGoogleCalendarDisconnect ? 'Disconnecting...' : 'Disconnect'}
+                  </Button>
+                </div>
+
+                {/* Message display */}
+                {googleCalendarMessage && (
+                  <p style={{
+                    marginBottom: '16px',
+                    fontSize: '14px',
+                    color: googleCalendarMessage.includes('✗') ? 'var(--danger)' : 'var(--success)',
+                  }}>
+                    {googleCalendarMessage}
+                  </p>
+                )}
+
+                {/* Sync Settings Dropdown */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                  <button
+                    onClick={() => setGoogleCalendarSyncSettingsOpen(!googleCalendarSyncSettingsOpen)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      padding: '10px 12px',
+                      backgroundColor: 'var(--panel-2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius-xs, 6px)',
+                      cursor: 'pointer',
+                      color: 'var(--text)',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Sync Settings
+                    <ChevronDown
+                      size={18}
+                      style={{
+                        transition: 'transform 0.2s ease',
+                        transform: googleCalendarSyncSettingsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        color: 'var(--text-muted)',
+                      }}
+                    />
+                  </button>
+                  {googleCalendarSyncSettingsOpen && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+                      {[
+                        { key: 'syncImportEvents', label: 'Import Events', description: 'Import Google Calendar events', value: googleCalendarStatus.syncImportEvents },
+                        { key: 'syncExportEvents', label: 'Export Events', description: 'Export calendar events to Google', value: googleCalendarStatus.syncExportEvents },
+                        { key: 'syncExportDeadlines', label: 'Export Deadlines', description: 'Export deadlines to Google', value: googleCalendarStatus.syncExportDeadlines },
+                        { key: 'syncExportExams', label: 'Export Exams', description: 'Export exams to Google', value: googleCalendarStatus.syncExportExams },
+                      ].map((setting) => (
+                        <label
+                          key={setting.key}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '10px 12px',
+                            backgroundColor: 'var(--panel-2)',
+                            borderRadius: 'var(--radius-xs, 6px)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <div>
+                            <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)', margin: 0 }}>{setting.label}</p>
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{setting.description}</p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={setting.value}
+                            onChange={(e) => handleGoogleCalendarSyncSettingChange(setting.key, e.target.checked)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: colorPalette.accent }}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </Card>
           </div>
 
           <div style={{
@@ -6159,6 +6571,18 @@ export default function SettingsPage() {
         isDangerous={true}
         onConfirm={handleBrightspaceDisconnect}
         onCancel={() => setShowBrightspaceDisconnectModal(false)}
+      />
+
+      {/* Google Calendar Disconnect Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showGoogleCalendarDisconnectModal}
+        title="Disconnect from Google Calendar?"
+        message="Your imported events will remain in College Orbit, but syncing will stop until you reconnect. Exported events will remain in Google Calendar."
+        confirmText="Disconnect"
+        cancelText="Cancel"
+        isDangerous={true}
+        onConfirm={handleGoogleCalendarDisconnect}
+        onCancel={() => setShowGoogleCalendarDisconnectModal(false)}
       />
     </>
   );

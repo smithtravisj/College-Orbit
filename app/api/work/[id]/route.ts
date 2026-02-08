@@ -191,6 +191,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
         type: true,
         recurringPatternId: true,
         canvasAssignmentId: true,
+        googleCalendarEventId: true,
         dueAt: true,
       },
     });
@@ -214,6 +215,25 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
           userId: token.id,
           canvasId: existingItem.canvasAssignmentId,
           type: 'assignment',
+        },
+      });
+    }
+
+    // If exported to Google Calendar, queue deletion from Google
+    if (existingItem.googleCalendarEventId) {
+      await prisma.deletedGoogleCalendarItem.upsert({
+        where: {
+          userId_googleEventId_type: {
+            userId: token.id as string,
+            googleEventId: existingItem.googleCalendarEventId,
+            type: 'pending_google_delete',
+          },
+        },
+        update: { deletedAt: new Date() },
+        create: {
+          userId: token.id as string,
+          googleEventId: existingItem.googleCalendarEventId,
+          type: 'pending_google_delete',
         },
       });
     }

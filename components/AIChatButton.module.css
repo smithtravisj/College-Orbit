@@ -1,0 +1,108 @@
+/* AI Chat FAB - circular button positioned to the LEFT of QuickAddButton */
+
+/* Mobile: circular FAB */
+.fab {
+  position: fixed;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 150ms ease;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.fab:active {
+  transform: scale(0.95);
+}
+
+/* Mobile positioning: to the left of QuickAddButton's mobile position */
+/* QuickAdd is at right: calc(20px + 56px + 12px + safe) = right ~88px+safe, 56px wide */
+/* AI button: 44px wide, 12px gap from QuickAdd → right: 88 + 56 + 12 + safe = 156px + safe */
+@media (max-width: 767px) {
+  .fab {
+    bottom: calc(26px + env(safe-area-inset-bottom, 0px));
+    right: calc(156px + env(safe-area-inset-right, 0px));
+  }
+}
+
+/* Desktop fallback (shouldn't be used but just in case) */
+@media (min-width: 768px) {
+  .fab {
+    top: 24px;
+    right: 174px;
+  }
+}
+
+/* Desktop: top-right position (dashboard, calendar, tools, settings, admin, account) */
+/* QuickAdd .fabDesktop: top:24px, right:24px, pill shape ~130px wide */
+/* AI button: 40x40, 12px gap → right: 24 + ~130 + 12 = ~166px */
+.fabDesktop {
+  position: fixed;
+  top: 26px;
+  right: 174px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 150ms ease;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.fabDesktop:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.fabDesktop:active {
+  transform: scale(0.95);
+}
+
+/* Desktop: bottom-right position (work, exams, notes, courses, shopping) */
+/* QuickAdd .fabDesktopBottomRight: bottom:24px, right:24px, pill ~130px wide */
+/* AI button: 40x40, 12px gap → right: 24 + ~130 + 12 = ~166px */
+.fabDesktopBottomRight {
+  position: fixed;
+  bottom: 26px;
+  right: 174px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 150ms ease;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.fabDesktopBottomRight:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.fabDesktopBottomRight:active {
+  transform: scale(0.95);
+}

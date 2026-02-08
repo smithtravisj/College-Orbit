@@ -153,6 +153,25 @@ export async function DELETE(
       return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
     }
 
+    // If exported to Google Calendar, queue deletion from Google
+    if (existingExam.googleCalendarEventId) {
+      await prisma.deletedGoogleCalendarItem.upsert({
+        where: {
+          userId_googleEventId_type: {
+            userId: token.id as string,
+            googleEventId: existingExam.googleCalendarEventId,
+            type: 'pending_google_delete',
+          },
+        },
+        update: { deletedAt: new Date() },
+        create: {
+          userId: token.id as string,
+          googleEventId: existingExam.googleCalendarEventId,
+          type: 'pending_google_delete',
+        },
+      });
+    }
+
     // If this is a recurring exam, delete this instance and all future instances
     if (existingExam.recurringPatternId) {
       const now = new Date();

@@ -29,7 +29,15 @@ export interface FlashcardDeck {
 }
 
 export type StudyMode = 'flashcard' | 'type' | 'match';
-export type ViewMode = 'decks' | 'deck' | 'study';
+export type ViewMode = 'decks' | 'deck' | 'study' | 'quiz';
+
+export interface QuizQuestion {
+  id: string;
+  type: 'mc' | 'short';
+  question: string;
+  options?: string[];
+  correctAnswer: string;
+}
 export type CardStatus = 'due' | 'learning' | 'reviewing' | 'mastered';
 
 export type SortOption = 'recent' | 'due' | 'alphabetical' | 'course' | 'mastery' | 'created';

@@ -155,7 +155,7 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Verify ownership and get Canvas ID if present
+    // Verify ownership and get Canvas/Google IDs if present
     const existingDeadline = await prisma.deadline.findFirst({
       where: {
         id,
@@ -166,6 +166,7 @@ export async function DELETE(
         userId: true,
         recurringPatternId: true,
         canvasAssignmentId: true,
+        googleCalendarEventId: true,
         dueAt: true,
       },
     });
@@ -192,6 +193,25 @@ export async function DELETE(
           userId: token.id,
           canvasId: existingDeadline.canvasAssignmentId,
           type: 'assignment',
+        },
+      });
+    }
+
+    // If exported to Google Calendar, queue deletion from Google
+    if (existingDeadline.googleCalendarEventId) {
+      await prisma.deletedGoogleCalendarItem.upsert({
+        where: {
+          userId_googleEventId_type: {
+            userId: token.id as string,
+            googleEventId: existingDeadline.googleCalendarEventId,
+            type: 'pending_google_delete',
+          },
+        },
+        update: { deletedAt: new Date() },
+        create: {
+          userId: token.id as string,
+          googleEventId: existingDeadline.googleCalendarEventId,
+          type: 'pending_google_delete',
         },
       });
     }

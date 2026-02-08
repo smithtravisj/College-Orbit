@@ -66,7 +66,8 @@ model User {
   deletedCanvasItems        DeletedCanvasItem[]
   deletedBlackboardItems    DeletedBlackboardItem[]
   deletedMoodleItems        DeletedMoodleItem[]
-  deletedBrightspaceItems   DeletedBrightspaceItem[]
+  deletedBrightspaceItems       DeletedBrightspaceItem[]
+  deletedGoogleCalendarItems    DeletedGoogleCalendarItem[]
   workItems                 WorkItem[]
   recurringWorkPatterns     RecurringWorkPattern[]
   betaFeedback              BetaFeedback[]
@@ -180,6 +181,9 @@ model Deadline {
   canvasPointsEarned   Float?
   canvasGradePostedAt  DateTime?
 
+  // Google Calendar Integration
+  googleCalendarEventId String?
+
   course           Course?                   @relation(fields: [courseId], references: [id])
   recurringPattern RecurringDeadlinePattern? @relation(fields: [recurringPatternId], references: [id])
   user             User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -194,6 +198,7 @@ model Deadline {
   @@index([isRecurring])
   @@index([canvasAssignmentId])
   @@index([dueAt])
+  @@index([googleCalendarEventId])
 }
 
 model Task {
@@ -321,6 +326,9 @@ model Exam {
   instanceDate       DateTime?
   isRecurring        Boolean               @default(false)
   recurringPatternId String?
+  // Google Calendar Integration
+  googleCalendarEventId String?
+
   course             Course?               @relation(fields: [courseId], references: [id])
   recurringPattern   RecurringExamPattern? @relation(fields: [recurringPatternId], references: [id])
   user               User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -334,6 +342,7 @@ model Exam {
   @@index([examAt])
   @@index([recurringPatternId])
   @@index([isRecurring])
+  @@index([googleCalendarEventId])
 }
 
 model ExamReminder {
@@ -619,6 +628,20 @@ model Settings {
   spotifyMiniPlayerSize     String    @default("medium") // "big" | "medium" | "mini"
   spotifyVisualizerEnabled  Boolean   @default(true)
 
+  // Google Calendar Integration
+  googleCalendarAccessToken        String?
+  googleCalendarRefreshToken       String?
+  googleCalendarTokenExpiresAt     DateTime?
+  googleCalendarEmail              String?
+  googleCalendarConnected          Boolean   @default(false)
+  googleCalendarLastSyncedAt       DateTime?
+  googleCalendarSyncImportEvents   Boolean   @default(true)
+  googleCalendarSyncExportEvents   Boolean   @default(true)
+  googleCalendarSyncExportDeadlines Boolean  @default(true)
+  googleCalendarSyncExportExams    Boolean   @default(true)
+  googleCalendarImportCalendarId   String?   @default("primary")
+  googleCalendarExportCalendarId   String?   @default("primary")
+
   // Visual Themes (Premium)
   visualTheme               String?   @default("default")
 
@@ -827,6 +850,9 @@ model CalendarEvent {
   // Brightspace LMS Integration
   brightspaceEventId String?
 
+  // Google Calendar Integration
+  googleEventId String?
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -835,6 +861,7 @@ model CalendarEvent {
   @@index([blackboardEventId])
   @@index([moodleEventId])
   @@index([brightspaceEventId])
+  @@index([googleEventId])
 }
 
 model AuditLog {
@@ -924,6 +951,19 @@ model DeletedBrightspaceItem {
   @@index([userId, type])
 }
 
+model DeletedGoogleCalendarItem {
+  id            String   @id @default(cuid())
+  userId        String
+  googleEventId String
+  type          String // 'event'
+  deletedAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, googleEventId, type])
+  @@index([userId, type])
+}
+
 model UserSession {
   id             String    @id @default(cuid())
   userId         String
@@ -998,6 +1038,9 @@ model WorkItem {
   brightspacePointsEarned   Float?
   brightspaceGradePostedAt  DateTime?
 
+  // Google Calendar Integration
+  googleCalendarEventId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1021,6 +1064,7 @@ model WorkItem {
   @@index([moodleAssignmentId])
   @@index([brightspaceActivityId])
   @@index([dueAt])
+  @@index([googleCalendarEventId])
 }
 
 model RecurringWorkPattern {

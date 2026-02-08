@@ -1,12 +1,12 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import { getVisualTheme, resolveThemeId } from '@/lib/visualThemes';
 import { useSubscription } from '@/hooks/useSubscription';
 
-export default function BackgroundDecoration() {
+export default memo(function BackgroundDecoration() {
   const university = useAppStore((state) => state.settings.university);
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
   const savedUseCustomTheme = useAppStore((state) => state.settings.useCustomTheme);
@@ -4896,4 +4896,4 @@ export default function BackgroundDecoration() {
       {renderSkeuoEffects()}
     </div>
   );
-}
+});

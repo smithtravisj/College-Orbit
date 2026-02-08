@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Search, ChevronDown, ChevronRight, X, HelpCircle, BookOpen, Calendar, CheckSquare, FileText, Settings, Shield, Zap, Bell, Download, Users, CreditCard } from 'lucide-react';
+import { ArrowLeft, Search, ChevronDown, ChevronRight, X, HelpCircle, BookOpen, Calendar, CheckSquare, FileText, Settings, Shield, Zap, Bell, Download, Users, CreditCard, Bot, ClipboardList, Volume2 } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
@@ -20,7 +20,7 @@ const faqData: FAQ[] = [
   {
     id: 'what-is-college-orbit',
     question: 'What is College Orbit?',
-    answer: 'College Orbit is a privacy-first personal dashboard designed for students. It helps you manage your courses, track assignments and deadlines, organize notes, prepare for exams, and stay on top of your academic life. All your data is stored securely and we never share your personal information with third parties.',
+    answer: 'College Orbit is a privacy-first personal dashboard designed for students. It helps you manage your courses, track assignments and work items, organize notes, prepare for exams, and stay on top of your academic life. All your data is stored securely and we never share your personal information with third parties.',
     category: 'Getting Started',
     keywords: ['about', 'what', 'overview', 'introduction', 'start'],
     featured: true,
@@ -28,23 +28,23 @@ const faqData: FAQ[] = [
   {
     id: 'how-to-add-courses',
     question: 'How do I add my courses?',
-    answer: 'Go to the Courses page from the sidebar. Click the "Add Course" button and fill in your course details including name, code, professor, location, and schedule. You can also set a custom color for each course to help organize your calendar and tasks visually.',
+    answer: 'Go to the Courses page from the sidebar. Click the "Add Course" button and fill in your course details including name, code, location, and schedule.',
     category: 'Getting Started',
     keywords: ['add', 'course', 'create', 'new', 'class', 'subject'],
     featured: true,
   },
   {
     id: 'how-to-add-assignments',
-    question: 'How do I add assignments and deadlines?',
-    answer: 'Navigate to the Deadlines page and click "Add Deadline". Enter the assignment name, select the associated course, set the due date and time, and optionally add a description. You can also set priority levels and receive reminders before the deadline.',
+    question: 'How do I add assignments and work items?',
+    answer: 'Navigate to the Work page and click the add button. Choose the type (task, assignment, reading, or project), select the associated course, set the due date and time, and optionally add a description, checklist, links, and tags. You can also set priority levels and receive reminders.',
     category: 'Getting Started',
-    keywords: ['assignment', 'deadline', 'homework', 'task', 'due date', 'add'],
+    keywords: ['assignment', 'work item', 'homework', 'task', 'due date', 'add'],
     featured: true,
   },
   {
     id: 'keyboard-shortcuts',
     question: 'Are there keyboard shortcuts?',
-    answer: 'Yes! Press the "?" key anywhere in the app to view all available keyboard shortcuts. Common shortcuts include: "/" to open global search, "N" to create new items, "C" for courses, "D" for deadlines, and arrow keys to navigate between items.',
+    answer: 'Yes! Press the "?" key anywhere in the app to view all available keyboard shortcuts. Common shortcuts include: "/" to open global search, "N" to create new items, "C" for courses, "W" for work items, and arrow keys to navigate between items.',
     category: 'Getting Started',
     keywords: ['keyboard', 'shortcut', 'hotkey', 'key', 'quick'],
     featured: true,
@@ -54,16 +54,9 @@ const faqData: FAQ[] = [
   {
     id: 'edit-course',
     question: 'How do I edit or delete a course?',
-    answer: 'Open the Courses page and click on the course you want to modify. Click the three-dot menu (⋮) or the edit button to change course details. To delete, select "Delete" from the menu. Note: Deleting a course will also remove all associated deadlines, exams, and work items.',
+    answer: 'Open the Courses page and click on the course you want to modify. Click the three-dot menu or the edit button to change course details. To delete, select "Delete" from the menu. Note: Deleting a course will also remove all associated work items, exams, and calendar events.',
     category: 'Courses',
     keywords: ['edit', 'delete', 'remove', 'modify', 'change', 'course'],
-  },
-  {
-    id: 'course-colors',
-    question: 'How do course colors work?',
-    answer: 'Each course can have a custom color that appears throughout the app - in the calendar, deadlines, and work items. This helps you quickly identify which course an item belongs to. You can change a course\'s color by editing the course and selecting from the color palette.',
-    category: 'Courses',
-    keywords: ['color', 'theme', 'visual', 'customize', 'appearance'],
   },
   {
     id: 'course-schedule',
@@ -71,13 +64,6 @@ const faqData: FAQ[] = [
     answer: 'When adding or editing a course, you can set recurring class times. Select the days of the week, start and end times, and location. These will automatically appear on your calendar as recurring events.',
     category: 'Courses',
     keywords: ['schedule', 'time', 'recurring', 'weekly', 'class time', 'timetable'],
-  },
-  {
-    id: 'archive-course',
-    question: 'Can I archive old courses?',
-    answer: 'Yes, you can archive courses from previous semesters. Archived courses are hidden from your main view but their data is preserved. Go to the course settings and select "Archive". You can unarchive them anytime from the archived courses section.',
-    category: 'Courses',
-    keywords: ['archive', 'old', 'past', 'semester', 'hide', 'previous'],
   },
 
   // Calendar
@@ -91,53 +77,46 @@ const faqData: FAQ[] = [
   {
     id: 'add-calendar-event',
     question: 'How do I add events to my calendar?',
-    answer: 'Click on any date or time slot in the calendar to create a new event. You can also click the "+" button. Events can be one-time or recurring, and you can link them to specific courses. All deadlines and exams automatically appear on your calendar.',
+    answer: 'Click on any date or time slot in the calendar to create a new event. You can also click the "+" button. Events can be one-time or recurring, and you can link them to specific courses. All work item due dates and exams automatically appear on your calendar.',
     category: 'Calendar',
     keywords: ['event', 'add', 'create', 'calendar', 'appointment'],
   },
   {
     id: 'calendar-sync',
-    question: 'Can I sync with Google Calendar or other calendars?',
-    answer: 'Yes! Go to Settings > Integrations to connect external calendars. You can import events from Google Calendar, Apple Calendar, or any calendar that supports ICS format. You can also export your College Orbit calendar to use in other apps.',
+    question: 'Can I sync with Google Calendar?',
+    answer: 'Yes! Premium users can connect Google Calendar for two-way sync of events and schedules. Go to Settings > Integrations to connect your Google account. You can also export your College Orbit calendar as an iCal subscription URL for use in Apple Calendar and other apps.',
     category: 'Calendar',
     keywords: ['sync', 'google', 'apple', 'ical', 'import', 'export', 'integration'],
   },
 
-  // Deadlines & Work
+  // Work Items
   {
-    id: 'deadline-reminders',
-    question: 'How do deadline reminders work?',
-    answer: 'You can set reminders for each deadline when creating or editing it. Choose to be reminded hours or days before the due date. Reminders appear as notifications if you have them enabled. You can customize default reminder times in Settings > Preferences.',
-    category: 'Deadlines',
-    keywords: ['reminder', 'notification', 'alert', 'deadline', 'due'],
+    id: 'what-are-work-items',
+    question: 'What are work items?',
+    answer: 'Work items are your central place for managing all academic tasks: assignments, readings, projects, and general tasks. Each can have a due date, priority, course, tags, checklist, links, and notes.',
+    category: 'Work Items',
+    keywords: ['work', 'item', 'task', 'assignment', 'reading', 'project', 'manage'],
   },
   {
-    id: 'recurring-deadlines',
-    question: 'Can I create recurring deadlines?',
-    answer: 'Yes, when adding a deadline, enable the "Recurring" option. You can set deadlines to repeat daily, weekly, biweekly, or monthly. This is perfect for regular assignments like weekly homework or lab reports.',
-    category: 'Deadlines',
-    keywords: ['recurring', 'repeat', 'weekly', 'regular', 'automatic'],
+    id: 'create-work-item',
+    question: 'How do I create a work item?',
+    answer: 'Go to the Work page and click the add button. Choose the type (task, assignment, reading, or project), fill in the details, and save.',
+    category: 'Work Items',
+    keywords: ['create', 'add', 'new', 'work item', 'task', 'assignment'],
   },
   {
-    id: 'priority-levels',
-    question: 'What do the priority levels mean?',
-    answer: 'Priority levels help you focus on what\'s most important. High priority items appear at the top and may have visual indicators. Medium is the default for regular assignments. Low priority is for optional or less urgent tasks. You can filter and sort by priority.',
-    category: 'Deadlines',
-    keywords: ['priority', 'important', 'urgent', 'high', 'low', 'medium'],
+    id: 'recurring-work-items',
+    question: 'Can I set up recurring work items?',
+    answer: 'Yes, you can create recurring patterns for work items that repeat on specific days of the week, days of the month, or at custom intervals.',
+    category: 'Work Items',
+    keywords: ['recurring', 'repeat', 'weekly', 'regular', 'automatic', 'pattern'],
   },
   {
-    id: 'complete-deadline',
-    question: 'How do I mark a deadline as complete?',
-    answer: 'Click the checkbox next to any deadline to mark it complete. Completed items move to the "Completed" section and contribute to your progress statistics. You can also undo completion if you made a mistake.',
-    category: 'Deadlines',
-    keywords: ['complete', 'done', 'finish', 'check', 'mark'],
-  },
-  {
-    id: 'overdue-deadlines',
-    question: 'What happens to overdue deadlines?',
-    answer: 'Overdue deadlines are highlighted in red and appear in a separate "Overdue" section at the top of your deadlines page. You can either complete them, reschedule them to a new date, or delete them if they\'re no longer relevant.',
-    category: 'Deadlines',
-    keywords: ['overdue', 'late', 'missed', 'past due', 'expired'],
+    id: 'work-item-priorities',
+    question: 'How do work item priorities work?',
+    answer: 'You can set priorities (low, medium, high, urgent) to help you focus on what matters most. Filter and sort by priority on the Work page.',
+    category: 'Work Items',
+    keywords: ['priority', 'important', 'urgent', 'high', 'low', 'medium', 'sort', 'filter'],
   },
 
   // Exams
@@ -185,19 +164,12 @@ const faqData: FAQ[] = [
     category: 'Notes',
     keywords: ['search', 'find', 'filter', 'query', 'look for'],
   },
-  {
-    id: 'export-notes',
-    question: 'Can I export my notes?',
-    answer: 'Yes, you can export individual notes or all notes at once. Supported formats include PDF, Markdown, and plain text. Go to the note\'s menu and select "Export", or use the bulk export option in Settings > Data.',
-    category: 'Notes',
-    keywords: ['export', 'download', 'pdf', 'markdown', 'backup'],
-  },
 
   // Progress & Analytics
   {
     id: 'progress-tracking',
     question: 'How does progress tracking work?',
-    answer: 'The Progress page shows your completion statistics across all courses. It tracks completed vs. pending deadlines, study hours, exam performance, and more. Use this to identify which courses need more attention and celebrate your achievements.',
+    answer: 'The Progress page shows your XP, level, streak information, and daily activity. Track your completed work items and see how consistently you are staying on top of your academic tasks.',
     category: 'Progress',
     keywords: ['progress', 'track', 'statistics', 'analytics', 'completion'],
   },
@@ -211,7 +183,7 @@ const faqData: FAQ[] = [
   {
     id: 'achievements',
     question: 'How do achievements work?',
-    answer: 'Earn achievements by reaching milestones like completing your first assignment, maintaining a week-long streak, or finishing all deadlines for a course. Achievements are displayed on your profile and provide motivation to stay on track.',
+    answer: 'Earn achievements by reaching milestones like completing your first assignment, maintaining a week-long streak, or finishing all work items for a course. Achievements are displayed on your profile and provide motivation to stay on track.',
     category: 'Progress',
     keywords: ['achievement', 'badge', 'milestone', 'reward', 'gamification'],
   },
@@ -227,23 +199,16 @@ const faqData: FAQ[] = [
   {
     id: 'change-theme',
     question: 'How do I change the app theme?',
-    answer: 'Go to Settings > Appearance to change your theme. Choose from light, dark, or system (auto-switches based on your device settings). You can also customize accent colors to match your college colors or personal preference.',
+    answer: 'Go to Settings > Appearance to change your theme. Choose from light or dark mode. You can also customize accent colors to match your college colors or personal preference.',
     category: 'Settings',
     keywords: ['theme', 'dark mode', 'light mode', 'appearance', 'color'],
   },
   {
     id: 'notifications-settings',
     question: 'How do I manage notifications?',
-    answer: 'Go to Settings > Preferences to configure notifications. You can enable/disable different notification types (deadlines, reminders, updates), set quiet hours, and choose notification sounds. Browser notifications require permission.',
+    answer: 'Go to Settings > Preferences to configure notifications. You can enable or disable different notification types (work items, reminders, updates) and choose notification sounds. Browser notifications require permission.',
     category: 'Settings',
-    keywords: ['notification', 'alert', 'sound', 'quiet', 'disable'],
-  },
-  {
-    id: 'default-values',
-    question: 'Can I set default values for new items?',
-    answer: 'Yes, in Settings > Preferences you can set defaults for new deadlines (default reminder time, priority), notes (default course), and more. This saves time when adding items frequently.',
-    category: 'Settings',
-    keywords: ['default', 'preset', 'automatic', 'setting', 'preference'],
+    keywords: ['notification', 'alert', 'sound', 'disable'],
   },
   {
     id: 'visual-themes',
@@ -271,21 +236,21 @@ const faqData: FAQ[] = [
   {
     id: 'export-data',
     question: 'How do I export all my data?',
-    answer: 'Go to Settings > Data and click "Export All Data". This downloads a complete backup of your courses, deadlines, notes, and settings in JSON format. You can use this for personal backup or to migrate to another system.',
+    answer: 'Go to Settings > Data and click "Export All Data". This downloads a complete backup of your courses, work items, notes, and settings in JSON format. You can use this for personal backup or to migrate to another system.',
     category: 'Privacy & Data',
     keywords: ['export', 'backup', 'download', 'data', 'json'],
   },
   {
     id: 'import-data',
-    question: 'Can I import data from other apps?',
-    answer: 'Yes, you can import data from various formats. Go to Settings > Data > Import to upload files. We support common formats and can help migrate from other student planners. Contact support if you need help with a specific format.',
+    question: 'Can I import data?',
+    answer: 'Yes, you can import data from a College Orbit JSON export. Go to Settings > Data > Import to upload your backup file.',
     category: 'Privacy & Data',
     keywords: ['import', 'migrate', 'upload', 'transfer', 'data'],
   },
   {
     id: 'delete-account',
     question: 'How do I delete my account and data?',
-    answer: 'Go to Settings > Account > Delete Account. This permanently removes all your data from our servers. This action cannot be undone, so we recommend exporting your data first. You\'ll need to confirm with your password.',
+    answer: 'Go to the Account page and select Delete Account. This permanently and immediately removes all your data from our servers. This action cannot be undone, so we recommend exporting your data first.',
     category: 'Privacy & Data',
     keywords: ['delete', 'account', 'remove', 'permanent', 'gdpr'],
   },
@@ -294,23 +259,16 @@ const faqData: FAQ[] = [
   {
     id: 'free-vs-premium',
     question: 'What\'s the difference between free and premium?',
-    answer: 'The free tier includes all core features: courses, deadlines, notes, and calendar. Premium adds: unlimited storage, advanced analytics, custom themes, priority support, and more. Visit the Pricing page for a full comparison.',
+    answer: 'The free tier includes all core features: courses, work items, notes, and calendar. Premium adds: AI features (Orbi, flashcard generation, work breakdown, note summarization), ambient sounds, Google Calendar sync, custom themes, pet companion, and more. Visit the Pricing page for a full comparison.',
     category: 'Subscription',
     keywords: ['free', 'premium', 'subscription', 'paid', 'features', 'pricing'],
   },
   {
     id: 'cancel-subscription',
     question: 'How do I cancel my subscription?',
-    answer: 'Go to Settings > Subscription > Manage Subscription. Click "Cancel Subscription" to stop future billing. You\'ll keep premium access until the end of your current billing period. You can resubscribe anytime.',
+    answer: 'Go to the Account page and click "Manage Subscription". Click "Cancel Subscription" to stop future billing. You\'ll keep premium access until the end of your current billing period. You can resubscribe anytime.',
     category: 'Subscription',
     keywords: ['cancel', 'subscription', 'stop', 'billing', 'unsubscribe'],
-  },
-  {
-    id: 'student-discount',
-    question: 'Is there a student discount?',
-    answer: 'Yes! We offer discounted pricing for students with a valid .edu email address. The discount is automatically applied when you sign up with your school email. Contact support if you have a different school email domain.',
-    category: 'Subscription',
-    keywords: ['discount', 'student', 'edu', 'pricing', 'cheap'],
   },
 
   // Troubleshooting
@@ -338,7 +296,7 @@ const faqData: FAQ[] = [
   {
     id: 'notifications-not-working',
     question: 'I\'m not receiving notifications',
-    answer: 'Check these settings: 1) Browser notification permissions (allow for this site), 2) System notification settings, 3) In-app notification settings (Settings > Preferences), 4) Check if quiet hours are active. Try sending a test notification.',
+    answer: 'Check these settings: 1) Browser notification permissions (allow for this site), 2) System notification settings, 3) In-app notification settings (Settings > Preferences). If issues persist, try logging out and back in, or contact support.',
     category: 'Troubleshooting',
     keywords: ['notifications', 'not receiving', 'alerts', 'remind', 'broken'],
   },
@@ -354,18 +312,10 @@ const faqData: FAQ[] = [
   {
     id: 'browser-extension',
     question: 'Is there a browser extension?',
-    answer: 'Yes! The College Orbit browser extension lets you quickly add deadlines and notes without leaving your current page. Available for Chrome and other Chromium-based browsers. Install it from the Chrome Web Store.',
+    answer: 'Yes! The College Orbit browser extension lets you quickly add work items and notes without leaving your current page. Available for Chrome and other Chromium-based browsers. Install it from the Chrome Web Store.',
     category: 'Mobile & Extensions',
     keywords: ['extension', 'chrome', 'browser', 'addon', 'plugin'],
   },
-  {
-    id: 'offline-access',
-    question: 'Can I use College Orbit offline?',
-    answer: 'Limited offline access is available. Previously loaded data can be viewed offline, and changes sync when you\'re back online. For the best experience, we recommend staying connected. Full offline support is planned for future updates.',
-    category: 'Mobile & Extensions',
-    keywords: ['offline', 'no internet', 'disconnected', 'airplane mode'],
-  },
-
   // Tools & Features
   {
     id: 'pomodoro-timer',
@@ -391,48 +341,103 @@ const faqData: FAQ[] = [
   {
     id: 'global-search',
     question: 'How do I search across everything?',
-    answer: 'Press "/" or click the search icon to open Global Search. Search across all your courses, deadlines, notes, events, and more. Results are grouped by type. Use filters to narrow down results. Recent searches are saved for quick access.',
+    answer: 'Press "/" or click the search icon to open Global Search. Search across all your courses, work items, notes, events, flashcard decks, shopping items, and more. Results are grouped by type for easy browsing.',
     category: 'Tools',
     keywords: ['search', 'global', 'find', 'everything', 'all'],
+  },
+
+  // AI Features / Orbi
+  {
+    id: 'what-is-orbi',
+    question: 'What is Orbi?',
+    answer: 'Orbi is your AI study assistant built into College Orbit. Ask questions about your schedule, assignments, exams, and progress. Orbi has access to all your data and can give personalized answers. Premium feature.',
+    category: 'AI Features',
+    keywords: ['orbi', 'ai', 'assistant', 'chat', 'ask', 'help'],
+  },
+  {
+    id: 'what-can-orbi-do',
+    question: 'What can I ask Orbi?',
+    answer: 'Anything about your academic life: what\'s due this week, how your streak is going, what courses you\'re taking, study tips based on your workload, etc.',
+    category: 'AI Features',
+    keywords: ['orbi', 'ai', 'ask', 'question', 'what', 'schedule', 'due', 'streak'],
+  },
+  {
+    id: 'ai-flashcard-generation',
+    question: 'How does AI flashcard generation work?',
+    answer: 'Open any flashcard deck and use the AI generate option. You can generate cards from your notes, PDFs, or by describing a topic. Premium feature.',
+    category: 'AI Features',
+    keywords: ['ai', 'flashcard', 'generate', 'create', 'automatic', 'notes', 'pdf'],
+  },
+  {
+    id: 'ai-work-breakdown',
+    question: 'What is AI work breakdown?',
+    answer: 'When you have a large assignment or project, Orbi can break it down into smaller, manageable subtasks automatically. Premium feature.',
+    category: 'AI Features',
+    keywords: ['ai', 'breakdown', 'subtask', 'project', 'assignment', 'split', 'divide'],
+  },
+  {
+    id: 'ai-note-summarization',
+    question: 'What is AI note summarization?',
+    answer: 'Select any note and use the summarize option to get a concise AI-generated summary of the content. Premium feature.',
+    category: 'AI Features',
+    keywords: ['ai', 'summarize', 'summary', 'note', 'concise', 'tldr'],
+  },
+
+  // Google Calendar
+  {
+    id: 'connect-google-calendar',
+    question: 'How do I connect Google Calendar?',
+    answer: 'Go to Settings > Integrations and click Connect Google Calendar. You\'ll be redirected to authorize College Orbit to access your calendar. Premium feature.',
+    category: 'Google Calendar',
+    keywords: ['google', 'calendar', 'connect', 'integrate', 'sync', 'authorize'],
+  },
+  {
+    id: 'google-calendar-sync',
+    question: 'What syncs with Google Calendar?',
+    answer: 'Your calendar events, class schedules, and due dates can sync to and from Google Calendar.',
+    category: 'Google Calendar',
+    keywords: ['google', 'calendar', 'sync', 'events', 'class', 'schedule', 'due date'],
+  },
+  {
+    id: 'disconnect-google-calendar',
+    question: 'How do I disconnect Google Calendar?',
+    answer: 'Go to Settings > Integrations and click Disconnect next to Google Calendar. Your synced events will remain in College Orbit.',
+    category: 'Google Calendar',
+    keywords: ['google', 'calendar', 'disconnect', 'remove', 'unlink'],
+  },
+
+  // Ambient / Focus Sounds
+  {
+    id: 'ambient-sounds',
+    question: 'What are ambient sounds?',
+    answer: 'College Orbit includes built-in focus sounds like rain, cafe noise, and lo-fi beats to help you concentrate while studying. Available in the Pomodoro timer.',
+    category: 'Ambient Sounds',
+    keywords: ['ambient', 'sound', 'focus', 'rain', 'cafe', 'lofi', 'lo-fi', 'music', 'noise'],
+  },
+  {
+    id: 'ambient-sounds-premium',
+    question: 'Are ambient sounds a premium feature?',
+    answer: 'Yes, ambient/focus sounds are available to premium subscribers.',
+    category: 'Ambient Sounds',
+    keywords: ['ambient', 'sound', 'premium', 'paid', 'subscription'],
   },
 
   // Shopping & Lists
   {
     id: 'shopping-lists',
     question: 'How do I use shopping lists?',
-    answer: 'The Shopping page lets you create and manage shopping lists. Add items with quantities and categories. Check items off as you shop. Create multiple lists for different stores or purposes. Lists sync across devices.',
+    answer: 'The Shopping page lets you manage shopping lists with three types: grocery, wishlist, and pantry. Add items with quantities, categories, and prices. Check items off as you shop. Lists sync across devices.',
     category: 'Shopping',
-    keywords: ['shopping', 'list', 'grocery', 'items', 'buy'],
-  },
-  {
-    id: 'share-lists',
-    question: 'Can I share lists with others?',
-    answer: 'Yes, you can share shopping lists with roommates or friends. Click the share button on any list to generate a link. Shared users can view and check off items in real-time. Manage sharing permissions in list settings.',
-    category: 'Shopping',
-    keywords: ['share', 'collaborate', 'roommate', 'together', 'list'],
+    keywords: ['shopping', 'list', 'grocery', 'items', 'buy', 'wishlist', 'pantry'],
   },
 
   // Account
   {
     id: 'change-email',
     question: 'How do I change my email address?',
-    answer: 'Go to Settings > Account > Email. Enter your new email address and confirm with your password. We\'ll send a verification link to your new email. Your old email will still work until you verify the new one.',
+    answer: 'Go to the Account page to update your email address. Enter your new email and confirm the change.',
     category: 'Account',
     keywords: ['email', 'change', 'update', 'address', 'account'],
-  },
-  {
-    id: 'two-factor-auth',
-    question: 'How do I enable two-factor authentication?',
-    answer: 'Go to Settings > Account > Security. Click "Enable 2FA" and scan the QR code with your authenticator app (Google Authenticator, Authy, etc.). Save your backup codes in a safe place in case you lose access to your authenticator.',
-    category: 'Account',
-    keywords: ['2fa', 'two factor', 'security', 'authenticator', 'mfa'],
-  },
-  {
-    id: 'multiple-colleges',
-    question: 'Can I track multiple colleges or semesters?',
-    answer: 'Yes! You can add courses from different semesters or even different schools. Use the semester/term selector to filter your view. Archive old semesters to keep your current view clean while preserving historical data.',
-    category: 'Account',
-    keywords: ['multiple', 'semester', 'college', 'school', 'term'],
   },
 
   // Integrations
@@ -446,23 +451,23 @@ const faqData: FAQ[] = [
   {
     id: 'google-integration',
     question: 'What Google integrations are available?',
-    answer: 'You can connect Google Calendar to sync events both ways, Google Drive to attach files to notes and exams, and sign in with Google for easy authentication. Go to Settings > Integrations to connect your Google account.',
+    answer: 'You can connect Google Calendar to sync events both ways (premium feature) and sign in with Google for easy authentication. Go to Settings > Integrations to connect your Google account.',
     category: 'Integrations',
-    keywords: ['google', 'calendar', 'drive', 'integration', 'connect'],
+    keywords: ['google', 'calendar', 'integration', 'connect'],
   },
 
   // Tips & Best Practices
   {
     id: 'getting-organized',
     question: 'Tips for staying organized?',
-    answer: 'Best practices: 1) Add all courses at the start of the semester, 2) Enter assignments as soon as they\'re announced, 3) Review your calendar weekly, 4) Use consistent naming conventions, 5) Set reminders 1-2 days before deadlines, 6) Check off completed items daily.',
+    answer: 'Best practices: 1) Add all courses at the start of the semester, 2) Enter assignments as soon as they\'re announced, 3) Review your calendar weekly, 4) Use consistent naming conventions, 5) Set reminders 1-2 days before due dates, 6) Check off completed items daily.',
     category: 'Tips',
     keywords: ['tips', 'organize', 'best practices', 'advice', 'help'],
   },
   {
     id: 'productivity-tips',
     question: 'How can I be more productive with College Orbit?',
-    answer: 'Productivity tips: 1) Use keyboard shortcuts for speed, 2) Set up default reminder times, 3) Use the Pomodoro timer for focused study, 4) Review your progress weekly, 5) Keep notes linked to courses, 6) Use tags to cross-reference related items.',
+    answer: 'Productivity tips: 1) Use keyboard shortcuts for speed, 2) Use the Pomodoro timer for focused study, 3) Review your progress weekly, 4) Keep notes linked to courses, 5) Use tags to cross-reference related items.',
     category: 'Tips',
     keywords: ['productive', 'efficient', 'tips', 'workflow', 'better'],
   },
@@ -471,28 +476,28 @@ const faqData: FAQ[] = [
   {
     id: 'first-time-setup',
     question: 'What should I do when I first sign up?',
-    answer: 'After signing up: 1) Complete the onboarding tutorial to learn the basics, 2) Add your current semester courses, 3) Set up your class schedule, 4) Add any upcoming deadlines or exams, 5) Customize your theme and preferences in Settings, 6) Enable notifications so you don\'t miss deadlines.',
+    answer: 'After signing up: 1) Add your current semester courses, 2) Set up your class schedule, 3) Add any upcoming work items or exams, 4) Customize your theme and preferences in Settings, 5) Enable notifications so you don\'t miss due dates.',
     category: 'Getting Started',
     keywords: ['first', 'new', 'setup', 'start', 'begin', 'onboarding'],
   },
   {
     id: 'navigation-basics',
     question: 'How do I navigate around the app?',
-    answer: 'Use the sidebar on the left to switch between pages (Courses, Deadlines, Calendar, etc.). On mobile, tap the menu icon to open the sidebar. You can also use keyboard shortcuts: press "?" to see all shortcuts, "/" for search, or letter keys like "C" for courses.',
+    answer: 'Use the sidebar on the left to switch between pages (Courses, Work, Calendar, etc.). On mobile, tap the menu icon to open the sidebar. You can also use keyboard shortcuts: press "?" to see all shortcuts, "/" for search, or letter keys like "C" for courses.',
     category: 'Getting Started',
     keywords: ['navigate', 'sidebar', 'menu', 'pages', 'move around'],
   },
   {
     id: 'quick-actions',
     question: 'What are quick actions?',
-    answer: 'Quick actions let you create items from anywhere in the app. Press "N" or click the "+" button to open the quick action menu. From there, you can quickly add a deadline, note, event, or exam without navigating to the specific page first.',
+    answer: 'Quick actions let you create items from anywhere in the app. Press "N" or click the "+" button to open the quick action menu. From there, you can quickly add a work item, note, event, or exam without navigating to the specific page first.',
     category: 'Getting Started',
     keywords: ['quick', 'action', 'shortcut', 'fast', 'add', 'create'],
   },
   {
     id: 'demo-data',
     question: 'What is the demo data?',
-    answer: 'When you first sign up, you can choose to load demo data which populates your account with sample courses, deadlines, and notes. This helps you explore the app\'s features before adding your own data. You can clear demo data anytime from Settings > Data.',
+    answer: 'When you first sign up, you can choose to load demo data which populates your account with sample courses, work items, and notes. This helps you explore the app\'s features before adding your own data. You can clear demo data anytime from Settings > Data.',
     category: 'Getting Started',
     keywords: ['demo', 'sample', 'example', 'test', 'try'],
   },
@@ -504,13 +509,6 @@ const faqData: FAQ[] = [
     answer: 'When adding a course, you can specify the number of credits/units. This is used for GPA calculations and workload tracking. The total credits for all your courses appear on your dashboard.',
     category: 'Courses',
     keywords: ['credits', 'units', 'hours', 'workload'],
-  },
-  {
-    id: 'course-professor',
-    question: 'How do I add professor information?',
-    answer: 'When creating or editing a course, add your professor\'s name, email, and office hours. This information appears on the course detail page for quick reference during the semester.',
-    category: 'Courses',
-    keywords: ['professor', 'instructor', 'teacher', 'office hours', 'email'],
   },
   {
     id: 'course-location',
@@ -526,33 +524,19 @@ const faqData: FAQ[] = [
     category: 'Courses',
     keywords: ['syllabus', 'attach', 'file', 'upload', 'document'],
   },
-  {
-    id: 'course-grading',
-    question: 'How do I track my grade in a course?',
-    answer: 'Each course has a grade tracking section where you can enter assignment grades, exam scores, and weights. The app calculates your current grade and predicts your final grade based on remaining assignments.',
-    category: 'Courses',
-    keywords: ['grade', 'score', 'percentage', 'track', 'weight'],
-  },
-  {
-    id: 'duplicate-course',
-    question: 'Can I duplicate a course from a previous semester?',
-    answer: 'Yes! When creating a new course, you can choose to duplicate an existing one. This copies the course name, color, and structure but starts fresh with no deadlines. Great for courses that span multiple semesters.',
-    category: 'Courses',
-    keywords: ['duplicate', 'copy', 'clone', 'repeat', 'same'],
-  },
 
   // Additional Calendar
   {
     id: 'calendar-colors',
     question: 'How do calendar colors work?',
-    answer: 'Events inherit colors from their associated courses. Personal events (not linked to a course) use a default color you can customize. This color-coding helps you quickly see which course each event belongs to.',
+    answer: 'Events inherit colors from their associated courses. This color-coding helps you quickly see which course each event belongs to.',
     category: 'Calendar',
     keywords: ['color', 'calendar', 'visual', 'identify'],
   },
   {
     id: 'recurring-events',
     question: 'How do I create recurring events?',
-    answer: 'When adding an event, enable "Repeat" and choose the frequency: daily, weekly, biweekly, monthly, or custom. Set an end date or number of occurrences. Edit individual instances or the entire series later.',
+    answer: 'When adding an event, enable recurring and choose the frequency: daily, weekly, biweekly, monthly, or custom. Set an end date or number of occurrences. Edit individual instances or the entire series later.',
     category: 'Calendar',
     keywords: ['recurring', 'repeat', 'weekly', 'regular', 'series'],
   },
@@ -566,68 +550,11 @@ const faqData: FAQ[] = [
   {
     id: 'all-day-events',
     question: 'How do I create all-day events?',
-    answer: 'When adding an event, toggle "All Day" to create an event without specific start/end times. All-day events appear at the top of the day in calendar views. Perfect for holidays, deadlines, or day-long activities.',
+    answer: 'When adding an event, toggle "All Day" to create an event without specific start/end times. All-day events appear at the top of the day in calendar views. Perfect for holidays, due dates, or day-long activities.',
     category: 'Calendar',
     keywords: ['all day', 'full day', 'no time', 'holiday'],
   },
-  {
-    id: 'calendar-print',
-    question: 'Can I print my calendar?',
-    answer: 'Yes, use the print option in the calendar menu to generate a printable version. Choose the date range and which details to include. You can also export to PDF for sharing or offline reference.',
-    category: 'Calendar',
-    keywords: ['print', 'pdf', 'export', 'paper', 'physical'],
-  },
-  {
-    id: 'timezone',
-    question: 'How do timezones work?',
-    answer: 'The app uses your device\'s timezone by default. You can set a specific timezone in Settings if needed. When traveling, events adjust automatically, or you can keep them in your home timezone.',
-    category: 'Calendar',
-    keywords: ['timezone', 'time zone', 'travel', 'local time'],
-  },
 
-  // Additional Deadlines
-  {
-    id: 'deadline-description',
-    question: 'Can I add detailed descriptions to deadlines?',
-    answer: 'Yes, each deadline has a description field where you can add assignment instructions, links to resources, grading rubrics, or any other relevant information. The description supports basic formatting.',
-    category: 'Deadlines',
-    keywords: ['description', 'details', 'instructions', 'notes', 'info'],
-  },
-  {
-    id: 'deadline-subtasks',
-    question: 'Can I break a deadline into subtasks?',
-    answer: 'Yes! Add subtasks to any deadline to break it into smaller steps. Check off subtasks as you complete them, and the main deadline shows your progress. Great for large projects or multi-part assignments.',
-    category: 'Deadlines',
-    keywords: ['subtask', 'checklist', 'steps', 'break down', 'parts'],
-  },
-  {
-    id: 'deadline-time',
-    question: 'How do I set specific due times?',
-    answer: 'When adding a deadline, you can set both a date and time. If no time is set, the deadline defaults to 11:59 PM. For classes with specific submission times (like "before class"), set the exact time.',
-    category: 'Deadlines',
-    keywords: ['time', 'due', 'when', 'hour', 'minute', 'submit'],
-  },
-  {
-    id: 'filter-deadlines',
-    question: 'How do I filter and sort deadlines?',
-    answer: 'Use the filter options on the Deadlines page to show only certain courses, priority levels, or date ranges. Sort by due date, priority, course, or date added. Filters persist until you clear them.',
-    category: 'Deadlines',
-    keywords: ['filter', 'sort', 'show', 'hide', 'organize'],
-  },
-  {
-    id: 'deadline-bulk-actions',
-    question: 'Can I edit multiple deadlines at once?',
-    answer: 'Yes, use bulk actions to modify multiple deadlines simultaneously. Select deadlines using checkboxes, then choose actions like complete, delete, change priority, or reschedule. Saves time during busy periods.',
-    category: 'Deadlines',
-    keywords: ['bulk', 'multiple', 'batch', 'many', 'several'],
-  },
-  {
-    id: 'deadline-links',
-    question: 'Can I add links to deadlines?',
-    answer: 'Yes, add URLs to assignment pages, submission portals, or resources directly on the deadline. Click the link icon when editing a deadline. Links open in a new tab when clicked.',
-    category: 'Deadlines',
-    keywords: ['link', 'url', 'website', 'submission', 'portal'],
-  },
 
   // Additional Exams
   {
@@ -643,34 +570,6 @@ const faqData: FAQ[] = [
     answer: 'Enter the exam duration when creating it. This helps with calendar blocking and study planning. The end time is calculated automatically based on start time and duration.',
     category: 'Exams',
     keywords: ['duration', 'length', 'how long', 'hours', 'time'],
-  },
-  {
-    id: 'exam-type',
-    question: 'What exam types are supported?',
-    answer: 'You can categorize exams as Quiz, Midterm, Final, or Custom. This helps with filtering and lets you track different types of assessments separately in your progress statistics.',
-    category: 'Exams',
-    keywords: ['type', 'quiz', 'midterm', 'final', 'category'],
-  },
-  {
-    id: 'exam-weight',
-    question: 'How do exam weights work?',
-    answer: 'Set the percentage weight of each exam toward your final grade. This is used for grade predictions and helps prioritize studying for higher-weight exams.',
-    category: 'Exams',
-    keywords: ['weight', 'percentage', 'grade', 'worth', 'points'],
-  },
-  {
-    id: 'exam-score',
-    question: 'How do I record my exam score?',
-    answer: 'After taking an exam, edit it to add your score. Enter the points earned and total possible points. This updates your course grade and tracks your exam performance over time.',
-    category: 'Exams',
-    keywords: ['score', 'grade', 'result', 'points', 'mark'],
-  },
-  {
-    id: 'study-schedule',
-    question: 'Can College Orbit create a study schedule for exams?',
-    answer: 'Yes! The study planner feature can generate a study schedule based on your exam dates and available time. It distributes study sessions across days leading up to each exam.',
-    category: 'Exams',
-    keywords: ['study', 'schedule', 'plan', 'prepare', 'automatic'],
   },
 
   // Additional Notes
@@ -689,13 +588,6 @@ const faqData: FAQ[] = [
     keywords: ['tag', 'hashtag', 'label', 'cross-reference', 'find'],
   },
   {
-    id: 'notes-images',
-    question: 'Can I add images to notes?',
-    answer: 'Yes, paste images directly into notes or use the image button to upload. Images are stored securely and can be resized within the note. Great for diagrams, screenshots, or handwritten content.',
-    category: 'Notes',
-    keywords: ['image', 'picture', 'photo', 'screenshot', 'diagram'],
-  },
-  {
     id: 'notes-code',
     question: 'How do I add code blocks to notes?',
     answer: 'Use triple backticks (```) to create code blocks, or click the code button in the toolbar. Specify the programming language for syntax highlighting. Inline code uses single backticks.',
@@ -705,16 +597,9 @@ const faqData: FAQ[] = [
   {
     id: 'notes-math',
     question: 'Can I write math equations in notes?',
-    answer: 'Yes, College Orbit supports LaTeX math notation. Wrap equations in $ for inline math or $$ for display math. The equation renders automatically as you type. Perfect for STEM courses.',
+    answer: 'Yes, College Orbit supports LaTeX math notation. Wrap equations in $ for inline math or $$ for display math. The equation renders in the note. Useful for STEM courses.',
     category: 'Notes',
     keywords: ['math', 'equation', 'latex', 'formula', 'stem'],
-  },
-  {
-    id: 'notes-templates',
-    question: 'Are there note templates?',
-    answer: 'Yes, use templates for common note types like lecture notes, meeting notes, or study guides. Access templates when creating a new note, or save your own notes as custom templates.',
-    category: 'Notes',
-    keywords: ['template', 'preset', 'format', 'structure', 'starting'],
   },
   {
     id: 'notes-link-course',
@@ -723,54 +608,19 @@ const faqData: FAQ[] = [
     category: 'Notes',
     keywords: ['link', 'course', 'associate', 'connect', 'attach'],
   },
-  {
-    id: 'notes-share',
-    question: 'Can I share notes with classmates?',
-    answer: 'Yes, click the share button on any note to generate a shareable link. Choose whether viewers can only read or also edit. Great for study groups or sharing lecture notes.',
-    category: 'Notes',
-    keywords: ['share', 'collaborate', 'classmate', 'link', 'send'],
-  },
-  {
-    id: 'notes-version-history',
-    question: 'Is there version history for notes?',
-    answer: 'Yes, notes automatically save versions as you edit. Access version history from the note menu to see previous versions, compare changes, or restore an older version.',
-    category: 'Notes',
-    keywords: ['version', 'history', 'previous', 'restore', 'undo'],
-  },
 
   // Additional Progress
   {
     id: 'weekly-review',
     question: 'What is the weekly review?',
-    answer: 'The weekly review summarizes your accomplishments: tasks completed, study time logged, and progress made. It appears at the end of each week and helps you reflect on your productivity.',
+    answer: 'The weekly review summarizes your accomplishments: tasks completed and progress made. It appears at the end of each week and helps you reflect on your productivity.',
     category: 'Progress',
     keywords: ['weekly', 'review', 'summary', 'reflection', 'accomplished'],
   },
   {
-    id: 'study-time-tracking',
-    question: 'How do I track study time?',
-    answer: 'Use the timer on any task or study session to track time. The Pomodoro timer also logs time. View your study hours per course, per day, or per week on the Progress page.',
-    category: 'Progress',
-    keywords: ['time', 'track', 'hours', 'study', 'log'],
-  },
-  {
-    id: 'completion-rate',
-    question: 'What is the completion rate?',
-    answer: 'Your completion rate shows the percentage of deadlines you\'ve completed on time vs. total deadlines. A higher rate indicates better time management. View rates per course or overall.',
-    category: 'Progress',
-    keywords: ['completion', 'rate', 'percentage', 'on time', 'metric'],
-  },
-  {
-    id: 'goals',
-    question: 'Can I set goals?',
-    answer: 'Yes, set weekly goals for tasks completed, study hours, or other metrics. Track your progress toward goals on the dashboard. Completing goals contributes to achievements.',
-    category: 'Progress',
-    keywords: ['goal', 'target', 'objective', 'aim', 'set'],
-  },
-  {
     id: 'leaderboard',
-    question: 'Is there a leaderboard or competition?',
-    answer: 'You can optionally join study groups with friends and see anonymous leaderboards for motivation. Compare streaks, completion rates, or study time. This feature is entirely opt-in for privacy.',
+    question: 'Is there a leaderboard?',
+    answer: 'Yes, you can add friends and see college leaderboards based on monthly XP totals. Compare progress with other students at your school for motivation.',
     category: 'Progress',
     keywords: ['leaderboard', 'compete', 'friends', 'compare', 'rank'],
   },
@@ -782,20 +632,6 @@ const faqData: FAQ[] = [
     answer: 'Go to Settings > Appearance > College Colors. Search for your college or enter custom colors. Your college colors become the app\'s accent color throughout the interface.',
     category: 'Settings',
     keywords: ['college', 'school', 'color', 'theme', 'brand'],
-  },
-  {
-    id: 'font-size',
-    question: 'Can I change the font size?',
-    answer: 'Yes, adjust text size in Settings > Appearance. Choose from small, medium, or large text. This affects all text throughout the app for better readability.',
-    category: 'Settings',
-    keywords: ['font', 'size', 'text', 'big', 'small', 'readable'],
-  },
-  {
-    id: 'start-of-week',
-    question: 'Can I change the start of the week?',
-    answer: 'Yes, choose whether your week starts on Sunday or Monday in Settings > Preferences. This affects calendar views and weekly statistics.',
-    category: 'Settings',
-    keywords: ['week', 'start', 'sunday', 'monday', 'calendar'],
   },
   {
     id: 'date-format',
@@ -811,21 +647,6 @@ const faqData: FAQ[] = [
     category: 'Settings',
     keywords: ['time', 'format', '12 hour', '24 hour', 'am pm'],
   },
-  {
-    id: 'sidebar-collapsed',
-    question: 'Can I collapse the sidebar?',
-    answer: 'Yes, click the collapse button at the bottom of the sidebar to minimize it. This gives you more screen space for content. Click again or hover to expand.',
-    category: 'Settings',
-    keywords: ['sidebar', 'collapse', 'minimize', 'hide', 'space'],
-  },
-  {
-    id: 'dense-mode',
-    question: 'What is dense mode?',
-    answer: 'Dense mode reduces spacing throughout the app, showing more information on screen. Enable it in Settings > Appearance. Great for power users or smaller screens.',
-    category: 'Settings',
-    keywords: ['dense', 'compact', 'space', 'smaller', 'tight'],
-  },
-
   // Additional Privacy & Data
   {
     id: 'data-encryption',
@@ -844,21 +665,21 @@ const faqData: FAQ[] = [
   {
     id: 'cookies',
     question: 'What cookies does College Orbit use?',
-    answer: 'We use essential cookies for authentication and preferences. No third-party advertising cookies are used. You can manage cookie preferences in Settings > Privacy.',
+    answer: 'We use essential cookies for authentication and preferences. No third-party advertising cookies are used.',
     category: 'Privacy & Data',
     keywords: ['cookies', 'tracking', 'advertising', 'privacy'],
   },
   {
     id: 'analytics',
     question: 'What analytics data is collected?',
-    answer: 'We collect anonymous usage analytics to improve the app (pages visited, features used). No personal data or content is included. You can opt out of analytics in Settings > Privacy.',
+    answer: 'We collect anonymous usage analytics to improve the app (pages visited, features used). No personal data or content is included.',
     category: 'Privacy & Data',
     keywords: ['analytics', 'tracking', 'data', 'collected', 'opt out'],
   },
   {
     id: 'data-retention',
     question: 'How long is my data kept?',
-    answer: 'Your data is kept as long as your account is active. After account deletion, data is permanently removed within 30 days. Backups are purged according to our retention policy.',
+    answer: 'Your data is kept as long as your account is active. After account deletion, all data is permanently and immediately removed from our servers.',
     category: 'Privacy & Data',
     keywords: ['retention', 'keep', 'store', 'how long', 'delete'],
   },
@@ -874,28 +695,21 @@ const faqData: FAQ[] = [
   {
     id: 'payment-methods',
     question: 'What payment methods are accepted?',
-    answer: 'We accept all major credit cards (Visa, Mastercard, American Express), PayPal, and Apple Pay. All payments are processed securely through Stripe.',
+    answer: 'We accept all major credit cards (Visa, Mastercard, American Express). All payments are processed securely through Stripe.',
     category: 'Subscription',
     keywords: ['payment', 'credit card', 'paypal', 'pay', 'method'],
   },
   {
     id: 'billing-cycle',
     question: 'How does billing work?',
-    answer: 'Choose monthly or annual billing. Annual billing offers a discount equivalent to 2 free months. You\'re billed at the start of each cycle, and can view invoices in Settings > Subscription.',
+    answer: 'Choose monthly or annual billing. Annual billing offers a discount equivalent to about 2 free months. You\'re billed at the start of each cycle.',
     category: 'Subscription',
     keywords: ['billing', 'cycle', 'monthly', 'annual', 'invoice'],
   },
   {
-    id: 'refund-policy',
-    question: 'What is the refund policy?',
-    answer: 'We offer a 14-day money-back guarantee for new subscribers. If you\'re not satisfied, contact support for a full refund within 14 days of your first payment.',
-    category: 'Subscription',
-    keywords: ['refund', 'money back', 'cancel', 'return', 'guarantee'],
-  },
-  {
     id: 'upgrade-downgrade',
     question: 'Can I upgrade or downgrade my plan?',
-    answer: 'Yes, change your plan anytime in Settings > Subscription. Upgrades take effect immediately with prorated billing. Downgrades take effect at the end of your current billing period.',
+    answer: 'Yes, change your plan anytime from the Account page. Upgrades take effect immediately with prorated billing. Downgrades take effect at the end of your current billing period.',
     category: 'Subscription',
     keywords: ['upgrade', 'downgrade', 'change', 'plan', 'switch'],
   },
@@ -905,13 +719,6 @@ const faqData: FAQ[] = [
     answer: 'Yes, new users get a 14-day free trial of premium features. No credit card required to start. At the end of the trial, you can subscribe or continue with the free tier.',
     category: 'Subscription',
     keywords: ['trial', 'free', 'try', 'test', '14 day'],
-  },
-  {
-    id: 'team-plans',
-    question: 'Are there team or group plans?',
-    answer: 'Yes, we offer discounted group plans for study groups, clubs, or organizations. Contact support for group pricing with 5 or more members.',
-    category: 'Subscription',
-    keywords: ['team', 'group', 'organization', 'multiple', 'discount'],
   },
 
   // Additional Troubleshooting
@@ -939,7 +746,7 @@ const faqData: FAQ[] = [
   {
     id: 'missing-data',
     question: 'Some of my data is missing',
-    answer: 'First, check if you\'re logged into the correct account. Then try refreshing the page. Check if filters are hiding items. If data is truly missing, contact support immediately - we may be able to restore from backups.',
+    answer: 'First, check if you\'re logged into the correct account. Then try refreshing the page. Check if filters are hiding items. If data is truly missing, contact support immediately.',
     category: 'Troubleshooting',
     keywords: ['missing', 'lost', 'gone', 'disappeared', 'data'],
   },
@@ -969,7 +776,7 @@ const faqData: FAQ[] = [
   {
     id: 'pwa-features',
     question: 'What PWA features are available?',
-    answer: 'As a Progressive Web App, College Orbit can be installed on your device, works offline (limited), sends push notifications, and runs in its own window like a native app.',
+    answer: 'As a Progressive Web App, College Orbit can be installed on your device, sends push notifications, and runs in its own window like a native app.',
     category: 'Mobile & Extensions',
     keywords: ['pwa', 'install', 'native', 'app', 'progressive'],
   },
@@ -981,16 +788,9 @@ const faqData: FAQ[] = [
     keywords: ['mobile', 'notification', 'push', 'alert', 'phone'],
   },
   {
-    id: 'widget',
-    question: 'Is there a home screen widget?',
-    answer: 'When installed as a PWA, some devices support widgets showing upcoming deadlines. Widget availability depends on your device and operating system version.',
-    category: 'Mobile & Extensions',
-    keywords: ['widget', 'home screen', 'quick view', 'shortcut'],
-  },
-  {
     id: 'extension-features',
     question: 'What can the browser extension do?',
-    answer: 'The extension lets you: quickly add deadlines from any webpage, save links as notes, view upcoming deadlines in a popup, and get deadline notifications. It syncs with your account automatically.',
+    answer: 'The extension lets you: quickly add work items from any webpage, save links as notes, view upcoming tasks in a popup, and get notifications. It syncs with your account automatically.',
     category: 'Mobile & Extensions',
     keywords: ['extension', 'features', 'what', 'can', 'popup'],
   },
@@ -1006,9 +806,9 @@ const faqData: FAQ[] = [
   {
     id: 'flashcards',
     question: 'How do I use flashcards?',
-    answer: 'Create flashcard decks from the Tools page. Each deck can be linked to a course for organization. Add cards individually or use bulk import (front|back format). Choose from three study modes: Flashcards (classic flip-to-reveal), Type Answer (test your recall by typing), or Match (pair terms with definitions). The app uses spaced repetition to optimize review timing—rate cards as Forgot (1 day), Struggled (2 days), Got it (3+ days), or Too easy (5+ days). Customize your study experience in Settings: cards per session, daily goal, shuffle order, and more. Edit or delete cards during study sessions. Earn XP for each card studied to level up and maintain your streak.',
+    answer: 'Create flashcard decks from the Tools page. Each deck can be linked to a course for organization. Add cards individually, use bulk import (front|back format), or use AI generation to create cards from your notes, PDFs, or topic descriptions (premium feature). Choose from three study modes: Flashcards (classic flip-to-reveal), Type Answer (test your recall by typing), or Match (pair terms with definitions). The app uses spaced repetition to optimize review timing—rate cards as Forgot (1 day), Struggled (2 days), Got it (3+ days), or Too easy (5+ days). Customize your study experience in Settings: cards per session, daily goal, shuffle order, and more. Edit or delete cards during study sessions. Earn XP for each card studied to level up and maintain your streak.',
     category: 'Tools',
-    keywords: ['flashcard', 'study', 'memorize', 'cards', 'deck', 'spaced repetition', 'match', 'type answer'],
+    keywords: ['flashcard', 'study', 'memorize', 'cards', 'deck', 'spaced repetition', 'match', 'type answer', 'ai', 'generate'],
   },
   {
     id: 'citation-generator',
@@ -1031,14 +831,6 @@ const faqData: FAQ[] = [
     category: 'Tools',
     keywords: ['unit', 'convert', 'metric', 'imperial', 'measurement', 'temperature'],
   },
-  {
-    id: 'calculator',
-    question: 'Is there a built-in calculator?',
-    answer: 'Yes, access the calculator from Tools. It supports basic operations, scientific functions, and can store previous calculations. Use keyboard input for fast calculations.',
-    category: 'Tools',
-    keywords: ['calculator', 'math', 'compute', 'numbers', 'scientific'],
-  },
-
   // Additional Shopping
   {
     id: 'shopping-categories',
@@ -1050,69 +842,47 @@ const faqData: FAQ[] = [
   {
     id: 'shopping-prices',
     question: 'Can I track prices in shopping lists?',
-    answer: 'Yes, add estimated prices to items. The list shows a running total. After shopping, update with actual prices to track spending. View spending history over time.',
+    answer: 'Yes, add estimated prices to items. The list shows a running total to help you stay on budget.',
     category: 'Shopping',
     keywords: ['price', 'cost', 'budget', 'spending', 'money'],
-  },
-  {
-    id: 'shopping-recurring',
-    question: 'Can I create recurring shopping items?',
-    answer: 'Yes, mark items as recurring so they reappear on your list at set intervals (weekly, monthly, etc.). Perfect for regular purchases like groceries or household supplies.',
-    category: 'Shopping',
-    keywords: ['recurring', 'repeat', 'regular', 'automatic', 'weekly'],
-  },
-  {
-    id: 'shopping-multiple-lists',
-    question: 'Can I have multiple shopping lists?',
-    answer: 'Yes, create separate lists for different stores, purposes, or time periods. Switch between lists easily. Great for separating groceries from school supplies.',
-    category: 'Shopping',
-    keywords: ['multiple', 'lists', 'separate', 'different', 'stores'],
   },
 
   // Additional Account
   {
     id: 'change-password',
     question: 'How do I change my password?',
-    answer: 'Go to Settings > Account > Password. Enter your current password and your new password twice to confirm. Use a strong password with letters, numbers, and symbols.',
+    answer: 'Go to the Account page. Enter your current password and your new password twice to confirm. Use a strong password with letters, numbers, and symbols.',
     category: 'Account',
     keywords: ['password', 'change', 'update', 'security', 'new'],
   },
   {
     id: 'profile-picture',
     question: 'How do I change my profile picture?',
-    answer: 'Go to Settings > Account and click on your profile picture. Upload a new image or choose from your recent photos. Images are cropped to a circle automatically.',
+    answer: 'Go to the Account page and click on your profile picture. Upload a new image. Images are cropped to a circle automatically.',
     category: 'Account',
     keywords: ['profile', 'picture', 'avatar', 'photo', 'image'],
   },
   {
     id: 'display-name',
     question: 'How do I change my display name?',
-    answer: 'Go to Settings > Account > Profile. Edit your display name which appears throughout the app. This is different from your username used for login.',
+    answer: 'Go to the Account page. Edit your display name which appears throughout the app.',
     category: 'Account',
     keywords: ['name', 'display', 'change', 'username', 'profile'],
   },
   {
     id: 'connected-accounts',
-    question: 'How do I manage connected accounts?',
-    answer: 'Go to Settings > Account > Connected Accounts to see services linked to your account (Google, Apple, etc.). You can connect new accounts or disconnect existing ones.',
+    question: 'How do I manage integrations?',
+    answer: 'Go to Settings > Integrations to see services linked to your account. You can connect or disconnect LMS platforms, Google Calendar, and other integrations.',
     category: 'Account',
     keywords: ['connected', 'linked', 'google', 'apple', 'social'],
   },
   {
     id: 'sessions',
     question: 'How do I view active sessions?',
-    answer: 'Go to Settings > Account > Sessions to see all devices logged into your account. You can see device type, location, and last active time. Sign out of any suspicious sessions.',
+    answer: 'Go to the Account page to see all devices logged into your account. You can see device type, location, and last active time. Sign out of any suspicious sessions.',
     category: 'Account',
     keywords: ['sessions', 'devices', 'logged in', 'active', 'security'],
   },
-  {
-    id: 'backup-codes',
-    question: 'What are backup codes?',
-    answer: 'Backup codes let you access your account if you lose your 2FA device. When enabling 2FA, save your backup codes securely. Each code can only be used once.',
-    category: 'Account',
-    keywords: ['backup', 'codes', '2fa', 'recovery', 'access'],
-  },
-
   // Additional Integrations
   {
     id: 'blackboard-integration',
@@ -1120,41 +890,6 @@ const faqData: FAQ[] = [
     answer: 'Blackboard integration is available for supported institutions. Go to Settings > Integrations > Blackboard. Enter your school\'s Blackboard URL and credentials to sync assignments.',
     category: 'Integrations',
     keywords: ['blackboard', 'lms', 'integration', 'sync', 'school'],
-  },
-  {
-    id: 'notion-integration',
-    question: 'Can I sync with Notion?',
-    answer: 'Yes, connect your Notion account to import pages as notes or export College Orbit notes to Notion. Go to Settings > Integrations > Notion to set up the connection.',
-    category: 'Integrations',
-    keywords: ['notion', 'sync', 'import', 'export', 'notes'],
-  },
-  {
-    id: 'todoist-integration',
-    question: 'Can I sync with Todoist?',
-    answer: 'Yes, connect Todoist to sync tasks both ways. Deadlines in College Orbit appear in Todoist and vice versa. Configure sync settings in Settings > Integrations > Todoist.',
-    category: 'Integrations',
-    keywords: ['todoist', 'sync', 'tasks', 'integration', 'todo'],
-  },
-  {
-    id: 'slack-integration',
-    question: 'Is there Slack integration?',
-    answer: 'Yes, connect Slack to receive deadline reminders and notifications in your Slack workspace. Great for study group channels. Set up in Settings > Integrations > Slack.',
-    category: 'Integrations',
-    keywords: ['slack', 'notification', 'team', 'channel', 'message'],
-  },
-  {
-    id: 'zapier-integration',
-    question: 'Can I use Zapier with College Orbit?',
-    answer: 'Yes, our Zapier integration lets you connect College Orbit with thousands of other apps. Create automated workflows like adding deadlines from emails or posting completions to social media.',
-    category: 'Integrations',
-    keywords: ['zapier', 'automation', 'workflow', 'connect', 'apps'],
-  },
-  {
-    id: 'api-access',
-    question: 'Is there an API?',
-    answer: 'Yes, premium users can access the College Orbit API to build custom integrations. Find API documentation and generate API keys in Settings > Integrations > API.',
-    category: 'Integrations',
-    keywords: ['api', 'developer', 'integration', 'custom', 'programming'],
   },
 
   // Additional Tips
@@ -1196,7 +931,7 @@ const faqData: FAQ[] = [
   {
     id: 'group-study-tips',
     question: 'Tips for effective group study?',
-    answer: 'Group study tips: 1) Set clear goals for each session, 2) Assign topics to each person to teach, 3) Quiz each other, 4) Stay on topic, 5) Meet regularly at the same time, 6) Share notes using College Orbit.',
+    answer: 'Group study tips: 1) Set clear goals for each session, 2) Assign topics to each person to teach, 3) Quiz each other, 4) Stay on topic, 5) Meet regularly at the same time, 6) Review with flashcards together.',
     category: 'Tips',
     keywords: ['group', 'study', 'together', 'team', 'collaborate'],
   },
@@ -1205,14 +940,14 @@ const faqData: FAQ[] = [
   {
     id: 'report-bug',
     question: 'How do I report a bug?',
-    answer: 'Go to Settings > About > Report Issue, or email support directly. Include: what happened, what you expected, steps to reproduce, your browser/device, and screenshots if possible.',
+    answer: 'Go to Settings > About > Report Issue, or email collegeorbit@protonmail.com directly. Include: what happened, what you expected, steps to reproduce, your browser/device, and screenshots if possible.',
     category: 'Troubleshooting',
     keywords: ['bug', 'report', 'issue', 'problem', 'feedback'],
   },
   {
     id: 'feature-request',
     question: 'How do I request a new feature?',
-    answer: 'We love feedback! Send feature requests to our support email or use the feedback form in Settings > About. Popular requests are prioritized for future updates.',
+    answer: 'We love feedback! Send feature requests to collegeorbit@protonmail.com or use the feedback form in Settings > About. Popular requests are prioritized for future updates.',
     category: 'Troubleshooting',
     keywords: ['feature', 'request', 'suggest', 'idea', 'want'],
   },
@@ -1226,23 +961,9 @@ const faqData: FAQ[] = [
   {
     id: 'release-notes-detail',
     question: 'Where can I see what\'s new?',
-    answer: 'Check the Release Notes page (linked in Settings > About) to see all updates, new features, and bug fixes. We update regularly based on user feedback.',
+    answer: 'Check the Release Notes in Settings to see all updates, new features, and bug fixes. We update regularly based on user feedback.',
     category: 'Getting Started',
     keywords: ['new', 'update', 'release', 'changelog', 'version'],
-  },
-  {
-    id: 'community',
-    question: 'Is there a College Orbit community?',
-    answer: 'Join our community Discord server to connect with other students, share tips, get help, and suggest features. Find the invite link in Settings > About > Community.',
-    category: 'Getting Started',
-    keywords: ['community', 'discord', 'social', 'connect', 'students'],
-  },
-  {
-    id: 'accessibility',
-    question: 'What accessibility features are available?',
-    answer: 'College Orbit supports: keyboard navigation, screen reader compatibility, adjustable font sizes, high contrast themes, and reduced motion options. Find accessibility settings in Settings > Appearance.',
-    category: 'Settings',
-    keywords: ['accessibility', 'a11y', 'screen reader', 'keyboard', 'contrast'],
   },
   {
     id: 'language',
@@ -1257,9 +978,12 @@ const categories = [
   { id: 'Getting Started', icon: HelpCircle },
   { id: 'Courses', icon: BookOpen },
   { id: 'Calendar', icon: Calendar },
-  { id: 'Deadlines', icon: CheckSquare },
+  { id: 'Work Items', icon: ClipboardList },
   { id: 'Exams', icon: FileText },
   { id: 'Notes', icon: FileText },
+  { id: 'AI Features', icon: Bot },
+  { id: 'Google Calendar', icon: Calendar },
+  { id: 'Ambient Sounds', icon: Volume2 },
   { id: 'Progress', icon: Zap },
   { id: 'Settings', icon: Settings },
   { id: 'Privacy & Data', icon: Shield },
@@ -1302,9 +1026,10 @@ const synonyms: Record<string, string[]> = {
   'preferences': ['settings', 'options', 'configuration'],
   'course': ['class', 'subject', 'module', 'lecture'],
   'class': ['course', 'subject', 'module', 'lecture'],
-  'deadline': ['due date', 'assignment', 'task', 'homework', 'work'],
-  'assignment': ['deadline', 'homework', 'task', 'work', 'project'],
-  'homework': ['assignment', 'deadline', 'task', 'work'],
+  'deadline': ['due date', 'assignment', 'task', 'homework', 'work', 'work item'],
+  'assignment': ['deadline', 'homework', 'task', 'work', 'project', 'work item'],
+  'homework': ['assignment', 'deadline', 'task', 'work', 'work item'],
+  'work item': ['task', 'assignment', 'deadline', 'homework', 'project', 'work'],
   'exam': ['test', 'quiz', 'midterm', 'final', 'assessment'],
   'test': ['exam', 'quiz', 'assessment'],
   'note': ['notes', 'document', 'writing', 'text'],
@@ -1346,6 +1071,9 @@ const synonyms: Record<string, string[]> = {
   'extension': ['addon', 'plugin', 'browser extension', 'chrome'],
   'integrate': ['connect', 'sync', 'link'],
   'timer': ['pomodoro', 'clock', 'countdown', 'stopwatch'],
+  'orbi': ['ai', 'assistant', 'chat', 'bot'],
+  'ai': ['orbi', 'artificial intelligence', 'assistant', 'smart'],
+  'ambient': ['sound', 'focus', 'music', 'noise', 'rain', 'lofi'],
   'study': ['learn', 'review', 'prepare', 'studying'],
   'gpa': ['grade', 'grades', 'average', 'score'],
   'grade': ['gpa', 'score', 'mark', 'result'],
@@ -1532,14 +1260,14 @@ export default function HelpContent() {
     return groups;
   }, [filteredFaqs]);
 
-  const FAQItem = ({ faq }: { faq: FAQ }) => {
+  const FAQItem = ({ faq, isLast }: { faq: FAQ; isLast?: boolean }) => {
     const isExpanded = expandedFaqs.has(faq.id);
     return (
       <div
         style={{
-          borderBottom: '1px solid var(--border)',
-          paddingBottom: '12px',
-          marginBottom: '12px',
+          borderBottom: isLast ? 'none' : '1px solid var(--border)',
+          paddingBottom: isLast ? 0 : '12px',
+          marginBottom: isLast ? 0 : '12px',
         }}
       >
         <button
@@ -1792,8 +1520,8 @@ export default function HelpContent() {
                     }}>
                       {category}
                     </p>
-                    {faqs.map(faq => (
-                      <FAQItem key={faq.id} faq={faq} />
+                    {faqs.map((faq, i) => (
+                      <FAQItem key={faq.id} faq={faq} isLast={i === faqs.length - 1} />
                     ))}
                   </div>
                 ))}
@@ -1806,8 +1534,8 @@ export default function HelpContent() {
         {!showSearch && (
           <Card title="Common Questions">
             <div>
-              {featuredFaqs.map(faq => (
-                <FAQItem key={faq.id} faq={faq} />
+              {featuredFaqs.map((faq, i) => (
+                <FAQItem key={faq.id} faq={faq} isLast={i === featuredFaqs.length - 1} />
               ))}
             </div>
           </Card>

@@ -14,7 +14,7 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X, Upload, FileIcon, ChevronDown, Crown, StickyNote } from 'lucide-react';
+import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X, Upload, FileIcon, ChevronDown, Crown, StickyNote, Sparkles } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import Link from 'next/link';
 import CalendarPicker from '@/components/CalendarPicker';
@@ -42,6 +42,7 @@ import { LearningSuiteBadge } from '@/components/LearningSuiteBadge';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
+import AIBreakdownModal from '@/components/AIBreakdownModal';
 
 // Helper function to format recurring pattern as human-readable text
 function getRecurrenceText(pattern: any): string {
@@ -164,6 +165,7 @@ export default function TasksPage() {
   const [importanceFilter, setImportanceFilter] = useState('');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [previewingTask, setPreviewingTask] = useState<any>(null);
+  const [showBreakdownModal, setShowBreakdownModal] = useState(false);
   const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [nlpInput, setNlpInput] = useState('');
@@ -173,7 +175,7 @@ export default function TasksPage() {
   const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
   const [hideRecurringCompleted, setHideRecurringCompleted] = useState(false);
 
-  const { courses, tasks, notes, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, bulkUpdateTasks, bulkDeleteTasks, workItems, addWorkItem, updateWorkItem, deleteWorkItem, toggleWorkItemComplete, addRecurringWorkItem, bulkUpdateWorkItems, bulkDeleteWorkItems, initialized: storeInitialized } = useAppStore();
+  const { courses, tasks, notes, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, bulkUpdateTasks, bulkDeleteTasks, workItems, addWorkItem, updateWorkItem, deleteWorkItem, toggleWorkItemComplete, toggleWorkItemChecklistItem, addRecurringWorkItem, bulkUpdateWorkItems, bulkDeleteWorkItems, initialized: storeInitialized } = useAppStore();
 
   // Type filter for unified work items - start with 'all' to avoid hydration mismatch
   const [typeFilter, setTypeFilter] = useState<WorkItemType | 'all'>('all');
@@ -2304,7 +2306,7 @@ export default function TasksPage() {
               backgroundColor: 'var(--panel)',
               borderRadius: 'var(--radius-card)',
               width: '100%',
-              maxWidth: '500px',
+              maxWidth: '600px',
               maxHeight: '80vh',
               overflow: 'hidden',
               border: '1px solid var(--border)',
@@ -2423,6 +2425,76 @@ export default function TasksPage() {
                   <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Recurring</div>
                   <div style={{ fontSize: '14px', color: 'var(--text)' }}>
                     {getRecurrenceText(previewingTask.recurringPattern)}
+                  </div>
+                </div>
+              )}
+
+              {/* Checklist */}
+              {previewingTask.checklist && previewingTask.checklist.length > 0 && (
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>Checklist</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        onClick={() => {
+                          if (useWorkItems) {
+                            updateWorkItem(previewingTask.id, { checklist: [] });
+                          } else {
+                            updateTask(previewingTask.id, { checklist: [] });
+                          }
+                          setPreviewingTask((prev: any) => prev ? { ...prev, checklist: [] } : prev);
+                        }}
+                        title="Delete checklist"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', opacity: 0.5 }}
+                        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; }}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                      <span>{previewingTask.checklist.filter((i: any) => i.done).length}/{previewingTask.checklist.length}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {previewingTask.checklist.map((item: any) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '6px 8px',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                        onClick={() => {
+                          if (useWorkItems) {
+                            toggleWorkItemChecklistItem(previewingTask.id, item.id);
+                          } else {
+                            useAppStore.getState().toggleChecklistItem(previewingTask.id, item.id);
+                          }
+                          setPreviewingTask((prev: any) => prev ? {
+                            ...prev,
+                            checklist: prev.checklist.map((ci: any) => ci.id === item.id ? { ...ci, done: !ci.done } : ci),
+                          } : prev);
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={item.done}
+                          onChange={() => {}}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer', flexShrink: 0 }}
+                        />
+                        <span style={{
+                          fontSize: '13px',
+                          color: item.done ? 'var(--text-muted)' : 'var(--text)',
+                          textDecoration: item.done ? 'line-through' : 'none',
+                        }}>
+                          {item.text}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -2570,18 +2642,19 @@ export default function TasksPage() {
             {/* Footer - Sticky */}
             <div style={{
               display: 'flex',
-              gap: '8px',
-              padding: isMobile ? '16px' : '20px',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '6px' : '8px',
+              padding: isMobile ? '12px' : '20px',
               borderTop: '1px solid var(--border)',
               flexShrink: 0,
               backgroundColor: 'var(--panel)',
             }}>
               <Button
                 variant="secondary"
+                size={isMobile ? 'sm' : 'md'}
                 onClick={() => {
                   const task = previewingTask;
                   const isCurrentlyDone = task.status === 'done';
-                  // Add to toggledTasks SYNCHRONOUSLY to keep it visible (prevent flicker)
                   setToggledTasks(prev => {
                     const newSet = new Set(prev);
                     if (newSet.has(task.id)) {
@@ -2592,7 +2665,6 @@ export default function TasksPage() {
                     return newSet;
                   });
                   handleToggleComplete(task.id);
-                  // Only fade out when marking as done, not when unchecking
                   if (!isCurrentlyDone) {
                     setTimeout(() => {
                       startTransition(() => {
@@ -2600,7 +2672,6 @@ export default function TasksPage() {
                       });
                     }, 50);
                   } else {
-                    // Remove from hiding when unchecking
                     startTransition(() => {
                       setHidingTasks(prev => {
                         const newSet = new Set(prev);
@@ -2611,25 +2682,54 @@ export default function TasksPage() {
                   }
                   setPreviewingTask(null);
                 }}
-                style={{ flex: 1 }}
+                style={{ flex: isMobile ? undefined : 1 }}
               >
-                <Check size={16} />
-                {previewingTask.status === 'done' ? 'Mark Incomplete' : 'Mark Complete'}
+                <Check size={isMobile ? 14 : 16} />
+                {previewingTask.status === 'done' ? 'Incomplete' : 'Complete'}
               </Button>
               <Button
                 variant="secondary"
+                size={isMobile ? 'sm' : 'md'}
+                onClick={() => setShowBreakdownModal(true)}
+                style={{ flex: isMobile ? undefined : 1 }}
+              >
+                <Sparkles size={isMobile ? 14 : 16} />
+                Breakdown
+              </Button>
+              <Button
+                variant="secondary"
+                size={isMobile ? 'sm' : 'md'}
                 onClick={() => {
                   setPreviewingTask(null);
                   startEdit(previewingTask);
                 }}
-                style={{ flex: 1 }}
+                style={{ flex: isMobile ? undefined : 1 }}
               >
-                <Edit2 size={16} />
+                <Edit2 size={isMobile ? 14 : 16} />
                 Edit
               </Button>
             </div>
           </div>
         </div>
+      )}
+
+      {showBreakdownModal && previewingTask && (
+        <AIBreakdownModal
+          existingTitle={previewingTask.title}
+          existingDescription={previewingTask.notes || previewingTask.title}
+          onClose={() => setShowBreakdownModal(false)}
+          onPremiumRequired={() => setShowUpgradeModal(true)}
+          onSave={(newItems) => {
+            const existing = Array.isArray(previewingTask.checklist) ? previewingTask.checklist : [];
+            const merged = [...newItems, ...existing];
+            if (useWorkItems) {
+              updateWorkItem(previewingTask.id, { checklist: merged });
+            } else {
+              updateTask(previewingTask.id, { checklist: merged });
+            }
+            setPreviewingTask((prev: any) => prev ? { ...prev, checklist: merged } : prev);
+          }}
+        />
       )}
 
       {/* File Preview Modal */}
