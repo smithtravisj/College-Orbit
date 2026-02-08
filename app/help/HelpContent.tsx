@@ -1508,8 +1508,8 @@ export default function HelpContent() {
               </p>
             ) : (
               <div>
-                {Object.entries(groupedResults).map(([category, faqs]) => (
-                  <div key={category} style={{ marginBottom: '24px' }}>
+                {Object.entries(groupedResults).map(([category, faqs], groupIndex, groupArr) => (
+                  <div key={category} style={{ marginBottom: groupIndex === groupArr.length - 1 ? 0 : '24px' }}>
                     <p style={{
                       fontSize: '12px',
                       fontWeight: 600,
