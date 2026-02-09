@@ -447,6 +447,7 @@ select {
   border-radius: var(--radius-control, 12px);
 }
 
+
 input[type="checkbox"] {
   width: 18px;
   height: 18px;
@@ -590,6 +591,15 @@ input[type="range"]:disabled::-moz-range-thumb {
   textarea,
   select {
     font-size: 16px !important;
+  }
+
+  select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    height: 40px !important;
+    max-height: 40px !important;
+    padding: 8px 12px !important;
   }
 }
 
