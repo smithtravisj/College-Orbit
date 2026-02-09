@@ -327,7 +327,6 @@ export interface CustomColors {
 }
 
 export interface Settings {
-  dueSoonWindowDays: number;
   weekStartsOn: 'Sun' | 'Mon';
   timeFormat: '12h' | '24h';
   dateFormat: 'MM/DD/YYYY' | 'DD/MM/YYYY';
@@ -340,6 +339,7 @@ export interface Settings {
   toolsCardsOrder?: string[] | string | null;
   visiblePagesOrder?: string[] | string | null;
   hasCompletedOnboarding?: boolean;
+  needsCollegeSelection?: boolean;
   hasDemoData?: boolean;
   examReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
   deadlineReminders?: Array<{ enabled: boolean; value: number; unit: 'hours' | 'days' }>;
@@ -486,6 +486,7 @@ export interface AppData {
   calendarEvents?: CalendarEvent[];
   workItems?: WorkItem[];
   recurringWorkPatterns?: RecurringWorkPattern[];
+  customQuickLinks?: { id: string; label: string; url: string; icon?: string; position?: number }[];
   flashcardDecks?: FlashcardDeck[];
   dailyChallengeRewards?: DailyChallengeReward[];
 }

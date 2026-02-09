@@ -175,6 +175,22 @@ const levenshteinDistance = (str1: string, str2: string): number => {
   return dp[m][n];
 };
 
+export const exportDeckToQuizlet = (cards: Flashcard[]): string => {
+  return cards.map(card => `${card.front}\t${card.back}`).join('\n');
+};
+
+export const downloadTextFile = (content: string, filename: string): void => {
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
 export const sortDecks = (decks: FlashcardDeck[], sortBy: string): FlashcardDeck[] => {
   return [...decks].sort((a, b) => {
     switch (sortBy) {

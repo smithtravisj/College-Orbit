@@ -1,15 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Play, Upload, Pencil, X, Sparkles, Crown, ClipboardList } from 'lucide-react';
+import { Plus, Play, Upload, Pencil, X, Sparkles, Crown, ClipboardList, Download, FileText } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { FlashcardDeck, Flashcard, DeckStats } from './types';
-import { calculateDeckStats } from './utils';
+import { calculateDeckStats, exportDeckToQuizlet, downloadTextFile } from './utils';
 import DeckStatsCard from './DeckStatsCard';
 import CardListItem from './CardListItem';
 import CreateCardModal from './CreateCardModal';
 import CreateDeckModal from './CreateDeckModal';
 import AIGenerateModal from './AIGenerateModal';
+import QuizletImportModal from './QuizletImportModal';
 
 interface DeckDetailProps {
   deck: FlashcardDeck;
@@ -24,6 +25,7 @@ interface DeckDetailProps {
   onDeleteCard: (cardId: string) => void;
   onBulkImport: (text: string) => void;
   onAIGenerate: (cards: { front: string; back: string }[]) => void;
+  onQuizletImport: (cards: { front: string; back: string }[]) => void;
   onQuiz: () => void;
   quizLoading?: boolean;
   isPremium?: boolean;
@@ -45,6 +47,7 @@ export default function DeckDetail({
   onDeleteCard,
   onBulkImport,
   onAIGenerate,
+  onQuizletImport,
   onQuiz,
   quizLoading = false,
   isPremium = false,
@@ -55,6 +58,7 @@ export default function DeckDetail({
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [showAIGenerate, setShowAIGenerate] = useState(false);
+  const [showQuizletImport, setShowQuizletImport] = useState(false);
   const [showEditDeck, setShowEditDeck] = useState(false);
   const [editingCard, setEditingCard] = useState<Flashcard | null>(null);
   const [bulkImportText, setBulkImportText] = useState('');
@@ -109,6 +113,26 @@ export default function DeckDetail({
           )}
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
+          {cards.length > 0 && (
+            <button
+              onClick={() => {
+                const content = exportDeckToQuizlet(cards);
+                const safeName = deck.name.replace(/[^a-zA-Z0-9-_ ]/g, '').trim();
+                downloadTextFile(content, `${safeName}.txt`);
+              }}
+              title="Export to Quizlet format"
+              style={{
+                padding: '8px',
+                backgroundColor: 'transparent',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                color: 'var(--text-muted)',
+              }}
+            >
+              <Download size={18} />
+            </button>
+          )}
           <button
             onClick={() => setShowEditDeck(true)}
             style={{
@@ -208,7 +232,7 @@ export default function DeckDetail({
       )}
 
       {/* Add card buttons */}
-      {!showNewCardForm && !showBulkImport && !showAIGenerate && !editingCard && (
+      {!showNewCardForm && !showBulkImport && !showAIGenerate && !showQuizletImport && !editingCard && (
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <Button
             variant="secondary"
@@ -225,6 +249,14 @@ export default function DeckDetail({
           >
             <Upload size={isMobile ? 14 : 18} />
             Bulk Import
+          </Button>
+          <Button
+            variant="secondary"
+            size={isMobile ? 'sm' : 'md'}
+            onClick={() => setShowQuizletImport(true)}
+          >
+            <FileText size={isMobile ? 14 : 18} />
+            Quizlet Import
           </Button>
           <Button
             variant="secondary"
@@ -312,6 +344,18 @@ export default function DeckDetail({
         </div>
       )}
 
+      {/* Quizlet import form */}
+      {showQuizletImport && (
+        <QuizletImportModal
+          onImport={(cards) => {
+            onQuizletImport(cards);
+            setShowQuizletImport(false);
+          }}
+          onClose={() => setShowQuizletImport(false)}
+          isMobile={isMobile}
+        />
+      )}
+
       {/* AI Generate form */}
       {showAIGenerate && (
         <AIGenerateModal
@@ -341,7 +385,7 @@ export default function DeckDetail({
             />
           ))}
         </div>
-      ) : !showNewCardForm && !showBulkImport && (
+      ) : !showNewCardForm && !showBulkImport && !showQuizletImport && (
         <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
           No cards yet. Add some cards to start studying!
         </div>

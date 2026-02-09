@@ -114,6 +114,16 @@ export function QuickAddButton() {
     return styles.fabDesktopBottomRight;
   };
 
+  // Premium users use "Ask Orbi" button instead — but keep modal + keyboard shortcut
+  if (isPremium) {
+    return (
+      <QuickAddModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+    );
+  }
+
   return (
     <>
       <button

@@ -97,7 +97,7 @@ export default function PrivacyContent() {
                 AI Features Data (Optional, Premium)
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                If you use AI-powered features (available to premium subscribers), certain data is sent to OpenAI&apos;s API (GPT-4o-mini) for processing. The Orbi AI chat assistant sends your academic data (courses, work items, exams, notes, calendar events, shopping items, and gamification stats) to provide contextual responses. AI flashcard generation sends your note content or uploaded PDF text. AI note summarization sends your note content. AI work breakdown sends your task details. Per OpenAI&apos;s API data usage policies, data submitted through the API is not used to train their models and is not retained after processing. We do not store AI conversation history or AI-generated responses on our servers beyond the immediate session. Your prompts and AI responses are not logged or used for any purpose other than delivering the feature to you.
+                If you use AI-powered features (available to premium subscribers), certain data is sent to OpenAI&apos;s API (GPT-4o-mini) for processing. The Orbi AI chat assistant sends your academic data (courses, work items, exams, notes, calendar events, shopping items, grades, flashcard stats, and gamification data) to provide contextual responses and take actions on your behalf (such as creating, editing, or deleting items). AI flashcard generation sends your note content or uploaded PDF text. AI note summarization sends your note content. AI work breakdown sends your task details. Per OpenAI&apos;s API data usage policies, data submitted through the API is not used to train their models and is not retained after processing. Orbi conversation history is stored locally in your browser (not on our servers) and can be cleared at any time. Your prompts and AI responses are not logged on our servers or used for any purpose other than delivering the feature to you.
               </p>
             </div>
             <div>
@@ -402,7 +402,7 @@ export default function PrivacyContent() {
                 Local Storage
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We use browser local storage to save your theme preferences, application state, navigation settings, Pomodoro timer state, and calendar cache for faster loading. This data is stored only on your device and is not sent to our servers. Local storage is useful for faster loading and offline functionality awareness.
+                We use browser local storage to save your theme preferences, application state, navigation settings, Pomodoro timer state, Orbi AI conversation history, and calendar cache for faster loading. This data is stored only on your device and is not sent to our servers. Local storage is useful for faster loading and offline functionality awareness.
               </p>
             </div>
             <div>

@@ -44,6 +44,7 @@ export const DELETE = withRateLimit(async function(_req: NextRequest) {
       prisma.deletedBlackboardItem.deleteMany({ where: { userId } }),
       prisma.deletedMoodleItem.deleteMany({ where: { userId } }),
       prisma.deletedBrightspaceItem.deleteMany({ where: { userId } }),
+      prisma.deletedGoogleCalendarItem.deleteMany({ where: { userId } }),
       prisma.friendRequest.deleteMany({ where: { OR: [{ senderId: userId }, { receiverId: userId }] } }),
       prisma.friendship.deleteMany({ where: { OR: [{ user1Id: userId }, { user2Id: userId }] } }),
       prisma.referral.deleteMany({ where: { OR: [{ referrerId: userId }, { refereeId: userId }] } }),

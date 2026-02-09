@@ -525,6 +525,46 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
     }
   };
 
+  const quizletImportCards = async (cards: { front: string; back: string }[]) => {
+    if (!selectedDeck) return;
+
+    if (cards.length === 0) {
+      showErrorToast('No cards to import');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/flashcards/cards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deckId: selectedDeck.id,
+          cards,
+        }),
+      });
+
+      if (res.ok) {
+        const { count } = await res.json();
+        const deckRes = await fetch(`/api/flashcards/decks/${selectedDeck.id}`);
+        if (deckRes.ok) {
+          const { deck: fullDeck } = await deckRes.json();
+          setSelectedDeck(fullDeck);
+          setDecks(prev => prev.map(d => d.id === fullDeck.id ? {
+            ...d,
+            cardCount: fullDeck.cardCount,
+            dueCount: fullDeck.dueCount,
+          } : d));
+        }
+        showSuccessToast(`Imported ${count} cards from Quizlet`);
+      } else {
+        showErrorToast('Failed to import cards');
+      }
+    } catch (error) {
+      console.error('Error importing Quizlet cards:', error);
+      showErrorToast('Failed to import cards');
+    }
+  };
+
   const aiGenerateCards = async (cards: { front: string; back: string }[]) => {
     if (!selectedDeck) return;
 
@@ -1044,6 +1084,7 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
                 onDeleteCard={deleteCard}
                 onBulkImport={bulkImportCards}
                 onAIGenerate={aiGenerateCards}
+                onQuizletImport={quizletImportCards}
                 onQuiz={() => selectedDeck && startQuiz(selectedDeck)}
                 quizLoading={quizLoading}
                 isPremium={isPremium}

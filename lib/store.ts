@@ -6,7 +6,6 @@ import { applyVisualTheme, clearVisualTheme } from '@/lib/visualThemes';
 import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
 
 const DEFAULT_SETTINGS: Settings = {
-  dueSoonWindowDays: 7,
   weekStartsOn: 'Sun',
   timeFormat: '12h',
   dateFormat: 'MM/DD/YYYY',
@@ -17,6 +16,7 @@ const DEFAULT_SETTINGS: Settings = {
   visibleDashboardCards: DEFAULT_VISIBLE_DASHBOARD_CARDS,
   visibleToolsCards: DEFAULT_VISIBLE_TOOLS_CARDS,
   hasCompletedOnboarding: false, // Always show tour on first login
+  needsCollegeSelection: false,
   hasDemoData: false,
   examReminders: [
     { enabled: false, value: 7, unit: 'days' },

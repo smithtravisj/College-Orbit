@@ -1,10 +1,10 @@
-/* AI Chat FAB - circular button positioned to the LEFT of QuickAddButton */
+/* AI Chat FAB - replaces QuickAddButton for premium users */
 
-/* Mobile: circular FAB */
+/* Mobile: circular FAB (same position as QuickAdd mobile) */
 .fab {
   position: fixed;
-  width: 44px;
-  height: 44px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   border: none;
   display: flex;
@@ -27,38 +27,35 @@
   transform: scale(0.95);
 }
 
-/* Mobile positioning: to the left of QuickAddButton's mobile position */
-/* QuickAdd is at right: calc(20px + 56px + 12px + safe) = right ~88px+safe, 56px wide */
-/* AI button: 44px wide, 12px gap from QuickAdd → right: 88 + 56 + 12 + safe = 156px + safe */
+/* Mobile positioning: same spot as QuickAdd mobile (to the left of hamburger) */
 @media (max-width: 767px) {
   .fab {
-    bottom: calc(26px + env(safe-area-inset-bottom, 0px));
-    right: calc(156px + env(safe-area-inset-right, 0px));
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    right: calc(20px + 56px + 12px + env(safe-area-inset-right, 0px));
   }
 }
 
-/* Desktop fallback (shouldn't be used but just in case) */
+/* Desktop fallback */
 @media (min-width: 768px) {
   .fab {
     top: 24px;
-    right: 174px;
+    right: 24px;
   }
 }
 
-/* Desktop: top-right position (dashboard, calendar, tools, settings, admin, account) */
-/* QuickAdd .fabDesktop: top:24px, right:24px, pill shape ~130px wide */
-/* AI button: 40x40, 12px gap → right: 24 + ~130 + 12 = ~166px */
+/* Desktop: top-right pill button (dashboard, calendar, tools, settings, admin, account) */
 .fabDesktop {
   position: fixed;
-  top: 26px;
-  right: 174px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  top: 24px;
+  right: 24px;
+  height: 44px;
+  padding: 0 18px 0 14px;
+  border-radius: var(--radius-control, 22px);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   cursor: pointer;
   color: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -68,28 +65,27 @@
 }
 
 .fabDesktop:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 .fabDesktop:active {
-  transform: scale(0.95);
+  transform: scale(0.98);
 }
 
-/* Desktop: bottom-right position (work, exams, notes, courses, shopping) */
-/* QuickAdd .fabDesktopBottomRight: bottom:24px, right:24px, pill ~130px wide */
-/* AI button: 40x40, 12px gap → right: 24 + ~130 + 12 = ~166px */
+/* Desktop: bottom-right pill button (work, exams, notes, courses, shopping) */
 .fabDesktopBottomRight {
   position: fixed;
-  bottom: 26px;
-  right: 174px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  bottom: 24px;
+  right: 24px;
+  height: 44px;
+  padding: 0 18px 0 14px;
+  border-radius: var(--radius-control, 22px);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   cursor: pointer;
   color: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -99,10 +95,16 @@
 }
 
 .fabDesktopBottomRight:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 .fabDesktopBottomRight:active {
-  transform: scale(0.95);
+  transform: scale(0.98);
+}
+
+.fabLabel {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  white-space: nowrap;
 }

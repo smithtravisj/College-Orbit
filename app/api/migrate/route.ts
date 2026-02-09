@@ -72,7 +72,6 @@ export async function POST(req: NextRequest) {
       await prisma.settings.update({
         where: { userId },
         data: {
-          dueSoonWindowDays: data.settings.dueSoonWindowDays,
           weekStartsOn: data.settings.weekStartsOn,
           theme: data.settings.theme,
           enableNotifications: data.settings.enableNotifications,

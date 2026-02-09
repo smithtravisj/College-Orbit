@@ -4,3 +4,5 @@ export { default as AchievementToast, AchievementToastContainer } from './Achiev
 export { default as Confetti, LevelUpConfetti } from './Confetti';
 export { default as LevelUpToast } from './LevelUpToast';
 export { default as ChallengeToast, ChallengeToastContainer } from './ChallengeToast';
+export { default as ShareStudyCard } from './ShareStudyCard';
+export { default as ShareStudyModal } from './ShareStudyModal';

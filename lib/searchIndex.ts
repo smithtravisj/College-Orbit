@@ -125,7 +125,8 @@ export const SEARCH_INDEX: SearchableItem[] = [
     keywords: ['flashcards', 'study', 'memorize', 'review', 'spaced repetition', 'sm2', 'decks', 'cards', 'match', 'type answer', 'study modes', 'quiz'],
     category: 'page',
     categoryLabel: 'Pages',
-    href: '/flashcards',
+    href: '/tools',
+    tab: 'flashcards',
   },
 
   // ==================== TOOLS ====================
@@ -384,17 +385,6 @@ export const SEARCH_INDEX: SearchableItem[] = [
 
   // ==================== SETTINGS - PREFERENCES ====================
   {
-    id: 'setting-due-soon-days',
-    title: 'Due Soon Days',
-    description: 'Set how many days ahead to show "due soon" items',
-    keywords: ['due soon', 'days', 'deadline', 'upcoming'],
-    category: 'setting',
-    categoryLabel: 'Settings > Preferences',
-    href: '/settings',
-    tab: 'preferences',
-    elementId: 'setting-due-soon-days',
-  },
-  {
     id: 'setting-keyboard-shortcuts',
     title: 'Keyboard Shortcuts',
     description: 'Enable or disable keyboard shortcuts',
@@ -459,6 +449,63 @@ export const SEARCH_INDEX: SearchableItem[] = [
     href: '/settings',
     tab: 'preferences',
     elementId: 'setting-reminder-timing',
+  },
+
+  // ==================== SETTINGS - FLASHCARDS ====================
+  {
+    id: 'setting-flashcard-study-mode',
+    title: 'Flashcard Study Mode',
+    description: 'Set the default study mode for flashcards',
+    keywords: ['flashcard', 'study mode', 'flashcard mode', 'type answer', 'match', 'review mode'],
+    category: 'setting',
+    categoryLabel: 'Settings > Preferences',
+    href: '/settings',
+    tab: 'preferences',
+    elementId: 'setting-flashcards',
+  },
+  {
+    id: 'setting-flashcard-daily-goal',
+    title: 'Flashcard Daily Goal',
+    description: 'Set how many flashcards to review per day',
+    keywords: ['flashcard', 'daily goal', 'cards per day', 'review goal', 'study goal'],
+    category: 'setting',
+    categoryLabel: 'Settings > Preferences',
+    href: '/settings',
+    tab: 'preferences',
+    elementId: 'setting-flashcards',
+  },
+  {
+    id: 'setting-flashcard-shuffle',
+    title: 'Flashcard Shuffle Order',
+    description: 'Randomize the order of flashcards during study sessions',
+    keywords: ['flashcard', 'shuffle', 'random', 'order', 'randomize'],
+    category: 'setting',
+    categoryLabel: 'Settings > Preferences',
+    href: '/settings',
+    tab: 'preferences',
+    elementId: 'setting-flashcards',
+  },
+  {
+    id: 'setting-flashcard-sounds',
+    title: 'Flashcard Sound Effects',
+    description: 'Enable or disable sound effects during flashcard study',
+    keywords: ['flashcard', 'sound', 'audio', 'effects', 'sfx'],
+    category: 'setting',
+    categoryLabel: 'Settings > Preferences',
+    href: '/settings',
+    tab: 'preferences',
+    elementId: 'setting-flashcards',
+  },
+  {
+    id: 'setting-flashcard-celebrations',
+    title: 'Flashcard Celebrations',
+    description: 'Enable or disable celebration animations when completing flashcard sessions',
+    keywords: ['flashcard', 'celebration', 'animation', 'confetti', 'reward'],
+    category: 'setting',
+    categoryLabel: 'Settings > Preferences',
+    href: '/settings',
+    tab: 'preferences',
+    elementId: 'setting-flashcards',
   },
 
   // ==================== SETTINGS - INTEGRATIONS ====================

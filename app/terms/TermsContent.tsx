@@ -307,7 +307,7 @@ export default function TermsContent() {
                 College Orbit offers AI-powered features as part of the premium subscription. These features use OpenAI&apos;s API (GPT-4o-mini) to process your requests. When you use AI features:
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                <li>Orbi AI chat assistant sends relevant academic data (courses, work items, exams, notes, calendar events, shopping items, and gamification stats) to OpenAI for contextual responses</li>
+                <li>Orbi AI chat assistant sends relevant academic data (courses, work items, exams, notes, calendar events, shopping items, grades, flashcard stats, and gamification data) to OpenAI for contextual responses and to take actions on your behalf (creating, editing, and deleting items, managing grades, creating study plans, and updating settings)</li>
                 <li>AI flashcard generation sends your notes or uploaded PDF content to OpenAI to generate study flashcards</li>
                 <li>AI note summarization sends your note content to OpenAI to produce concise summaries</li>
                 <li>AI work breakdown sends your task details to OpenAI to generate subtask suggestions</li>

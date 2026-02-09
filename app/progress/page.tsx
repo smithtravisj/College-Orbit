@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Flame, Trophy, Zap, Lock, Target, Clock, Award, Star, Rocket, Medal, Crown, Sun, Moon, Sparkles, ChevronLeft, ChevronRight, Users, School, CheckCircle, BookOpen, FileText, Gift } from 'lucide-react';
+import { Flame, Trophy, Zap, Lock, Target, Clock, Award, Star, Rocket, Medal, Crown, Sun, Moon, Sparkles, ChevronLeft, ChevronRight, Users, School, CheckCircle, BookOpen, FileText, Gift, Share2 } from 'lucide-react';
+import { ShareStudyModal } from '@/components/gamification';
 import Card from '@/components/ui/Card';
 import { GamificationData, Achievement, DailyChallengeProgress } from '@/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -34,6 +35,7 @@ export default function ProgressPage() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -198,7 +200,7 @@ export default function ProgressPage() {
   return (
     <>
       {/* Header */}
-      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '4px 16px 4px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '4px 16px 4px' : '12px 24px 12px', position: 'relative', zIndex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
           <h1
             style={{
@@ -214,6 +216,27 @@ export default function ProgressPage() {
             {isPremium && visualTheme === 'cartoon' ? "Look how far you've come!" : "Track your streaks, level, and achievements."}
           </p>
         </div>
+        <button
+          onClick={() => setShowShareModal(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: isMobile ? '6px 12px' : '8px 16px',
+            borderRadius: '8px',
+            border: '1px solid var(--border)',
+            backgroundColor: 'var(--panel)',
+            color: 'var(--text)',
+            cursor: 'pointer',
+            fontSize: isMobile ? '13px' : '14px',
+            fontWeight: 500,
+            marginTop: isMobile ? '4px' : '12px',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <Share2 size={isMobile ? 14 : 16} />
+          Share
+        </button>
       </div>
 
       {/* Content */}
@@ -861,6 +884,8 @@ export default function ProgressPage() {
           ))}
         </Card>
       </div>
+
+      <ShareStudyModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} />
     </>
   );
 }

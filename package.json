@@ -1,6 +1,6 @@
 {
   "name": "college-orbit",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -33,6 +33,7 @@
     "driver.js": "^1.4.0",
     "heic-convert": "^2.1.0",
     "heic2any": "^0.0.4",
+    "html2canvas": "^1.4.1",
     "jsonwebtoken": "^9.0.3",
     "jspdf": "^4.0.0",
     "jszip": "^3.10.1",

@@ -26,7 +26,7 @@ const coreFeatures = [
   {
     icon: Sparkles,
     title: 'Orbi AI Assistant',
-    description: 'Ask Orbi about your schedule, assignments, and progress. AI-powered flashcard generation, note summarization, and work breakdown.',
+    description: 'Your AI study assistant that can manage items, track grades, plan study sessions, and control settings. Plus AI flashcard generation, note summarization, and work breakdown.',
   },
   {
     icon: PenLine,

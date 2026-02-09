@@ -16,15 +16,38 @@ interface Message {
   content: string;
 }
 
+const ORBI_STORAGE_KEY = 'orbi-chat-messages';
+
+function loadMessages(): Message[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem(ORBI_STORAGE_KEY);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    if (Array.isArray(parsed)) return parsed.slice(-50); // Keep last 50 messages
+    return [];
+  } catch { return []; }
+}
+
+function saveMessages(msgs: Message[]) {
+  try {
+    localStorage.setItem(ORBI_STORAGE_KEY, JSON.stringify(msgs.slice(-50)));
+  } catch { /* quota exceeded — silently ignore */ }
+}
+
 export function AIChatButton() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => loadMessages());
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
-  // Clear conversation on navigation
+  // Persist messages to localStorage whenever they change
   useEffect(() => {
-    setMessages([]);
+    saveMessages(messages);
+  }, [messages]);
+
+  // Close modal on navigation but keep conversation
+  useEffect(() => {
     setIsModalOpen(false);
   }, [pathname]);
 
@@ -95,6 +118,8 @@ export function AIChatButton() {
     setIsModalOpen(true);
   };
 
+  const showLabel = !isMobile;
+
   const getButtonClass = () => {
     if (isMobile) return styles.fab;
     if (isTopRight) return styles.fabDesktop;
@@ -112,10 +137,11 @@ export function AIChatButton() {
           boxShadow: isMobile ? mobileBoxShadow : desktopBoxShadow,
           pointerEvents: 'auto',
         }}
-        aria-label="Orbi"
+        aria-label="Ask Orbi"
         type="button"
       >
-        <Sparkles size={isMobile ? 20 : 18} color={iconColor} strokeWidth={2} />
+        <Sparkles size={showLabel ? 18 : 20} color={iconColor} strokeWidth={2} />
+        {showLabel && <span className={styles.fabLabel} style={{ color: iconColor }}>Ask Orbi</span>}
       </button>
 
       <AIChatModal

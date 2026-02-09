@@ -100,7 +100,6 @@ export default function SettingsPage() {
   const { data: session, status: sessionStatus } = useSession();
   const { isPremium, isLoading: isLoadingSubscription } = useSubscription();
   const [mounted, setMounted] = useState(false);
-  const [dueSoonDays, setDueSoonDays] = useState<number | string>(7);
   const [university, setUniversity] = useState<string | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark'>('dark');
   const [useCustomTheme, setUseCustomTheme] = useState(false);
@@ -123,7 +122,7 @@ export default function SettingsPage() {
   const betaWarningRef = useRef<HTMLDivElement>(null);
   const [currentVersion, setCurrentVersion] = useState<string>('1.4.0');
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
-  const dueSoonInputRef = useRef<HTMLInputElement>(null);
+
 
   // Visibility customization state
   const [activeCustomizationTab, setActiveCustomizationTab] = useState<'pages' | 'tools'>('pages');
@@ -491,7 +490,6 @@ export default function SettingsPage() {
     if (mounted) return;
 
     // Store is already initialized globally by AppLoader
-    setDueSoonDays(settings.dueSoonWindowDays);
     setUniversity(settings.university || null);
     setSelectedTheme(settings.theme || 'dark');
     // Use saved visible pages directly - don't merge with defaults
@@ -571,13 +569,6 @@ export default function SettingsPage() {
 
     setMounted(true);
   }, [settings, mounted]);
-
-  // Update input value when state changes (but not if user is editing)
-  useEffect(() => {
-    if (dueSoonInputRef.current && document.activeElement !== dueSoonInputRef.current) {
-      dueSoonInputRef.current.value = String(dueSoonDays);
-    }
-  }, [dueSoonDays]);
 
   // Fetch current version from API
   useEffect(() => {
@@ -2175,6 +2166,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Flashcards */}
+          <div id="setting-flashcards">
           <Card title="Flashcards">
             {/* Dropdowns in two columns */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '20px' }}>
@@ -2487,6 +2479,7 @@ export default function SettingsPage() {
               </div>
             </div>
           </Card>
+          </div>
 
           {/* Display Options */}
           <Card title="Display Options">
@@ -2802,41 +2795,6 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Due Soon Window */}
-            <div id="setting-due-soon-days" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-              <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Due Soon Window</p>
-              <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '12px' }}>
-                Show work items on dashboard within this many days
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <input
-                  ref={dueSoonInputRef}
-                  type="text"
-                  inputMode="numeric"
-                  defaultValue={dueSoonDays}
-                  onKeyUp={(e) => {
-                    const inputValue = e.currentTarget.value;
-                    setDueSoonDays(inputValue);
-                    const val = parseInt(inputValue);
-                    if (!isNaN(val) && val >= 1 && val <= 30) {
-                      updateSettings({ dueSoonWindowDays: val });
-                    }
-                  }}
-                  style={{
-                    width: '80px',
-                    height: '40px',
-                    padding: '8px 12px',
-                    fontSize: '16px',
-                    fontFamily: 'inherit',
-                    backgroundColor: 'var(--panel-2)',
-                    color: 'var(--text)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-xs, 6px)',
-                  }}
-                />
-                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>days</span>
-              </div>
-            </div>
           </Card>
 
           {/* Behavior */}

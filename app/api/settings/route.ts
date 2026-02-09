@@ -25,7 +25,6 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
     const response = {
       userId: session.user.id,
       settings: settings || {
-        dueSoonWindowDays: 7,
         weekStartsOn: 'Sun',
         timeFormat: '12h',
         dateFormat: 'MM/DD/YYYY',
@@ -78,7 +77,6 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     // Build update data object dynamically
     const updateData: any = {};
 
-    if (data.dueSoonWindowDays !== undefined) updateData.dueSoonWindowDays = data.dueSoonWindowDays;
     if (data.weekStartsOn !== undefined) updateData.weekStartsOn = data.weekStartsOn;
     if (data.timeFormat !== undefined) updateData.timeFormat = data.timeFormat;
     if (data.dateFormat !== undefined) updateData.dateFormat = data.dateFormat;
@@ -89,6 +87,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.visibleDashboardCards !== undefined) updateData.visibleDashboardCards = data.visibleDashboardCards;
     if (data.visibleToolsCards !== undefined) updateData.visibleToolsCards = data.visibleToolsCards;
     if (data.hasCompletedOnboarding !== undefined) updateData.hasCompletedOnboarding = data.hasCompletedOnboarding;
+    if (data.needsCollegeSelection !== undefined) updateData.needsCollegeSelection = data.needsCollegeSelection;
     if (data.examReminders !== undefined) updateData.examReminders = data.examReminders;
     if (data.deadlineReminders !== undefined) updateData.deadlineReminders = data.deadlineReminders;
     if (data.taskReminders !== undefined) updateData.taskReminders = data.taskReminders;
@@ -205,7 +204,6 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
           data: {
             id: newId,
             userId: userId,
-            dueSoonWindowDays: 7,
             weekStartsOn: 'Sun',
             theme: 'dark',
             enableNotifications: false,

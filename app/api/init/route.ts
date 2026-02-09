@@ -139,12 +139,12 @@ export async function GET(request: NextRequest) {
       notes,
       folders,
       settings: settings || {
-        dueSoonWindowDays: 7,
         weekStartsOn: 'Sun',
         theme: 'dark',
         enableNotifications: false,
         university: null,
         hasCompletedOnboarding: false,
+        needsCollegeSelection: false,
         hasDemoData: false,
         selectedGradeSemester: 'all',
         courseTermFilter: 'all',

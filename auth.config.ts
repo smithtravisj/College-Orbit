@@ -1,14 +1,26 @@
 import type { NextAuthOptions } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
+import AzureADProvider from 'next-auth/providers/azure-ad';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { randomUUID } from 'crypto';
+import { randomUUID, randomBytes } from 'crypto';
+import { DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_DASHBOARD_CARDS, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
+import { seedDemoData } from '@/lib/seedDemoData';
 
 export const authConfig: NextAuthOptions = {
   pages: {
     signIn: '/login',
   },
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    AzureADProvider({
+      clientId: process.env.AZURE_AD_CLIENT_ID!,
+      clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
+    }),
     Credentials({
       credentials: {
         email: { label: 'Email', type: 'email' },
@@ -71,16 +83,106 @@ export const authConfig: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        console.log('JWT callback - creating token for user:', user.id);
+    async signIn({ user, account }) {
+      if ((account?.provider === 'google' || account?.provider === 'azure-ad') && user.email) {
+        try {
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email },
+          });
+
+          if (!existingUser) {
+            // Create new user for Google sign-in
+            const randomHash = await bcrypt.hash(randomBytes(32).toString('hex'), 10);
+            const trialEndsAt = new Date();
+            trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+
+            const newUser = await prisma.user.create({
+              data: {
+                email: user.email,
+                name: user.name || null,
+                passwordHash: randomHash,
+                trialEndsAt,
+                settings: {
+                  create: {
+                    weekStartsOn: 'Sun',
+                    theme: 'dark',
+                    enableNotifications: false,
+                    visiblePages: DEFAULT_VISIBLE_PAGES,
+                    visibleDashboardCards: DEFAULT_VISIBLE_DASHBOARD_CARDS,
+                    visibleToolsCards: DEFAULT_VISIBLE_TOOLS_CARDS,
+                    needsCollegeSelection: true,
+                  },
+                },
+              },
+            });
+
+            // Seed demo data in background
+            seedDemoData(newUser.id).catch(err => console.error(`Failed to create demo data for ${account.provider} user:`, err));
+
+            // Create welcome notifications in background
+            prisma.notification.createMany({
+              data: [
+                {
+                  userId: newUser.id,
+                  title: 'Welcome to your 14-day Premium Trial!',
+                  message: `Enjoy full access to all premium features. Your trial ends on ${trialEndsAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.`,
+                  type: 'trial_started',
+                },
+                {
+                  userId: newUser.id,
+                  title: 'Connect Your LMS',
+                  message: 'Sync your courses, assignments, and grades automatically. Go to Settings to connect Canvas or Moodle.',
+                  type: 'lms_tip',
+                },
+              ],
+            }).catch(err => console.error('Failed to create OAuth signup notifications:', err));
+
+            // Notify admins
+            prisma.user.findMany({ where: { isAdmin: true }, select: { id: true } }).then(admins => {
+              if (admins.length > 0) {
+                prisma.notification.createMany({
+                  data: admins.map(admin => ({
+                    userId: admin.id,
+                    title: 'New User Signup',
+                    message: `${newUser.name || newUser.email} just created an account via ${account.provider === 'azure-ad' ? 'Microsoft' : 'Google'} Sign-In.`,
+                    type: 'new_user_signup',
+                  })),
+                }).catch(err => console.error('Failed to notify admins:', err));
+              }
+            }).catch(err => console.error('Failed to find admins:', err));
+          }
+        } catch (error) {
+          console.error('OAuth sign-in user creation error:', error);
+          return false;
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user, account }) {
+      if ((account?.provider === 'google' || account?.provider === 'azure-ad') && user?.email) {
+        // Look up the user from our database for OAuth sign-ins
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email },
+        });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.name = dbUser.name;
+          token.email = dbUser.email;
+          token.iat = Math.floor(Date.now() / 1000);
+          token.sessionToken = randomUUID();
+
+          // Update lastLogin
+          prisma.user.update({
+            where: { id: dbUser.id },
+            data: { lastLogin: new Date() },
+          }).catch(err => console.error('Failed to update lastLogin:', err));
+        }
+      } else if (user) {
         token.id = user.id;
         token.name = user.name;
         token.email = user.email;
-        token.iat = Math.floor(Date.now() / 1000); // Token creation time
-        token.sessionToken = randomUUID(); // Unique session identifier
-      } else {
-        console.log('JWT callback - no user, token:', token ? 'exists' : 'null');
+        token.iat = Math.floor(Date.now() / 1000);
+        token.sessionToken = randomUUID();
       }
       return token;
     },

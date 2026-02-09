@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, X, Send, Loader2, Lock } from 'lucide-react';
+import { Sparkles, X, Send, Loader2, Lock, Trash2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import useAppStore from '@/lib/store';
+import { usePomodoroContext } from '@/context/PomodoroContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -28,10 +30,12 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [premiumRequired, setPremiumRequired] = useState(false);
+  const [suggestedActions, setSuggestedActions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastUserRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
+  const pomodoro = usePomodoroContext();
 
   // Drag state for desktop
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
@@ -119,6 +123,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
     setMessages((prev: Message[]) => [...prev, userMessage]);
     setInput('');
     setError(null);
+    setSuggestedActions([]);
     setIsLoading(true);
 
     try {
@@ -138,6 +143,184 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
           return;
         }
         throw new Error(data.error || 'Failed to get response');
+      }
+
+      // Sync created/deleted/updated items to Zustand store so UI updates immediately
+      if (data.createdItems && Array.isArray(data.createdItems)) {
+        for (const result of data.createdItems) {
+          if (!result.success || !result.item) continue;
+          const store = useAppStore.getState();
+          switch (result.type) {
+            // Creates — push new item into array
+            case 'workItem':
+              useAppStore.setState({ workItems: [...store.workItems, result.item] });
+              break;
+            case 'exam':
+              useAppStore.setState({ exams: [...store.exams, result.item] });
+              break;
+            case 'course':
+              useAppStore.setState({ courses: [...store.courses, result.item] });
+              break;
+            case 'calendarEvent':
+              useAppStore.setState({ calendarEvents: [...store.calendarEvents, result.item] });
+              break;
+            case 'note':
+              useAppStore.setState({ notes: [...store.notes, result.item] });
+              break;
+            case 'shoppingItem':
+              useAppStore.setState({ shoppingItems: [...store.shoppingItems, result.item] });
+              break;
+            // Status update — replace item in array
+            case 'workItemUpdate':
+              useAppStore.setState({
+                workItems: store.workItems.map((w) => w.id === result.item.id ? result.item : w),
+              });
+              break;
+            // Deletes — remove item from array by ID
+            case 'workItemDelete':
+              useAppStore.setState({
+                workItems: store.workItems.filter((w) => w.id !== result.item.id),
+              });
+              break;
+            case 'examDelete':
+              useAppStore.setState({
+                exams: store.exams.filter((e) => e.id !== result.item.id),
+              });
+              break;
+            case 'calendarEventDelete':
+              useAppStore.setState({
+                calendarEvents: store.calendarEvents.filter((e) => e.id !== result.item.id),
+              });
+              break;
+            case 'noteDelete':
+              useAppStore.setState({
+                notes: store.notes.filter((n) => n.id !== result.item.id),
+              });
+              break;
+            case 'shoppingItemDelete':
+              useAppStore.setState({
+                shoppingItems: store.shoppingItems.filter((s) => s.id !== result.item.id),
+              });
+              break;
+            // Excluded dates — full sync (replace entire array)
+            case 'excludedDateSync':
+              useAppStore.setState({ excludedDates: result.item });
+              break;
+            // Pomodoro — start, pause, or stop the timer
+            case 'pomodoroControl': {
+              const { action, workDuration, breakDuration } = result.item;
+              if (action === 'start') {
+                if (workDuration || breakDuration) {
+                  pomodoro.applySettings(
+                    workDuration || pomodoro.workDuration,
+                    breakDuration || pomodoro.breakDuration,
+                    pomodoro.isMuted
+                  );
+                  setTimeout(() => pomodoro.start(), 100);
+                } else {
+                  pomodoro.start();
+                }
+              } else if (action === 'pause') {
+                pomodoro.pause();
+              } else if (action === 'stop') {
+                pomodoro.reset();
+              } else if (action === 'skip') {
+                pomodoro.skip();
+              }
+              break;
+            }
+            // Edit/update — replace item in array
+            case 'examUpdate':
+              useAppStore.setState({
+                exams: store.exams.map((e) => e.id === result.item.id ? result.item : e),
+              });
+              break;
+            case 'calendarEventUpdate':
+              useAppStore.setState({
+                calendarEvents: store.calendarEvents.map((e) => e.id === result.item.id ? result.item : e),
+              });
+              break;
+            case 'noteUpdate':
+              useAppStore.setState({
+                notes: store.notes.map((n) => n.id === result.item.id ? result.item : n),
+              });
+              break;
+            case 'shoppingItemUpdate':
+              useAppStore.setState({
+                shoppingItems: store.shoppingItems.map((s) => s.id === result.item.id ? result.item : s),
+              });
+              break;
+            // Bulk operations
+            case 'bulkWorkItemUpdate': {
+              // Re-fetch to get updated items (bulk update doesn't return full items)
+              const action = result.item.action;
+              const newStatus = action === 'mark_done' ? 'done' : 'open';
+              const titles = new Set(result.item.titles as string[]);
+              useAppStore.setState({
+                workItems: store.workItems.map((w) =>
+                  titles.has(w.title) ? { ...w, status: newStatus } : w
+                ),
+              });
+              break;
+            }
+            case 'bulkWorkItemDelete': {
+              const deleteIds = new Set(result.item.ids as string[]);
+              useAppStore.setState({
+                workItems: store.workItems.filter((w) => !deleteIds.has(w.id)),
+              });
+              break;
+            }
+            // Recurring pattern — add generated work items to store
+            case 'recurringPatternCreated': {
+              const newWorkItems = result.item.workItems || [];
+              if (newWorkItems.length > 0) {
+                useAppStore.setState({ workItems: [...store.workItems, ...newWorkItems] });
+              }
+              break;
+            }
+            // Study plan — add created items to appropriate store arrays
+            case 'studyPlanCreated': {
+              const sessions = result.item.sessions || [];
+              const newEvents = sessions.filter((s: any) => s._itemType === 'calendarEvent');
+              const newWork = sessions.filter((s: any) => s._itemType === 'workItem');
+              if (newEvents.length > 0) {
+                useAppStore.setState({ calendarEvents: [...store.calendarEvents, ...newEvents] });
+              }
+              if (newWork.length > 0) {
+                useAppStore.setState({ workItems: [...store.workItems, ...newWork] });
+              }
+              break;
+            }
+            // GPA entries
+            case 'gpaEntry':
+              useAppStore.setState({ gpaEntries: [...store.gpaEntries, result.item] });
+              break;
+            case 'gpaEntryUpdate':
+              useAppStore.setState({
+                gpaEntries: store.gpaEntries.map((e) => e.id === result.item.id ? result.item : e),
+              });
+              break;
+            case 'gpaEntryDelete':
+              useAppStore.setState({
+                gpaEntries: store.gpaEntries.filter((e) => e.id !== result.item.id),
+              });
+              break;
+            // Settings — merge into store settings
+            case 'settingsUpdate':
+              useAppStore.setState({
+                settings: { ...store.settings, ...result.item },
+              });
+              break;
+            // Email sent — no store update needed
+            case 'emailSent':
+              break;
+          }
+        }
+      }
+
+      // Set suggested follow-up actions if provided
+      if (data.suggestedActions && Array.isArray(data.suggestedActions)) {
+        setSuggestedActions(data.suggestedActions);
       }
 
       const assistantMessage: Message = { role: 'assistant', content: data.response };
@@ -188,20 +371,39 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
             Chat with Orbi
           </h3>
         </div>
-        <button
-          onClick={onClose}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'var(--text-muted)',
-            padding: '4px',
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          <X size={20} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {messages.length > 0 && (
+            <button
+              onClick={() => setMessages([])}
+              title="Clear conversation"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--text-muted)',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--text-muted)',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <X size={20} />
+          </button>
+        </div>
       </div>
 
       {/* Messages area */}
@@ -338,6 +540,46 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
               </div>
               );
             })}
+
+            {suggestedActions.length > 0 && !isLoading && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '6px',
+                  justifyContent: 'flex-start',
+                  paddingLeft: '4px',
+                }}
+              >
+                {suggestedActions.map((action) => (
+                  <button
+                    key={action}
+                    onClick={() => sendMessage(action)}
+                    style={{
+                      padding: '5px 12px',
+                      fontSize: '12px',
+                      color: 'var(--accent)',
+                      backgroundColor: 'transparent',
+                      border: '1px solid var(--accent)',
+                      borderRadius: '16px',
+                      cursor: 'pointer',
+                      transition: 'background-color 150ms',
+                      whiteSpace: 'nowrap',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--accent)';
+                      e.currentTarget.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = 'var(--accent)';
+                    }}
+                  >
+                    {action}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {isLoading && (
               <div style={{ display: 'flex', justifyContent: 'flex-start' }}>

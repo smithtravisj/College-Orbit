@@ -25,12 +25,14 @@ import { Task, Deadline, Course, Exam, CalendarEvent, WorkItem } from '@/types';
 import { StreakCard } from '@/components/gamification';
 import DemoBanner from '@/components/DemoBanner';
 import AIBreakdownModal from '@/components/AIBreakdownModal';
+import CollegeSelectionModal from '@/components/CollegeSelectionModal';
 
 export default function AuthenticatedDashboard() {
   const { data: session } = useSession();
   const { formatDate, formatTime, formatTimeString } = useFormatters();
   const [mounted, setMounted] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showCollegeSelection, setShowCollegeSelection] = useState(false);
   const [previewingTask, setPreviewingTask] = useState<any>(null);
   const [previewingDeadline, setPreviewingDeadline] = useState<any>(null);
   const [previewingWorkItem, setPreviewingWorkItem] = useState<WorkItem | null>(null);
@@ -150,8 +152,13 @@ export default function AuthenticatedDashboard() {
       setTimeout(() => {
         setShowOnboarding(true);
       }, 800);
+    } else if (mounted && storeInitialized && userId && settings.hasCompletedOnboarding && settings.needsCollegeSelection) {
+      // OAuth user who completed onboarding but hasn't selected a college yet (e.g. page refresh)
+      setTimeout(() => {
+        setShowCollegeSelection(true);
+      }, 800);
     }
-  }, [mounted, storeInitialized, userId, settings.hasCompletedOnboarding]);
+  }, [mounted, storeInitialized, userId, settings.hasCompletedOnboarding, settings.needsCollegeSelection]);
 
   const hiddenLinksForUniversity = settings.university && settings.hiddenQuickLinks
     ? (settings.hiddenQuickLinks[settings.university] || [])
@@ -195,8 +202,16 @@ export default function AuthenticatedDashboard() {
     <>
       <OnboardingTour
         shouldRun={showOnboarding}
-        onComplete={() => setShowOnboarding(false)}
+        onComplete={() => {
+          setShowOnboarding(false);
+          if (settings.needsCollegeSelection) {
+            setTimeout(() => setShowCollegeSelection(true), 400);
+          }
+        }}
       />
+      {showCollegeSelection && (
+        <CollegeSelectionModal onClose={() => setShowCollegeSelection(false)} />
+      )}
 
       {/* Dashboard Header */}
       <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>

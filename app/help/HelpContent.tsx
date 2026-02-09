@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Search, ChevronDown, ChevronRight, X, HelpCircle, BookOpen, Calendar, CheckSquare, FileText, Settings, Shield, Zap, Bell, Download, Users, CreditCard, Bot, ClipboardList, Volume2 } from 'lucide-react';
+import { ArrowLeft, Search, ChevronDown, ChevronRight, X, HelpCircle, BookOpen, Calendar, CheckSquare, FileText, Settings, Shield, Zap, Bell, Download, Users, CreditCard, ClipboardList, Volume2, Sparkles } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
@@ -346,41 +346,56 @@ const faqData: FAQ[] = [
     keywords: ['search', 'global', 'find', 'everything', 'all'],
   },
 
-  // AI Features / Orbi
+  // Orbi AI
   {
     id: 'what-is-orbi',
     question: 'What is Orbi?',
-    answer: 'Orbi is your AI study assistant built into College Orbit. Ask questions about your schedule, assignments, exams, and progress. Orbi has access to all your data and can give personalized answers. Premium feature.',
-    category: 'AI Features',
-    keywords: ['orbi', 'ai', 'assistant', 'chat', 'ask', 'help'],
+    answer: 'Orbi is your AI study assistant built into College Orbit. It has access to all your courses, work items, exams, notes, calendar events, shopping lists, grades, flashcards, settings, and progress data. Orbi can answer questions about your academic life and take actions on your behalf. Premium feature — access it by clicking the "Ask Orbi" button.',
+    category: 'Orbi AI',
+    keywords: ['orbi', 'ai', 'assistant', 'chat', 'ask', 'help', 'premium'],
+    featured: true,
   },
   {
-    id: 'what-can-orbi-do',
+    id: 'orbi-questions',
     question: 'What can I ask Orbi?',
-    answer: 'Anything about your academic life: what\'s due this week, how your streak is going, what courses you\'re taking, study tips based on your workload, etc.',
-    category: 'AI Features',
-    keywords: ['orbi', 'ai', 'ask', 'question', 'what', 'schedule', 'due', 'streak'],
+    answer: 'You can ask Orbi anything about your data: "What\'s due this week?", "What classes do I have tomorrow?", "What\'s my GPA?", "How many flashcards are due for review?", "Am I free on Friday?". Orbi has full context of your courses, schedule, grades, flashcard decks, streak, and progress to give personalized answers.',
+    category: 'Orbi AI',
+    keywords: ['orbi', 'ask', 'question', 'schedule', 'due', 'streak', 'gpa', 'flashcard', 'deck', 'review', 'mastery'],
   },
   {
-    id: 'ai-flashcard-generation',
-    question: 'How does AI flashcard generation work?',
-    answer: 'Open any flashcard deck and use the AI generate option. You can generate cards from your notes, PDFs, or by describing a topic. Premium feature.',
-    category: 'AI Features',
-    keywords: ['ai', 'flashcard', 'generate', 'create', 'automatic', 'notes', 'pdf'],
+    id: 'orbi-manage-items',
+    question: 'Can Orbi create, edit, and delete items?',
+    answer: 'Yes! Orbi can create, update, and delete work items, exams, courses, calendar events, notes, and shopping items. Examples: "Add milk to my grocery list", "Create an exam for CS101 on March 15th at 2pm", "Rename my math homework to Chapter 5 Review", "Delete my dentist appointment", "Mark my essay as done". Orbi can also add links/URLs to items, perform bulk operations ("Mark all readings as done", "Delete all tasks tagged old"), and manage your grades and GPA entries.',
+    category: 'Orbi AI',
+    keywords: ['orbi', 'create', 'add', 'edit', 'update', 'delete', 'remove', 'complete', 'done', 'bulk', 'link', 'url', 'grade', 'gpa', 'work item', 'exam', 'course', 'event', 'note', 'shopping'],
   },
   {
-    id: 'ai-work-breakdown',
-    question: 'What is AI work breakdown?',
-    answer: 'When you have a large assignment or project, Orbi can break it down into smaller, manageable subtasks automatically. Premium feature.',
-    category: 'AI Features',
-    keywords: ['ai', 'breakdown', 'subtask', 'project', 'assignment', 'split', 'divide'],
+    id: 'orbi-planning',
+    question: 'Can Orbi help me plan and schedule?',
+    answer: 'Yes! Orbi can create recurring tasks ("Add a weekly reading for Biology every Tuesday"), generate study plans ("Plan study sessions for my CS101 final from Monday to Friday covering sorting, trees, and graphs"), and manage holidays/excluded dates ("Add spring break from March 10-14"). Recurring tasks are automatically skipped on excluded dates.',
+    category: 'Orbi AI',
+    keywords: ['orbi', 'recurring', 'repeat', 'weekly', 'daily', 'study', 'plan', 'schedule', 'holiday', 'day off', 'break', 'excluded'],
   },
   {
-    id: 'ai-note-summarization',
-    question: 'What is AI note summarization?',
-    answer: 'Select any note and use the summarize option to get a concise AI-generated summary of the content. Premium feature.',
-    category: 'AI Features',
-    keywords: ['ai', 'summarize', 'summary', 'note', 'concise', 'tldr'],
+    id: 'orbi-settings-controls',
+    question: 'Can Orbi change settings and control the app?',
+    answer: 'Yes! Orbi can update your settings ("Switch to dark mode", "Change my theme to sakura", "Set my pomodoro to 30 minutes"), control the Pomodoro timer ("Start a pomodoro", "Pause the timer"), and send feedback or bug reports to the College Orbit team on your behalf.',
+    category: 'Orbi AI',
+    keywords: ['orbi', 'settings', 'preferences', 'theme', 'dark mode', 'pomodoro', 'timer', 'feedback', 'bug', 'report'],
+  },
+  {
+    id: 'orbi-chat-features',
+    question: 'Does Orbi remember my conversation?',
+    answer: 'Yes! Orbi remembers your conversation across page navigations and refreshes (up to 50 messages stored locally). Click the trash icon in the chat header to clear it. After each response, Orbi also suggests 1-3 follow-up actions as clickable chips — contextual shortcuts like "Mark it as done" or "Create a study plan".',
+    category: 'Orbi AI',
+    keywords: ['orbi', 'memory', 'remember', 'history', 'conversation', 'clear', 'suggested', 'actions', 'buttons', 'chips'],
+  },
+  {
+    id: 'ai-other-features',
+    question: 'What other AI features are available?',
+    answer: 'Beyond the Orbi chat, College Orbit offers AI-powered flashcard generation (generate cards from notes, PDFs, or topics), AI work breakdown (split large assignments into subtasks), and AI note summarization (get concise summaries of your notes). All are premium features accessible from their respective tools.',
+    category: 'Orbi AI',
+    keywords: ['ai', 'flashcard', 'generate', 'breakdown', 'subtask', 'summarize', 'summary', 'note', 'pdf'],
   },
 
   // Google Calendar
@@ -981,7 +996,7 @@ const categories = [
   { id: 'Work Items', icon: ClipboardList },
   { id: 'Exams', icon: FileText },
   { id: 'Notes', icon: FileText },
-  { id: 'AI Features', icon: Bot },
+  { id: 'Orbi AI', icon: Sparkles },
   { id: 'Google Calendar', icon: Calendar },
   { id: 'Ambient Sounds', icon: Volume2 },
   { id: 'Progress', icon: Zap },

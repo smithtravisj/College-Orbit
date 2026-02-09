@@ -478,7 +478,6 @@ model GpaEntry {
 model Settings {
   id                           String   @id @default(cuid())
   userId                       String   @unique
-  dueSoonWindowDays            Int      @default(7)
   weekStartsOn                 String   @default("Sun")
   timeFormat                   String   @default("12h")
   dateFormat                   String   @default("MM/DD/YYYY")
@@ -532,6 +531,9 @@ model Settings {
   showCourseCode               Boolean  @default(false)
   confirmBeforeDelete          Boolean  @default(true)
   enableKeyboardShortcuts      Boolean  @default(true)
+
+  // OAuth signup flags
+  needsCollegeSelection        Boolean  @default(false)
 
   // Demo Data
   hasDemoData                  Boolean  @default(false)

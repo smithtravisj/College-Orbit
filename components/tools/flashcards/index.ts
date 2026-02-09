@@ -7,6 +7,7 @@ export { default as CardListItem } from './CardListItem';
 export { default as CreateDeckModal } from './CreateDeckModal';
 export { default as CreateCardModal } from './CreateCardModal';
 export { default as FlashcardSettings } from './FlashcardSettings';
+export { default as QuizletImportModal } from './QuizletImportModal';
 
 // Study components
 export { default as StudySession } from './study/StudySession';
