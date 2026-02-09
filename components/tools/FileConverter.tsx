@@ -26,12 +26,16 @@ type InputType =
   | 'image'
   | 'heic'
   | 'word'
+  | 'pptx'
   | 'markdown'
   | 'text'
   | 'json'
   | 'csv'
   | 'excel'
-  | 'html';
+  | 'html'
+  | 'compress-image'
+  | 'compress-pdf'
+  | 'compress-office';
 
 type OutputType =
   | 'jpeg'
@@ -42,18 +46,28 @@ type OutputType =
   | 'html'
   | 'markdown'
   | 'json'
-  | 'csv';
+  | 'csv'
+  | 'compress-low'
+  | 'compress-medium'
+  | 'compress-high';
+
+const isCompressType = (type: InputType) =>
+  type === 'compress-image' || type === 'compress-pdf' || type === 'compress-office';
 
 const inputTypes: { value: InputType; label: string }[] = [
   { value: 'image', label: 'Image (JPEG, PNG, WebP, GIF)' },
   { value: 'heic', label: 'HEIC (iPhone Photo)' },
   { value: 'word', label: 'Word Document (.docx)' },
+  { value: 'pptx', label: 'PowerPoint (.ppt, .pptx)' },
   { value: 'excel', label: 'Excel Spreadsheet (.xlsx)' },
   { value: 'markdown', label: 'Markdown (.md)' },
   { value: 'html', label: 'HTML (.html)' },
   { value: 'text', label: 'Text (.txt)' },
   { value: 'json', label: 'JSON (.json)' },
   { value: 'csv', label: 'CSV (.csv)' },
+  { value: 'compress-image', label: 'Compress Image (JPEG, PNG, WebP)' },
+  { value: 'compress-pdf', label: 'Compress PDF' },
+  { value: 'compress-office', label: 'Compress Office (PPTX, DOCX, XLSX)' },
 ];
 
 const outputOptions: Record<InputType, { value: OutputType; label: string }[]> = {
@@ -74,6 +88,12 @@ const outputOptions: Record<InputType, { value: OutputType; label: string }[]> =
     { value: 'html', label: 'HTML' },
     { value: 'markdown', label: 'Markdown' },
     { value: 'pdf', label: 'PDF' },
+  ],
+  pptx: [
+    { value: 'text', label: 'Plain Text' },
+    { value: 'pdf', label: 'PDF' },
+    { value: 'html', label: 'HTML' },
+    { value: 'markdown', label: 'Markdown' },
   ],
   excel: [
     { value: 'csv', label: 'CSV' },
@@ -103,21 +123,40 @@ const outputOptions: Record<InputType, { value: OutputType; label: string }[]> =
     { value: 'json', label: 'JSON' },
     { value: 'text', label: 'Plain Text' },
   ],
+  'compress-image': [
+    { value: 'compress-medium', label: 'Balanced' },
+    { value: 'compress-low', label: 'Max Compression' },
+    { value: 'compress-high', label: 'Light Compression' },
+  ],
+  'compress-pdf': [
+    { value: 'compress-medium', label: 'Balanced' },
+    { value: 'compress-low', label: 'Max Compression' },
+    { value: 'compress-high', label: 'Light Compression' },
+  ],
+  'compress-office': [
+    { value: 'compress-medium', label: 'Balanced' },
+    { value: 'compress-low', label: 'Max Compression' },
+    { value: 'compress-high', label: 'Light Compression' },
+  ],
 };
 
 const acceptedFiles: Record<InputType, string> = {
   image: 'image/jpeg,image/png,image/webp,image/gif,image/bmp',
   heic: '.heic,.HEIC,image/heic',
   word: '.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  pptx: '.ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation',
   excel: '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   markdown: '.md,.markdown,text/markdown',
   html: '.html,.htm,text/html',
   text: '.txt,text/plain',
   json: '.json,application/json',
   csv: '.csv,text/csv',
+  'compress-image': 'image/jpeg,image/png,image/webp',
+  'compress-pdf': '.pdf,application/pdf',
+  'compress-office': '.pptx,.docx,.xlsx,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 };
 
-const mimeTypes: Record<OutputType, string> = {
+const mimeTypes: Partial<Record<OutputType, string>> = {
   jpeg: 'image/jpeg',
   png: 'image/png',
   webp: 'image/webp',
@@ -129,7 +168,7 @@ const mimeTypes: Record<OutputType, string> = {
   csv: 'text/csv',
 };
 
-const extensions: Record<OutputType, string> = {
+const extensions: Partial<Record<OutputType, string>> = {
   jpeg: '.jpg',
   png: '.png',
   webp: '.webp',
@@ -150,21 +189,20 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
   const [outputType, setOutputType] = useState<OutputType>('pdf');
   const [files, setFiles] = useState<File[]>([]);
   const [isConverting, setIsConverting] = useState(false);
+  const [convertingIndex, setConvertingIndex] = useState(-1);
   const [progress, setProgress] = useState(0);
-  const [results, setResults] = useState<{ url: string; filename: string; size?: number }[]>([]);
+  const [results, setResults] = useState<{ url: string; filename: string; size?: number; originalSize?: number; compressedSize?: number }[]>([]);
   const [textResult, setTextResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
-  // Simulate progress during conversion, speed based on total file size
+  // Simulate progress during conversion, speed based on current file's size
   useEffect(() => {
-    if (isConverting && files.length > 0) {
+    if (isConverting && convertingIndex >= 0 && convertingIndex < files.length) {
       setProgress(0);
 
-      // Adjust speed based on total file size
-      const totalSize = files.reduce((sum, f) => sum + f.size, 0);
-      const sizeInMB = totalSize / (1024 * 1024);
+      const sizeInMB = files[convertingIndex].size / (1024 * 1024);
       let speedMultiplier: number;
       if (sizeInMB < 0.1) {
         speedMultiplier = 4;
@@ -174,8 +212,10 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
         speedMultiplier = 1;
       } else if (sizeInMB < 5) {
         speedMultiplier = 0.5;
+      } else if (sizeInMB < 50) {
+        speedMultiplier = 0.15;
       } else {
-        speedMultiplier = 0.25;
+        speedMultiplier = 0.05;
       }
 
       progressInterval.current = setInterval(() => {
@@ -200,7 +240,7 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
         clearInterval(progressInterval.current);
       }
     };
-  }, [isConverting, files, results, textResult]);
+  }, [isConverting, convertingIndex, files, results, textResult]);
 
   const handleInputTypeChange = (type: InputType) => {
     setInputType(type);
@@ -232,12 +272,14 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
     setTextResult(null);
     setError(null);
     setProgress(0);
+    setConvertingIndex(-1);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
   const getOutputFilename = (originalName: string) => {
+    if (isCompressType(inputType)) return originalName;
     const baseName = originalName.replace(/\.[^/.]+$/, '');
     return baseName + extensions[outputType];
   };
@@ -246,6 +288,7 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
     if (files.length === 0) return;
 
     setIsConverting(true);
+    setConvertingIndex(0);
     setError(null);
     setResults([]);
     setTextResult(null);
@@ -259,7 +302,9 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
       else {
         const newResults: { url: string; filename: string; size?: number }[] = [];
 
-        for (const f of files) {
+        for (let i = 0; i < files.length; i++) {
+          const f = files[i];
+          setConvertingIndex(i);
           const filename = getOutputFilename(f.name);
 
           if (inputType === 'image') {
@@ -270,6 +315,9 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
             newResults.push({ ...result, filename });
           } else if (inputType === 'word') {
             const result = await convertWordSingle(f, outputType, filename);
+            if (result) newResults.push(result);
+          } else if (inputType === 'pptx') {
+            const result = await convertPptxSingle(f, outputType, filename);
             if (result) newResults.push(result);
           } else if (inputType === 'excel') {
             const result = await convertExcelSingle(f, outputType, filename);
@@ -289,6 +337,15 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
           } else if (inputType === 'csv') {
             const result = await convertCsvSingle(f, outputType, filename);
             if (result) newResults.push(result);
+          } else if (inputType === 'compress-image') {
+            const result = await compressImageSingle(f);
+            newResults.push(result);
+          } else if (inputType === 'compress-pdf') {
+            const result = await compressPdfSingle(f);
+            newResults.push(result);
+          } else if (inputType === 'compress-office') {
+            const result = await compressOfficeSingle(f);
+            newResults.push(result);
           }
         }
 
@@ -298,7 +355,7 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
       }
     } catch (err: unknown) {
       console.error('Conversion error:', err);
-      let message = 'Conversion failed. Please try again.';
+      let message = isCompressType(inputType) ? 'Compression failed. Please try again.' : 'Conversion failed. Please try again.';
       if (err instanceof Error) {
         message = err.message;
       } else if (typeof err === 'object' && err !== null && 'message' in err) {
@@ -309,6 +366,7 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
       setError(message);
     } finally {
       setIsConverting(false);
+      setConvertingIndex(-1);
     }
   };
 
@@ -438,6 +496,99 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
     } else if (output === 'pdf') {
       const result = await mammoth.extractRawText({ arrayBuffer });
       return await textToPdfSingle(result.value, filename);
+    }
+    return null;
+  };
+
+  const extractPptxXmlSlides = async (file: File): Promise<string[]> => {
+    const JSZip = (await import('jszip')).default;
+    const zip = await JSZip.loadAsync(await file.arrayBuffer());
+
+    const slideEntries: { num: number; path: string }[] = [];
+    zip.forEach((path) => {
+      const match = path.match(/^ppt\/slides\/slide(\d+)\.xml$/);
+      if (match) {
+        slideEntries.push({ num: parseInt(match[1], 10), path });
+      }
+    });
+    slideEntries.sort((a, b) => a.num - b.num);
+
+    const slides: string[] = [];
+    for (const entry of slideEntries) {
+      const xml = await zip.file(entry.path)!.async('string');
+      const texts: string[] = [];
+      const regex = /<a:t>([\s\S]*?)<\/a:t>/g;
+      let m;
+      while ((m = regex.exec(xml)) !== null) {
+        texts.push(m[1]);
+      }
+      slides.push(texts.join(' ').trim());
+    }
+    return slides;
+  };
+
+  const isLegacyPpt = (file: File) =>
+    file.name.toLowerCase().endsWith('.ppt') &&
+    !file.name.toLowerCase().endsWith('.pptx');
+
+  // Convert .ppt to target format via server-side LibreOffice
+  const convertPptViaServer = async (file: File, targetFormat: string): Promise<Blob> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('format', targetFormat);
+    const response = await fetch('/api/convert/ppt', { method: 'POST', body: formData });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to convert .ppt file');
+    }
+    const { data, mimeType } = await response.json();
+    const binaryString = atob(data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return new Blob([bytes], { type: mimeType });
+  };
+
+  const convertPptxSingle = async (file: File, output: OutputType, filename: string): Promise<{ url: string; filename: string; size: number } | null> => {
+    // PDF: always use server-side LibreOffice for full-fidelity rendering (images, formatting, layout)
+    if (output === 'pdf') {
+      const blob = await convertPptViaServer(file, 'pdf');
+      return { url: URL.createObjectURL(blob), filename, size: blob.size };
+    }
+
+    // Text/HTML/Markdown: extract text from slides
+    let pptxFile = file;
+    if (isLegacyPpt(file)) {
+      // Convert .ppt → .pptx first via LibreOffice, then parse
+      const pptxBlob = await convertPptViaServer(file, 'pptx');
+      pptxFile = new File([pptxBlob], file.name.replace(/\.ppt$/i, '.pptx'), {
+        type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      });
+    }
+    const slides = await extractPptxXmlSlides(pptxFile);
+    return await formatSlideOutput(slides, output, filename, file.name);
+  };
+
+  const formatSlideOutput = async (slides: string[], output: OutputType, filename: string, originalName: string): Promise<{ url: string; filename: string; size: number } | null> => {
+    if (output === 'text') {
+      const text = slides.map((s, i) => `--- Slide ${i + 1} ---\n${s}`).join('\n\n');
+      setTextResult(text);
+      return null;
+    } else if (output === 'pdf') {
+      const text = slides.map((s, i) => `Slide ${i + 1}\n${s}`).join('\n\n');
+      return await textToPdfSingle(text, filename);
+    } else if (output === 'html') {
+      const body = slides.map((s, i) =>
+        `<div style="margin-bottom:24px;padding:16px;border:1px solid #ddd;border-radius:8px;"><h3>Slide ${i + 1}</h3><p>${escapeHtml(s).replace(/\n/g, '<br>')}</p></div>`
+      ).join('\n');
+      const html = `<!DOCTYPE html>\n<html>\n<head><meta charset="UTF-8"><title>${originalName}</title></head>\n<body style="font-family:sans-serif;max-width:800px;margin:40px auto;padding:0 20px;">${body}</body>\n</html>`;
+      const blob = new Blob([html], { type: mimeTypes.html });
+      return { url: URL.createObjectURL(blob), filename, size: blob.size };
+    } else if (output === 'markdown') {
+      const md = slides.map((s, i) => `## Slide ${i + 1}\n\n${s}`).join('\n\n---\n\n');
+      const blob = new Blob([md], { type: mimeTypes.markdown });
+      return { url: URL.createObjectURL(blob), filename, size: blob.size };
     }
     return null;
   };
@@ -612,6 +763,99 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
     return { url: URL.createObjectURL(blob), filename, size: blob.size };
   };
 
+  const getCompressionQuality = (): string => {
+    if (outputType === 'compress-low') return 'low';
+    if (outputType === 'compress-high') return 'high';
+    return 'medium';
+  };
+
+  const compressImageSingle = async (file: File): Promise<{ url: string; filename: string; originalSize: number; compressedSize: number }> => {
+    const quality = getCompressionQuality();
+    const qualityMap: Record<string, number> = { low: 0.4, medium: 0.65, high: 0.85 };
+    const maxDimMap: Record<string, number | null> = { low: 1280, medium: 1920, high: null };
+    const q = qualityMap[quality] || 0.65;
+    const maxDim = maxDimMap[quality];
+
+    const img = await loadImage(file);
+    const canvas = document.createElement('canvas');
+
+    let { width, height } = img;
+    if (maxDim && Math.max(width, height) > maxDim) {
+      if (width > height) {
+        height = Math.round(height * (maxDim / width));
+        width = maxDim;
+      } else {
+        width = Math.round(width * (maxDim / height));
+        height = maxDim;
+      }
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+    URL.revokeObjectURL(img.src);
+
+    const isPng = file.type === 'image/png';
+    // PNG files get converted to WebP for actual compression (canvas toBlob('image/png') ignores quality)
+    const outputMime = isPng ? 'image/webp' : file.type;
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Compression failed'))), outputMime, q);
+    });
+
+    // If compressed is larger, return original
+    if (blob.size >= file.size) {
+      const originalUrl = URL.createObjectURL(file);
+      return { url: originalUrl, filename: file.name, originalSize: file.size, compressedSize: file.size };
+    }
+
+    const ext = isPng ? '.webp' : '';
+    const filename = ext ? file.name.replace(/\.[^/.]+$/, ext) : file.name;
+    return { url: URL.createObjectURL(blob), filename, originalSize: file.size, compressedSize: blob.size };
+  };
+
+  const compressPdfSingle = async (file: File): Promise<{ url: string; filename: string; originalSize: number; compressedSize: number }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('quality', getCompressionQuality());
+
+    const response = await fetch('/api/compress/pdf', { method: 'POST', body: formData });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to compress PDF');
+    }
+
+    const { data, mimeType, originalSize, compressedSize } = await response.json();
+    const binaryString = atob(data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: mimeType });
+    return { url: URL.createObjectURL(blob), filename: file.name, originalSize, compressedSize };
+  };
+
+  const compressOfficeSingle = async (file: File): Promise<{ url: string; filename: string; originalSize: number; compressedSize: number }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('quality', getCompressionQuality());
+
+    const response = await fetch('/api/compress/office', { method: 'POST', body: formData });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to compress Office file');
+    }
+
+    const { data, mimeType, originalSize, compressedSize } = await response.json();
+    const binaryString = atob(data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: mimeType });
+    return { url: URL.createObjectURL(blob), filename: file.name, originalSize, compressedSize };
+  };
+
   const htmlToMarkdown = (html: string): string => {
     return html
       .replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n\n')
@@ -727,7 +971,7 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
               marginBottom: '6px',
             }}
           >
-            To
+            {isCompressType(inputType) ? 'Quality' : 'To'}
           </label>
           <Select
             value={outputType}
@@ -772,8 +1016,8 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
                 overflow: 'hidden',
               }}
             >
-              {/* Progress bar background - only show on first file during conversion */}
-              {isConverting && index === 0 && (
+              {/* Progress bar background - show on currently converting file */}
+              {isConverting && index === convertingIndex && (
                 <div
                   style={{
                     position: 'absolute',
@@ -783,6 +1027,19 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
                     width: `${progress}%`,
                     backgroundColor: 'var(--accent-bg, rgba(99, 102, 241, 0.1))',
                     transition: 'width 0.1s ease-out',
+                  }}
+                />
+              )}
+              {/* Completed background for already-converted files */}
+              {isConverting && index < convertingIndex && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    height: '100%',
+                    width: '100%',
+                    backgroundColor: 'var(--accent-bg, rgba(99, 102, 241, 0.1))',
                   }}
                 />
               )}
@@ -802,10 +1059,25 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)', flexShrink: 0 }}>
                   {formatFileSize(f.size)}
                 </span>
-                {isConverting && index === 0 ? (
+                {isConverting && index === convertingIndex ? (
                   <span style={{ fontSize: '12px', color: 'var(--link)', fontWeight: 500, flexShrink: 0, minWidth: '32px', textAlign: 'right' }}>
                     {Math.round(progress)}%
                   </span>
+                ) : isConverting && index < convertingIndex ? (
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: 'var(--success, #22c55e)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Check size={12} style={{ color: 'white' }} />
+                  </div>
                 ) : !isConverting && (
                   <button
                     onClick={() => removeFile(index)}
@@ -862,19 +1134,29 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
                 >
                   <Check size={14} style={{ color: 'white' }} />
                 </div>
-                <span
-                  style={{
-                    flex: 1,
-                    fontSize: '14px',
-                    color: 'var(--text)',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {result.filename}
-                </span>
-                {result.size && (
+                <div style={{ flex: 1, overflow: 'hidden' }}>
+                  <span
+                    style={{
+                      fontSize: '14px',
+                      color: 'var(--text)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      display: 'block',
+                    }}
+                  >
+                    {result.filename}
+                  </span>
+                  {result.originalSize != null && result.compressedSize != null && (
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      {formatFileSize(result.originalSize)} → {formatFileSize(result.compressedSize)}
+                      {result.originalSize > result.compressedSize
+                        ? ` (${Math.round((1 - result.compressedSize / result.originalSize) * 100)}% saved)`
+                        : ' (no savings)'}
+                    </span>
+                  )}
+                </div>
+                {!result.originalSize && result.size && (
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)', flexShrink: 0 }}>
                     {formatFileSize(result.size)}
                   </span>
@@ -916,7 +1198,10 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
       {/* Convert Button */}
       {files.length > 0 && results.length === 0 && !textResult && !isConverting && (
         <Button onClick={handleConvert}>
-          Convert to {outputOptions[inputType].find(o => o.value === outputType)?.label}
+          {isCompressType(inputType)
+            ? `Compress (${outputOptions[inputType].find(o => o.value === outputType)?.label})`
+            : `Convert to ${outputOptions[inputType].find(o => o.value === outputType)?.label}`
+          }
         </Button>
       )}
 
@@ -986,9 +1271,11 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
         >
           <FileUp size={32} style={{ color: 'var(--text-muted)', marginBottom: '12px', opacity: 0.5 }} />
           <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
-            {(inputType === 'image' || inputType === 'heic') && outputType === 'pdf'
-              ? `Select images to combine into a PDF.`
-              : `Select files to convert to ${outputOptions[inputType].find(o => o.value === outputType)?.label}.`
+            {isCompressType(inputType)
+              ? 'Select files to compress.'
+              : (inputType === 'image' || inputType === 'heic') && outputType === 'pdf'
+                ? `Select images to combine into a PDF.`
+                : `Select files to convert to ${outputOptions[inputType].find(o => o.value === outputType)?.label}.`
             }
           </p>
         </div>
