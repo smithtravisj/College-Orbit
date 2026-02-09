@@ -1,6 +1,6 @@
 {
   "name": "college-orbit",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -38,6 +38,7 @@
     "jspdf": "^4.0.0",
     "jszip": "^3.10.1",
     "libheif-js": "^1.19.8",
+    "libreoffice-convert": "^1.8.1",
     "lucide-react": "^0.561.0",
     "mammoth": "^1.11.0",
     "marked": "^17.0.1",
@@ -50,6 +51,7 @@
     "react-dom": "^19.2.3",
     "read-excel-file": "^6.0.1",
     "resend": "^6.6.0",
+    "sharp": "^0.34.5",
     "stripe": "^20.2.0",
     "uuid": "^13.0.0",
     "zustand": "^5.0.9"
