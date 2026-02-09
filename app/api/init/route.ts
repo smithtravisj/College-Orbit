@@ -1,24 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 // GET all data for authenticated user in a single request
 // This replaces 14 separate API calls with 1
 // Note: No rate limiting on this read-heavy init endpoint to reduce latency
 export async function GET(request: NextRequest) {
   try {
-    // Use getToken instead of getServerSession to avoid session callback DB queries
-    // This is ~10x faster since it only decodes the JWT without hitting the database
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
-
-    const userId = token.id as string;
 
     // Fetch all data in parallel using a single database connection
     const [
