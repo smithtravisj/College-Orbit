@@ -117,7 +117,7 @@ export default function ShareStudyModal({ isOpen, onClose }: ShareStudyModalProp
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{
-        backgroundColor: 'var(--panel)',
+        backgroundColor: 'var(--panel-solid, var(--panel))',
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-card, 12px)',
         maxWidth: '440px',
@@ -239,7 +239,7 @@ export default function ShareStudyModal({ isOpen, onClose }: ShareStudyModalProp
                 padding: '12px',
                 borderRadius: '10px',
                 border: '1px solid var(--border)',
-                backgroundColor: 'var(--panel)',
+                backgroundColor: 'var(--panel-solid, var(--panel))',
                 color: 'var(--text)',
                 cursor: downloading ? 'wait' : 'pointer',
                 fontSize: '15px',

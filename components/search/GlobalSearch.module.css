@@ -11,7 +11,7 @@
 }
 
 .modal {
-  background-color: var(--panel);
+  background-color: var(--panel-solid, var(--panel));
   border-radius: var(--radius-card);
   border: 1px solid var(--border);
   width: 100%;

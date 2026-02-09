@@ -164,7 +164,7 @@ export default function MiniPomodoroPlayer() {
       style={{
         position: 'fixed',
         ...positionStyles,
-        backgroundColor: 'var(--panel)',
+        backgroundColor: 'var(--panel-solid, var(--panel))',
         border: '1px solid var(--border)',
         borderRadius: '12px',
         padding: '8px 12px',

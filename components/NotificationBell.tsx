@@ -362,7 +362,7 @@ export default function NotificationBell() {
               width: 'auto',
               minWidth: isMobile ? '280px' : '300px',
               maxWidth: isMobile ? '320px' : '360px',
-              backgroundColor: 'var(--panel)',
+              backgroundColor: 'var(--panel-solid, var(--panel))',
               border: '1px solid var(--border)',
               borderRadius: '20px',
               boxShadow: 'var(--shadow-lg)',

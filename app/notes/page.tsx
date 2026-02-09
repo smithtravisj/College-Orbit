@@ -1267,7 +1267,7 @@ export default function NotesPage() {
                   {selectedNote.tags && selectedNote.tags.length > 0 && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '16px' }}>
                       {selectedNote.tags.map((tag) => (
-                        <span key={tag} style={{ backgroundColor: 'var(--accent)', color: 'white', borderRadius: '4px', padding: '4px 8px', fontSize: '12px' }}>
+                        <span key={tag} style={{ backgroundColor: 'var(--accent)', color: 'var(--accent-text)', borderRadius: '4px', padding: '4px 8px', fontSize: '12px' }}>
                           {tag}
                         </span>
                       ))}

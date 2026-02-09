@@ -17,7 +17,7 @@ const FilterPills = React.memo(React.forwardRef<HTMLDivElement, FilterPillsProps
             onClick={() => onChange(filter.value)}
             className={`rounded-[10px] text-sm font-medium transition-colors ${
               activeFilter === filter.value
-                ? 'bg-[var(--accent)] text-white'
+                ? 'bg-[var(--accent)] text-[var(--accent-text)]'
                 : 'bg-[var(--panel-2)] text-[var(--text-secondary)] hover:bg-[var(--panel-3)] hover:text-[var(--text)]'
             }`}
             style={{ padding: '12px 16px' }}

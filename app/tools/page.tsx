@@ -1147,7 +1147,7 @@ export default function ToolsPage() {
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
-                activeTab === tab.key ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                activeTab === tab.key ? 'text-[var(--accent-text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
               style={{
                 padding: isMobile ? '6px 8px' : '10px 18px',

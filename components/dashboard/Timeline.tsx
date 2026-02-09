@@ -394,7 +394,7 @@ export const Timeline: React.FC<TimelineProps> = ({
                   key={tab.key}
                   onClick={() => setRange(tab.key)}
                   className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
-                    isActive ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                    isActive ? 'text-[var(--accent-text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
                   }`}
                   style={{
                     padding: '6px 12px',

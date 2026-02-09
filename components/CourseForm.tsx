@@ -617,7 +617,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
                       border: '1px solid var(--border)',
                       backgroundColor: colorPalette.accent,
                       backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                      color: 'white',
+                      color: 'var(--accent-text)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',

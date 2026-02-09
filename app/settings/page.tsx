@@ -1979,7 +1979,7 @@ export default function SettingsPage() {
               key={tab.key}
               onClick={() => setActiveSettingsTab(tab.key as typeof activeSettingsTab)}
               className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
-                activeSettingsTab === tab.key ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                activeSettingsTab === tab.key ? 'text-[var(--accent-text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
               style={{
                 padding: isMobile ? '6px 8px' : '10px 18px',
@@ -2018,7 +2018,7 @@ export default function SettingsPage() {
                     style={{
                       padding: '10px 20px',
                       backgroundColor: 'var(--accent)',
-                      color: selectedTheme === 'light' ? '#000000' : 'white',
+                      color: 'var(--accent-text)',
                       borderRadius: 'var(--radius-control)',
                       whiteSpace: 'nowrap',
                     }}
@@ -3200,7 +3200,7 @@ export default function SettingsPage() {
               borderRadius: 'var(--radius-control, 12px)',
               flexShrink: 0,
             }}>
-              <Chrome size={24} style={{ color: 'white' }} />
+              <Chrome size={24} style={{ color: 'var(--accent-text)' }} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <h3 style={{
@@ -5127,7 +5127,7 @@ export default function SettingsPage() {
                   key={tab.id}
                   onClick={() => isPremium && setActiveCustomizationTab(tab.id as 'pages' | 'tools')}
                   className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
-                    activeCustomizationTab === tab.id ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                    activeCustomizationTab === tab.id ? 'text-[var(--accent-text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
                   }`}
                   style={{
                     padding: '8px 14px',
@@ -6468,7 +6468,7 @@ export default function SettingsPage() {
                 style={{
                   padding: '8px 16px',
                   backgroundColor: 'var(--accent)',
-                  color: 'white',
+                  color: 'var(--accent-text)',
                   border: '1px solid var(--accent)',
                   borderRadius: 'var(--radius-xs, 6px)',
                   cursor: 'pointer',

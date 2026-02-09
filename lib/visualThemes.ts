@@ -6,6 +6,22 @@
 
 import { ColorPalette } from './collegeColors';
 
+/**
+ * Compute whether text on a given background color should be black or white.
+ * Uses perceived brightness formula: (0.299*R + 0.587*G + 0.114*B)
+ */
+export function getContrastTextColor(hexColor: string): string {
+  // Strip # prefix
+  const hex = hexColor.replace('#', '');
+  if (hex.length < 6) return 'white';
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return 'white';
+  const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+  return brightness > 160 ? '#000000' : 'white';
+}
+
 export type BorderRadiusSize = 'sm' | 'md' | 'lg' | 'xl';
 export type ShadowStyle = 'none' | 'soft' | 'bold';
 export type BackgroundPattern = 'dots' | 'grid' | 'waves' | null;
@@ -1924,11 +1940,23 @@ export function applyVisualTheme(
 
   // Only set CSS variables for colors that are defined in the theme
   if (themeColors.bg) root.style.setProperty('--bg', themeColors.bg);
-  if (themeColors.panel) root.style.setProperty('--panel', themeColors.panel);
+  if (themeColors.panel) {
+    root.style.setProperty('--panel', themeColors.panel);
+    // Create a solid (opaque) version of panel for modals and toasts
+    const rgbaMatch = themeColors.panel.match(/rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/);
+    if (rgbaMatch) {
+      root.style.setProperty('--panel-solid', `rgb(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]})`);
+    } else {
+      root.style.setProperty('--panel-solid', themeColors.panel);
+    }
+  }
   if (themeColors.panel2) root.style.setProperty('--panel-2', themeColors.panel2);
   if (themeColors.text) root.style.setProperty('--text', themeColors.text);
   if (themeColors.textSecondary) root.style.setProperty('--text-secondary', themeColors.textSecondary);
-  if (themeColors.accent) root.style.setProperty('--accent', themeColors.accent);
+  if (themeColors.accent) {
+    root.style.setProperty('--accent', themeColors.accent);
+    root.style.setProperty('--accent-text', getContrastTextColor(themeColors.accent));
+  }
   if (themeColors.accentHover) root.style.setProperty('--accent-hover', themeColors.accentHover);
   if (themeColors.accent2) root.style.setProperty('--accent-2', themeColors.accent2);
   if (themeColors.ring) root.style.setProperty('--ring', themeColors.ring);
@@ -1996,6 +2024,8 @@ export function clearVisualTheme(): void {
   root.style.setProperty('--theme-radius', '12px');
   root.style.setProperty('--theme-shadow', 'soft');
   root.style.setProperty('--theme-border-width', '1px');
+  root.style.removeProperty('--panel-solid');
+  root.style.removeProperty('--accent-text');
   root.style.setProperty('--visual-theme', 'default');
   root.dataset.visualTheme = 'default';
 }

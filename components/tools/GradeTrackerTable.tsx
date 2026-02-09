@@ -414,7 +414,7 @@ export default function GradeTrackerTable({
               style={{
                 padding: '10px 16px',
                 backgroundColor: 'var(--accent)',
-                color: 'white',
+                color: 'var(--accent-text)',
                 border: 'none',
                 borderRadius: '4px',
                 cursor: 'pointer',

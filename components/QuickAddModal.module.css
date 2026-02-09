@@ -48,7 +48,7 @@
   width: calc(100% - 32px);
   max-width: 400px;
   max-height: calc(100vh - 80px);
-  background-color: var(--panel);
+  background-color: var(--panel-solid, var(--panel));
   border-radius: var(--radius-card, 16px);
   border: 1px solid var(--border);
   z-index: 1002;
@@ -79,7 +79,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0 16px 16px;
-  background-color: var(--panel);
+  background-color: var(--panel-solid, var(--panel));
 }
 
 /* Desktop Modal - Centered floating */
@@ -91,7 +91,7 @@
   width: 100%;
   max-width: 480px;
   max-height: 90vh;
-  background-color: var(--panel);
+  background-color: var(--panel-solid, var(--panel));
   border-radius: var(--radius-card, 12px);
   border: 1px solid var(--border);
   z-index: 1002;

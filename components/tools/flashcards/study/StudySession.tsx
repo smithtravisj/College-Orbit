@@ -110,7 +110,7 @@ export default function StudySession({
               border: '1px solid var(--border)',
               background: 'linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 80%, black) 100%)',
               boxShadow: '0 0 12px color-mix(in srgb, var(--accent) 50%, transparent)',
-              color: 'white',
+              color: 'var(--accent-text)',
               fontSize: '15px',
               fontWeight: 600,
               cursor: 'pointer',

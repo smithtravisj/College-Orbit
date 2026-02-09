@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, X, Send, Loader2, Lock, Trash2 } from 'lucide-react';
+import { Sparkles, X, Send, Loader2, Lock, SquarePen } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import useAppStore from '@/lib/store';
 import { usePomodoroContext } from '@/context/PomodoroContext';
@@ -345,7 +345,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
         flexDirection: 'column',
         height: '100%',
         maxHeight: isMobile ? undefined : '560px',
-        backgroundColor: 'var(--panel)',
+        backgroundColor: 'var(--panel-solid, var(--panel))',
         border: isMobile ? 'none' : '1px solid var(--border)',
         borderRadius: isMobile ? 0 : '12px',
         overflow: 'hidden',
@@ -375,7 +375,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
           {messages.length > 0 && (
             <button
               onClick={() => setMessages([])}
-              title="Clear conversation"
+              title="New conversation"
               style={{
                 background: 'none',
                 border: 'none',
@@ -386,7 +386,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
                 alignItems: 'center',
               }}
             >
-              <Trash2 size={16} />
+              <SquarePen size={16} />
             </button>
           )}
           <button
@@ -446,7 +446,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
                 gap: '6px',
                 padding: '8px 16px',
                 backgroundColor: 'var(--accent)',
-                color: 'white',
+                color: 'var(--accent-text)',
                 borderRadius: '8px',
                 fontSize: '14px',
                 fontWeight: 600,
@@ -528,7 +528,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
                     padding: '10px 14px',
                     borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                     backgroundColor: msg.role === 'user' ? 'var(--accent)' : 'var(--panel-2)',
-                    color: msg.role === 'user' ? 'white' : 'var(--text)',
+                    color: msg.role === 'user' ? 'var(--accent-text)' : 'var(--text)',
                     fontSize: '14px',
                     lineHeight: '1.5',
                     wordBreak: 'break-word',
@@ -568,7 +568,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = 'var(--accent)';
-                      e.currentTarget.style.color = 'white';
+                      e.currentTarget.style.color = 'var(--accent-text)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = 'transparent';
@@ -660,7 +660,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
               borderRadius: '50%',
               border: 'none',
               backgroundColor: input.trim() ? 'var(--accent)' : 'var(--panel-2)',
-              color: input.trim() ? 'white' : 'var(--text-muted)',
+              color: input.trim() ? 'var(--accent-text)' : 'var(--text-muted)',
               cursor: input.trim() && !isLoading ? 'pointer' : 'default',
               display: 'flex',
               alignItems: 'center',
@@ -694,7 +694,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
           position: 'fixed',
           inset: 0,
           zIndex: 1100,
-          backgroundColor: 'var(--panel)',
+          backgroundColor: 'var(--panel-solid, var(--panel))',
         }}
       >
         {modalContent}

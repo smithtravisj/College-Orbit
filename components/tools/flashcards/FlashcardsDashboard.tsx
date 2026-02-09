@@ -941,7 +941,7 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
               padding: '4px',
               borderRadius: '8px',
               border: '1px solid var(--border)',
-              backgroundColor: 'var(--panel)',
+              backgroundColor: 'var(--panel-solid, var(--panel))',
               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
               zIndex: 10,
               minWidth: '160px',

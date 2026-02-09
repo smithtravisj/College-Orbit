@@ -499,7 +499,7 @@ export default function Navigation() {
                 data-tour={item.label === 'Settings' ? 'settings-link' : item.label === 'Courses' ? 'courses-link' : undefined}
                 className={`nav-link-hover relative flex items-center gap-2.5 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   isActive
-                    ? 'text-[var(--text)]'
+                    ? 'text-[var(--accent-text)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
                 style={{
@@ -529,7 +529,7 @@ export default function Navigation() {
                       justifyContent: 'center',
                       borderRadius: '10px',
                       backgroundColor: item.label === 'Exams' ? 'var(--accent)' : 'var(--danger)',
-                      color: 'white',
+                      color: item.label === 'Exams' ? 'var(--accent-text)' : 'white',
                       flexShrink: 0,
                     }}
                   >
@@ -550,7 +550,7 @@ export default function Navigation() {
                 aria-current={isActive ? 'page' : undefined}
                 className={`nav-link-hover relative flex items-center gap-2.5 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   isActive
-                    ? 'text-[var(--text)]'
+                    ? 'text-[var(--accent-text)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
                 style={{
@@ -581,7 +581,7 @@ export default function Navigation() {
                 onClick={() => setPendingNav('/account')}
                 className={`nav-link-hover relative flex items-center gap-2.5 rounded-[var(--radius-control)] font-medium text-sm transition-all duration-150 group ${
                   (pendingNav ? pendingNav === '/account' : pathname === '/account')
-                    ? 'text-[var(--text)]'
+                    ? 'text-[var(--accent-text)]'
                     : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                 }`}
                 style={{
@@ -685,7 +685,7 @@ export default function Navigation() {
                         justifyContent: 'center',
                         borderRadius: '9px',
                         backgroundColor: item.label === 'Exams' ? 'var(--accent)' : 'var(--danger)',
-                        color: 'white',
+                        color: item.label === 'Exams' ? 'var(--accent-text)' : 'white',
                         flexShrink: 0,
                       }}
                     >

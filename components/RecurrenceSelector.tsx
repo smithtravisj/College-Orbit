@@ -3,7 +3,6 @@
 import { RecurringTaskFormData, RecurringDeadlineFormData, RecurringExamFormData } from '@/types';
 import { Select } from '@/components/ui/Input';
 import CalendarPicker from './CalendarPicker';
-import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 type RecurringFormData = RecurringTaskFormData | RecurringDeadlineFormData | RecurringExamFormData;
@@ -16,14 +15,12 @@ interface RecurrenceSelectorProps {
 
 export default function RecurrenceSelector({ value, onChange, disabled }: RecurrenceSelectorProps) {
   const isMobile = useIsMobile();
-  const theme = useAppStore((state) => state.settings.theme);
-
   const handleChange = (updates: Partial<RecurringFormData>) => {
     onChange({ ...value, ...updates } as RecurringFormData);
   };
 
-  // In light mode, use dark text on accent background; in dark mode, use white
-  const selectedTextColor = theme === 'light' ? '#000000' : 'white';
+  // Use computed accent text color for readability on accent backgrounds
+  const selectedTextColor = 'var(--accent-text)';
 
   // Get the time field value (dueTime for tasks/deadlines, examTime for exams)
   const getTimeValue = (): string => {

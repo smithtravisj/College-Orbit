@@ -131,7 +131,7 @@ function PublicPricingPage() {
                 fontWeight: 600,
                 borderRadius: '20px',
                 background: accentColor,
-                color: '#fff',
+                color: 'var(--accent-text)',
                 letterSpacing: '0.5px',
               }}
             >
@@ -316,7 +316,7 @@ function AuthenticatedPricingPage() {
                 fontWeight: 600,
                 borderRadius: '20px',
                 background: colorPalette.accent,
-                color: settings.theme === 'light' ? '#000' : '#fff',
+                color: 'var(--accent-text)',
                 letterSpacing: '0.5px',
               }}
             >

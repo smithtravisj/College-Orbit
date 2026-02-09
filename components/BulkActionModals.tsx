@@ -40,7 +40,7 @@ export function BulkChangeCourseModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Course</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -110,7 +110,7 @@ export function BulkChangeTagsModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Tags</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -195,7 +195,7 @@ export function BulkChangeTypeModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Type</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -276,7 +276,7 @@ export function BulkChangePriorityModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change {label}</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -335,7 +335,7 @@ export function BulkChangeDateModal({ isOpen, onClose, selectedCount, onConfirm 
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4" style={{ overflow: 'visible' }}>
-      <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full" style={{ overflow: 'visible' }}>
+      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full" style={{ overflow: 'visible' }}>
         <div style={{ padding: '24px', overflow: 'visible' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Date</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -403,7 +403,7 @@ export function BulkChangeTimeModal({ isOpen, onClose, selectedCount, onConfirm 
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Time</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -468,7 +468,7 @@ export function BulkAddLinkModal({ isOpen, onClose, selectedCount, onConfirm }: 
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Add Link</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -540,7 +540,7 @@ export function BulkChangeLocationModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Location</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -608,7 +608,7 @@ export function BulkChangeTermModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Term</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -686,7 +686,7 @@ export function BulkDeleteModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Delete {entityType}s</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>

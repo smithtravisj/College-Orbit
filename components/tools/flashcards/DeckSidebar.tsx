@@ -83,7 +83,7 @@ export default function DeckSidebar({
                 border: 'none',
                 cursor: 'pointer',
                 backgroundColor: quickFilter === filter.value ? 'var(--accent)' : 'var(--panel-2)',
-                color: quickFilter === filter.value ? 'white' : 'var(--text-muted)',
+                color: quickFilter === filter.value ? 'var(--accent-text)' : 'var(--text-muted)',
                 transition: 'all 0.15s ease',
               }}
             >

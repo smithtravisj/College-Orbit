@@ -78,7 +78,7 @@ export function AIChatButton() {
   })();
 
   const isLightMode = useIsLightMode();
-  const iconColor = isLightMode ? '#000000' : 'white';
+  const iconColor = 'var(--accent-text)';
 
   const gradientIntensity = useAppStore((state) => state.settings.gradientIntensity) ?? 50;
 

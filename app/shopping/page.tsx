@@ -980,7 +980,7 @@ export default function ShoppingPage() {
                       : 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)')
                     : 'none',
                   boxShadow: isActive ? `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}` : 'none',
-                  color: isActive ? 'var(--text)' : 'var(--text-muted)',
+                  color: isActive ? 'var(--accent-text)' : 'var(--text-muted)',
                 }}
               >
                 <Icon size={isMobile ? 14 : 16} />

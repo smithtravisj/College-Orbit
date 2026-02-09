@@ -356,7 +356,7 @@ export default function CoursesPage() {
                     onClick={() => handleTermFilterChange(f.value)}
                     className={`w-full text-left rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
                       termFilter === f.value
-                        ? 'text-[var(--text)]'
+                        ? 'text-[var(--accent-text)]'
                         : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                     }`}
                     style={{
@@ -439,7 +439,7 @@ export default function CoursesPage() {
                       onClick={() => handleTermFilterChange(f.value)}
                       className={`w-full text-left rounded-[var(--radius-control)] font-medium transition-colors ${
                         termFilter === f.value
-                          ? 'text-[var(--text)]'
+                          ? 'text-[var(--accent-text)]'
                           : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                       }`}
                       style={{

@@ -34,9 +34,6 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
   const [tempWorkDuration, setTempWorkDuration] = useState<number | ''>(workDuration);
   const [tempBreakDuration, setTempBreakDuration] = useState<number | ''>(breakDuration);
 
-  // Use theme prop directly instead of localStorage to avoid hydration issues
-  const isLightMode = theme === 'light';
-
   // Sync temp settings when opening settings panel
   useEffect(() => {
     if (settingsMode) {
@@ -241,7 +238,7 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
               style={{
                 flex: 1,
                 backgroundColor: 'var(--accent)',
-                color: 'white',
+                color: 'var(--accent-text)',
               }}
             >
               Apply Settings
@@ -312,7 +309,7 @@ export default function PomodoroTimer({ theme = 'dark' }: Props) {
                 padding: '12px 24px',
                 backgroundColor: isRunning ? pauseButtonColor : 'var(--accent)',
                 backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                color: isLightMode ? 'black' : 'white',
+                color: 'var(--accent-text)',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: 'pointer',

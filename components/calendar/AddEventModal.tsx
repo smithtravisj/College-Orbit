@@ -176,7 +176,7 @@ export default function AddEventModal({
     >
       <div
         style={{
-          backgroundColor: 'var(--panel)',
+          backgroundColor: 'var(--panel-solid, var(--panel))',
           borderRadius: '16px',
           border: '1px solid var(--border)',
           width: '100%',

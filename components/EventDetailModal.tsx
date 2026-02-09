@@ -545,7 +545,7 @@ export default function EventDetailModal({
       <div
         ref={modalRef}
         style={{
-          backgroundColor: 'var(--panel)',
+          backgroundColor: 'var(--panel-solid, var(--panel))',
           border: '1px solid var(--border)',
           borderRadius: 'var(--radius-card)',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -567,7 +567,7 @@ export default function EventDetailModal({
             padding: isMobile ? '12px 12px 8px 12px' : '16px 16px 12px 16px',
             borderBottom: '1px solid var(--border)',
             flexShrink: 0,
-            backgroundColor: 'var(--panel)',
+            backgroundColor: 'var(--panel-solid, var(--panel))',
           }}
         >
           <div style={{ flex: 1 }}>
@@ -731,7 +731,7 @@ export default function EventDetailModal({
             padding: isMobile ? '8px 12px' : '12px 16px',
             borderTop: '1px solid var(--border)',
             flexShrink: 0,
-            backgroundColor: 'var(--panel)',
+            backgroundColor: 'var(--panel-solid, var(--panel))',
           }}
         >
           {isEditing ? (
@@ -876,7 +876,7 @@ export default function EventDetailModal({
           >
             <div
               style={{
-                backgroundColor: 'var(--panel)',
+                backgroundColor: 'var(--panel-solid, var(--panel))',
                 borderRadius: isMobile ? '12px 12px 0 0' : '12px',
                 boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
                 maxWidth: isMobile ? '100%' : '420px',
@@ -922,7 +922,7 @@ export default function EventDetailModal({
                       border: '1px solid var(--border)',
                       backgroundColor: colorPalette.accent,
                       backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                      color: 'white',
+                      color: 'var(--accent-text)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',

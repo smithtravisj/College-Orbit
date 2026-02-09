@@ -450,7 +450,7 @@ export default function RichTextEditor({
                     fontSize: '14px',
                     border: 'none',
                     backgroundColor: 'var(--accent)',
-                    color: 'white',
+                    color: 'var(--accent-text)',
                     cursor: 'pointer',
                     transition: 'opacity 150ms ease',
                     opacity: linkUrl.trim() ? 1 : 0.5,

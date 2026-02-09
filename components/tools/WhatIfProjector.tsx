@@ -177,7 +177,7 @@ export default function WhatIfProjector({ entries: providedEntries }: WhatIfProj
             padding: '12px 16px',
             backgroundColor: 'var(--accent)',
             backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-            color: 'white',
+            color: 'var(--accent-text)',
             border: 'none',
             borderRadius: '8px',
             cursor: 'pointer',

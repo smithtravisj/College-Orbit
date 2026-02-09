@@ -53,7 +53,7 @@ const Checkbox = React.memo(function Checkbox({
         <svg width={s.check} height={s.check} viewBox="0 0 12 12" fill="none">
           <path
             d="M2 6L5 9L10 3"
-            stroke="white"
+            stroke="var(--accent-text, white)"
             strokeWidth={s.stroke}
             strokeLinecap="round"
             strokeLinejoin="round"

@@ -1388,7 +1388,7 @@ export default function HelpContent() {
                     gap: '8px',
                     padding: '10px 16px',
                     backgroundColor: 'var(--accent)',
-                    color: 'white',
+                    color: 'var(--accent-text)',
                     border: 'none',
                     borderRadius: '8px',
                     fontSize: '14px',

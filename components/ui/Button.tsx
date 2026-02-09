@@ -30,9 +30,9 @@ const Button = React.memo(React.forwardRef<HTMLButtonElement, ButtonProps>(
     const customColors = isPremium ? settings.customColors : null;
     const visualTheme = isPremium ? settings.visualTheme : null;
 
-    // Compute accent color (text color uses theme defaults)
+    // Compute accent color
     let accentColor = colorPalette.accent;
-    const accentTextColor = isLightMode ? '#000000' : '#ffffff';
+    const accentTextColor = 'var(--accent-text)';
 
     // Visual theme takes priority over custom colors
     if (visualTheme && visualTheme !== 'default') {

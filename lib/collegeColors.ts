@@ -1618,6 +1618,9 @@ export function applyColorPalette(palette: ColorPalette): void {
   // Backgrounds
   root.style.setProperty("--bg", palette.bg);
   root.style.setProperty("--panel", palette.panel);
+  // Compute solid (opaque) version of panel for modals/toasts/overlays
+  const panelRgba = palette.panel.match(/rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/);
+  root.style.setProperty("--panel-solid", panelRgba ? `rgb(${panelRgba[1]}, ${panelRgba[2]}, ${panelRgba[3]})` : palette.panel);
   root.style.setProperty("--panel-2", palette.panel2);
 
   // Text
@@ -1638,6 +1641,16 @@ export function applyColorPalette(palette: ColorPalette): void {
   root.style.setProperty("--accent-hover", palette.accentHover);
   root.style.setProperty("--accent-2", palette.accent2);
   root.style.setProperty("--ring", palette.ring);
+
+  // Compute accent text color based on brightness
+  const accentHex = palette.accent.replace('#', '');
+  if (accentHex.length >= 6) {
+    const r = parseInt(accentHex.substring(0, 2), 16);
+    const g = parseInt(accentHex.substring(2, 4), 16);
+    const b = parseInt(accentHex.substring(4, 6), 16);
+    const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+    root.style.setProperty("--accent-text", brightness > 160 ? '#000000' : 'white');
+  }
 
   // Button colors
   root.style.setProperty("--button-secondary", palette.buttonSecondary);

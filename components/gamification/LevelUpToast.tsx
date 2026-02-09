@@ -46,7 +46,7 @@ export default function LevelUpToast({ level, onDismiss }: LevelUpToastProps) {
     >
       <div
         style={{
-          backgroundColor: 'var(--panel)',
+          backgroundColor: 'var(--panel-solid, var(--panel))',
           borderRadius: '12px',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
           border: '1px solid var(--border)',

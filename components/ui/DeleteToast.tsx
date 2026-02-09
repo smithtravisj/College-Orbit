@@ -50,7 +50,7 @@ export function DeleteToast({ message, onUndo, onDismiss, duration = 5000 }: Del
   return (
     <div
       style={{
-        backgroundColor: 'var(--panel)',
+        backgroundColor: 'var(--panel-solid, var(--panel))',
         border: '1px solid var(--border)',
         borderRadius: '8px',
         padding: '12px 16px',
@@ -298,7 +298,7 @@ export function ErrorToast({ message }: { message: string }) {
   return (
     <div
       style={{
-        backgroundColor: 'var(--panel)',
+        backgroundColor: 'var(--panel-solid, var(--panel))',
         border: '1px solid #ef4444',
         borderRadius: '8px',
         padding: '12px 16px',

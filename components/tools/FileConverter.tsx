@@ -887,7 +887,7 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
                     backgroundColor: accentColor || 'var(--link)',
                     backgroundImage: buttonGradient,
                     boxShadow: buttonGlow,
-                    color: 'white',
+                    color: 'var(--accent-text)',
                     borderRadius: '5px',
                     fontSize: '12px',
                     fontWeight: 500,

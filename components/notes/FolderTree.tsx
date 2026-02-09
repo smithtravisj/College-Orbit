@@ -190,7 +190,7 @@ export default function FolderTree({
 
   // Light mode detection
   const isLightMode = settings.theme === 'light';
-  const selectedTextColor = isLightMode ? '#000000' : 'white';
+  const selectedTextColor = 'var(--accent-text)';
   const addFolderBgColor = isLightMode ? '#f0f0f0' : 'rgba(255,255,255,0.08)';
   const addFolderHoverBgColor = isLightMode ? '#e5e5e5' : 'rgba(255,255,255,0.12)';
 
@@ -386,7 +386,7 @@ export default function FolderTree({
               position: 'fixed',
               top: contextMenu.y,
               left: contextMenu.x,
-              backgroundColor: 'var(--panel)',
+              backgroundColor: 'var(--panel-solid, var(--panel))',
               border: '1px solid var(--border)',
               borderRadius: '8px',
               boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
@@ -467,7 +467,7 @@ export default function FolderTree({
         >
           <div
             style={{
-              backgroundColor: 'var(--panel)',
+              backgroundColor: 'var(--panel-solid, var(--panel))',
               borderRadius: '8px',
               boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
               maxWidth: '400px',

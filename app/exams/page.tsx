@@ -648,7 +648,7 @@ export default function ExamsPage() {
                       onClick={() => setFilter(f.value)}
                       className={`w-full text-left rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
                         filter === f.value
-                          ? 'text-[var(--text)]'
+                          ? 'text-[var(--accent-text)]'
                           : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                       }`}
                       style={{
@@ -724,7 +724,7 @@ export default function ExamsPage() {
                       onClick={() => setFilter(f.value)}
                       className={`w-full text-left rounded-[var(--radius-control)] text-sm font-medium transition-colors ${
                         filter === f.value
-                          ? 'text-[var(--text)]'
+                          ? 'text-[var(--accent-text)]'
                           : 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                       }`}
                       style={{

@@ -508,7 +508,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
                   }}
                   className={`text-sm font-medium transition-colors ${
                     !isPM
-                      ? 'bg-[var(--accent)] text-white'
+                      ? 'bg-[var(--accent)] text-[var(--accent-text)]'
                       : 'bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                   }`}
                   style={{ padding: '8px 16px', borderRadius: '6px' }}
@@ -523,7 +523,7 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
                   }}
                   className={`text-sm font-medium transition-colors ${
                     isPM
-                      ? 'bg-[var(--accent)] text-white'
+                      ? 'bg-[var(--accent)] text-[var(--accent-text)]'
                       : 'bg-[var(--panel)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-white/5'
                   }`}
                   style={{ padding: '8px 16px', borderRadius: '6px' }}

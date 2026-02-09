@@ -29,7 +29,7 @@ export default function ConfirmationModal({
 
   return createPortal(
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
-      <div className="bg-[var(--panel)] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-2">{title}</h2>
           <p className="text-sm text-[var(--text-muted)] mb-6">{message}</p>

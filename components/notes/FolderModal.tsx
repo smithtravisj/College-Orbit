@@ -121,7 +121,7 @@ export default function FolderModal({ isOpen, onClose, editingFolderId, courses 
     >
       <div
         style={{
-          backgroundColor: 'var(--panel)',
+          backgroundColor: 'var(--panel-solid, var(--panel))',
           borderRadius: '8px',
           boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
           maxWidth: '448px',
@@ -142,7 +142,7 @@ export default function FolderModal({ isOpen, onClose, editingFolderId, courses 
             padding: '16px',
             position: 'sticky',
             top: 0,
-            backgroundColor: 'var(--panel)',
+            backgroundColor: 'var(--panel-solid, var(--panel))',
           }}
         >
           <h2 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text)' }}>
@@ -325,7 +325,7 @@ export default function FolderModal({ isOpen, onClose, editingFolderId, courses 
                 fontSize: '14px',
                 transition: 'opacity 150ms ease',
                 backgroundColor: 'var(--accent)',
-                color: 'white',
+                color: 'var(--accent-text)',
                 border: 'none',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 opacity: loading ? 0.5 : 1,

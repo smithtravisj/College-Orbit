@@ -73,7 +73,7 @@ export default function HelpTooltip({ text, size = 15, width = 220, position = '
             padding: '8px 12px',
             fontSize: '12px',
             color: 'var(--text)',
-            backgroundColor: 'var(--panel)',
+            backgroundColor: 'var(--panel-solid, var(--panel))',
             border: '1px solid var(--border)',
             borderRadius: '6px',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',

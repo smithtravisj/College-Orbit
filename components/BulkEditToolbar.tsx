@@ -67,7 +67,7 @@ export default function BulkEditToolbar({
         right: 0,
         zIndex: 1000,
         padding: isMobile ? '12px 16px' : '16px 24px',
-        backgroundColor: 'var(--panel)',
+        backgroundColor: 'var(--panel-solid, var(--panel))',
         borderTop: '1px solid var(--border)',
         backdropFilter: 'blur(12px)',
         animation: 'slideUp 0.2s ease-out',

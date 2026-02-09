@@ -425,7 +425,7 @@ export default function FlashcardMode({
                   borderRadius: '8px',
                   border: '1px solid var(--accent)',
                   backgroundColor: 'var(--accent)',
-                  color: 'white',
+                  color: 'var(--accent-text)',
                   fontSize: '14px',
                   fontWeight: 500,
                   cursor: 'pointer',

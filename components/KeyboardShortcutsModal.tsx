@@ -52,7 +52,7 @@ export default function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShor
     >
       <div
         style={{
-          backgroundColor: 'var(--panel)',
+          backgroundColor: 'var(--panel-solid, var(--panel))',
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--border)',
           width: '100%',

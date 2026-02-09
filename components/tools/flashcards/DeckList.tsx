@@ -162,7 +162,7 @@ export default function DeckList({
                     border: 'none',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    color: 'white',
+                    color: 'var(--accent-text)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

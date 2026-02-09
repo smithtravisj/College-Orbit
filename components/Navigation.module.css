@@ -121,7 +121,7 @@
   }
 
   .drawerLink.active {
-    color: var(--link);
+    color: var(--accent-text);
     background-color: var(--nav-active);
   }
 

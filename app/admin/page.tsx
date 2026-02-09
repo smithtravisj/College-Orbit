@@ -1262,7 +1262,7 @@ export default function AdminPage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as AdminTab)}
               className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
-                activeTab === tab.id ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                activeTab === tab.id ? 'text-[var(--accent-text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
               style={{
                 padding: '10px 18px',
@@ -2010,7 +2010,7 @@ export default function AdminPage() {
                     key={tab.id}
                     onClick={() => setAdminTab(tab.id as 'college' | 'issues' | 'features')}
                     className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
-                      adminTab === tab.id ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                      adminTab === tab.id ? 'text-[var(--accent-text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
                     }`}
                     style={{
                       padding: '8px 14px',
@@ -3897,7 +3897,7 @@ export default function AdminPage() {
                   key={tab.id}
                   onClick={() => setBetaSubTab(tab.id as 'users' | 'feedback' | 'versions')}
                   className={`rounded-[var(--radius-control)] font-medium transition-all duration-150 ${
-                    betaSubTab === tab.id ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                    betaSubTab === tab.id ? 'text-[var(--accent-text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
                   }`}
                   style={{
                     padding: '10px 18px',

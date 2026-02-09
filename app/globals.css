@@ -14,6 +14,7 @@
   /* Backgrounds */
   --bg: #0b0f14;
   --panel: #101826;
+  --panel-solid: #101826;
   --panel-2: #0f1724;
 
   /* Text hierarchy */
@@ -31,6 +32,7 @@
 
   /* Accent - Orbit Purple */
   --accent: #7c3aed;
+  --accent-text: white;
   --accent-2: rgba(124, 58, 237, 0.15);
   --ring: rgba(124, 58, 237, 0.35);
 
@@ -398,7 +400,7 @@ select {
 
 .btn-primary {
   background: var(--accent);
-  color: white;
+  color: var(--accent-text);
 }
 
 .btn-primary:hover {

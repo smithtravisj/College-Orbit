@@ -107,7 +107,7 @@ export default function AIBreakdownModal({ onSave, onClose, onPremiumRequired, e
       <div
         style={{
           position: 'relative',
-          backgroundColor: 'var(--panel)',
+          backgroundColor: 'var(--panel-solid, var(--panel))',
           border: '1px solid var(--border)',
           borderRadius: '12px',
           padding: '24px',
