@@ -3225,23 +3225,7 @@ export default function SettingsPage() {
 
           {/* Google Calendar Integration Card */}
           <div id="setting-google-calendar" style={{ gridColumn: '1 / -1' }}>
-          <Card title={
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              Google Calendar Sync
-              <span style={{
-                fontSize: '10px',
-                fontWeight: 600,
-                color: 'var(--warning)',
-                backgroundColor: 'var(--warning-bg)',
-                padding: '2px 6px',
-                borderRadius: 'var(--radius-xs, 4px)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}>
-                Beta
-              </span>
-            </span>
-          }>
+          <Card title="Google Calendar Sync">
             {!googleCalendarStatus?.connected ? (
               // Not Connected State
               <div>

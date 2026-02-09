@@ -23,14 +23,36 @@ interface SyncResult {
 
 /**
  * Check if a date should be treated as all-day for Google Calendar export.
- * Times at midnight (00:00) or near end-of-day (11:00 PM onward) are treated as all-day
- * since assignments due at 11:59 PM are effectively "due that day".
+ * Times at midnight (00:00) or with minutes=59 (like 11:59 PM in any timezone)
+ * are treated as all-day since LMS assignments due at 11:59 PM are effectively "due that day".
+ * We check minutes=59 because that's the universal LMS end-of-day marker,
+ * and the UTC hour varies depending on the user's timezone.
  */
 function shouldExportAsAllDay(date: Date): boolean {
   const hours = date.getUTCHours();
   const minutes = date.getUTCMinutes();
-  // Midnight (no time set) or 11:00 PM onward
-  return (hours === 0 && minutes === 0) || hours >= 23;
+  // Midnight (no time set) or minutes=59 (11:59 PM in any timezone)
+  return (hours === 0 && minutes === 0) || minutes === 59;
+}
+
+/**
+ * Get the correct local date string (YYYY-MM-DD) for an all-day event.
+ * When a due date is 11:59 PM local time, toISOString() returns the next day in UTC.
+ * We subtract 1 day if the time has minutes=59 and is in the early UTC hours (meaning
+ * it crossed midnight going from local -> UTC), so the Google Calendar event
+ * appears on the correct day.
+ */
+function getAllDayDateString(date: Date): string {
+  const hours = date.getUTCHours();
+  const minutes = date.getUTCMinutes();
+  // If minutes=59 and UTC hours are 0-12, the date rolled over from local -> UTC
+  // (e.g., 11:59 PM MST = 6:59 AM UTC next day). Subtract a day to get the local date.
+  if (minutes === 59 && hours >= 0 && hours <= 12) {
+    const adjusted = new Date(date);
+    adjusted.setUTCDate(adjusted.getUTCDate() - 1);
+    return adjusted.toISOString().split('T')[0];
+  }
+  return date.toISOString().split('T')[0];
 }
 
 // Throttle between Google API calls to avoid rate limiting (Google allows ~10 req/sec per user)
@@ -172,6 +194,31 @@ export const POST = withRateLimit(async function(req: NextRequest) {
       console.log('[Google Calendar Sync] DeletedGoogleCalendarItem table not available');
     }
 
+    // Build a set of Google event IDs we've previously exported (deadlines, exams, work items)
+    // so we don't re-import them as duplicate CalendarEvents
+    const exportedGoogleEventIds = new Set<string>();
+    try {
+      const [exportedDeadlines, exportedExams, exportedWork] = await Promise.all([
+        prisma.deadline.findMany({
+          where: { userId, googleCalendarEventId: { not: null } },
+          select: { googleCalendarEventId: true },
+        }),
+        prisma.exam.findMany({
+          where: { userId, googleCalendarEventId: { not: null } },
+          select: { googleCalendarEventId: true },
+        }),
+        prisma.workItem.findMany({
+          where: { userId, googleCalendarEventId: { not: null } },
+          select: { googleCalendarEventId: true },
+        }),
+      ]);
+      for (const d of exportedDeadlines) if (d.googleCalendarEventId) exportedGoogleEventIds.add(d.googleCalendarEventId);
+      for (const e of exportedExams) if (e.googleCalendarEventId) exportedGoogleEventIds.add(e.googleCalendarEventId);
+      for (const w of exportedWork) if (w.googleCalendarEventId) exportedGoogleEventIds.add(w.googleCalendarEventId);
+    } catch {
+      // Tables may not exist yet
+    }
+
     // ========== Phase 1: Import Google Calendar Events ==========
     if (syncOptions.importEvents) {
       try {
@@ -215,6 +262,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
             // Skip events that were exported by us (re-import prevention)
             if (gEvent.extendedProperties?.private?.collegeOrbitId) { skippedExported++; continue; }
+            if (exportedGoogleEventIds.has(gEvent.id)) { skippedExported++; continue; }
 
             // Parse start/end times
             const isAllDay = !!gEvent.start.date && !gEvent.start.dateTime;
@@ -313,10 +361,10 @@ export const POST = withRateLimit(async function(req: NextRequest) {
               description: event.description || undefined,
               location: event.location || undefined,
               start: event.allDay
-                ? { date: event.startAt.toISOString().split('T')[0] }
+                ? { date: getAllDayDateString(event.startAt) }
                 : { dateTime: event.startAt.toISOString() },
               end: event.allDay
-                ? { date: (event.endAt || event.startAt).toISOString().split('T')[0] }
+                ? { date: getAllDayDateString(event.endAt || event.startAt) }
                 : { dateTime: (event.endAt || event.startAt).toISOString() },
               extendedProperties: {
                 private: {
@@ -400,10 +448,10 @@ export const POST = withRateLimit(async function(req: NextRequest) {
               summary: `📋 ${coursePrefix}${deadline.title}`,
               description: deadline.notes || undefined,
               start: allDay
-                ? { date: deadline.dueAt.toISOString().split('T')[0] }
+                ? { date: getAllDayDateString(deadline.dueAt) }
                 : { dateTime: deadline.dueAt.toISOString() },
               end: allDay
-                ? { date: deadline.dueAt.toISOString().split('T')[0] }
+                ? { date: getAllDayDateString(deadline.dueAt) }
                 : { dateTime: deadline.dueAt.toISOString() },
               extendedProperties: {
                 private: {
@@ -487,10 +535,10 @@ export const POST = withRateLimit(async function(req: NextRequest) {
               description: exam.notes || undefined,
               location: exam.location || undefined,
               start: allDay
-                ? { date: exam.examAt.toISOString().split('T')[0] }
+                ? { date: getAllDayDateString(exam.examAt) }
                 : { dateTime: exam.examAt.toISOString() },
               end: allDay
-                ? { date: exam.examAt.toISOString().split('T')[0] }
+                ? { date: getAllDayDateString(exam.examAt) }
                 : { dateTime: exam.examAt.toISOString() },
               extendedProperties: {
                 private: {
@@ -581,10 +629,10 @@ export const POST = withRateLimit(async function(req: NextRequest) {
               summary: `${emoji} ${coursePrefix}${item.title}`,
               description: item.notes || undefined,
               start: allDay
-                ? { date: item.dueAt.toISOString().split('T')[0] }
+                ? { date: getAllDayDateString(item.dueAt) }
                 : { dateTime: item.dueAt.toISOString() },
               end: allDay
-                ? { date: item.dueAt.toISOString().split('T')[0] }
+                ? { date: getAllDayDateString(item.dueAt) }
                 : { dateTime: item.dueAt.toISOString() },
               extendedProperties: {
                 private: {
@@ -707,20 +755,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
                 try {
                   await sleep(API_DELAY);
-                  const created = await client.insertEvent(exportCalendarId, googleEvent);
-                  // Store as a CalendarEvent so we track it
-                  await prisma.calendarEvent.create({
-                    data: {
-                      userId,
-                      title: `🏫 [${course.code || course.name}] Class`,
-                      description: '',
-                      startAt: startDateTime,
-                      endAt: endDateTime,
-                      allDay: false,
-                      location: meeting.location || null,
-                      googleEventId: created.id,
-                    },
-                  });
+                  await client.insertEvent(exportCalendarId, googleEvent);
                   existingDates.add(dateKey);
                   result.exportedClasses.created++;
                 } catch (error) {
