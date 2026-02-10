@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 export const GET = withRateLimit(async function (req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
-    const status = await getSubscriptionStatus(token.id);
+    const status = await getSubscriptionStatus(userId);
 
     return NextResponse.json({
       tier: status.tier,

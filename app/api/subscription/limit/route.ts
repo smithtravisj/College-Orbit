@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { checkFeatureLimit } from '@/lib/subscription';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 export const GET = withRateLimit(async function (req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -21,7 +18,7 @@ export const GET = withRateLimit(async function (req: NextRequest) {
       return NextResponse.json({ error: 'Invalid feature parameter' }, { status: 400 });
     }
 
-    const result = await checkFeatureLimit(token.id, feature as 'notes' | 'courses');
+    const result = await checkFeatureLimit(userId, feature as 'notes' | 'courses');
 
     return NextResponse.json({
       current: result.current,
