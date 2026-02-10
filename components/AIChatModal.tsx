@@ -345,7 +345,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
         flexDirection: 'column',
         height: '100%',
         maxHeight: isMobile ? undefined : '560px',
-        backgroundColor: 'var(--panel-solid, var(--panel))',
+        backgroundColor: 'var(--orbi-bg)',
         border: isMobile ? 'none' : '1px solid var(--border)',
         borderRadius: isMobile ? 0 : '12px',
         overflow: 'hidden',
@@ -366,7 +366,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Sparkles size={18} style={{ color: 'var(--accent)' }} />
+          <Sparkles size={18} style={{ color: 'var(--link)' }} />
           <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)', margin: 0 }}>
             Chat with Orbi
           </h3>
@@ -558,21 +558,21 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
                     style={{
                       padding: '5px 12px',
                       fontSize: '12px',
-                      color: 'var(--accent)',
+                      color: 'var(--link)',
                       backgroundColor: 'transparent',
-                      border: '1px solid var(--accent)',
+                      border: '1px solid var(--link)',
                       borderRadius: '16px',
                       cursor: 'pointer',
                       transition: 'background-color 150ms',
                       whiteSpace: 'nowrap',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--accent)';
+                      e.currentTarget.style.backgroundColor = 'var(--link)';
                       e.currentTarget.style.color = 'var(--accent-text)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = 'var(--accent)';
+                      e.currentTarget.style.color = 'var(--link)';
                     }}
                   >
                     {action}
@@ -694,7 +694,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
           position: 'fixed',
           inset: 0,
           zIndex: 1100,
-          backgroundColor: 'var(--panel-solid, var(--panel))',
+          backgroundColor: 'var(--orbi-bg)',
         }}
       >
         {modalContent}

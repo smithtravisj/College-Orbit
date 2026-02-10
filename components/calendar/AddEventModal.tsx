@@ -231,6 +231,17 @@ export default function AddEventModal({
               onChange={(d) => setDateStr(d)}
             />
 
+            {/* All Day Toggle */}
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={allDay}
+                onChange={(e) => setAllDay(e.target.checked)}
+                style={{ width: isMobile ? '18px' : '16px', height: isMobile ? '18px' : '16px', cursor: 'pointer' }}
+              />
+              <span style={{ fontSize: isMobile ? '14px' : '13px', color: 'var(--text)' }}>All day event</span>
+            </label>
+
             {/* Time Pickers (only if not all day) */}
             {!allDay && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -269,17 +280,6 @@ export default function AddEventModal({
             {/* More Options Section */}
             {showMore && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '10px' }}>
-                {/* All Day Toggle */}
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={allDay}
-                    onChange={(e) => setAllDay(e.target.checked)}
-                    style={{ width: isMobile ? '18px' : '16px', height: isMobile ? '18px' : '16px', cursor: 'pointer' }}
-                  />
-                  <span style={{ fontSize: isMobile ? '14px' : '13px', color: 'var(--text)' }}>All day event</span>
-                </label>
-
                 <Input
                   label="Location (optional)"
                   value={location}

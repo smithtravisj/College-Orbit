@@ -1704,6 +1704,9 @@ export function applyColorPalette(palette: ColorPalette): void {
   // Light mode uses #dc2626, dark mode uses #660000
   const isLightMode = palette.bg === "#f5f5f5";
   root.style.setProperty("--delete-button", isLightMode ? "#dc2626" : "#660000");
+
+  // Orbi AI modal background (neutral grey, not themed card color)
+  root.style.setProperty("--orbi-bg", isLightMode ? "#f0f0f0" : "#18181b");
 }
 
 /**
