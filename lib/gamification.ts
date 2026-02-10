@@ -328,9 +328,8 @@ export async function processTaskCompletion(
 
   const longestStreak = Math.max(userStreak.longestStreak, newStreak);
 
-  // Calculate XP with streak bonus
-  const streakBonus = calculateStreakBonus(newStreak);
-  const xpEarned = BASE_XP_PER_COMPLETION + streakBonus;
+  // Calculate XP (flat rate, no streak bonus)
+  const xpEarned = BASE_XP_PER_COMPLETION;
   const previousLevel = userStreak.level;
   const newTotalXp = userStreak.totalXp + xpEarned;
   const newLevel = calculateLevel(newTotalXp);
