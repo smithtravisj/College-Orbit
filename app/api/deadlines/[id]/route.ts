@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 
 // GET single deadline
@@ -9,9 +9,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req: _request, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(_request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -20,7 +20,7 @@ export async function GET(
     const deadline = await prisma.deadline.findFirst({
       where: {
         id,
-        userId: token.id,
+        userId,
       },
     });
 
@@ -47,9 +47,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -62,7 +62,7 @@ export async function PATCH(
     const existingDeadline = await prisma.deadline.findFirst({
       where: {
         id,
-        userId: token.id,
+        userId,
       },
     });
 
@@ -147,9 +147,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req: _request, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(_request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -159,7 +159,7 @@ export async function DELETE(
     const existingDeadline = await prisma.deadline.findFirst({
       where: {
         id,
-        userId: token.id,
+        userId,
       },
       select: {
         id: true,
@@ -183,14 +183,14 @@ export async function DELETE(
       await prisma.deletedCanvasItem.upsert({
         where: {
           userId_canvasId_type: {
-            userId: token.id,
+            userId,
             canvasId: existingDeadline.canvasAssignmentId,
             type: 'assignment',
           },
         },
         update: { deletedAt: new Date() },
         create: {
-          userId: token.id,
+          userId,
           canvasId: existingDeadline.canvasAssignmentId,
           type: 'assignment',
         },
@@ -202,14 +202,14 @@ export async function DELETE(
       await prisma.deletedGoogleCalendarItem.upsert({
         where: {
           userId_googleEventId_type: {
-            userId: token.id as string,
+            userId,
             googleEventId: existingDeadline.googleCalendarEventId,
             type: 'pending_google_delete',
           },
         },
         update: { deletedAt: new Date() },
         create: {
-          userId: token.id as string,
+          userId,
           googleEventId: existingDeadline.googleCalendarEventId,
           type: 'pending_google_delete',
         },

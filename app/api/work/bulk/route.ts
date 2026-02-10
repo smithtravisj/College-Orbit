@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 // Valid bulk operations
 const VALID_OPERATIONS = ['update', 'delete', 'complete', 'reopen'] as const;
@@ -10,12 +10,9 @@ type BulkOperation = (typeof VALID_OPERATIONS)[number];
 // POST bulk operations on work items
 export const POST = withRateLimit(async function (req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -44,7 +41,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
     const existingItems = await prisma.workItem.findMany({
       where: {
         id: { in: ids },
-        userId: token.id,
+        userId,
       },
       select: {
         id: true,
@@ -72,14 +69,14 @@ export const POST = withRateLimit(async function (req: NextRequest) {
           await prisma.deletedCanvasItem.upsert({
             where: {
               userId_canvasId_type: {
-                userId: token.id,
+                userId,
                 canvasId: item.canvasAssignmentId!,
                 type: 'assignment',
               },
             },
             update: { deletedAt: new Date() },
             create: {
-              userId: token.id,
+              userId,
               canvasId: item.canvasAssignmentId!,
               type: 'assignment',
             },
@@ -101,7 +98,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
         result = await prisma.workItem.deleteMany({
           where: {
             id: { in: ids },
-            userId: token.id,
+            userId,
           },
         });
 
@@ -113,7 +110,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
         result = await prisma.workItem.updateMany({
           where: {
             id: { in: ids },
-            userId: token.id,
+            userId,
           },
           data: {
             status: 'done',
@@ -129,7 +126,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
         result = await prisma.workItem.updateMany({
           where: {
             id: { in: ids },
-            userId: token.id,
+            userId,
           },
           data: {
             status: 'open',
@@ -180,7 +177,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
         result = await prisma.workItem.updateMany({
           where: {
             id: { in: ids },
-            userId: token.id,
+            userId,
           },
           data: updateData,
         });

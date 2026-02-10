@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 // Valid priorities
 const VALID_PRIORITIES = ['low', 'medium', 'high', 'critical'] as const;
@@ -8,9 +8,9 @@ const VALID_PRIORITIES = ['low', 'medium', 'high', 'critical'] as const;
 // GET single work item
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = await getToken({ req: _request, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(_request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -19,7 +19,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     const workItem = await prisma.workItem.findFirst({
       where: {
         id,
-        userId: token.id,
+        userId,
       },
       include: {
         recurringPattern: true,
@@ -48,9 +48,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 // PATCH update work item
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -63,7 +63,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const existingItem = await prisma.workItem.findFirst({
       where: {
         id,
-        userId: token.id,
+        userId,
       },
     });
 
@@ -171,9 +171,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 // DELETE work item
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = await getToken({ req: _request, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(_request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -183,7 +183,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
     const existingItem = await prisma.workItem.findFirst({
       where: {
         id,
-        userId: token.id,
+        userId,
       },
       select: {
         id: true,
@@ -205,14 +205,14 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
       await prisma.deletedCanvasItem.upsert({
         where: {
           userId_canvasId_type: {
-            userId: token.id,
+            userId,
             canvasId: existingItem.canvasAssignmentId,
             type: 'assignment',
           },
         },
         update: { deletedAt: new Date() },
         create: {
-          userId: token.id,
+          userId,
           canvasId: existingItem.canvasAssignmentId,
           type: 'assignment',
         },
@@ -224,14 +224,14 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
       await prisma.deletedGoogleCalendarItem.upsert({
         where: {
           userId_googleEventId_type: {
-            userId: token.id as string,
+            userId,
             googleEventId: existingItem.googleCalendarEventId,
             type: 'pending_google_delete',
           },
         },
         update: { deletedAt: new Date() },
         create: {
-          userId: token.id as string,
+          userId,
           googleEventId: existingItem.googleCalendarEventId,
           type: 'pending_google_delete',
         },

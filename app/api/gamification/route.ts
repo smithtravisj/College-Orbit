@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { getUserGamificationData, toggleVacationMode } from '@/lib/gamification';
 import { computeChallengeProgress } from '@/lib/dailyChallenges';
 
 // GET user's gamification stats
 export async function GET(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     // Get timezone offset from query params (in minutes)
@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
     const dateKey = `${userLocalTime.getUTCFullYear()}-${String(userLocalTime.getUTCMonth() + 1).padStart(2, '0')}-${String(userLocalTime.getUTCDate()).padStart(2, '0')}`;
 
     const [data, dailyChallenges] = await Promise.all([
-      getUserGamificationData(token.id, timezoneOffset),
-      computeChallengeProgress(token.id, dateKey, timezoneOffset),
+      getUserGamificationData(userId, timezoneOffset),
+      computeChallengeProgress(userId, dateKey, timezoneOffset),
     ]);
 
     return NextResponse.json({ ...data, dailyChallenges });
@@ -39,10 +39,10 @@ export async function GET(request: NextRequest) {
 // PATCH update vacation mode
 export async function PATCH(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const data = await request.json();
@@ -54,7 +54,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const streak = await toggleVacationMode(token.id, data.vacationMode);
+    const streak = await toggleVacationMode(userId, data.vacationMode);
 
     return NextResponse.json({
       vacationMode: streak.vacationMode,

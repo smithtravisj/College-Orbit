@@ -1,24 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { generateAllUserRecurringInstances } from '@/lib/recurringTaskUtils';
 import { checkPremiumAccess } from '@/lib/subscription';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 // GET all tasks for authenticated user
 export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
-    console.log('[GET /api/tasks] Token:', token ? { userId: token.id, email: token.email } : 'null');
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
-      console.log('[GET /api/tasks] No user ID in token, returning 401');
+    if (!userId) {
+      console.log('[GET /api/tasks] No user ID, returning 401');
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
-    console.log('[GET /api/tasks] Authorized user:', token.id);
+    console.log('[GET /api/tasks] Authorized user:', userId);
 
     // Get query parameters
     const url = new URL(request.url);
@@ -28,7 +24,7 @@ export const GET = withRateLimit(async function(request: NextRequest) {
 
     // Generate recurring instances before fetching tasks
     try {
-      await generateAllUserRecurringInstances(token.id, windowDays);
+      await generateAllUserRecurringInstances(userId, windowDays);
     } catch (genError) {
       console.error('[GET /api/tasks] Error generating recurring instances:', genError);
       // Continue even if generation fails
@@ -37,7 +33,7 @@ export const GET = withRateLimit(async function(request: NextRequest) {
     // Fetch all tasks with their recurring patterns
     const allTasks = await prisma.task.findMany({
       where: {
-        userId: token.id,
+        userId,
         ...(status && { status }),
       },
       include: {
@@ -96,12 +92,9 @@ export const GET = withRateLimit(async function(request: NextRequest) {
 // POST create new task
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -110,7 +103,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     // Handle recurring task creation
     if (data.recurring) {
       // Recurring tasks require premium
-      const premiumCheck = await checkPremiumAccess(token.id);
+      const premiumCheck = await checkPremiumAccess(userId);
       if (!premiumCheck.allowed) {
         return NextResponse.json(
           { error: 'premium_required', message: 'Recurring tasks are a Premium feature. Upgrade to create recurring tasks.' },
@@ -122,7 +115,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         // Create recurring pattern
         const pattern = await prisma.recurringPattern.create({
           data: {
-            userId: token.id,
+            userId,
             recurrenceType: data.recurring.recurrenceType,
             intervalDays: data.recurring.customIntervalDays || null,
             daysOfWeek: data.recurring.daysOfWeek || [],
@@ -150,7 +143,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         const { generateRecurringInstances } = await import('@/lib/recurringTaskUtils');
         await generateRecurringInstances({
           patternId: pattern.id,
-          userId: token.id,
+          userId,
         });
 
         // Fetch first task to return
@@ -185,7 +178,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     const task = await prisma.task.create({
       data: {
-        userId: token.id,
+        userId,
         title: data.title,
         courseId: data.courseId || null,
         dueAt,
