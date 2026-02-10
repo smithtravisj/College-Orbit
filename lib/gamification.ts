@@ -3,12 +3,6 @@ import { Achievement, XpStats, GamificationRecordResult } from '@/types';
 
 // XP rewards
 const BASE_XP_PER_COMPLETION = 10;
-const STREAK_BONUSES: { minStreak: number; bonus: number }[] = [
-  { minStreak: 30, bonus: 25 },
-  { minStreak: 14, bonus: 15 },
-  { minStreak: 7, bonus: 10 },
-  { minStreak: 3, bonus: 5 },
-];
 
 // Level thresholds
 const LEVEL_THRESHOLDS = [
@@ -74,18 +68,6 @@ export function calculateXpStats(totalXp: number): XpStats {
     nextLevelXp: xpNeededForNextLevel,
     progress,
   };
-}
-
-/**
- * Calculate streak bonus XP based on current streak
- */
-function calculateStreakBonus(currentStreak: number): number {
-  for (const { minStreak, bonus } of STREAK_BONUSES) {
-    if (currentStreak >= minStreak) {
-      return bonus;
-    }
-  }
-  return 0;
 }
 
 /**
