@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 // GET single deck with all cards
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(request);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -20,7 +19,7 @@ export async function GET(
     const deck = await prisma.flashcardDeck.findFirst({
       where: {
         id,
-        userId: session.user.id,
+        userId,
       },
       include: {
         course: {
@@ -59,9 +58,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -72,7 +71,7 @@ export async function PATCH(
     const existingDeck = await prisma.flashcardDeck.findFirst({
       where: {
         id,
-        userId: session.user.id,
+        userId,
       },
     });
 
@@ -122,13 +121,13 @@ export async function PATCH(
 
 // DELETE deck and all cards
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(request);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -138,7 +137,7 @@ export async function DELETE(
     const existingDeck = await prisma.flashcardDeck.findFirst({
       where: {
         id,
-        userId: session.user.id,
+        userId,
       },
     });
 

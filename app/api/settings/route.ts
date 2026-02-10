@@ -1,29 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET settings for authenticated user
-export const GET = withRateLimit(async function(_request: NextRequest) {
+export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(request);
 
-    if (!session?.user?.id) {
-      console.log('[GET /api/settings] No user ID in session');
+    if (!userId) {
+      console.log('[GET /api/settings] No user ID');
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
-    console.log('[GET /api/settings] Fetching for user:', session.user.id);
+    console.log('[GET /api/settings] Fetching for user:', userId);
 
     const settings = await prisma.settings.findUnique({
-      where: { userId: session.user.id },
+      where: { userId },
     });
 
     console.log('[GET /api/settings] Found settings:', settings);
 
     const response = {
-      userId: session.user.id,
+      userId: userId,
       settings: settings || {
         weekStartsOn: 'Sun',
         timeFormat: '12h',
@@ -63,13 +62,12 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
 
 // PATCH update settings
 export const PATCH = withRateLimit(async function(req: NextRequest) {
-  const session = await getServerSession(authConfig);
+  const userId = await getAuthUserId(req);
 
-  if (!session?.user?.id) {
+  if (!userId) {
     return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
   }
 
-  const userId = session.user.id;
   const data = await req.json();
 
   try {

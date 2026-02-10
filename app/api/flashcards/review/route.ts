@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { processFlashcardReview } from '@/lib/flashcardGamification';
 
 // Modified SM-2 Spaced Repetition Algorithm
@@ -66,9 +65,9 @@ function calculateNextReview(
 // POST process a card review
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -98,7 +97,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (!card || card.deck.userId !== session.user.id) {
+    if (!card || card.deck.userId !== userId) {
       return NextResponse.json({ error: 'Card not found' }, { status: 404 });
     }
 
@@ -137,7 +136,7 @@ export async function POST(req: NextRequest) {
 
     // Award XP for the review (1 XP per card)
     const gamificationResult = await processFlashcardReview(
-      session.user.id,
+      userId,
       timezoneOffset,
       data.cardId
     );
