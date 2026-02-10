@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { computeChallengeProgress, claimCompletedChallenges } from '@/lib/dailyChallenges';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 /**
  * Helper to get today's date key in user's local timezone
@@ -17,9 +17,9 @@ function getLocalDateKey(timezoneOffset: number): string {
 // GET today's challenges with progress
 export async function GET(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const timezoneOffset = parseInt(searchParams.get('tz') || '0', 10);
     const dateKey = getLocalDateKey(timezoneOffset);
 
-    const challenges = await computeChallengeProgress(token.id, dateKey, timezoneOffset);
+    const challenges = await computeChallengeProgress(userId, dateKey, timezoneOffset);
     return NextResponse.json({ challenges, dateKey });
   } catch (error) {
     console.error('Error fetching daily challenges:', error);
@@ -41,9 +41,9 @@ export async function GET(request: NextRequest) {
 // POST claim completed challenges
 export async function POST(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const timezoneOffset = typeof data.timezoneOffset === 'number' ? data.timezoneOffset : 0;
     const dateKey = getLocalDateKey(timezoneOffset);
 
-    const result = await claimCompletedChallenges(token.id, dateKey, timezoneOffset);
+    const result = await claimCompletedChallenges(userId, dateKey, timezoneOffset);
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error claiming daily challenges:', error);

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { processTaskCompletion } from '@/lib/gamification';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 // POST record a task completion
 export async function POST(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'itemId is required' }, { status: 400 });
     }
 
-    const result = await processTaskCompletion(token.id, timezoneOffset, itemType, itemId);
+    const result = await processTaskCompletion(userId, timezoneOffset, itemType, itemId);
 
     return NextResponse.json(result);
   } catch (error) {
