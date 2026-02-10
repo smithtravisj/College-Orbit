@@ -204,9 +204,8 @@ export function getTaskDeadlineEventsForDate(
       // Check if date matches directly
       if (dueDateLocal === dateStr) return true;
 
-      // Check if time is at midnight - if so, also check previous day (end of day convention)
-      const [, timeStr] = item.dueAt.split('T');
-      if (timeStr && timeStr.startsWith('00:00:00')) {
+      // Check if local time is at midnight - if so, also check previous day (end of day convention)
+      if (dueDate.getHours() === 0 && dueDate.getMinutes() === 0) {
         const prevDay = new Date(dueDate);
         prevDay.setDate(prevDay.getDate() - 1);
         const prevYear = prevDay.getFullYear();

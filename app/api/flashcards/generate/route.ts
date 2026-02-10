@@ -5,7 +5,7 @@ import { checkPremiumAccess } from '@/lib/subscription';
 import OpenAI from 'openai';
 
 const MAX_CHARS = 60000;
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB for images
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'];
 
 const SYSTEM_PROMPT = `You are an expert study assistant that creates high-quality flashcards from lecture notes and study materials.
@@ -64,7 +64,7 @@ export const POST = withRateLimit(async function(request: NextRequest) {
     if (file) {
       if (file.size > MAX_FILE_SIZE) {
         return NextResponse.json(
-          { error: 'File size must be under 10MB' },
+          { error: 'File size must be under 25MB' },
           { status: 400 }
         );
       }

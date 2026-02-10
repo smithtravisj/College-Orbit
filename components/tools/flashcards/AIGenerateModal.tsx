@@ -87,8 +87,8 @@ export default function AIGenerateModal({ onSave, onClose, isMobile = false }: A
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        setError('File size must be under 10MB');
+      if (file.size > 25 * 1024 * 1024) {
+        setError('File size must be under 25MB');
         return;
       }
       if (!ACCEPTED_TYPES.includes(file.type)) {
@@ -263,7 +263,7 @@ export default function AIGenerateModal({ onSave, onClose, isMobile = false }: A
                       Click to select a file
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                      PDF, PNG, JPG, WebP, GIF — Max 10MB
+                      PDF, PNG, JPG, WebP, GIF — Max 25MB
                     </div>
                   </div>
                 )}

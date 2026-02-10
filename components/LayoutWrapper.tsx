@@ -28,6 +28,7 @@ import PetCompanion from './pet/PetCompanion';
 export default function LayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
+
   const { status } = useSession();
   const loadFromDatabase = useAppStore((state) => state.loadFromDatabase);
   const pendingAchievements = useAppStore((state) => state.pendingAchievements);

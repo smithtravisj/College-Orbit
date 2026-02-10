@@ -1425,7 +1425,7 @@ async function executeToolCall(
   }
 }
 
-async function buildSystemPrompt(userId: string): Promise<string> {
+async function buildSystemPrompt(userId: string, timezoneOffset: number = 0): Promise<string> {
   const [user, courses, workItems, exams, notes, calendarEvents, shoppingItems, settings, streak, recurringWorkPatterns, excludedDates, gpaEntries, flashcardDecks] =
     await Promise.all([
       prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
@@ -1507,7 +1507,8 @@ async function buildSystemPrompt(userId: string): Promise<string> {
 
   const courseMap = new Map(courses.map((c) => [c.id, `${c.code} - ${c.name}`]));
 
-  const now = new Date();
+  const utcNow = new Date();
+  const now = new Date(utcNow.getTime() - timezoneOffset * 60000);
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const todayISO = localDateStr(todayStart);
 
@@ -2100,12 +2101,13 @@ export const POST = withRateLimit(async function (request: NextRequest) {
     const history: Array<{ role: string; content: string }> = Array.isArray(body.history)
       ? body.history.slice(-MAX_HISTORY)
       : [];
+    const timezoneOffset = typeof body.timezoneOffset === 'number' ? body.timezoneOffset : 0;
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    const systemPrompt = await buildSystemPrompt(userId);
+    const systemPrompt = await buildSystemPrompt(userId, timezoneOffset);
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 

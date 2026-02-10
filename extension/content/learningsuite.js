@@ -195,7 +195,7 @@ function scrapeGradebookAssignment() {
         const targetOffset = localDate.getTimezoneOffset();
         // The datetime attr was calculated with current offset, recalculate with target offset
         const currentOffset = new Date().getTimezoneOffset();
-        const offsetDiff = (currentOffset - targetOffset) * 60 * 1000; // in ms
+        const offsetDiff = (targetOffset - currentOffset) * 60 * 1000; // in ms
         const correctedDate = new Date(utcDate.getTime() + offsetDiff);
         dueDate = correctedDate.toISOString();
         console.log('[College Orbit LS] DST-corrected date:', dueDate, 'offset diff (hrs):', offsetDiff / 3600000);

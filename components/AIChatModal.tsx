@@ -131,7 +131,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text.trim(), history }),
+        body: JSON.stringify({ message: text.trim(), history, timezoneOffset: new Date().getTimezoneOffset() }),
       });
 
       const data = await res.json();
