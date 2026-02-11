@@ -528,6 +528,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
                     padding: '10px 14px',
                     borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                     backgroundColor: msg.role === 'user' ? 'var(--accent)' : 'var(--panel-2)',
+                    border: '1px solid var(--border)',
                     color: msg.role === 'user' ? 'var(--accent-text)' : 'var(--text)',
                     fontSize: '14px',
                     lineHeight: '1.5',
