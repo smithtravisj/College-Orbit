@@ -285,11 +285,11 @@ const getLocalStorageSize = (): number => {
   return total * 2; // Characters are 2 bytes in UTF-16
 };
 
-// Clear volatile caches when storage is getting full (> 4MB of ~5MB limit)
+// Clear volatile caches when storage is getting full (> 3.5MB of ~5MB limit)
 const clearVolatileCaches = () => {
   if (typeof window === 'undefined') return;
   const size = getLocalStorageSize();
-  const threshold = 4 * 1024 * 1024; // 4MB threshold
+  const threshold = 3.5 * 1024 * 1024; // 3.5MB threshold
 
   if (size > threshold) {
     console.log('[Storage] Clearing volatile caches, current size:', Math.round(size / 1024), 'KB');
@@ -299,6 +299,8 @@ const clearVolatileCaches = () => {
     localStorage.removeItem('calendarCache');
     localStorage.removeItem('app-colleges');
     localStorage.removeItem('app-subscriptionStatus');
+    localStorage.removeItem('admin-colleges-cache');
+    localStorage.removeItem('orbi-chat-messages');
   }
 };
 
@@ -339,16 +341,24 @@ const saveToLocalStorage = (state: AppStore) => {
       // - recurringWorkPatterns (rarely accessed)
     }));
   } catch (error) {
-    // If quota exceeded, try to clear old data and save minimal data
+    // If quota exceeded, aggressively clear caches and retry with minimal data
     if (error instanceof DOMException && error.name === 'QuotaExceededError') {
       console.warn('localStorage quota exceeded, clearing cache...');
       try {
-        // Clear timeline cache and try again with minimal data
+        const storageKey = state.getStorageKey();
+
+        // Remove the existing store entry first to free space
+        localStorage.removeItem(storageKey);
+
+        // Clear all volatile caches
         localStorage.removeItem('timeline_cache_today');
         localStorage.removeItem('timeline_cache_week');
         localStorage.removeItem('calendarCache');
+        localStorage.removeItem('app-colleges');
+        localStorage.removeItem('app-subscriptionStatus');
+        localStorage.removeItem('admin-colleges-cache');
+        localStorage.removeItem('orbi-chat-messages');
 
-        const storageKey = state.getStorageKey();
         // Save only absolutely essential data for dashboard
         localStorage.setItem(storageKey, JSON.stringify({
           courses: state.courses,
@@ -410,10 +420,11 @@ const useAppStore = create<AppStore>((set, get) => ({
         set({ colleges });
         // Update the global database colleges for color palette generation
         setDatabaseColleges(colleges);
-        // Cache colleges in localStorage for faster loading
+        // Cache colleges in localStorage for faster loading (strip quickLinks to save space)
         if (typeof window !== 'undefined') {
           try {
-            localStorage.setItem('app-colleges', JSON.stringify(colleges));
+            const slimColleges = colleges.map(({ quickLinks, ...rest }: any) => rest);
+            localStorage.setItem('app-colleges', JSON.stringify(slimColleges));
           } catch (e) {
             console.warn('Failed to cache colleges:', e);
           }
