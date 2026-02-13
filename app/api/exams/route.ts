@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET all exams for authenticated user
 export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const exams = await prisma.exam.findMany({
-      where: { userId: token.id },
+      where: { userId },
       orderBy: { examAt: 'asc' },
       include: {
         course: true,
@@ -36,12 +33,9 @@ export const GET = withRateLimit(async function(request: NextRequest) {
 // POST create new exam
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -69,7 +63,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     const exam = await prisma.exam.create({
       data: {
-        userId: token.id,
+        userId,
         title: data.title.trim(),
         courseId: data.courseId || null,
         examAt: examAt,

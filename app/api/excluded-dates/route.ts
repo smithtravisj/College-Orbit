@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET all excluded dates for authenticated user
 export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const excludedDates = await prisma.excludedDate.findMany({
-      where: { userId: token.id },
+      where: { userId },
       orderBy: { date: 'asc' },
     });
 
@@ -39,12 +36,9 @@ export const GET = withRateLimit(async function(request: NextRequest) {
 // POST create new excluded date(s)
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -66,7 +60,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     if (data.dates && Array.isArray(data.dates)) {
       // Batch creation of dates (for date ranges)
       datesToCreate = data.dates.map((date: string) => ({
-        userId: token.id,
+        userId,
         courseId: data.courseId || null,
         date: new Date(date),
         description: data.description.trim(),
@@ -75,7 +69,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
       // Single date
       datesToCreate = [
         {
-          userId: token.id,
+          userId,
           courseId: data.courseId || null,
           date: new Date(data.date),
           description: data.description.trim(),
@@ -94,7 +88,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
       const course = await prisma.course.findFirst({
         where: {
           id: data.courseId,
-          userId: token.id,
+          userId,
         },
       });
 
@@ -116,7 +110,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     // Fetch and return the created dates
     const excludedDates = await prisma.excludedDate.findMany({
-      where: { userId: token.id },
+      where: { userId },
       orderBy: { date: 'asc' },
     });
 

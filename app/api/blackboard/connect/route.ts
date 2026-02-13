@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { createBlackboardClient, getAccessToken, encryptToken } from '@/lib/blackboard';
 
 // POST - Connect to Blackboard LMS
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -77,7 +76,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     // Update settings with Blackboard connection info
     await prisma.settings.upsert({
-      where: { userId: session.user.id },
+      where: { userId },
       update: {
         blackboardInstanceUrl: normalizedUrl,
         blackboardApplicationKey: encryptedKey,
@@ -89,7 +88,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         blackboardSyncEnabled: true,
       },
       create: {
-        userId: session.user.id,
+        userId,
         blackboardInstanceUrl: normalizedUrl,
         blackboardApplicationKey: encryptedKey,
         blackboardApplicationSecret: encryptedSecret,

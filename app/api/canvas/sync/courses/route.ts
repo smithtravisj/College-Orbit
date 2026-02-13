@@ -1,20 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { createCanvasClient, decryptToken, getCurrentTerm, CanvasAuthError } from '@/lib/canvas';
 
 // POST - Sync courses from Canvas
-export const POST = withRateLimit(async function(_req: NextRequest) {
+export const POST = withRateLimit(async function(req: NextRequest) {
+  const userId = await getAuthUserId(req);
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
+  }
+
   try {
-    const session = await getServerSession(authConfig);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
-    }
-
-    const userId = session.user.id;
 
     // Get settings with Canvas credentials
     const settings = await prisma.settings.findUnique({
@@ -121,15 +119,14 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
     console.error('[Canvas Sync Courses] Error:', error);
 
     if (error instanceof CanvasAuthError) {
-      const session = await getServerSession(authConfig);
-      if (session?.user?.id) {
+      if (userId) {
         const existingNotification = await prisma.notification.findFirst({
-          where: { userId: session.user.id, type: 'canvas_token_expired', read: false },
+          where: { userId, type: 'canvas_token_expired', read: false },
         });
         if (!existingNotification) {
           await prisma.notification.create({
             data: {
-              userId: session.user.id,
+              userId,
               title: 'Canvas Connection Expired',
               message: 'Your Canvas access token has expired. Please go to Settings to reconnect your Canvas account.',
               type: 'canvas_token_expired',

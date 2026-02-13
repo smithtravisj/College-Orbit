@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 import { generateRecurringInstances } from '@/lib/recurringTaskUtils';
 
@@ -9,12 +9,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -25,7 +22,7 @@ export async function PATCH(
 
     // Verify ownership
     const pattern = await prisma.recurringPattern.findFirst({
-      where: { id, userId: token.id },
+      where: { id, userId },
     });
 
     if (!pattern) {
@@ -83,7 +80,7 @@ export async function PATCH(
       // Regenerate instances with the new pattern settings
       await generateRecurringInstances({
         patternId: id,
-        userId: token.id,
+        userId,
         windowDays: 365,
       });
 

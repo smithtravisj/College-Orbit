@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 
 // GET single exam
@@ -8,9 +8,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -19,7 +19,7 @@ export async function GET(
     const exam = await prisma.exam.findFirst({
       where: {
         id,
-        userId: token.id,
+        userId,
       },
       include: {
         course: true,
@@ -46,9 +46,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -59,7 +59,7 @@ export async function PATCH(
     const existingExam = await prisma.exam.findFirst({
       where: {
         id,
-        userId: token.id,
+        userId,
       },
     });
 
@@ -133,9 +133,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -145,7 +145,7 @@ export async function DELETE(
     const existingExam = await prisma.exam.findFirst({
       where: {
         id,
-        userId: token.id,
+        userId,
       },
     });
 
@@ -158,14 +158,14 @@ export async function DELETE(
       await prisma.deletedGoogleCalendarItem.upsert({
         where: {
           userId_googleEventId_type: {
-            userId: token.id as string,
+            userId,
             googleEventId: existingExam.googleCalendarEventId,
             type: 'pending_google_delete',
           },
         },
         update: { deletedAt: new Date() },
         create: {
-          userId: token.id as string,
+          userId,
           googleEventId: existingExam.googleCalendarEventId,
           type: 'pending_google_delete',
         },

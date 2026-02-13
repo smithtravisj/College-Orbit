@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import {
   exchangeCodeForTokens,
   createGoogleCalendarClient,
@@ -13,9 +12,9 @@ import { cookies } from 'next/headers';
 // GET - Handle Google Calendar OAuth callback
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.redirect(new URL('/login?error=session_expired', req.url));
     }
 
@@ -106,7 +105,7 @@ export async function GET(req: NextRequest) {
 
     // Update settings with Google Calendar connection info
     await prisma.settings.upsert({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       update: {
         googleCalendarAccessToken: encryptedAccessToken,
         googleCalendarRefreshToken: encryptedRefreshToken,
@@ -115,7 +114,7 @@ export async function GET(req: NextRequest) {
         googleCalendarConnected: true,
       },
       create: {
-        userId: session.user.id,
+        userId: userId,
         googleCalendarAccessToken: encryptedAccessToken,
         googleCalendarRefreshToken: encryptedRefreshToken,
         googleCalendarTokenExpiresAt: expiresAt,

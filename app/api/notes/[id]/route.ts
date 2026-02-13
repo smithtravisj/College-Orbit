@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 import { extractPlainText } from '@/lib/tiptapUtils';
 
@@ -9,16 +9,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = await params;
 
     const note = await prisma.note.findFirst({
-      where: { id, userId: token.id },
+      where: { id, userId },
       include: {
         course: { select: { id: true, code: true, name: true } },
         folder: { select: { id: true, name: true } },
@@ -53,9 +53,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -64,7 +64,7 @@ export async function PATCH(
 
     // Verify ownership
     const existingNote = await prisma.note.findFirst({
-      where: { id, userId: token.id },
+      where: { id, userId },
     });
 
     if (!existingNote) {
@@ -133,9 +133,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -143,7 +143,7 @@ export async function DELETE(
 
     // Verify ownership
     const existingNote = await prisma.note.findFirst({
-      where: { id, userId: token.id },
+      where: { id, userId },
     });
 
     if (!existingNote) {

@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET all folders for authenticated user
 export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const folders = await prisma.folder.findMany({
-      where: { userId: token.id },
+      where: { userId },
       include: {
         course: { select: { id: true, code: true, name: true } },
         children: {
@@ -48,12 +45,9 @@ export const GET = withRateLimit(async function(request: NextRequest) {
 // POST create new folder
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -66,7 +60,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     // Check for duplicate folder names at the same level (parent)
     const existingFolder = await prisma.folder.findFirst({
       where: {
-        userId: token.id,
+        userId,
         name: data.name.trim(),
         parentId: data.parentId || null,
       },
@@ -82,7 +76,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     // If parentId is provided, verify it belongs to the user and is not a nested-3 level
     if (data.parentId) {
       const parentFolder = await prisma.folder.findFirst({
-        where: { id: data.parentId, userId: token.id },
+        where: { id: data.parentId, userId },
         include: { parent: true },
       });
 
@@ -101,7 +95,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     const folder = await prisma.folder.create({
       data: {
-        userId: token.id,
+        userId,
         name: data.name.trim(),
         parentId: data.parentId || null,
         courseId: data.courseId || null,

@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { createBrightspaceClient, getAccessToken, encryptToken } from '@/lib/brightspace';
 
 // POST - Connect to Brightspace LMS
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -78,7 +77,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     // Update settings with Brightspace connection info
     await prisma.settings.upsert({
-      where: { userId: session.user.id },
+      where: { userId },
       update: {
         brightspaceInstanceUrl: normalizedUrl,
         brightspaceClientId: encryptedClientId,
@@ -91,7 +90,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         brightspaceSyncEnabled: true,
       },
       create: {
-        userId: session.user.id,
+        userId,
         brightspaceInstanceUrl: normalizedUrl,
         brightspaceClientId: encryptedClientId,
         brightspaceClientSecret: encryptedClientSecret,

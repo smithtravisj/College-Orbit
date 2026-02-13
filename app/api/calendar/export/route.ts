@@ -1,7 +1,6 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authConfig } from '@/auth.config';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import {
   generateIcal,
   deadlineToCalendarItem,
@@ -12,14 +11,12 @@ import {
 } from '@/lib/ical';
 
 // GET /api/calendar/export - Download iCal file (authenticated)
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.id) {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const userId = session.user.id;
 
     // Fetch all items with dates
     const [deadlines, exams, tasks, courses, calendarEvents] = await Promise.all([

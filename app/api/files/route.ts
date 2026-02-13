@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import convert from 'heic-convert';
 import { checkPremiumAccess } from '@/lib/subscription';
 
 // POST - Upload a file (converts to base64 data URL)
 export async function POST(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     // File uploads require premium
-    const premiumCheck = await checkPremiumAccess(token.id);
+    const premiumCheck = await checkPremiumAccess(userId);
     if (!premiumCheck.allowed) {
       return NextResponse.json(
         { error: 'premium_required', message: 'File uploads are a Premium feature. Upgrade to upload files.' },
@@ -87,12 +84,9 @@ export async function POST(request: NextRequest) {
 // DELETE - No-op for base64 files (they're deleted when removed from the entity)
 export async function DELETE(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 

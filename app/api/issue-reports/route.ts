@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // POST create new issue report
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -26,7 +23,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     const issueReport = await prisma.issueReport.create({
       data: {
-        userId: token.id,
+        userId,
         description: data.description.trim(),
         status: 'pending',
       },
@@ -34,14 +31,14 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     // Get user info for notification message
     const user = await prisma.user.findUnique({
-      where: { id: token.id },
+      where: { id: userId },
       select: { name: true },
     });
 
     // Create notification for the user
     await prisma.notification.create({
       data: {
-        userId: token.id,
+        userId: userId,
         title: 'Report Submitted',
         message: 'Your issue report has been submitted. Thank you for helping us improve!',
         type: 'issue_report_submitted',

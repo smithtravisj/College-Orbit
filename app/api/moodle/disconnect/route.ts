@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // POST - Disconnect from Moodle LMS
-export const POST = withRateLimit(async function(_req: NextRequest) {
+export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     // Clear Moodle connection info from settings
     await prisma.settings.update({
-      where: { userId: session.user.id },
+      where: { userId },
       data: {
         moodleInstanceUrl: null,
         moodleAccessToken: null,
@@ -29,7 +28,7 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
     // Clear deleted items tracking
     try {
       await prisma.deletedMoodleItem.deleteMany({
-        where: { userId: session.user.id },
+        where: { userId },
       });
     } catch {
       // Table may not exist yet

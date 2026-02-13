@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { extractPlainText } from '@/lib/tiptapUtils';
@@ -8,17 +8,14 @@ import { checkFeatureLimit } from '@/lib/subscription';
 // GET all notes for authenticated user
 export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const notes = await prisma.note.findMany({
-      where: { userId: token.id },
+      where: { userId },
       include: {
         course: { select: { id: true, code: true, name: true } },
         folder: { select: { id: true, name: true } },
@@ -47,17 +44,14 @@ export const GET = withRateLimit(async function(request: NextRequest) {
 // POST create new note
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     // Check notes limit for free users
-    const limitCheck = await checkFeatureLimit(token.id, 'notes');
+    const limitCheck = await checkFeatureLimit(userId, 'notes');
     if (!limitCheck.allowed) {
       return NextResponse.json(
         { error: 'limit_reached', message: limitCheck.message },
@@ -73,49 +67,49 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     // Validate foreign key references exist
     if (data.taskId) {
-      const task = await prisma.task.findFirst({ where: { id: data.taskId, userId: token.id } });
+      const task = await prisma.task.findFirst({ where: { id: data.taskId, userId } });
       if (!task) {
         return NextResponse.json({ error: 'Task not found' }, { status: 400 });
       }
     }
     if (data.deadlineId) {
-      const deadline = await prisma.deadline.findFirst({ where: { id: data.deadlineId, userId: token.id } });
+      const deadline = await prisma.deadline.findFirst({ where: { id: data.deadlineId, userId } });
       if (!deadline) {
         return NextResponse.json({ error: 'Assignment not found' }, { status: 400 });
       }
     }
     if (data.recurringTaskPatternId) {
-      const pattern = await prisma.recurringPattern.findFirst({ where: { id: data.recurringTaskPatternId, userId: token.id } });
+      const pattern = await prisma.recurringPattern.findFirst({ where: { id: data.recurringTaskPatternId, userId } });
       if (!pattern) {
         return NextResponse.json({ error: 'Recurring task pattern not found' }, { status: 400 });
       }
     }
     if (data.recurringDeadlinePatternId) {
-      const pattern = await prisma.recurringDeadlinePattern.findFirst({ where: { id: data.recurringDeadlinePatternId, userId: token.id } });
+      const pattern = await prisma.recurringDeadlinePattern.findFirst({ where: { id: data.recurringDeadlinePatternId, userId } });
       if (!pattern) {
         return NextResponse.json({ error: 'Recurring assignment pattern not found' }, { status: 400 });
       }
     }
     if (data.examId) {
-      const exam = await prisma.exam.findFirst({ where: { id: data.examId, userId: token.id } });
+      const exam = await prisma.exam.findFirst({ where: { id: data.examId, userId } });
       if (!exam) {
         return NextResponse.json({ error: 'Exam not found' }, { status: 400 });
       }
     }
     if (data.recurringExamPatternId) {
-      const pattern = await prisma.recurringExamPattern.findFirst({ where: { id: data.recurringExamPatternId, userId: token.id } });
+      const pattern = await prisma.recurringExamPattern.findFirst({ where: { id: data.recurringExamPatternId, userId } });
       if (!pattern) {
         return NextResponse.json({ error: 'Recurring exam pattern not found' }, { status: 400 });
       }
     }
     if (data.workItemId) {
-      const workItem = await prisma.workItem.findFirst({ where: { id: data.workItemId, userId: token.id } });
+      const workItem = await prisma.workItem.findFirst({ where: { id: data.workItemId, userId } });
       if (!workItem) {
         return NextResponse.json({ error: 'Work item not found' }, { status: 400 });
       }
     }
     if (data.recurringWorkPatternId) {
-      const pattern = await prisma.recurringWorkPattern.findFirst({ where: { id: data.recurringWorkPatternId, userId: token.id } });
+      const pattern = await prisma.recurringWorkPattern.findFirst({ where: { id: data.recurringWorkPatternId, userId } });
       if (!pattern) {
         return NextResponse.json({ error: 'Recurring work pattern not found' }, { status: 400 });
       }
@@ -126,7 +120,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     const note = await prisma.note.create({
       data: {
-        userId: token.id,
+        userId,
         title: data.title.trim(),
         content: data.content || { type: 'doc', content: [] },
         plainText,

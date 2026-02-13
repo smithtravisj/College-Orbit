@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET all shopping items for authenticated user (supports filtering and purchase history)
 export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -24,7 +21,7 @@ export const GET = withRateLimit(async function(request: NextRequest) {
 
     const items = await prisma.shoppingItem.findMany({
       where: {
-        userId: token.id,
+        userId,
         ...(listType && { listType }),
         ...(category && { category }),
         // By default, only return active (non-purchased) items
@@ -50,12 +47,9 @@ export const GET = withRateLimit(async function(request: NextRequest) {
 // POST create new shopping item
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -71,7 +65,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     const item = await prisma.shoppingItem.create({
       data: {
-        userId: token.id,
+        userId,
         listType: data.listType,
         name: data.name.trim(),
         quantity: data.quantity || 1,
@@ -103,12 +97,9 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 // - permanent=true: Permanently delete instead of marking as purchased
 export const DELETE = withRateLimit(async function(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -121,7 +112,7 @@ export const DELETE = withRateLimit(async function(req: NextRequest) {
     if (clearHistory) {
       await prisma.shoppingItem.deleteMany({
         where: {
-          userId: token.id,
+          userId,
           purchasedAt: { not: null },
         },
       });
@@ -136,7 +127,7 @@ export const DELETE = withRateLimit(async function(req: NextRequest) {
     if (listType === 'grocery' && !permanent) {
       await prisma.shoppingItem.updateMany({
         where: {
-          userId: token.id,
+          userId,
           listType,
           checked: true,
           purchasedAt: null, // Only mark active items as purchased
@@ -150,7 +141,7 @@ export const DELETE = withRateLimit(async function(req: NextRequest) {
       // For wishlist/pantry or permanent delete, actually delete
       await prisma.shoppingItem.deleteMany({
         where: {
-          userId: token.id,
+          userId,
           listType,
           checked: true,
         },

@@ -1,24 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authConfig } from '@/auth.config';
 import { prisma } from '@/lib/prisma';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { getToken } from 'next-auth/jwt';
 
 // GET /api/user/sessions - List all active sessions
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.id) {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get the current session token from the JWT
+    // Get the current session token from the JWT (for identifying which session is "current")
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     const currentSessionToken = token?.sessionToken as string | undefined;
 
     const sessions = await prisma.userSession.findMany({
       where: {
-        userId: session.user.id,
+        userId,
         expiresAt: { gt: new Date() }, // Only non-expired sessions
         revokedAt: null, // Only non-revoked sessions
       },
@@ -53,23 +52,23 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/user/sessions - Invalidate all sessions (log out everywhere)
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.id) {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Set sessionInvalidatedAt to now - this will invalidate all existing JWT tokens
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: userId },
       data: { sessionInvalidatedAt: new Date() },
     });
 
     // Mark all session records as revoked
     await prisma.userSession.updateMany({
       where: {
-        userId: session.user.id,
+        userId,
         revokedAt: null,
       },
       data: { revokedAt: new Date() },
@@ -85,8 +84,8 @@ export async function POST() {
 // DELETE /api/user/sessions - Revoke a specific session
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.id) {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -101,7 +100,7 @@ export async function DELETE(req: NextRequest) {
     const revokedSession = await prisma.userSession.updateMany({
       where: {
         id: sessionId,
-        userId: session.user.id,
+        userId,
         revokedAt: null, // Only revoke if not already revoked
       },
       data: {

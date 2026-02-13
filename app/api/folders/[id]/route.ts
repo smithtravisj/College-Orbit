@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 
 // GET single folder
@@ -8,16 +8,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = await params;
 
     const folder = await prisma.folder.findFirst({
-      where: { id, userId: token.id },
+      where: { id, userId },
       include: {
         course: { select: { id: true, code: true, name: true } },
         children: {
@@ -55,9 +55,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -66,7 +66,7 @@ export async function PATCH(
 
     // Verify ownership
     const existingFolder = await prisma.folder.findFirst({
-      where: { id, userId: token.id },
+      where: { id, userId },
     });
 
     if (!existingFolder) {
@@ -77,7 +77,7 @@ export async function PATCH(
     if ('name' in data && data.name !== existingFolder.name) {
       const duplicate = await prisma.folder.findFirst({
         where: {
-          userId: token.id,
+          userId,
           name: data.name.trim(),
           parentId: existingFolder.parentId,
           NOT: { id },
@@ -96,7 +96,7 @@ export async function PATCH(
     if ('parentId' in data && data.parentId !== existingFolder.parentId) {
       if (data.parentId) {
         const parentFolder = await prisma.folder.findFirst({
-          where: { id: data.parentId, userId: token.id },
+          where: { id: data.parentId, userId },
           include: { parent: true },
         });
 
@@ -165,9 +165,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -175,7 +175,7 @@ export async function DELETE(
 
     // Verify ownership
     const existingFolder = await prisma.folder.findFirst({
-      where: { id, userId: token.id },
+      where: { id, userId },
     });
 
     if (!existingFolder) {

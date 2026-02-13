@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 import {
   createSpotifyClient,
@@ -41,15 +40,15 @@ async function getSpotifyClient(userId: string) {
 }
 
 // GET - Get current playback state
-export const GET = withRateLimit(async function(_req: NextRequest) {
+export const GET = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
-    const { client, isPremium } = await getSpotifyClient(session.user.id);
+    const { client, isPremium } = await getSpotifyClient(userId);
 
     const playbackState = await client.getPlaybackState();
 
@@ -114,9 +113,9 @@ export const GET = withRateLimit(async function(_req: NextRequest) {
 // POST - Control playback (requires Premium)
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -126,7 +125,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
       return NextResponse.json({ error: 'Action is required' }, { status: 400 });
     }
 
-    const { client, isPremium } = await getSpotifyClient(session.user.id);
+    const { client, isPremium } = await getSpotifyClient(userId);
 
     // Check if user has Premium for playback control
     if (!isPremium) {

@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // POST create a new college request
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -33,7 +32,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     // Create college request
     const collegeRequest = await prisma.collegeRequest.create({
       data: {
-        userId: session.user.id,
+        userId,
         collegeName: trimmedName,
         status: 'pending',
       },
@@ -42,12 +41,18 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     // Create notification for the user
     await prisma.notification.create({
       data: {
-        userId: session.user.id,
+        userId,
         title: 'Request Submitted',
         message: `Your request to add ${trimmedName} has been submitted. We'll review it soon!`,
         type: 'college_request_submitted',
         collegeRequestId: collegeRequest.id,
       },
+    });
+
+    // Get user name for admin notification
+    const requestingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true },
     });
 
     // Create notification for all admins
@@ -61,7 +66,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         data: {
           userId: admin.id,
           title: 'New College Request',
-          message: `${session.user.name || 'A user'} requested to add ${trimmedName} as a college.`,
+          message: `${requestingUser?.name || 'A user'} requested to add ${trimmedName} as a college.`,
           type: 'college_request_pending',
           collegeRequestId: collegeRequest.id,
         },

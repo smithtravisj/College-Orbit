@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET - Get Blackboard connection status
-export const GET = withRateLimit(async function(_req: NextRequest) {
+export const GET = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const settings = await prisma.settings.findUnique({
-      where: { userId: session.user.id },
+      where: { userId },
       select: {
         blackboardInstanceUrl: true,
         blackboardUserId: true,
@@ -73,9 +72,9 @@ export const GET = withRateLimit(async function(_req: NextRequest) {
 // PATCH - Update Blackboard sync settings
 export const PATCH = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -90,7 +89,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     if (data.autoMarkComplete !== undefined) updateData.blackboardAutoMarkComplete = data.autoMarkComplete;
 
     await prisma.settings.update({
-      where: { userId: session.user.id },
+      where: { userId },
       data: updateData,
     });
 

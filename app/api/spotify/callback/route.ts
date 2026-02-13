@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import {
   exchangeCodeForTokens,
   createSpotifyClient,
@@ -13,9 +12,9 @@ import { cookies } from 'next/headers';
 // GET - Handle Spotify OAuth callback
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       // Redirect to login with error
       return NextResponse.redirect(new URL('/login?error=session_expired', req.url));
     }
@@ -106,7 +105,7 @@ export async function GET(req: NextRequest) {
 
     // Update settings with Spotify connection info
     await prisma.settings.upsert({
-      where: { userId: session.user.id },
+      where: { userId },
       update: {
         spotifyAccessToken: encryptedAccessToken,
         spotifyRefreshToken: encryptedRefreshToken,
@@ -118,7 +117,7 @@ export async function GET(req: NextRequest) {
         spotifyConnected: true,
       },
       create: {
-        userId: session.user.id,
+        userId,
         spotifyAccessToken: encryptedAccessToken,
         spotifyRefreshToken: encryptedRefreshToken,
         spotifyTokenExpiresAt: expiresAt,

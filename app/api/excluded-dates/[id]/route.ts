@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 
 // PATCH update excluded date
@@ -8,9 +8,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -23,7 +23,7 @@ export async function PATCH(
     const existingExcludedDate = await prisma.excludedDate.findFirst({
       where: {
         id,
-        userId: token.id,
+        userId,
       },
     });
 
@@ -58,7 +58,7 @@ export async function PATCH(
         const course = await prisma.course.findFirst({
           where: {
             id: data.courseId,
-            userId: token.id,
+            userId,
           },
         });
 
@@ -102,9 +102,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = await getToken({ req: _request, secret: process.env.NEXTAUTH_SECRET });
+    const userId = await getAuthUserId(_request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -114,7 +114,7 @@ export async function DELETE(
     const existingExcludedDate = await prisma.excludedDate.findFirst({
       where: {
         id,
-        userId: token.id,
+        userId,
       },
     });
 

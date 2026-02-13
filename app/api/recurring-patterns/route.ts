@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET all recurring patterns for the authenticated user
 export const GET = withRateLimit(async function (request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const patterns = await prisma.recurringPattern.findMany({
-      where: { userId: token.id },
+      where: { userId },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -30,12 +27,9 @@ export const GET = withRateLimit(async function (request: NextRequest) {
 // DELETE a recurring pattern
 export const DELETE = withRateLimit(async function (request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -49,7 +43,7 @@ export const DELETE = withRateLimit(async function (request: NextRequest) {
 
     // Verify ownership
     const pattern = await prisma.recurringPattern.findFirst({
-      where: { id: patternId, userId: token.id },
+      where: { id: patternId, userId },
     });
 
     if (!pattern) {

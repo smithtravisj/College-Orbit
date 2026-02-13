@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authConfig } from '@/auth.config';
 import { prisma } from '@/lib/prisma';
 import { parseUserAgent } from '@/lib/userAgent';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { getToken } from 'next-auth/jwt';
 
 // POST /api/user/sessions/register - Register a new session with device info
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.id) {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get the session token from the JWT
+    // Get the session token from the JWT (needed for session registration/tracking)
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token?.sessionToken) {
       return NextResponse.json({ error: 'No session token found' }, { status: 400 });
@@ -77,7 +76,7 @@ export async function POST(req: NextRequest) {
     // Create session record
     await prisma.userSession.create({
       data: {
-        userId: session.user.id,
+        userId,
         sessionToken,
         userAgent,
         browser,

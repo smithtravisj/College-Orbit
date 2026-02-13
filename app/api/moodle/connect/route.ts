@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { createMoodleClient, encryptToken } from '@/lib/moodle';
 
 // POST - Connect to Moodle LMS
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -55,7 +54,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     // Update settings with Moodle connection info
     await prisma.settings.upsert({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       update: {
         moodleInstanceUrl: normalizedUrl,
         moodleAccessToken: encryptedToken,
@@ -64,7 +63,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         moodleSyncEnabled: true,
       },
       create: {
-        userId: session.user.id,
+        userId: userId,
         moodleInstanceUrl: normalizedUrl,
         moodleAccessToken: encryptedToken,
         moodleUserId: String(siteInfo.userid),

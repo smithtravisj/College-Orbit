@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 import {
   createMoodleClient,
@@ -34,14 +33,13 @@ function getBaseUrl(instanceUrl: string): string {
 
 // POST - Run a full sync from Moodle
 export const POST = withRateLimit(async function(req: NextRequest) {
+  const userId = await getAuthUserId(req);
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
+  }
+
   try {
-    const session = await getServerSession(authConfig);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
-    }
-
-    const userId = session.user.id;
 
     // Get settings with Moodle credentials
     const settings = await prisma.settings.findUnique({
@@ -526,11 +524,10 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     console.error('[Moodle Sync] Error:', error);
 
     if (error instanceof MoodleAuthError) {
-      const session = await getServerSession(authConfig);
-      if (session?.user?.id) {
+      if (userId) {
         const existingNotification = await prisma.notification.findFirst({
           where: {
-            userId: session.user.id,
+            userId,
             type: 'moodle_token_expired',
             read: false,
           },
@@ -539,7 +536,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         if (!existingNotification) {
           await prisma.notification.create({
             data: {
-              userId: session.user.id,
+              userId,
               title: 'Moodle Connection Expired',
               message: 'Your Moodle access token has expired or is invalid. Please go to Settings to reconnect your Moodle account.',
               type: 'moodle_token_expired',

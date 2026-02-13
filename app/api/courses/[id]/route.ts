@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 // GET single course
 export async function GET(
-  _request: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -20,7 +19,7 @@ export async function GET(
     const course = await prisma.course.findFirst({
       where: {
         id,
-        userId: session.user.id,
+        userId,
       },
     });
 
@@ -44,9 +43,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -57,7 +56,7 @@ export async function PATCH(
     const existingCourse = await prisma.course.findFirst({
       where: {
         id,
-        userId: session.user.id,
+        userId,
       },
     });
 
@@ -93,13 +92,13 @@ export async function PATCH(
 
 // DELETE course
 export async function DELETE(
-  _request: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -109,7 +108,7 @@ export async function DELETE(
     const existingCourse = await prisma.course.findFirst({
       where: {
         id,
-        userId: session.user.id,
+        userId,
       },
       select: {
         id: true,
@@ -126,14 +125,14 @@ export async function DELETE(
       await prisma.deletedCanvasItem.upsert({
         where: {
           userId_canvasId_type: {
-            userId: session.user.id,
+            userId,
             canvasId: existingCourse.canvasCourseId,
             type: 'course',
           },
         },
         update: { deletedAt: new Date() },
         create: {
-          userId: session.user.id,
+          userId,
           canvasId: existingCourse.canvasCourseId,
           type: 'course',
         },

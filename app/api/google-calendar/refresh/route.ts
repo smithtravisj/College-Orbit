@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 import {
   getValidAccessToken,
@@ -9,16 +8,16 @@ import {
 } from '@/lib/google-calendar';
 
 // POST - Manually refresh Google Calendar token
-export const POST = withRateLimit(async function(_req: NextRequest) {
+export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const settings = await prisma.settings.findUnique({
-      where: { userId: session.user.id },
+      where: { userId },
       select: {
         googleCalendarConnected: true,
         googleCalendarAccessToken: true,
@@ -35,7 +34,7 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
     }
 
     // getValidAccessToken will auto-refresh if needed
-    await getValidAccessToken(settings, session.user.id);
+    await getValidAccessToken(settings, userId);
 
     return NextResponse.json({ success: true, message: 'Token refreshed' });
   } catch (error) {

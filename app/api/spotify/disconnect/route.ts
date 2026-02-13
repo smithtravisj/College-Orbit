@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // POST - Disconnect from Spotify
-export const POST = withRateLimit(async function(_req: NextRequest) {
+export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     // Clear Spotify connection info
     await prisma.settings.update({
-      where: { userId: session.user.id },
+      where: { userId },
       data: {
         spotifyAccessToken: null,
         spotifyRefreshToken: null,

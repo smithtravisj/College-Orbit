@@ -1,23 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET all calendar events for authenticated user
 export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(request);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const events = await prisma.calendarEvent.findMany({
       where: {
-        userId: token.id,
+        userId,
       },
       orderBy: {
         startAt: 'asc',
@@ -37,12 +34,9 @@ export const GET = withRateLimit(async function(request: NextRequest) {
 // POST create new calendar event
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -58,7 +52,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     const event = await prisma.calendarEvent.create({
       data: {
-        userId: token.id,
+        userId,
         title: data.title.trim(),
         description: data.description || '',
         startAt: new Date(data.startAt),

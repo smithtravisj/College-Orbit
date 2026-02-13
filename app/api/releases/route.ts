@@ -1,18 +1,17 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authConfig } from '@/auth.config';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 // GET releases based on user's beta status
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
     // Check if user is a beta user (for display purposes only)
     let isBetaUser = false;
-    if (session?.user?.id) {
+    if (userId) {
       const settings = await prisma.settings.findUnique({
-        where: { userId: session.user.id },
+        where: { userId },
         select: { isBetaUser: true },
       });
       isBetaUser = settings?.isBetaUser ?? false;

@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { decryptToken, getEncryptionSecret } from '@/lib/google-calendar';
 
 // POST - Disconnect from Google Calendar
-export const POST = withRateLimit(async function(_req: NextRequest) {
+export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     // Get current tokens to revoke
     const settings = await prisma.settings.findUnique({
-      where: { userId: session.user.id },
+      where: { userId },
       select: { googleCalendarAccessToken: true },
     });
 
@@ -36,7 +35,7 @@ export const POST = withRateLimit(async function(_req: NextRequest) {
 
     // Clear Google Calendar connection info
     await prisma.settings.update({
-      where: { userId: session.user.id },
+      where: { userId },
       data: {
         googleCalendarAccessToken: null,
         googleCalendarRefreshToken: null,

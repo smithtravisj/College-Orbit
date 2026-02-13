@@ -1,19 +1,18 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authConfig } from '@/auth.config';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { randomUUID } from 'crypto';
 
 // GET /api/calendar/token - Get or create calendar subscription token
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.id) {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { calendarToken: true },
     });
 
@@ -25,7 +24,7 @@ export async function GET() {
     if (!user.calendarToken) {
       const newToken = randomUUID() + randomUUID().replace(/-/g, '');
       await prisma.user.update({
-        where: { id: session.user.id },
+        where: { id: userId },
         data: { calendarToken: newToken },
       });
       return NextResponse.json({ token: newToken });
@@ -39,10 +38,10 @@ export async function GET() {
 }
 
 // POST /api/calendar/token - Regenerate calendar subscription token
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.id) {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -50,7 +49,7 @@ export async function POST() {
     const newToken = randomUUID() + randomUUID().replace(/-/g, '');
 
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: userId },
       data: { calendarToken: newToken },
     });
 

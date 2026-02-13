@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET user's notifications
 export const GET = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -21,7 +20,7 @@ export const GET = withRateLimit(async function(req: NextRequest) {
 
     const notifications = await prisma.notification.findMany({
       where: {
-        userId: session.user.id,
+        userId,
         ...(unreadOnly && { read: false }),
         createdAt: {
           gte: thirtyDaysAgo,
@@ -33,7 +32,7 @@ export const GET = withRateLimit(async function(req: NextRequest) {
     // Count unread
     const unreadCount = await prisma.notification.count({
       where: {
-        userId: session.user.id,
+        userId,
         read: false,
         createdAt: {
           gte: thirtyDaysAgo,
@@ -54,9 +53,9 @@ export const GET = withRateLimit(async function(req: NextRequest) {
 // PATCH mark notification as read
 export const PATCH = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -67,7 +66,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
       // Mark all unread notifications as read
       await prisma.notification.updateMany({
         where: {
-          userId: session.user.id,
+          userId,
           read: false,
         },
         data: { read: true },
@@ -99,9 +98,9 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
 // DELETE notification
 export const DELETE = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -112,7 +111,7 @@ export const DELETE = withRateLimit(async function(req: NextRequest) {
     // Delete all notifications
     if (deleteAll) {
       await prisma.notification.deleteMany({
-        where: { userId: session.user.id },
+        where: { userId },
       });
       return NextResponse.json({ success: true, message: 'All notifications deleted' });
     }
@@ -126,7 +125,7 @@ export const DELETE = withRateLimit(async function(req: NextRequest) {
       where: { id: notificationId },
     });
 
-    if (!notification || notification.userId !== session.user.id) {
+    if (!notification || notification.userId !== userId) {
       return NextResponse.json({ error: 'Notification not found' }, { status: 404 });
     }
 
