@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 // PATCH accept or decline friend request
 export const PATCH = withRateLimit(async function(
@@ -10,15 +9,14 @@ export const PATCH = withRateLimit(async function(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const { id } = await params;
     const { action } = await req.json();
-    const userId = session.user.id;
 
     if (!action || !['accept', 'decline'].includes(action)) {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
@@ -108,18 +106,17 @@ export const PATCH = withRateLimit(async function(
 
 // DELETE cancel a sent friend request
 export const DELETE = withRateLimit(async function(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const { id } = await params;
-    const userId = session.user.id;
 
     // Find the friend request
     const friendRequest = await prisma.friendRequest.findUnique({

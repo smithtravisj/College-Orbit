@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 // GET list user's friends with gamification stats
-export const GET = withRateLimit(async function(_request: NextRequest) {
+export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(request);
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
-
-    const userId = session.user.id;
 
     // Get all friendships where user is either user1 or user2
     const friendships = await prisma.friendship.findMany({
@@ -90,14 +87,14 @@ export const GET = withRateLimit(async function(_request: NextRequest) {
 // POST send friend request
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const { identifier } = await req.json();
-    const senderId = session.user.id;
+    const senderId = userId;
 
     if (!identifier || typeof identifier !== 'string') {
       return NextResponse.json({ error: 'Username or email required' }, { status: 400 });
