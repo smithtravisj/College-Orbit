@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // DELETE user account
-export const DELETE = withRateLimit(async function(_req: NextRequest) {
+export const DELETE = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
-
-    const userId = session.user.id;
 
     // Delete analytics events and audit logs (not cascade-deleted since no FK relation)
     await Promise.all([

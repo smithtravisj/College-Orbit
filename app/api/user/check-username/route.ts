@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // Username validation regex: 3-20 chars, alphanumeric + underscores
@@ -10,9 +9,9 @@ const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
 // GET check if username is available
 export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(request);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -38,7 +37,7 @@ export const GET = withRateLimit(async function(request: NextRequest) {
     });
 
     // Available if no user has it, or if the current user owns it
-    const available = !existingUser || existingUser.id === session.user.id;
+    const available = !existingUser || existingUser.id === userId;
 
     return NextResponse.json({ available });
   } catch (error) {

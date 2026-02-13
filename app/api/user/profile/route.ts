@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import bcrypt from 'bcryptjs';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET user profile
-export const GET = withRateLimit(async function(_request: NextRequest) {
+export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(request);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: {
         id: true,
         name: true,
@@ -53,16 +52,16 @@ const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
 // PATCH update user profile
 export const PATCH = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       console.error('No session found');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const data = await req.json();
     const { name, email, password, username, profileImage, collegeId } = data;
-    console.log('Updating profile for user:', session.user.id, { name, email, password: password ? 'provided' : 'not provided', username, collegeId });
+    console.log('Updating profile for user:', userId, { name, email, password: password ? 'provided' : 'not provided', username, collegeId });
 
     // Check if email is already in use by another user
     if (email) {
@@ -70,7 +69,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
         where: { email },
       });
 
-      if (existingUser && existingUser.id !== session.user.id) {
+      if (existingUser && existingUser.id !== userId) {
         return NextResponse.json(
           { error: 'Email already in use' },
           { status: 409 }
@@ -92,7 +91,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
         where: { username },
       });
 
-      if (existingUsername && existingUsername.id !== session.user.id) {
+      if (existingUsername && existingUsername.id !== userId) {
         return NextResponse.json(
           { error: 'Username already taken' },
           { status: 409 }
@@ -162,7 +161,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
     }
 
     const user = await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: userId },
       data: updateData,
       select: {
         id: true,
