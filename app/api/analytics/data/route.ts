@@ -1,18 +1,17 @@
 import { prisma } from '@/lib/prisma';
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authConfig } from '@/auth.config';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     // Check admin access
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.id) {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { isAdmin: true },
     });
 

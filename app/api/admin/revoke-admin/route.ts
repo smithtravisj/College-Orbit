@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 import { logAuditEvent } from '@/lib/auditLog';
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if requester is admin
     const requester = await prisma.user.findUnique({
-      where: { id: token.id as string },
+      where: { id: userId },
       select: { isAdmin: true, email: true },
     });
 
@@ -24,19 +21,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { userId } = await req.json();
+    const { userId: targetUserId } = await req.json();
 
-    if (!userId) {
+    if (!targetUserId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
     }
 
     // Prevent self-demotion
-    if (userId === token.id) {
+    if (targetUserId === userId) {
       return NextResponse.json({ error: 'You cannot revoke your own admin access' }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: targetUserId },
       select: { email: true, isAdmin: true },
     });
 
@@ -50,14 +47,14 @@ export async function POST(req: NextRequest) {
 
     // Revoke admin access
     await prisma.user.update({
-      where: { id: userId },
+      where: { id: targetUserId },
       data: { isAdmin: false },
     });
 
     // Create notification
     await prisma.notification.create({
       data: {
-        userId,
+        userId: targetUserId,
         title: 'Admin Access Revoked',
         message: 'Your admin access has been revoked by another administrator.',
         type: 'admin_revoked',
@@ -66,10 +63,10 @@ export async function POST(req: NextRequest) {
 
     // Log audit event
     await logAuditEvent({
-      adminId: token.id as string,
+      adminId: userId,
       adminEmail: requester.email || 'unknown',
       action: 'revoke_admin',
-      targetUserId: userId,
+      targetUserId: targetUserId,
       targetEmail: user.email,
     });
 

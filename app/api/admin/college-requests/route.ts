@@ -1,23 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { logAuditEvent } from '@/lib/auditLog';
 import { sendCollegeRequestApprovedEmail } from '@/lib/email';
 
 // GET all college requests (admin only)
-export const GET = withRateLimit(async function() {
+export const GET = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
-
-    if (!session?.user?.id) {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user is admin
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
     });
 
     if (!user?.isAdmin) {
@@ -54,15 +52,14 @@ export const GET = withRateLimit(async function() {
 // PATCH update request status
 export const PATCH = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
-
-    if (!session?.user?.id) {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user is admin
     const adminUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { isAdmin: true, email: true },
     });
 
@@ -140,7 +137,7 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
 
       // Log audit event
       await logAuditEvent({
-        adminId: session.user.id,
+        adminId: userId,
         adminEmail: adminUser.email || 'unknown',
         action: status === 'added' ? 'approve_college_request' : 'reject_college_request',
         targetUserId: collegeRequest.user.id,
@@ -168,15 +165,14 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
 // DELETE a college request
 export const DELETE = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
-
-    if (!session?.user?.id) {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user is admin
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
     });
 
     if (!user?.isAdmin) {

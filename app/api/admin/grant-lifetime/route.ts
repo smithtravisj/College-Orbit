@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 import { logAuditEvent } from '@/lib/auditLog';
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if requester is admin
     const requester = await prisma.user.findUnique({
-      where: { id: token.id as string },
+      where: { id: userId },
       select: { isAdmin: true, email: true },
     });
 
@@ -71,7 +68,7 @@ export async function POST(req: NextRequest) {
 
     // Log audit event
     await logAuditEvent({
-      adminId: token.id as string,
+      adminId: userId,
       adminEmail: requester.email || 'unknown',
       action: 'grant_premium',
       targetUserId: user.id,

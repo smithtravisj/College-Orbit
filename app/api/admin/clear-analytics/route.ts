@@ -1,22 +1,21 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { logAuditEvent } from '@/lib/auditLog';
 
 // DELETE all analytics events (admin only)
-export const DELETE = withRateLimit(async function() {
+export const DELETE = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
-
-    if (!session?.user?.id) {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user is admin
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
+      select: { isAdmin: true, email: true },
     });
 
     if (!user?.isAdmin) {
@@ -31,8 +30,8 @@ export const DELETE = withRateLimit(async function() {
 
     // Log the admin action
     await logAuditEvent({
-      adminId: session.user.id,
-      adminEmail: session.user.email || 'unknown',
+      adminId: userId,
+      adminEmail: user.email || 'unknown',
       action: 'clear_analytics',
       details: {
         deletedCount: result.count,
@@ -55,17 +54,16 @@ export const DELETE = withRateLimit(async function() {
 });
 
 // GET analytics count (admin only) - useful for preview before clearing
-export const GET = withRateLimit(async function() {
+export const GET = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
-
-    if (!session?.user?.id) {
+    const userId = await getAuthUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user is admin
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
     });
 
     if (!user?.isAdmin) {

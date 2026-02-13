@@ -1,21 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if requester is admin
     const requester = await prisma.user.findUnique({
-      where: { id: token.id as string },
+      where: { id: userId },
       select: { isAdmin: true },
     });
 
@@ -23,14 +20,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { userId } = await req.json();
+    const { userId: targetUserId } = await req.json();
 
-    if (!userId) {
+    if (!targetUserId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: targetUserId },
       select: { email: true, lifetimePremium: true, subscriptionTier: true },
     });
 
@@ -40,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     // Revoke premium - reset to free tier
     await prisma.user.update({
-      where: { id: userId },
+      where: { id: targetUserId },
       data: {
         lifetimePremium: false,
         subscriptionTier: 'free',
@@ -53,7 +50,7 @@ export async function POST(req: NextRequest) {
     // Create notification
     await prisma.notification.create({
       data: {
-        userId,
+        userId: targetUserId,
         title: 'Premium Access Revoked',
         message: 'Your premium access has been revoked by an administrator.',
         type: 'subscription_canceled',
