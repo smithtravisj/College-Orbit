@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 import { stripe, PRICE_IDS } from '@/lib/stripe';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 export const POST = withRateLimit(async function (req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -29,7 +26,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
 
     // Get user to check for existing Stripe customer
     const user = await prisma.user.findUnique({
-      where: { id: token.id },
+      where: { id: userId },
       select: { email: true, stripeCustomerId: true, name: true },
     });
 
@@ -44,13 +41,13 @@ export const POST = withRateLimit(async function (req: NextRequest) {
       const customer = await stripe.customers.create({
         email: user.email,
         name: user.name || undefined,
-        metadata: { userId: token.id },
+        metadata: { userId: userId },
       });
       customerId = customer.id;
 
       // Save customer ID to database
       await prisma.user.update({
-        where: { id: token.id },
+        where: { id: userId },
         data: { stripeCustomerId: customerId },
       });
     }
@@ -66,7 +63,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
       success_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL}/settings?subscription=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL}/pricing?canceled=true`,
       metadata: {
-        userId: token.id,
+        userId: userId,
         plan,
       },
       ...(isSemester ? {
@@ -77,7 +74,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
       } : {
         subscription_data: {
           metadata: {
-            userId: token.id,
+            userId: userId,
             plan,
           },
         },

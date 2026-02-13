@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 import { stripe, PRICE_IDS } from '@/lib/stripe';
 import { sendPlanChangedEmail } from '@/lib/email';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 export const POST = withRateLimit(async function (req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -23,7 +20,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: token.id },
+      where: { id: userId },
       select: { stripeSubscriptionId: true, subscriptionPlan: true, email: true, name: true },
     });
 
@@ -57,7 +54,7 @@ export const POST = withRateLimit(async function (req: NextRequest) {
 
     // Update database
     await prisma.user.update({
-      where: { id: token.id },
+      where: { id: userId },
       data: { subscriptionPlan: plan },
     });
 

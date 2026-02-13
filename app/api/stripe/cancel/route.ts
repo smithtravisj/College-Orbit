@@ -1,23 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe';
 import { sendSubscriptionCancelledEmail } from '@/lib/email';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 export const POST = withRateLimit(async function (req: NextRequest) {
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const userId = await getAuthUserId(req);
 
-    if (!token?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: token.id },
+      where: { id: userId },
       select: { stripeSubscriptionId: true, email: true, name: true },
     });
 
@@ -39,14 +36,14 @@ export const POST = withRateLimit(async function (req: NextRequest) {
 
     // Update database status
     await prisma.user.update({
-      where: { id: token.id },
+      where: { id: userId },
       data: { subscriptionStatus: 'canceled', subscriptionExpiresAt: expiresAt },
     });
 
     // Create notification
     await prisma.notification.create({
       data: {
-        userId: token.id,
+        userId: userId,
         title: 'Subscription Canceled',
         message: 'Your Premium subscription has been canceled. You\'ll retain access until the end of your billing period.',
         type: 'subscription_canceled',
