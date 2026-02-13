@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 // PATCH update a GPA entry
 export async function PATCH(
@@ -9,9 +8,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -23,7 +22,7 @@ export async function PATCH(
       where: { id },
     });
 
-    if (!entry || entry.userId !== session.user.id) {
+    if (!entry || entry.userId !== userId) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
@@ -50,13 +49,13 @@ export async function PATCH(
 
 // DELETE a GPA entry
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(request);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -67,7 +66,7 @@ export async function DELETE(
       where: { id },
     });
 
-    if (!entry || entry.userId !== session.user.id) {
+    if (!entry || entry.userId !== userId) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 

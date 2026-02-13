@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET all custom quick links for authenticated user (optionally filtered by university)
 export const GET = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -18,7 +17,7 @@ export const GET = withRateLimit(async function(req: NextRequest) {
 
     const links = await prisma.customQuickLink.findMany({
       where: {
-        userId: session.user.id,
+        userId,
         ...(university && { university }),
       },
       orderBy: { createdAt: 'asc' },
@@ -37,9 +36,9 @@ export const GET = withRateLimit(async function(req: NextRequest) {
 // POST create new custom quick link
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
@@ -64,7 +63,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     const link = await prisma.customQuickLink.create({
       data: {
-        userId: session.user.id,
+        userId,
         university: data.university,
         label: data.label,
         url: data.url,

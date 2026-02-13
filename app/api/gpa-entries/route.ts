@@ -1,23 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 import { withRateLimit } from '@/lib/withRateLimit';
 
 // GET all GPA entries for authenticated user
-export const GET = withRateLimit(async function() {
+export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(request);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     // Fetch all GPA entries for the user (no filtering by university)
     const entries = await prisma.gpaEntry.findMany({
-      where: {
-        userId: session.user.id,
-      },
+      where: { userId },
       orderBy: { createdAt: 'asc' },
     });
 
@@ -34,28 +31,25 @@ export const GET = withRateLimit(async function() {
 // POST create new GPA entry
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
-      console.log('[POST /api/gpa-entries] Unauthorized');
+    if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const data = await req.json();
-    console.log('[POST /api/gpa-entries] Received data:', data);
 
     // Get user's selected university
     const settings = await prisma.settings.findUnique({
-      where: { userId: session.user.id },
+      where: { userId },
       select: { university: true },
     });
 
     const university = settings?.university || null;
-    console.log('[POST /api/gpa-entries] User university:', university);
 
     const entry = await prisma.gpaEntry.create({
       data: {
-        userId: session.user.id,
+        userId,
         courseId: data.courseId || null,
         courseName: data.courseName,
         grade: data.grade,
@@ -66,7 +60,6 @@ export const POST = withRateLimit(async function(req: NextRequest) {
       },
     });
 
-    console.log('[POST /api/gpa-entries] Created entry:', entry);
     return NextResponse.json({ entry }, { status: 201 });
   } catch (error) {
     console.error('[POST /api/gpa-entries] Error creating GPA entry:', error);

@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 // DELETE a custom quick link
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(request);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -22,7 +21,7 @@ export async function DELETE(
       where: { id },
     });
 
-    if (!link || link.userId !== session.user.id) {
+    if (!link || link.userId !== userId) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
