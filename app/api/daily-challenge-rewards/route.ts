@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 // GET all daily challenge rewards for the user (for export)
-export const GET = withRateLimit(async function(_req: NextRequest) {
+export const GET = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const rewards = await prisma.dailyChallengeReward.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       orderBy: { claimedAt: 'desc' },
     });
 
@@ -31,10 +30,10 @@ export const GET = withRateLimit(async function(_req: NextRequest) {
 // POST create a daily challenge reward (for import)
 export const POST = withRateLimit(async function(req: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(req);
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
 
     const body = await req.json();
@@ -50,14 +49,14 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     const reward = await prisma.dailyChallengeReward.upsert({
       where: {
         userId_challengeId_dateKey: {
-          userId: session.user.id,
+          userId,
           challengeId,
           dateKey,
         },
       },
       update: { xpAwarded },
       create: {
-        userId: session.user.id,
+        userId,
         challengeId,
         dateKey,
         xpAwarded,

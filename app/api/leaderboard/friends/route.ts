@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
-import { authConfig } from '@/auth.config';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { getAuthUserId } from '@/lib/getAuthUserId';
 
 // GET friends leaderboard (friends + self sorted by monthly XP)
 export const GET = withRateLimit(async function(request: NextRequest) {
   try {
-    const session = await getServerSession(authConfig);
+    const userId = await getAuthUserId(request);
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
-
-    const userId = session.user.id;
     const { searchParams } = new URL(request.url);
 
     // Get month from query params or default to current month
