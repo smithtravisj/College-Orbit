@@ -11,11 +11,13 @@ import { cookies } from 'next/headers';
 
 // GET - Handle Google Calendar OAuth callback
 export async function GET(req: NextRequest) {
+  const baseUrl = process.env.NEXTAUTH_URL || `${req.nextUrl.protocol}//${req.nextUrl.host}`;
+
   try {
     const userId = await getAuthUserId(req);
 
     if (!userId) {
-      return NextResponse.redirect(new URL('/login?error=session_expired', req.url));
+      return NextResponse.redirect(new URL('/login?error=session_expired', baseUrl));
     }
 
     const searchParams = req.nextUrl.searchParams;
@@ -27,13 +29,13 @@ export async function GET(req: NextRequest) {
     if (error) {
       console.error('[Google Calendar Callback] Authorization error:', error);
       return NextResponse.redirect(
-        new URL(`/settings?tab=integrations&google_calendar_error=${encodeURIComponent(error)}`, req.url)
+        new URL(`/settings?tab=integrations&google_calendar_error=${encodeURIComponent(error)}`, baseUrl)
       );
     }
 
     if (!code || !state) {
       return NextResponse.redirect(
-        new URL('/settings?tab=integrations&google_calendar_error=missing_params', req.url)
+        new URL('/settings?tab=integrations&google_calendar_error=missing_params', baseUrl)
       );
     }
 
@@ -44,13 +46,13 @@ export async function GET(req: NextRequest) {
 
     if (!storedState || state !== storedState) {
       return NextResponse.redirect(
-        new URL('/settings?tab=integrations&google_calendar_error=state_mismatch', req.url)
+        new URL('/settings?tab=integrations&google_calendar_error=state_mismatch', baseUrl)
       );
     }
 
     if (!codeVerifier) {
       return NextResponse.redirect(
-        new URL('/settings?tab=integrations&google_calendar_error=missing_verifier', req.url)
+        new URL('/settings?tab=integrations&google_calendar_error=missing_verifier', baseUrl)
       );
     }
 
@@ -62,12 +64,11 @@ export async function GET(req: NextRequest) {
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     if (!clientId || !clientSecret) {
       return NextResponse.redirect(
-        new URL('/settings?tab=integrations&google_calendar_error=not_configured', req.url)
+        new URL('/settings?tab=integrations&google_calendar_error=not_configured', baseUrl)
       );
     }
 
     // Get redirect URI
-    const baseUrl = process.env.NEXTAUTH_URL || `${req.nextUrl.protocol}//${req.nextUrl.host}`;
     const redirectUri = `${baseUrl}/api/google-calendar/callback`;
 
     // Exchange code for tokens
@@ -77,7 +78,7 @@ export async function GET(req: NextRequest) {
     } catch (error) {
       console.error('[Google Calendar Callback] Token exchange failed:', error);
       return NextResponse.redirect(
-        new URL('/settings?tab=integrations&google_calendar_error=token_exchange_failed', req.url)
+        new URL('/settings?tab=integrations&google_calendar_error=token_exchange_failed', baseUrl)
       );
     }
 
@@ -89,7 +90,7 @@ export async function GET(req: NextRequest) {
     } catch (error) {
       console.error('[Google Calendar Callback] Failed to fetch user info:', error);
       return NextResponse.redirect(
-        new URL('/settings?tab=integrations&google_calendar_error=user_fetch_failed', req.url)
+        new URL('/settings?tab=integrations&google_calendar_error=user_fetch_failed', baseUrl)
       );
     }
 
@@ -125,12 +126,12 @@ export async function GET(req: NextRequest) {
 
     // Redirect back to settings with success
     return NextResponse.redirect(
-      new URL('/settings?tab=integrations&google_calendar_connected=true', req.url)
+      new URL('/settings?tab=integrations&google_calendar_connected=true', baseUrl)
     );
   } catch (error) {
     console.error('[Google Calendar Callback] Error:', error);
     return NextResponse.redirect(
-      new URL('/settings?tab=integrations&google_calendar_error=unknown', req.url)
+      new URL('/settings?tab=integrations&google_calendar_error=unknown', baseUrl)
     );
   }
 }
