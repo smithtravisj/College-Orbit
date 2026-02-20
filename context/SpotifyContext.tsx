@@ -115,21 +115,34 @@ export function SpotifyProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Generate visualizer bars based on playback
+  // Generate visualizer bars with organic, music-like movement
   useEffect(() => {
     if (!isPlaying) {
       setVisualizerBars([0.15, 0.15, 0.15, 0.15]);
       return;
     }
 
+    // Random seed offsets per bar so they move independently
+    const offsets = [0, 1.7, 3.4, 5.1];
+    let prev = [0.5, 0.5, 0.5, 0.5];
+
     const interval = setInterval(() => {
-      const time = Date.now() / 1000;
-      const bars = [0, 1, 2, 3].map((i) => {
-        const phase = (i / 4) * Math.PI * 2;
-        return 0.3 + 0.7 * Math.abs(Math.sin(time * 2 + phase));
+      const t = Date.now() / 1000;
+      const bars = offsets.map((offset, i) => {
+        // Layer multiple sine waves at different speeds for organic feel
+        const wave1 = Math.sin(t * 3.2 + offset) * 0.3;
+        const wave2 = Math.sin(t * 5.7 + offset * 2.3) * 0.25;
+        const wave3 = Math.sin(t * 1.4 + offset * 0.7) * 0.15;
+        // Add random jitter
+        const jitter = (Math.random() - 0.5) * 0.2;
+        const raw = 0.45 + wave1 + wave2 + wave3 + jitter;
+        // Smooth toward target to avoid jumps
+        const smoothed = prev[i] * 0.3 + raw * 0.7;
+        return Math.max(0.1, Math.min(1, smoothed));
       });
+      prev = bars;
       setVisualizerBars(bars);
-    }, 100);
+    }, 80);
 
     return () => clearInterval(interval);
   }, [isPlaying]);
@@ -291,6 +304,10 @@ export function SpotifyProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Optimistically update state immediately
+    if (action === 'play') setIsPlaying(true);
+    if (action === 'pause') setIsPlaying(false);
+
     try {
       const response = await fetch('/api/spotify/playback', {
         method: 'POST',
@@ -300,18 +317,21 @@ export function SpotifyProvider({ children }: { children: ReactNode }) {
 
       if (!response.ok) {
         const data = await response.json();
-        setLastError(data.error || 'Failed to control playback');
-        return;
+        // Don't show token-related errors as playback errors
+        if (data.needsRefresh) {
+          await fetch('/api/spotify/refresh', { method: 'POST' });
+          return;
+        }
+        console.warn('Playback control response:', data.error);
       }
 
-      // Optimistically update state
-      if (action === 'play') setIsPlaying(true);
-      if (action === 'pause') setIsPlaying(false);
-
-      // Fetch actual state after a short delay
+      // Fetch actual state after a short delay to confirm
       setTimeout(fetchPlaybackState, 500);
     } catch (error) {
       console.error('Playback control error:', error);
+      // Revert optimistic update
+      if (action === 'play') setIsPlaying(false);
+      if (action === 'pause') setIsPlaying(true);
       setLastError('Failed to control playback');
     }
   };

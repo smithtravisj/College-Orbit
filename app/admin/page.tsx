@@ -4733,6 +4733,7 @@ function SpotifyIntegrationCard({ theme }: { theme: 'light' | 'dark' }) {
     isPremium: isSpotifyPremium,
     userProfile,
     isLoading,
+    currentTrack,
     miniPlayerSize,
     setMiniPlayerSize,
     showMiniPlayer,
@@ -4836,13 +4837,15 @@ function SpotifyIntegrationCard({ theme }: { theme: 'light' | 'dark' }) {
             marginBottom: '14px',
           }}>
             {userProfile?.image && (
-              <Image
-                src={userProfile.image}
-                alt={userProfile.name}
-                width={36}
-                height={36}
-                style={{ borderRadius: '50%' }}
-              />
+              <div style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+                <Image
+                  src={userProfile.image}
+                  alt={userProfile.name}
+                  width={36}
+                  height={36}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -4909,7 +4912,13 @@ function SpotifyIntegrationCard({ theme }: { theme: 'light' | 'dark' }) {
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <Button
               size="sm"
-              onClick={showMiniPlayer}
+              onClick={() => {
+                showMiniPlayer();
+                if (!currentTrack) {
+                  setMessage('Play something on Spotify first');
+                  setTimeout(() => setMessage(''), 3000);
+                }
+              }}
               style={{
                 backgroundColor: spotifyButtonColor,
                 borderColor: spotifyButtonColor,
