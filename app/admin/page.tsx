@@ -3876,7 +3876,7 @@ export default function AdminPage() {
       {activeTab === 'integrations' && (
         <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '0 16px 32px 16px' : '0 24px 32px 24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
-            <SpotifyIntegrationCard isMobile={isMobile} theme={selectedTheme} />
+            <SpotifyIntegrationCard theme={selectedTheme} />
           </div>
         </div>
       )}
@@ -4728,7 +4728,7 @@ export default function AdminPage() {
 }
 
 // Spotify Integration Card Component
-function SpotifyIntegrationCard({ isMobile, theme }: { isMobile: boolean; theme: 'light' | 'dark' }) {
+function SpotifyIntegrationCard({ theme }: { theme: 'light' | 'dark' }) {
   const spotifyButtonColor = theme === 'dark' ? '#00511e' : '#00d94c';
   const {
     isConnected,
@@ -4799,28 +4799,26 @@ function SpotifyIntegrationCard({ isMobile, theme }: { isMobile: boolean; theme:
     <Card title="Spotify Integration">
       {!isConnected ? (
         <div>
-          <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.5 }}>
             Connect your Spotify account to see what&apos;s playing and control playback from anywhere in College Orbit.
           </p>
 
           <Button
-            size={isMobile ? 'sm' : 'lg'}
+            size="sm"
             onClick={handleConnect}
             style={{
-              paddingLeft: isMobile ? '12px' : '16px',
-              paddingRight: isMobile ? '12px' : '16px',
               backgroundColor: spotifyButtonColor,
               borderColor: spotifyButtonColor,
             }}
           >
-            <Link2 size={16} className="mr-2" />
+            <Link2 size={14} className="mr-1.5" />
             Connect to Spotify
           </Button>
 
           {message && (
             <p style={{
-              marginTop: '12px',
-              fontSize: '14px',
+              marginTop: '10px',
+              fontSize: '13px',
               color: message.includes('Failed') ? 'var(--danger)' : 'var(--success)',
             }}>
               {message}
@@ -4829,58 +4827,61 @@ function SpotifyIntegrationCard({ isMobile, theme }: { isMobile: boolean; theme:
         </div>
       ) : (
         <div>
+          {/* Connected profile */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            padding: '12px',
+            padding: '10px 12px',
             backgroundColor: 'var(--panel-2)',
             borderRadius: 'var(--radius-xs, 8px)',
-            marginBottom: '16px',
+            marginBottom: '14px',
           }}>
             {userProfile?.image && (
               <Image
                 src={userProfile.image}
                 alt={userProfile.name}
-                width={40}
-                height={40}
+                width={36}
+                height={36}
                 style={{ borderRadius: '50%' }}
               />
             )}
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <div style={{
-                  width: '10px',
-                  height: '10px',
+                  width: '8px',
+                  height: '8px',
                   borderRadius: '50%',
                   backgroundColor: '#1DB954',
+                  flexShrink: 0,
                 }} />
-                <span className="text-sm text-[var(--text)]">
+                <span style={{ fontSize: '13px', color: 'var(--text)' }}>
                   Connected as <strong>{userProfile?.name}</strong>
                 </span>
               </div>
               <span style={{
-                fontSize: '12px',
+                fontSize: '11px',
                 color: isSpotifyPremium ? '#1DB954' : 'var(--text-muted)',
-                marginTop: '2px',
+                marginTop: '1px',
                 display: 'block',
+                paddingLeft: '14px',
               }}>
-                {isSpotifyPremium ? 'Premium Account' : 'Free Account'}
+                {isSpotifyPremium ? 'Premium' : 'Free'} Account
               </span>
             </div>
           </div>
 
           {/* Mini Player Size Selector */}
-          <div style={{ marginBottom: '16px' }}>
-            <p className="text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>
+          <div style={{ marginBottom: '14px' }}>
+            <p style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
               Mini Player Size
             </p>
             <div style={{
-              display: 'flex',
-              gap: '8px',
-              padding: '4px',
+              display: 'inline-flex',
+              gap: '4px',
+              padding: '3px',
               backgroundColor: 'var(--panel-2)',
-              borderRadius: 'var(--radius-xs, 8px)',
+              borderRadius: 'var(--radius-xs, 6px)',
               border: '1px solid var(--border)',
             }}>
               {(['big', 'medium', 'mini'] as const).map((size) => (
@@ -4888,16 +4889,15 @@ function SpotifyIntegrationCard({ isMobile, theme }: { isMobile: boolean; theme:
                   key={size}
                   onClick={() => setMiniPlayerSize(size)}
                   style={{
-                    flex: 1,
-                    padding: '8px 16px',
-                    fontSize: '14px',
-                    fontWeight: '500',
+                    padding: '5px 14px',
+                    fontSize: '12px',
+                    fontWeight: 500,
                     color: miniPlayerSize === size ? 'var(--text)' : 'var(--text-muted)',
                     backgroundColor: miniPlayerSize === size ? 'var(--panel)' : 'transparent',
                     border: miniPlayerSize === size ? '1px solid var(--border)' : '1px solid transparent',
-                    borderRadius: 'var(--radius-xs, 6px)',
+                    borderRadius: '4px',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.15s ease',
                     textTransform: 'capitalize',
                   }}
                 >
@@ -4907,33 +4907,27 @@ function SpotifyIntegrationCard({ isMobile, theme }: { isMobile: boolean; theme:
             </div>
           </div>
 
-          {/* Show Mini Player Button */}
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <Button
-              size={isMobile ? 'sm' : 'lg'}
+              size="sm"
               onClick={showMiniPlayer}
               style={{
-                paddingLeft: isMobile ? '12px' : '16px',
-                paddingRight: isMobile ? '12px' : '16px',
                 backgroundColor: spotifyButtonColor,
                 borderColor: spotifyButtonColor,
               }}
             >
-              <Music size={16} className="mr-2" />
+              <Music size={14} className="mr-1.5" />
               Show Mini Player
             </Button>
             <Button
-              size={isMobile ? 'sm' : 'lg'}
+              size="sm"
               variant="secondary"
               onClick={handleDisconnect}
               disabled={isDisconnecting}
-              style={{
-                paddingLeft: isMobile ? '12px' : '16px',
-                paddingRight: isMobile ? '12px' : '16px',
-                boxShadow: 'none',
-              }}
+              style={{ boxShadow: 'none' }}
             >
-              <Unlink size={16} className="mr-2" />
+              <Unlink size={14} className="mr-1.5" />
               {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
             </Button>
           </div>
@@ -4941,11 +4935,13 @@ function SpotifyIntegrationCard({ isMobile, theme }: { isMobile: boolean; theme:
           {/* Spotify Premium info */}
           {!isSpotifyPremium && (
             <p style={{
-              fontSize: '12px',
+              fontSize: '11px',
               color: 'var(--text-muted)',
               backgroundColor: 'var(--panel-2)',
-              padding: '10px 12px',
+              padding: '8px 10px',
               borderRadius: 'var(--radius-xs, 6px)',
+              marginTop: '12px',
+              lineHeight: 1.4,
             }}>
               Playback controls require Spotify Premium. With a free account, you can still see what&apos;s playing.
             </p>
@@ -4953,8 +4949,8 @@ function SpotifyIntegrationCard({ isMobile, theme }: { isMobile: boolean; theme:
 
           {message && (
             <p style={{
-              marginTop: '12px',
-              fontSize: '14px',
+              marginTop: '10px',
+              fontSize: '13px',
               color: message.includes('Failed') ? 'var(--danger)' : 'var(--success)',
             }}>
               {message}
