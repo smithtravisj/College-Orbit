@@ -1,8 +1,9 @@
 // Learning Suite (BYU) content script - scrapes assignment data and injects button
-// Supports: gradebook/assignments page (inline expand) and discussion pages
+// Supports: gradebook/assignments page (inline expand), discussion pages, and exam pages
 
 const LS_GRADEBOOK_RE = /learningsuite\.byu\.edu\/.*\/student\/gradebook/;
 const LS_DISCUSSION_RE = /learningsuite\.byu\.edu\/.*\/student\/discuss\/discussion\/id-([A-Za-z0-9_-]+)/;
+const LS_EXAM_RE = /learningsuite\.byu\.edu\/.*\/student\/exam\/info\/id-([A-Za-z0-9_-]+)/;
 const LS_CID_RE = /\/cid-([^/]+)/;
 const LS_ANY_PAGE = /learningsuite\.byu\.edu\//;
 
@@ -397,7 +398,110 @@ function scrapeDiscussion() {
   };
 }
 
+function scrapeExam() {
+  const url = window.location.href;
+  const match = url.match(LS_EXAM_RE);
+
+  // Title: look for h1 or prominent heading
+  let title = '';
+  const h1 = document.querySelector('h1');
+  if (h1) {
+    title = h1.textContent?.trim() || '';
+  }
+  if (!title) {
+    const h2 = document.querySelector('h2');
+    if (h2) title = h2.textContent?.trim() || '';
+  }
+
+  // Due date / exam date: look for date-like text near "Date", "Opens", "Closes", "Due"
+  let dueDate = null;
+  const bodyText = document.body.innerText || '';
+
+  // Try "Closes <date>" pattern
+  const closesMatch = bodyText.match(/Closes\s+([A-Z][a-z]+\s+\d{1,2}\s+\d{1,2}:\d{2}\s*(?:am|pm)\s*(?:[A-Z]{3,4})?)/i);
+  if (closesMatch) {
+    dueDate = parseLSDate(closesMatch[1]);
+  }
+
+  // Try "Due <date>" pattern
+  if (!dueDate) {
+    const dueMatch = bodyText.match(/[Dd]ue[:\s]+([A-Z][a-z]+\s+\d{1,2}(?:,?\s*\d{4})?\s+\d{1,2}:\d{2}\s*(?:am|pm))/i);
+    if (dueMatch) dueDate = parseLSDate(dueMatch[1]);
+  }
+
+  // Try <time> elements
+  if (!dueDate) {
+    const timeEl = document.querySelector('time[datetime]');
+    if (timeEl) {
+      const dt = timeEl.getAttribute('datetime');
+      if (dt) {
+        const utcDate = new Date(dt);
+        if (!isNaN(utcDate.getTime())) {
+          const localDate = new Date(
+            utcDate.getUTCFullYear(),
+            utcDate.getUTCMonth(),
+            utcDate.getUTCDate(),
+            utcDate.getUTCHours(),
+            utcDate.getUTCMinutes(),
+            utcDate.getUTCSeconds()
+          );
+          const targetOffset = localDate.getTimezoneOffset();
+          const currentOffset = new Date().getTimezoneOffset();
+          const offsetDiff = (currentOffset - targetOffset) * 60 * 1000;
+          const correctedDate = new Date(utcDate.getTime() + offsetDiff);
+          dueDate = correctedDate.toISOString();
+        }
+      }
+    }
+  }
+
+  // Try generic date patterns like "Feb 20, 2026" or "February 20 at 11:59pm"
+  if (!dueDate) {
+    const datePattern = bodyText.match(/(?:Date|Opens|Available|Start)[:\s]+([A-Z][a-z]+\s+\d{1,2}(?:,?\s*\d{4})?(?:\s+(?:at\s+)?\d{1,2}:\d{2}\s*(?:am|pm))?)/i);
+    if (datePattern) dueDate = parseLSDate(datePattern[1]);
+  }
+
+  // Description: look for content area
+  let description = '';
+  const descSelectors = [
+    '.user_content',
+    '[class*="description"]',
+    '[class*="content"]',
+    '.card-body',
+  ];
+  for (const sel of descSelectors) {
+    const el = document.querySelector(sel);
+    if (el && el.innerText?.trim().length > 20) {
+      description = el.innerText.trim();
+      break;
+    }
+  }
+
+  // Points
+  let points = null;
+  const pointsMatch = bodyText.match(/(?:Points|Score|Worth)[:\s]+(\d+(?:\.\d+)?)/i);
+  if (pointsMatch) points = parseFloat(pointsMatch[1]);
+
+  console.log('[College Orbit] Exam scraped:', { title, dueDate, points, descLen: description.length });
+
+  if (!title) return null;
+
+  return {
+    title,
+    dueDate,
+    points,
+    description,
+    courseName: scrapeCourseName(),
+    lsCourseId: getCourseId(),
+    lsItemId: match ? match[1] : '',
+    lsPageType: 'exam',
+    source: 'learningsuite',
+    canvasUrl: url.split('?')[0],
+  };
+}
+
 function scrapeAssignmentData() {
+  if (LS_EXAM_RE.test(window.location.href)) return scrapeExam();
   if (LS_DISCUSSION_RE.test(window.location.href)) return scrapeDiscussion();
   if (LS_GRADEBOOK_RE.test(window.location.href)) return scrapeGradebookAssignment();
   return null;
@@ -797,7 +901,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 function init() {
   const url = window.location.href;
 
-  if (LS_GRADEBOOK_RE.test(url) || LS_DISCUSSION_RE.test(url)) {
+  if (LS_GRADEBOOK_RE.test(url) || LS_DISCUSSION_RE.test(url) || LS_EXAM_RE.test(url)) {
     injectButton();
 
     // Store scraped data for popup (may be null on gradebook if nothing expanded)

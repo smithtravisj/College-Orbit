@@ -3897,11 +3897,6 @@ const useAppStore = create<AppStore>((set, get) => ({
 
       const result: GamificationRecordResult = await response.json();
 
-      // Show confetti and notification for level up
-      if (result.levelUp) {
-        set({ showConfetti: true, levelUpNotification: result.newLevel });
-      }
-
       // Queue new achievements for display
       if (result.newAchievements && result.newAchievements.length > 0) {
         set((state) => ({
@@ -3912,10 +3907,19 @@ const useAppStore = create<AppStore>((set, get) => ({
       // Refresh gamification data
       await get().fetchGamification();
 
-      // Auto-claim any completed daily challenges
+      // Auto-claim any completed daily challenges (may trigger its own confetti)
       const gamData = get().gamification;
-      if (gamData?.dailyChallenges?.some(c => c.completed && !c.claimed)) {
+      const willClaimChallenges = gamData?.dailyChallenges?.some(c => c.completed && !c.claimed);
+      if (willClaimChallenges) {
         await get().claimDailyChallenges();
+      }
+
+      // Show confetti for level up only if claimDailyChallenges didn't already trigger it
+      if (result.levelUp) {
+        if (!get().showConfetti) {
+          set({ showConfetti: true });
+        }
+        set({ levelUpNotification: result.newLevel });
       }
 
       return result;

@@ -128,10 +128,10 @@ const CATEGORY_KEYWORDS: Record<string, string[]> = {
   'Meat & Seafood': ['chicken', 'beef', 'pork', 'fish', 'salmon', 'tuna', 'shrimp', 'turkey', 'bacon', 'sausage', 'ham', 'steak', 'ground beef', 'ground turkey', 'meat', 'seafood', 'lamb', 'crab', 'lobster', 'tilapia', 'cod', 'meatball', 'meatballs', 'hot dog', 'hot dogs', 'deli', 'pepperoni', 'salami'],
   'Bakery': ['bread', 'bagel', 'bagels', 'muffin', 'muffins', 'croissant', 'croissants', 'donut', 'donuts', 'doughnut', 'doughnuts', 'cake', 'pie', 'cookie', 'cookies', 'pastry', 'pastries', 'bun', 'buns', 'roll', 'rolls', 'tortilla', 'tortillas', 'pita', 'baguette', 'bakery'],
   'Frozen': ['frozen', 'ice cream', 'frozen pizza', 'frozen vegetables', 'frozen fruit', 'frozen dinner', 'frozen meal', 'popsicle', 'popsicles', 'freezer'],
-  'Canned Goods': ['canned', 'can of', 'soup', 'beans', 'tomato sauce', 'tomato paste', 'diced tomatoes', 'corn', 'peas', 'tuna can', 'chickpeas', 'black beans', 'kidney beans', 'green beans', 'canned fruit'],
+  'Canned Goods': ['canned', 'can of', 'soup', 'beans', 'tomato sauce', 'tomato paste', 'diced tomatoes', 'crushed tomatoes', 'stewed tomatoes', 'canned tomatoes', 'canned corn', 'canned peas', 'canned beans', 'canned chicken', 'canned tuna', 'tuna can', 'chickpeas', 'black beans', 'kidney beans', 'pinto beans', 'refried beans', 'canned fruit', 'canned soup'],
   'Snacks': ['chips', 'crackers', 'pretzels', 'popcorn', 'nuts', 'trail mix', 'granola bar', 'granola bars', 'candy', 'chocolate', 'snack', 'snacks', 'cookie', 'cookies', 'goldfish', 'cheez-it', 'oreo', 'oreos', 'gummy', 'gummies'],
   'Beverages': ['water', 'juice', 'soda', 'pop', 'coffee', 'tea', 'energy drink', 'sports drink', 'gatorade', 'lemonade', 'drink', 'drinks', 'beverage', 'beverages', 'sparkling water', 'coconut water', 'almond milk', 'oat milk', 'soy milk', 'kombucha'],
-  'Condiments': ['ketchup', 'mustard', 'mayonnaise', 'mayo', 'relish', 'hot sauce', 'soy sauce', 'bbq sauce', 'salsa', 'dressing', 'vinegar', 'olive oil', 'vegetable oil', 'cooking oil', 'honey', 'maple syrup', 'jam', 'jelly', 'peanut butter', 'nutella', 'condiment', 'condiments', 'sauce'],
+  'Condiments': ['ketchup', 'mustard', 'mayonnaise', 'mayo', 'relish', 'hot sauce', 'soy sauce', 'bbq sauce', 'salsa', 'dressing', 'vinegar', 'honey', 'maple syrup', 'jam', 'jelly', 'peanut butter', 'nutella', 'condiment', 'condiments', 'sauce'],
   'Household': ['paper towel', 'paper towels', 'toilet paper', 'tissues', 'trash bag', 'trash bags', 'dish soap', 'laundry detergent', 'cleaning', 'cleaner', 'sponge', 'sponges', 'aluminum foil', 'plastic wrap', 'ziploc', 'ziplock', 'household', 'batteries', 'light bulb', 'light bulbs'],
   'Personal Care': ['shampoo', 'conditioner', 'soap', 'body wash', 'toothpaste', 'toothbrush', 'deodorant', 'lotion', 'razor', 'razors', 'shaving cream', 'floss', 'mouthwash', 'sunscreen', 'personal care', 'hygiene', 'cotton balls', 'q-tips', 'face wash', 'moisturizer'],
   // Wishlist categories
@@ -240,20 +240,24 @@ function detectCategory(text: string, listType: ShoppingListType): { category: s
     }
   }
 
-  // Then check each category's keywords - prioritize longer keywords first
+  // Then check all categories' keywords - pick the longest match across ALL categories
+  // This ensures "canned tomatoes" matches "canned tomatoes" (Canned Goods) over "tomatoes" (Produce)
+  // and "olive oil" matches "olive oil" (Oils) over "oil" or a shorter keyword elsewhere
+  let bestMatch: { category: string; keyword: string; length: number } | null = null;
+
   for (const category of categories) {
     const keywords = CATEGORY_KEYWORDS[category];
-    if (keywords) {
-      // Sort keywords by length descending to match longer phrases first
-      const sortedKeywords = [...keywords].sort((a, b) => b.length - a.length);
-      for (const keyword of sortedKeywords) {
-        if (lowerText.includes(keyword)) {
-          // Only mark for removal if it's a category descriptor, not an item name
-          const shouldRemove = REMOVABLE_CATEGORY_KEYWORDS.has(keyword.toLowerCase());
-          return { category, matchedKeyword: keyword, shouldRemoveKeyword: shouldRemove };
-        }
+    if (!keywords) continue;
+    for (const keyword of keywords) {
+      if (lowerText.includes(keyword) && keyword.length > (bestMatch?.length || 0)) {
+        bestMatch = { category, keyword, length: keyword.length };
       }
     }
+  }
+
+  if (bestMatch) {
+    const shouldRemove = REMOVABLE_CATEGORY_KEYWORDS.has(bestMatch.keyword.toLowerCase());
+    return { category: bestMatch.category, matchedKeyword: bestMatch.keyword, shouldRemoveKeyword: shouldRemove };
   }
 
   return { category: null, matchedKeyword: null, shouldRemoveKeyword: false };

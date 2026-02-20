@@ -58,8 +58,20 @@ export default function Confetti({
     return particles;
   }, [particleCount]);
 
+  // Track which "active" cycle we've already handled to prevent double-firing (React Strict Mode)
+  const handledRef = useRef(false);
+
   useEffect(() => {
-    if (!active || animatingRef.current) return;
+    if (!active) {
+      // Reset when active goes false so next true can trigger
+      handledRef.current = false;
+      animatingRef.current = false;
+      return;
+    }
+
+    // Prevent double-fire (React Strict Mode remounts effects)
+    if (handledRef.current || animatingRef.current) return;
+    handledRef.current = true;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -121,9 +133,9 @@ export default function Confetti({
     }, duration);
 
     return () => {
-      animatingRef.current = false;
       cancelAnimationFrame(rafRef.current);
       if (timerRef.current) clearTimeout(timerRef.current);
+      // Don't reset animatingRef here — handledRef prevents re-trigger
     };
   }, [active, duration, createParticles, onComplete]);
 

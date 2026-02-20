@@ -43,12 +43,30 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
   const dragOffset = useRef({ x: 0, y: 0 });
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // Track visual viewport height for mobile keyboard
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+
   // Reset position when modal opens
   useEffect(() => {
     if (isOpen) {
       setPosition(null);
     }
   }, [isOpen]);
+
+  // Listen to visualViewport resize for mobile keyboard
+  useEffect(() => {
+    if (!isOpen || !isMobile) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const handleResize = () => {
+      setViewportHeight(vv.height);
+    };
+
+    handleResize();
+    vv.addEventListener('resize', handleResize);
+    return () => vv.removeEventListener('resize', handleResize);
+  }, [isOpen, isMobile]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!panelRef.current) return;
@@ -687,15 +705,19 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
     </div>
   );
 
-  // Mobile: full-screen overlay
+  // Mobile: full-screen overlay that adapts to virtual keyboard
   if (isMobile) {
     return (
       <div
         style={{
           position: 'fixed',
-          inset: 0,
+          left: 0,
+          right: 0,
+          top: 0,
+          height: viewportHeight ? `${viewportHeight}px` : '100dvh',
           zIndex: 1100,
           backgroundColor: 'var(--orbi-bg)',
+          overflow: 'hidden',
         }}
       >
         {modalContent}
