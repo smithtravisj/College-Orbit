@@ -11,6 +11,9 @@ import {
 } from '@/lib/google-calendar';
 import { checkPremiumAccess } from '@/lib/subscription';
 
+// Sync involves many sequential Google API calls — needs extended timeout
+export const maxDuration = 60;
+
 interface SyncResult {
   imported: { created: number; updated: number; errors: string[] };
   exportedEvents: { created: number; updated: number; errors: string[] };
@@ -56,7 +59,7 @@ function getAllDayDateString(date: Date): string {
 
 // Throttle between Google API calls to avoid rate limiting (Google allows ~10 req/sec per user)
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-const API_DELAY = 150; // 150ms between calls = ~6.6 req/sec, safely under limit
+const API_DELAY = 100; // 100ms between calls = ~10 req/sec, at Google's limit
 
 // POST - Run a full bidirectional Google Calendar sync
 export const POST = withRateLimit(async function(req: NextRequest) {
@@ -416,11 +419,18 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     // ========== Phase 3: Export Deadlines ==========
     if (syncOptions.exportDeadlines) {
       try {
+        // Only fetch deadlines that need to be created OR updated since last sync
         const deadlines = await prisma.deadline.findMany({
           where: {
             userId,
             dueAt: { not: null },
             status: { not: 'completed' },
+            OR: [
+              { googleCalendarEventId: null }, // Not yet exported
+              ...(settings.googleCalendarLastSyncedAt
+                ? [{ updatedAt: { gt: settings.googleCalendarLastSyncedAt } }]
+                : []),
+            ],
           },
           select: {
             id: true,
@@ -501,11 +511,18 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     // ========== Phase 4: Export Exams ==========
     if (syncOptions.exportExams) {
       try {
+        // Only fetch exams that need to be created OR updated since last sync
         const exams = await prisma.exam.findMany({
           where: {
             userId,
             examAt: { not: null },
             status: { not: 'completed' },
+            OR: [
+              { googleCalendarEventId: null },
+              ...(settings.googleCalendarLastSyncedAt
+                ? [{ updatedAt: { gt: settings.googleCalendarLastSyncedAt } }]
+                : []),
+            ],
           },
           select: {
             id: true,
@@ -588,11 +605,18 @@ export const POST = withRateLimit(async function(req: NextRequest) {
     // ========== Phase 5: Export Work Items (assignments, tasks, readings, projects) ==========
     if (syncOptions.exportDeadlines) {
       try {
+        // Only fetch work items that need to be created OR updated since last sync
         const workItems = await prisma.workItem.findMany({
           where: {
             userId,
             dueAt: { not: null },
             status: { not: 'done' },
+            OR: [
+              { googleCalendarEventId: null },
+              ...(settings.googleCalendarLastSyncedAt
+                ? [{ updatedAt: { gt: settings.googleCalendarLastSyncedAt } }]
+                : []),
+            ],
           },
           select: {
             id: true,
@@ -697,26 +721,59 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         const twoWeeksFromNow = new Date(now);
         twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
 
+        // Fetch existing events from Google to find already-exported classes & clean up duplicates
+        let existingGoogleClassEvents: GoogleCalendarEvent[] = [];
+        try {
+          const allExportEvents = await client.listEvents(
+            exportCalendarId,
+            new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(), // Include today's events
+            twoWeeksFromNow.toISOString()
+          );
+          existingGoogleClassEvents = allExportEvents.filter(
+            e => e.extendedProperties?.private?.collegeOrbitType === 'class'
+          );
+        } catch (error) {
+          console.error('[Google Calendar Sync] Failed to list export calendar for class dedup:', error);
+        }
+
+        // Group class events by courseId + start time to find duplicates
+        const classEventGroups = new Map<string, GoogleCalendarEvent[]>();
+        for (const event of existingGoogleClassEvents) {
+          const courseId = event.extendedProperties?.private?.collegeOrbitId || '';
+          const startTime = event.start.dateTime || event.start.date || '';
+          const key = `${courseId}|${startTime}`;
+          if (!classEventGroups.has(key)) classEventGroups.set(key, []);
+          classEventGroups.get(key)!.push(event);
+        }
+
+        // Delete duplicate class events from Google (keep first, delete rest)
+        let duplicatesRemoved = 0;
+        for (const [, events] of classEventGroups) {
+          if (events.length <= 1) continue;
+          for (let i = 1; i < events.length; i++) {
+            try {
+              await sleep(API_DELAY);
+              await client.deleteEvent(exportCalendarId, events[i].id);
+              duplicatesRemoved++;
+            } catch {
+              // Ignore deletion errors (event may already be gone)
+            }
+          }
+        }
+        if (duplicatesRemoved > 0) {
+          console.log(`[Google Calendar Sync] Cleaned up ${duplicatesRemoved} duplicate class events`);
+        }
+
+        // Build dedup set from remaining Google events (one per key)
+        const existingClassKeys = new Set<string>();
+        for (const [key] of classEventGroups) {
+          existingClassKeys.add(key);
+        }
+
         for (const course of courses) {
           try {
             const meetings = course.meetingTimes as Array<{ days: string[]; start: string; end: string; location?: string }>;
             if (!meetings || meetings.length === 0) continue;
-
-            // Check if we already exported classes for this course (by looking for existing events)
-            const existingClassEvents = await prisma.calendarEvent.findMany({
-              where: {
-                userId,
-                googleEventId: { not: null },
-                title: { startsWith: `🏫 [${course.code || course.name}]` },
-                startAt: { gte: now },
-              },
-              select: { id: true, startAt: true },
-            });
-
-            // Build a set of existing dates to avoid duplicates
-            const existingDates = new Set(
-              existingClassEvents.map(e => e.startAt.toISOString().split('T')[0] + e.startAt.toISOString().split('T')[1]?.substring(0, 5))
-            );
 
             for (const meeting of meetings) {
               if (!meeting.days || !meeting.start || !meeting.end) continue;
@@ -731,11 +788,12 @@ export const POST = withRateLimit(async function(req: NextRequest) {
                 if (course.endDate && d > new Date(course.endDate)) continue;
 
                 const dateStr = d.toISOString().split('T')[0];
-                const dateKey = dateStr + meeting.start;
-                if (existingDates.has(dateKey)) continue;
-
                 const startDateTime = new Date(`${dateStr}T${meeting.start}:00`);
                 const endDateTime = new Date(`${dateStr}T${meeting.end}:00`);
+
+                // Dedup using the same key format as Google events
+                const classKey = `${course.id}|${startDateTime.toISOString()}`;
+                if (existingClassKeys.has(classKey)) continue;
 
                 const googleEvent: Partial<GoogleCalendarEvent> = {
                   summary: `🏫 [${course.code || course.name}] Class`,
@@ -753,7 +811,7 @@ export const POST = withRateLimit(async function(req: NextRequest) {
                 try {
                   await sleep(API_DELAY);
                   await client.insertEvent(exportCalendarId, googleEvent);
-                  existingDates.add(dateKey);
+                  existingClassKeys.add(classKey);
                   result.exportedClasses.created++;
                 } catch (error) {
                   result.exportedClasses.errors.push(
