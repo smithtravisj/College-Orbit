@@ -190,23 +190,16 @@ export default function DeckDetail({
       {cards.length > 0 && (
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <Button
-            onClick={onStudyDue}
+            onClick={stats.due > cardsPerSession ? onStudySession : onStudyDue}
             size={isMobile ? 'md' : 'lg'}
             disabled={stats.due === 0}
             style={{ opacity: stats.due === 0 ? 0.5 : 1 }}
           >
             <Play size={18} />
-            Study All Due ({stats.due})
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={onStudySession}
-            size={isMobile ? 'md' : 'lg'}
-            disabled={stats.due === 0}
-            style={{ opacity: stats.due === 0 ? 0.5 : 1 }}
-          >
-            <Play size={18} />
-            Study Session ({Math.min(stats.due, cardsPerSession)})
+            {stats.due > cardsPerSession
+              ? `Study (${cardsPerSession} of ${stats.due} due)`
+              : `Study (${stats.due} due)`
+            }
           </Button>
           <Button
             variant="secondary"
@@ -214,7 +207,7 @@ export default function DeckDetail({
             size={isMobile ? 'md' : 'lg'}
           >
             <Play size={18} />
-            Study All ({stats.total})
+            Review All ({stats.total})
           </Button>
           {cards.length >= 4 && (
             <Button
@@ -277,6 +270,9 @@ export default function DeckDetail({
           onSubmit={(data) => {
             onCreateCard(data);
             setShowNewCardForm(false);
+          }}
+          onSubmitAndContinue={(data) => {
+            onCreateCard(data);
           }}
           isMobile={isMobile}
         />

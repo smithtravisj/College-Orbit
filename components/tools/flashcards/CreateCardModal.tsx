@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Flashcard } from './types';
@@ -9,6 +9,7 @@ interface CreateCardModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: { front: string; back: string }) => void;
+  onSubmitAndContinue?: (data: { front: string; back: string }) => void;
   editingCard?: Flashcard | null;
   isMobile?: boolean;
 }
@@ -17,11 +18,13 @@ export default function CreateCardModal({
   isOpen,
   onClose,
   onSubmit,
+  onSubmitAndContinue,
   editingCard,
   isMobile = false,
 }: CreateCardModalProps) {
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
+  const frontInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editingCard) {
@@ -45,6 +48,18 @@ export default function CreateCardModal({
     setBack('');
   };
 
+  const handleSubmitAndContinue = () => {
+    if (!front.trim() || !back.trim() || !onSubmitAndContinue) return;
+    onSubmitAndContinue({
+      front: front.trim(),
+      back: back.trim(),
+    });
+    setFront('');
+    setBack('');
+    // Re-focus the front input for quick entry
+    setTimeout(() => frontInputRef.current?.focus(), 50);
+  };
+
   return (
     <div style={{
       padding: isMobile ? '12px' : '16px',
@@ -61,6 +76,7 @@ export default function CreateCardModal({
             Front (Question/Term)
           </label>
           <Input
+            ref={frontInputRef}
             placeholder="Enter the question or term"
             value={front}
             onChange={(e) => setFront(e.target.value)}
@@ -84,6 +100,17 @@ export default function CreateCardModal({
           >
             Cancel
           </Button>
+          {!editingCard && onSubmitAndContinue && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleSubmitAndContinue}
+              disabled={!front.trim() || !back.trim()}
+              style={{ opacity: (!front.trim() || !back.trim()) ? 0.5 : 1 }}
+            >
+              Save & Add Another
+            </Button>
+          )}
           <Button size="sm" onClick={handleSubmit}>
             {editingCard ? 'Save' : 'Add Card'}
           </Button>

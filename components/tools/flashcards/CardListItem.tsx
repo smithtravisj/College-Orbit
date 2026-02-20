@@ -26,7 +26,7 @@ export default function CardListItem({
     <div
       style={{
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         padding: isMobile ? '10px 12px' : '12px 16px',
         backgroundColor: 'var(--bg)',
         borderRadius: '8px',
@@ -39,18 +39,14 @@ export default function CardListItem({
           fontSize: '14px',
           fontWeight: 500,
           color: 'var(--text)',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
+          wordBreak: 'break-word',
         }}>
           {card.front}
         </div>
         <div style={{
           fontSize: '13px',
           color: 'var(--text-muted)',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
+          wordBreak: 'break-word',
           marginTop: '2px',
         }}>
           {card.back}

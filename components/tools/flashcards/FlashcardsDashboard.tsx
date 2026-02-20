@@ -222,6 +222,8 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
         setDecks(prev => [deck, ...prev]);
         setShowNewDeckForm(false);
         showSuccessToast('Deck created successfully');
+        // Auto-open the new deck so user can immediately add cards
+        openDeck(deck);
       } else {
         const data = await res.json();
         showErrorToast(data.error || 'Failed to create deck');
@@ -278,17 +280,25 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
     }
   };
 
+  const [deckLoading, setDeckLoading] = useState(false);
+
   const openDeck = async (deck: FlashcardDeck) => {
+    // Switch to deck view immediately with skeleton
+    setSelectedDeck(deck);
+    setViewMode('deck');
+    setDeckLoading(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     try {
       const res = await fetch(`/api/flashcards/decks/${deck.id}`);
       if (res.ok) {
         const { deck: fullDeck } = await res.json();
         setSelectedDeck(fullDeck);
-        setViewMode('deck');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (error) {
       console.error('Error fetching deck:', error);
+    } finally {
+      setDeckLoading(false);
     }
   };
 
@@ -1058,6 +1068,7 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
                       showErrorToast('Failed to load deck');
                     }
                   }}
+                  onCreateDeck={() => setShowNewDeckForm(true)}
                   theme={theme}
                   isMobile={isMobile}
                 />
@@ -1068,30 +1079,90 @@ export default function FlashcardsDashboard({ theme = 'dark' }: FlashcardsDashbo
           {/* Deck detail view */}
           {viewMode === 'deck' && selectedDeck && (
             <Card noAccent>
-              <DeckDetail
-                deck={selectedDeck}
-                courses={courses}
-                onClose={() => {
-                  setViewMode('decks');
-                  setSelectedDeck(null);
-                }}
-                onStudyDue={() => startStudy('due')}
-                onStudySession={() => startStudy('session')}
-                onStudyAll={() => startStudy('all')}
-                onEditDeck={updateDeck}
-                onCreateCard={createCard}
-                onEditCard={updateCard}
-                onDeleteCard={deleteCard}
-                onBulkImport={bulkImportCards}
-                onAIGenerate={aiGenerateCards}
-                onQuizletImport={quizletImportCards}
-                onQuiz={() => selectedDeck && startQuiz(selectedDeck)}
-                quizLoading={quizLoading}
-                isPremium={isPremium}
-                cardsPerSession={settings.cardsPerSession}
-                theme={theme}
-                isMobile={isMobile}
-              />
+              {deckLoading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {/* Skeleton title */}
+                  <div style={{
+                    width: '60%',
+                    height: '24px',
+                    backgroundColor: 'var(--panel-2)',
+                    borderRadius: '8px',
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                  }} />
+                  {/* Skeleton stats */}
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} style={{
+                        flex: 1,
+                        height: '60px',
+                        backgroundColor: 'var(--panel-2)',
+                        borderRadius: '10px',
+                        animation: 'pulse 1.5s ease-in-out infinite',
+                        animationDelay: `${i * 0.1}s`,
+                      }} />
+                    ))}
+                  </div>
+                  {/* Skeleton buttons */}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{
+                      width: '140px',
+                      height: '40px',
+                      backgroundColor: 'var(--panel-2)',
+                      borderRadius: '8px',
+                      animation: 'pulse 1.5s ease-in-out infinite',
+                    }} />
+                    <div style={{
+                      width: '120px',
+                      height: '40px',
+                      backgroundColor: 'var(--panel-2)',
+                      borderRadius: '8px',
+                      animation: 'pulse 1.5s ease-in-out infinite',
+                      animationDelay: '0.1s',
+                    }} />
+                  </div>
+                  {/* Skeleton card list */}
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} style={{
+                      height: '52px',
+                      backgroundColor: 'var(--panel-2)',
+                      borderRadius: '8px',
+                      animation: 'pulse 1.5s ease-in-out infinite',
+                      animationDelay: `${i * 0.08}s`,
+                    }} />
+                  ))}
+                  <style>{`
+                    @keyframes pulse {
+                      0%, 100% { opacity: 1; }
+                      50% { opacity: 0.4; }
+                    }
+                  `}</style>
+                </div>
+              ) : (
+                <DeckDetail
+                  deck={selectedDeck}
+                  courses={courses}
+                  onClose={() => {
+                    setViewMode('decks');
+                    setSelectedDeck(null);
+                  }}
+                  onStudyDue={() => startStudy('due')}
+                  onStudySession={() => startStudy('session')}
+                  onStudyAll={() => startStudy('all')}
+                  onEditDeck={updateDeck}
+                  onCreateCard={createCard}
+                  onEditCard={updateCard}
+                  onDeleteCard={deleteCard}
+                  onBulkImport={bulkImportCards}
+                  onAIGenerate={aiGenerateCards}
+                  onQuizletImport={quizletImportCards}
+                  onQuiz={() => selectedDeck && startQuiz(selectedDeck)}
+                  quizLoading={quizLoading}
+                  isPremium={isPremium}
+                  cardsPerSession={settings.cardsPerSession}
+                  theme={theme}
+                  isMobile={isMobile}
+                />
+              )}
             </Card>
           )}
         </div>

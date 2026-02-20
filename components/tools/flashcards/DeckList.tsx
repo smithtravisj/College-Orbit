@@ -1,14 +1,16 @@
 'use client';
 
-import { Trash2, Play } from 'lucide-react';
+import { Trash2, Play, Layers } from 'lucide-react';
 import { FlashcardDeck } from './types';
 import { calculateDeckStats, getStatusColor } from './utils';
+import EmptyState from '@/components/ui/EmptyState';
 
 interface DeckListProps {
   decks: FlashcardDeck[];
   onOpenDeck: (deck: FlashcardDeck) => void;
   onDeleteDeck: (deckId: string) => void;
   onQuickStudy?: (deck: FlashcardDeck) => void;
+  onCreateDeck?: () => void;
   theme?: string;
   isMobile?: boolean;
 }
@@ -18,14 +20,18 @@ export default function DeckList({
   onOpenDeck,
   onDeleteDeck,
   onQuickStudy,
+  onCreateDeck,
   theme = 'dark',
   isMobile = false,
 }: DeckListProps) {
   if (decks.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
-        No flashcard decks yet. Create one to get started!
-      </div>
+      <EmptyState
+        icon={<Layers size={20} />}
+        title="No flashcard decks yet"
+        description="Create your first deck to start studying with spaced repetition."
+        action={onCreateDeck ? { label: 'Create Deck', onClick: onCreateDeck } : undefined}
+      />
     );
   }
 
@@ -33,12 +39,8 @@ export default function DeckList({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       {decks.map(deck => {
         const stats = deck.cards ? calculateDeckStats(deck.cards) : null;
-        const masteryBadgeColor = stats
-          ? stats.masteryPercentage >= 80 ? '#fbbf24'
-            : stats.masteryPercentage >= 50 ? '#9ca3af'
-            : stats.masteryPercentage >= 25 ? '#d97706'
-            : null
-          : null;
+        const masteryPct = stats?.masteryPercentage ?? 0;
+        const masteryBarColor = masteryPct >= 80 ? '#22c55e' : masteryPct >= 50 ? '#3b82f6' : '#f97316';
 
         return (
           <div
@@ -62,29 +64,14 @@ export default function DeckList({
           >
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
+                fontSize: isMobile ? '14px' : '16px',
+                fontWeight: 600,
+                color: 'var(--text)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}>
-                <div style={{
-                  fontSize: isMobile ? '14px' : '16px',
-                  fontWeight: 600,
-                  color: 'var(--text)',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}>
-                  {deck.name}
-                </div>
-                {masteryBadgeColor && (
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: masteryBadgeColor,
-                    flexShrink: 0,
-                  }} />
-                )}
+                {deck.name}
               </div>
               {deck.description && (
                 <div style={{
@@ -118,11 +105,38 @@ export default function DeckList({
                     color: 'var(--text-muted)',
                   }}>
                     <span>{stats.total} cards</span>
-                    {stats.masteryPercentage > 0 && (
-                      <span style={{ color: getStatusColor('mastered', theme) }}>
-                        {stats.masteryPercentage}% mastered
-                      </span>
-                    )}
+                  </div>
+                )}
+                {/* Mastery progress bar */}
+                {stats && stats.total > 0 && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}>
+                    <div style={{
+                      width: isMobile ? '50px' : '60px',
+                      height: '6px',
+                      backgroundColor: 'var(--panel)',
+                      borderRadius: '3px',
+                      overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        width: `${masteryPct}%`,
+                        height: '100%',
+                        backgroundColor: masteryBarColor,
+                        borderRadius: '3px',
+                        transition: 'width 0.3s ease',
+                      }} />
+                    </div>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: masteryBarColor,
+                      minWidth: '28px',
+                    }}>
+                      {masteryPct}%
+                    </span>
                   </div>
                 )}
               </div>
@@ -176,6 +190,8 @@ export default function DeckList({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  const cardCount = stats?.total ?? deck.cardCount ?? 0;
+                  if (!window.confirm(`Delete "${deck.name}"${cardCount > 0 ? ` and its ${cardCount} card${cardCount === 1 ? '' : 's'}` : ''}? This cannot be undone.`)) return;
                   onDeleteDeck(deck.id);
                 }}
                 style={{

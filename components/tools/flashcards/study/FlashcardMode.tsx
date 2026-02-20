@@ -39,6 +39,7 @@ export default function FlashcardMode({
 }: FlashcardModeProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [animateFlip, setAnimateFlip] = useState(false);
   const [xpEarned, setXpEarned] = useState(0);
   const [studyComplete, setStudyComplete] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -70,19 +71,23 @@ export default function FlashcardMode({
     onRate(currentCard.id, quality);
 
     if (currentIndex < cards.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+      // Disable animation when advancing to avoid reverse-flip flicker
+      setAnimateFlip(false);
       setIsFlipped(false);
+      setCurrentIndex(prev => prev + 1);
     } else {
       setStudyComplete(true);
     }
   }, [currentCard, currentIndex, cards.length, onRate]);
 
   const handleFlip = useCallback(() => {
+    setAnimateFlip(true);
     setIsFlipped(prev => !prev);
   }, []);
 
   const handlePrevious = useCallback(() => {
     if (currentIndex > 0) {
+      setAnimateFlip(false);
       setCurrentIndex(prev => prev - 1);
       setIsFlipped(false);
     }
@@ -214,101 +219,217 @@ export default function FlashcardMode({
         onExit={onExit}
       />
 
-      {/* Flashcard */}
+      {/* Flashcard with 3D flip */}
       <div
         onClick={handleFlip}
         style={{
           minHeight: isMobile ? '200px' : '250px',
-          padding: isMobile ? '24px' : '32px',
-          backgroundColor: 'var(--panel-2)',
-          borderRadius: '16px',
-          border: '1px solid var(--border)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
           perspective: '1000px',
-          transition: 'transform 0.1s ease',
-          position: 'relative',
+          cursor: 'pointer',
         }}
       >
         <div style={{
-          textAlign: 'center',
-          fontSize: isMobile ? '18px' : '22px',
-          fontWeight: 500,
-          color: 'var(--text)',
-          lineHeight: 1.5,
+          position: 'relative',
+          width: '100%',
+          minHeight: isMobile ? '200px' : '250px',
+          transformStyle: 'preserve-3d',
+          transform: isFlipped ? 'rotateX(180deg)' : 'rotateX(0deg)',
+          transition: animateFlip ? 'transform 0.5s ease' : 'none',
         }}>
-          {isFlipped ? currentCard.back : currentCard.front}
-        </div>
-        <div style={{
-          position: 'absolute',
-          top: '12px',
-          right: '12px',
-          fontSize: '11px',
-          color: 'var(--text-muted)',
-          opacity: 0.6,
-        }}>
-          {isFlipped ? 'Answer' : 'Question'}
-        </div>
-        {/* Action buttons */}
-        <div style={{
-          position: 'absolute',
-          top: '10px',
-          left: '10px',
-          display: 'flex',
-          gap: '6px',
-        }}>
-          {onEditCard && (
-            <button
-              onClick={handleStartEdit}
-              style={{
-                padding: '8px',
-                backgroundColor: 'var(--panel)',
-                border: '1px solid var(--border)',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                color: 'var(--text-muted)',
-                transition: 'color 0.15s, border-color 0.15s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--accent)';
-                e.currentTarget.style.borderColor = 'var(--accent)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--text-muted)';
-                e.currentTarget.style.borderColor = 'var(--border)';
-              }}
-              title="Edit card"
-            >
-              <Pencil size={16} />
-            </button>
-          )}
-          {onDeleteCard && (
-            <button
-              onClick={handleDeleteCard}
-              style={{
-                padding: '8px',
-                backgroundColor: 'var(--panel)',
-                border: '1px solid var(--border)',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                color: 'var(--text-muted)',
-                transition: 'color 0.15s, border-color 0.15s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--delete-button)';
-                e.currentTarget.style.borderColor = 'var(--delete-button)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--text-muted)';
-                e.currentTarget.style.borderColor = 'var(--border)';
-              }}
-              title="Delete card"
-            >
-              <Trash2 size={16} />
-            </button>
-          )}
+          {/* Front face */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            minHeight: isMobile ? '200px' : '250px',
+            padding: isMobile ? '24px' : '32px',
+            backgroundColor: 'var(--panel-2)',
+            borderRadius: '16px',
+            border: '1px solid var(--border)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+          }}>
+            <div style={{
+              textAlign: 'center',
+              fontSize: isMobile ? '18px' : '22px',
+              fontWeight: 500,
+              color: 'var(--text)',
+              lineHeight: 1.5,
+            }}>
+              {currentCard.front}
+            </div>
+            <div style={{
+              position: 'absolute',
+              top: '12px',
+              right: '12px',
+              fontSize: '11px',
+              color: 'var(--text-muted)',
+              opacity: 0.6,
+            }}>
+              Question
+            </div>
+            {/* Action buttons on front */}
+            <div style={{
+              position: 'absolute',
+              top: '10px',
+              left: '10px',
+              display: 'flex',
+              gap: '6px',
+            }}>
+              {onEditCard && (
+                <button
+                  onClick={handleStartEdit}
+                  style={{
+                    padding: '8px',
+                    backgroundColor: 'var(--panel)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    transition: 'color 0.15s, border-color 0.15s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--accent)';
+                    e.currentTarget.style.borderColor = 'var(--accent)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--text-muted)';
+                    e.currentTarget.style.borderColor = 'var(--border)';
+                  }}
+                  title="Edit card"
+                >
+                  <Pencil size={16} />
+                </button>
+              )}
+              {onDeleteCard && (
+                <button
+                  onClick={handleDeleteCard}
+                  style={{
+                    padding: '8px',
+                    backgroundColor: 'var(--panel)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    transition: 'color 0.15s, border-color 0.15s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--delete-button)';
+                    e.currentTarget.style.borderColor = 'var(--delete-button)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--text-muted)';
+                    e.currentTarget.style.borderColor = 'var(--border)';
+                  }}
+                  title="Delete card"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Back face */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            minHeight: isMobile ? '200px' : '250px',
+            padding: isMobile ? '24px' : '32px',
+            backgroundColor: 'var(--panel-2)',
+            borderRadius: '16px',
+            border: '1px solid var(--border)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            transform: 'rotateX(180deg)',
+          }}>
+            <div style={{
+              textAlign: 'center',
+              fontSize: isMobile ? '18px' : '22px',
+              fontWeight: 500,
+              color: 'var(--text)',
+              lineHeight: 1.5,
+            }}>
+              {currentCard.back}
+            </div>
+            <div style={{
+              position: 'absolute',
+              top: '12px',
+              right: '12px',
+              fontSize: '11px',
+              color: 'var(--text-muted)',
+              opacity: 0.6,
+            }}>
+              Answer
+            </div>
+            {/* Action buttons on back */}
+            <div style={{
+              position: 'absolute',
+              top: '10px',
+              left: '10px',
+              display: 'flex',
+              gap: '6px',
+            }}>
+              {onEditCard && (
+                <button
+                  onClick={handleStartEdit}
+                  style={{
+                    padding: '8px',
+                    backgroundColor: 'var(--panel)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    transition: 'color 0.15s, border-color 0.15s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--accent)';
+                    e.currentTarget.style.borderColor = 'var(--accent)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--text-muted)';
+                    e.currentTarget.style.borderColor = 'var(--border)';
+                  }}
+                  title="Edit card"
+                >
+                  <Pencil size={16} />
+                </button>
+              )}
+              {onDeleteCard && (
+                <button
+                  onClick={handleDeleteCard}
+                  style={{
+                    padding: '8px',
+                    backgroundColor: 'var(--panel)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    transition: 'color 0.15s, border-color 0.15s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--delete-button)';
+                    e.currentTarget.style.borderColor = 'var(--delete-button)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--text-muted)';
+                    e.currentTarget.style.borderColor = 'var(--border)';
+                  }}
+                  title="Delete card"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -484,8 +605,8 @@ export default function FlashcardMode({
       {isFlipped && (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '8px',
+          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+          gap: isMobile ? '10px' : '8px',
           marginTop: '8px',
         }}>
           {ratingButtons.map((btn) => (
@@ -493,19 +614,25 @@ export default function FlashcardMode({
               key={btn.quality}
               onClick={() => handleRate(btn.quality)}
               style={{
-                padding: isMobile ? '12px 8px' : '14px 12px',
+                padding: isMobile ? '16px 12px' : '16px 14px',
                 backgroundColor: theme === 'light' ? btn.bgLight : btn.bgDark,
                 color: theme === 'light' ? btn.colorLight : btn.colorDark,
                 border: 'none',
-                borderRadius: '10px',
+                borderRadius: '12px',
                 cursor: 'pointer',
-                fontSize: '13px',
+                fontSize: isMobile ? '15px' : '14px',
                 fontWeight: 600,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '2px',
+                gap: '4px',
+                transition: 'transform 0.1s ease',
               }}
+              onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.96)'}
+              onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              onTouchStart={(e) => e.currentTarget.style.transform = 'scale(0.96)'}
+              onTouchEnd={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
               <span>{btn.label}</span>
               {showKeyboardHints && !isMobile && (
