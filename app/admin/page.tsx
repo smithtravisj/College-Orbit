@@ -3874,10 +3874,8 @@ export default function AdminPage() {
 
       {/* ==================== Integrations Tab ==================== */}
       {activeTab === 'integrations' && (
-        <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '0 16px 32px 16px' : '0 24px 32px 24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
-            <SpotifyIntegrationCard theme={selectedTheme} />
-          </div>
+        <div style={{ padding: isMobile ? '0 16px 32px 16px' : '0 24px 32px 24px', maxWidth: '480px' }}>
+          <SpotifyIntegrationCard theme={selectedTheme} />
         </div>
       )}
 
