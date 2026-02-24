@@ -37,7 +37,7 @@ export default function TermsContent() {
         <Card title="Description of Service">
           <div className="space-y-4">
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              College Orbit is an educational productivity platform designed to help students manage their academic and personal lives. The Service provides features for organizing courses, managing work items (tasks, assignments, readings, and projects), maintaining a calendar, calculating GPA, managing shopping lists, and organizing academic information.
+              College Orbit is an educational productivity platform designed to help students manage their academic and personal lives. The Service provides features for organizing courses, managing work items (tasks, assignments, readings, and projects), maintaining a calendar, calculating GPA, managing shopping lists and recipes, and organizing academic information.
             </p>
             <div>
               <p className="font-medium text-sm" style={{ color: 'var(--text)', marginBottom: '8px' }}>
@@ -54,12 +54,13 @@ export default function TermsContent() {
                 <li>Flashcards with spaced repetition for effective studying, including AI-powered flashcard generation</li>
                 <li>GPA calculation and tracking</li>
                 <li>Shopping lists (grocery, wishlist, and pantry inventory)</li>
-                <li>AI-powered features (premium) including Orbi AI chat assistant, note summarization, flashcard generation, and work item breakdown</li>
+                <li>Recipe management with AI-powered extraction from recipe URLs, step group organization, and grocery list integration</li>
+                <li>AI-powered features (premium) including Orbi AI chat assistant, note summarization, flashcard generation, work item breakdown, and recipe extraction from URLs</li>
                 <li>Google Calendar integration for syncing calendar events via OAuth 2.0</li>
                 <li>Ambient and focus sounds for studying (played locally in your browser)</li>
                 <li>Productivity tools including Pomodoro timer, word counter, citation generator, and unit converter</li>
                 <li>File converter for images, documents, and text files (most processing done in-browser)</li>
-                <li>Global search across courses, notes, tasks, exams, and events</li>
+                <li>Global search across courses, notes, tasks, exams, events, and recipes</li>
                 <li>Help center with searchable FAQ</li>
                 <li>Dashboard customization (show/hide cards, pages, quick links, and visual effects)</li>
                 <li>Theme customization including custom color themes</li>
@@ -150,7 +151,7 @@ export default function TermsContent() {
                 Ownership
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                You retain full ownership of all content, data, and information you create in the Service (courses, work items, exams, notes, flashcard decks, file attachments, shopping lists, calendar events, etc.). We do not claim ownership of your data.
+                You retain full ownership of all content, data, and information you create in the Service (courses, work items, exams, notes, flashcard decks, file attachments, shopping lists, recipes, calendar events, etc.). We do not claim ownership of your data.
               </p>
             </div>
             <div>
@@ -307,10 +308,11 @@ export default function TermsContent() {
                 College Orbit offers AI-powered features as part of the premium subscription. These features use OpenAI&apos;s API (GPT-4o-mini) to process your requests. When you use AI features:
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                <li>Orbi AI chat assistant sends relevant academic data (courses, work items, exams, notes, calendar events, shopping items, grades, flashcard stats, and gamification data) to OpenAI for contextual responses and to take actions on your behalf (creating, editing, and deleting items, managing grades, creating study plans, and updating settings)</li>
+                <li>Orbi AI chat assistant sends relevant academic data (courses, work items, exams, notes, calendar events, shopping items, recipes, grades, flashcard stats, and gamification data) to OpenAI for contextual responses and to take actions on your behalf (creating, editing, and deleting items, managing grades, creating study plans, and updating settings)</li>
                 <li>AI flashcard generation sends your notes or uploaded PDF content to OpenAI to generate study flashcards</li>
                 <li>AI note summarization sends your note content to OpenAI to produce concise summaries</li>
                 <li>AI work breakdown sends your task details to OpenAI to generate subtask suggestions</li>
+                <li>AI recipe extraction sends the content of a recipe URL to OpenAI to extract structured recipe data (title, ingredients, instructions, and step groups)</li>
               </ul>
               <p className="text-sm" style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>
                 Data sent to OpenAI is processed according to OpenAI&apos;s API data usage policies. Per OpenAI&apos;s API terms, data submitted through the API is not used to train their models and is not stored after processing. AI-generated content is provided as-is and may not always be accurate. You are responsible for verifying any AI-generated information. AI features are available exclusively to premium subscribers.

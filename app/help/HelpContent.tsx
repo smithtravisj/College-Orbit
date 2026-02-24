@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Search, ChevronDown, ChevronRight, X, HelpCircle, BookOpen, Calendar, CheckSquare, FileText, Settings, Shield, Zap, Bell, Download, Users, CreditCard, ClipboardList, Volume2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Search, ChevronDown, ChevronRight, X, HelpCircle, BookOpen, Calendar, CheckSquare, FileText, Settings, Shield, Zap, Bell, Download, Users, CreditCard, ClipboardList, Volume2, Sparkles, UtensilsCrossed } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
@@ -20,7 +20,7 @@ const faqData: FAQ[] = [
   {
     id: 'what-is-college-orbit',
     question: 'What is College Orbit?',
-    answer: 'College Orbit is a privacy-first personal dashboard designed for students. It helps you manage your courses, track assignments and work items, organize notes, prepare for exams, and stay on top of your academic life. All your data is stored securely and we never share your personal information with third parties.',
+    answer: 'College Orbit is a privacy-first personal dashboard designed for students. It helps you manage your courses, track assignments and work items, organize notes, prepare for exams, save and organize recipes, and stay on top of your academic life. All your data is stored securely and we never share your personal information with third parties.',
     category: 'Getting Started',
     keywords: ['about', 'what', 'overview', 'introduction', 'start'],
     featured: true,
@@ -341,7 +341,7 @@ const faqData: FAQ[] = [
   {
     id: 'global-search',
     question: 'How do I search across everything?',
-    answer: 'Press "/" or click the search icon to open Global Search. Search across all your courses, work items, notes, events, flashcard decks, shopping items, and more. Results are grouped by type for easy browsing.',
+    answer: 'Press "/" or click the search icon to open Global Search. Search across all your courses, work items, notes, events, flashcard decks, recipes, shopping items, and more. Results are grouped by type for easy browsing.',
     category: 'Tools',
     keywords: ['search', 'global', 'find', 'everything', 'all'],
   },
@@ -350,7 +350,7 @@ const faqData: FAQ[] = [
   {
     id: 'what-is-orbi',
     question: 'What is Orbi?',
-    answer: 'Orbi is your AI study assistant built into College Orbit. It has access to all your courses, work items, exams, notes, calendar events, shopping lists, grades, flashcards, settings, and progress data. Orbi can answer questions about your academic life and take actions on your behalf. Premium feature — access it by clicking the "Ask Orbi" button.',
+    answer: 'Orbi is your AI study assistant built into College Orbit. It has access to all your courses, work items, exams, notes, calendar events, shopping lists, recipes, grades, flashcards, settings, and progress data. Orbi can answer questions about your academic life and take actions on your behalf. Premium feature — access it by clicking the "Ask Orbi" button.',
     category: 'Orbi AI',
     keywords: ['orbi', 'ai', 'assistant', 'chat', 'ask', 'help', 'premium'],
     featured: true,
@@ -846,6 +846,43 @@ const faqData: FAQ[] = [
     category: 'Tools',
     keywords: ['unit', 'convert', 'metric', 'imperial', 'measurement', 'temperature'],
   },
+  // Recipes
+  {
+    id: 'what-are-recipes',
+    question: 'How do I use the Recipes feature?',
+    answer: 'The Recipes tab is located on the Shopping page. You can add recipes manually or use AI extraction to import them from a URL. Each recipe can include a title, description, servings, prep time, cook time, an image, ingredients, and step-by-step instructions organized into groups.',
+    category: 'Recipes',
+    keywords: ['recipe', 'cooking', 'food', 'meal', 'ingredients', 'instructions'],
+  },
+  {
+    id: 'ai-recipe-extraction',
+    question: 'How does AI recipe extraction work?',
+    answer: 'Click "AI Extract" on the Recipes tab and paste a recipe URL. The AI reads the page and extracts the title, description, servings, times, ingredients, and instructions organized into logical step groups (e.g., "Rice", "Sauce"). You can review and edit everything before saving. AI extraction is a premium feature.',
+    category: 'Recipes',
+    keywords: ['ai', 'extract', 'url', 'import', 'recipe', 'automatic', 'paste'],
+  },
+  {
+    id: 'recipe-step-groups',
+    question: 'What are recipe step groups?',
+    answer: 'Step groups organize your recipe into logical sections, each with its own title and instructions. For example, a recipe might have "Prepare the Rice", "Make the Sauce", and "Assemble" as separate step groups. Each step group can also reference specific ingredients from the master ingredient list.',
+    category: 'Recipes',
+    keywords: ['step', 'group', 'section', 'organize', 'instructions', 'recipe'],
+  },
+  {
+    id: 'recipe-to-grocery',
+    question: 'Can I add recipe ingredients to my grocery list?',
+    answer: 'Yes! When viewing a recipe, click the grocery cart button next to "All Ingredients" to add all the recipe\'s ingredients to your grocery list at once. Quantities and units are included automatically.',
+    category: 'Recipes',
+    keywords: ['grocery', 'shopping', 'list', 'add', 'ingredients', 'cart'],
+  },
+  {
+    id: 'recipe-edit',
+    question: 'How do I edit a recipe?',
+    answer: 'Open the recipe detail view and click the edit (pencil) button. You can modify the title, description, servings, times, ingredients, and step groups. The "All Ingredients" card at the top lets you manage the master ingredient list, and each step group lets you select which ingredients belong to that step.',
+    category: 'Recipes',
+    keywords: ['edit', 'modify', 'change', 'update', 'recipe'],
+  },
+
   // Additional Shopping
   {
     id: 'shopping-categories',
@@ -1007,6 +1044,7 @@ const categories = [
   { id: 'Mobile & Extensions', icon: Download },
   { id: 'Tools', icon: Zap },
   { id: 'Shopping', icon: CheckSquare },
+  { id: 'Recipes', icon: UtensilsCrossed },
   { id: 'Account', icon: Users },
   { id: 'Integrations', icon: Bell },
   { id: 'Tips', icon: Zap },
@@ -1088,6 +1126,9 @@ const synonyms: Record<string, string[]> = {
   'timer': ['pomodoro', 'clock', 'countdown', 'stopwatch'],
   'orbi': ['ai', 'assistant', 'chat', 'bot'],
   'ai': ['orbi', 'artificial intelligence', 'assistant', 'smart'],
+  'recipe': ['cooking', 'food', 'meal', 'ingredients', 'cook'],
+  'cooking': ['recipe', 'food', 'meal', 'cook'],
+  'ingredient': ['recipe', 'food', 'grocery'],
   'ambient': ['sound', 'focus', 'music', 'noise', 'rain', 'lofi'],
   'study': ['learn', 'review', 'prepare', 'studying'],
   'gpa': ['grade', 'grades', 'average', 'score'],

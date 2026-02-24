@@ -1426,7 +1426,7 @@ async function executeToolCall(
 }
 
 async function buildSystemPrompt(userId: string, timezoneOffset: number = 0): Promise<string> {
-  const [user, courses, workItems, exams, notes, calendarEvents, shoppingItems, settings, streak, recurringWorkPatterns, excludedDates, gpaEntries, flashcardDecks] =
+  const [user, courses, workItems, exams, notes, calendarEvents, shoppingItems, settings, streak, recurringWorkPatterns, excludedDates, gpaEntries, flashcardDecks, recipes] =
     await Promise.all([
       prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
       prisma.course.findMany({
@@ -1502,6 +1502,11 @@ async function buildSystemPrompt(userId: string, timezoneOffset: number = 0): Pr
             select: { interval: true, repetitions: true, nextReview: true },
           },
         },
+      }),
+      prisma.recipe.findMany({
+        where: { userId },
+        select: { title: true, description: true, servings: true, prepTime: true, cookTime: true, tags: true, isFavorite: true, ingredients: { select: { name: true, quantity: true, unit: true }, orderBy: { order: 'asc' } } },
+        orderBy: { updatedAt: 'desc' },
       }),
     ]);
 
@@ -1785,6 +1790,22 @@ async function buildSystemPrompt(userId: string, timezoneOffset: number = 0): Pr
     sections.push(`SHOPPING:\n${lines.join('\n')}`);
   }
 
+  // ===== Recipes =====
+  if (recipes.length > 0) {
+    const recipeData = truncateList(recipes, 20);
+    const lines = recipeData.items.map((r) => {
+      const tags = Array.isArray(r.tags) ? (r.tags as string[]).join(', ') : '';
+      const time = [r.prepTime ? `prep ${r.prepTime}m` : '', r.cookTime ? `cook ${r.cookTime}m` : ''].filter(Boolean).join(', ');
+      const ingCount = r.ingredients?.length || 0;
+      const parts = [`- ${r.isFavorite ? '★ ' : ''}${r.title}${r.servings ? ` (${r.servings} servings)` : ''}${time ? ` [${time}]` : ''} — ${ingCount} ingredients`];
+      if (tags) parts.push(`  Tags: ${tags}`);
+      if (r.description) parts.push(`  ${r.description}`);
+      return parts.join('\n');
+    });
+    if (recipeData.overflow > 0) lines.push(`...and ${recipeData.overflow} more`);
+    sections.push(`SAVED RECIPES:\n${lines.join('\n')}`);
+  }
+
   // ===== Active recurring patterns =====
   if (recurringWorkPatterns.length > 0) {
     const lines = recurringWorkPatterns.map((p) => {
@@ -1951,6 +1972,14 @@ Shopping Lists:
 - Add items with quantities, units, categories, prices, and notes
 - Check items off as you shop
 - Lists sync across devices
+
+Recipes:
+- Save and organize recipes with ingredients, instructions, and tags
+- AI recipe extraction: paste a URL or text and AI extracts structured recipe data (premium)
+- Recipes are organized into step groups, each with its own title, ingredients, and instructions
+- Add recipe ingredients to grocery list with one click
+- Favorite recipes for quick access
+- Filter and search recipes by name, tags, or ingredients
 
 GPA & Grade Tools:
 - GPA calculator for semester or cumulative GPA (supports 4.0, percentage, letter grades)

@@ -36,14 +36,20 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
   // Flashcard decks fetched when search opens
   const [flashcardDecks, setFlashcardDecks] = useState<{ id: string; name: string; description?: string | null; courseId?: string | null }[]>([]);
+  // Recipes fetched when search opens
+  const [recipes, setRecipes] = useState<{ id: string; title: string; description?: string | null; tags?: string[] | null }[]>([]);
 
-  // Fetch flashcard decks when modal opens
+  // Fetch flashcard decks and recipes when modal opens
   useEffect(() => {
     if (isOpen) {
       fetch('/api/flashcards/decks', { credentials: 'include' })
         .then(res => res.ok ? res.json() : { decks: [] })
         .then(data => setFlashcardDecks(Array.isArray(data?.decks) ? data.decks : []))
         .catch(() => setFlashcardDecks([]));
+      fetch('/api/recipes', { credentials: 'include' })
+        .then(res => res.ok ? res.json() : { recipes: [] })
+        .then(data => setRecipes(Array.isArray(data?.recipes) ? data.recipes : []))
+        .catch(() => setRecipes([]));
     }
   }, [isOpen]);
 
@@ -191,8 +197,25 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
       });
     });
 
+    // Add recipes
+    recipes.forEach((recipe: any) => {
+      items.push({
+        id: `recipe-${recipe.id}`,
+        title: recipe.title,
+        description: recipe.description || 'Recipe',
+        keywords: [recipe.title, recipe.description, 'recipe', 'cooking', 'food', ...(recipe.tags || [])].filter(Boolean),
+        category: 'item',
+        categoryLabel: 'Recipes',
+        href: '/shopping',
+        tab: 'recipes',
+        itemType: 'shopping' as any,
+        itemId: recipe.id,
+        itemData: recipe,
+      });
+    });
+
     return items;
-  }, [courses, workItems, exams, calendarEvents, notes, shoppingItems, folders, flashcardDecks]);
+  }, [courses, workItems, exams, calendarEvents, notes, shoppingItems, folders, flashcardDecks, recipes]);
 
   const results = useMemo(() => searchItems(query, isPremium, dynamicItems), [query, isPremium, dynamicItems]);
   const groupedResults = useMemo(() => groupSearchResults(results), [results]);

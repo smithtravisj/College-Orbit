@@ -73,7 +73,7 @@ export default function PrivacyContent() {
                 Shopping & Lifestyle Data
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                We store shopping lists you create, including grocery lists, wishlists, and pantry inventory. This includes item names, quantities, categories, prices, and perishable status. This data is entirely user-generated and belongs to you.
+                We store shopping lists you create, including grocery lists, wishlists, and pantry inventory. This includes item names, quantities, categories, prices, and perishable status. We also store recipes you create or import, including titles, descriptions, ingredients, instructions, step groups, tags, servings, prep/cook times, source URLs, and images. This data is entirely user-generated and belongs to you.
               </p>
             </div>
             <div>
@@ -97,7 +97,7 @@ export default function PrivacyContent() {
                 AI Features Data (Optional, Premium)
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                If you use AI-powered features (available to premium subscribers), certain data is sent to OpenAI&apos;s API (GPT-4o-mini) for processing. The Orbi AI chat assistant sends your academic data (courses, work items, exams, notes, calendar events, shopping items, grades, flashcard stats, and gamification data) to provide contextual responses and take actions on your behalf (such as creating, editing, or deleting items). AI flashcard generation sends your note content or uploaded PDF text. AI note summarization sends your note content. AI work breakdown sends your task details. Per OpenAI&apos;s API data usage policies, data submitted through the API is not used to train their models and is not retained after processing. Orbi conversation history is stored locally in your browser (not on our servers) and can be cleared at any time. Your prompts and AI responses are not logged on our servers or used for any purpose other than delivering the feature to you.
+                If you use AI-powered features (available to premium subscribers), certain data is sent to OpenAI&apos;s API (GPT-4o-mini) for processing. The Orbi AI chat assistant sends your academic data (courses, work items, exams, notes, calendar events, shopping items, recipes, grades, flashcard stats, and gamification data) to provide contextual responses and take actions on your behalf (such as creating, editing, or deleting items). AI flashcard generation sends your note content or uploaded PDF text. AI note summarization sends your note content. AI work breakdown sends your task details. AI recipe extraction sends the fetched content of a recipe URL you provide to extract structured recipe data (title, ingredients, instructions, and step groups). Per OpenAI&apos;s API data usage policies, data submitted through the API is not used to train their models and is not retained after processing. Orbi conversation history is stored locally in your browser (not on our servers) and can be cleared at any time. Your prompts and AI responses are not logged on our servers or used for any purpose other than delivering the feature to you.
               </p>
             </div>
             <div>
@@ -200,7 +200,7 @@ export default function PrivacyContent() {
                 <span className="font-medium" style={{ color: 'var(--text)' }}>Analytics & Improvement</span>: We analyze usage patterns, page visits, and feedback to improve features, identify bugs, understand user needs, and develop new functionality. Only administrators can view analytics data.
               </li>
               <li>
-                <span className="font-medium" style={{ color: 'var(--text)' }}>AI-Powered Features</span>: If you use premium AI features, we send relevant portions of your academic data to OpenAI&apos;s API to generate contextual chat responses, flashcards, note summaries, and task breakdowns. This data is processed by OpenAI solely to fulfill your request and is not retained by OpenAI after processing.
+                <span className="font-medium" style={{ color: 'var(--text)' }}>AI-Powered Features</span>: If you use premium AI features, we send relevant portions of your academic data to OpenAI&apos;s API to generate contextual chat responses, flashcards, note summaries, task breakdowns, and recipe extractions. This data is processed by OpenAI solely to fulfill your request and is not retained by OpenAI after processing.
               </li>
               <li>
                 <span className="font-medium" style={{ color: 'var(--text)' }}>Google Calendar Sync</span>: If you connect Google Calendar, we use your encrypted OAuth tokens to read and import your calendar events into College Orbit for unified schedule management.
@@ -299,7 +299,7 @@ export default function PrivacyContent() {
                 AI Processing (OpenAI)
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                If you use AI-powered features (premium only), portions of your academic data are sent to OpenAI&apos;s API for processing. This includes note content (for summarization and flashcard generation), task details (for work breakdown), and academic context data (for Orbi AI chat responses). OpenAI processes this data solely to generate responses and, per their API terms, does not use API data to train their models or retain it after processing. We do not share any personally identifiable information (such as your name, email, or account details) with OpenAI. Only the academic content necessary to fulfill your AI request is transmitted.
+                If you use AI-powered features (premium only), portions of your academic data are sent to OpenAI&apos;s API for processing. This includes note content (for summarization and flashcard generation), task details (for work breakdown), recipe URL content (for AI recipe extraction), and academic context data (for Orbi AI chat responses). OpenAI processes this data solely to generate responses and, per their API terms, does not use API data to train their models or retain it after processing. We do not share any personally identifiable information (such as your name, email, or account details) with OpenAI. Only the academic content necessary to fulfill your AI request is transmitted.
               </p>
             </div>
             <div>
@@ -327,7 +327,7 @@ export default function PrivacyContent() {
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <li>With our email service provider (Resend) to send password reset and transactional emails</li>
-                <li>With OpenAI&apos;s API (only if you use premium AI features) to process academic content for chat responses, flashcard generation, note summaries, and task breakdowns</li>
+                <li>With OpenAI&apos;s API (only if you use premium AI features) to process academic content for chat responses, flashcard generation, note summaries, task breakdowns, and recipe extraction</li>
                 <li>With Google&apos;s API (only if you connect Google Calendar) to read and sync your calendar events</li>
                 <li>With your LMS instance (only if you connect Canvas, Blackboard, Moodle, or Brightspace) to fetch your academic data</li>
                 <li>Between our browser extension and our servers to save assignments you choose to add from Canvas or Learning Suite pages</li>
@@ -364,7 +364,7 @@ export default function PrivacyContent() {
                 Modify Your Data
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                You have full control to edit, update, or delete any of your academic data, courses, work items, exams, notes, and profile information at any time through the app.
+                You have full control to edit, update, or delete any of your academic data, courses, work items, exams, notes, recipes, and profile information at any time through the app.
               </p>
             </div>
             <div>

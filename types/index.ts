@@ -870,3 +870,45 @@ export interface FlashcardDeck {
   updatedAt: string;
   cards?: Flashcard[];
 }
+
+// Recipes
+export interface RecipeStep {
+  title: string;
+  ingredients: { name: string; quantity: number | null; unit: string | null; notes: string | null }[];
+  instructions: string[];
+}
+
+export interface RecipeIngredient {
+  id: string;
+  recipeId: string;
+  name: string;
+  quantity: number | null;
+  unit: string | null;
+  notes: string | null;
+  order: number;
+}
+
+export interface Recipe {
+  id: string;
+  title: string;
+  description: string | null;
+  servings: number | null;
+  prepTime: number | null;
+  cookTime: number | null;
+  instructions: string | null;
+  steps: RecipeStep[] | null;
+  sourceUrl: string | null;
+  imageUrl: string | null;
+  tags: string[] | null;
+  isFavorite: boolean;
+  createdAt: string;
+  updatedAt: string;
+  ingredients: RecipeIngredient[];
+}
+
+export const RECIPE_TAG_SUGGESTIONS = [
+  'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert',
+  'Quick', 'Healthy', 'Meal Prep', 'Comfort Food', 'Budget',
+  'Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free',
+  'One Pot', 'Slow Cooker', 'Air Fryer', 'Grill',
+] as const;

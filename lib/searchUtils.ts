@@ -115,7 +115,7 @@ export function groupSearchResults(items: SearchableItem[]): Record<string, Sear
   }
 
   // Define preferred order for groups
-  const groupOrder = ['Pages', 'Courses', 'Tasks', 'Work', 'Readings', 'Projects', 'Exams', 'Events', 'Notes', 'Tools', 'Settings', 'Dashboard', 'Calendar'];
+  const groupOrder = ['Pages', 'Courses', 'Tasks', 'Work', 'Readings', 'Projects', 'Exams', 'Events', 'Notes', 'Recipes', 'Tools', 'Settings', 'Dashboard', 'Calendar'];
 
   // Sort groups by preferred order
   const sortedGroups: Record<string, SearchableItem[]> = {};
