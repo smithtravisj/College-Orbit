@@ -64,7 +64,7 @@ const ORBI_TOOLS: OpenAI.ChatCompletionTool[] = [
           title: { type: 'string', description: 'Title of the work item' },
           type: { type: 'string', enum: ['task', 'assignment', 'reading', 'project'], description: 'Type of work item. Default: task' },
           courseName: { type: 'string', description: 'Course code or name to link this item to (e.g. "CS 101" or "Intro to CS"). Will be matched against the student\'s courses.' },
-          dueAt: { type: 'string', description: 'Due date/time in ISO 8601 format' },
+          dueAt: { type: 'string', description: 'Due date/time in ISO 8601 format. IMPORTANT: If the user does not specify a time, use 23:59 in the user\'s local timezone (see UTC offset in system prompt) so the item appears as an all-day deadline. Always include the timezone offset in the ISO string (e.g. 2026-02-25T23:59:00-07:00).' },
           priority: { type: 'string', enum: ['low', 'medium', 'high', 'critical'], description: 'Priority level' },
           effort: { type: 'string', enum: ['small', 'medium', 'large'], description: 'Effort estimate' },
           notes: { type: 'string', description: 'Additional notes or description' },
@@ -84,7 +84,7 @@ const ORBI_TOOLS: OpenAI.ChatCompletionTool[] = [
         type: 'object',
         properties: {
           title: { type: 'string', description: 'Exam title' },
-          examAt: { type: 'string', description: 'Exam date/time in ISO 8601 format' },
+          examAt: { type: 'string', description: 'Exam date/time in ISO 8601 format. Always include the timezone offset using the user\'s UTC offset from the system prompt.' },
           courseName: { type: 'string', description: 'Course code or name to link this exam to' },
           location: { type: 'string', description: 'Exam location/room' },
           notes: { type: 'string', description: 'Additional notes' },
@@ -134,8 +134,8 @@ const ORBI_TOOLS: OpenAI.ChatCompletionTool[] = [
         type: 'object',
         properties: {
           title: { type: 'string', description: 'Event title' },
-          startAt: { type: 'string', description: 'Start date/time in ISO 8601 format' },
-          endAt: { type: 'string', description: 'End date/time in ISO 8601 format' },
+          startAt: { type: 'string', description: 'Start date/time in ISO 8601 format. Always include the timezone offset (e.g. 2026-02-25T09:00:00-07:00). Use the user\'s UTC offset from the system prompt.' },
+          endAt: { type: 'string', description: 'End date/time in ISO 8601 format. Always include the timezone offset.' },
           allDay: { type: 'boolean', description: 'Whether this is an all-day event' },
           description: { type: 'string', description: 'Event description' },
           location: { type: 'string', description: 'Event location' },
@@ -374,7 +374,7 @@ const ORBI_TOOLS: OpenAI.ChatCompletionTool[] = [
           newTitle: { type: 'string', description: 'New title for the work item' },
           type: { type: 'string', enum: ['task', 'assignment', 'reading', 'project'], description: 'New type' },
           courseName: { type: 'string', description: 'New course (code or name)' },
-          dueAt: { type: 'string', description: 'New due date/time in ISO 8601' },
+          dueAt: { type: 'string', description: 'New due date/time in ISO 8601. Include timezone offset. If no time specified, use 23:59 in user\'s local timezone.' },
           priority: { type: 'string', enum: ['low', 'medium', 'high', 'critical'], description: 'New priority' },
           effort: { type: 'string', enum: ['small', 'medium', 'large'], description: 'New effort' },
           notes: { type: 'string', description: 'New notes/description' },
@@ -395,7 +395,7 @@ const ORBI_TOOLS: OpenAI.ChatCompletionTool[] = [
         properties: {
           title: { type: 'string', description: 'Current title (or partial) of the exam to update. Will be fuzzy matched.' },
           newTitle: { type: 'string', description: 'New title' },
-          examAt: { type: 'string', description: 'New exam date/time in ISO 8601' },
+          examAt: { type: 'string', description: 'New exam date/time in ISO 8601. Include timezone offset.' },
           courseName: { type: 'string', description: 'New course' },
           location: { type: 'string', description: 'New location' },
           notes: { type: 'string', description: 'New notes' },
@@ -416,8 +416,8 @@ const ORBI_TOOLS: OpenAI.ChatCompletionTool[] = [
         properties: {
           title: { type: 'string', description: 'Current title (or partial). Will be fuzzy matched.' },
           newTitle: { type: 'string', description: 'New title' },
-          startAt: { type: 'string', description: 'New start date/time in ISO 8601' },
-          endAt: { type: 'string', description: 'New end date/time in ISO 8601' },
+          startAt: { type: 'string', description: 'New start date/time in ISO 8601. Include timezone offset.' },
+          endAt: { type: 'string', description: 'New end date/time in ISO 8601. Include timezone offset.' },
           allDay: { type: 'boolean', description: 'Whether all-day event' },
           description: { type: 'string', description: 'New description' },
           location: { type: 'string', description: 'New location' },
@@ -1535,7 +1535,10 @@ async function buildSystemPrompt(userId: string, timezoneOffset: number = 0): Pr
   const sections: string[] = [];
 
   if (user?.name) sections.push(`Student's name: ${user.name}`);
-  sections.push(`Today: ${friendlyDate(todayStart)} (${todayISO})`);
+  const offsetHours = -(timezoneOffset / 60);
+  const offsetStr = `UTC${offsetHours >= 0 ? '+' : ''}${offsetHours}`;
+  const isoOffsetStr = `${offsetHours >= 0 ? '+' : '-'}${String(Math.abs(Math.floor(offsetHours))).padStart(2, '0')}:${String(Math.abs(timezoneOffset) % 60).padStart(2, '0')}`;
+  sections.push(`Today: ${friendlyDate(todayStart)} (${todayISO}). User's timezone: ${offsetStr} (ISO offset: ${isoOffsetStr}). Use this offset when generating ISO 8601 dates.`);
   if (settings?.university) sections.push(`University: ${settings.university}`);
 
   // ===== Current Settings =====
@@ -2087,6 +2090,7 @@ RULES:
 - You can mark work items as COMPLETE or INCOMPLETE. When the user says they finished something, or asks to mark it done/complete, use update_work_item_status with status "done". When they want to reopen it, use status "open".
 - For shopping items, infer the list type from context: food/groceries go to "grocery", things to buy (electronics, clothes, etc.) go to "wishlist", pantry staples go to "pantry". Default to "grocery" if unclear.
 - If the request is ambiguous (e.g. no due date for a task, unclear course), make reasonable assumptions rather than asking for clarification. Only ask if truly critical info is missing.
+- When the user mentions a course name in their request (e.g. "for climate change class", "in CS 101"), use it to set the courseName field but REMOVE the course reference from the title. For example, "Check extra credit for climate change class" should have title "Check extra credit" with courseName set to the climate change course. The course is already shown in the UI via the linked course — repeating it in the title is redundant.
 - When the user asks to add a link/URL to a work item, exam, or note, use the "links" field (array of {label, url}), NOT the "notes" field. The links field creates proper clickable links in the UI. The notes field is for text descriptions only.
 - IMPORTANT: When adding links, ONLY use URLs that the user explicitly provides in their message. NEVER copy or reuse URLs from other items in the system prompt. If the user says "add a link" without providing a specific URL, ASK them for the URL first. Do not guess or pull URLs from other assignments, courses, or items.
 - You can create, delete, or update multiple items in a single response if the user asks (e.g. "add milk and eggs to my grocery list" = 2 shopping items, "mark my math homework and essay as done" = 2 status updates).
