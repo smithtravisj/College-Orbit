@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendPushNotification } from '@/lib/sendPushNotification';
 
 export async function GET(req: NextRequest) {
   // Verify cron secret for security
@@ -99,6 +100,14 @@ export async function GET(req: NextRequest) {
                 notificationId: notification.id,
               },
             });
+
+            // Send push notification
+            sendPushNotification(
+              exam.userId,
+              notification.title,
+              notification.message,
+              { type: 'exam_reminder', examId: exam.id }
+            ).catch(() => {});
 
             results.sent++;
           } catch (error) {

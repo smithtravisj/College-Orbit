@@ -1,7 +1,7 @@
 // Learning Suite (BYU) content script - scrapes assignment data and injects button
 // Supports: gradebook/assignments page (inline expand), discussion pages, and exam pages
 
-const LS_GRADEBOOK_RE = /learningsuite\.byu\.edu\/.*\/student\/gradebook/;
+const LS_GRADEBOOK_RE = /learningsuite\.byu\.edu\/.*\/student\/(?:gradebook|home\/assignments)/;
 const LS_DISCUSSION_RE = /learningsuite\.byu\.edu\/.*\/student\/discuss\/discussion\/id-([A-Za-z0-9_-]+)/;
 const LS_EXAM_RE = /learningsuite\.byu\.edu\/.*\/student\/exam\/info\/id-([A-Za-z0-9_-]+)/;
 const LS_CID_RE = /\/cid-([^/]+)/;
@@ -167,41 +167,27 @@ function scrapeGradebookAssignment() {
     }
   }
 
-  // Due date: prefer <time datetime="..."> element within or after the active row
+  // Due date: use datetime attribute (has exact time), fall back to visible text
   let dueDate = null;
-  // Look in the row itself and its sibling detail area
   const rowParent = activeRow.parentElement;
   const timeEl = activeRow.querySelector('time[datetime]') ||
     (rowParent && rowParent.querySelector('time[datetime]'));
   if (timeEl) {
+    // Prefer datetime attribute — it has the exact time
     const dt = timeEl.getAttribute('datetime');
-    console.log('[College Orbit LS] Found datetime attribute:', dt);
     if (dt) {
-      // Learning Suite calculates UTC using CURRENT timezone offset, but we need the offset
-      // that will be in effect on the due DATE (to handle DST correctly).
-      // Parse the UTC time, then recalculate using the correct offset for that date.
-      const utcDate = new Date(dt);
-      if (!isNaN(utcDate.getTime())) {
-        // Create a date in local time for the same calendar date/time
-        // This ensures DST is calculated for the TARGET date, not today
-        const localDate = new Date(
-          utcDate.getUTCFullYear(),
-          utcDate.getUTCMonth(),
-          utcDate.getUTCDate(),
-          utcDate.getUTCHours(),
-          utcDate.getUTCMinutes(),
-          utcDate.getUTCSeconds()
-        );
-        // Now get the offset for THIS date (which accounts for DST on that date)
-        const targetOffset = localDate.getTimezoneOffset();
-        // The datetime attr was calculated with current offset, recalculate with target offset
-        const currentOffset = new Date().getTimezoneOffset();
-        const offsetDiff = (targetOffset - currentOffset) * 60 * 1000; // in ms
-        const correctedDate = new Date(utcDate.getTime() + offsetDiff);
-        dueDate = correctedDate.toISOString();
-        console.log('[College Orbit LS] DST-corrected date:', dueDate, 'offset diff (hrs):', offsetDiff / 3600000);
-      } else {
-        dueDate = dt;
+      const parsed = new Date(dt);
+      if (!isNaN(parsed.getTime())) {
+        dueDate = formatLocalISO(parsed);
+        console.log('[College Orbit LS] Due date from datetime attr:', dt, '->', dueDate);
+      }
+    }
+    // Fall back to visible text if no datetime attribute
+    if (!dueDate) {
+      const visibleText = timeEl.textContent?.trim();
+      if (visibleText) {
+        dueDate = parseLSDate(visibleText);
+        console.log('[College Orbit LS] Due date from visible text:', visibleText, '->', dueDate);
       }
     }
   }
@@ -359,24 +345,15 @@ function scrapeDiscussion() {
     if (timeEl) {
       const dt = timeEl.getAttribute('datetime');
       if (dt) {
-        // Apply same DST correction as gradebook assignments
-        const utcDate = new Date(dt);
-        if (!isNaN(utcDate.getTime())) {
-          const localDate = new Date(
-            utcDate.getUTCFullYear(),
-            utcDate.getUTCMonth(),
-            utcDate.getUTCDate(),
-            utcDate.getUTCHours(),
-            utcDate.getUTCMinutes(),
-            utcDate.getUTCSeconds()
-          );
-          const targetOffset = localDate.getTimezoneOffset();
-          const currentOffset = new Date().getTimezoneOffset();
-          const offsetDiff = (currentOffset - targetOffset) * 60 * 1000;
-          const correctedDate = new Date(utcDate.getTime() + offsetDiff);
-          dueDate = correctedDate.toISOString();
-        } else {
-          dueDate = dt;
+        const parsed = new Date(dt);
+        if (!isNaN(parsed.getTime())) {
+          dueDate = formatLocalISO(parsed);
+        }
+      }
+      if (!dueDate) {
+        const visibleText = timeEl.textContent?.trim();
+        if (visibleText) {
+          dueDate = parseLSDate(visibleText);
         }
       }
     }
@@ -435,21 +412,15 @@ function scrapeExam() {
     if (timeEl) {
       const dt = timeEl.getAttribute('datetime');
       if (dt) {
-        const utcDate = new Date(dt);
-        if (!isNaN(utcDate.getTime())) {
-          const localDate = new Date(
-            utcDate.getUTCFullYear(),
-            utcDate.getUTCMonth(),
-            utcDate.getUTCDate(),
-            utcDate.getUTCHours(),
-            utcDate.getUTCMinutes(),
-            utcDate.getUTCSeconds()
-          );
-          const targetOffset = localDate.getTimezoneOffset();
-          const currentOffset = new Date().getTimezoneOffset();
-          const offsetDiff = (currentOffset - targetOffset) * 60 * 1000;
-          const correctedDate = new Date(utcDate.getTime() + offsetDiff);
-          dueDate = correctedDate.toISOString();
+        const parsed = new Date(dt);
+        if (!isNaN(parsed.getTime())) {
+          dueDate = formatLocalISO(parsed);
+        }
+      }
+      if (!dueDate) {
+        const visibleText = timeEl.textContent?.trim();
+        if (visibleText) {
+          dueDate = parseLSDate(visibleText);
         }
       }
     }

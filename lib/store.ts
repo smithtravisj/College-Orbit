@@ -2756,6 +2756,18 @@ const useAppStore = create<AppStore>((set, get) => ({
       console.error('Failed to fetch daily challenge rewards for export:', error);
     }
 
+    // Fetch recipes from API
+    let recipes: any[] = [];
+    try {
+      const response = await fetch('/api/recipes', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        recipes = data.recipes || [];
+      }
+    } catch (error) {
+      console.error('Failed to fetch recipes for export:', error);
+    }
+
     return {
       courses: state.courses,
       deadlines: state.deadlines,
@@ -2777,6 +2789,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       customQuickLinks,
       flashcardDecks,
       dailyChallengeRewards,
+      recipes,
     };
   },
 
@@ -3112,6 +3125,30 @@ const useAppStore = create<AppStore>((set, get) => ({
           });
           if (!response.ok) {
             console.error('Failed to import daily challenge reward:', rewardData);
+          }
+        }
+      }
+
+      // Import recipes
+      if ((data as any).recipes && (data as any).recipes.length > 0) {
+        console.log('Importing recipes:', (data as any).recipes.length);
+        for (const recipe of (data as any).recipes) {
+          const { id, createdAt, updatedAt, userId, ...recipeData } = recipe as any;
+          // Strip IDs from ingredients
+          if (recipeData.ingredients) {
+            recipeData.ingredients = recipeData.ingredients.map((ing: any) => {
+              const { id: ingId, recipeId, ...ingData } = ing;
+              return ingData;
+            });
+          }
+          const response = await fetch('/api/recipes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(recipeData),
+          });
+          if (!response.ok) {
+            console.error('Failed to import recipe:', recipeData.title);
           }
         }
       }

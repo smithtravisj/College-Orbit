@@ -234,7 +234,7 @@ export default function MiniSpotifyPlayer() {
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
-          maxWidth: '200px',
+          maxWidth: '280px',
         }}
       >
         <SpotifyVisualizer size="small" />

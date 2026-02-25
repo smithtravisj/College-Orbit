@@ -120,7 +120,7 @@ export default function SettingsPage() {
   const [notificationPrefsExpanded, setNotificationPrefsExpanded] = useState(false);
   const [betaWarningOpen, setBetaWarningOpen] = useState(false);
   const betaWarningRef = useRef<HTMLDivElement>(null);
-  const [currentVersion, setCurrentVersion] = useState<string>('v1.5.0');
+  const [currentVersion, setCurrentVersion] = useState<string>('v1.5.1');
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
 
 

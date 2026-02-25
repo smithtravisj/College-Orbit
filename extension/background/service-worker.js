@@ -4,7 +4,7 @@ importScripts('../lib/api.js');
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
     const isAssignment = /instructure\.com\/courses\/\d+\/(assignments|discussion_topics|quizzes)\/\d+/.test(tab.url) ||
-      /learningsuite\.byu\.edu\/.*\/student\/(gradebook|discuss)/.test(tab.url);
+      /learningsuite\.byu\.edu\/.*\/student\/(gradebook|home\/assignments|discuss)/.test(tab.url);
     chrome.action.setBadgeText({
       tabId,
       text: isAssignment ? '+' : '',
@@ -61,7 +61,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         let foundItem = null;
         let matchReason = '';
-        const isGradebookUrl = canvasUrl && canvasUrl.includes('/gradebook');
+        let titleOnlyFallback = null;
+        const isGradebookUrl = canvasUrl && (canvasUrl.includes('/gradebook') || canvasUrl.includes('/home/assignments'));
 
         console.log('[College Orbit SW] CHECK_ASSIGNMENT_EXISTS:', {
           title,
@@ -111,6 +112,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                   break;
                 }
                 // Don't match - title matches but course doesn't
+                if (!titleOnlyFallback) titleOnlyFallback = w;
                 console.log('[College Orbit SW] Title matched but course mismatch:', { wTitle, wCourseId: w.courseId, matchingCourseId });
               } else if (lsCourseId) {
                 // Learning Suite: we have lsCourseId but no matching course in Orbit
@@ -123,6 +125,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                   matchReason = 'title + LS link course match';
                   break;
                 }
+                // Save as fallback — title matched but couldn't verify course
+                if (!titleOnlyFallback) titleOnlyFallback = w;
                 console.log('[College Orbit SW] Title matched but LS course not found and no matching LS link:', { wTitle, lsCourseId });
               } else {
                 // Canvas or no course info: fall back to title-only match
@@ -132,6 +136,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               }
             }
           }
+        }
+
+        // Use title-only fallback if no strong match found
+        if (!foundItem && titleOnlyFallback) {
+          foundItem = titleOnlyFallback;
+          matchReason = 'title only (course fallback)';
         }
 
         if (foundItem) {
@@ -317,7 +327,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const existingItems = existingData.workItems || [];
         const canvasUrl = (d.canvasUrl || '').split('?')[0];
         const title = (d.title || '').toLowerCase().trim();
-        const isGradebookUrl = canvasUrl && canvasUrl.includes('/gradebook');
+        const isGradebookUrl = canvasUrl && (canvasUrl.includes('/gradebook') || canvasUrl.includes('/home/assignments'));
 
         // If we have an lsCourseId, find the matching Orbit course
         // But verify the course code matches to catch corrupted data
@@ -492,8 +502,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               const isLearningsuite = d.source === 'learningsuite';
               console.log(`[College Orbit SW] Creating new course for ${isLearningsuite ? 'Learning Suite' : 'Canvas'}:`, d.courseName);
 
-              // Parse course name - usually "CODE 123 - Course Name" or "CODE 123"
-              const courseNameParts = d.courseName.match(/^([A-Z]{2,5}\s*\d{3}\S*)\s*[-–]?\s*(.*)$/i);
+              // Parse course name - handles "CS 142", "A HTG 100", "REL C 210", etc.
+              const courseNameParts = d.courseName.match(/^([A-Z]{1,5}(?:\s+[A-Z]{1,5})?\s*\d{3}\S*)\s*[-–]?\s*(.*)$/i);
               const code = courseNameParts ? courseNameParts[1].trim() : d.courseName;
               const courseName = courseNameParts && courseNameParts[2] ? courseNameParts[2].trim() : '';
 

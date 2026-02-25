@@ -626,31 +626,71 @@ export default function RecipesTab() {
               >
                 <ShoppingCart size={14} />
                 <span style={{ marginLeft: '6px' }}>
-                  {groceryAdded ? 'Added!' : addingToGrocery ? 'Adding...' : 'Add to Grocery List'}
+                  {groceryAdded ? 'Added!' : addingToGrocery ? 'Adding...' : isMobile ? 'Add All' : 'Add to Grocery List'}
                 </span>
               </Button>
             )}
           </div>
           {selectedRecipe.ingredients.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', margin: '0 -12px' }}>
               {selectedRecipe.ingredients.map((ing, index) => (
                 <div
                   key={ing.id}
                   style={{
-                    padding: '8px 0',
+                    padding: '8px 12px',
                     borderBottom: index < selectedRecipe.ingredients.length - 1 ? '1px solid var(--border)' : 'none',
                     display: 'flex',
                     gap: '8px',
-                    alignItems: 'baseline',
+                    alignItems: 'center',
+                    borderRadius: '6px',
                   }}
+                  onMouseEnter={(e) => { const btn = e.currentTarget.querySelector('.ing-grocery-btn') as HTMLElement; if (btn) btn.style.opacity = '1'; }}
+                  onMouseLeave={(e) => { const btn = e.currentTarget.querySelector('.ing-grocery-btn') as HTMLElement; if (btn) btn.style.opacity = '0'; }}
                 >
                   <span style={{ color: 'var(--text-muted)', fontSize: '13px', minWidth: '60px' }}>
                     {ing.quantity ? `${ing.quantity}${ing.unit ? ` ${ing.unit}` : ''}` : ''}
                   </span>
-                  <span style={{ color: 'var(--text)', fontSize: '14px', fontWeight: 500 }}>{ing.name}</span>
-                  {ing.notes && (
-                    <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontStyle: 'italic' }}>{ing.notes}</span>
-                  )}
+                  <span style={{ flex: 1 }}>
+                    <span style={{ color: 'var(--text)', fontSize: '14px', fontWeight: 500 }}>{ing.name}</span>
+                    {ing.notes && (
+                      <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontStyle: 'italic', marginLeft: '6px' }}>{ing.notes}</span>
+                    )}
+                  </span>
+                  <button
+                    className="ing-grocery-btn"
+                    onClick={async () => {
+                      const category = categorizeItem(ing.name);
+                      await addShoppingItem({
+                        listType: 'grocery',
+                        name: ing.name,
+                        quantity: ing.quantity ? Math.ceil(ing.quantity) : 1,
+                        unit: ing.unit || null,
+                        category,
+                        notes: ing.notes || '',
+                        checked: false,
+                        priority: null,
+                        price: null,
+                        perishable: null,
+                      });
+                    }}
+                    title="Add to grocery list"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '6px',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--success)',
+                      opacity: isMobile ? 1 : 0,
+                      transition: 'opacity 0.15s',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <ShoppingCart size={18} />
+                  </button>
                 </div>
               ))}
             </div>

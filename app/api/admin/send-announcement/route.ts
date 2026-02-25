@@ -3,6 +3,7 @@ import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 import { sendAnnouncementEmail } from '@/lib/email';
 import { logAuditEvent } from '@/lib/auditLog';
+import { sendPushNotification } from '@/lib/sendPushNotification';
 
 export async function POST(req: NextRequest) {
   try {
@@ -146,6 +147,11 @@ export async function POST(req: NextRequest) {
         })),
       });
       notificationsSent = users.length;
+
+      // Send push notifications to all recipients
+      for (const user of users) {
+        sendPushNotification(user.id, title, message, { type: 'announcement' }).catch(() => {});
+      }
     }
 
     // Send emails if delivery method includes email

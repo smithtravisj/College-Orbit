@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { getAuthUserId } from '@/lib/getAuthUserId';
+import { sendPushNotification } from '@/lib/sendPushNotification';
 
 // GET list user's friends with gamification stats
 export const GET = withRateLimit(async function(request: NextRequest) {
@@ -198,6 +199,14 @@ export const POST = withRateLimit(async function(req: NextRequest) {
         type: 'friend_request',
       },
     });
+
+    // Send push notification
+    sendPushNotification(
+      receiver.id,
+      'New Friend Request',
+      `${senderName} wants to be your friend`,
+      { type: 'friend_request' }
+    ).catch(() => {});
 
     return NextResponse.json({
       friendRequest,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
 import { getAuthUserId } from '@/lib/getAuthUserId';
+import { sendPushNotification } from '@/lib/sendPushNotification';
 
 // PATCH accept or decline friend request
 export const PATCH = withRateLimit(async function(
@@ -74,6 +75,14 @@ export const PATCH = withRateLimit(async function(
           },
         }),
       ]);
+
+      // Send push notification
+      sendPushNotification(
+        friendRequest.senderId,
+        'Friend Request Accepted',
+        `${receiverName} accepted your friend request`,
+        { type: 'friend_request_accepted' }
+      ).catch(() => {});
 
       return NextResponse.json({ message: 'Friend request accepted' });
     } else {

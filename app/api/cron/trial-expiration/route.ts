@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendPushNotification } from '@/lib/sendPushNotification';
 
 export async function GET(req: NextRequest) {
   // Verify cron secret for security
@@ -52,6 +53,12 @@ export async function GET(req: NextRequest) {
               type: 'trial_ending_soon',
             },
           });
+          sendPushNotification(
+            user.id,
+            'Your trial ends tomorrow!',
+            'Subscribe now to keep premium features like Calendar, Shopping, unlimited notes, and more.',
+            { type: 'trial_ending_soon' }
+          ).catch(() => {});
           results.endingSoonNotifications++;
         }
       } catch (error) {
@@ -91,6 +98,12 @@ export async function GET(req: NextRequest) {
             type: 'trial_ended',
           },
         });
+        sendPushNotification(
+          user.id,
+          'Your trial has ended',
+          'Your premium features are now locked. Subscribe anytime to regain access - your data is safe!',
+          { type: 'trial_ended' }
+        ).catch(() => {});
 
         results.expiredTrials++;
       } catch (error) {
