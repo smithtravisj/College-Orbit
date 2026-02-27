@@ -26,6 +26,10 @@ import { StreakCard } from '@/components/gamification';
 import DemoBanner from '@/components/DemoBanner';
 import AIBreakdownModal from '@/components/AIBreakdownModal';
 import CollegeSelectionModal from '@/components/CollegeSelectionModal';
+import dynamic from 'next/dynamic';
+import { CalendarEvent as InternalCalendarEvent } from '@/lib/calendarUtils';
+
+const EventDetailModal = dynamic(() => import('@/components/EventDetailModal'), { ssr: false });
 
 export default function AuthenticatedDashboard() {
   const { data: session } = useSession();
@@ -46,7 +50,7 @@ export default function AuthenticatedDashboard() {
   const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>([]);
   const [timelineHeight, setTimelineHeight] = useState<number>(500);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const { courses, settings, toggleTaskDone, updateDeadline, toggleWorkItemComplete, updateWorkItem, toggleWorkItemChecklistItem, gamification, fetchGamification } = useAppStore();
+  const { courses, tasks, deadlines, workItems, exams, calendarEvents, settings, toggleTaskDone, updateDeadline, toggleWorkItemComplete, updateWorkItem, toggleWorkItemChecklistItem, gamification, fetchGamification } = useAppStore();
   const { isPremium } = useSubscription();
   const savedVisibleDashboardCards = settings.visibleDashboardCards || DEFAULT_VISIBLE_DASHBOARD_CARDS;
   const visibleDashboardCards = isPremium ? savedVisibleDashboardCards : DEFAULT_VISIBLE_DASHBOARD_CARDS;
@@ -1448,92 +1452,32 @@ export default function AuthenticatedDashboard() {
         </div>
       )}
 
-      {/* Event Preview Modal */}
-      {previewingEvent && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: isMobile ? '16px' : '24px',
-          }}
-          onClick={() => setPreviewingEvent(null)}
-        >
-          <div
-            style={{
-              backgroundColor: 'var(--panel)',
-              borderRadius: 'var(--radius-card)',
-              width: '100%',
-              maxWidth: '600px',
-              maxHeight: '80vh',
-              overflow: 'hidden',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              padding: isMobile ? '10px 12px' : '12px 16px',
-              borderBottom: '1px solid var(--border)',
-            }}>
-              <div style={{ flex: 1, paddingRight: '12px' }}>
-                <h2 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>
-                  {previewingEvent.title}
-                </h2>
-              </div>
-              <button onClick={() => setPreviewingEvent(null)} style={{ padding: '4px', color: 'var(--text-muted)', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}>
-                <X size={20} />
-              </button>
-            </div>
-            <div style={{ padding: isMobile ? '10px 12px' : '12px 16px', flex: 1, overflowY: 'auto' }}>
-              {previewingEvent.startAt && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>
-                    {previewingEvent.allDay ? 'Date' : 'Date & Time'}
-                  </div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>
-                    {formatDate(previewingEvent.startAt)}
-                    {!previewingEvent.allDay && (
-                      <> {formatTime(previewingEvent.startAt)}</>
-                    )}
-                    {previewingEvent.endAt && !previewingEvent.allDay && (
-                      <> – {formatTime(previewingEvent.endAt)}</>
-                    )}
-                  </div>
-                </div>
-              )}
-              {previewingEvent.location && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Location</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>{previewingEvent.location}</div>
-                </div>
-              )}
-              {previewingEvent.description && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Description</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)', whiteSpace: 'pre-wrap' }}>{previewingEvent.description}</div>
-                </div>
-              )}
-            </div>
-            <div style={{ display: 'flex', gap: '8px', padding: isMobile ? '10px 12px' : '12px 16px', borderTop: '1px solid var(--border)' }}>
-              <Button variant="secondary" style={{ flex: 1 }} onClick={() => setPreviewingEvent(null)}>
-                Close
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Event Detail Modal (with edit support) */}
+      <EventDetailModal
+        isOpen={!!previewingEvent}
+        event={previewingEvent ? {
+          id: previewingEvent.id,
+          type: 'event' as const,
+          title: previewingEvent.title,
+          startAt: previewingEvent.startAt,
+          endAt: previewingEvent.endAt,
+          allDay: previewingEvent.allDay,
+          color: previewingEvent.color,
+          location: previewingEvent.location,
+          description: previewingEvent.description,
+        } as InternalCalendarEvent : null}
+        onClose={() => setPreviewingEvent(null)}
+        courses={courses}
+        tasks={tasks}
+        deadlines={deadlines}
+        workItems={workItems}
+        exams={exams}
+        calendarEvents={calendarEvents}
+        onEventUpdate={(updatedEvent) => {
+          useAppStore.getState().updateCalendarEvent(updatedEvent.id, updatedEvent);
+          setPreviewingEvent(null);
+        }}
+      />
 
       {/* File Preview Modal */}
       <FilePreviewModal

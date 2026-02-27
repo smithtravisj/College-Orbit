@@ -52,6 +52,12 @@ export const GET = withRateLimit(async function(request: NextRequest) {
       }),
     ]);
 
+    // Format excluded dates as YYYY-MM-DD for consistency
+    const formattedExcludedDates = excludedDates.map((d) => ({
+      ...d,
+      date: d.date.toISOString().split('T')[0],
+    }));
+
     return NextResponse.json({
       tasks,
       deadlines,
@@ -59,7 +65,7 @@ export const GET = withRateLimit(async function(request: NextRequest) {
       exams,
       calendarEvents,
       courses,
-      excludedDates,
+      excludedDates: formattedExcludedDates,
     });
   } catch (error) {
     console.error('Error fetching calendar data:', error);

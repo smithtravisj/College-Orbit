@@ -49,7 +49,7 @@ export default function GradeTrackerTable({
   const [isAddingGrade, setIsAddingGrade] = useState(false);
   const [newGrade, setNewGrade] = useState<Omit<GpaEntry, 'id' | 'createdAt'>>({
     courseName: '',
-    grade: 'A',
+    grade: '',
     credits: 3,
     term: '',
     status: 'in_progress',
@@ -91,7 +91,7 @@ export default function GradeTrackerTable({
       await onAddGrade(newGrade);
       setNewGrade({
         courseName: '',
-        grade: 'A',
+        grade: '',
         credits: 3,
         term: '',
         status: 'in_progress',
@@ -161,22 +161,22 @@ export default function GradeTrackerTable({
             Course
           </div>
         </div>
-        <div style={{ minWidth: '120px' }}>
+        <div style={{ width: '120px', flexShrink: 0 }}>
           <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
             Term
           </div>
         </div>
-        <div style={{ minWidth: '100px' }}>
+        <div style={{ width: '100px', flexShrink: 0 }}>
           <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
             Grade
           </div>
         </div>
-        <div style={{ minWidth: '90px' }}>
+        <div style={{ width: '90px', flexShrink: 0 }}>
           <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
             Credits
           </div>
         </div>
-        <div style={{ minWidth: '110px' }}>
+        <div style={{ width: '110px', flexShrink: 0 }}>
           <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
             Status
           </div>
@@ -205,10 +205,10 @@ export default function GradeTrackerTable({
                 {entry.courseName}
               </div>
             </div>
-            <div style={{ minWidth: '120px', fontSize: '13px', color: 'var(--text-muted)' }}>
+            <div style={{ width: '120px', flexShrink: 0, fontSize: '13px', color: 'var(--text-muted)' }}>
               {entry.term || '—'}
             </div>
-            <div style={{ minWidth: '100px' }}>
+            <div style={{ width: '100px', flexShrink: 0 }}>
               {editingId === entry.id ? (
                 <Select
                   value={entry.grade}
@@ -233,7 +233,7 @@ export default function GradeTrackerTable({
                 </div>
               )}
             </div>
-            <div style={{ minWidth: '90px' }}>
+            <div style={{ width: '90px', flexShrink: 0 }}>
               {editingId === entry.id ? (
                 <Input
                   type="number"
@@ -261,7 +261,7 @@ export default function GradeTrackerTable({
                 </div>
               )}
             </div>
-            <div style={{ minWidth: '110px' }}>
+            <div style={{ width: '110px', flexShrink: 0 }}>
               {editingId === entry.id ? (
                 <Select
                   value={entry.status || 'final'}
@@ -370,7 +370,7 @@ export default function GradeTrackerTable({
               ]}
             />
           </div>
-          <div style={{ minWidth: '120px' }}>
+          <div style={{ width: '120px', flexShrink: 0 }}>
             <div
               style={{
                 padding: '10px 12px',
@@ -384,14 +384,14 @@ export default function GradeTrackerTable({
               {newGrade.term || '—'}
             </div>
           </div>
-          <div style={{ minWidth: '100px' }}>
+          <div style={{ width: '100px', flexShrink: 0 }}>
             <Select
               value={newGrade.grade}
               onChange={(e) => setNewGrade({ ...newGrade, grade: e.target.value })}
-              options={gradeOptions}
+              options={[{ value: '', label: 'Grade...' }, ...gradeOptions]}
             />
           </div>
-          <div style={{ minWidth: '90px' }}>
+          <div style={{ width: '90px', flexShrink: 0 }}>
             <Input
               type="number"
               step="0.5"
@@ -401,7 +401,7 @@ export default function GradeTrackerTable({
               placeholder="Credits"
             />
           </div>
-          <div style={{ minWidth: '110px' }}>
+          <div style={{ width: '110px', flexShrink: 0 }}>
             <Select
               value={newGrade.status}
               onChange={(e) => setNewGrade({ ...newGrade, status: e.target.value as 'in_progress' | 'final' })}

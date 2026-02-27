@@ -193,6 +193,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           method: 'PATCH',
           body: JSON.stringify({ status: newStatus }),
         });
+
+        // Record gamification XP/streak when marking complete
+        if (newStatus === 'done') {
+          try {
+            await OrbitAPI.fetch('/api/gamification/record', {
+              method: 'POST',
+              body: JSON.stringify({
+                timezoneOffset: new Date().getTimezoneOffset(),
+                itemType: 'workItem',
+                itemId: message.workItemId,
+              }),
+            });
+          } catch (gamErr) {
+            console.warn('Gamification record failed:', gamErr.message);
+          }
+        }
+
         sendResponse({ success: true, status: newStatus });
       } catch (e) {
         sendResponse({ success: false, error: e.message });

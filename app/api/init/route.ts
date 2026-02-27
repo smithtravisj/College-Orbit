@@ -122,6 +122,12 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
+    // Format excluded dates as YYYY-MM-DD for consistency
+    const formattedExcludedDates = excludedDates.map((d: any) => ({
+      ...d,
+      date: d.date instanceof Date ? d.date.toISOString().split('T')[0] : typeof d.date === 'string' && d.date.includes('T') ? d.date.split('T')[0] : d.date,
+    }));
+
     // Return all data in a single response
     return NextResponse.json({
       userId,
@@ -147,7 +153,7 @@ export async function GET(request: NextRequest) {
         visiblePagesOrder: ['Dashboard', 'Calendar', 'Work', 'Exams', 'Notes', 'Courses', 'Shopping', 'Tools', 'Progress'],
         toolsCardsOrder: ['pomodoroTimer', 'fileConverter', 'unitConverter', 'wordCounter', 'citationGenerator', 'flashcards', 'gradeTracker', 'gpaTrendChart', 'whatIfProjector', 'gpaCalculator', 'finalGradeCalculator', 'tools_quickLinks'],
       },
-      excludedDates,
+      excludedDates: formattedExcludedDates,
       gpaEntries,
       recurringPatterns,
       recurringDeadlinePatterns,

@@ -60,9 +60,11 @@ export default function ExcludedDatesCard() {
         const lastGroup = groups[groups.length - 1];
         const lastDate = lastGroup.dates[lastGroup.dates.length - 1];
 
-        // Check if consecutive by comparing dates
-        const lastDateParts = lastDate.date.split('-').map(Number);
-        const currentDateParts = excludedDate.date.split('-').map(Number);
+        // Check if consecutive by comparing dates (handle both YYYY-MM-DD and ISO datetime)
+        const lastDateOnly = lastDate.date.includes('T') ? lastDate.date.split('T')[0] : lastDate.date;
+        const currentDateOnly = excludedDate.date.includes('T') ? excludedDate.date.split('T')[0] : excludedDate.date;
+        const lastDateParts = lastDateOnly.split('-').map(Number);
+        const currentDateParts = currentDateOnly.split('-').map(Number);
 
         const lastDateObj = new Date(lastDateParts[0], lastDateParts[1] - 1, lastDateParts[2]);
         const currentDateObj = new Date(currentDateParts[0], currentDateParts[1] - 1, currentDateParts[2]);
