@@ -18,6 +18,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useHighlightElement, useTabFromSearchParams } from '@/hooks/useHighlightElement';
 import { TOOLS_CARDS, CARD_LABELS, PAGES, DEFAULT_VISIBLE_PAGES, DEFAULT_VISIBLE_TOOLS_CARDS } from '@/lib/customizationConstants';
+import { PageSkeleton } from '@/components/ui/Skeleton';
 import { PetSprite } from '@/components/pet/PetSprite';
 import { sprites, animalLabels, animalPreviewSize } from '@/components/pet/petSprites';
 import type { AnimalType } from '@/components/pet/petSprites';
@@ -589,11 +590,7 @@ export default function SettingsPage() {
   }, []);
 
   if (!mounted) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-[var(--text-muted)]">Loading...</div>
-      </div>
-    );
+    return <PageSkeleton cards={4} headerWidth="20%" />;
   }
 
   // Slider handlers: update store immediately for real-time visual effects,
@@ -2996,6 +2993,7 @@ export default function SettingsPage() {
                     <div ref={betaWarningRef} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
                       <button
                         type="button"
+                        className="icon-btn"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();

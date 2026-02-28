@@ -17,6 +17,7 @@ import RecipesTab from '@/components/shopping/RecipesTab';
 import HelpTooltip from '@/components/ui/HelpTooltip';
 import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { parseNaturalLanguage, NLP_SHOPPING_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
+import { PageSkeleton } from '@/components/ui/Skeleton';
 import {
   ShoppingListType,
   ShoppingItem,
@@ -629,11 +630,7 @@ export default function ShoppingPage() {
   };
 
   if (!mounted) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-[var(--text-muted)]">Loading...</div>
-      </div>
-    );
+    return <PageSkeleton cards={3} />;
   }
 
   const currentCategories = TAB_CONFIG[activeTab].categories || [];

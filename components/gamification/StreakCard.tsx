@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Flame, Trophy, Zap, ChevronRight } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { GamificationData } from '@/types';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { formatXp } from '@/lib/utils';
 
 interface StreakCardProps {
@@ -29,9 +30,9 @@ export default function StreakCard({ data, loading = false }: StreakCardProps) {
     return (
       <Card style={{ padding: '16px' }}>
         <div>
-          <div style={{ height: '24px', backgroundColor: 'var(--border)', borderRadius: '4px', width: '33%', marginBottom: '16px' }} />
-          <div style={{ height: '80px', backgroundColor: 'var(--border)', borderRadius: '4px', marginBottom: '16px' }} />
-          <div style={{ height: '16px', backgroundColor: 'var(--border)', borderRadius: '4px', width: '66%' }} />
+          <Skeleton width="33%" height={24} style={{ marginBottom: 16 }} />
+          <Skeleton width="100%" height={80} borderRadius={8} style={{ marginBottom: 16 }} />
+          <Skeleton width="66%" height={16} />
         </div>
       </Card>
     );
@@ -41,9 +42,9 @@ export default function StreakCard({ data, loading = false }: StreakCardProps) {
     return (
       <Card style={{ padding: '16px' }}>
         <div>
-          <div style={{ height: '24px', backgroundColor: 'var(--border)', borderRadius: '4px', width: '33%', marginBottom: '16px' }} />
-          <div style={{ height: '80px', backgroundColor: 'var(--border)', borderRadius: '4px', marginBottom: '16px' }} />
-          <div style={{ height: '16px', backgroundColor: 'var(--border)', borderRadius: '4px', width: '66%' }} />
+          <Skeleton width="33%" height={24} style={{ marginBottom: 16 }} />
+          <Skeleton width="100%" height={80} borderRadius={8} style={{ marginBottom: 16 }} />
+          <Skeleton width="66%" height={16} />
         </div>
       </Card>
     );

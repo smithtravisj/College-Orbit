@@ -935,7 +935,7 @@ export default memo(function BackgroundDecoration() {
             background: 'linear-gradient(90deg, transparent, #ffffff, transparent)',
             transform: 'rotate(-35deg)',
             opacity: 0.6,
-            animation: 'space-shoot 8s ease-in-out infinite',
+            animation: 'space-shoot 18s linear infinite',
           }}
         />
 

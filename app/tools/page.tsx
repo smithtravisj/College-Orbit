@@ -702,31 +702,31 @@ export default function ToolsPage() {
     switch (cardId) {
       case TOOLS_CARDS.POMODORO_TIMER:
         return visibleToolsCards.includes(cardId) && (
-          <CollapsibleCard key={cardId} id="pomodoro-timer" title="Pomodoro Timer" subtitle="Focus sessions for productive study" helpTooltip="The Pomodoro Technique helps you focus by working in timed intervals (usually 25 min) followed by short breaks. Start a session, take a break when the timer ends, then repeat.">
+          <CollapsibleCard key={cardId} id="pomodoro-timer" title="Pomodoro Timer" subtitle="Focus sessions for productive study" helpTooltip="The Pomodoro Technique helps you focus by working in timed intervals (usually 25 min) followed by short breaks. Start a session, take a break when the timer ends, then repeat." collapsible={false}>
             <PomodoroTimer theme={settings.theme} />
           </CollapsibleCard>
         );
       case TOOLS_CARDS.FILE_CONVERTER:
         return visibleToolsCards.includes(cardId) && (
-          <CollapsibleCard key={cardId} id="file-converter" title="File Converter" subtitle="Convert between file formats" helpTooltip="Convert files between formats. Supports images, HEIC, Word, Excel, Markdown, HTML, JSON, CSV, and text files. Convert to PDF, extract text, change image formats, and more.">
+          <CollapsibleCard key={cardId} id="file-converter" title="File Converter" subtitle="Convert between file formats" helpTooltip="Convert files between formats. Supports images, HEIC, Word, Excel, Markdown, HTML, JSON, CSV, and text files. Convert to PDF, extract text, change image formats, and more." collapsible={false}>
             <FileConverter theme={settings.theme} accentColor={accentColor} glowScale={glowScale} glowOpacity={glowOpacity} />
           </CollapsibleCard>
         );
       case TOOLS_CARDS.UNIT_CONVERTER:
         return visibleToolsCards.includes(cardId) && (
-          <CollapsibleCard key={cardId} id="unit-converter" title="Unit Converter" subtitle="Length, weight, temperature, volume" helpTooltip="Convert between different units of measurement. Supports length (meters, feet, miles), weight (kg, pounds), temperature (Celsius, Fahrenheit, Kelvin), and volume (liters, gallons, cups).">
+          <CollapsibleCard key={cardId} id="unit-converter" title="Unit Converter" subtitle="Length, weight, temperature, volume" helpTooltip="Convert between different units of measurement. Supports length (meters, feet, miles), weight (kg, pounds), temperature (Celsius, Fahrenheit, Kelvin), and volume (liters, gallons, cups)." collapsible={false}>
             <UnitConverter theme={settings.theme} />
           </CollapsibleCard>
         );
       case TOOLS_CARDS.WORD_COUNTER:
         return visibleToolsCards.includes(cardId) && (
-          <CollapsibleCard key={cardId} id="word-counter" title="Word Counter" subtitle="Words, characters, reading time" helpTooltip="Count words, characters, sentences, and paragraphs in your text. Also shows estimated reading and speaking time based on average speeds.">
+          <CollapsibleCard key={cardId} id="word-counter" title="Word Counter" subtitle="Words, characters, reading time" helpTooltip="Count words, characters, sentences, and paragraphs in your text. Also shows estimated reading and speaking time based on average speeds." collapsible={false}>
             <WordCounter theme={settings.theme} />
           </CollapsibleCard>
         );
       case TOOLS_CARDS.CITATION_GENERATOR:
         return visibleToolsCards.includes(cardId) && (
-          <CollapsibleCard key={cardId} id="citation-generator" title="Citation Generator" subtitle="APA, MLA, Chicago citations" helpTooltip="Generate properly formatted citations for websites, books, and journal articles in APA (7th), MLA (9th), and Chicago (17th) formats.">
+          <CollapsibleCard key={cardId} id="citation-generator" title="Citation Generator" subtitle="APA, MLA, Chicago citations" helpTooltip="Generate properly formatted citations for websites, books, and journal articles in APA (7th), MLA (9th), and Chicago (17th) formats." collapsible={false}>
             <CitationGenerator theme={settings.theme} />
           </CollapsibleCard>
         );
@@ -898,7 +898,7 @@ export default function ToolsPage() {
         const hiddenDefaultLinks = allDefaultLinks.filter((link) => hiddenLinksForUniversity.includes(link.label));
 
         return visibleToolsCards.includes(cardId) && (
-          <CollapsibleCard key={cardId} id="quick-links" title="Quick Links" subtitle={settings.university ? `Resources for ${settings.university}` : 'Select a college to view quick links'}>
+          <CollapsibleCard key={cardId} id="quick-links" title="Quick Links" subtitle={settings.university ? `Resources for ${settings.university}` : 'Select a college to view quick links'} collapsible={false}>
             {mounted && settings.university ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '16px' }}>
                 {/* Links Grid */}

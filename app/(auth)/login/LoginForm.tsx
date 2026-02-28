@@ -231,6 +231,7 @@ export function LoginForm() {
               />
               <button
                 type="button"
+                className="icon-btn"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: 'absolute',

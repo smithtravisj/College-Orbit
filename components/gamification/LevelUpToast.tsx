@@ -94,6 +94,7 @@ export default function LevelUpToast({ level, onDismiss }: LevelUpToastProps) {
           </p>
         </div>
         <button
+          className="icon-btn"
           onClick={handleDismiss}
           style={{
             color: 'var(--text-muted)',

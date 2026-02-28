@@ -982,6 +982,7 @@ export default function AccountPage() {
                       />
                       <button
                         type="button"
+                        className="icon-btn"
                         onClick={() => setShowPassword(!showPassword)}
                         style={{
                           position: 'absolute',
@@ -1022,6 +1023,7 @@ export default function AccountPage() {
                       />
                       <button
                         type="button"
+                        className="icon-btn"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         style={{
                           position: 'absolute',
@@ -1810,6 +1812,7 @@ export default function AccountPage() {
                         </div>
                         {!s.isCurrent && (
                           <button
+                            className="icon-btn"
                             onClick={() => handleRevokeSession(s.id)}
                             disabled={revokingSessionId === s.id}
                             style={{

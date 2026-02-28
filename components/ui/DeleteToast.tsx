@@ -188,10 +188,13 @@ export function useDeleteToast() {
 interface SuccessToastState {
   id: string;
   message: string;
+  exiting?: boolean;
 }
 
 let successToastListeners: ((toasts: SuccessToastState[]) => void)[] = [];
 let currentSuccessToasts: SuccessToastState[] = [];
+
+const EXIT_ANIMATION_MS = 300;
 
 export function showSuccessToast(message: string, duration = 3000): string {
   const id = Math.random().toString(36).substring(7);
@@ -201,10 +204,14 @@ export function showSuccessToast(message: string, duration = 3000): string {
   currentSuccessToasts = [newToast];
   successToastListeners.forEach(listener => listener(currentSuccessToasts));
 
-  // Auto-dismiss after duration
+  // Start exit animation, then remove
   setTimeout(() => {
-    currentSuccessToasts = currentSuccessToasts.filter(t => t.id !== id);
+    currentSuccessToasts = currentSuccessToasts.map(t => t.id === id ? { ...t, exiting: true } : t);
     successToastListeners.forEach(listener => listener(currentSuccessToasts));
+    setTimeout(() => {
+      currentSuccessToasts = currentSuccessToasts.filter(t => t.id !== id);
+      successToastListeners.forEach(listener => listener(currentSuccessToasts));
+    }, EXIT_ANIMATION_MS);
   }, duration);
 
   return id;
@@ -226,7 +233,7 @@ export function useSuccessToast() {
   return toasts;
 }
 
-export function SuccessToast({ message }: { message: string }) {
+export function SuccessToast({ message, exiting }: { message: string; exiting?: boolean }) {
   return (
     <div
       style={{
@@ -240,6 +247,9 @@ export function SuccessToast({ message }: { message: string }) {
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
         minWidth: '200px',
         maxWidth: '400px',
+        opacity: exiting ? 0 : 1,
+        transform: exiting ? 'translateY(-12px)' : 'translateY(0)',
+        transition: `opacity ${EXIT_ANIMATION_MS}ms ease, transform ${EXIT_ANIMATION_MS}ms ease`,
       }}
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -256,6 +266,7 @@ export function SuccessToast({ message }: { message: string }) {
 interface ErrorToastState {
   id: string;
   message: string;
+  exiting?: boolean;
 }
 
 let errorToastListeners: ((toasts: ErrorToastState[]) => void)[] = [];
@@ -269,10 +280,14 @@ export function showErrorToast(message: string, duration = 4000): string {
   currentErrorToasts = [newToast];
   errorToastListeners.forEach(listener => listener(currentErrorToasts));
 
-  // Auto-dismiss after duration
+  // Start exit animation, then remove
   setTimeout(() => {
-    currentErrorToasts = currentErrorToasts.filter(t => t.id !== id);
+    currentErrorToasts = currentErrorToasts.map(t => t.id === id ? { ...t, exiting: true } : t);
     errorToastListeners.forEach(listener => listener(currentErrorToasts));
+    setTimeout(() => {
+      currentErrorToasts = currentErrorToasts.filter(t => t.id !== id);
+      errorToastListeners.forEach(listener => listener(currentErrorToasts));
+    }, EXIT_ANIMATION_MS);
   }, duration);
 
   return id;
@@ -294,7 +309,7 @@ export function useErrorToast() {
   return toasts;
 }
 
-export function ErrorToast({ message }: { message: string }) {
+export function ErrorToast({ message, exiting }: { message: string; exiting?: boolean }) {
   return (
     <div
       style={{
@@ -308,6 +323,9 @@ export function ErrorToast({ message }: { message: string }) {
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
         minWidth: '200px',
         maxWidth: '400px',
+        opacity: exiting ? 0 : 1,
+        transform: exiting ? 'translateY(-12px)' : 'translateY(0)',
+        transition: `opacity ${EXIT_ANIMATION_MS}ms ease, transform ${EXIT_ANIMATION_MS}ms ease`,
       }}
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

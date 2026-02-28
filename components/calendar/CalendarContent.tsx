@@ -854,6 +854,7 @@ export default function CalendarContent() {
                   }}
                 />
                 <button
+                  className="icon-btn"
                   onClick={() => {
                     if (searchQuery) {
                       setSearchQuery('');
@@ -869,6 +870,7 @@ export default function CalendarContent() {
               </div>
             ) : (
               <button
+                className="icon-btn"
                 onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 0); }}
                 style={{
                   padding: isMobile ? '5px 6px' : '6px 8px',

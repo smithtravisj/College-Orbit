@@ -627,6 +627,7 @@ export default function Navigation() {
               <h2 className={styles.drawerTitle}>{getAppTitle(university)}</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingRight: '4px' }}>
                 <button
+                  className="icon-btn"
                   onClick={() => {
                     closeDrawer();
                     openGlobalSearch();

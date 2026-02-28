@@ -204,6 +204,7 @@ const FileUpload = React.memo(function FileUpload({ files = [], onChange, maxFil
             </div>
           </div>
           <button
+            className="icon-btn"
             type="button"
             onClick={() => handleRemove(index)}
             style={{

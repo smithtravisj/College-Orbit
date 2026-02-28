@@ -16,6 +16,7 @@
   --panel: #101826;
   --panel-solid: #101826;
   --panel-2: #0f1724;
+  --panel-3: #1a2332;
 
   /* Text hierarchy */
   --text: #e6edf6;
@@ -122,6 +123,7 @@
 
   /* Border radius */
   --radius-xs: 6px;
+  --radius-md: 8px;
   --radius-control: 12px;
   --radius-card: 16px;
 
@@ -1092,6 +1094,15 @@ body.modal-open {
    Visual Themes
    ============================================ */
 
+/* Reset theme effects on icon-only utility buttons (chevrons, bells, close buttons, etc.) */
+.icon-btn,
+.icon-btn:hover,
+.icon-btn:active {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  background-image: none !important;
+}
+
 /* Cartoon Theme - Extra rounded, bold shadows, playful */
 body.theme-cartoon {
   /* Fun rounded font */
@@ -1985,19 +1996,15 @@ body.theme-space {
 
 /* Shooting star animation */
 @keyframes space-shoot {
-  0%, 70% {
+  0%, 88% {
     opacity: 0;
     transform: rotate(-35deg) translateX(0);
   }
-  75% {
-    opacity: 0;
-    transform: rotate(-35deg) translateX(0);
-  }
-  78% {
+  90% {
     opacity: 0.9;
     transform: rotate(-35deg) translateX(40px);
   }
-  90% {
+  96% {
     opacity: 0.5;
     transform: rotate(-35deg) translateX(150px);
   }

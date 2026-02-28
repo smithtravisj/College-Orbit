@@ -149,6 +149,7 @@ export default function FolderModal({ isOpen, onClose, editingFolderId, courses 
             {editingFolder ? 'Edit Folder' : 'New Folder'}
           </h2>
           <button
+            className="icon-btn"
             onClick={onClose}
             style={{
               color: 'var(--text-muted)',

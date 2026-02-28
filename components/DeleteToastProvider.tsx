@@ -31,7 +31,7 @@ export function DeleteToastProvider() {
               animation: 'slideDown 0.3s ease-out',
             }}
           >
-            <SuccessToast message={toast.message} />
+            <SuccessToast message={toast.message} exiting={toast.exiting} />
           </div>
         );
       })}
@@ -52,7 +52,7 @@ export function DeleteToastProvider() {
               animation: 'slideDown 0.3s ease-out',
             }}
           >
-            <ErrorToast message={toast.message} />
+            <ErrorToast message={toast.message} exiting={toast.exiting} />
           </div>
         );
       })}

@@ -1080,6 +1080,7 @@ export default function FileConverter({ theme, accentColor, glowScale = 1, glowO
                   </div>
                 ) : !isConverting && (
                   <button
+                    className="icon-btn"
                     onClick={() => removeFile(index)}
                     style={{
                       padding: '4px',

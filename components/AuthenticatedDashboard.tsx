@@ -25,6 +25,7 @@ import FilePreviewModal from '@/components/FilePreviewModal';
 import { Task, Deadline, Course, Exam, CalendarEvent, WorkItem } from '@/types';
 import { TimelineItem as TimelineItemType } from '@/types/timeline';
 import { StreakCard } from '@/components/gamification';
+import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton';
 import DemoBanner from '@/components/DemoBanner';
 import AIBreakdownModal from '@/components/AIBreakdownModal';
 import CollegeSelectionModal from '@/components/CollegeSelectionModal';
@@ -196,6 +197,31 @@ export default function AuthenticatedDashboard() {
   );
   const universityCustomLinks = customLinks.filter(link => link.university === settings.university);
   const quickLinks = [...defaultQuickLinks, ...universityCustomLinks];
+
+  if (!mounted) {
+    return (
+      <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
+        <Skeleton width={180} height={isMobile ? 26 : 34} borderRadius={6} style={{ marginBottom: 6 }} />
+        <Skeleton width={280} height={14} borderRadius={4} style={{ marginBottom: 24 }} />
+        {isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <SkeletonCard lines={5} />
+            <SkeletonCard lines={4} />
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 24 }}>
+            <div style={{ flex: 1 }}>
+              <SkeletonCard lines={8} />
+            </div>
+            <div style={{ width: 320, display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <SkeletonCard lines={4} />
+              <SkeletonCard lines={3} />
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const renderCard = (cardId: string, title: string, children: React.ReactNode, className?: string, subtitle?: string, variant: 'primary' | 'secondary' = 'primary') => {
     const isCollapsed = (settings.dashboardCardsCollapsedState || []).includes(cardId);

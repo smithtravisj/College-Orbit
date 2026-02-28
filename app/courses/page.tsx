@@ -29,6 +29,7 @@ import {
   BulkAddLinkModal,
   BulkDeleteModal,
 } from '@/components/BulkActionModals';
+import { ListPageSkeleton } from '@/components/ui/Skeleton';
 
 export default function CoursesPage() {
   const isMobile = useIsMobile();
@@ -141,7 +142,7 @@ export default function CoursesPage() {
   if (!mounted) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-[var(--text-muted)]">Loading...</div>
+        <ListPageSkeleton items={4} />
       </div>
     );
   }

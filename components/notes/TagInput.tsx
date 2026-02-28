@@ -103,6 +103,7 @@ export default function TagInput({
           >
             {tag}
             <button
+              className="icon-btn"
               type="button"
               onClick={(e) => { e.stopPropagation(); removeTag(idx); }}
               style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, opacity: 1, transition: 'opacity 150ms ease', display: 'flex', alignItems: 'center' }}

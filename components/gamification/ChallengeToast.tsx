@@ -105,6 +105,7 @@ export default function ChallengeToast({ message, xp, isSweep, onDismiss }: Chal
           +{xp} XP
         </span>
         <button
+          className="icon-btn"
           onClick={handleDismiss}
           style={{
             color: 'var(--text-muted)',

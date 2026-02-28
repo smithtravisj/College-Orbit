@@ -28,6 +28,7 @@ import { FREE_TIER_LIMITS } from '@/lib/subscription-constants';
 import Link from 'next/link';
 import { showDeleteToast } from '@/components/ui/DeleteToast';
 import FilePreviewModal from '@/components/FilePreviewModal';
+import { PageSkeleton } from '@/components/ui/Skeleton';
 
 export default function NotesPage() {
   const isMobile = useIsMobile();
@@ -163,7 +164,7 @@ export default function NotesPage() {
   if (!mounted) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-[var(--text-muted)]">Loading...</div>
+        <PageSkeleton cards={3} />
       </div>
     );
   }
@@ -598,6 +599,7 @@ export default function NotesPage() {
               <div style={{ marginBottom: '0', position: 'relative' }}>
                 <button
                   type="button"
+                  className="icon-btn"
                   onClick={() => setShowFoldersDropdown(!showFoldersDropdown)}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', transition: 'color 150ms ease' }}
                   onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
@@ -622,6 +624,7 @@ export default function NotesPage() {
                 <div style={{ marginTop: '14px', position: 'relative' }}>
                   <button
                     type="button"
+                    className="icon-btn"
                     onClick={() => setShowCoursesDropdown(!showCoursesDropdown)}
                     style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', transition: 'color 150ms ease' }}
                     onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
@@ -661,6 +664,7 @@ export default function NotesPage() {
                 <div style={{ marginTop: '14px', position: 'relative' }}>
                   <button
                     type="button"
+                    className="icon-btn"
                     onClick={() => setShowTagsDropdown(!showTagsDropdown)}
                     style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', transition: 'color 150ms ease' }}
                     onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
@@ -719,6 +723,7 @@ export default function NotesPage() {
                 <div style={{ marginBottom: '0', position: 'relative' }}>
                   <button
                     type="button"
+                    className="icon-btn"
                     onClick={() => setShowFoldersDropdown(!showFoldersDropdown)}
                     style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '4px 8px' : '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', transition: 'color 150ms ease' }}
                     onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
@@ -743,6 +748,7 @@ export default function NotesPage() {
                   <div style={{ marginTop: isMobile ? '12px' : '14px', position: 'relative' }}>
                     <button
                       type="button"
+                      className="icon-btn"
                       onClick={() => setShowCoursesDropdown(!showCoursesDropdown)}
                       style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '4px 8px' : '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', transition: 'color 150ms ease' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
@@ -782,6 +788,7 @@ export default function NotesPage() {
                   <div style={{ marginTop: isMobile ? '12px' : '14px', position: 'relative' }}>
                     <button
                       type="button"
+                      className="icon-btn"
                       onClick={() => setShowTagsDropdown(!showTagsDropdown)}
                       style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '4px 8px' : '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', transition: 'color 150ms ease' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
@@ -1149,6 +1156,7 @@ export default function NotesPage() {
                           />
                           <button
                             type="button"
+                            className="icon-btn"
                             onClick={() => setFormData({ ...formData, files: formData.files.filter((_, i) => i !== index) })}
                             style={{ background: 'none', border: 'none', padding: '2px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
                           >
@@ -1546,6 +1554,7 @@ export default function NotesPage() {
                                 </div>
                                 <div data-buttons-container style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? '4px' : '2px', opacity: isMobile ? 1 : 0, transition: 'opacity 150ms ease', marginLeft: isMobile ? '0' : 'auto' }}>
                                   <button
+                                    className="icon-btn"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       toggleNotePin(note.id);
@@ -1562,12 +1571,13 @@ export default function NotesPage() {
                                       e.stopPropagation();
                                       startEdit(note);
                                     }}
-                                    className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
+                                    className="icon-btn rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
                                     style={{ padding: isMobile ? '4px' : '8px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                   >
                                     <Edit2 size={isMobile ? 16 : 20} />
                                   </button>
                                   <button
+                                    className="icon-btn"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleDeleteNote(note.id);
@@ -1659,6 +1669,7 @@ export default function NotesPage() {
                                 </div>
                                 <div data-buttons-container style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? '4px' : '2px', opacity: isMobile ? 1 : 0, transition: 'opacity 150ms ease', marginLeft: isMobile ? '0' : 'auto' }}>
                                   <button
+                                    className="icon-btn"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       toggleNotePin(note.id);
@@ -1675,12 +1686,13 @@ export default function NotesPage() {
                                       e.stopPropagation();
                                       startEdit(note);
                                     }}
-                                    className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
+                                    className="icon-btn rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--edit-hover)] hover:bg-white/5 transition-colors"
                                     style={{ padding: isMobile ? '4px' : '8px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                   >
                                     <Edit2 size={isMobile ? 16 : 20} />
                                   </button>
                                   <button
+                                    className="icon-btn"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleDeleteNote(note.id);
@@ -1916,6 +1928,7 @@ export default function NotesPage() {
                 <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)', margin: 0 }}>AI Summarize</h3>
               </div>
               <button
+                className="icon-btn"
                 onClick={() => { if (!isSummarizing) { setShowSummarizeModal(false); setSummarizeError(null); } }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '4px', display: 'flex', alignItems: 'center' }}
               >

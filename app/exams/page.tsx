@@ -36,6 +36,7 @@ import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import { RecurringExamFormData } from '@/types';
+import { ListPageSkeleton } from '@/components/ui/Skeleton';
 
 export default function ExamsPage() {
   const isMobile = useIsMobile();
@@ -180,7 +181,7 @@ export default function ExamsPage() {
   if (!mounted) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-[var(--text-muted)]">Loading...</div>
+        <ListPageSkeleton items={3} />
       </div>
     );
   }
@@ -885,7 +886,7 @@ export default function ExamsPage() {
                 {titleIsDuplicate && !duplicateWarningDismissed && !editingId && (
                   <div style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '8px', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                     <p style={{ fontSize: '13px', color: 'rgb(234, 179, 8)', margin: 0 }}>An exam with this title already exists. Add anyway?</p>
-                    <button type="button" onClick={() => setDuplicateWarningDismissed(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgb(234, 179, 8)', padding: '2px', flexShrink: 0 }}>
+                    <button type="button" className="icon-btn" onClick={() => setDuplicateWarningDismissed(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgb(234, 179, 8)', padding: '2px', flexShrink: 0 }}>
                       <X size={16} />
                     </button>
                   </div>
@@ -1099,6 +1100,7 @@ export default function ExamsPage() {
                         >
                           <button
                             type="button"
+                            className="icon-btn"
                             onClick={() => setPreviewingFile({ file, allFiles: formData.files, index })}
                             style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', flexShrink: 0 }}
                             title="Preview file"
@@ -1125,6 +1127,7 @@ export default function ExamsPage() {
                           />
                           <button
                             type="button"
+                            className="icon-btn"
                             onClick={() => setFormData({ ...formData, files: formData.files.filter((_, i) => i !== index) })}
                             style={{ background: 'none', border: 'none', padding: '2px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
                           >

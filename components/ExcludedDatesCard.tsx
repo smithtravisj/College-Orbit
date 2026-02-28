@@ -160,6 +160,7 @@ export default function ExcludedDatesCard() {
                   )}
                 </div>
                 <button
+                  className="icon-btn"
                   onClick={() => {
                     group.dates.forEach(date => handleDelete(date.id));
                   }}

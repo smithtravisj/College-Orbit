@@ -287,6 +287,7 @@ export default function NotificationBell() {
   return (
     <div ref={containerRef} style={{ position: 'relative' }}>
       <button
+        className="icon-btn"
         onClick={() => setShowDropdown(!showDropdown)}
         style={{
           position: 'relative',
@@ -536,6 +537,7 @@ export default function NotificationBell() {
                         </div>
                       </div>
                       <button
+                        className="icon-btn"
                         onClick={(e) => handleDelete(e, notification.id)}
                         style={{
                           background: 'none',

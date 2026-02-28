@@ -1497,6 +1497,7 @@ export default function HelpContent() {
                     />
                     {searchQuery && (
                       <button
+                        className="icon-btn"
                         onClick={() => setSearchQuery('')}
                         style={{
                           position: 'absolute',

@@ -367,6 +367,7 @@ function ResetPasswordContent() {
               />
               <button
                 type="button"
+                className="icon-btn"
                 onClick={() => setShowNewPassword(!showNewPassword)}
                 style={{
                   position: 'absolute',
@@ -412,6 +413,7 @@ function ResetPasswordContent() {
               />
               <button
                 type="button"
+                className="icon-btn"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 style={{
                   position: 'absolute',

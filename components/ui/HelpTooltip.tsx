@@ -48,7 +48,7 @@ export default function HelpTooltip({ text, size = 15, width = 220, position = '
       <button
         type="button"
         onClick={handleClick}
-        className="text-[var(--text-muted)] hover:text-[var(--text)]"
+        className="icon-btn text-[var(--text-muted)] hover:text-[var(--text)]"
         style={{
           background: 'none',
           border: 'none',

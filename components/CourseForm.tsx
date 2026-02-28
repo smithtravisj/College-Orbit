@@ -468,6 +468,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
                   }}
                 >
                   <button
+                    className="icon-btn"
                     type="button"
                     onClick={() => setPreviewingFile({ file, allFiles: form.files, index })}
                     style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', flexShrink: 0 }}
@@ -494,6 +495,7 @@ const CourseFormComponent = forwardRef(function CourseForm(
                     }}
                   />
                   <button
+                    className="icon-btn"
                     type="button"
                     onClick={() => setForm({ ...form, files: form.files.filter((_, i) => i !== index) })}
                     style={{ background: 'none', border: 'none', padding: '2px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}

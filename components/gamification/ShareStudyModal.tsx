@@ -141,6 +141,7 @@ export default function ShareStudyModal({ isOpen, onClose }: ShareStudyModalProp
             </h2>
           </div>
           <button
+            className="icon-btn"
             onClick={onClose}
             style={{
               background: 'none',

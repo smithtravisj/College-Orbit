@@ -499,6 +499,7 @@ export const Timeline: React.FC<TimelineProps> = ({
 
           {/* Search icon (toggle) */}
           <button
+            className="icon-btn"
             onClick={() => {
               if (isSearchOpen) {
                 setIsSearchOpen(false);
@@ -540,7 +541,7 @@ export const Timeline: React.FC<TimelineProps> = ({
                 }
               }
             }}
-            className={isRefreshing ? 'animate-spin' : ''}
+            className={`icon-btn${isRefreshing ? ' animate-spin' : ''}`}
             style={{
               background: 'none',
               border: 'none',
@@ -562,6 +563,7 @@ export const Timeline: React.FC<TimelineProps> = ({
 
           {/* Quick add button */}
           <button
+            className="icon-btn"
             onClick={() => setIsQuickAddOpen(true)}
             style={{
               background: 'none',

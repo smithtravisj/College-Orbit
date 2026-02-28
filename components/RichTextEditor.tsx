@@ -334,6 +334,7 @@ export default function RichTextEditor({
                   Add Link
                 </h3>
                 <button
+                  className="icon-btn"
                   onClick={() => setIsLinkModalOpen(false)}
                   style={{
                     color: 'var(--text-muted)',

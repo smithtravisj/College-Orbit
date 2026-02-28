@@ -417,6 +417,7 @@ export default function SignupForm() {
                 />
                 <button
                   type="button"
+                  className="icon-btn"
                   onClick={() => setShowPassword(!showPassword)}
                   style={{
                     position: 'absolute',

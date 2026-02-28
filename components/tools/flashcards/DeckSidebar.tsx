@@ -143,6 +143,7 @@ export default function DeckSidebar({
       {courses.length > 0 && (
         <div>
           <button
+            className="icon-btn"
             type="button"
             onClick={() => setShowCoursesDropdown(!showCoursesDropdown)}
             style={{

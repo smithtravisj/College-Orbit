@@ -296,6 +296,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
             }}
           >
             <button
+              className="icon-btn"
               type="button"
               onClick={(e) => {
                 e.preventDefault();
@@ -323,6 +324,7 @@ export default function CalendarPicker({ value, onChange, label }: CalendarPicke
               {monthName}
             </div>
             <button
+              className="icon-btn"
               type="button"
               onClick={(e) => {
                 e.preventDefault();

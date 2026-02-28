@@ -819,7 +819,7 @@ export default function RecipesTab() {
           <button
             type="button"
             onClick={() => setFormData((prev) => ({ ...prev, isFavorite: !prev.isFavorite }))}
-            className="text-[var(--text-muted)] hover:text-[#f59e0b]"
+            className="icon-btn text-[var(--text-muted)] hover:text-[#f59e0b]"
             style={{ padding: '4px', background: 'none', border: 'none', cursor: 'pointer' }}
             title={formData.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           >
@@ -1081,7 +1081,7 @@ export default function RecipesTab() {
                 )}
                 <button
                   onClick={() => removeFlatIngredient(index)}
-                  className="text-[var(--text-muted)] hover:text-[var(--danger)]"
+                  className="icon-btn text-[var(--text-muted)] hover:text-[var(--danger)]"
                   style={{ flexShrink: 0, display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}
                 >
                   <X size={16} />
@@ -1114,7 +1114,7 @@ export default function RecipesTab() {
                 {stepGroups.length > 1 && (
                   <button
                     onClick={() => removeStepGroup(gi)}
-                    className="text-[var(--text-muted)] hover:text-[var(--danger)]"
+                    className="icon-btn text-[var(--text-muted)] hover:text-[var(--danger)]"
                     style={{ flexShrink: 0, display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
                     title="Remove step group"
                   >
@@ -1173,7 +1173,7 @@ export default function RecipesTab() {
                       </div>
                       <button
                         onClick={() => removeInstruction(gi, si)}
-                        className="text-[var(--text-muted)] hover:text-[var(--danger)]"
+                        className="icon-btn text-[var(--text-muted)] hover:text-[var(--danger)]"
                         style={{ flexShrink: 0, display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}
                       >
                         <X size={16} />

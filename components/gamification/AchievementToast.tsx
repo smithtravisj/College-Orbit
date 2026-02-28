@@ -180,6 +180,7 @@ export default function AchievementToast({
 
             {/* Close button */}
             <button
+              className="icon-btn"
               onClick={handleDismiss}
               style={{
                 color: 'var(--text-muted)',
