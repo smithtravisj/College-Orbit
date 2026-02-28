@@ -537,6 +537,17 @@ export default function AuthenticatedDashboard() {
                 </div>
               )}
 
+              {previewingTask.tags && previewingTask.tags.length > 0 && (
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Tags</div>
+                  <div className={previewStyles.tags}>
+                    {previewingTask.tags.map((tag: string) => (
+                      <span key={tag} className={previewStyles.tag}>#{tag}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {previewingTask.links && previewingTask.links.length > 0 && (
                 <div className={previewStyles.section}>
                   <div className={previewStyles.sectionLabel}>Links</div>
@@ -726,6 +737,17 @@ export default function AuthenticatedDashboard() {
                 </div>
               )}
 
+              {previewingDeadline.tags && previewingDeadline.tags.length > 0 && (
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Tags</div>
+                  <div className={previewStyles.tags}>
+                    {previewingDeadline.tags.map((tag: string) => (
+                      <span key={tag} className={previewStyles.tag}>#{tag}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {previewingDeadline.links && previewingDeadline.links.length > 0 && (
                 <div className={previewStyles.section}>
                   <div className={previewStyles.sectionLabel}>Links</div>
@@ -911,6 +933,17 @@ export default function AuthenticatedDashboard() {
                 <div className={previewStyles.section}>
                   <div className={previewStyles.sectionLabel}>Notes</div>
                   <div className={previewStyles.sectionValuePrewrap}>{previewingWorkItem.notes}</div>
+                </div>
+              )}
+
+              {previewingWorkItem.tags && previewingWorkItem.tags.length > 0 && (
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Tags</div>
+                  <div className={previewStyles.tags}>
+                    {previewingWorkItem.tags.map((tag: string) => (
+                      <span key={tag} className={previewStyles.tag}>#{tag}</span>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -1125,6 +1158,16 @@ export default function AuthenticatedDashboard() {
                 <div className={previewStyles.section}>
                   <div className={previewStyles.sectionLabel}>Notes</div>
                   <div className={previewStyles.sectionValuePrewrap}>{previewingExam.notes}</div>
+                </div>
+              )}
+              {previewingExam.tags && previewingExam.tags.length > 0 && (
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Tags</div>
+                  <div className={previewStyles.tags}>
+                    {previewingExam.tags.map((tag: string) => (
+                      <span key={tag} className={previewStyles.tag}>#{tag}</span>
+                    ))}
+                  </div>
                 </div>
               )}
               {previewingExam.links && previewingExam.links.length > 0 && (

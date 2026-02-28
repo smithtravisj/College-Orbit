@@ -2471,11 +2471,11 @@ export default function TasksPage() {
 
               {/* Tags */}
               {previewingTask.tags && previewingTask.tags.length > 0 && (
-                <div>
+                <div className={previewStyles.section}>
                   <div className={previewStyles.sectionLabel}>Tags</div>
                   <div className={previewStyles.tags}>
                     {previewingTask.tags.map((tag: string) => (
-                      <span key={tag} className={previewStyles.tag}>{tag}</span>
+                      <span key={tag} className={previewStyles.tag}>#{tag}</span>
                     ))}
                   </div>
                 </div>

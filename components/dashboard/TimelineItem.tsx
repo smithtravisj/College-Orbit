@@ -277,6 +277,22 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
           )}
         </div>
 
+        {/* Tags */}
+        {item.originalItem?.tags && item.originalItem.tags.length > 0 && (
+          <div style={{ display: 'flex', gap: '4px', marginTop: '3px', flexWrap: 'wrap' }}>
+            {item.originalItem.tags.slice(0, 3).map((tag: string) => (
+              <span key={tag} style={{ fontSize: '11px', color: 'var(--link)', backgroundColor: 'var(--panel-2)', padding: '1px 6px', borderRadius: '4px' }}>
+                #{tag}
+              </span>
+            ))}
+            {item.originalItem.tags.length > 3 && (
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                +{item.originalItem.tags.length - 3} more
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Links */}
         {item.links && item.links.length > 0 && (
           <div

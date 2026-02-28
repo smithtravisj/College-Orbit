@@ -1613,6 +1613,17 @@ function TaskContent({ task, onToggleChecklistItem, onDeleteChecklist, onFileCli
         </div>
       )}
 
+      {task.tags && task.tags.length > 0 && (
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Tags</div>
+          <div className={previewStyles.tags}>
+            {task.tags.map((tag: string) => (
+              <span key={tag} className={previewStyles.tag}>#{tag}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {task.links && task.links.length > 0 && (
         <div className={previewStyles.section}>
           <div className={previewStyles.sectionLabel}>Links</div>
@@ -1708,6 +1719,17 @@ function WorkItemContent({ workItem, onToggleChecklistItem, onDeleteChecklist, o
         </div>
       )}
 
+      {workItem.tags && workItem.tags.length > 0 && (
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Tags</div>
+          <div className={previewStyles.tags}>
+            {workItem.tags.map((tag: string) => (
+              <span key={tag} className={previewStyles.tag}>#{tag}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {workItem.links && workItem.links.length > 0 && (
         <div className={previewStyles.section}>
           <div className={previewStyles.sectionLabel}>Links</div>
@@ -1765,6 +1787,17 @@ function DeadlineContent({ deadline, onFileClick }: DeadlineContentProps) {
         <div className={previewStyles.section}>
           <div className={previewStyles.sectionLabel}>Notes</div>
           <div className={previewStyles.sectionValuePrewrap}>{deadline.notes}</div>
+        </div>
+      )}
+
+      {deadline.tags && deadline.tags.length > 0 && (
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Tags</div>
+          <div className={previewStyles.tags}>
+            {deadline.tags.map((tag: string) => (
+              <span key={tag} className={previewStyles.tag}>#{tag}</span>
+            ))}
+          </div>
         </div>
       )}
 
@@ -1833,6 +1866,17 @@ function ExamContent({ exam }: ExamContentProps) {
         <div className={previewStyles.section}>
           <div className={previewStyles.sectionLabel}>Notes</div>
           <div className={previewStyles.sectionValuePrewrap}>{exam.notes}</div>
+        </div>
+      )}
+
+      {exam.tags && exam.tags.length > 0 && (
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Tags</div>
+          <div className={previewStyles.tags}>
+            {exam.tags.map((tag: string) => (
+              <span key={tag} className={previewStyles.tag}>#{tag}</span>
+            ))}
+          </div>
         </div>
       )}
 
