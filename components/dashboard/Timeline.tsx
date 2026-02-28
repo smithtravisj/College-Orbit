@@ -611,6 +611,17 @@ export const Timeline: React.FC<TimelineProps> = ({
               defaultCollapsed={isMobile && range === 'week' && !day.isToday && dayIndex > 2}
             />
           ))}
+          {range === 'today' && (
+            <div style={{
+              textAlign: 'center',
+              padding: '16px 0 8px',
+              fontSize: '12px',
+              color: 'var(--text-muted)',
+              opacity: 0.7,
+            }}>
+              That&apos;s all for today!
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto min-h-0" style={maxHeight ? { maxHeight: `${maxHeight}px` } : undefined}>
