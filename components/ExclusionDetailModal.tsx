@@ -2,9 +2,13 @@
 
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 import { ExcludedDate, Course } from '@/types';
 import { getEventColor } from '@/lib/calendarUtils';
 import useAppStore from '@/lib/store';
+import Button from '@/components/ui/Button';
+import { useAnimatedOpen } from '@/hooks/useModalAnimation';
+import previewStyles from '@/components/ItemPreviewModal.module.css';
 
 interface ExclusionDetailModalProps {
   isOpen: boolean;
@@ -19,56 +23,35 @@ export default function ExclusionDetailModal({
   courses,
   onClose,
 }: ExclusionDetailModalProps) {
-  // Get colorblind settings
   const settings = useAppStore((state) => state.settings);
   const colorblindMode = settings.colorblindMode as any;
   const colorblindStyle = settings.colorblindStyle as any;
   const theme = (settings.theme || 'dark') as 'light' | 'dark';
+  const { visible, closing } = useAnimatedOpen(isOpen);
 
-  // Handle escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+      if (e.key === 'Escape') onClose();
     };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
+    if (isOpen) document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen || !exclusion) return null;
+  if (!visible || !exclusion) return null;
   if (typeof document === 'undefined') return null;
 
   const isHoliday = !exclusion.courseId;
-  const course = exclusion.courseId
-    ? courses.find((c) => c.id === exclusion.courseId)
-    : null;
+  const course = exclusion.courseId ? courses.find((c) => c.id === exclusion.courseId) : null;
   const markerColor = getEventColor({ courseId: exclusion.courseId } as any, colorblindMode, theme, colorblindStyle);
 
-  // Format date for display
   const formatDate = (dateStr: string) => {
     try {
-      // Parse YYYY-MM-DD format manually to avoid timezone issues
       const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
       if (match) {
         const [, year, month, day] = match;
-        // Create date using local timezone by specifying components
         const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        return date.toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        });
+        return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       }
-
-      // Fallback for other formats
       return dateStr;
     } catch {
       return dateStr;
@@ -76,186 +59,65 @@ export default function ExclusionDetailModal({
   };
 
   return createPortal(
-    <>
-      {/* Backdrop */}
+    <div
+      className={closing ? previewStyles.backdropClosing : previewStyles.backdrop}
+      style={{ zIndex: 9999 }}
+      onClick={onClose}
+    >
       <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 9999,
-        }}
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          backgroundColor: 'var(--panel-solid, var(--panel))',
-          border: '1px solid var(--border)',
-          borderRadius: '16px',
-          padding: '0',
-          minWidth: '320px',
-          maxWidth: '450px',
-          width: '90%',
-          zIndex: 10000,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-          overflow: 'hidden',
-        }}
+        className={`${previewStyles.modal} ${previewStyles.modalNarrow} ${closing ? previewStyles.modalClosing : ''}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div
-          style={{
-            padding: '16px 20px',
-            borderBottom: '1px solid var(--border)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-          }}
-        >
-          {/* Type badge */}
-          <div
-            style={{
-              backgroundColor: `${markerColor}80`,
-              color: 'var(--calendar-event-text)',
-              padding: '4px 10px',
-              borderRadius: '4px',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-            }}
-          >
-            {isHoliday ? 'No School' : 'Class Cancelled'}
+        <div className={previewStyles.header}>
+          <div className={previewStyles.headerInfo}>
+            <h2 className={previewStyles.title}>{exclusion.description || (isHoliday ? 'Holiday' : 'Class Cancelled')}</h2>
+            <div style={{ marginTop: '8px' }}>
+              <span
+                style={{
+                  backgroundColor: `${markerColor}80`,
+                  color: 'var(--calendar-event-text)',
+                  padding: '4px 10px',
+                  borderRadius: '999px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                }}
+              >
+                {isHoliday ? 'No School' : 'Class Cancelled'}
+              </span>
+            </div>
           </div>
-
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            style={{
-              marginLeft: 'auto',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '4px',
-              color: 'var(--text-muted)',
-              fontSize: '1.25rem',
-              lineHeight: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            aria-label="Close"
-          >
-            &times;
+          <button onClick={onClose} className={previewStyles.closeButton}>
+            <X size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Date */}
-          <div>
-            <div
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                color: 'var(--text-muted)',
-                marginBottom: '4px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              Date
-            </div>
-            <div style={{ fontSize: '0.9rem', color: 'var(--text)' }}>
-              {formatDate(exclusion.date)}
-            </div>
+        <div className={previewStyles.content} style={{ overscrollBehavior: 'contain' }}>
+          <div className={previewStyles.section}>
+            <div className={previewStyles.sectionLabel}>Date</div>
+            <div className={previewStyles.sectionValue}>{formatDate(exclusion.date)}</div>
           </div>
 
-          {/* Course (if class cancelled) */}
           {course && (
-            <div>
-              <div
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: 'var(--text-muted)',
-                  marginBottom: '4px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}
-              >
-                Course
-              </div>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text)' }}>
+            <div className={previewStyles.section}>
+              <div className={previewStyles.sectionLabel}>Course</div>
+              <div className={previewStyles.sectionValue}>
                 {course.code ? `${course.code} - ${course.name}` : course.name}
               </div>
             </div>
           )}
 
-          {/* Description / Reason */}
-          {exclusion.description && (
-            <div>
-              <div
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: 'var(--text-muted)',
-                  marginBottom: '4px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}
-              >
-                {isHoliday ? 'Reason' : 'Notes'}
-              </div>
-              <div
-                style={{
-                  fontSize: '0.9rem',
-                  color: 'var(--text)',
-                  whiteSpace: 'pre-wrap',
-                  lineHeight: 1.5,
-                }}
-              >
-                {exclusion.description}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Footer */}
-        <div
-          style={{
-            padding: '12px 20px',
-            borderTop: '1px solid var(--border)',
-            display: 'flex',
-            justifyContent: 'flex-end',
-          }}
-        >
-          <button
-            onClick={onClose}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: 'var(--accent)',
-              backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-              color: 'var(--accent-text)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-control)',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-            }}
-          >
+        <div className={previewStyles.footer}>
+          <Button variant="primary" style={{ flex: 1 }} onClick={onClose}>
             Close
-          </button>
+          </Button>
         </div>
       </div>
-    </>,
+    </div>,
     document.body
   );
 }

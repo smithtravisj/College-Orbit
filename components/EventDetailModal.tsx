@@ -5,6 +5,8 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Course, Task, Deadline, Exam, CalendarEvent as CustomCalendarEvent, WorkItem } from '@/types';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useModalAnimation } from '@/hooks/useModalAnimation';
+import previewStyles from '@/components/ItemPreviewModal.module.css';
 import { CalendarEvent } from '@/lib/calendarUtils';
 import useAppStore from '@/lib/store';
 import Button from '@/components/ui/Button';
@@ -13,16 +15,12 @@ import FileUpload from '@/components/ui/FileUpload';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import CourseForm from '@/components/CourseForm';
-import { ChevronDown, Crown, FileIcon, Sparkles, Trash2 } from 'lucide-react';
+import { ChevronDown, Crown, FileIcon, Sparkles, Trash2, X } from 'lucide-react';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
 import { getThemeColors } from '@/lib/visualThemes';
 import Link from 'next/link';
-import { CanvasBadge } from './CanvasBadge';
-import { BlackboardBadge } from './BlackboardBadge';
-import { MoodleBadge } from './MoodleBadge';
-import { BrightspaceBadge } from './BrightspaceBadge';
 import { useFormatters } from '@/hooks/useFormatters';
 import AIBreakdownModal from '@/components/AIBreakdownModal';
 
@@ -38,6 +36,8 @@ interface EventDetailModalProps {
   calendarEvents?: CustomCalendarEvent[];
   onEventUpdate?: (updatedEvent: CustomCalendarEvent) => void;
   onStatusChange?: () => void;
+  initialBreakdown?: boolean;
+  initialEditScope?: 'this' | 'future' | 'all';
 }
 
 function formatTime(time?: string): string {
@@ -82,7 +82,7 @@ function formatDateTimeWithTime(dateStr?: string | null): string {
 
 export default function EventDetailModal({
   isOpen,
-  event,
+  event: eventProp,
   onClose,
   courses,
   tasks,
@@ -92,6 +92,8 @@ export default function EventDetailModal({
   calendarEvents = [],
   onEventUpdate,
   onStatusChange,
+  initialBreakdown,
+  initialEditScope,
 }: EventDetailModalProps) {
   const isMobile = useIsMobile();
   const subscription = useSubscription();
@@ -112,10 +114,17 @@ export default function EventDetailModal({
   })();
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState<any>(null);
+  const [editScope, setEditScope] = useState<'this' | 'future' | 'all'>('this');
+  const [showEditScopeChoice, setShowEditScopeChoice] = useState(false);
   const [localStatus, setLocalStatus] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showBreakdownModal, setShowBreakdownModal] = useState(false);
+  const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
+
+  const handleFileClick = (file: { name: string; url: string; size: number }, allFiles: { name: string; url: string; size: number }[], index: number) => {
+    setPreviewingFile({ file, allFiles, index });
+  };
 
   useEffect(() => {
     if (!isOpen) {
@@ -128,10 +137,24 @@ export default function EventDetailModal({
   }, [isOpen]);
 
   useEffect(() => {
-    if (event && 'status' in event) {
+    if (isOpen && initialBreakdown) {
+      setShowBreakdownModal(true);
+    }
+  }, [isOpen, initialBreakdown]);
+
+  useEffect(() => {
+    if (isOpen && initialEditScope && initialEditScope !== 'this' && isRecurringEvent) {
+      setEditScope(initialEditScope);
+      setShowEditScopeChoice(false);
+      beginEditing();
+    }
+  }, [isOpen, initialEditScope]);
+
+  useEffect(() => {
+    if (eventProp && 'status' in eventProp) {
       setLocalStatus(null); // Reset local status when event changes
     }
-  }, [event?.id]);
+  }, [eventProp?.id]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -151,13 +174,16 @@ export default function EventDetailModal({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, isEditing, onClose]);
 
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget && !isEditing) {
+  const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
       onClose();
     }
   };
 
-  if (!isOpen || !event) return null;
+  const eventAnim = useModalAnimation(isOpen && eventProp ? eventProp : null);
+  if (!eventAnim.data) return null;
+  const closing = eventAnim.closing;
+  const event = eventAnim.data;
 
   let fullData: Course | Task | Deadline | Exam | CustomCalendarEvent | WorkItem | null = null;
   let relatedCourse: Course | null = null;
@@ -240,24 +266,39 @@ export default function EventDetailModal({
     return '#666';
   };
 
+  const handleEditWithScope = (scope: 'this' | 'future' | 'all') => {
+    setEditScope(scope);
+    setShowEditScopeChoice(false);
+    beginEditing();
+  };
+
   const handleEditToggle = () => {
     if (isEditing) {
       setIsEditing(false);
       setEditFormData(null);
+    } else if (showEditScopeChoice) {
+      setShowEditScopeChoice(false);
     } else {
-      if (event.type === 'course') {
-        // Navigate to courses page with courseId for editing
-        const course = fullData as Course;
-        router.push(`/courses?edit=${course.id}`);
-        onClose();
-      } else if (event.type === 'exam') {
-        // Navigate to exams page with examId for editing
-        const exam = fullData as Exam;
-        router.push(`/exams?edit=${exam.id}`);
-        onClose();
-      } else {
-        setIsEditing(true);
-        if (event.type === 'task' && 'checklist' in fullData) {
+      if (isRecurringEvent) {
+        setShowEditScopeChoice(true);
+        return;
+      }
+      beginEditing();
+    }
+  };
+
+  const beginEditing = () => {
+    if (event.type === 'course') {
+      const course = fullData as Course;
+      router.push(`/courses?edit=${course.id}`);
+      onClose();
+    } else if (event.type === 'exam') {
+      const exam = fullData as Exam;
+      router.push(`/exams?edit=${exam.id}`);
+      onClose();
+    } else {
+      setIsEditing(true);
+      if (event.type === 'task' && 'checklist' in fullData) {
         const task = fullData as Task;
         const dueDate = task.dueAt ? new Date(task.dueAt) : null;
         let dateStr = '';
@@ -269,7 +310,6 @@ export default function EventDetailModal({
           dateStr = `${year}-${month}-${date}`;
           timeStr = `${String(dueDate.getHours()).padStart(2, '0')}:${String(dueDate.getMinutes()).padStart(2, '0')}`;
         }
-
         setEditFormData({
           title: task.title,
           courseId: task.courseId || '',
@@ -327,7 +367,6 @@ export default function EventDetailModal({
           description: calEvent.description || '',
           color: calEvent.color || '#a855f7',
         });
-      }
       }
     }
   };
@@ -408,46 +447,98 @@ export default function EventDetailModal({
       } else if (event.type === 'event') {
         const calEvent = fullData as CustomCalendarEvent;
 
-        // Build start datetime
-        let startAt: string | null = null;
-        if (editFormData.date && editFormData.date.trim()) {
-          const startDate = new Date(editFormData.date + 'T00:00:00');
-          if (!editFormData.allDay && editFormData.startTime) {
-            const [hours, minutes] = editFormData.startTime.split(':').map(Number);
-            startDate.setHours(hours, minutes, 0, 0);
-          } else {
-            startDate.setHours(0, 0, 0, 0);
+        // Build the common update data
+        const buildUpdateData = () => {
+          let startAt: string | null = null;
+          if (editFormData.date && editFormData.date.trim()) {
+            const startDate = new Date(editFormData.date + 'T00:00:00');
+            if (!editFormData.allDay && editFormData.startTime) {
+              const [hours, minutes] = editFormData.startTime.split(':').map(Number);
+              startDate.setHours(hours, minutes, 0, 0);
+            } else {
+              startDate.setHours(0, 0, 0, 0);
+            }
+            startAt = startDate.toISOString();
           }
-          startAt = startDate.toISOString();
-        }
 
-        // Build end datetime
-        let endAt: string | null = null;
-        if (!editFormData.allDay && editFormData.date && editFormData.endTime) {
-          const endDate = new Date(editFormData.date + 'T00:00:00');
-          const [endHours, endMinutes] = editFormData.endTime.split(':').map(Number);
-          endDate.setHours(endHours, endMinutes, 0, 0);
-          endAt = endDate.toISOString();
-        }
+          let endAt: string | null = null;
+          if (!editFormData.allDay && editFormData.date && editFormData.endTime) {
+            const endDate = new Date(editFormData.date + 'T00:00:00');
+            const [endHours, endMinutes] = editFormData.endTime.split(':').map(Number);
+            endDate.setHours(endHours, endMinutes, 0, 0);
+            endAt = endDate.toISOString();
+          }
 
-        const updatedData = {
-          title: editFormData.title,
-          description: editFormData.description,
-          startAt: startAt || calEvent.startAt,
-          endAt,
-          allDay: editFormData.allDay,
-          location: editFormData.location || null,
-          color: editFormData.color,
+          return {
+            title: editFormData.title,
+            description: editFormData.description,
+            startAt: startAt || calEvent.startAt,
+            endAt,
+            allDay: editFormData.allDay,
+            location: editFormData.location || null,
+            color: editFormData.color,
+          };
         };
-        // Don't await - optimistic update handles UI immediately
-        updateCalendarEvent(calEvent.id, updatedData);
 
-        // Notify parent of the update for instant UI refresh
-        if (onEventUpdate) {
-          onEventUpdate({
-            ...calEvent,
-            ...updatedData,
+        const updatedData = buildUpdateData();
+
+        if (calEvent.recurringPatternId && editScope === 'all') {
+          // Update the pattern template + all existing instances
+          const templateData = {
+            title: editFormData.title,
+            description: editFormData.description,
+            allDay: editFormData.allDay,
+            location: editFormData.location || null,
+            color: editFormData.color,
+            startTime: editFormData.startTime || null,
+            endTime: editFormData.endTime || null,
+          };
+          await fetch(`/api/recurring-calendar-event-patterns/${calEvent.recurringPatternId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eventTemplate: templateData }),
           });
+          // Update all instances with the shared fields (not date-specific fields)
+          const allEvents = useAppStore.getState().calendarEvents;
+          const siblingEvents = allEvents.filter(e => e.recurringPatternId === calEvent.recurringPatternId);
+          const sharedUpdate = {
+            title: editFormData.title,
+            description: editFormData.description,
+            allDay: editFormData.allDay,
+            location: editFormData.location || null,
+            color: editFormData.color,
+          };
+          await Promise.all(siblingEvents.map(e =>
+            updateCalendarEvent(e.id, sharedUpdate)
+          ));
+          await useAppStore.getState().loadFromDatabase();
+          onStatusChange?.();
+        } else if (calEvent.recurringPatternId && editScope === 'future') {
+          // Update this + all future instances with shared fields
+          const thisDate = calEvent.startAt ? new Date(calEvent.startAt) : new Date();
+          const allEvents = useAppStore.getState().calendarEvents;
+          const futureEvents = allEvents.filter(e =>
+            e.recurringPatternId === calEvent.recurringPatternId &&
+            e.startAt && new Date(e.startAt) >= thisDate
+          );
+          const sharedUpdate = {
+            title: editFormData.title,
+            description: editFormData.description,
+            allDay: editFormData.allDay,
+            location: editFormData.location || null,
+            color: editFormData.color,
+          };
+          await Promise.all(futureEvents.map(e =>
+            updateCalendarEvent(e.id, sharedUpdate)
+          ));
+          await useAppStore.getState().loadFromDatabase();
+          onStatusChange?.();
+        } else {
+          // Edit just this single event
+          updateCalendarEvent(calEvent.id, updatedData);
+          if (onEventUpdate) {
+            onEventUpdate({ ...calEvent, ...updatedData });
+          }
         }
 
         setIsEditing(false);
@@ -484,21 +575,52 @@ export default function EventDetailModal({
     }
   };
 
-  const handleDoneAndClose = () => {
-    // If status was changed, trigger calendar refresh
-    if (localStatus !== null) {
-      onStatusChange?.();
-    }
-    onClose();
-  };
 
-  const handleDeleteEvent = async () => {
+
+  const isRecurringEvent = event?.type === 'event' && fullData && (fullData as CustomCalendarEvent).recurringPatternId;
+
+  const handleDeleteEvent = async (mode?: 'this' | 'future' | 'all') => {
     if (event?.type === 'event' && fullData) {
       const calEvent = fullData as CustomCalendarEvent;
+      const deleteMode = mode || 'this';
       try {
-        await deleteCalendarEvent(calEvent.id);
-        onStatusChange?.();
-        onClose();
+        if (calEvent.recurringPatternId && deleteMode === 'all') {
+          // Delete pattern and all instances via API
+          await fetch(`/api/recurring-calendar-event-patterns/${calEvent.recurringPatternId}?deleteInstances=true`, { method: 'DELETE' });
+          // Reload store to reflect bulk DB deletions
+          await useAppStore.getState().loadFromDatabase();
+          onStatusChange?.();
+          onClose();
+        } else if (calEvent.recurringPatternId && deleteMode === 'future') {
+          // Delete this event and all future instances from the same pattern
+          const thisDate = calEvent.startAt ? new Date(calEvent.startAt) : new Date();
+          // Update the pattern's end date first to stop generating future instances
+          await fetch(`/api/recurring-calendar-event-patterns/${calEvent.recurringPatternId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endDate: thisDate.toISOString() }),
+          });
+          // Bulk delete future instances from DB
+          const allEvents = useAppStore.getState().calendarEvents;
+          const futureEventIds = allEvents
+            .filter(e =>
+              e.recurringPatternId === calEvent.recurringPatternId &&
+              e.startAt && new Date(e.startAt) >= thisDate
+            )
+            .map(e => e.id);
+          // Delete via individual API calls then reload
+          await Promise.all(futureEventIds.map(id =>
+            fetch(`/api/calendar-events/${id}`, { method: 'DELETE' })
+          ));
+          await useAppStore.getState().loadFromDatabase();
+          onStatusChange?.();
+          onClose();
+        } else {
+          // Delete just this single event
+          await deleteCalendarEvent(calEvent.id);
+          onStatusChange?.();
+          onClose();
+        }
       } catch (error) {
         console.error('Error deleting event:', error);
       }
@@ -530,33 +652,14 @@ export default function EventDetailModal({
 
   return createPortal(
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        padding: '16px',
-      }}
-      onClick={handleBackdropClick}
+      className={closing ? previewStyles.backdropClosing : previewStyles.backdrop}
+      style={{ zIndex: 9999 }}
+      onMouseDown={handleBackdropMouseDown}
     >
       <div
         ref={modalRef}
-        style={{
-          backgroundColor: 'var(--panel-solid, var(--panel))',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-card)',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          maxWidth: '600px',
-          width: '100%',
-          maxHeight: '90vh',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-        onClick={(e) => e.stopPropagation()}
+        className={`${previewStyles.modal} ${closing ? previewStyles.modalClosing : ''}`}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header - Sticky */}
         <div
@@ -565,9 +668,7 @@ export default function EventDetailModal({
             alignItems: 'flex-start',
             justifyContent: 'space-between',
             padding: isMobile ? '12px 12px 8px 12px' : '16px 16px 12px 16px',
-            borderBottom: '1px solid var(--border)',
             flexShrink: 0,
-            backgroundColor: 'var(--panel-solid, var(--panel))',
           }}
         >
           <div style={{ flex: 1 }}>
@@ -595,10 +696,6 @@ export default function EventDetailModal({
                     >
                       COURSE
                     </div>
-                    {fullData && 'canvasCourseId' in fullData && (fullData as Course).canvasCourseId && <CanvasBadge size="md" />}
-                    {fullData && 'blackboardCourseId' in fullData && (fullData as Course).blackboardCourseId && <BlackboardBadge size="md" />}
-                    {fullData && 'moodleCourseId' in fullData && (fullData as Course).moodleCourseId && <MoodleBadge size="md" />}
-                    {fullData && 'brightspaceCourseId' in fullData && (fullData as Course).brightspaceCourseId && <BrightspaceBadge size="md" />}
                   </div>
                   <h2
                     style={{
@@ -625,7 +722,7 @@ export default function EventDetailModal({
                         fontWeight: 600,
                       }}
                     >
-                      {event.type === 'task' ? 'TASK' : event.type === 'deadline' ? 'DEADLINE' : event.type === 'exam' ? 'EXAM' : 'EVENT'}
+                      {event.type === 'task' ? 'TASK' : event.type === 'deadline' ? 'DEADLINE' : event.type === 'reading' ? 'READING' : event.type === 'project' ? 'PROJECT' : event.type === 'exam' ? 'EXAM' : 'EVENT'}
                     </div>
                   </div>
                   <h2
@@ -638,6 +735,27 @@ export default function EventDetailModal({
                   >
                     {event.title}
                   </h2>
+                  {(event.courseCode || (localStatus || (fullData && 'status' in fullData && (fullData as any).status)) === 'done') && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      {event.courseCode && (
+                        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                          {event.courseCode}
+                        </span>
+                      )}
+                      {(localStatus || (fullData && 'status' in fullData && (fullData as any).status)) === 'done' && (
+                        <span style={{
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          color: 'var(--success)',
+                          backgroundColor: 'var(--success-bg)',
+                          padding: '2px 8px',
+                          borderRadius: '999px',
+                        }}>
+                          Completed
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -645,29 +763,16 @@ export default function EventDetailModal({
 
           <button
             onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              fontSize: '24px',
-              padding: '0',
-              marginLeft: '12px',
-              width: '24px',
-              height: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
+            className={previewStyles.closeButton}
+            style={{ marginLeft: '12px', flexShrink: 0 }}
             aria-label="Close modal"
           >
-            ✕
+            <X size={18} />
           </button>
         </div>
 
         {/* Content - Scrollable */}
-        <div style={{ padding: isMobile ? '12px' : '16px', flex: 1, overflowY: 'auto' }}>
+        <div className={previewStyles.content} style={{ overscrollBehavior: 'contain' }}>
           {isEditing ? (
             event.type === 'course' ? (
               <CourseForm
@@ -707,13 +812,13 @@ export default function EventDetailModal({
               } else {
                 updateTask(event.id, { checklist: [] });
               }
-            }} />
+            }} onFileClick={handleFileClick} />
           ) : (event.type === 'reading' || event.type === 'project') && 'type' in fullData ? (
             <WorkItemContent workItem={fullData as WorkItem} relatedCourse={relatedCourse} eventType={event.type} onToggleChecklistItem={(itemId) => toggleWorkItemChecklistItem(event.id, itemId)} onDeleteChecklist={() => {
               updateWorkItem(event.id, { checklist: [] });
-            }} />
+            }} onFileClick={handleFileClick} />
           ) : event.type === 'deadline' ? (
-            <DeadlineContent deadline={fullData as Deadline} relatedCourse={relatedCourse} />
+            <DeadlineContent deadline={fullData as Deadline} relatedCourse={relatedCourse} onFileClick={handleFileClick} />
           ) : event.type === 'exam' ? (
             <ExamContent exam={fullData as Exam} relatedCourse={relatedCourse} />
           ) : event.type === 'event' ? (
@@ -726,56 +831,114 @@ export default function EventDetailModal({
           style={{
             display: 'flex',
             flexWrap: 'wrap',
-            gap: isMobile ? '6px' : '12px',
-            justifyContent: 'flex-end',
-            padding: isMobile ? '8px 12px' : '12px 16px',
-            borderTop: '1px solid var(--border)',
+            gap: isMobile ? '6px' : '8px',
+            padding: isMobile ? '8px 12px 12px' : '12px 16px 16px',
             flexShrink: 0,
-            backgroundColor: 'var(--panel-solid, var(--panel))',
           }}
         >
           {isEditing ? (
             <>
-              <Button variant="secondary" size={isMobile ? 'sm' : 'md'} onClick={handleEditToggle}>
+              <Button variant="secondary" size={isMobile ? 'sm' : 'md'} onClick={handleEditToggle} style={{ flex: 1 }}>
                 Cancel
               </Button>
               <Button
                 variant="primary"
                 size={isMobile ? 'sm' : 'md'}
                 onClick={handleSaveClick}
-                style={{
-                  paddingLeft: isMobile ? '12px' : '16px',
-                  paddingRight: isMobile ? '12px' : '16px',
-                }}
+                style={{ flex: 1 }}
               >
                 Save
               </Button>
             </>
           ) : showDeleteConfirm ? (
+            isRecurringEvent ? (
+              <>
+                <span style={{ fontSize: isMobile ? '11px' : '13px', color: 'var(--text-muted)', width: '100%', marginBottom: '2px' }}>
+                  This is a recurring event. What would you like to delete?
+                </span>
+                <Button variant="secondary" size={isMobile ? 'sm' : 'md'} onClick={() => setShowDeleteConfirm(false)} style={{ flex: 1 }}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  size={isMobile ? 'sm' : 'md'}
+                  onClick={() => handleDeleteEvent('this')}
+                  style={{ flex: 1, backgroundColor: '#ef4444' }}
+                >
+                  This Event
+                </Button>
+                <Button
+                  variant="primary"
+                  size={isMobile ? 'sm' : 'md'}
+                  onClick={() => handleDeleteEvent('future')}
+                  style={{ flex: 1, backgroundColor: '#ef4444' }}
+                >
+                  This & Future
+                </Button>
+                <Button
+                  variant="primary"
+                  size={isMobile ? 'sm' : 'md'}
+                  onClick={() => handleDeleteEvent('all')}
+                  style={{ flex: 1, backgroundColor: '#ef4444' }}
+                >
+                  All Events
+                </Button>
+              </>
+            ) : (
+              <>
+                <span style={{ fontSize: isMobile ? '12px' : '14px', color: 'var(--text-muted)', marginRight: 'auto' }}>
+                  Delete this event?
+                </span>
+                <Button variant="secondary" size={isMobile ? 'sm' : 'md'} onClick={() => setShowDeleteConfirm(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  size={isMobile ? 'sm' : 'md'}
+                  onClick={() => handleDeleteEvent('this')}
+                  style={{ backgroundColor: '#ef4444' }}
+                >
+                  Delete
+                </Button>
+              </>
+            )
+          ) : showEditScopeChoice ? (
             <>
-              <span style={{ fontSize: isMobile ? '12px' : '14px', color: 'var(--text-muted)', marginRight: 'auto' }}>
-                Delete this event?
+              <span style={{ fontSize: isMobile ? '11px' : '13px', color: 'var(--text-muted)', width: '100%', marginBottom: '2px' }}>
+                This is a recurring event. What would you like to edit?
               </span>
-              <Button variant="secondary" size={isMobile ? 'sm' : 'md'} onClick={() => setShowDeleteConfirm(false)}>
+              <Button variant="secondary" size={isMobile ? 'sm' : 'md'} onClick={() => setShowEditScopeChoice(false)} style={{ flex: 1 }}>
                 Cancel
               </Button>
               <Button
                 variant="primary"
                 size={isMobile ? 'sm' : 'md'}
-                onClick={handleDeleteEvent}
-                style={{
-                  paddingLeft: isMobile ? '12px' : '16px',
-                  paddingRight: isMobile ? '12px' : '16px',
-                  backgroundColor: '#ef4444',
-                }}
+                onClick={() => handleEditWithScope('this')}
+                style={{ flex: 1 }}
               >
-                Delete
+                This Event
+              </Button>
+              <Button
+                variant="primary"
+                size={isMobile ? 'sm' : 'md'}
+                onClick={() => handleEditWithScope('future')}
+                style={{ flex: 1 }}
+              >
+                Future Events
+              </Button>
+              <Button
+                variant="primary"
+                size={isMobile ? 'sm' : 'md'}
+                onClick={() => handleEditWithScope('all')}
+                style={{ flex: 1 }}
+              >
+                All Events
               </Button>
             </>
           ) : (
             <>
               {event.type !== 'course' && event.type !== 'exam' && event.type !== 'event' && (
-                <Button variant="secondary" size={isMobile ? 'sm' : 'md'} onClick={handleMarkDoneClick}>
+                <Button variant="secondary" size={isMobile ? 'sm' : 'md'} onClick={handleMarkDoneClick} style={{ flex: 1 }}>
                   {(localStatus || (fullData && 'status' in fullData && (fullData as Task | Deadline).status)) === 'done'
                     ? (isMobile ? 'Incomplete' : 'Mark Incomplete')
                     : (isMobile ? 'Complete' : 'Mark Complete')}
@@ -786,6 +949,7 @@ export default function EventDetailModal({
                   variant="secondary"
                   size={isMobile ? 'sm' : 'md'}
                   onClick={() => setShowBreakdownModal(true)}
+                  style={{ flex: 1 }}
                 >
                   <Sparkles size={14} />
                   {!isMobile && 'Breakdown'}
@@ -796,35 +960,27 @@ export default function EventDetailModal({
                   variant="secondary"
                   size={isMobile ? 'sm' : 'md'}
                   onClick={() => setShowDeleteConfirm(true)}
-                  style={{
-                    color: '#ef4444',
-                  }}
+                  style={{ flex: 1, color: '#ef4444' }}
                 >
                   Delete
                 </Button>
               )}
-              <Button
-                variant="primary"
-                size={isMobile ? 'sm' : 'md'}
-                onClick={handleEditToggle}
-                style={{
-                  paddingLeft: isMobile ? '12px' : '16px',
-                  paddingRight: isMobile ? '12px' : '16px',
-                }}
-              >
-                Edit
-              </Button>
-              <Button
-                variant="primary"
-                size={isMobile ? 'sm' : 'md'}
-                onClick={handleDoneAndClose}
-                style={{
-                  paddingLeft: isMobile ? '12px' : '16px',
-                  paddingRight: isMobile ? '12px' : '16px',
-                }}
-              >
-                Done
-              </Button>
+              {event.type === 'course' ? (
+                <Link href={`/courses?preview=${event.id}`} style={{ flex: 1 }}>
+                  <Button variant="primary" size={isMobile ? 'sm' : 'md'} style={{ width: '100%' }} onClick={onClose}>
+                    View Course
+                  </Button>
+                </Link>
+              ) : (
+                <Button
+                  variant="primary"
+                  size={isMobile ? 'sm' : 'md'}
+                  onClick={handleEditToggle}
+                  style={{ flex: 1 }}
+                >
+                  Edit
+                </Button>
+              )}
             </>
           )}
         </div>
@@ -833,6 +989,7 @@ export default function EventDetailModal({
       {/* Breakdown Modal */}
       {showBreakdownModal && fullData && event && (
         <AIBreakdownModal
+          isOpen={true}
           existingTitle={event.title}
           existingDescription={(fullData as any).notes || (fullData as any).description || event.title}
           onClose={() => setShowBreakdownModal(false)}
@@ -858,6 +1015,15 @@ export default function EventDetailModal({
           }}
         />
       )}
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        file={previewingFile?.file ?? null}
+        files={previewingFile?.allFiles}
+        currentIndex={previewingFile?.index ?? 0}
+        onClose={() => setPreviewingFile(null)}
+        onNavigate={(file, index) => setPreviewingFile(prev => prev ? { ...prev, file, index } : null)}
+      />
 
       {/* Upgrade Modal */}
       {showUpgradeModal && (
@@ -1006,26 +1172,24 @@ function TaskDeadlineForm({ formData, setFormData, courses, isPremium, onShowUpg
         />
       </div>
 
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '8px' : '12px' }}>
-        <div style={{ flex: 1 }}>
-          <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
-            Due Date
-          </p>
-          <CalendarPicker
-            value={formData.dueDate}
-            onChange={(date) => setFormData({ ...formData, dueDate: date })}
-          />
-        </div>
+      <div>
+        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
+          Due Date
+        </p>
+        <CalendarPicker
+          value={formData.dueDate}
+          onChange={(date) => setFormData({ ...formData, dueDate: date })}
+        />
+      </div>
 
-        <div style={{ flex: 1 }}>
-          <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
-            Due Time (Optional)
-          </p>
-          <TimePicker
-            value={formData.dueTime}
-            onChange={(time) => setFormData({ ...formData, dueTime: time })}
-          />
-        </div>
+      <div>
+        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600, ...(isMobile && { paddingLeft: '6px' }) }}>
+          Due Time (Optional)
+        </p>
+        <TimePicker
+          value={formData.dueTime}
+          onChange={(time) => setFormData({ ...formData, dueTime: time })}
+        />
       </div>
 
       {/* More Options Toggle */}
@@ -1189,149 +1353,96 @@ function CalendarEventForm({ formData, setFormData }: CalendarEventFormProps) {
   const [showMore, setShowMore] = useState(false);
   if (!formData) return null;
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
-      {/* Always visible fields */}
-      <div>
-        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
-          Title
-        </p>
+  if (isMobile) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <Input
+          label="Title"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '10px 12px' }}
+          style={{ fontSize: '0.75rem', padding: '10px 12px' }}
         />
+        <CalendarPicker label="Date" value={formData.date} onChange={(date) => setFormData({ ...formData, date })} />
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <input type="checkbox" checked={formData.allDay} onChange={(e) => setFormData({ ...formData, allDay: e.target.checked })} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
+          <span style={{ fontSize: '14px', color: 'var(--text)' }}>All day event</span>
+        </label>
+        {!formData.allDay && (
+          <>
+            <TimePicker label="Start Time" value={formData.startTime} onChange={(time) => {
+              const duration = getDurationMinutes(formData.startTime, formData.endTime);
+              setFormData({ ...formData, startTime: time, endTime: addMinutesToTime(time, duration) });
+            }} />
+            <TimePicker label="End Time" value={formData.endTime} onChange={(time) => setFormData({ ...formData, endTime: time })} />
+          </>
+        )}
+        <button
+          type="button"
+          onClick={() => setShowMore(!showMore)}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', padding: '10px 0', cursor: 'pointer', color: 'var(--text)', fontSize: '14px', fontWeight: 500 }}
+        >
+          <ChevronDown size={18} style={{ transform: showMore ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
+          More options
+        </button>
+        {showMore && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <Input label="Location (optional)" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} placeholder="Where is it?" />
+            <Textarea label="Description (optional)" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Add details..." />
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '8px' }}>Color</label>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                {EVENT_COLORS.map((c) => (
+                  <button key={c.value} type="button" onClick={() => setFormData({ ...formData, color: c.value })} style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: c.value, border: formData.color === c.value ? '3px solid var(--text)' : '2px solid transparent', cursor: 'pointer', transition: 'transform 0.1s' }} title={c.label} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+    );
+  }
 
-      <div>
-        <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
-          Date
-        </p>
-        <CalendarPicker
-          value={formData.date}
-          onChange={(date) => setFormData({ ...formData, date })}
-        />
-      </div>
-
-      {/* Time Pickers (only if not all day) */}
-      {!formData.allDay && (
-        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '8px' : '12px' }}>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
-              Start Time
-            </p>
-            <TimePicker
-              value={formData.startTime}
-              onChange={(time) => {
+  // Desktop: Two-column layout matching AddEventModal
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <Input
+        label="Title"
+        value={formData.title}
+        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+        style={{ fontSize: '0.875rem', padding: '10px 12px' }}
+      />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '2px' }}>
+        {/* Left column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <CalendarPicker label="Date" value={formData.date} onChange={(date) => setFormData({ ...formData, date })} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+            <input type="checkbox" checked={formData.allDay} onChange={(e) => setFormData({ ...formData, allDay: e.target.checked })} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+            <span style={{ fontSize: '13px', color: 'var(--text)' }}>All day event</span>
+          </label>
+          {!formData.allDay && (
+            <>
+              <TimePicker label="Start Time" value={formData.startTime} onChange={(time) => {
                 const duration = getDurationMinutes(formData.startTime, formData.endTime);
                 setFormData({ ...formData, startTime: time, endTime: addMinutesToTime(time, duration) });
-              }}
-            />
-          </div>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
-              End Time
-            </p>
-            <TimePicker
-              value={formData.endTime}
-              onChange={(time) => setFormData({ ...formData, endTime: time })}
-            />
-          </div>
+              }} />
+              <TimePicker label="End Time" value={formData.endTime} onChange={(time) => setFormData({ ...formData, endTime: time })} />
+            </>
+          )}
         </div>
-      )}
-
-      {/* More Options Toggle */}
-      <button
-        type="button"
-        onClick={() => setShowMore(!showMore)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          background: 'none',
-          border: 'none',
-          padding: '10px 0',
-          cursor: 'pointer',
-          color: 'var(--text)',
-          fontSize: isMobile ? '14px' : '14px',
-          fontWeight: 500,
-        }}
-      >
-        <ChevronDown
-          size={18}
-          style={{
-            transform: showMore ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.2s ease',
-          }}
-        />
-        More options
-      </button>
-
-      {/* More Options Section */}
-      {showMore && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
-          {/* All Day Toggle */}
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={formData.allDay}
-              onChange={(e) => setFormData({ ...formData, allDay: e.target.checked })}
-              style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-            />
-            <span style={{ fontSize: '14px', color: 'var(--text)' }}>All day event</span>
-          </label>
-
+        {/* Right column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <Input label="Location (optional)" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} placeholder="Where is it?" />
+          <Textarea label="Description (optional)" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Add details..." style={{ minHeight: '90px', height: '90px' }} />
           <div>
-            <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
-              Location (Optional)
-            </p>
-            <Input
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="Where is it?"
-              style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '10px 12px' }}
-            />
-          </div>
-
-          <div>
-            <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
-              Description (Optional)
-            </p>
-            <Textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Add details..."
-              style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', padding: '10px 12px' }}
-            />
-          </div>
-
-          {/* Color Picker */}
-          <div>
-            <p style={{ fontSize: isMobile ? '0.65rem' : '0.75rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0', fontWeight: 600 }}>
-              Color
-            </p>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>Color</label>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {EVENT_COLORS.map((c) => (
-                <button
-                  key={c.value}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, color: c.value })}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    backgroundColor: c.value,
-                    border: formData.color === c.value ? '3px solid var(--text)' : '2px solid transparent',
-                    cursor: 'pointer',
-                    transition: 'transform 0.1s',
-                  }}
-                  title={c.label}
-                />
+                <button key={c.value} type="button" onClick={() => setFormData({ ...formData, color: c.value })} style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: c.value, border: formData.color === c.value ? '3px solid var(--text)' : '2px solid transparent', cursor: 'pointer', transition: 'transform 0.1s' }} title={c.label} />
               ))}
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -1349,119 +1460,97 @@ function CourseContent({ event, course }: CourseContentProps) {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
-      <div>
-        <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-          Course Name
-        </p>
-        <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
-          {course.name}
-        </p>
-      </div>
-
-      <div>
-        <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-          Term
-        </p>
-        <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
-          {course.term}
-        </p>
-      </div>
-
+    <>
+      {/* Row 1: Time | Days */}
       {meetingTime && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Meeting Time
-          </p>
-          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
-            {meetingTime.days.join(', ')} {formatTime(meetingTime.start)} -{' '}
-            {formatTime(meetingTime.end)}
-          </p>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '8px' : '12px' }}>
+          <div className={previewStyles.section}>
+            <div className={previewStyles.sectionLabel}>Time</div>
+            <div className={previewStyles.sectionValue}>
+              {formatTime(meetingTime.start)} - {formatTime(meetingTime.end)}
+            </div>
+          </div>
+          <div className={previewStyles.section}>
+            <div className={previewStyles.sectionLabel}>Days</div>
+            <div className={previewStyles.sectionValue}>
+              {meetingTime.days.join(', ')}
+            </div>
+          </div>
         </div>
       )}
 
+      {/* Row 2: Location */}
       {meetingTime?.location && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Location
-          </p>
-          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
-            {meetingTime.location}
-          </p>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Location</div>
+          <div className={previewStyles.sectionValue}>{meetingTime.location}</div>
         </div>
       )}
 
-      {course.links && course.links.length > 0 && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Links
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
-            {course.links.map((link) => (
-              <a
-                key={link.label}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  color: 'var(--link)',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  wordBreak: 'break-word',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.textDecoration = 'underline';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.textDecoration = 'none';
-                }}
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Row 3: Links | Files */}
+      {((course.links && course.links.length > 0) || (course.files && course.files.length > 0)) && (
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile || !((course.links?.length ?? 0) > 0 && (course.files?.length ?? 0) > 0) ? '1fr' : '1fr 1fr', gap: isMobile ? '8px' : '12px' }}>
+          {course.links && course.links.length > 0 && (
+            <div className={previewStyles.section}>
+              <div className={previewStyles.sectionLabel}>Links</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                {course.links.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      color: 'var(--link)',
+                      textDecoration: 'none',
+                      fontSize: '0.875rem',
+                      wordBreak: 'break-word',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
-      {course.files && course.files.length > 0 && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Files
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
-            {course.files.map((file, index) => (
-              <a
-                key={`${index}-${file.name}`}
-                href={file.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                download={file.name}
-                style={{
-                  color: 'var(--link)',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  wordBreak: 'break-word',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.textDecoration = 'underline';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.textDecoration = 'none';
-                }}
-              >
-                {file.name}
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                  ({file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`})
-                </span>
-              </a>
-            ))}
-          </div>
+          {course.files && course.files.length > 0 && (
+            <div className={previewStyles.section}>
+              <div className={previewStyles.sectionLabel}>Files</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                {course.files.map((file, index) => (
+                  <a
+                    key={`${index}-${file.name}`}
+                    href={file.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={file.name}
+                    style={{
+                      color: 'var(--link)',
+                      textDecoration: 'none',
+                      fontSize: '0.875rem',
+                      wordBreak: 'break-word',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
+                  >
+                    {file.name}
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                      ({file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`})
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -1470,69 +1559,45 @@ interface TaskContentProps {
   relatedCourse: Course | null;
   onToggleChecklistItem?: (itemId: string) => void;
   onDeleteChecklist?: () => void;
+  onFileClick?: (file: { name: string; url: string; size: number }, allFiles: { name: string; url: string; size: number }[], index: number) => void;
 }
 
-function TaskContent({ task, relatedCourse, onToggleChecklistItem, onDeleteChecklist }: TaskContentProps) {
-  const isMobile = useIsMobile();
+function TaskContent({ task, onToggleChecklistItem, onDeleteChecklist, onFileClick }: TaskContentProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
-      {relatedCourse && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Related Course
-          </p>
-          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
-            {relatedCourse.code}: {relatedCourse.name}
-          </p>
-        </div>
-      )}
-
+    <>
       {task.dueAt && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Due Date
-          </p>
-          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Due</div>
+          <div className={previewStyles.sectionValue}>
             {formatDateTimeWithTime(task.dueAt)}
-          </p>
+          </div>
         </div>
       )}
 
       {task.checklist && task.checklist.length > 0 && (
-        <div>
-          <div style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 8px 0' : '0 0 12px 0', display: 'flex', justifyContent: 'space-between' }}>
-            <span>Checklist</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.checklistHeader}>
+            <span className={previewStyles.checklistCount}>Checklist</span>
+            <div className={previewStyles.checklistActions}>
               <button
                 onClick={() => onDeleteChecklist?.()}
                 title="Delete checklist"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', opacity: 0.5 }}
-                onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; }}
+                className={previewStyles.checklistDeleteBtn}
               >
-                <Trash2 size={15} />
+                <Trash2 size={14} />
               </button>
               <span>{task.checklist.filter(i => i.done).length}/{task.checklist.length}</span>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
+          <div className={previewStyles.checklistItems}>
             {task.checklist.map((item) => (
               <div
                 key={item.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: isMobile ? '8px' : '10px',
-                  padding: isMobile ? '4px' : '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                className={previewStyles.checklistItem}
                 onClick={() => onToggleChecklistItem?.(item.id)}
               >
-                <input type="checkbox" checked={item.done} onChange={() => {}} style={{ width: isMobile ? '14px' : '16px', height: isMobile ? '14px' : '16px', cursor: 'pointer', flexShrink: 0 }} />
-                <span style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: item.done ? 'var(--text-muted)' : 'var(--text)', textDecoration: item.done ? 'line-through' : 'none' }}>
+                <input type="checkbox" checked={item.done} onChange={() => {}} className={previewStyles.checklistCheckbox} />
+                <span className={item.done ? previewStyles.checklistTextDone : previewStyles.checklistText}>
                   {item.text}
                 </span>
               </div>
@@ -1542,49 +1607,18 @@ function TaskContent({ task, relatedCourse, onToggleChecklistItem, onDeleteCheck
       )}
 
       {task.notes && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Notes
-          </p>
-          <p
-            style={{
-              fontSize: isMobile ? '0.75rem' : '0.875rem',
-              color: 'var(--text)',
-              margin: 0,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-            }}
-          >
-            {task.notes}
-          </p>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Notes</div>
+          <div className={previewStyles.sectionValuePrewrap}>{task.notes}</div>
         </div>
       )}
 
       {task.links && task.links.length > 0 && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Links
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
-            {task.links.map((link) => (
-              <a
-                key={link.label}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  color: 'var(--link)',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  wordBreak: 'break-word',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.textDecoration = 'underline';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.textDecoration = 'none';
-                }}
-              >
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Links</div>
+          <div className={previewStyles.linksList}>
+            {task.links.map((link, idx) => (
+              <a key={`${link.url}-${idx}`} href={link.url} target="_blank" rel="noopener noreferrer" className={previewStyles.linkCard}>
                 {link.label}
               </a>
             ))}
@@ -1593,44 +1627,24 @@ function TaskContent({ task, relatedCourse, onToggleChecklistItem, onDeleteCheck
       )}
 
       {task.files && task.files.length > 0 && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Files
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Files</div>
+          <div className={previewStyles.linksList}>
             {task.files.map((file, index) => (
-              <a
+              <button
                 key={`${index}-${file.name}`}
-                href={file.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                download={file.name}
-                style={{
-                  color: 'var(--link)',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  wordBreak: 'break-word',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.textDecoration = 'underline';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.textDecoration = 'none';
-                }}
+                type="button"
+                onClick={() => onFileClick?.(file, task.files!, index)}
+                className={previewStyles.fileCard}
               >
-                {file.name}
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                  ({file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`})
-                </span>
-              </a>
+                <FileIcon size={14} className={previewStyles.fileIcon} />
+                <span className={previewStyles.fileName}>{file.name}</span>
+              </button>
             ))}
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -1640,80 +1654,45 @@ interface WorkItemContentProps {
   eventType: 'reading' | 'project';
   onToggleChecklistItem?: (itemId: string) => void;
   onDeleteChecklist?: () => void;
+  onFileClick?: (file: { name: string; url: string; size: number }, allFiles: { name: string; url: string; size: number }[], index: number) => void;
 }
 
-function WorkItemContent({ workItem, relatedCourse, eventType, onToggleChecklistItem, onDeleteChecklist }: WorkItemContentProps) {
-  const isMobile = useIsMobile();
-  const typeLabel = eventType === 'reading' ? 'Reading' : 'Project';
-
+function WorkItemContent({ workItem, onToggleChecklistItem, onDeleteChecklist, onFileClick }: WorkItemContentProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
-      {relatedCourse && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Related Course
-          </p>
-          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
-            {relatedCourse.code}: {relatedCourse.name}
-          </p>
-        </div>
-      )}
-
-      <div>
-        <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-          Type
-        </p>
-        <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
-          {typeLabel}
-        </p>
-      </div>
-
+    <>
       {workItem.dueAt && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Due Date
-          </p>
-          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Due</div>
+          <div className={previewStyles.sectionValue}>
             {formatDateTimeWithTime(workItem.dueAt)}
-          </p>
+          </div>
         </div>
       )}
 
       {workItem.checklist && workItem.checklist.length > 0 && (
-        <div>
-          <div style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 8px 0' : '0 0 12px 0', display: 'flex', justifyContent: 'space-between' }}>
-            <span>Checklist</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.checklistHeader}>
+            <span className={previewStyles.checklistCount}>Checklist</span>
+            <div className={previewStyles.checklistActions}>
               <button
                 onClick={() => onDeleteChecklist?.()}
                 title="Delete checklist"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', opacity: 0.5 }}
-                onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; }}
+                className={previewStyles.checklistDeleteBtn}
               >
-                <Trash2 size={15} />
+                <Trash2 size={14} />
               </button>
               <span>{workItem.checklist.filter(i => i.done).length}/{workItem.checklist.length}</span>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
+          <div className={previewStyles.checklistItems}>
             {workItem.checklist.map((item) => (
               <div
                 key={item.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: isMobile ? '8px' : '10px',
-                  padding: isMobile ? '4px' : '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                className={previewStyles.checklistItem}
                 onClick={() => onToggleChecklistItem?.(item.id)}
               >
-                <input type="checkbox" checked={item.done} onChange={() => {}} style={{ width: isMobile ? '14px' : '16px', height: isMobile ? '14px' : '16px', cursor: 'pointer', flexShrink: 0 }} />
-                <span style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: item.done ? 'var(--text-muted)' : 'var(--text)', textDecoration: item.done ? 'line-through' : 'none' }}>
+                <input type="checkbox" checked={item.done} onChange={() => {}} className={previewStyles.checklistCheckbox} />
+                <span className={item.done ? previewStyles.checklistTextDone : previewStyles.checklistText}>
                   {item.text}
                 </span>
               </div>
@@ -1723,42 +1702,18 @@ function WorkItemContent({ workItem, relatedCourse, eventType, onToggleChecklist
       )}
 
       {workItem.notes && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Notes
-          </p>
-          <p
-            style={{
-              fontSize: isMobile ? '0.75rem' : '0.875rem',
-              color: 'var(--text)',
-              margin: 0,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-            }}
-          >
-            {workItem.notes}
-          </p>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Notes</div>
+          <div className={previewStyles.sectionValuePrewrap}>{workItem.notes}</div>
         </div>
       )}
 
       {workItem.links && workItem.links.length > 0 && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 8px 0' : '0 0 12px 0' }}>
-            Links
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Links</div>
+          <div className={previewStyles.linksList}>
             {workItem.links.map((link, idx) => (
-              <a
-                key={idx}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  fontSize: isMobile ? '0.75rem' : '0.875rem',
-                  color: 'var(--link)',
-                  textDecoration: 'none',
-                }}
-              >
+              <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className={previewStyles.linkCard}>
                 {link.label || link.url}
               </a>
             ))}
@@ -1767,111 +1722,58 @@ function WorkItemContent({ workItem, relatedCourse, eventType, onToggleChecklist
       )}
 
       {workItem.files && workItem.files.length > 0 && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 8px 0' : '0 0 12px 0' }}>
-            Attachments
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '6px' : '8px' }}>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Files</div>
+          <div className={previewStyles.linksList}>
             {workItem.files.map((file, idx) => (
-              <a
+              <button
                 key={idx}
-                href={file.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  fontSize: isMobile ? '0.75rem' : '0.875rem',
-                  color: 'var(--link)',
-                  textDecoration: 'none',
-                }}
+                type="button"
+                onClick={() => onFileClick?.(file, workItem.files!, idx)}
+                className={previewStyles.fileCard}
               >
-                {file.name}{' '}
-                <span style={{ color: 'var(--text-muted)' }}>
-                  ({file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`})
-                </span>
-              </a>
+                <FileIcon size={14} className={previewStyles.fileIcon} />
+                <span className={previewStyles.fileName}>{file.name}</span>
+              </button>
             ))}
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
 interface DeadlineContentProps {
   deadline: Deadline;
   relatedCourse: Course | null;
+  onFileClick?: (file: { name: string; url: string; size: number }, allFiles: { name: string; url: string; size: number }[], index: number) => void;
 }
 
-function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
-  const isMobile = useIsMobile();
+function DeadlineContent({ deadline, onFileClick }: DeadlineContentProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
-      {relatedCourse && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Related Course
-          </p>
-          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
-            {relatedCourse.code}: {relatedCourse.name}
-          </p>
-        </div>
-      )}
-
+    <>
       {deadline.dueAt && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Due Date
-          </p>
-          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Due</div>
+          <div className={previewStyles.sectionValue}>
             {formatDateTimeWithTime(deadline.dueAt)}
-          </p>
+          </div>
         </div>
       )}
 
       {deadline.notes && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Notes
-          </p>
-          <p
-            style={{
-              fontSize: isMobile ? '0.75rem' : '0.875rem',
-              color: 'var(--text)',
-              margin: 0,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-            }}
-          >
-            {deadline.notes}
-          </p>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Notes</div>
+          <div className={previewStyles.sectionValuePrewrap}>{deadline.notes}</div>
         </div>
       )}
 
       {deadline.links && deadline.links.length > 0 && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Links
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
-            {deadline.links.map((link) => (
-              <a
-                key={link.label}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  color: 'var(--link)',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  wordBreak: 'break-word',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.textDecoration = 'underline';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.textDecoration = 'none';
-                }}
-              >
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Links</div>
+          <div className={previewStyles.linksList}>
+            {deadline.links.map((link, idx) => (
+              <a key={`${link.url}-${idx}`} href={link.url} target="_blank" rel="noopener noreferrer" className={previewStyles.linkCard}>
                 {link.label}
               </a>
             ))}
@@ -1880,44 +1782,24 @@ function DeadlineContent({ deadline, relatedCourse }: DeadlineContentProps) {
       )}
 
       {deadline.files && deadline.files.length > 0 && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Files
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Files</div>
+          <div className={previewStyles.linksList}>
             {deadline.files.map((file, index) => (
-              <a
+              <button
                 key={`${index}-${file.name}`}
-                href={file.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                download={file.name}
-                style={{
-                  color: 'var(--link)',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  wordBreak: 'break-word',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.textDecoration = 'underline';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.textDecoration = 'none';
-                }}
+                type="button"
+                onClick={() => onFileClick?.(file, deadline.files!, index)}
+                className={previewStyles.fileCard}
               >
-                {file.name}
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                  ({file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`})
-                </span>
-              </a>
+                <FileIcon size={14} className={previewStyles.fileIcon} />
+                <span className={previewStyles.fileName}>{file.name}</span>
+              </button>
             ))}
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -1926,90 +1808,40 @@ interface ExamContentProps {
   relatedCourse: Course | null;
 }
 
-function ExamContent({ exam, relatedCourse }: ExamContentProps) {
-  const isMobile = useIsMobile();
+function ExamContent({ exam }: ExamContentProps) {
   const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
 
   return (
     <>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
-      {relatedCourse && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Related Course
-          </p>
-          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
-            {relatedCourse.code}: {relatedCourse.name}
-          </p>
-        </div>
-      )}
-
       {exam.examAt && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Exam Date & Time
-          </p>
-          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Date & Time</div>
+          <div className={previewStyles.sectionValue}>
             {formatDateTimeWithTime(exam.examAt)}
-          </p>
+          </div>
         </div>
       )}
 
       {exam.location && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Location
-          </p>
-          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
-            {exam.location}
-          </p>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Location</div>
+          <div className={previewStyles.sectionValue}>{exam.location}</div>
         </div>
       )}
 
       {exam.notes && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Notes
-          </p>
-          <p
-            style={{
-              fontSize: isMobile ? '0.75rem' : '0.875rem',
-              color: 'var(--text)',
-              margin: 0,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-            }}
-          >
-            {exam.notes}
-          </p>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Notes</div>
+          <div className={previewStyles.sectionValuePrewrap}>{exam.notes}</div>
         </div>
       )}
 
       {exam.links && exam.links.length > 0 && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Links
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
-            {exam.links.map((link) => (
-              <a
-                key={link.label}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  color: 'var(--link)',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  wordBreak: 'break-word',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.textDecoration = 'underline';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.textDecoration = 'none';
-                }}
-              >
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Links</div>
+          <div className={previewStyles.linksList}>
+            {exam.links.map((link, idx) => (
+              <a key={`${link.url}-${idx}`} href={link.url} target="_blank" rel="noopener noreferrer" className={previewStyles.linkCard}>
                 {link.label}
               </a>
             ))}
@@ -2018,37 +1850,18 @@ function ExamContent({ exam, relatedCourse }: ExamContentProps) {
       )}
 
       {exam.files && exam.files.length > 0 && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Files
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '8px' }}>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Files</div>
+          <div className={previewStyles.linksList}>
             {exam.files.map((file, idx) => (
               <button
                 key={file.url}
                 type="button"
                 onClick={() => setPreviewingFile({ file, allFiles: exam.files!, index: idx })}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  color: 'var(--link)',
-                  background: 'none',
-                  border: 'none',
-                  padding: 0,
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  textAlign: 'left',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.textDecoration = 'underline';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.textDecoration = 'none';
-                }}
+                className={previewStyles.fileCard}
               >
-                <FileIcon size={14} />
-                {file.name}
+                <FileIcon size={14} className={previewStyles.fileIcon} />
+                <span className={previewStyles.fileName}>{file.name}</span>
               </button>
             ))}
           </div>
@@ -2062,7 +1875,6 @@ function ExamContent({ exam, relatedCourse }: ExamContentProps) {
         onClose={() => setPreviewingFile(null)}
         onNavigate={(file, index) => setPreviewingFile(prev => prev ? { ...prev, file, index } : null)}
       />
-    </div>
     </>
   );
 }
@@ -2073,53 +1885,47 @@ interface CalendarEventContentProps {
 
 function CalendarEventContent({ calendarEvent }: CalendarEventContentProps) {
   const isMobile = useIsMobile();
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
+    <>
+      {/* Row 1: Date | Time */}
       {calendarEvent.startAt && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            {calendarEvent.allDay ? 'Date' : 'Date & Time'}
-          </p>
-          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
-            {calendarEvent.allDay
-              ? new Date(calendarEvent.startAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
-              : formatDateTimeWithTime(calendarEvent.startAt)}
-            {!calendarEvent.allDay && calendarEvent.endAt && (
-              <> - {new Date(calendarEvent.endAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</>
-            )}
-          </p>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile || calendarEvent.allDay ? '1fr' : '1fr 1fr', gap: isMobile ? '8px' : '12px' }}>
+          <div className={previewStyles.section}>
+            <div className={previewStyles.sectionLabel}>Date</div>
+            <div className={previewStyles.sectionValue}>
+              {new Date(calendarEvent.startAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+            </div>
+          </div>
+          {!calendarEvent.allDay && (
+            <div className={previewStyles.section}>
+              <div className={previewStyles.sectionLabel}>Time</div>
+              <div className={previewStyles.sectionValue}>
+                {new Date(calendarEvent.startAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                {calendarEvent.endAt && (
+                  <> - {new Date(calendarEvent.endAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
+      {/* Row 2: Location */}
       {calendarEvent.location && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Location
-          </p>
-          <p style={{ fontSize: isMobile ? '0.875rem' : '1rem', color: 'var(--text)', margin: 0, fontWeight: 500 }}>
-            {calendarEvent.location}
-          </p>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Location</div>
+          <div className={previewStyles.sectionValue}>{calendarEvent.location}</div>
         </div>
       )}
 
+      {/* Row 3: Description */}
       {calendarEvent.description && (
-        <div>
-          <p style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)', margin: isMobile ? '0 0 2px 0' : '0 0 4px 0' }}>
-            Description
-          </p>
-          <p
-            style={{
-              fontSize: isMobile ? '0.75rem' : '0.875rem',
-              color: 'var(--text)',
-              margin: 0,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-            }}
-          >
-            {calendarEvent.description}
-          </p>
+        <div className={previewStyles.section}>
+          <div className={previewStyles.sectionLabel}>Description</div>
+          <div className={previewStyles.sectionValuePrewrap}>{calendarEvent.description}</div>
         </div>
       )}
-    </div>
+    </>
   );
 }

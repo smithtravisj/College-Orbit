@@ -1,0 +1,455 @@
+/* Backdrop */
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+  animation: fadeIn 200ms ease-out;
+  overscroll-behavior: contain;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+/* Closing states */
+.backdropClosing {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+  animation: fadeOut 200ms ease-in forwards;
+  pointer-events: none;
+  overscroll-behavior: contain;
+}
+
+.modalClosing {
+  animation: scaleOut 200ms ease-in forwards;
+}
+
+/* Modal Container */
+.modal {
+  background-color: var(--panel-solid, var(--panel));
+  border-radius: var(--radius-card);
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  animation: scaleIn 200ms ease-out;
+}
+
+.modalNarrow {
+  max-width: 500px;
+}
+
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 20px 12px;
+  flex-shrink: 0;
+}
+
+.headerInfo {
+  flex: 1;
+  padding-right: 12px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  word-break: break-word;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.closeButton {
+  padding: 6px;
+  color: var(--text-muted);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms ease;
+}
+
+.closeButton:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger, #ef4444);
+}
+
+/* Content */
+.content {
+  padding: 0 20px 20px;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Badges Row */
+.badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.badgeSuccess {
+  background-color: var(--success-bg);
+  color: var(--success);
+}
+
+.badgeDanger {
+  background-color: var(--danger-bg);
+  color: var(--danger);
+}
+
+.badgeWarning {
+  background-color: var(--warning-bg);
+  color: var(--warning);
+}
+
+.badgeMuted {
+  background-color: rgba(107, 114, 128, 0.1);
+  color: var(--text-muted);
+}
+
+/* Section Card */
+.section {
+  background-color: var(--panel-2);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sectionValue {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.sectionValuePrewrap {
+  font-size: 14px;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+/* Checklist */
+.checklistHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.checklistCount {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.checklistActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.checklistDeleteBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  opacity: 0.5;
+  transition: opacity 150ms ease;
+}
+
+.checklistDeleteBtn:hover {
+  opacity: 1;
+}
+
+.checklistItems {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.checklistItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.checklistItem:hover {
+  background-color: var(--nav-active);
+}
+
+.checklistCheckbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.checklistText {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.checklistTextDone {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+/* Tags */
+.tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background-color: var(--panel-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+/* Links */
+.linksList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.linkCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background-color: var(--panel-2);
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 150ms ease;
+  font-size: 14px;
+  color: var(--link);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.linkCard:hover {
+  background-color: var(--nav-active);
+}
+
+/* Files */
+.fileCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background-color: var(--panel-2);
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 150ms ease;
+}
+
+.fileCard:hover {
+  background-color: var(--nav-active);
+}
+
+.fileName {
+  font-size: 14px;
+  color: var(--link);
+}
+
+.fileSize {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-left: auto;
+}
+
+.fileIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Related Notes */
+.noteCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background-color: var(--panel-2);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 150ms ease;
+}
+
+.noteCard:hover {
+  background-color: var(--nav-active);
+}
+
+.noteIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.noteTitle {
+  font-size: 13px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewAllLink {
+  font-size: 12px;
+  color: var(--link);
+  text-decoration: none;
+  padding: 4px 0;
+}
+
+.viewAllLink:hover {
+  text-decoration: underline;
+}
+
+/* Section with icon */
+.sectionWithIcon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px 20px;
+  flex-shrink: 0;
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .backdrop,
+  .backdropClosing {
+    padding: 16px;
+  }
+
+  .header {
+    padding: 16px 16px 10px;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+
+  .content {
+    padding: 0 16px 16px;
+    gap: 12px;
+  }
+
+  .section {
+    padding: 12px 14px;
+  }
+
+  .footer {
+    flex-direction: column;
+    padding: 10px 16px 16px;
+    gap: 6px;
+  }
+}

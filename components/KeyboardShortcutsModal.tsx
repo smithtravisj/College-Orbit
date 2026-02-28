@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { KEYBOARD_SHORTCUTS } from '@/hooks/useKeyboardShortcuts';
+import { useAnimatedOpen } from '@/hooks/useModalAnimation';
+import previewStyles from '@/components/ItemPreviewModal.module.css';
 
 interface KeyboardShortcutsModalProps {
   isOpen: boolean;
@@ -10,6 +13,8 @@ interface KeyboardShortcutsModalProps {
 }
 
 export default function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsModalProps) {
+  const { visible, closing } = useAnimatedOpen(isOpen);
+
   // Handle escape key
   useEffect(() => {
     if (!isOpen) return;
@@ -26,86 +31,42 @@ export default function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShor
     return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!visible) return null;
+  if (typeof document === 'undefined') return null;
 
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac');
   const modKey = isMac ? '⌘' : 'Ctrl';
 
-  // Replace ⌘ with the appropriate modifier key
   const formatKeys = (keys: string[]) => {
     return keys.map(k => k === '⌘' ? modKey : k === '⌫' ? (isMac ? '⌫' : 'Backspace') : k);
   };
 
-  return (
+  return createPortal(
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 100000,
-        padding: '16px',
-      }}
+      className={closing ? previewStyles.backdropClosing : previewStyles.backdrop}
+      style={{ zIndex: 100000 }}
       onClick={onClose}
     >
       <div
-        style={{
-          backgroundColor: 'var(--panel-solid, var(--panel))',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--border)',
-          width: '100%',
-          maxWidth: '600px',
-          maxHeight: '80vh',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className={`${previewStyles.modal} ${closing ? previewStyles.modalClosing : ''}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '16px 20px',
-            borderBottom: '1px solid var(--border)',
-          }}
-        >
-          <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text)' }}>
-            Keyboard Shortcuts
-          </h2>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              padding: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '4px',
-              transition: 'color 0.2s',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
-          >
+        <div className={previewStyles.header}>
+          <h2 className={previewStyles.title}>Keyboard Shortcuts</h2>
+          <button onClick={onClose} className={previewStyles.closeButton}>
             <X size={20} />
           </button>
         </div>
 
         {/* Content */}
         <div
+          className={previewStyles.content}
           style={{
-            padding: '20px',
-            overflowY: 'auto',
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
             gap: '24px',
+            overscrollBehavior: 'contain',
           }}
         >
           {Object.entries(KEYBOARD_SHORTCUTS).map(([key, section]) => (
@@ -173,14 +134,7 @@ export default function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShor
         </div>
 
         {/* Footer */}
-        <div
-          style={{
-            padding: '12px 20px',
-            borderTop: '1px solid var(--border)',
-            display: 'flex',
-            justifyContent: 'center',
-          }}
-        >
+        <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'center' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
             Press <kbd style={{
               padding: '2px 6px',
@@ -194,6 +148,7 @@ export default function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShor
           </span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

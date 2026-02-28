@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { X, Sparkles } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useAnimatedOpen } from '@/hooks/useModalAnimation';
 import useAppStore from '@/lib/store';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import { getThemeColors } from '@/lib/visualThemes';
@@ -14,7 +15,7 @@ import { useModalShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { parseNaturalLanguage } from '@/lib/naturalLanguageParser';
 import styles from './QuickAddModal.module.css';
 
-type QuickAddType = 'task' | 'assignment' | 'reading' | 'project' | 'exam' | 'note' | 'course' | 'shopping';
+type QuickAddType = 'task' | 'assignment' | 'reading' | 'project' | 'exam' | 'note' | 'event' | 'shopping';
 
 interface QuickAddModalProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ const TYPE_OPTIONS_ROW1: { value: QuickAddType; label: string }[] = [
 const TYPE_OPTIONS_ROW2: { value: QuickAddType; label: string }[] = [
   { value: 'exam', label: 'Exam' },
   { value: 'note', label: 'Note' },
-  { value: 'course', label: 'Course' },
+  { value: 'event', label: 'Event' },
   { value: 'shopping', label: 'Shopping' },
 ];
 
@@ -50,7 +51,7 @@ const QUICK_INPUT_PLACEHOLDERS: Record<QuickAddType, string> = {
   project: 'e.g. Group presentation HIST 301 Feb 15',
   exam: 'e.g. Calc midterm Feb 2 1pm Room 102',
   note: 'e.g. Meeting notes: key points from today',
-  course: 'e.g. CS 101 Intro to Computer Science',
+  event: 'e.g. Study group Monday 3pm Library',
   shopping: 'e.g. 2 gallons milk',
 };
 
@@ -59,7 +60,7 @@ const getTypeFromPathname = (pathname: string): QuickAddType | null => {
   if (pathname === '/work') return 'task'; // Unified work page defaults to task
   if (pathname === '/exams') return 'exam';
   if (pathname === '/notes') return 'note';
-  if (pathname === '/courses') return 'course';
+  if (pathname === '/calendar') return 'event';
   return null; // Return null for other pages to keep the last selected type
 };
 
@@ -79,8 +80,9 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('');
   const [location, setLocation] = useState('');
-  const [courseCode, setCourseCode] = useState('');
-  const [courseName, setCourseName] = useState('');
+  const [allDay, setAllDay] = useState(false);
+  const [endTime, setEndTime] = useState('');
+  const [eventDescription, setEventDescription] = useState('');
   const [shoppingListType, setShoppingListType] = useState<ShoppingListType>('grocery');
   const [quantity, setQuantity] = useState(1);
 
@@ -88,9 +90,20 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
   const addWorkItem = useAppStore((state) => state.addWorkItem);
   const addExam = useAppStore((state) => state.addExam);
   const addNote = useAppStore((state) => state.addNote);
-  const addCourse = useAppStore((state) => state.addCourse);
+  const addCalendarEvent = useAppStore((state) => state.addCalendarEvent);
   const addShoppingItem = useAppStore((state) => state.addShoppingItem);
   const courses = useAppStore((state) => state.courses);
+  const exams = useAppStore((state) => state.exams);
+  const workItems = useAppStore((state) => state.workItems);
+
+  // Duplicate detection
+  const existingTitles = useMemo(() => {
+    const examTitles = exams.map((e) => e.title.toLowerCase().trim());
+    const workTitles = workItems.map((w) => w.title.toLowerCase().trim());
+    return new Set([...examTitles, ...workTitles]);
+  }, [exams, workItems]);
+  const titleIsDuplicate = title.trim().length > 0 && existingTitles.has(title.toLowerCase().trim());
+  const [duplicateWarningDismissed, setDuplicateWarningDismissed] = useState(false);
   const university = useAppStore((state) => state.settings.university) || null;
   const theme = useAppStore((state) => state.settings.theme);
   const isPremium = useAppStore((state) => state.isPremium);
@@ -136,10 +149,12 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
     setDueDate('');
     setDueTime('');
     setLocation('');
-    setCourseCode('');
-    setCourseName('');
+    setAllDay(false);
+    setEndTime('');
+    setEventDescription('');
     setShoppingListType('grocery');
     setQuantity(1);
+    setDuplicateWarningDismissed(false);
   };
 
   // Handle quick input parsing
@@ -153,8 +168,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
       setDueDate('');
       setDueTime('');
       setLocation('');
-      setCourseCode('');
-      setCourseName('');
+      setEndTime('');
+      setEventDescription('');
       return;
     }
 
@@ -166,10 +181,12 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
     });
 
     // Apply parsed values based on selected type
-    if (selectedType === 'course') {
-      // For course type, use courseCode and courseName
-      setCourseCode(parsed.courseCode || '');
-      setCourseName(parsed.courseName || '');
+    if (selectedType === 'event') {
+      setTitle(parsed.title || '');
+      setDueDate(parsed.date || '');
+      setDueTime(parsed.time || '');
+      setEndTime(parsed.endTime || '');
+      setLocation(parsed.location || '');
     } else if (selectedType === 'note') {
       // For notes, use title and noteContent
       setTitle(parsed.title || '');
@@ -193,9 +210,12 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
         itemType: selectedType,
         shoppingListType: shoppingListType,
       });
-      if (selectedType === 'course') {
-        setCourseCode(parsed.courseCode || '');
-        setCourseName(parsed.courseName || '');
+      if (selectedType === 'event') {
+        setTitle(parsed.title || '');
+        setDueDate(parsed.date || '');
+        setDueTime(parsed.time || '');
+        setEndTime(parsed.endTime || '');
+        setLocation(parsed.location || '');
       } else if (selectedType === 'note') {
         setTitle(parsed.title || '');
         setNoteContent(parsed.noteContent || '');
@@ -323,15 +343,27 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
           });
           break;
         }
-        case 'course': {
-          if (!courseCode.trim() || !courseName.trim()) return;
-          // Don't await - optimistic update handles UI immediately
-          addCourse({
-            code: courseCode.trim(),
-            name: courseName.trim(),
-            term: '',
-            meetingTimes: [],
-            links: [],
+        case 'event': {
+          if (!title.trim() || !dueDate) return;
+          const startTimeStr = dueTime || (allDay ? '00:00' : '12:00');
+          const startAt = new Date(`${dueDate}T${startTimeStr}`).toISOString();
+          let endAt: string | null = null;
+          if (!allDay && endTime) {
+            endAt = new Date(`${dueDate}T${endTime}`).toISOString();
+          } else if (!allDay && dueTime) {
+            // Default 1-hour duration
+            const end = new Date(`${dueDate}T${startTimeStr}`);
+            end.setHours(end.getHours() + 1);
+            endAt = end.toISOString();
+          }
+          addCalendarEvent({
+            title: title.trim(),
+            description: eventDescription.trim(),
+            startAt,
+            endAt,
+            allDay,
+            color: null,
+            location: location.trim() || null,
           });
           break;
         }
@@ -372,8 +404,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
         return title.trim().length > 0;
       case 'exam':
         return title.trim().length > 0 && dueDate.length > 0;
-      case 'course':
-        return courseCode.trim().length > 0 && courseName.trim().length > 0;
+      case 'event':
+        return title.trim().length > 0 && dueDate.length > 0;
       default:
         return false;
     }
@@ -390,7 +422,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
     },
   });
 
-  if (!isOpen) return null;
+  const { visible, closing } = useAnimatedOpen(isOpen);
+  if (!visible) return null;
 
   const renderForm = () => {
     switch (selectedType) {
@@ -405,7 +438,10 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
               <input
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setDuplicateWarningDismissed(false);
+                }}
                 placeholder={
                   selectedType === 'task' ? 'What needs to be done?' :
                   selectedType === 'assignment' ? 'Assignment name' :
@@ -414,6 +450,12 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
                 }
                 className={styles.input}
               />
+              {titleIsDuplicate && !duplicateWarningDismissed && (
+                <div style={{ marginTop: '6px', fontSize: '12px', color: 'rgb(234, 179, 8)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>An item with this title already exists.</span>
+                  <button type="button" onClick={() => setDuplicateWarningDismissed(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgb(234, 179, 8)', padding: '0', fontSize: '11px', textDecoration: 'underline' }}>Dismiss</button>
+                </div>
+              )}
             </div>
             <div className={styles.formGroup}>
               <label className={styles.label}>Course</label>
@@ -457,10 +499,19 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
               <input
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setDuplicateWarningDismissed(false);
+                }}
                 placeholder="Exam name"
                 className={styles.input}
               />
+              {titleIsDuplicate && !duplicateWarningDismissed && (
+                <div style={{ marginTop: '6px', fontSize: '12px', color: 'rgb(234, 179, 8)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>An item with this title already exists.</span>
+                  <button type="button" onClick={() => setDuplicateWarningDismissed(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgb(234, 179, 8)', padding: '0', fontSize: '11px', textDecoration: 'underline' }}>Dismiss</button>
+                </div>
+              )}
             </div>
             <div className={styles.dateTimeRow}>
               <div className={styles.formGroup}>
@@ -533,26 +584,64 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
           </>
         );
 
-      case 'course':
+      case 'event':
         return (
           <>
             <div className={styles.formGroup}>
-              <label className={styles.label}>Course Code *</label>
+              <label className={styles.label}>Title *</label>
               <input
                 type="text"
-                value={courseCode}
-                onChange={(e) => setCourseCode(e.target.value)}
-                placeholder="e.g. CS 101"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Event name"
                 className={styles.input}
               />
             </div>
+            <div className={styles.dateTimeRow}>
+              <div className={styles.formGroup}>
+                <CalendarPicker
+                  value={dueDate}
+                  onChange={setDueDate}
+                  label="Date *"
+                />
+              </div>
+              {!allDay && (
+                <>
+                  <div className={styles.formGroup}>
+                    <TimePicker
+                      value={dueTime}
+                      onChange={setDueTime}
+                      label="Start Time"
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <TimePicker
+                      value={endTime}
+                      onChange={setEndTime}
+                      label="End Time"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
             <div className={styles.formGroup}>
-              <label className={styles.label}>Course Name *</label>
+              <label className={styles.toggleRow}>
+                <span className={styles.label} style={{ marginBottom: 0 }}>All Day</span>
+                <input
+                  type="checkbox"
+                  checked={allDay}
+                  onChange={(e) => setAllDay(e.target.checked)}
+                  style={{ accentColor: accentColor }}
+                />
+              </label>
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Location</label>
               <input
                 type="text"
-                value={courseName}
-                onChange={(e) => setCourseName(e.target.value)}
-                placeholder="e.g. Introduction to Computer Science"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Room or building"
                 className={styles.input}
               />
             </div>
@@ -609,8 +698,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
   if (isMobile) {
     return (
       <>
-        <div className={styles.backdrop} onClick={handleClose} />
-        <div className={styles.mobileModal}>
+        <div className={closing ? styles.backdropClosing : styles.backdrop} onClick={handleClose} />
+        <div className={closing ? styles.mobileModalClosing : styles.mobileModal}>
           <div className={styles.mobileHeader}>
             <h2 className={styles.mobileTitle}>Quick Add</h2>
             <button
@@ -714,8 +803,8 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
   // Desktop: Centered floating modal
   return (
     <>
-      <div className={styles.backdrop} onClick={handleClose} />
-      <div className={styles.desktopModal}>
+      <div className={closing ? styles.backdropClosing : styles.backdrop} onClick={handleClose} />
+      <div className={closing ? styles.desktopModalClosing : styles.desktopModal}>
         <div className={styles.desktopHeader}>
           <h2 className={styles.desktopTitle}>Quick Add</h2>
           <button

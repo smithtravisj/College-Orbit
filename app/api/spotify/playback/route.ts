@@ -5,17 +5,20 @@ import { withRateLimit } from '@/lib/withRateLimit';
 import {
   createSpotifyClient,
   decryptToken,
+  encryptToken,
   getEncryptionSecret,
+  refreshAccessToken,
   SpotifyAuthError,
 } from '@/lib/spotify';
 
-// Helper to get authenticated Spotify client
+// Helper to get authenticated Spotify client (with proactive token refresh)
 async function getSpotifyClient(userId: string) {
   const settings = await prisma.settings.findUnique({
     where: { userId },
     select: {
       spotifyConnected: true,
       spotifyAccessToken: true,
+      spotifyRefreshToken: true,
       spotifyTokenExpiresAt: true,
       spotifyProduct: true,
     },
@@ -25,12 +28,57 @@ async function getSpotifyClient(userId: string) {
     throw new Error('Not connected to Spotify');
   }
 
-  // Check if token is expired
-  if (settings.spotifyTokenExpiresAt && new Date() >= settings.spotifyTokenExpiresAt) {
+  const secret = getEncryptionSecret();
+  const now = new Date();
+  const expiresAt = settings.spotifyTokenExpiresAt ? new Date(settings.spotifyTokenExpiresAt) : null;
+  const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+
+  // Proactively refresh if token expires within 5 minutes
+  if (expiresAt && fiveMinutesFromNow >= expiresAt && settings.spotifyRefreshToken) {
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    if (clientId) {
+      try {
+        const refreshToken = decryptToken(settings.spotifyRefreshToken, secret);
+        const tokens = await refreshAccessToken(refreshToken, clientId);
+
+        const encryptedAccessToken = encryptToken(tokens.access_token, secret);
+        const encryptedRefreshToken = tokens.refresh_token
+          ? encryptToken(tokens.refresh_token, secret)
+          : settings.spotifyRefreshToken;
+        const newExpiresAt = new Date(Date.now() + tokens.expires_in * 1000);
+
+        await prisma.settings.update({
+          where: { userId },
+          data: {
+            spotifyAccessToken: encryptedAccessToken,
+            spotifyRefreshToken: encryptedRefreshToken,
+            spotifyTokenExpiresAt: newExpiresAt,
+          },
+        });
+
+        return {
+          client: createSpotifyClient(tokens.access_token),
+          isPremium: settings.spotifyProduct === 'premium',
+        };
+      } catch {
+        // If proactive refresh fails but token isn't expired yet, continue with current token
+        if (expiresAt && now < expiresAt) {
+          const accessToken = decryptToken(settings.spotifyAccessToken, secret);
+          return {
+            client: createSpotifyClient(accessToken),
+            isPremium: settings.spotifyProduct === 'premium',
+          };
+        }
+        throw new SpotifyAuthError('Token expired and refresh failed', 401);
+      }
+    }
+  }
+
+  // Check if token is already expired (no refresh possible or not near expiry)
+  if (expiresAt && now >= expiresAt) {
     throw new SpotifyAuthError('Token expired', 401);
   }
 
-  const secret = getEncryptionSecret();
   const accessToken = decryptToken(settings.spotifyAccessToken, secret);
 
   return {

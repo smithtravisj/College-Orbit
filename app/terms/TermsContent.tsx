@@ -326,10 +326,10 @@ export default function TermsContent() {
                 College Orbit offers optional integration with Google Calendar. When you connect your Google account:
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                <li>You authenticate via Google&apos;s OAuth 2.0 flow, granting College Orbit permission to read your calendar events</li>
+                <li>You authenticate via Google&apos;s OAuth 2.0 flow, granting College Orbit permission to read and write your calendar events</li>
                 <li>We read and sync your Google Calendar events into your College Orbit calendar</li>
+                <li>We export College Orbit items (work items, exams, and custom events) to your Google Calendar so they appear alongside your other events</li>
                 <li>Your OAuth tokens are encrypted using AES-256 encryption and stored securely on our servers</li>
-                <li>We only read calendar data from your Google account; we do not create, modify, or delete events in your Google Calendar</li>
                 <li>You can disconnect your Google account at any time from Settings, which will remove your stored tokens</li>
               </ul>
               <p className="text-sm" style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>

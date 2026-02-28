@@ -58,9 +58,9 @@ const Button = React.memo(React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizePadding = {
-      sm: '8px 12px',
-      md: '10px 16px',
-      lg: '12px 20px',
+      sm: { paddingTop: '8px', paddingBottom: '8px', paddingLeft: '12px', paddingRight: '12px' },
+      md: { paddingTop: '10px', paddingBottom: '10px', paddingLeft: '16px', paddingRight: '16px' },
+      lg: { paddingTop: '12px', paddingBottom: '12px', paddingLeft: '20px', paddingRight: '20px' },
     };
 
     const variantStyles = {
@@ -130,7 +130,7 @@ const Button = React.memo(React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
-        style={{ padding: sizePadding[size], ...gradientStyle, ...style }}
+        style={{ ...sizePadding[size], ...gradientStyle, ...style }}
         disabled={disabled || loading}
         {...props}
       >

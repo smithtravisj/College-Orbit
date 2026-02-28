@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
+import { useModalAnimation } from '@/hooks/useModalAnimation';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -14,10 +15,12 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import Input, { Select, Textarea } from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trash2, Edit2, MapPin, Check, X, ChevronDown, StickyNote, FileIcon, Upload } from 'lucide-react';
+import { Plus, Trash2, Edit2, MapPin, Check, X, ChevronDown, StickyNote, FileIcon, Upload, Repeat } from 'lucide-react';
 import Link from 'next/link';
+import previewStyles from '@/components/ItemPreviewModal.module.css';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
+import RecurrenceSelector from '@/components/RecurrenceSelector';
 import TagInput from '@/components/notes/TagInput';
 import BulkEditToolbar, { BulkAction } from '@/components/BulkEditToolbar';
 import {
@@ -32,6 +35,7 @@ import {
 import NaturalLanguageInput from '@/components/NaturalLanguageInput';
 import { parseNaturalLanguage, NLP_PLACEHOLDERS } from '@/lib/naturalLanguageParser';
 import FilePreviewModal from '@/components/FilePreviewModal';
+import { RecurringExamFormData } from '@/types';
 
 export default function ExamsPage() {
   const isMobile = useIsMobile();
@@ -79,7 +83,21 @@ export default function ExamsPage() {
     tags: [] as string[],
     links: [{ label: '', url: '' }],
     files: [] as Array<{ name: string; url: string; size: number }>,
+    isRecurring: false,
+    recurring: {
+      isRecurring: false,
+      recurrenceType: 'weekly' as const,
+      customIntervalDays: 7,
+      daysOfWeek: [1],
+      daysOfMonth: [1],
+      startDate: '',
+      endCondition: 'never' as const,
+      endDate: '',
+      occurrenceCount: 10,
+      examTime: '09:00',
+    } as RecurringExamFormData,
   });
+  const [duplicateWarningDismissed, setDuplicateWarningDismissed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
   const [filter, setFilter] = useState('upcoming');
@@ -88,6 +106,7 @@ export default function ExamsPage() {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [formError, setFormError] = useState('');
   const [previewingExam, setPreviewingExam] = useState<any>(null);
+  const examAnim = useModalAnimation(previewingExam);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [nlpInput, setNlpInput] = useState('');
 
@@ -96,7 +115,14 @@ export default function ExamsPage() {
   const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
   const [showDeleteAllPast, setShowDeleteAllPast] = useState(false);
 
-  const { courses, exams, notes, settings, addExam, updateExam, deleteExam, bulkUpdateExams, bulkDeleteExams } = useAppStore();
+  const { courses, exams, notes, settings, addExam, updateExam, deleteExam, bulkUpdateExams, bulkDeleteExams, addRecurringExam } = useAppStore();
+
+  // Duplicate detection - build a set of existing exam titles
+  const existingExamTitles = useMemo(
+    () => new Set(exams.map((e) => e.title.toLowerCase().trim())),
+    [exams]
+  );
+  const titleIsDuplicate = formData.title.trim().length > 0 && existingExamTitles.has(formData.title.toLowerCase().trim());
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -168,7 +194,7 @@ export default function ExamsPage() {
       return;
     }
 
-    if (!formData.examDate.trim()) {
+    if (!formData.isRecurring && !formData.examDate.trim()) {
       setFormError('Exam date is required');
       return;
     }
@@ -200,20 +226,16 @@ export default function ExamsPage() {
         setFormError('Invalid date or time format');
         return;
       }
-    } else {
-      console.log('[Exams] No date provided, examAt will be null');
+    } else if (!formData.isRecurring) {
       formData.examTime = '';
       setFormError('Exam date is required');
       return;
     }
 
-    if (!examAt) {
-      console.error('[Exams] examAt is required');
+    if (!examAt && !formData.isRecurring) {
       setFormError('Exam date is required');
       return;
     }
-
-    console.log('[Exams] Final examAt before API call:', examAt);
 
     // Handle links - normalize and add https:// if needed
     const links = formData.links
@@ -224,6 +246,42 @@ export default function ExamsPage() {
           ? l.url
           : `https://${l.url}`
       }));
+
+    // Handle recurring exam creation
+    if (formData.isRecurring && !editingId) {
+      const recurring = formData.recurring;
+
+      if (recurring.recurrenceType === 'weekly' && recurring.daysOfWeek.length === 0) {
+        setFormError('Please select at least one day of the week');
+        return;
+      }
+      if (recurring.recurrenceType === 'monthly' && recurring.daysOfMonth.length === 0) {
+        setFormError('Please select at least one day of the month');
+        return;
+      }
+      if (recurring.recurrenceType === 'custom' && (!recurring.customIntervalDays || recurring.customIntervalDays < 1)) {
+        setFormError('Please enter a valid interval (1 or more days)');
+        return;
+      }
+
+      addRecurringExam(
+        {
+          title: formData.title,
+          courseId: formData.courseId || null,
+          examAt,
+          location: formData.location || null,
+          notes: formData.notes,
+          tags: formData.tags,
+          links,
+        },
+        formData.recurring
+      ).catch((error) => console.error('Error creating recurring exam:', error));
+
+      setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', tags: [], links: [{ label: '', url: '' }], files: [], isRecurring: false, recurring: { isRecurring: false, recurrenceType: 'weekly', customIntervalDays: 7, daysOfWeek: [1], daysOfMonth: [1], startDate: '', endCondition: 'never', endDate: '', occurrenceCount: 10, examTime: '09:00' } });
+      setShowForm(false);
+      setDuplicateWarningDismissed(false);
+      return;
+    }
 
     const payload = {
       title: formData.title,
@@ -237,11 +295,7 @@ export default function ExamsPage() {
       status: 'scheduled' as const,
     };
 
-    console.log('[Exams] Payload being sent:', JSON.stringify(payload, null, 2));
-
     if (editingId) {
-      console.log('[Exams] Updating exam:', editingId);
-      // Don't await - optimistic update handles UI immediately
       updateExam(editingId, {
         title: formData.title,
         courseId: formData.courseId || null,
@@ -254,13 +308,12 @@ export default function ExamsPage() {
       });
       setEditingId(null);
     } else {
-      console.log('[Exams] Creating new exam');
-      // Don't await - optimistic update handles UI immediately
       addExam(payload);
     }
 
-    setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', tags: [], links: [{ label: '', url: '' }], files: [] });
+    setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', tags: [], links: [{ label: '', url: '' }], files: [], isRecurring: false, recurring: { isRecurring: false, recurrenceType: 'weekly', customIntervalDays: 7, daysOfWeek: [1], daysOfMonth: [1], startDate: '', endCondition: 'never', endDate: '', occurrenceCount: 10, examTime: '09:00' } });
     setShowForm(false);
+    setDuplicateWarningDismissed(false);
   };
 
   const startEdit = (exam: any) => {
@@ -286,6 +339,19 @@ export default function ExamsPage() {
       tags: exam.tags || [],
       links: exam.links && exam.links.length > 0 ? exam.links : [{ label: '', url: '' }],
       files: exam.files || [],
+      isRecurring: false,
+      recurring: {
+        isRecurring: false,
+        recurrenceType: 'weekly',
+        customIntervalDays: 7,
+        daysOfWeek: [1],
+        daysOfMonth: [1],
+        startDate: '',
+        endCondition: 'never',
+        endDate: '',
+        occurrenceCount: 10,
+        examTime: timeStr || '09:00',
+      },
     });
     setShowForm(true);
   };
@@ -293,8 +359,9 @@ export default function ExamsPage() {
   const cancelEdit = () => {
     setEditingId(null);
     setNlpInput('');
-    setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', tags: [], links: [{ label: '', url: '' }], files: [] });
+    setFormData({ title: '', courseId: '', examDate: '', examTime: '', location: '', notes: '', tags: [], links: [{ label: '', url: '' }], files: [], isRecurring: false, recurring: { isRecurring: false, recurrenceType: 'weekly', customIntervalDays: 7, daysOfWeek: [1], daysOfMonth: [1], startDate: '', endCondition: 'never', endDate: '', occurrenceCount: 10, examTime: '09:00' } });
     setShowForm(false);
+    setDuplicateWarningDismissed(false);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -413,6 +480,11 @@ export default function ExamsPage() {
 
   // Collect all unique tags from exams
   const allTags = Array.from(new Set(exams.flatMap((e) => e.tags || [])));
+
+  // Tags from upcoming/scheduled exams only (for filter sidebar)
+  const filterTags = Array.from(new Set(
+    exams.filter((e) => e.status === 'scheduled').flatMap((e) => e.tags || [])
+  ));
 
   // Bulk action handlers
   const handleBulkAction = (action: BulkAction) => {
@@ -599,8 +671,9 @@ export default function ExamsPage() {
               if (editingId || !showForm) {
                 setEditingId(null);
                 setNlpInput('');
-                setFormData({ title: '', courseId: courseFilter || '', examDate: '', examTime: '', location: '', notes: '', tags: Array.from(selectedTags), links: [{ label: '', url: '' }], files: [] });
+                setFormData({ title: '', courseId: courseFilter || '', examDate: '', examTime: '', location: '', notes: '', tags: Array.from(selectedTags), links: [{ label: '', url: '' }], files: [], isRecurring: false, recurring: { isRecurring: false, recurrenceType: 'weekly', customIntervalDays: 7, daysOfWeek: [1], daysOfMonth: [1], startDate: '', endCondition: 'never', endDate: '', occurrenceCount: 10, examTime: '09:00' } });
                 setShowForm(true);
+                setDuplicateWarningDismissed(false);
               } else {
                 setShowForm(false);
               }
@@ -667,11 +740,11 @@ export default function ExamsPage() {
                     </button>
                   ))}
                 </div>
-                {allTags.length > 0 && (
+                {filterTags.length > 0 && (
                   <div style={{ marginTop: isMobile ? '12px' : '14px' }}>
                     <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Tags</label>
                     <div className="space-y-1">
-                      {allTags.map((tag) => (
+                      {filterTags.map((tag) => (
                         <label key={tag} className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)] hover:text-[var(--text)]">
                           <input
                             type="checkbox"
@@ -743,11 +816,11 @@ export default function ExamsPage() {
                     </button>
                   ))}
                 </div>
-                {allTags.length > 0 && (
+                {filterTags.length > 0 && (
                   <div style={{ marginTop: '14px' }}>
                     <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Tags</label>
                     <div className="space-y-1">
-                      {allTags.map((tag) => (
+                      {filterTags.map((tag) => (
                         <label key={tag} className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)] hover:text-[var(--text)]">
                           <input
                             type="checkbox"
@@ -799,11 +872,24 @@ export default function ExamsPage() {
                   <Input
                     label="Exam title"
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, title: e.target.value });
+                      setDuplicateWarningDismissed(false);
+                    }}
                     placeholder="e.g., Calculus Midterm"
                     required
                   />
                 </div>
+
+                {/* Duplicate warning */}
+                {titleIsDuplicate && !duplicateWarningDismissed && !editingId && (
+                  <div style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '8px', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                    <p style={{ fontSize: '13px', color: 'rgb(234, 179, 8)', margin: 0 }}>An exam with this title already exists. Add anyway?</p>
+                    <button type="button" onClick={() => setDuplicateWarningDismissed(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgb(234, 179, 8)', padding: '2px', flexShrink: 0 }}>
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
 
                 {/* Course and Location row */}
                 <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-4 gap-3'} style={{ overflow: 'visible', paddingTop: isMobile ? '4px' : '8px' }}>
@@ -819,7 +905,7 @@ export default function ExamsPage() {
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     placeholder="e.g., Room 101"
                   />
-                  {!isMobile && (
+                  {!isMobile && !formData.isRecurring && (
                     <>
                       <CalendarPicker
                         label="Exam Date"
@@ -835,8 +921,8 @@ export default function ExamsPage() {
                   )}
                 </div>
 
-                {/* Date and Time row - mobile only */}
-                {isMobile && (
+                {/* Date and Time row - mobile only (hidden when recurring) */}
+                {isMobile && !formData.isRecurring && (
                   <div className="grid grid-cols-2 gap-2" style={{ overflow: 'visible', paddingTop: '8px' }}>
                     <CalendarPicker
                       label="Exam Date"
@@ -849,6 +935,35 @@ export default function ExamsPage() {
                       onChange={(time) => setFormData({ ...formData, examTime: time })}
                     />
                   </div>
+                )}
+
+                {/* Recurring checkbox - only for new exams */}
+                {!editingId && (
+                  <div style={{ display: 'flex', alignItems: 'center', paddingTop: isMobile ? '4px' : '8px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '4px' : '8px', cursor: 'pointer', fontSize: isMobile ? '12px' : '14px', fontWeight: '500', color: 'var(--text)' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.isRecurring}
+                        onChange={(e) => {
+                          if (e.target.checked && !isPremium) {
+                            return;
+                          }
+                          setFormData({ ...formData, isRecurring: e.target.checked, recurring: { ...formData.recurring, isRecurring: e.target.checked } });
+                        }}
+                        style={{ width: isMobile ? '14px' : '16px', height: isMobile ? '14px' : '16px', cursor: 'pointer' }}
+                      />
+                      <Repeat size={isMobile ? 14 : 16} />
+                      Recurring
+                    </label>
+                  </div>
+                )}
+
+                {/* Recurrence selector */}
+                {formData.isRecurring && (
+                  <RecurrenceSelector
+                    value={formData.recurring}
+                    onChange={(recurring) => setFormData({ ...formData, recurring: recurring as RecurringExamFormData })}
+                  />
                 )}
 
                 {/* More Options Toggle */}
@@ -1389,101 +1504,53 @@ export default function ExamsPage() {
       )}
 
       {/* Preview Modal */}
-      {previewingExam && (
+      {examAnim.data && (() => { const previewingExam = examAnim.data!; return (
         <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: isMobile ? '16px' : '24px',
-          }}
+          className={examAnim.closing ? previewStyles.backdropClosing : previewStyles.backdrop}
           onClick={() => setPreviewingExam(null)}
         >
           <div
-            style={{
-              backgroundColor: 'var(--panel)',
-              borderRadius: 'var(--radius-card)',
-              width: '100%',
-              maxWidth: '500px',
-              maxHeight: '80vh',
-              overflow: 'hidden',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
+            className={`${previewStyles.modal} ${previewStyles.modalNarrow} ${examAnim.closing ? previewStyles.modalClosing : ''}`}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header - Sticky */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              padding: isMobile ? '10px 12px' : '12px 16px',
-              borderBottom: '1px solid var(--border)',
-              flexShrink: 0,
-              backgroundColor: 'var(--panel)',
-            }}>
-              <div style={{ flex: 1, paddingRight: '12px' }}>
-                <h2 style={{
-                  fontSize: isMobile ? '16px' : '18px',
-                  fontWeight: '600',
-                  color: 'var(--text)',
-                  margin: 0,
-                  wordBreak: 'break-word',
-                }}>
+            {/* Header */}
+            <div className={previewStyles.header}>
+              <div className={previewStyles.headerInfo}>
+                <h2 className={previewStyles.title}>
                   {previewingExam.title}
                 </h2>
-                {previewingExam.courseId && (
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    {courses.find(c => c.id === previewingExam.courseId)?.code || courses.find(c => c.id === previewingExam.courseId)?.name}
+                {(previewingExam.courseId || previewingExam.status === 'completed' || previewingExam.status === 'cancelled') && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                    {previewingExam.courseId && (
+                      <span className={previewStyles.subtitle} style={{ margin: 0 }}>
+                        {courses.find(c => c.id === previewingExam.courseId)?.code || courses.find(c => c.id === previewingExam.courseId)?.name}
+                      </span>
+                    )}
+                    {previewingExam.status === 'completed' && (
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 8px', borderRadius: '999px' }}>Completed</span>
+                    )}
+                    {previewingExam.status === 'cancelled' && (
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', backgroundColor: 'rgba(107, 114, 128, 0.1)', padding: '2px 8px', borderRadius: '999px' }}>Cancelled</span>
+                    )}
                   </div>
                 )}
               </div>
               <button
                 onClick={() => setPreviewingExam(null)}
-                style={{
-                  padding: '4px',
-                  color: 'var(--text-muted)',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  borderRadius: '4px',
-                }}
+                className={previewStyles.closeButton}
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* Content - Scrollable */}
-            <div style={{ padding: isMobile ? '10px 12px' : '12px 16px', flex: 1, overflowY: 'auto' }}>
-              {/* Status */}
-              {(previewingExam.status === 'completed' || previewingExam.status === 'cancelled') && (
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                  <span style={{
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    backgroundColor: previewingExam.status === 'completed' ? 'var(--success-bg)' : 'rgba(107, 114, 128, 0.1)',
-                    color: previewingExam.status === 'completed' ? 'var(--success)' : 'var(--text-muted)',
-                  }}>
-                    {previewingExam.status.charAt(0).toUpperCase() + previewingExam.status.slice(1)}
-                  </span>
-                </div>
-              )}
+            {/* Content */}
+            <div className={previewStyles.content}>
 
               {/* Date & Time */}
               {previewingExam.examAt && (
-                <div style={{ marginBottom: '10px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Date & Time</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Date & Time</div>
+                  <div className={previewStyles.sectionValue}>
                     {formatDate(previewingExam.examAt)}
                     {(() => {
                       const examDate = new Date(previewingExam.examAt);
@@ -1500,9 +1567,9 @@ export default function ExamsPage() {
 
               {/* Location */}
               {previewingExam.location && (
-                <div style={{ marginBottom: '10px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Location</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Location</div>
+                  <div className={previewStyles.sectionWithIcon}>
                     <MapPin size={14} />
                     {previewingExam.location}
                   </div>
@@ -1511,9 +1578,9 @@ export default function ExamsPage() {
 
               {/* Notes */}
               {previewingExam.notes && (
-                <div style={{ marginBottom: '10px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Notes</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Notes</div>
+                  <div className={previewStyles.sectionValuePrewrap}>
                     {previewingExam.notes}
                   </div>
                 </div>
@@ -1521,19 +1588,11 @@ export default function ExamsPage() {
 
               {/* Tags */}
               {previewingExam.tags && previewingExam.tags.length > 0 && (
-                <div style={{ marginBottom: '10px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Tags</div>
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <div>
+                  <div className={previewStyles.sectionLabel}>Tags</div>
+                  <div className={previewStyles.tags}>
                     {previewingExam.tags.map((tag: string) => (
-                      <span key={tag} style={{
-                        fontSize: '12px',
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        backgroundColor: 'var(--panel-2)',
-                        color: 'var(--text-muted)',
-                      }}>
-                        {tag}
-                      </span>
+                      <span key={tag} className={previewStyles.tag}>{tag}</span>
                     ))}
                   </div>
                 </div>
@@ -1541,20 +1600,16 @@ export default function ExamsPage() {
 
               {/* Links */}
               {previewingExam.links && previewingExam.links.length > 0 && (
-                <div style={{ marginBottom: '10px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Links</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Links</div>
+                  <div className={previewStyles.linksList}>
                     {previewingExam.links.map((link: { label: string; url: string }, i: number) => (
                       <a
                         key={i}
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{
-                          fontSize: '14px',
-                          color: 'var(--link)',
-                          textDecoration: 'underline',
-                        }}
+                        className={previewStyles.linkCard}
                         onClick={(e) => e.stopPropagation()}
                       >
                         {link.label || link.url}
@@ -1566,9 +1621,9 @@ export default function ExamsPage() {
 
               {/* Files */}
               {previewingExam.files && previewingExam.files.length > 0 && (
-                <div style={{ marginBottom: '10px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Files</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Files</div>
+                  <div className={previewStyles.linksList}>
                     {previewingExam.files.map((file: { name: string; url: string; size: number }, i: number) => (
                       <button
                         key={i}
@@ -1577,23 +1632,10 @@ export default function ExamsPage() {
                           e.stopPropagation();
                           setPreviewingFile({ file, allFiles: previewingExam.files, index: i });
                         }}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          padding: '8px 12px',
-                          backgroundColor: 'var(--panel-2)',
-                          borderRadius: '6px',
-                          border: 'none',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          transition: 'background-color 150ms ease',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--nav-active)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
+                        className={previewStyles.fileCard}
                       >
-                        <FileIcon size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-                        <span style={{ fontSize: '14px', color: 'var(--link)' }}>{file.name}</span>
+                        <FileIcon size={14} className={previewStyles.fileIcon} />
+                        <span className={previewStyles.fileName}>{file.name}</span>
                       </button>
                     ))}
                   </div>
@@ -1609,29 +1651,18 @@ export default function ExamsPage() {
                 );
                 if (relatedNotes.length === 0) return null;
                 return (
-                  <div style={{ marginBottom: '10px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '8px' }}>Related Notes</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div>
+                    <div className={previewStyles.sectionLabel}>Related Notes</div>
+                    <div className={previewStyles.linksList}>
                       {relatedNotes.slice(0, 3).map((note) => (
                         <Link
                           key={note.id}
                           href={`/notes?note=${note.id}`}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '8px 12px',
-                            backgroundColor: 'var(--panel-2)',
-                            borderRadius: '6px',
-                            textDecoration: 'none',
-                            transition: 'background-color 150ms ease',
-                          }}
+                          className={previewStyles.noteCard}
                           onClick={(e) => e.stopPropagation()}
-                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--nav-active)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
                         >
-                          <StickyNote size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-                          <span style={{ fontSize: '13px', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <StickyNote size={14} className={previewStyles.noteIcon} />
+                          <span className={previewStyles.noteTitle}>
                             {note.title}
                           </span>
                         </Link>
@@ -1639,14 +1670,7 @@ export default function ExamsPage() {
                       {relatedNotes.length > 3 && (
                         <Link
                           href={previewingExam.courseId ? `/notes?courseId=${previewingExam.courseId}` : '/notes'}
-                          style={{
-                            fontSize: '12px',
-                            color: 'var(--link)',
-                            textDecoration: 'none',
-                            padding: '4px 0',
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
+                          className={previewStyles.viewAllLink}
                           onClick={(e) => e.stopPropagation()}
                         >
                           View all {relatedNotes.length} related notes →
@@ -1658,15 +1682,8 @@ export default function ExamsPage() {
               })()}
             </div>
 
-            {/* Footer - Sticky */}
-            <div style={{
-              display: 'flex',
-              gap: '8px',
-              padding: isMobile ? '16px' : '20px',
-              borderTop: '1px solid var(--border)',
-              flexShrink: 0,
-              backgroundColor: 'var(--panel)',
-            }}>
+            {/* Footer */}
+            <div className={previewStyles.footer}>
               <Button
                 variant="secondary"
                 onClick={() => {
@@ -1681,7 +1698,7 @@ export default function ExamsPage() {
             </div>
           </div>
         </div>
-      )}
+      ); })()}
 
       {/* File Preview Modal */}
       <FilePreviewModal

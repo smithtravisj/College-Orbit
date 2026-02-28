@@ -105,7 +105,7 @@ export default function PrivacyContent() {
                 Google Calendar Data (Optional)
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                If you choose to connect your Google Calendar, we store encrypted OAuth 2.0 tokens (access and refresh tokens) to maintain the connection. When you sync, we import and store your Google Calendar events (titles, dates, times, and descriptions) in your College Orbit account. Your OAuth tokens are encrypted using AES-256 encryption before being stored in our database and are only decrypted server-side when making requests to Google&apos;s API. We only read calendar events from your Google account; we never create, modify, or delete events in your Google Calendar. You can disconnect your Google account at any time from Settings, which removes the stored tokens. Synced calendar events remain in your account unless you manually delete them.
+                If you choose to connect your Google Calendar, we store encrypted OAuth 2.0 tokens (access and refresh tokens) to maintain the connection. When you sync, we import and store your Google Calendar events (titles, dates, times, and descriptions) in your College Orbit account. We also export College Orbit items (work items, exams, and custom events) to your Google Calendar so they appear alongside your other events. Your OAuth tokens are encrypted using AES-256 encryption before being stored in our database and are only decrypted server-side when making requests to Google&apos;s API. You can disconnect your Google account at any time from Settings, which removes the stored tokens. Synced calendar events remain in your account unless you manually delete them.
               </p>
             </div>
             <div>
@@ -203,7 +203,7 @@ export default function PrivacyContent() {
                 <span className="font-medium" style={{ color: 'var(--text)' }}>AI-Powered Features</span>: If you use premium AI features, we send relevant portions of your academic data to OpenAI&apos;s API to generate contextual chat responses, flashcards, note summaries, task breakdowns, and recipe extractions. This data is processed by OpenAI solely to fulfill your request and is not retained by OpenAI after processing.
               </li>
               <li>
-                <span className="font-medium" style={{ color: 'var(--text)' }}>Google Calendar Sync</span>: If you connect Google Calendar, we use your encrypted OAuth tokens to read and import your calendar events into College Orbit for unified schedule management.
+                <span className="font-medium" style={{ color: 'var(--text)' }}>Google Calendar Sync</span>: If you connect Google Calendar, we use your encrypted OAuth tokens to read and import your Google Calendar events and to export College Orbit items to your Google Calendar for unified schedule management.
               </li>
               <li>
                 <span className="font-medium" style={{ color: 'var(--text)' }}>Notifications & Reminders</span>: We use your data to send you in-app notifications about exam reminders, feature request status updates, and other service-related information.
@@ -307,7 +307,7 @@ export default function PrivacyContent() {
                 Google Calendar
               </p>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                If you connect your Google Calendar, our servers communicate with Google&apos;s API using encrypted OAuth tokens you authorize. This communication is used solely to read and import your calendar events. We do not share your College Orbit account information with Google, and Google does not have access to your College Orbit data beyond the standard OAuth authorization. All communication uses secure HTTPS connections. Your Google Calendar data remains under Google&apos;s privacy policies; we simply import a copy for display within College Orbit.
+                If you connect your Google Calendar, our servers communicate with Google&apos;s API using encrypted OAuth tokens you authorize. This communication is used to read and import your Google Calendar events into College Orbit and to export College Orbit items (work items, exams, and custom events) to your Google Calendar. We do not share your College Orbit account information with Google, and Google does not have access to your College Orbit data beyond the standard OAuth authorization. All communication uses secure HTTPS connections.
               </p>
             </div>
             <div>
@@ -328,7 +328,7 @@ export default function PrivacyContent() {
               <ul className="list-disc list-inside space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <li>With our email service provider (Resend) to send password reset and transactional emails</li>
                 <li>With OpenAI&apos;s API (only if you use premium AI features) to process academic content for chat responses, flashcard generation, note summaries, task breakdowns, and recipe extraction</li>
-                <li>With Google&apos;s API (only if you connect Google Calendar) to read and sync your calendar events</li>
+                <li>With Google&apos;s API (only if you connect Google Calendar) to read your Google Calendar events and export College Orbit items to your Google Calendar</li>
                 <li>With your LMS instance (only if you connect Canvas, Blackboard, Moodle, or Brightspace) to fetch your academic data</li>
                 <li>Between our browser extension and our servers to save assignments you choose to add from Canvas or Learning Suite pages</li>
                 <li>With service providers who help us operate the platform (hosting, databases) under confidentiality agreements</li>

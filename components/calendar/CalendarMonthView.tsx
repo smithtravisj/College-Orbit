@@ -21,6 +21,7 @@ const EventDetailModal = dynamic(() => import('@/components/EventDetailModal'), 
   ssr: false,
 });
 import ExclusionDetailModal from '@/components/ExclusionDetailModal';
+import { useCalendarContextMenu, CalendarContextMenuPortal } from './CalendarContextMenu';
 
 interface CalendarMonthViewProps {
   year: number;
@@ -39,6 +40,8 @@ interface CalendarMonthViewProps {
   selectedDate?: Date; // For mobile: highlight selected day
   onEventUpdate?: (updatedEvent: CustomCalendarEvent) => void;
   onStatusChange?: () => void;
+  onTimeSlotClick?: (date: Date, time?: string, allDay?: boolean) => void;
+  searchQuery?: string;
 }
 
 const CalendarMonthView = React.memo(function CalendarMonthView({
@@ -58,6 +61,8 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
   selectedDate,
   onEventUpdate,
   onStatusChange,
+  onTimeSlotClick: _onTimeSlotClick,
+  searchQuery = '',
 }: CalendarMonthViewProps) {
   const isMobile = useIsMobile();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -73,6 +78,12 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
   } | null>(null);
   const ghostPreviewTimerRef = useRef<NodeJS.Timeout | null>(null);
   const dotsRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  const { contextMenu, setContextMenu, handleContextMenu, getMenuItems, handleAction, wantsBreakdown, clearBreakdown, pendingEditScope } = useCalendarContextMenu({
+    workItems,
+    setSelectedEvent,
+    onStatusChange,
+  });
 
   // Get colorblind settings
   const settings = useAppStore((state) => state.settings);
@@ -246,13 +257,9 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
                 style={{
                   fontSize: '0.80rem',
                   fontWeight: 600,
-                  marginBottom: '6px',
-                  paddingLeft: '0px',
-                  paddingRight: '0px',
-                  paddingTop: '0px',
-                  paddingBottom: '0px',
                   color: isTodayDate ? 'var(--link)' : 'var(--text)',
                   lineHeight: 1,
+                  marginBottom: '6px',
                 }}
               >
                 {date.getDate()}
@@ -339,6 +346,13 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
                   return dayEvents.slice(0, limit).map((event) => {
                     const color = getMonthViewColor(event, colorblindMode, theme, colorblindStyle);
 
+                    const isDimmed = searchQuery && !(
+                      event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      (event as any).courseCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      (event as any).location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      (event as any).description?.toLowerCase().includes(searchQuery.toLowerCase())
+                    );
+
                     return (
                       <div
                         key={event.id}
@@ -349,7 +363,8 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
                           backgroundColor: color,
                           flexShrink: 0,
                           cursor: isMobile ? 'default' : 'pointer',
-                          transition: isMobile ? 'none' : 'transform 0.2s',
+                          transition: isMobile ? 'none' : 'transform 0.2s, opacity 0.2s',
+                          opacity: isDimmed ? 0.2 : 1,
                         }}
                         title={isMobile ? undefined : (event.type === 'course' ? `${event.courseCode}: ${event.title}` : event.title)}
                         onClick={(e) => {
@@ -358,6 +373,7 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
                             setSelectedEvent(event);
                           }
                         }}
+                        onContextMenu={(e) => { if (!isMobile) handleContextMenu(event, e); }}
                         onMouseEnter={(e) => {
                           if (!isMobile) {
                             e.currentTarget.style.transform = 'scale(1.5)';
@@ -503,6 +519,7 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
                           setSelectedEvent(event);
                           setPopupState(null);
                         }}
+                        onContextMenu={(e) => { handleContextMenu(event, e); setPopupState(null); }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.opacity = '0.9';
                         }}
@@ -610,6 +627,7 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
                       setSelectedEvent(event);
                       setGhostPreview(null);
                     }}
+                    onContextMenu={(e) => { handleContextMenu(event, e); setGhostPreview(null); }}
                     style={{
                       display: 'flex',
                       alignItems: 'flex-start',
@@ -648,7 +666,7 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
       <EventDetailModal
         isOpen={selectedEvent !== null}
         event={selectedEvent}
-        onClose={() => setSelectedEvent(null)}
+        onClose={() => { setSelectedEvent(null); clearBreakdown(); }}
         courses={courses}
         tasks={allTasks.length > 0 ? allTasks : tasks}
         deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
@@ -657,6 +675,8 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
         calendarEvents={calendarEvents}
         onEventUpdate={onEventUpdate}
         onStatusChange={onStatusChange}
+        initialBreakdown={wantsBreakdown}
+        initialEditScope={pendingEditScope}
       />
 
       <ExclusionDetailModal
@@ -664,6 +684,13 @@ const CalendarMonthView = React.memo(function CalendarMonthView({
         exclusion={selectedExclusion}
         courses={courses}
         onClose={() => setSelectedExclusion(null)}
+      />
+
+      <CalendarContextMenuPortal
+        contextMenu={contextMenu}
+        setContextMenu={setContextMenu}
+        getMenuItems={getMenuItems}
+        handleAction={handleAction}
       />
     </div>
   );

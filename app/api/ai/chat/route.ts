@@ -1937,17 +1937,20 @@ Work Items (Tasks, Assignments, Readings, Projects):
 - AI-powered breakdown: break large assignments into smaller subtasks automatically (premium)
 - Recurring work patterns: repeat on specific days of week, days of month, or custom intervals
 - Filter and sort by type, course, priority, status, due date, or tags
-- Quick add from anywhere using the "+" button or "N" key
+- Quick add from anywhere using the "+" button or "N" key (supports tasks, assignments, readings, projects, exams, notes, events, and shopping items)
 
 Calendar:
-- Month, week, and day views with navigation via arrow keys
+- Month, week, day, and agenda views with navigation via arrow keys
 - Create one-time or recurring events (daily, weekly, biweekly, monthly, custom)
 - All-day events for holidays, due dates, or day-long activities
 - Events inherit course colors for visual identification
-- Google Calendar integration: two-way sync of events and schedules (premium)
+- Right-click context menu for quick actions (complete, edit, delete items)
+- Events can be created via Quick Add (N key or + button) by selecting Event type
+- Google Calendar integration: imports events from Google Calendar and exports College Orbit items to Google Calendar (premium)
 - iCal export/subscription URL for Apple Calendar and other apps
 - Shows class schedules, work item due dates, exams, and custom events together
 - Scheduling conflict detection for overlapping events
+- Mobile: swipe left/right to navigate, pull-to-refresh
 
 Exams:
 - Track exam name, course, date, time, location, and duration
@@ -2019,7 +2022,7 @@ Integrations:
 - Blackboard LMS: sync courses, assignments, and events
 - Moodle LMS: sync courses, assignments, and events
 - Brightspace/D2L LMS: sync courses, assignments, and events
-- Google Calendar: two-way OAuth sync of events and schedules (premium)
+- Google Calendar: imports events from Google Calendar and exports College Orbit items to Google Calendar via OAuth (premium)
 - Browser extension for Chrome: quickly add items from Canvas or BYU Learning Suite
 - iCal export for Apple Calendar and other apps
 

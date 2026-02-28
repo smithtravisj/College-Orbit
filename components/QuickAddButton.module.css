@@ -136,3 +136,61 @@
 .fabDesktopBottomRight:active {
   transform: scale(0.98);
 }
+
+/* Premium: small circular + button next to Ask Orbi pill */
+.premiumCircle {
+  position: fixed;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 150ms ease;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.premiumCircle:hover {
+  transform: scale(1.15);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.premiumCircle:active {
+  transform: scale(0.9);
+}
+
+/* Desktop top-right: to the left of Ask Orbi pill */
+.premiumCircleTopRight {
+  composes: premiumCircle;
+  top: 24px;
+  right: 156px;
+}
+
+/* Desktop bottom-right: to the left of Ask Orbi pill */
+.premiumCircleBottomRight {
+  composes: premiumCircle;
+  bottom: 24px;
+  right: 156px;
+}
+
+/* Mobile: to the left of Ask Orbi FAB */
+@media (max-width: 767px) {
+  .premiumCircle {
+    width: 56px;
+    height: 56px;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    right: calc(20px + 56px + 12px + 56px + 12px + env(safe-area-inset-right, 0px));
+  }
+
+  .premiumCircleTopRight,
+  .premiumCircleBottomRight {
+    top: unset;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    right: calc(20px + 56px + 12px + 56px + 12px + env(safe-area-inset-right, 0px));
+  }
+}

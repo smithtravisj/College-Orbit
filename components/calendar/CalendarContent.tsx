@@ -13,13 +13,14 @@ import { useHighlightElement } from '@/hooks/useHighlightElement';
 import CalendarMonthView from './CalendarMonthView';
 import CalendarDayView from './CalendarDayView';
 import CalendarWeekView from './CalendarWeekView';
+import CalendarAgendaView from './CalendarAgendaView';
 import CalendarLegend from './CalendarLegend';
 import ExcludedDatesCard from '@/components/ExcludedDatesCard';
 import AddEventModal from './AddEventModal';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Search, X } from 'lucide-react';
 import { CalendarEvent } from '@/types';
 
-type ViewType = 'month' | 'week' | 'day';
+type ViewType = 'month' | 'week' | 'day' | 'agenda';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
@@ -90,6 +91,20 @@ export default function CalendarContent() {
   const [addEventInitialDate, setAddEventInitialDate] = useState<Date | undefined>(undefined);
   const [addEventInitialTime, setAddEventInitialTime] = useState<string | undefined>(undefined);
   const [addEventInitialAllDay, setAddEventInitialAllDay] = useState(false);
+  const [addEventInitialEndTime, setAddEventInitialEndTime] = useState<string | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Swipe gesture state
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const swipeContainerRef = useRef<HTMLDivElement>(null);
+  const swipeDirectionLocked = useRef<'horizontal' | 'vertical' | null>(null);
+
+  // Pull-to-refresh state
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const pullStartRef = useRef<{ y: number; scrollTop: number } | null>(null);
   const hasFilteredRef = useRef(false);
   const cacheLoadedRef = useRef(false);
 
@@ -214,7 +229,7 @@ export default function CalendarContent() {
     let viewToUse: ViewType = 'week';
     if (typeof window !== 'undefined') {
       const savedView = localStorage.getItem('calendarView') as ViewType;
-      if (savedView && ['month', 'week', 'day'].includes(savedView)) {
+      if (savedView && ['month', 'week', 'day', 'agenda'].includes(savedView)) {
         viewToUse = savedView;
       }
     }
@@ -247,7 +262,7 @@ export default function CalendarContent() {
   const handlePreviousDate = () => {
     const newDate = new Date(currentDate);
     // On mobile, always navigate by month
-    if (isMobile || view === 'month') {
+    if (isMobile || view === 'month' || view === 'agenda') {
       newDate.setMonth(newDate.getMonth() - 1);
       // On mobile, also update selectedDay to first day of new month
       if (isMobile) {
@@ -265,7 +280,7 @@ export default function CalendarContent() {
   const handleNextDate = () => {
     const newDate = new Date(currentDate);
     // On mobile, always navigate by month
-    if (isMobile || view === 'month') {
+    if (isMobile || view === 'month' || view === 'agenda') {
       newDate.setMonth(newDate.getMonth() + 1);
       // On mobile, also update selectedDay to first day of new month
       if (isMobile) {
@@ -310,7 +325,7 @@ export default function CalendarContent() {
       return `${monthNames[selectedDay.getMonth()]} ${selectedDay.getDate()}, ${selectedDay.getFullYear()}`;
     }
 
-    if (view === 'month') {
+    if (view === 'month' || view === 'agenda') {
       return `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
     } else if (view === 'week') {
       const weekStart = new Date(currentDate);
@@ -333,6 +348,14 @@ export default function CalendarContent() {
     allDay: boolean;
     location: string | null;
     color: string | null;
+    recurrence?: {
+      type: string;
+      daysOfWeek?: number[];
+      daysOfMonth?: number[];
+      intervalDays?: number;
+      endDate?: string | null;
+      occurrenceCount?: number | null;
+    };
   }) => {
     try {
       const response = await fetch('/api/calendar-events', {
@@ -343,7 +366,16 @@ export default function CalendarContent() {
 
       if (response.ok) {
         const data = await response.json();
-        setCalendarEvents((prev) => [...prev, data.event]);
+        if (eventData.recurrence && eventData.recurrence.type !== 'none') {
+          // For recurring events, refetch all calendar events to get all generated instances
+          const eventsRes = await fetch('/api/calendar-events');
+          if (eventsRes.ok) {
+            const eventsData = await eventsRes.json();
+            setCalendarEvents(eventsData.events || []);
+          }
+        } else if (data.event) {
+          setCalendarEvents((prev) => [...prev, data.event]);
+        }
         // Clear cache to force refresh
         if (typeof window !== 'undefined') {
           localStorage.removeItem('calendarCache');
@@ -357,10 +389,11 @@ export default function CalendarContent() {
     }
   };
 
-  const handleTimeSlotClick = (date: Date, time?: string, allDay?: boolean) => {
+  const handleTimeSlotClick = (date: Date, time?: string, allDay?: boolean, endTime?: string) => {
     setAddEventInitialDate(date);
     setAddEventInitialTime(time);
     setAddEventInitialAllDay(allDay || false);
+    setAddEventInitialEndTime(endTime);
     setShowAddEventModal(true);
   };
 
@@ -511,8 +544,113 @@ export default function CalendarContent() {
     }
   };
 
+  // Touch handlers for swipe gestures and pull-to-refresh
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+    swipeDirectionLocked.current = null;
+    // Remove transition during active touch for immediate response
+    if (swipeContainerRef.current) {
+      swipeContainerRef.current.style.transition = 'none';
+      swipeContainerRef.current.style.transform = '';
+    }
+    // Pull-to-refresh: check if at scroll top
+    const container = e.currentTarget as HTMLElement;
+    const scrollableChild = container.querySelector('[data-calendar-scroll]') as HTMLElement;
+    pullStartRef.current = {
+      y: touch.clientY,
+      scrollTop: scrollableChild?.scrollTop ?? 0,
+    };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+
+    // Lock direction after 10px of movement
+    if (!swipeDirectionLocked.current && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
+      swipeDirectionLocked.current = Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical';
+    }
+
+    // Horizontal swipe: direct DOM manipulation for smooth animation
+    if (swipeDirectionLocked.current === 'horizontal' && swipeContainerRef.current) {
+      const offset = deltaX * 0.3;
+      swipeContainerRef.current.style.transform = `translateX(${offset}px)`;
+    }
+
+    // Pull-to-refresh (only for vertical)
+    if (swipeDirectionLocked.current !== 'horizontal' && pullStartRef.current && pullStartRef.current.scrollTop === 0 && deltaY > 0 && !isRefreshing) {
+      const pull = Math.min(deltaY * 0.4, 80);
+      setPullDistance(pull);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    // Animate swipe container back with CSS transition
+    if (swipeContainerRef.current) {
+      swipeContainerRef.current.style.transition = 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)';
+      swipeContainerRef.current.style.transform = '';
+    }
+
+    if (!touchStartRef.current) return;
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const elapsed = Date.now() - touchStartRef.current.time;
+
+    // Horizontal swipe detection — use the locked direction for reliability
+    if (swipeDirectionLocked.current === 'horizontal' && Math.abs(deltaX) > 50 && elapsed < 500) {
+      if (deltaX < 0) {
+        handleNextDate();
+      } else {
+        handlePreviousDate();
+      }
+    }
+
+    // Pull-to-refresh
+    if (pullDistance > 60 && !isRefreshing) {
+      setIsRefreshing(true);
+      setPullDistance(0);
+      // Clear cache and refetch
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('calendarCache');
+      }
+      fetch('/api/calendar-data')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) {
+            const allOpenTasks = (data.tasks || []).filter((task: any) => task.status !== 'done');
+            const allOpenDeadlines = (data.deadlines || []).filter((deadline: any) => deadline.status !== 'done');
+            const allOpenWorkItems = (data.workItems || []).filter((item: any) => item.status !== 'done');
+            const allOpenExams = (data.exams || []).filter((exam: any) => exam.status !== 'completed');
+            setAllTaskInstances(allOpenTasks);
+            setAllDeadlineInstances(allOpenDeadlines);
+            setAllWorkItemInstances(allOpenWorkItems);
+            setAllExamInstances(allOpenExams);
+            setCalendarEvents(data.calendarEvents || []);
+            setCachedCourses(data.courses || []);
+            setCachedExcludedDates(data.excludedDates || []);
+            setFilteredTasks(allOpenTasks);
+            setFilteredDeadlines(allOpenDeadlines);
+            setFilteredWorkItems(allOpenWorkItems);
+            setFilteredExams(allOpenExams);
+          }
+        })
+        .finally(() => {
+          setIsRefreshing(false);
+        });
+    } else {
+      setPullDistance(0);
+    }
+
+    touchStartRef.current = null;
+    pullStartRef.current = null;
+  };
+
   return (
     <>
+      {isMobile && <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>}
       {/* Calendar Header */}
       <div className="mx-auto w-full max-w-[1800px]" style={{ padding: isMobile ? '8px 20px 8px' : '12px 24px 12px', position: 'relative', zIndex: 1 }}>
         <h1
@@ -545,123 +683,221 @@ export default function CalendarContent() {
           ...(isMobile ? {} : { height: 'calc(100vh - 140px)', overflow: 'hidden' }),
         }}>
           {/* Controls Bar */}
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-            <button
-              onClick={handleToday}
-              style={{
-                padding: '6px 12px',
-                borderRadius: 'var(--radius-control)',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                color: 'var(--text)',
-                backgroundColor: 'transparent',
-                border: '1px solid var(--border)',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--panel-2)';
-                e.currentTarget.style.borderColor = 'var(--border-hover)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.borderColor = 'var(--border)';
-              }}
-            >
-              Today
-            </button>
-            <button
-              onClick={handlePreviousDate}
-              style={{
-                padding: '6px 8px',
-                borderRadius: 'var(--radius-control)',
-                color: 'var(--text)',
-                backgroundColor: 'transparent',
-                border: '1px solid var(--border)',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--panel-2)';
-                e.currentTarget.style.borderColor = 'var(--border-hover)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.borderColor = 'var(--border)';
-              }}
-              title="Previous"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button
-              onClick={handleNextDate}
-              style={{
-                padding: '6px 8px',
-                borderRadius: 'var(--radius-control)',
-                color: 'var(--text)',
-                backgroundColor: 'transparent',
-                border: '1px solid var(--border)',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--panel-2)';
-                e.currentTarget.style.borderColor = 'var(--border-hover)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.borderColor = 'var(--border)';
-              }}
-              title="Next"
-            >
-              <ChevronRight size={18} />
-            </button>
-            <div style={{ fontSize: '0.875rem', color: 'var(--text)', fontWeight: 500, marginLeft: '12px' }}>
-              {getDateDisplay()}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: isMobile ? '10px 12px' : '12px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0, flexWrap: isMobile ? 'nowrap' : 'nowrap' }}>
+            {/* Navigation controls */}
+            <div style={{ display: 'flex', gap: isMobile ? '6px' : '8px', alignItems: 'center' }}>
+              <button
+                onClick={handleToday}
+                style={{
+                  padding: isMobile ? '5px 10px' : '6px 12px',
+                  borderRadius: 'var(--radius-control)',
+                  fontSize: isMobile ? '0.8rem' : '0.875rem',
+                  fontWeight: 500,
+                  color: 'var(--text)',
+                  backgroundColor: 'transparent',
+                  border: '1px solid var(--border)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                  e.currentTarget.style.borderColor = 'var(--border-hover)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                }}
+              >
+                Today
+              </button>
+              <button
+                onClick={handlePreviousDate}
+                style={{
+                  padding: isMobile ? '5px 6px' : '6px 8px',
+                  borderRadius: 'var(--radius-control)',
+                  color: 'var(--text)',
+                  backgroundColor: 'transparent',
+                  border: '1px solid var(--border)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                  e.currentTarget.style.borderColor = 'var(--border-hover)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                }}
+                title="Previous"
+              >
+                <ChevronLeft size={isMobile ? 16 : 18} />
+              </button>
+              <button
+                onClick={handleNextDate}
+                style={{
+                  padding: isMobile ? '5px 6px' : '6px 8px',
+                  borderRadius: 'var(--radius-control)',
+                  color: 'var(--text)',
+                  backgroundColor: 'transparent',
+                  border: '1px solid var(--border)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                  e.currentTarget.style.borderColor = 'var(--border-hover)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                }}
+                title="Next"
+              >
+                <ChevronRight size={isMobile ? 16 : 18} />
+              </button>
+              <div style={{ fontSize: isMobile ? '0.8rem' : '0.875rem', color: 'var(--text)', fontWeight: 500, marginLeft: isMobile ? '4px' : '12px' }}>
+                {getDateDisplay()}
+              </div>
+              {!isMobile && (
+                <button
+                  onClick={() => {
+                    setAddEventInitialDate(view === 'day' ? currentDate : currentDate);
+                    setAddEventInitialTime(undefined);
+                    setAddEventInitialAllDay(false);
+                    setShowAddEventModal(true);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    borderRadius: 'var(--radius-control)',
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    color: 'var(--accent-text)',
+                    backgroundColor: 'var(--accent)',
+                    backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
+                    border: 'none',
+                    boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    marginLeft: '4px',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = '0.9';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = '1';
+                  }}
+                >
+                  <Plus size={16} />
+                  <span>Add Event</span>
+                </button>
+              )}
+              {/* Add Event (mobile - compact) */}
+              {isMobile && (
+                <button
+                  onClick={() => {
+                    setAddEventInitialDate(selectedDay);
+                    setAddEventInitialTime(undefined);
+                    setAddEventInitialAllDay(false);
+                    setShowAddEventModal(true);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '5px 8px',
+                    borderRadius: 'var(--radius-control)',
+                    color: 'var(--accent-text)',
+                    backgroundColor: 'var(--accent)',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Plus size={16} />
+                </button>
+              )}
             </div>
-            <button
-              onClick={() => {
-                // Default to current view's date
-                setAddEventInitialDate(view === 'day' ? currentDate : (isMobile ? selectedDay : currentDate));
-                setAddEventInitialTime(undefined);
-                setAddEventInitialAllDay(false);
-                setShowAddEventModal(true);
-              }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
-                borderRadius: 'var(--radius-control)',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                color: 'var(--accent-text)',
-                backgroundColor: 'var(--accent)',
-                backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)',
-                border: 'none',
-                boxShadow: `0 0 ${Math.round(10 * glowScale)}px ${accentColor}${glowOpacity}`,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                marginLeft: '12px',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.opacity = '0.9';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = '1';
-              }}
-            >
-              <Plus size={16} />
-              <span style={{ display: isMobile ? 'none' : 'inline' }}>Add Event</span>
-            </button>
+            {/* Spacer */}
             <div style={{ flex: 1 }} />
+            {/* Search/Filter */}
+            {searchOpen ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--panel-2)', borderRadius: 'var(--radius-control)', border: '1px solid var(--border)', padding: isMobile ? '3px 8px' : '4px 10px' }}>
+                <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search..."
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'var(--text)',
+                    fontSize: isMobile ? '0.8rem' : '0.875rem',
+                    width: isMobile ? '80px' : '160px',
+                    padding: '2px 2px',
+                    caretColor: 'var(--text)',
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setSearchQuery('');
+                      setSearchOpen(false);
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    if (searchQuery) {
+                      setSearchQuery('');
+                      searchInputRef.current?.focus();
+                    } else {
+                      setSearchOpen(false);
+                    }
+                  }}
+                  style={{ background: 'none', border: 'none', padding: '2px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', flexShrink: 0 }}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 0); }}
+                style={{
+                  padding: isMobile ? '5px 6px' : '6px 8px',
+                  borderRadius: 'var(--radius-control)',
+                  color: 'var(--text-muted)',
+                  backgroundColor: 'transparent',
+                  border: '1px solid var(--border)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                  e.currentTarget.style.borderColor = 'var(--border-hover)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                }}
+                title="Search events (press /)"
+              >
+                <Search size={isMobile ? 14 : 16} />
+              </button>
+            )}
+            {/* Desktop: View selector */}
             {!isMobile && (
             <div style={{ display: 'flex', gap: '6px' }}>
-              {(['month', 'week', 'day'] as const).map((v) => (
+              {(['month', 'week', 'day', 'agenda'] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => handleViewChange(v)}
@@ -698,7 +934,32 @@ export default function CalendarContent() {
             )}
           </div>
 
-          <div style={{ flex: isMobile ? 'none' : 1, overflow: isMobile ? 'visible' : 'auto', display: 'flex', flexDirection: 'column' }}>
+          {/* Pull-to-refresh indicator */}
+          {isMobile && (pullDistance > 0 || isRefreshing) && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: `${Math.min(pullDistance, 40)}px 0`,
+              transition: pullDistance === 0 ? 'padding 0.2s' : 'none',
+              color: 'var(--text-muted)',
+              fontSize: '0.75rem',
+            }}>
+              {isRefreshing ? (
+                <div style={{ animation: 'spin 1s linear infinite', width: '18px', height: '18px', border: '2px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%' }} />
+              ) : (
+                <span>{pullDistance > 60 ? 'Release to refresh' : 'Pull to refresh'}</span>
+              )}
+            </div>
+          )}
+          <div
+            ref={swipeContainerRef}
+            data-calendar-scroll
+            style={{ flex: isMobile ? 'none' : 1, overflow: isMobile ? 'visible' : 'auto', display: 'flex', flexDirection: 'column' }}
+            onTouchStart={isMobile ? handleTouchStart : undefined}
+            onTouchMove={isMobile ? handleTouchMove : undefined}
+            onTouchEnd={isMobile ? handleTouchEnd : undefined}
+          >
             {isMobile ? (
               <>
                 {/* Mobile: Month view at top with compact height */}
@@ -720,6 +981,9 @@ export default function CalendarContent() {
                     selectedDate={selectedDay}
                     onEventUpdate={handleEventUpdate}
                     onStatusChange={handleStatusChange}
+
+                    onTimeSlotClick={handleTimeSlotClick}
+                    searchQuery={searchQuery}
                   />
                 </div>
                 {/* Mobile: Day view below the month, showing schedule for selected day */}
@@ -740,6 +1004,7 @@ export default function CalendarContent() {
                     onEventUpdate={handleEventUpdate}
                     onStatusChange={handleStatusChange}
                     onEventReschedule={handleEventReschedule}
+                    searchQuery={searchQuery}
                   />
                 </div>
               </>
@@ -763,6 +1028,9 @@ export default function CalendarContent() {
                     onSelectDate={handleSelectDate}
                     onEventUpdate={handleEventUpdate}
                     onStatusChange={handleStatusChange}
+
+                    onTimeSlotClick={handleTimeSlotClick}
+                    searchQuery={searchQuery}
                   />
                 )}
                 {view === 'week' && (
@@ -782,6 +1050,7 @@ export default function CalendarContent() {
                     onEventUpdate={handleEventUpdate}
                     onStatusChange={handleStatusChange}
                     onEventReschedule={handleEventReschedule}
+                    searchQuery={searchQuery}
                   />
                 )}
                 {view === 'day' && (
@@ -801,6 +1070,26 @@ export default function CalendarContent() {
                     onEventUpdate={handleEventUpdate}
                     onStatusChange={handleStatusChange}
                     onEventReschedule={handleEventReschedule}
+                    searchQuery={searchQuery}
+                  />
+                )}
+                {view === 'agenda' && (
+                  <CalendarAgendaView
+                    year={currentDate.getFullYear()}
+                    month={currentDate.getMonth()}
+                    courses={cachedCourses.length > 0 ? cachedCourses : courses}
+                    tasks={allTaskInstances.length > 0 ? allTaskInstances : filteredTasks}
+                    deadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : filteredDeadlines}
+                    workItems={allWorkItemInstances.length > 0 ? allWorkItemInstances : filteredWorkItems}
+                    exams={allExamInstances.length > 0 ? allExamInstances : filteredExams}
+                    allTasks={allTaskInstances.length > 0 ? allTaskInstances : tasks}
+                    allDeadlines={allDeadlineInstances.length > 0 ? allDeadlineInstances : deadlines}
+                    allWorkItems={allWorkItemInstances.length > 0 ? allWorkItemInstances : workItems}
+                    excludedDates={cachedExcludedDates.length > 0 ? cachedExcludedDates : excludedDates}
+                    calendarEvents={calendarEvents}
+                    onEventUpdate={handleEventUpdate}
+                    onStatusChange={handleStatusChange}
+                    searchQuery={searchQuery}
                   />
                 )}
               </>
@@ -821,6 +1110,7 @@ export default function CalendarContent() {
         initialDate={addEventInitialDate}
         initialTime={addEventInitialTime}
         initialAllDay={addEventInitialAllDay}
+        initialEndTime={addEventInitialEndTime}
       />
     </>
   );

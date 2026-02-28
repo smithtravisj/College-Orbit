@@ -114,13 +114,37 @@ export function QuickAddButton() {
     return styles.fabDesktopBottomRight;
   };
 
-  // Premium users use "Ask Orbi" button instead — but keep modal + keyboard shortcut
+  // Premium users see a small circular + next to the Ask Orbi button
   if (isPremium) {
+    const getPremiumClass = () => {
+      if (isMobile) return styles.premiumCircle;
+      if (isTopRight) return styles.premiumCircleTopRight;
+      return styles.premiumCircleBottomRight;
+    };
+
     return (
-      <QuickAddModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
+      <>
+        <button
+          onClick={handleClick}
+          className={getPremiumClass()}
+          data-tour="quick-add"
+          style={{
+            backgroundColor: buttonColor,
+            backgroundImage: isMobile ? mobileBackgroundImage : desktopBackgroundImage,
+            boxShadow: isMobile ? mobileBoxShadow : desktopBoxShadow,
+            pointerEvents: 'auto',
+          }}
+          aria-label="Quick add"
+          type="button"
+        >
+          <Plus size={isMobile ? 20 : 18} color={iconColor} strokeWidth={2.5} />
+        </button>
+
+        <QuickAddModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      </>
     );
   }
 

@@ -20,6 +20,7 @@ import { showDeleteToast } from './ui/DeleteToast';
 interface CourseListProps {
   courses: Course[];
   onEdit: (courseId: string) => void;
+  onPreview?: (courseId: string) => void;
   showSemester?: boolean;
   // Bulk selection props
   isSelecting?: boolean;
@@ -41,6 +42,7 @@ const formatTime12Hour = (time24: string): string => {
 export default function CourseList({
   courses,
   onEdit,
+  onPreview,
   showSemester = false,
   isSelecting = false,
   selectedIds = new Set(),
@@ -133,6 +135,7 @@ export default function CourseList({
               paddingRight: '32px',
               transition: 'background-color 0.2s ease',
               backgroundColor: isSelected ? 'var(--nav-active)' : undefined,
+              cursor: onPreview && !isSelecting ? 'pointer' : undefined,
             }}
             className="first:pt-0 last:pb-0 flex items-center gap-4 group/course hover:bg-[var(--panel-2)] rounded transition-colors border-b border-[var(--border)] last:border-b-0"
             onContextMenu={(e) => onContextMenu?.(e, course.id)}
@@ -142,6 +145,8 @@ export default function CourseList({
             onClick={() => {
               if (isSelecting) {
                 onToggleSelection?.(course.id);
+              } else if (onPreview) {
+                onPreview(course.id);
               }
             }}
           >

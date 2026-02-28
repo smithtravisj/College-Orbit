@@ -15,6 +15,7 @@ import CollapsibleCard from '@/components/ui/CollapsibleCard';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
 import Link from 'next/link';
+import previewStyles from '@/components/ItemPreviewModal.module.css';
 import { X, FileIcon, Sparkles, Trash2 } from 'lucide-react';
 import { CanvasBadge } from '@/components/CanvasBadge';
 import { CanvasExtBadge } from '@/components/CanvasExtBadge';
@@ -22,12 +23,14 @@ import { LearningSuiteBadge } from '@/components/LearningSuiteBadge';
 import { Timeline } from '@/components/dashboard';
 import FilePreviewModal from '@/components/FilePreviewModal';
 import { Task, Deadline, Course, Exam, CalendarEvent, WorkItem } from '@/types';
+import { TimelineItem as TimelineItemType } from '@/types/timeline';
 import { StreakCard } from '@/components/gamification';
 import DemoBanner from '@/components/DemoBanner';
 import AIBreakdownModal from '@/components/AIBreakdownModal';
 import CollegeSelectionModal from '@/components/CollegeSelectionModal';
 import dynamic from 'next/dynamic';
 import { CalendarEvent as InternalCalendarEvent } from '@/lib/calendarUtils';
+import { useModalAnimation } from '@/hooks/useModalAnimation';
 
 const EventDetailModal = dynamic(() => import('@/components/EventDetailModal'), { ssr: false });
 
@@ -46,6 +49,27 @@ export default function AuthenticatedDashboard() {
   const [previewingEvent, setPreviewingEvent] = useState<any>(null);
   const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
   const [, startTransition] = useTransition();
+
+  // Animated modal wrappers — delay unmount so exit animation plays
+  const taskAnim = useModalAnimation(previewingTask);
+  const deadlineAnim = useModalAnimation(previewingDeadline);
+  const workItemAnim = useModalAnimation(previewingWorkItem);
+  const classAnim = useModalAnimation(previewingClass);
+  const examAnim = useModalAnimation(previewingExam);
+
+  const handleTimelineBreakdown = (item: TimelineItemType) => {
+    const type = item.type;
+    if (type === 'task') {
+      setPreviewingTask(item.originalItem as Task);
+      setTimeout(() => setShowBreakdownModal(true), 50);
+    } else if (type === 'deadline') {
+      setPreviewingDeadline(item.originalItem as Deadline);
+      setTimeout(() => setShowBreakdownModal(true), 50);
+    } else if (type === 'reading' || type === 'project') {
+      setPreviewingWorkItem(item.originalItem as WorkItem);
+      setTimeout(() => setShowBreakdownModal(true), 50);
+    }
+  };
 
   const [customLinks, setCustomLinks] = useState<Array<{ id: string; label: string; url: string; university: string }>>([]);
   const [timelineHeight, setTimelineHeight] = useState<number>(500);
@@ -255,6 +279,7 @@ export default function AuthenticatedDashboard() {
                     onExamClick={(exam: Exam) => startTransition(() => setPreviewingExam(exam))}
                     onEventClick={(event: CalendarEvent) => startTransition(() => setPreviewingEvent(event))}
                     onFileClick={(file, allFiles, index) => setPreviewingFile({ file, allFiles, index })}
+                    onBreakdown={handleTimelineBreakdown}
                     defaultRange={settings.hasDemoData ? "week" : "today"}
                     showProgress={true}
                     showRangeToggle={true}
@@ -329,6 +354,7 @@ export default function AuthenticatedDashboard() {
                     onExamClick={(exam: Exam) => startTransition(() => setPreviewingExam(exam))}
                     onEventClick={(event: CalendarEvent) => startTransition(() => setPreviewingEvent(event))}
                     onFileClick={(file, allFiles, index) => setPreviewingFile({ file, allFiles, index })}
+                    onBreakdown={handleTimelineBreakdown}
                     defaultRange={settings.hasDemoData ? "week" : "today"}
                     showProgress={true}
                     showRangeToggle={true}
@@ -393,114 +419,47 @@ export default function AuthenticatedDashboard() {
 
 
       {/* Task Preview Modal */}
-      {previewingTask && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: isMobile ? '16px' : '24px',
-          }}
-          onClick={() => setPreviewingTask(null)}
-        >
-          <div
-            style={{
-              backgroundColor: 'var(--panel)',
-              borderRadius: 'var(--radius-card)',
-              width: '100%',
-              maxWidth: '600px',
-              maxHeight: '80vh',
-              overflow: 'hidden',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header - Sticky */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              padding: isMobile ? '10px 12px' : '12px 16px',
-              borderBottom: '1px solid var(--border)',
-              flexShrink: 0,
-              backgroundColor: 'var(--panel)',
-            }}>
-              <div style={{ flex: 1, paddingRight: '12px' }}>
-                <h2 style={{
-                  fontSize: isMobile ? '16px' : '18px',
-                  fontWeight: '600',
-                  color: 'var(--text)',
-                  margin: 0,
-                  wordBreak: 'break-word',
-                }}>
-                  {previewingTask.title}
-                </h2>
-                {previewingTask.courseId && (
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    {courses.find(c => c.id === previewingTask.courseId)?.code || courses.find(c => c.id === previewingTask.courseId)?.name}
+      {taskAnim.data && (() => { const previewingTask = taskAnim.data!; return (
+        <div className={taskAnim.closing ? previewStyles.backdropClosing : previewStyles.backdrop} onClick={() => setPreviewingTask(null)}>
+          <div className={`${previewStyles.modal} ${taskAnim.closing ? previewStyles.modalClosing : ''}`} onClick={(e) => e.stopPropagation()}>
+            <div className={previewStyles.header}>
+              <div className={previewStyles.headerInfo}>
+                <h2 className={previewStyles.title}>{previewingTask.title}</h2>
+                {(previewingTask.courseId || previewingTask.status === 'done') && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                    {previewingTask.courseId && (
+                      <span className={previewStyles.subtitle} style={{ margin: 0 }}>
+                        {courses.find(c => c.id === previewingTask.courseId)?.code || courses.find(c => c.id === previewingTask.courseId)?.name}
+                      </span>
+                    )}
+                    {previewingTask.status === 'done' && (
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 8px', borderRadius: '999px' }}>Completed</span>
+                    )}
                   </div>
                 )}
               </div>
-              <button
-                onClick={() => setPreviewingTask(null)}
-                style={{
-                  padding: '4px',
-                  color: 'var(--text-muted)',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  borderRadius: '4px',
-                }}
-              >
+              <button onClick={() => setPreviewingTask(null)} className={previewStyles.closeButton}>
                 <X size={20} />
               </button>
             </div>
 
-            {/* Content - Scrollable */}
-            <div style={{ padding: isMobile ? '10px 12px' : '12px 16px', flex: 1, overflowY: 'auto' }}>
-              {/* Status */}
-              {previewingTask.status === 'done' && (
-                <span style={{
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  backgroundColor: 'var(--success-bg)',
-                  color: 'var(--success)',
-                  marginBottom: '10px',
-                  display: 'inline-block',
-                }}>
-                  Completed
-                </span>
-              )}
+            <div className={previewStyles.content}>
 
-              {/* Due Date */}
               {previewingTask.dueAt && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Due</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>
-                    {formatDate(previewingTask.dueAt)}
-                    {' '}
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Due</div>
+                  <div className={previewStyles.sectionValue}>
+                    {formatDate(previewingTask.dueAt)}{' '}
                     {new Date(previewingTask.dueAt).getHours() !== 23 && formatTime(previewingTask.dueAt)}
                   </div>
                 </div>
               )}
 
-              {/* Checklist */}
               {previewingTask.checklist && previewingTask.checklist.length > 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Checklist</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.checklistHeader}>
+                    <span className={previewStyles.checklistCount}>Checklist</span>
+                    <div className={previewStyles.checklistActions}>
                       <button
                         onClick={() => {
                           const isWI = previewingTask.type && ['task', 'assignment', 'reading', 'project'].includes(previewingTask.type);
@@ -512,22 +471,18 @@ export default function AuthenticatedDashboard() {
                           setPreviewingTask((prev: any) => prev ? { ...prev, checklist: [] } : prev);
                         }}
                         title="Delete checklist"
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', opacity: 0.5 }}
-                        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; }}
+                        className={previewStyles.checklistDeleteBtn}
                       >
                         <Trash2 size={14} />
                       </button>
                       <span>{previewingTask.checklist.filter((i: any) => i.done).length}/{previewingTask.checklist.length}</span>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div className={previewStyles.checklistItems}>
                     {previewingTask.checklist.map((item: any) => (
                       <div
                         key={item.id}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px', borderRadius: '4px', cursor: 'pointer' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                        className={previewStyles.checklistItem}
                         onClick={() => {
                           const isWI = previewingTask.type && ['task', 'assignment', 'reading', 'project'].includes(previewingTask.type);
                           if (isWI) {
@@ -541,39 +496,27 @@ export default function AuthenticatedDashboard() {
                           } : prev);
                         }}
                       >
-                        <input type="checkbox" checked={item.done} onChange={() => {}} style={{ width: '14px', height: '14px', cursor: 'pointer', flexShrink: 0 }} />
-                        <span style={{ fontSize: '13px', color: item.done ? 'var(--text-muted)' : 'var(--text)', textDecoration: item.done ? 'line-through' : 'none' }}>
-                          {item.text}
-                        </span>
+                        <input type="checkbox" checked={item.done} onChange={() => {}} className={previewStyles.checklistCheckbox} />
+                        <span className={item.done ? previewStyles.checklistTextDone : previewStyles.checklistText}>{item.text}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Notes */}
               {previewingTask.notes && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Notes</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
-                    {previewingTask.notes}
-                  </div>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Notes</div>
+                  <div className={previewStyles.sectionValuePrewrap}>{previewingTask.notes}</div>
                 </div>
               )}
 
-              {/* Links */}
               {previewingTask.links && previewingTask.links.length > 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Links</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Links</div>
+                  <div className={previewStyles.linksList}>
                     {previewingTask.links.map((link: any, idx: number) => (
-                      <a
-                        key={`${link.url}-${idx}`}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ fontSize: '14px', color: 'var(--link)' }}
-                      >
+                      <a key={`${link.url}-${idx}`} href={link.url} target="_blank" rel="noopener noreferrer" className={previewStyles.linkCard}>
                         {link.label}
                       </a>
                     ))}
@@ -581,20 +524,19 @@ export default function AuthenticatedDashboard() {
                 </div>
               )}
 
-              {/* Files */}
               {previewingTask.files && previewingTask.files.length > 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Files</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Files</div>
+                  <div className={previewStyles.linksList}>
                     {previewingTask.files.map((file: any, idx: number) => (
                       <button
                         key={`${file.url}-${idx}`}
                         type="button"
                         onClick={() => setPreviewingFile({ file, allFiles: previewingTask.files, index: idx })}
-                        style={{ fontSize: '14px', color: 'var(--link)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        className={previewStyles.fileCard}
                       >
-                        <FileIcon size={14} style={{ flexShrink: 0 }} />
-                        {file.name}
+                        <FileIcon size={14} className={previewStyles.fileIcon} />
+                        <span className={previewStyles.fileName}>{file.name}</span>
                       </button>
                     ))}
                   </div>
@@ -602,16 +544,7 @@ export default function AuthenticatedDashboard() {
               )}
             </div>
 
-            {/* Footer - Sticky */}
-            <div style={{
-              display: 'flex',
-              flexDirection: isMobile ? 'column' : 'row',
-              gap: isMobile ? '6px' : '8px',
-              padding: isMobile ? '10px 12px' : '12px 16px',
-              borderTop: '1px solid var(--border)',
-              flexShrink: 0,
-              backgroundColor: 'var(--panel)',
-            }}>
+            <div className={previewStyles.footer}>
               <Button
                 variant="secondary"
                 size={isMobile ? 'sm' : 'md'}
@@ -645,11 +578,12 @@ export default function AuthenticatedDashboard() {
             </div>
           </div>
         </div>
-      )}
+      ); })()}
 
       {/* Breakdown Modal for Tasks */}
       {showBreakdownModal && previewingTask && (
         <AIBreakdownModal
+          isOpen={true}
           existingTitle={previewingTask.title}
           existingDescription={previewingTask.notes || previewingTask.title}
           onClose={() => setShowBreakdownModal(false)}
@@ -669,119 +603,52 @@ export default function AuthenticatedDashboard() {
       )}
 
       {/* Deadline Preview Modal */}
-      {previewingDeadline && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: isMobile ? '16px' : '24px',
-          }}
-          onClick={() => setPreviewingDeadline(null)}
-        >
-          <div
-            style={{
-              backgroundColor: 'var(--panel)',
-              borderRadius: 'var(--radius-card)',
-              width: '100%',
-              maxWidth: '600px',
-              maxHeight: '80vh',
-              overflow: 'hidden',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header - Sticky */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              padding: isMobile ? '10px 12px' : '12px 16px',
-              borderBottom: '1px solid var(--border)',
-              flexShrink: 0,
-              backgroundColor: 'var(--panel)',
-            }}>
-              <div style={{ flex: 1, paddingRight: '12px' }}>
+      {deadlineAnim.data && (() => { const previewingDeadline = deadlineAnim.data!; return (
+        <div className={deadlineAnim.closing ? previewStyles.backdropClosing : previewStyles.backdrop} onClick={() => setPreviewingDeadline(null)}>
+          <div className={`${previewStyles.modal} ${deadlineAnim.closing ? previewStyles.modalClosing : ''}`} onClick={(e) => e.stopPropagation()}>
+            <div className={previewStyles.header}>
+              <div className={previewStyles.headerInfo}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  <h2 style={{
-                    fontSize: isMobile ? '16px' : '18px',
-                    fontWeight: '600',
-                    color: 'var(--text)',
-                    margin: 0,
-                    wordBreak: 'break-word',
-                  }}>
-                    {previewingDeadline.title}
-                  </h2>
+                  <h2 className={previewStyles.title}>{previewingDeadline.title}</h2>
                   {previewingDeadline.canvasAssignmentId && <CanvasBadge />}
                   {!previewingDeadline.canvasAssignmentId && ((previewingDeadline as any).links || []).some((l: any) => l.label === 'Canvas') && <CanvasExtBadge />}
                   {((previewingDeadline as any).links || []).some((l: any) => l.label === 'Learning Suite') && <LearningSuiteBadge />}
                 </div>
-                {previewingDeadline.courseId && (
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    {courses.find(c => c.id === previewingDeadline.courseId)?.code || courses.find(c => c.id === previewingDeadline.courseId)?.name}
+                {(previewingDeadline.courseId || previewingDeadline.status === 'done') && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                    {previewingDeadline.courseId && (
+                      <span className={previewStyles.subtitle} style={{ margin: 0 }}>
+                        {courses.find(c => c.id === previewingDeadline.courseId)?.code || courses.find(c => c.id === previewingDeadline.courseId)?.name}
+                      </span>
+                    )}
+                    {previewingDeadline.status === 'done' && (
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 8px', borderRadius: '999px' }}>Completed</span>
+                    )}
                   </div>
                 )}
               </div>
-              <button
-                onClick={() => setPreviewingDeadline(null)}
-                style={{
-                  padding: '4px',
-                  color: 'var(--text-muted)',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  borderRadius: '4px',
-                }}
-              >
+              <button onClick={() => setPreviewingDeadline(null)} className={previewStyles.closeButton}>
                 <X size={20} />
               </button>
             </div>
 
-            {/* Content - Scrollable */}
-            <div style={{ padding: isMobile ? '10px 12px' : '12px 16px', flex: 1, overflowY: 'auto' }}>
-              {/* Status */}
-              {previewingDeadline.status === 'done' && (
-                <span style={{
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  backgroundColor: 'var(--success-bg)',
-                  color: 'var(--success)',
-                  marginBottom: '10px',
-                  display: 'inline-block',
-                }}>
-                  Completed
-                </span>
-              )}
+            <div className={previewStyles.content}>
 
-              {/* Due Date */}
               {previewingDeadline.dueAt && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Due</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>
-                    {formatDate(previewingDeadline.dueAt)}
-                    {' '}
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Due</div>
+                  <div className={previewStyles.sectionValue}>
+                    {formatDate(previewingDeadline.dueAt)}{' '}
                     {new Date(previewingDeadline.dueAt).getHours() !== 23 && formatTime(previewingDeadline.dueAt)}
                   </div>
                 </div>
               )}
 
-              {/* Checklist */}
               {previewingDeadline.checklist && previewingDeadline.checklist.length > 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Checklist</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.checklistHeader}>
+                    <span className={previewStyles.checklistCount}>Checklist</span>
+                    <div className={previewStyles.checklistActions}>
                       <button
                         onClick={() => {
                           const isWI = previewingDeadline.type === 'assignment';
@@ -793,22 +660,18 @@ export default function AuthenticatedDashboard() {
                           setPreviewingDeadline((prev: any) => prev ? { ...prev, checklist: [] } : prev);
                         }}
                         title="Delete checklist"
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', opacity: 0.5 }}
-                        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; }}
+                        className={previewStyles.checklistDeleteBtn}
                       >
                         <Trash2 size={14} />
                       </button>
                       <span>{previewingDeadline.checklist.filter((i: any) => i.done).length}/{previewingDeadline.checklist.length}</span>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div className={previewStyles.checklistItems}>
                     {previewingDeadline.checklist.map((item: any) => (
                       <div
                         key={item.id}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px', borderRadius: '4px', cursor: 'pointer' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                        className={previewStyles.checklistItem}
                         onClick={() => {
                           const isWI = previewingDeadline.type === 'assignment';
                           if (isWI) {
@@ -822,39 +685,27 @@ export default function AuthenticatedDashboard() {
                           } : prev);
                         }}
                       >
-                        <input type="checkbox" checked={item.done} onChange={() => {}} style={{ width: '14px', height: '14px', cursor: 'pointer', flexShrink: 0 }} />
-                        <span style={{ fontSize: '13px', color: item.done ? 'var(--text-muted)' : 'var(--text)', textDecoration: item.done ? 'line-through' : 'none' }}>
-                          {item.text}
-                        </span>
+                        <input type="checkbox" checked={item.done} onChange={() => {}} className={previewStyles.checklistCheckbox} />
+                        <span className={item.done ? previewStyles.checklistTextDone : previewStyles.checklistText}>{item.text}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Notes */}
               {previewingDeadline.notes && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Notes</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
-                    {previewingDeadline.notes}
-                  </div>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Notes</div>
+                  <div className={previewStyles.sectionValuePrewrap}>{previewingDeadline.notes}</div>
                 </div>
               )}
 
-              {/* Links */}
               {previewingDeadline.links && previewingDeadline.links.length > 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Links</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Links</div>
+                  <div className={previewStyles.linksList}>
                     {previewingDeadline.links.map((link: any, idx: number) => (
-                      <a
-                        key={`${link.url}-${idx}`}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ fontSize: '14px', color: 'var(--link)' }}
-                      >
+                      <a key={`${link.url}-${idx}`} href={link.url} target="_blank" rel="noopener noreferrer" className={previewStyles.linkCard}>
                         {link.label}
                       </a>
                     ))}
@@ -862,20 +713,19 @@ export default function AuthenticatedDashboard() {
                 </div>
               )}
 
-              {/* Files */}
               {previewingDeadline.files && previewingDeadline.files.length > 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Files</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Files</div>
+                  <div className={previewStyles.linksList}>
                     {previewingDeadline.files.map((file: any, idx: number) => (
                       <button
                         key={`${file.url}-${idx}`}
                         type="button"
                         onClick={() => setPreviewingFile({ file, allFiles: previewingDeadline.files, index: idx })}
-                        style={{ fontSize: '14px', color: 'var(--link)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        className={previewStyles.fileCard}
                       >
-                        <FileIcon size={14} style={{ flexShrink: 0 }} />
-                        {file.name}
+                        <FileIcon size={14} className={previewStyles.fileIcon} />
+                        <span className={previewStyles.fileName}>{file.name}</span>
                       </button>
                     ))}
                   </div>
@@ -883,16 +733,7 @@ export default function AuthenticatedDashboard() {
               )}
             </div>
 
-            {/* Footer - Sticky */}
-            <div style={{
-              display: 'flex',
-              flexDirection: isMobile ? 'column' : 'row',
-              gap: isMobile ? '6px' : '8px',
-              padding: isMobile ? '10px 12px' : '12px 16px',
-              borderTop: '1px solid var(--border)',
-              flexShrink: 0,
-              backgroundColor: 'var(--panel)',
-            }}>
+            <div className={previewStyles.footer}>
               <Button
                 variant="secondary"
                 size={isMobile ? 'sm' : 'md'}
@@ -928,11 +769,12 @@ export default function AuthenticatedDashboard() {
             </div>
           </div>
         </div>
-      )}
+      ); })()}
 
       {/* Breakdown Modal for Deadlines */}
       {showBreakdownModal && previewingDeadline && (
         <AIBreakdownModal
+          isOpen={true}
           existingTitle={previewingDeadline.title}
           existingDescription={previewingDeadline.notes || previewingDeadline.title}
           onClose={() => setShowBreakdownModal(false)}
@@ -952,84 +794,35 @@ export default function AuthenticatedDashboard() {
       )}
 
       {/* WorkItem Preview Modal (for readings and projects) */}
-      {previewingWorkItem && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: isMobile ? '16px' : '24px',
-          }}
-          onClick={() => setPreviewingWorkItem(null)}
-        >
-          <div
-            style={{
-              backgroundColor: 'var(--panel)',
-              borderRadius: '12px',
-              border: '1px solid var(--border)',
-              width: isMobile ? '100%' : '600px',
-              maxHeight: isMobile ? '80vh' : '70vh',
-              overflow: 'auto',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                padding: isMobile ? '12px' : '16px',
-                borderBottom: '1px solid var(--border)',
-              }}
-            >
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <h3 style={{ margin: 0, fontSize: isMobile ? '1rem' : '1.125rem', color: 'var(--text)' }}>
-                    {previewingWorkItem.title}
-                  </h3>
-                </div>
-                {previewingWorkItem.courseId && (
-                  <p style={{ margin: '4px 0 0 0', fontSize: isMobile ? '0.75rem' : '0.875rem', color: 'var(--text-muted)' }}>
-                    {courses.find(c => c.id === previewingWorkItem.courseId)?.code || courses.find(c => c.id === previewingWorkItem.courseId)?.name}
-                  </p>
+      {workItemAnim.data && (() => { const previewingWorkItem = workItemAnim.data!; return (
+        <div className={workItemAnim.closing ? previewStyles.backdropClosing : previewStyles.backdrop} onClick={() => setPreviewingWorkItem(null)}>
+          <div className={`${previewStyles.modal} ${workItemAnim.closing ? previewStyles.modalClosing : ''}`} onClick={(e) => e.stopPropagation()}>
+            <div className={previewStyles.header}>
+              <div className={previewStyles.headerInfo}>
+                <h2 className={previewStyles.title}>{previewingWorkItem.title}</h2>
+                {(previewingWorkItem.courseId || previewingWorkItem.status === 'done') && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                    {previewingWorkItem.courseId && (
+                      <span className={previewStyles.subtitle} style={{ margin: 0 }}>
+                        {courses.find(c => c.id === previewingWorkItem.courseId)?.code || courses.find(c => c.id === previewingWorkItem.courseId)?.name}
+                      </span>
+                    )}
+                    {previewingWorkItem.status === 'done' && (
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 8px', borderRadius: '999px' }}>Completed</span>
+                    )}
+                  </div>
                 )}
               </div>
-              <button
-                onClick={() => setPreviewingWorkItem(null)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  padding: '4px',
-                  cursor: 'pointer',
-                  color: 'var(--text-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
+              <button onClick={() => setPreviewingWorkItem(null)} className={previewStyles.closeButton}>
                 <X size={20} />
               </button>
             </div>
 
-            {/* Content */}
-            <div style={{ padding: isMobile ? '12px' : '16px' }}>
-              {/* Type Badge */}
-              <div style={{ marginBottom: '12px' }}>
+            <div className={previewStyles.content}>
+              <div className={previewStyles.badges}>
                 <span
+                  className={previewStyles.badge}
                   style={{
-                    display: 'inline-block',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    fontSize: '0.75rem',
-                    fontWeight: 500,
                     backgroundColor: previewingWorkItem.type === 'reading' ? 'rgba(6, 182, 212, 0.2)' : 'rgba(236, 72, 153, 0.2)',
                     color: previewingWorkItem.type === 'reading' ? '#06b6d4' : '#ec4899',
                     textTransform: 'capitalize',
@@ -1039,60 +832,39 @@ export default function AuthenticatedDashboard() {
                 </span>
               </div>
 
-              {previewingWorkItem.status === 'done' && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    color: 'var(--success)',
-                    marginBottom: '12px',
-                    fontSize: isMobile ? '0.75rem' : '0.875rem',
-                  }}
-                >
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--success)' }} />
-                  Completed
-                </div>
-              )}
-
               {previewingWorkItem.dueAt && (
-                <div style={{ marginBottom: '12px' }}>
-                  <span style={{ color: 'var(--text-muted)', fontSize: isMobile ? '0.75rem' : '0.875rem' }}>Due: </span>
-                  <span style={{ color: 'var(--text)', fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Due</div>
+                  <div className={previewStyles.sectionValue}>
                     {formatDate(previewingWorkItem.dueAt)}
                     {new Date(previewingWorkItem.dueAt).getHours() !== 23 && ` at ${formatTime(previewingWorkItem.dueAt)}`}
-                  </span>
+                  </div>
                 </div>
               )}
 
-              {/* Checklist */}
               {previewingWorkItem.checklist && previewingWorkItem.checklist.length > 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Checklist</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.checklistHeader}>
+                    <span className={previewStyles.checklistCount}>Checklist</span>
+                    <div className={previewStyles.checklistActions}>
                       <button
                         onClick={() => {
                           updateWorkItem(previewingWorkItem.id, { checklist: [] });
                           setPreviewingWorkItem(prev => prev ? { ...prev, checklist: [] } : prev);
                         }}
                         title="Delete checklist"
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', opacity: 0.5 }}
-                        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; }}
+                        className={previewStyles.checklistDeleteBtn}
                       >
                         <Trash2 size={14} />
                       </button>
                       <span>{previewingWorkItem.checklist.filter(i => i.done).length}/{previewingWorkItem.checklist.length}</span>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div className={previewStyles.checklistItems}>
                     {previewingWorkItem.checklist.map((item) => (
                       <div
                         key={item.id}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px', borderRadius: '4px', cursor: 'pointer' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                        className={previewStyles.checklistItem}
                         onClick={() => {
                           toggleWorkItemChecklistItem(previewingWorkItem.id, item.id);
                           setPreviewingWorkItem(prev => prev ? {
@@ -1101,10 +873,8 @@ export default function AuthenticatedDashboard() {
                           } : prev);
                         }}
                       >
-                        <input type="checkbox" checked={item.done} onChange={() => {}} style={{ width: '14px', height: '14px', cursor: 'pointer', flexShrink: 0 }} />
-                        <span style={{ fontSize: isMobile ? '0.75rem' : '0.875rem', color: item.done ? 'var(--text-muted)' : 'var(--text)', textDecoration: item.done ? 'line-through' : 'none' }}>
-                          {item.text}
-                        </span>
+                        <input type="checkbox" checked={item.done} onChange={() => {}} className={previewStyles.checklistCheckbox} />
+                        <span className={item.done ? previewStyles.checklistTextDone : previewStyles.checklistText}>{item.text}</span>
                       </div>
                     ))}
                   </div>
@@ -1112,60 +882,45 @@ export default function AuthenticatedDashboard() {
               )}
 
               {previewingWorkItem.notes && (
-                <div style={{ marginBottom: '12px' }}>
-                  <p style={{ color: 'var(--text)', fontSize: isMobile ? '0.75rem' : '0.875rem', whiteSpace: 'pre-wrap', margin: 0 }}>
-                    {previewingWorkItem.notes}
-                  </p>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Notes</div>
+                  <div className={previewStyles.sectionValuePrewrap}>{previewingWorkItem.notes}</div>
                 </div>
               )}
 
               {previewingWorkItem.links && previewingWorkItem.links.length > 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '4px' }}>Links:</p>
-                  {previewingWorkItem.links.map((link: any, idx: number) => (
-                    <a
-                      key={idx}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ display: 'block', color: 'var(--link)', fontSize: isMobile ? '0.75rem' : '0.875rem', marginBottom: '4px' }}
-                    >
-                      {link.label || link.url}
-                    </a>
-                  ))}
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Links</div>
+                  <div className={previewStyles.linksList}>
+                    {previewingWorkItem.links.map((link: any, idx: number) => (
+                      <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className={previewStyles.linkCard}>
+                        {link.label || link.url}
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {previewingWorkItem.files && previewingWorkItem.files.length > 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '4px' }}>Files:</p>
-                  {previewingWorkItem.files.map((file: any, idx: number) => (
-                    <button
-                      key={idx}
-                      onClick={() => setPreviewingFile({ file, allFiles: previewingWorkItem.files, index: idx })}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        color: 'var(--link)',
-                        fontSize: isMobile ? '0.75rem' : '0.875rem',
-                        marginBottom: '4px',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: 0,
-                      }}
-                    >
-                      <FileIcon size={14} />
-                      {file.name}
-                    </button>
-                  ))}
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Files</div>
+                  <div className={previewStyles.linksList}>
+                    {previewingWorkItem.files.map((file: any, idx: number) => (
+                      <button
+                        key={idx}
+                        onClick={() => setPreviewingFile({ file, allFiles: previewingWorkItem.files, index: idx })}
+                        className={previewStyles.fileCard}
+                      >
+                        <FileIcon size={14} className={previewStyles.fileIcon} />
+                        <span className={previewStyles.fileName}>{file.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Actions */}
-            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '6px' : '8px', padding: isMobile ? '12px' : '16px', borderTop: '1px solid var(--border)' }}>
+            <div className={previewStyles.footer}>
               <Button
                 variant="secondary"
                 size={isMobile ? 'sm' : 'md'}
@@ -1194,11 +949,12 @@ export default function AuthenticatedDashboard() {
             </div>
           </div>
         </div>
-      )}
+      ); })()}
 
       {/* Breakdown Modal for WorkItems */}
       {showBreakdownModal && previewingWorkItem && (
         <AIBreakdownModal
+          isOpen={true}
           existingTitle={previewingWorkItem.title}
           existingDescription={previewingWorkItem.notes || previewingWorkItem.title}
           onClose={() => setShowBreakdownModal(false)}
@@ -1213,209 +969,144 @@ export default function AuthenticatedDashboard() {
       )}
 
       {/* Class Preview Modal */}
-      {previewingClass && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: isMobile ? '16px' : '24px',
-          }}
-          onClick={() => setPreviewingClass(null)}
-        >
-          <div
-            style={{
-              backgroundColor: 'var(--panel)',
-              borderRadius: 'var(--radius-card)',
-              width: '100%',
-              maxWidth: '600px',
-              maxHeight: '80vh',
-              overflow: 'hidden',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              padding: isMobile ? '10px 12px' : '12px 16px',
-              borderBottom: '1px solid var(--border)',
-            }}>
-              <div style={{ flex: 1, paddingRight: '12px' }}>
-                <h2 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>
+      {classAnim.data && (() => { const previewingClass = classAnim.data!; return (
+        <div className={classAnim.closing ? previewStyles.backdropClosing : previewStyles.backdrop} onClick={() => setPreviewingClass(null)}>
+          <div className={`${previewStyles.modal} ${classAnim.closing ? previewStyles.modalClosing : ''}`} onClick={(e) => e.stopPropagation()}>
+            <div className={previewStyles.header}>
+              <div className={previewStyles.headerInfo}>
+                <h2 className={previewStyles.title}>
                   {previewingClass.course.name || previewingClass.course.code}
                 </h2>
                 {previewingClass.course.code && previewingClass.course.name && (
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    {previewingClass.course.code}
-                  </div>
+                  <div className={previewStyles.subtitle}>{previewingClass.course.code}</div>
                 )}
               </div>
-              <button onClick={() => setPreviewingClass(null)} style={{ padding: '4px', color: 'var(--text-muted)', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}>
+              <button onClick={() => setPreviewingClass(null)} className={previewStyles.closeButton}>
                 <X size={20} />
               </button>
             </div>
-            <div style={{ padding: isMobile ? '10px 12px' : '12px 16px', flex: 1, overflowY: 'auto' }}>
+            <div className={previewStyles.content}>
+              {/* Row 1: Time | Days */}
               {previewingClass.meetingTime && (
-                <>
-                  <div style={{ marginBottom: '12px' }}>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Time</div>
-                    <div style={{ fontSize: '14px', color: 'var(--text)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile || !previewingClass.meetingTime.days ? '1fr' : '1fr 1fr', gap: isMobile ? '8px' : '12px' }}>
+                  <div className={previewStyles.section}>
+                    <div className={previewStyles.sectionLabel}>Time</div>
+                    <div className={previewStyles.sectionValue}>
                       {formatTimeString(previewingClass.meetingTime.start)} – {formatTimeString(previewingClass.meetingTime.end)}
                     </div>
                   </div>
-                  {previewingClass.meetingTime.location && (
-                    <div style={{ marginBottom: '12px' }}>
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Location</div>
-                      <div style={{ fontSize: '14px', color: 'var(--text)' }}>{previewingClass.meetingTime.location}</div>
-                    </div>
-                  )}
                   {previewingClass.meetingTime.days && (
-                    <div style={{ marginBottom: '12px' }}>
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Days</div>
-                      <div style={{ fontSize: '14px', color: 'var(--text)' }}>{previewingClass.meetingTime.days.join(', ')}</div>
+                    <div className={previewStyles.section}>
+                      <div className={previewStyles.sectionLabel}>Days</div>
+                      <div className={previewStyles.sectionValue}>{previewingClass.meetingTime.days.join(', ')}</div>
                     </div>
                   )}
-                </>
+                </div>
+              )}
+              {/* Row 2: Location */}
+              {previewingClass.meetingTime?.location && (
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Location</div>
+                  <div className={previewStyles.sectionValue}>{previewingClass.meetingTime.location}</div>
+                </div>
               )}
               {previewingClass.course.instructor && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Instructor</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>{previewingClass.course.instructor}</div>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Instructor</div>
+                  <div className={previewStyles.sectionValue}>{previewingClass.course.instructor}</div>
                 </div>
               )}
-              {previewingClass.course.links && previewingClass.course.links.length > 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Links</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {previewingClass.course.links.map((link: { label: string; url: string }, idx: number) => (
-                      <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--link)] hover:underline">
-                        {link.label || link.url}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {previewingClass.course.files && previewingClass.course.files.length > 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Files</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {previewingClass.course.files.map((file: any, idx: number) => (
-                      <button
-                        key={`${file.url}-${idx}`}
-                        type="button"
-                        onClick={() => setPreviewingFile({ file, allFiles: previewingClass.course.files, index: idx })}
-                        style={{ fontSize: '14px', color: 'var(--link)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}
-                      >
-                        <FileIcon size={14} style={{ flexShrink: 0 }} />
-                        {file.name}
-                      </button>
-                    ))}
-                  </div>
+              {/* Row 3: Links | Files */}
+              {((previewingClass.course.links && previewingClass.course.links.length > 0) || (previewingClass.course.files && previewingClass.course.files.length > 0)) && (
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile || !(previewingClass.course.links?.length > 0 && previewingClass.course.files?.length > 0) ? '1fr' : '1fr 1fr', gap: isMobile ? '8px' : '12px' }}>
+                  {previewingClass.course.links && previewingClass.course.links.length > 0 && (
+                    <div className={previewStyles.section}>
+                      <div className={previewStyles.sectionLabel}>Links</div>
+                      <div className={previewStyles.linksList}>
+                        {previewingClass.course.links.map((link: { label: string; url: string }, idx: number) => (
+                          <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className={previewStyles.linkCard}>
+                            {link.label || link.url}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {previewingClass.course.files && previewingClass.course.files.length > 0 && (
+                    <div className={previewStyles.section}>
+                      <div className={previewStyles.sectionLabel}>Files</div>
+                      <div className={previewStyles.linksList}>
+                        {previewingClass.course.files.map((file: any, idx: number) => (
+                          <button
+                            key={`${file.url}-${idx}`}
+                            type="button"
+                            onClick={() => setPreviewingFile({ file, allFiles: previewingClass.course.files, index: idx })}
+                            className={previewStyles.fileCard}
+                          >
+                            <FileIcon size={14} className={previewStyles.fileIcon} />
+                            <span className={previewStyles.fileName}>{file.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-            <div style={{ display: 'flex', gap: '8px', padding: isMobile ? '10px 12px' : '12px 16px', borderTop: '1px solid var(--border)' }}>
+            <div className={previewStyles.footer}>
               <Link href={`/courses?preview=${previewingClass.course.id}`} style={{ flex: 1 }}>
-                <Button variant="primary" style={{ width: '100%' }} onClick={() => setPreviewingClass(null)}>
+                <Button variant="primary" size={isMobile ? 'sm' : 'md'} style={{ width: '100%' }} onClick={() => setPreviewingClass(null)}>
                   View Course
                 </Button>
               </Link>
             </div>
           </div>
         </div>
-      )}
+      ); })()}
 
       {/* Exam Preview Modal */}
-      {previewingExam && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: isMobile ? '16px' : '24px',
-          }}
-          onClick={() => setPreviewingExam(null)}
-        >
-          <div
-            style={{
-              backgroundColor: 'var(--panel)',
-              borderRadius: 'var(--radius-card)',
-              width: '100%',
-              maxWidth: '600px',
-              maxHeight: '80vh',
-              overflow: 'hidden',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              padding: isMobile ? '10px 12px' : '12px 16px',
-              borderBottom: '1px solid var(--border)',
-            }}>
-              <div style={{ flex: 1, paddingRight: '12px' }}>
-                <h2 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '600', color: 'var(--text)', margin: 0 }}>
-                  {previewingExam.title}
-                </h2>
+      {examAnim.data && (() => { const previewingExam = examAnim.data!; return (
+        <div className={examAnim.closing ? previewStyles.backdropClosing : previewStyles.backdrop} onClick={() => setPreviewingExam(null)}>
+          <div className={`${previewStyles.modal} ${examAnim.closing ? previewStyles.modalClosing : ''}`} onClick={(e) => e.stopPropagation()}>
+            <div className={previewStyles.header}>
+              <div className={previewStyles.headerInfo}>
+                <h2 className={previewStyles.title}>{previewingExam.title}</h2>
                 {previewingExam.courseId && (
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  <div className={previewStyles.subtitle}>
                     {courses.find(c => c.id === previewingExam.courseId)?.code || courses.find(c => c.id === previewingExam.courseId)?.name}
                   </div>
                 )}
               </div>
-              <button onClick={() => setPreviewingExam(null)} style={{ padding: '4px', color: 'var(--text-muted)', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px' }}>
+              <button onClick={() => setPreviewingExam(null)} className={previewStyles.closeButton}>
                 <X size={20} />
               </button>
             </div>
-            <div style={{ padding: isMobile ? '10px 12px' : '12px 16px', flex: 1, overflowY: 'auto' }}>
+            <div className={previewStyles.content}>
               {previewingExam.examAt && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Date & Time</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Date & Time</div>
+                  <div className={previewStyles.sectionValue}>
                     {formatDate(previewingExam.examAt)} {formatTime(previewingExam.examAt)}
                   </div>
                 </div>
               )}
               {previewingExam.location && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Location</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>{previewingExam.location}</div>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Location</div>
+                  <div className={previewStyles.sectionValue}>{previewingExam.location}</div>
                 </div>
               )}
               {previewingExam.notes && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Notes</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)', whiteSpace: 'pre-wrap' }}>{previewingExam.notes}</div>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Notes</div>
+                  <div className={previewStyles.sectionValuePrewrap}>{previewingExam.notes}</div>
                 </div>
               )}
               {previewingExam.links && previewingExam.links.length > 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Links</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Links</div>
+                  <div className={previewStyles.linksList}>
                     {previewingExam.links.map((link: { label: string; url: string }, idx: number) => (
-                      <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--link)] hover:underline">
+                      <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className={previewStyles.linkCard}>
                         {link.label || link.url}
                       </a>
                     ))}
@@ -1423,34 +1114,34 @@ export default function AuthenticatedDashboard() {
                 </div>
               )}
               {previewingExam.files && previewingExam.files.length > 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Files</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Files</div>
+                  <div className={previewStyles.linksList}>
                     {previewingExam.files.map((file: any, idx: number) => (
                       <button
                         key={`${file.url}-${idx}`}
                         type="button"
                         onClick={() => setPreviewingFile({ file, allFiles: previewingExam.files, index: idx })}
-                        style={{ fontSize: '14px', color: 'var(--link)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        className={previewStyles.fileCard}
                       >
-                        <FileIcon size={14} style={{ flexShrink: 0 }} />
-                        {file.name}
+                        <FileIcon size={14} className={previewStyles.fileIcon} />
+                        <span className={previewStyles.fileName}>{file.name}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-            <div style={{ display: 'flex', gap: '8px', padding: isMobile ? '10px 12px' : '12px 16px', borderTop: '1px solid var(--border)' }}>
+            <div className={previewStyles.footer}>
               <Link href={`/exams?preview=${previewingExam.id}`} style={{ flex: 1 }}>
-                <Button variant="primary" style={{ width: '100%' }} onClick={() => setPreviewingExam(null)}>
+                <Button variant="primary" size={isMobile ? 'sm' : 'md'} style={{ width: '100%' }} onClick={() => setPreviewingExam(null)}>
                   View in Exams
                 </Button>
               </Link>
             </div>
           </div>
         </div>
-      )}
+      ); })()}
 
       {/* Event Detail Modal (with edit support) */}
       <EventDetailModal

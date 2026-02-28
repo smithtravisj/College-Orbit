@@ -21,6 +21,7 @@ export interface CalendarEvent {
   allDay?: boolean; // For custom calendar events
   description?: string; // For custom calendar events
   instanceDate?: string | null; // For recurring task instances
+  recurringPatternId?: string | null; // For recurring calendar events
   meetingTimeData?: {
     days: string[];
     start: string;
@@ -342,6 +343,7 @@ export function getCustomCalendarEventsForDate(
         endAt: event.endAt,
         allDay: event.allDay,
         description: event.description,
+        recurringPatternId: event.recurringPatternId || null,
       };
     });
 }

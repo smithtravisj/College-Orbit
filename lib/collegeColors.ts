@@ -1619,8 +1619,21 @@ export function applyColorPalette(palette: ColorPalette): void {
   root.style.setProperty("--bg", palette.bg);
   root.style.setProperty("--panel", palette.panel);
   // Compute solid (opaque) version of panel for modals/toasts/overlays
-  const panelRgba = palette.panel.match(/rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/);
-  root.style.setProperty("--panel-solid", panelRgba ? `rgb(${panelRgba[1]}, ${panelRgba[2]}, ${panelRgba[3]})` : palette.panel);
+  // Composite panel over bg so modals match how cards look on the page
+  const panelRgba = palette.panel.match(/rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+  if (panelRgba) {
+    const a = parseFloat(panelRgba[4]);
+    const bgMatch = palette.bg.match(/#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i);
+    const bgR = bgMatch ? parseInt(bgMatch[1], 16) : 0;
+    const bgG = bgMatch ? parseInt(bgMatch[2], 16) : 0;
+    const bgB = bgMatch ? parseInt(bgMatch[3], 16) : 0;
+    const r = Math.round(parseInt(panelRgba[1]) * a + bgR * (1 - a));
+    const g = Math.round(parseInt(panelRgba[2]) * a + bgG * (1 - a));
+    const b = Math.round(parseInt(panelRgba[3]) * a + bgB * (1 - a));
+    root.style.setProperty("--panel-solid", `rgb(${r}, ${g}, ${b})`);
+  } else {
+    root.style.setProperty("--panel-solid", palette.panel);
+  }
   root.style.setProperty("--panel-2", palette.panel2);
 
   // Text

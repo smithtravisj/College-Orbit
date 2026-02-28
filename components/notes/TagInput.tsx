@@ -82,69 +82,92 @@ export default function TagInput({
 
   return (
     <div style={{ position: 'relative' }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+      <div
+        onClick={() => inputRef.current?.focus()}
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '6px',
+          alignItems: 'center',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '8px 12px',
+          backgroundColor: 'var(--panel-2)',
+          cursor: 'text',
+        }}
+      >
         {tags.map((tag, idx) => (
           <div
             key={idx}
-            style={{ backgroundColor: 'var(--accent)', color: tagTextColor, padding: '4px 12px', borderRadius: '9999px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}
+            style={{ backgroundColor: 'var(--accent)', color: tagTextColor, padding: '2px 10px', borderRadius: '9999px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', lineHeight: '1.4', flexShrink: 0 }}
           >
             {tag}
             <button
               type="button"
-              onClick={() => removeTag(idx)}
-              style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, opacity: 1, transition: 'opacity 150ms ease' }}
+              onClick={(e) => { e.stopPropagation(); removeTag(idx); }}
+              style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, opacity: 1, transition: 'opacity 150ms ease', display: 'flex', alignItems: 'center' }}
               onMouseEnter={(e) => e.currentTarget.style.opacity = '0.75'}
               onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
               aria-label={`Remove tag ${tag}`}
             >
-              <X size={14} />
+              <X size={12} />
             </button>
           </div>
         ))}
-        <div style={{ position: 'relative', flex: 1, minWidth: '100px', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 12px', backgroundColor: 'var(--panel-2)' }}>
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            style={{ width: '100%', backgroundColor: 'transparent', color: 'var(--text)', outline: 'none', border: 'none', padding: 0 }}
-            autoComplete="off"
-          />
-
-          {/* Suggestions dropdown */}
-          {suggestions.length > 0 && (
-            <div
-              ref={suggestionsRef}
-              style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', backgroundColor: 'var(--panel-solid, var(--panel))', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 10 }}
-            >
-              {suggestions.map((suggestion, idx) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  onClick={() => addTag(suggestion)}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    padding: '8px 12px',
-                    fontSize: '14px',
-                    transition: 'background-color 150ms ease',
-                    backgroundColor: idx === selectedSuggestionIndex ? 'var(--accent)' : 'transparent',
-                    color: idx === selectedSuggestionIndex ? tagTextColor : 'var(--text)',
-                    border: 'none',
-                    cursor: 'pointer',
-                  }}
-                  onMouseEnter={() => setSelectedSuggestionIndex(idx)}
-                  onMouseLeave={() => setSelectedSuggestionIndex(-1)}
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <input
+          ref={inputRef}
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={tags.length === 0 ? placeholder : ''}
+          style={{
+            flex: 1,
+            minWidth: '80px',
+            backgroundColor: 'transparent',
+            color: 'var(--text)',
+            outline: 'none',
+            border: 'none',
+            borderRadius: 0,
+            padding: '4px 0',
+            margin: 0,
+            fontSize: '14px',
+            lineHeight: '1.5',
+          }}
+          autoComplete="off"
+        />
       </div>
+
+      {/* Suggestions dropdown */}
+      {suggestions.length > 0 && (
+        <div
+          ref={suggestionsRef}
+          style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', backgroundColor: 'var(--panel-solid, var(--panel))', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 10 }}
+        >
+          {suggestions.map((suggestion, idx) => (
+            <button
+              key={suggestion}
+              type="button"
+              onClick={() => addTag(suggestion)}
+              style={{
+                width: '100%',
+                textAlign: 'left',
+                padding: '8px 12px',
+                fontSize: '14px',
+                transition: 'background-color 150ms ease',
+                backgroundColor: idx === selectedSuggestionIndex ? 'var(--accent)' : 'transparent',
+                color: idx === selectedSuggestionIndex ? tagTextColor : 'var(--text)',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={() => setSelectedSuggestionIndex(idx)}
+              onMouseLeave={() => setSelectedSuggestionIndex(-1)}
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

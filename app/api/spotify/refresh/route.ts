@@ -52,11 +52,14 @@ export const POST = withRateLimit(async function(req: NextRequest) {
       tokens = await refreshAccessToken(refreshToken, clientId);
     } catch (error) {
       console.error('[Spotify Refresh] Token refresh failed:', error);
-      // If refresh fails, the connection may be invalid
+      // If refresh fails, clear the connection and all tokens to avoid zombie state
       await prisma.settings.update({
         where: { userId },
         data: {
           spotifyConnected: false,
+          spotifyAccessToken: null,
+          spotifyRefreshToken: null,
+          spotifyTokenExpiresAt: null,
         },
       });
       return NextResponse.json(

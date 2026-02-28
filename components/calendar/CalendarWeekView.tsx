@@ -22,6 +22,7 @@ const EventDetailModal = dynamic(() => import('@/components/EventDetailModal'), 
   ssr: false,
 });
 import ExclusionDetailModal from '@/components/ExclusionDetailModal';
+import { useCalendarContextMenu, CalendarContextMenuPortal } from './CalendarContextMenu';
 
 interface CalendarWeekViewProps {
   date: Date;
@@ -35,10 +36,11 @@ interface CalendarWeekViewProps {
   allWorkItems?: WorkItem[];
   excludedDates?: ExcludedDate[];
   calendarEvents?: CustomCalendarEvent[];
-  onTimeSlotClick?: (date: Date, time?: string, allDay?: boolean) => void;
+  onTimeSlotClick?: (date: Date, time?: string, allDay?: boolean, endTime?: string) => void;
   onEventUpdate?: (updatedEvent: CustomCalendarEvent) => void;
   onStatusChange?: () => void;
   onEventReschedule?: (eventType: string, eventId: string, newDate: Date, allDay: boolean) => void;
+  searchQuery?: string;
 }
 
 const HOUR_HEIGHT = 60; // pixels
@@ -57,9 +59,11 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
   allWorkItems = [],
   excludedDates = [],
   calendarEvents = [],
+  onTimeSlotClick,
   onEventUpdate,
   onStatusChange,
   onEventReschedule,
+  searchQuery = '',
 }: CalendarWeekViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const dayColumnRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -75,6 +79,24 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
   const [draggedEvent, setDraggedEvent] = useState<CalendarEvent | null>(null);
   const [dropIndicator, setDropIndicator] = useState<{ dateStr: string; top: number; isAllDay: boolean } | null>(null);
   const lastScrolledWeekRef = useRef<string | null>(null);
+
+  const { contextMenu, setContextMenu, handleContextMenu, getMenuItems, handleAction, wantsBreakdown, clearBreakdown, pendingEditScope } = useCalendarContextMenu({
+    workItems,
+    setSelectedEvent,
+    onStatusChange,
+  });
+
+  // Search match helper
+  const matchesSearch = (event: CalendarEvent) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      event.title?.toLowerCase().includes(q) ||
+      event.courseCode?.toLowerCase().includes(q) ||
+      event.location?.toLowerCase().includes(q) ||
+      event.description?.toLowerCase().includes(q)
+    );
+  };
 
   // Get colorblind settings
   const settings = useAppStore((state) => state.settings);
@@ -269,6 +291,112 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
     }
   };
 
+  // Click-to-create handler for time grid
+  const handleTimeGridClick = (e: React.MouseEvent, day: Date, dateStr: string) => {
+    if (!onTimeSlotClick) return;
+    // Don't fire if clicking on an event
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-event-type]') || target.closest('[data-exclusion-type]')) return;
+
+    const columnRef = dayColumnRefs.current.get(dateStr);
+    if (!columnRef) return;
+
+    const rect = columnRef.getBoundingClientRect();
+    const y = e.clientY - rect.top - 8; // Account for padding
+    const totalMinutes = Math.round((y / HOUR_HEIGHT) * 60 / 15) * 15;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+    onTimeSlotClick(day, timeStr, false);
+  };
+
+  // Drag-to-create state
+  const [dragCreate, setDragCreate] = useState<{
+    dateStr: string;
+    day: Date;
+    startY: number;
+    startMinutes: number;
+    currentMinutes: number;
+  } | null>(null);
+  const dragCreateRef = useRef(dragCreate);
+  dragCreateRef.current = dragCreate;
+
+  const handleDragCreateMouseDown = (e: React.MouseEvent, day: Date, dateStr: string) => {
+    if (!onTimeSlotClick) return;
+    // Don't start drag-create on events
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-event-type]') || target.closest('[data-exclusion-type]')) return;
+    // Only left mouse button
+    if (e.button !== 0) return;
+
+    const columnRef = dayColumnRefs.current.get(dateStr);
+    if (!columnRef) return;
+
+    const rect = columnRef.getBoundingClientRect();
+    const y = e.clientY - rect.top - 8;
+    const totalMinutes = Math.round((y / HOUR_HEIGHT) * 60 / 15) * 15;
+
+    setDragCreate({
+      dateStr,
+      day,
+      startY: e.clientY,
+      startMinutes: totalMinutes,
+      currentMinutes: totalMinutes,
+    });
+  };
+
+  useEffect(() => {
+    if (!dragCreate) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const dc = dragCreateRef.current;
+      if (!dc) return;
+      const columnRef = dayColumnRefs.current.get(dc.dateStr);
+      if (!columnRef) return;
+
+      const rect = columnRef.getBoundingClientRect();
+      const y = e.clientY - rect.top - 8;
+      const totalMinutes = Math.round((y / HOUR_HEIGHT) * 60 / 15) * 15;
+      const clampedMinutes = Math.max(0, Math.min(24 * 60, totalMinutes));
+
+      setDragCreate(prev => prev ? { ...prev, currentMinutes: clampedMinutes } : null);
+    };
+
+    const handleMouseUp = (_e: MouseEvent) => {
+      const dc = dragCreateRef.current;
+      if (!dc || !onTimeSlotClick) {
+        setDragCreate(null);
+        return;
+      }
+
+      const startMin = Math.min(dc.startMinutes, dc.currentMinutes);
+      const endMin = Math.max(dc.startMinutes, dc.currentMinutes);
+      const duration = endMin - startMin;
+
+      if (duration >= 15) {
+        // Drag-to-create: open modal with start and end time
+        const startHours = Math.floor(startMin / 60);
+        const startMins = startMin % 60;
+        const endHours = Math.floor(endMin / 60);
+        const endMins = endMin % 60;
+        const startTimeStr = `${startHours.toString().padStart(2, '0')}:${startMins.toString().padStart(2, '0')}`;
+        const endTimeStr = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+        onTimeSlotClick(dc.day, startTimeStr, false, endTimeStr);
+      }
+      // If duration < 15min, it's treated as a click (handled by onClick)
+
+      setDragCreate(null);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [dragCreate !== null]);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--panel)', overflow: 'hidden' }}>
       {/* Day headers */}
@@ -381,6 +509,8 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
                   const exDateOnly = ex.date.includes('T') ? ex.date.split('T')[0] : ex.date;
                   return exDateOnly === dateStr && (exclusionType === 'holiday' ? !ex.courseId : ex.courseId);
                 });
+                const exclusionLabel = exclusionType === 'holiday' ? 'No School' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`;
+                const exclusionDimmed = searchQuery && !exclusionLabel.toLowerCase().includes(searchQuery.toLowerCase()) && !(courseCode && courseCode.toLowerCase().includes(searchQuery.toLowerCase()));
 
                 return (
                   <div
@@ -403,18 +533,19 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
                       flexShrink: 0,
                       cursor: 'pointer',
                       transition: 'opacity 0.2s',
+                      opacity: exclusionDimmed ? 0.2 : undefined,
                     }}
                     onClick={() => {
                       if (exclusion) setSelectedExclusion(exclusion);
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = '0.8';
+                      if (!exclusionDimmed) e.currentTarget.style.opacity = '0.8';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.opacity = '1';
+                      e.currentTarget.style.opacity = exclusionDimmed ? '0.2' : '1';
                     }}
                   >
-                    {exclusionType === 'holiday' ? 'No School' : `Class Cancelled${courseCode ? ': ' + courseCode : ''}`}
+                    {exclusionLabel}
                   </div>
                 );
               })()}
@@ -447,6 +578,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
                     }}
                     title={event.title}
                     onClick={() => setSelectedEvent(event)}
+                    onContextMenu={(e) => handleContextMenu(event, e)}
                   >
                     {event.title.substring(0, 16)}
                   </div>
@@ -529,7 +661,13 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
                   borderRight: '1px solid var(--border)',
                   backgroundColor: isTodayDate ? 'var(--today-bg)' : 'var(--panel)',
                   paddingRight: isLastDay ? '8px' : undefined,
+                  cursor: onTimeSlotClick ? 'pointer' : undefined,
                 }}
+                onClick={(e) => {
+                  // Only fire click if not drag-creating
+                  if (!dragCreate) handleTimeGridClick(e, day, dateStr);
+                }}
+                onMouseDown={(e) => handleDragCreateMouseDown(e, day, dateStr)}
                 onDragOver={(e) => handleTimeGridDragOver(e, dateStr)}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleTimeGridDrop(e, dateStr, day)}
@@ -666,11 +804,13 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
                         height: `${height}px`,
                         backgroundColor: `${color}80`,
                         boxSizing: 'border-box',
+                        opacity: searchQuery && !matchesSearch(event) ? 0.2 : undefined,
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-                      onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                      onMouseEnter={(e) => { if (!searchQuery || matchesSearch(event)) e.currentTarget.style.opacity = '0.9'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.opacity = searchQuery && !matchesSearch(event) ? '0.2' : '1'; }}
                       title={event.title}
                       onClick={() => setSelectedEvent(event)}
+                      onContextMenu={(e) => handleContextMenu(event, e)}
                     >
                       <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: layout.totalColumns > 1 ? 'clip' : 'ellipsis', whiteSpace: layout.totalColumns > 1 ? 'normal' : 'nowrap', lineHeight: 1.2, wordBreak: 'break-word' }}>
                         {event.courseCode}
@@ -759,11 +899,13 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
                           justifyContent: 'center',
                           alignItems: 'flex-start',
                           boxSizing: 'border-box',
+                          opacity: searchQuery && !matchesSearch(event) ? 0.2 : undefined,
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-                        onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                        onMouseEnter={(e) => { if (!searchQuery || matchesSearch(event)) e.currentTarget.style.opacity = '0.9'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.opacity = searchQuery && !matchesSearch(event) ? '0.2' : '1'; }}
                         title={`${event.title}${event.endTime ? ` (${formatTime(event.time)} - ${formatTime(event.endTime)})` : ` (${formatTime(event.time)})`}`}
                         onClick={() => setSelectedEvent(event)}
+                        onContextMenu={(e) => handleContextMenu(event, e)}
                       >
                         <div style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2, width: '100%', minWidth: 0 }}>
                           {event.title}
@@ -771,6 +913,31 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
                       </div>
                     );
                   });
+                })()}
+
+                {/* Drag-to-create preview */}
+                {dragCreate && dragCreate.dateStr === dateStr && Math.abs(dragCreate.currentMinutes - dragCreate.startMinutes) >= 15 && (() => {
+                  const startMin = Math.min(dragCreate.startMinutes, dragCreate.currentMinutes);
+                  const endMin = Math.max(dragCreate.startMinutes, dragCreate.currentMinutes);
+                  const topPos = (startMin / 60) * HOUR_HEIGHT + 8;
+                  const heightPx = ((endMin - startMin) / 60) * HOUR_HEIGHT;
+                  return (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: '3px',
+                        right: '3px',
+                        top: `${topPos}px`,
+                        height: `${heightPx}px`,
+                        backgroundColor: 'var(--link)',
+                        opacity: 0.35,
+                        borderRadius: 'var(--radius-control)',
+                        zIndex: 30,
+                        pointerEvents: 'none',
+                        border: '2px solid var(--link)',
+                      }}
+                    />
+                  );
                 })()}
               </div>
             );
@@ -851,6 +1018,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
                           setSelectedEvent(event);
                           setPopupState(null);
                         }}
+                        onContextMenu={(e) => { handleContextMenu(event, e); setPopupState(null); }}
                       >
                         {event.title}
                       </div>
@@ -866,7 +1034,7 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
       <EventDetailModal
         isOpen={selectedEvent !== null}
         event={selectedEvent}
-        onClose={() => setSelectedEvent(null)}
+        onClose={() => { setSelectedEvent(null); clearBreakdown(); }}
         courses={courses}
         tasks={allTasks.length > 0 ? allTasks : tasks}
         deadlines={allDeadlines.length > 0 ? allDeadlines : deadlines}
@@ -874,6 +1042,8 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
         exams={exams}
         calendarEvents={calendarEvents}
         onEventUpdate={onEventUpdate}
+        initialBreakdown={wantsBreakdown}
+        initialEditScope={pendingEditScope}
         onStatusChange={onStatusChange}
       />
 
@@ -882,6 +1052,13 @@ const CalendarWeekView = React.memo(function CalendarWeekView({
         exclusion={selectedExclusion}
         courses={courses}
         onClose={() => setSelectedExclusion(null)}
+      />
+
+      <CalendarContextMenuPortal
+        contextMenu={contextMenu}
+        setContextMenu={setContextMenu}
+        getMenuItems={getMenuItems}
+        handleAction={handleAction}
       />
     </div>
   );

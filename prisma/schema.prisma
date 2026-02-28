@@ -63,6 +63,7 @@ model User {
   shoppingItems             ShoppingItem[]
   tasks                     Task[]
   calendarEvents            CalendarEvent[]
+  recurringCalendarEventPatterns RecurringCalendarEventPattern[]
   deletedCanvasItems        DeletedCanvasItem[]
   deletedBlackboardItems    DeletedBlackboardItem[]
   deletedMoodleItems        DeletedMoodleItem[]
@@ -856,6 +857,11 @@ model CalendarEvent {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  // Recurring event support
+  recurringPatternId String?
+  instanceDate       DateTime?
+  recurringPattern   RecurringCalendarEventPattern? @relation(fields: [recurringPatternId], references: [id])
+
   // Canvas LMS Integration
   canvasEventId String?
 
@@ -875,11 +881,35 @@ model CalendarEvent {
 
   @@index([userId])
   @@index([startAt])
+  @@index([recurringPatternId])
   @@index([canvasEventId])
   @@index([blackboardEventId])
   @@index([moodleEventId])
   @@index([brightspaceEventId])
   @@index([googleEventId])
+}
+
+model RecurringCalendarEventPattern {
+  id              String    @id @default(cuid())
+  userId          String
+  recurrenceType  String    // daily, weekly, biweekly, monthly, custom
+  intervalDays    Int?
+  daysOfWeek      Json      @default("[]")
+  daysOfMonth     Json      @default("[]")
+  startDate       DateTime?
+  endDate         DateTime?
+  occurrenceCount Int?
+  lastGenerated   DateTime  @default(now())
+  instanceCount   Int       @default(0)
+  eventTemplate   Json      // title, description, color, location, allDay, startTime, endTime
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  isActive        Boolean   @default(true)
+  events          CalendarEvent[]
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive])
 }
 
 model AuditLog {

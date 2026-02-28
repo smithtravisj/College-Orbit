@@ -1,18 +1,23 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 import useAppStore from '@/lib/store';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import CalendarPicker from '@/components/CalendarPicker';
 import { getDateRange } from '@/lib/calendarUtils';
 import { useFormatters } from '@/hooks/useFormatters';
+import { useAnimatedOpen } from '@/hooks/useModalAnimation';
+import previewStyles from '@/components/ItemPreviewModal.module.css';
 
 interface ExcludedDateFormProps {
+  isOpen: boolean;
   onClose: () => void;
 }
 
-export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
+export default function ExcludedDateForm({ isOpen, onClose }: ExcludedDateFormProps) {
   const { courses, settings, addExcludedDate, addExcludedDateRange } = useAppStore();
   const { getCourseDisplayName } = useFormatters();
   const [dateMode, setDateMode] = useState<'single' | 'range'>('single');
@@ -26,12 +31,22 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  // Reset form when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setForm({ courseId: '', singleDate: '', startDate: '', endDate: '', description: '' });
+      setDateMode('single');
+      setError('');
+      setIsSubmitting(false);
+    }
+  }, [isOpen]);
+
   const selectStyle = useMemo(() => ({
     width: '100%',
     padding: '8px 32px 8px 12px',
     borderRadius: '6px',
     border: '1px solid var(--border)',
-    backgroundColor: settings.theme === 'light' ? 'var(--panel-2)' : 'var(--background)',
+    backgroundColor: 'var(--panel-2)',
     color: 'var(--text)',
     fontSize: '14px',
     cursor: 'pointer',
@@ -69,7 +84,6 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
     setIsSubmitting(true);
 
     try {
-      // Validation
       if (!form.description.trim()) {
         setError('Description is required');
         setIsSubmitting(false);
@@ -120,135 +134,171 @@ export default function ExcludedDateForm({ onClose }: ExcludedDateFormProps) {
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {error && (
-        <div style={{
-          padding: '12px 16px',
-          backgroundColor: '#fee2e2',
-          borderRadius: '8px',
-          color: '#991b1b',
-          fontSize: '14px',
-        }}>
-          {error}
-        </div>
-      )}
+  // Escape key to close
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') onClose();
+  }, [onClose]);
 
-      <div>
-        <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
-          Scope
-        </label>
-        <select
-          value={form.courseId}
-          onChange={(e) => setForm({ ...form, courseId: e.target.value })}
-          style={selectStyle}
-        >
-          <option value="">All Courses (School Holiday)</option>
-          {courses.map((course) => (
-            <option key={course.id} value={course.id}>
-              {getCourseDisplayName(course)}
-            </option>
-          ))}
-        </select>
-      </div>
+  useEffect(() => {
+    if (!isOpen) return;
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, handleKeyDown]);
 
-      <div>
-        <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
-          Date Type
-        </label>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-            <input
-              type="radio"
-              value="single"
-              checked={dateMode === 'single'}
-              onChange={() => setDateMode('single')}
-              style={radioStyle(dateMode === 'single')}
-            />
-            <span style={{ fontSize: '14px', color: 'var(--text)' }}>Single Date</span>
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-            <input
-              type="radio"
-              value="range"
-              checked={dateMode === 'range'}
-              onChange={() => setDateMode('range')}
-              style={radioStyle(dateMode === 'range')}
-            />
-            <span style={{ fontSize: '14px', color: 'var(--text)' }}>Date Range</span>
-          </label>
-        </div>
-      </div>
+  const { visible, closing } = useAnimatedOpen(isOpen);
+  if (!visible) return null;
+  if (typeof document === 'undefined') return null;
 
-      {dateMode === 'single' ? (
-        <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
-            Select Date
-          </label>
-          <CalendarPicker
-            value={form.singleDate}
-            onChange={(date) => setForm({ ...form, singleDate: date })}
-          />
-        </div>
-      ) : (
-        <>
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
-              Start Date
-            </label>
-            <CalendarPicker
-              value={form.startDate}
-              onChange={(date) => setForm({ ...form, startDate: date })}
-            />
+  return createPortal(
+    <div
+      className={closing ? previewStyles.backdropClosing : previewStyles.backdrop}
+      style={{ zIndex: 9999 }}
+      onClick={onClose}
+    >
+      <div
+        className={`${previewStyles.modal} ${previewStyles.modalNarrow} ${closing ? previewStyles.modalClosing : ''}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className={previewStyles.header}>
+          <div className={previewStyles.headerInfo}>
+            <h2 className={previewStyles.title}>Add Excluded Date</h2>
+            <p className={previewStyles.subtitle}>Mark days where you have no classes</p>
           </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
-              End Date
-            </label>
-            <CalendarPicker
-              value={form.endDate}
-              onChange={(date) => setForm({ ...form, endDate: date })}
-            />
+          <button className={previewStyles.closeButton} onClick={onClose} type="button">
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
+          <div className={previewStyles.content}>
+            {error && (
+              <div style={{
+                padding: '10px 14px',
+                backgroundColor: 'var(--danger-bg, #fee2e2)',
+                borderRadius: '8px',
+                color: 'var(--danger, #991b1b)',
+                fontSize: '13px',
+              }}>
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: 'var(--text-muted)' }}>
+                Scope
+              </label>
+              <select
+                value={form.courseId}
+                onChange={(e) => setForm({ ...form, courseId: e.target.value })}
+                style={selectStyle}
+              >
+                <option value="">All Courses (School Holiday)</option>
+                {courses.map((course) => (
+                  <option key={course.id} value={course.id}>
+                    {getCourseDisplayName(course)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: 'var(--text-muted)' }}>
+                Date Type
+              </label>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    value="single"
+                    checked={dateMode === 'single'}
+                    onChange={() => setDateMode('single')}
+                    style={radioStyle(dateMode === 'single')}
+                  />
+                  <span style={{ fontSize: '14px', color: 'var(--text)' }}>Single Date</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    value="range"
+                    checked={dateMode === 'range'}
+                    onChange={() => setDateMode('range')}
+                    style={radioStyle(dateMode === 'range')}
+                  />
+                  <span style={{ fontSize: '14px', color: 'var(--text)' }}>Date Range</span>
+                </label>
+              </div>
+            </div>
+
+            {dateMode === 'single' ? (
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: 'var(--text-muted)' }}>
+                  Date
+                </label>
+                <CalendarPicker
+                  value={form.singleDate}
+                  onChange={(date) => setForm({ ...form, singleDate: date })}
+                />
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: 'var(--text-muted)' }}>
+                    Start Date
+                  </label>
+                  <CalendarPicker
+                    value={form.startDate}
+                    onChange={(date) => setForm({ ...form, startDate: date })}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: 'var(--text-muted)' }}>
+                    End Date
+                  </label>
+                  <CalendarPicker
+                    value={form.endDate}
+                    onChange={(date) => setForm({ ...form, endDate: date })}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: 'var(--text-muted)' }}>
+                Description
+              </label>
+              <Input
+                type="text"
+                placeholder="e.g., Thanksgiving Break, Spring Break, No class"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                style={{ width: '100%' }}
+              />
+            </div>
           </div>
-        </>
-      )}
 
-      <div>
-        <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
-          Description/Label
-        </label>
-        <Input
-          type="text"
-          placeholder="e.g., Thanksgiving Break, Spring Break, No class"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          style={{ width: '100%' }}
-        />
+          {/* Footer */}
+          <div className={previewStyles.footer}>
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={onClose}
+              style={{ flex: 1 }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              style={{ flex: 1 }}
+            >
+              {isSubmitting ? 'Creating...' : 'Create'}
+            </Button>
+          </div>
+        </form>
       </div>
-
-      <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-        <Button
-          variant="secondary"
-          type="button"
-          onClick={onClose}
-          style={{
-            backgroundColor: 'var(--background-secondary)',
-            color: 'var(--text)',
-            marginRight: '8px',
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          style={{
-            padding: '8px 20px',
-          }}
-        >
-          {isSubmitting ? 'Creating...' : 'Create'}
-        </Button>
-      </div>
-    </form>
+    </div>,
+    document.body
   );
 }

@@ -220,7 +220,7 @@ export async function claimCompletedChallenges(
       },
     },
   });
-  const sweepBonus = allCompleted && !alreadyClaimedSweep;
+  let sweepBonus = allCompleted && !alreadyClaimedSweep;
   if (sweepBonus) {
     totalXp += SWEEP_BONUS_XP;
   }
@@ -320,6 +320,78 @@ export async function claimCompletedChallenges(
       });
     }
   });
+
+  // Cascade: claiming challenges awards XP, which may complete XP-based challenges.
+  // Re-check once for newly completed challenges after the XP update.
+  const cascadeProgress = await computeChallengeProgress(userId, dateKey, timezoneOffset);
+  const cascadeClaim = cascadeProgress.filter(p => p.completed && !p.claimed);
+
+  if (cascadeClaim.length > 0) {
+    let cascadeXp = 0;
+    for (const c of cascadeClaim) cascadeXp += c.xpReward;
+
+    // Check sweep bonus if not already awarded
+    const allNowCompleted = cascadeProgress.every(p => p.completed);
+    const cascadeSweep = allNowCompleted && !sweepBonus && !alreadyClaimedSweep;
+    if (cascadeSweep) {
+      cascadeXp += SWEEP_BONUS_XP;
+    }
+
+    const freshStreak = await prisma.userStreak.findUnique({ where: { userId } });
+    if (freshStreak) {
+      const cascadeTotalXp = freshStreak.totalXp + cascadeXp;
+      const cascadeLevel = calculateLevel(cascadeTotalXp);
+
+      await prisma.$transaction(async (tx) => {
+        for (const c of cascadeClaim) {
+          await tx.dailyChallengeReward.create({
+            data: { userId, challengeId: c.id, dateKey, xpAwarded: c.xpReward },
+          });
+        }
+
+        if (cascadeSweep) {
+          await tx.dailyChallengeReward.create({
+            data: { userId, challengeId: 'sweep_bonus', dateKey, xpAwarded: SWEEP_BONUS_XP },
+          });
+        }
+
+        await tx.userStreak.update({
+          where: { userId },
+          data: { totalXp: cascadeTotalXp, level: cascadeLevel },
+        });
+
+        await tx.dailyActivity.upsert({
+          where: { userId_activityDate: { userId, activityDate } },
+          update: { xpEarned: { increment: cascadeXp } },
+          create: { userId, activityDate, tasksCompleted: 0, xpEarned: cascadeXp },
+        });
+
+        const user = await tx.user.findUnique({ where: { id: userId }, select: { collegeId: true } });
+        if (user?.collegeId) {
+          const now = new Date();
+          const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+          await tx.monthlyXpTotal.upsert({
+            where: { userId_yearMonth: { userId, yearMonth } },
+            update: { totalXp: { increment: cascadeXp } },
+            create: { userId, collegeId: user.collegeId, yearMonth, totalXp: cascadeXp },
+          });
+        }
+      });
+
+      totalXp += cascadeXp;
+      toClaim.push(...cascadeClaim);
+      if (cascadeSweep) sweepBonus = true;
+      // Update final level info
+      const finalStreak = await prisma.userStreak.findUnique({ where: { userId } });
+      return {
+        xpAwarded: totalXp,
+        levelUp: (finalStreak?.level || newLevel) > previousLevel,
+        newLevel: finalStreak?.level || newLevel,
+        sweepBonus,
+        claimedChallenges: toClaim.map(c => ({ id: c.id, title: c.title, xpReward: c.xpReward })),
+      };
+    }
+  }
 
   return {
     xpAwarded: totalXp,

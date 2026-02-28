@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Sparkles, X, Loader2, Trash2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { useAnimatedOpen } from '@/hooks/useModalAnimation';
+import previewStyles from '@/components/ItemPreviewModal.module.css';
 
 interface BreakdownStep {
   text: string;
@@ -10,6 +13,7 @@ interface BreakdownStep {
 }
 
 interface AIBreakdownModalProps {
+  isOpen: boolean;
   onSave: (checklist: Array<{ id: string; text: string; done: boolean }>) => void;
   onClose: () => void;
   onPremiumRequired: () => void;
@@ -17,7 +21,8 @@ interface AIBreakdownModalProps {
   existingDescription?: string;
 }
 
-export default function AIBreakdownModal({ onSave, onClose, onPremiumRequired, existingTitle, existingDescription }: AIBreakdownModalProps) {
+export default function AIBreakdownModal({ isOpen, onSave, onClose, onPremiumRequired, existingTitle, existingDescription }: AIBreakdownModalProps) {
+  const { visible, closing } = useAnimatedOpen(isOpen);
   const [step, setStep] = useState<'input' | 'review'>(existingDescription ? 'review' : 'input');
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -89,124 +94,143 @@ export default function AIBreakdownModal({ onSave, onClose, onPremiumRequired, e
   const mins = totalMinutes % 60;
   const timeEstimate = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
 
-  return (
+  if (!visible) return null;
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 1000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
+      className={closing ? previewStyles.backdropClosing : previewStyles.backdrop}
+      style={{ zIndex: 10001 }}
+      onClick={() => { if (!isLoading) onClose(); }}
     >
       <div
-        style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)' }}
-        onClick={() => { if (!isLoading) onClose(); }}
-      />
-      <div
-        style={{
-          position: 'relative',
-          backgroundColor: 'var(--panel-solid, var(--panel))',
-          border: '1px solid var(--border)',
-          borderRadius: '12px',
-          padding: '24px',
-          width: '90%',
-          maxWidth: '600px',
-          maxHeight: '80vh',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        className={`${previewStyles.modal} ${closing ? previewStyles.modalClosing : ''}`}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <div className={previewStyles.header}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sparkles size={20} style={{ color: 'var(--accent)' }} />
-            <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)', margin: 0 }}>
-              Breakdown
-            </h3>
+            <Sparkles size={20} style={{ color: 'var(--link)' }} />
+            <h2 className={previewStyles.title}>Breakdown</h2>
           </div>
           <button
             onClick={() => { if (!isLoading) onClose(); }}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--text-muted)',
-              padding: '4px',
-              display: 'flex',
-              alignItems: 'center',
-            }}
+            className={previewStyles.closeButton}
           >
             <X size={20} />
           </button>
         </div>
 
-        {step === 'input' ? (
-          <>
-            {existingTitle && (
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
-                Breaking down: <strong style={{ color: 'var(--text)' }}>{existingTitle}</strong>
-              </p>
-            )}
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
-                Paste the assignment description
-              </label>
-              <textarea
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder="Paste the full assignment prompt, project description, or rubric here..."
-                style={{
-                  width: '100%',
-                  minHeight: '200px',
-                  padding: '12px',
-                  fontSize: '14px',
-                  lineHeight: '1.5',
-                  backgroundColor: 'var(--panel-2)',
-                  color: 'var(--text)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '8px',
-                  resize: 'vertical',
-                  outline: 'none',
-                  fontFamily: 'inherit',
-                  boxSizing: 'border-box',
-                }}
-              />
+        {/* Content */}
+        <div className={previewStyles.content} style={{ overscrollBehavior: 'contain' }}>
+          {step === 'input' ? (
+            <>
+              {existingTitle && (
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
+                  Breaking down: <strong style={{ color: 'var(--text)' }}>{existingTitle}</strong>
+                </p>
+              )}
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: 'var(--text)', marginBottom: '6px' }}>
+                  Paste the assignment description
+                </label>
+                <textarea
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  placeholder="Paste the full assignment prompt, project description, or rubric here..."
+                  style={{
+                    width: '100%',
+                    minHeight: '200px',
+                    padding: '12px',
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    backgroundColor: 'var(--panel-2)',
+                    color: 'var(--text)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    resize: 'vertical',
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+              {error && (
+                <p style={{ color: 'var(--danger)', fontSize: '13px', margin: 0 }}>{error}</p>
+              )}
+            </>
+          ) : isLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: '16px' }}>
+              <Loader2 size={32} className="animate-spin" style={{ color: 'var(--link)' }} />
+              <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+                Breaking down{existingTitle ? ` "${existingTitle}"` : ''}...
+              </div>
             </div>
+          ) : error ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: '16px' }}>
+              <p style={{ color: 'var(--danger)', fontSize: '14px', margin: 0 }}>{error}</p>
+            </div>
+          ) : (
+            <>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                <span>{steps.length} subtask{steps.length !== 1 ? 's' : ''}</span>
+                <span>Est. total: {timeEstimate}</span>
+              </div>
 
-            {error && (
-              <p style={{ color: 'var(--danger)', fontSize: '13px', marginTop: '8px' }}>{error}</p>
-            )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {steps.map((s, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '10px 12px',
+                      backgroundColor: 'var(--panel-2)',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '14px', color: 'var(--text)', wordBreak: 'break-word' }}>{s.text}</div>
+                      {s.estimatedMinutes > 0 && (
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>~{s.estimatedMinutes}m</div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleRemoveStep(i)}
+                      className={previewStyles.closeButton}
+                      style={{ flexShrink: 0 }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
-              <Button variant="secondary" size="md" onClick={onClose} disabled={isLoading}>
+        {/* Footer */}
+        <div className={previewStyles.footer}>
+          {step === 'input' ? (
+            <>
+              <Button variant="secondary" style={{ flex: 1 }} onClick={onClose} disabled={isLoading}>
                 Cancel
               </Button>
-              <Button variant="primary" size="md" onClick={handleGenerate} disabled={isLoading || !inputText.trim()}>
+              <Button variant="primary" style={{ flex: 1 }} onClick={handleGenerate} disabled={isLoading || !inputText.trim()}>
                 {isLoading ? (
                   <><Loader2 size={16} className="animate-spin" /> Generating...</>
                 ) : (
                   <><Sparkles size={16} /> Generate Subtasks</>
                 )}
               </Button>
-            </div>
-          </>
-        ) : isLoading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: '16px' }}>
-            <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent)' }} />
-            <div style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-              Breaking down{existingTitle ? ` "${existingTitle}"` : ''}...
-            </div>
-          </div>
-        ) : error ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: '16px' }}>
-            <p style={{ color: 'var(--danger)', fontSize: '14px' }}>{error}</p>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Button variant="secondary" size="md" onClick={onClose}>
+            </>
+          ) : error ? (
+            <>
+              <Button variant="secondary" style={{ flex: 1 }} onClick={onClose}>
                 Cancel
               </Button>
-              <Button variant="primary" size="md" onClick={() => {
+              <Button variant="primary" style={{ flex: 1 }} onClick={() => {
                 if (existingDescription) {
                   const text = existingTitle ? `${existingTitle}\n\n${existingDescription}` : existingDescription;
                   runGenerate(text);
@@ -217,65 +241,20 @@ export default function AIBreakdownModal({ onSave, onClose, onPremiumRequired, e
               }}>
                 Retry
               </Button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '12px', display: 'flex', justifyContent: 'space-between' }}>
-              <span>{steps.length} subtask{steps.length !== 1 ? 's' : ''}</span>
-              <span>Est. total: {timeEstimate}</span>
-            </div>
-
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '400px' }}>
-              {steps.map((s, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px 12px',
-                    backgroundColor: 'var(--panel-2)',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border)',
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '14px', color: 'var(--text)', wordBreak: 'break-word' }}>{s.text}</div>
-                    {s.estimatedMinutes > 0 && (
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>~{s.estimatedMinutes}m</div>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => handleRemoveStep(i)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: 'var(--text-muted)',
-                      padding: '4px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
-              <Button variant="secondary" size="md" onClick={onClose}>
+            </>
+          ) : !isLoading ? (
+            <>
+              <Button variant="secondary" style={{ flex: 1 }} onClick={onClose}>
                 Cancel
               </Button>
-              <Button variant="primary" size="md" onClick={handleSave} disabled={steps.length === 0}>
+              <Button variant="primary" style={{ flex: 1 }} onClick={handleSave} disabled={steps.length === 0}>
                 Save to Checklist
               </Button>
-            </div>
-          </>
-        )}
+            </>
+          ) : null}
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

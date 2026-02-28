@@ -2768,6 +2768,18 @@ const useAppStore = create<AppStore>((set, get) => ({
       console.error('Failed to fetch recipes for export:', error);
     }
 
+    // Fetch recurring calendar event patterns from API
+    let recurringCalendarEventPatterns: any[] = [];
+    try {
+      const response = await fetch('/api/recurring-calendar-event-patterns', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        recurringCalendarEventPatterns = data.patterns || [];
+      }
+    } catch (error) {
+      console.error('Failed to fetch recurring calendar event patterns for export:', error);
+    }
+
     return {
       courses: state.courses,
       deadlines: state.deadlines,
@@ -2790,6 +2802,7 @@ const useAppStore = create<AppStore>((set, get) => ({
       flashcardDecks,
       dailyChallengeRewards,
       recipes,
+      recurringCalendarEventPatterns,
     };
   },
 
@@ -3011,6 +3024,23 @@ const useAppStore = create<AppStore>((set, get) => ({
         for (const event of data.calendarEvents) {
           const { id, createdAt, updatedAt, userId, ...eventData } = event as any;
           await store.addCalendarEvent(eventData);
+        }
+      }
+
+      // Import recurring calendar event patterns
+      if ((data as any).recurringCalendarEventPatterns && (data as any).recurringCalendarEventPatterns.length > 0) {
+        console.log('Importing recurring calendar event patterns:', (data as any).recurringCalendarEventPatterns.length);
+        for (const pattern of (data as any).recurringCalendarEventPatterns) {
+          const { id, createdAt, updatedAt, userId, ...patternData } = pattern as any;
+          const response = await fetch('/api/recurring-calendar-event-patterns', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(patternData),
+          });
+          if (!response.ok) {
+            console.error('Failed to import recurring calendar event pattern:', patternData);
+          }
         }
       }
 

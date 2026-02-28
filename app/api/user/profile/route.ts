@@ -180,6 +180,16 @@ export const PATCH = withRateLimit(async function(req: NextRequest) {
       },
     });
 
+    // If collegeId was updated, also sync Settings.university for theming
+    if (collegeId !== undefined) {
+      const universityName = user.college?.fullName || null;
+      await prisma.settings.updateMany({
+        where: { userId },
+        data: { university: universityName },
+      });
+      console.log('[PATCH /api/user/profile] Synced Settings.university:', universityName);
+    }
+
     console.log('User updated successfully:', { ...user, profileImage: user.profileImage ? '[base64 data]' : null });
     return NextResponse.json({ user });
   } catch (error) {

@@ -10,6 +10,7 @@ interface TimelineDayProps {
   onToggleComplete?: (item: TimelineItemType) => void;
   onItemClick?: (item: TimelineItemType) => void;
   onFileClick?: (file: { name: string; url: string; size: number }, allFiles: { name: string; url: string; size: number }[], index: number) => void;
+  onContextMenu?: (item: TimelineItemType, e: React.MouseEvent) => void;
   collapsible?: boolean;
   defaultCollapsed?: boolean;
   nextEventId?: string | null;
@@ -21,6 +22,7 @@ export const TimelineDay: React.FC<TimelineDayProps> = ({
   onToggleComplete,
   onItemClick,
   onFileClick,
+  onContextMenu,
   collapsible = false,
   defaultCollapsed = false,
   nextEventId,
@@ -94,12 +96,13 @@ export const TimelineDay: React.FC<TimelineDayProps> = ({
           {hasItems ? (
             <div className="flex flex-col">
               {day.items.map((item) => (
-                <div key={item.id} ref={item.id === nextEventId ? nextEventRef : undefined}>
+                <div key={item.id} data-timeline-item-id={item.id} ref={item.id === nextEventId ? nextEventRef : undefined}>
                   <TimelineItem
                     item={item}
                     onToggleComplete={onToggleComplete}
                     onItemClick={onItemClick}
                     onFileClick={onFileClick}
+                    onContextMenu={onContextMenu}
                   />
                 </div>
               ))}

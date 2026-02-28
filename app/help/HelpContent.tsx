@@ -70,16 +70,16 @@ const faqData: FAQ[] = [
   {
     id: 'calendar-views',
     question: 'What calendar views are available?',
-    answer: 'The calendar supports multiple views: Month view for a broad overview, Week view for detailed planning, and Day view for focused scheduling. Use the view selector at the top of the calendar to switch between them. You can also navigate using arrow keys.',
+    answer: 'The calendar supports multiple views: Month view for a broad overview, Week view for detailed planning, Day view for focused scheduling, and Agenda view for a chronological list of events. Use the view selector at the top of the calendar to switch between them. You can also navigate using arrow keys.',
     category: 'Calendar',
-    keywords: ['calendar', 'view', 'month', 'week', 'day', 'schedule'],
+    keywords: ['calendar', 'view', 'month', 'week', 'day', 'agenda', 'schedule'],
   },
   {
     id: 'add-calendar-event',
     question: 'How do I add events to my calendar?',
-    answer: 'Click on any date or time slot in the calendar to create a new event. You can also click the "+" button. Events can be one-time or recurring, and you can link them to specific courses. All work item due dates and exams automatically appear on your calendar.',
+    answer: 'Click on any date or time slot in the calendar to create a new event. You can also use Quick Add (press N or click the + button) and select the Event type, or right-click on a calendar slot to use the context menu. Events can be one-time or recurring, and you can link them to specific courses. All work item due dates and exams automatically appear on your calendar.',
     category: 'Calendar',
-    keywords: ['event', 'add', 'create', 'calendar', 'appointment'],
+    keywords: ['event', 'add', 'create', 'calendar', 'appointment', 'quick add', 'context menu'],
   },
   {
     id: 'calendar-sync',
@@ -87,6 +87,27 @@ const faqData: FAQ[] = [
     answer: 'Yes! Premium users can connect Google Calendar for two-way sync of events and schedules. Go to Settings > Integrations to connect your Google account. You can also export your College Orbit calendar as an iCal subscription URL for use in Apple Calendar and other apps.',
     category: 'Calendar',
     keywords: ['sync', 'google', 'apple', 'ical', 'import', 'export', 'integration'],
+  },
+  {
+    id: 'calendar-context-menu',
+    question: 'What can I do with the calendar context menu?',
+    answer: 'Right-click on any item in the calendar to open a context menu with quick actions. You can quickly mark items as complete, edit them, or delete them without opening the full detail view.',
+    category: 'Calendar',
+    keywords: ['context menu', 'right-click', 'quick actions', 'complete', 'edit', 'delete'],
+  },
+  {
+    id: 'calendar-mobile-gestures',
+    question: 'How do I navigate the calendar on mobile?',
+    answer: 'On mobile devices, swipe left or right to navigate between dates. Pull down to refresh the calendar data. You can also tap on any event to view its details.',
+    category: 'Calendar',
+    keywords: ['mobile', 'swipe', 'gesture', 'navigate', 'pull to refresh', 'touch'],
+  },
+  {
+    id: 'quick-add-events',
+    question: 'Can I quickly add events with Quick Add?',
+    answer: 'Yes! Press N or click the + button to open Quick Add. Select the Event type to create a calendar event. Quick Add supports tasks, assignments, readings, projects, exams, notes, events, and shopping items. It also parses natural language for dates, times, and time ranges.',
+    category: 'Calendar',
+    keywords: ['quick add', 'event', 'fast', 'shortcut', 'N key', 'plus button'],
   },
 
   // Work Items

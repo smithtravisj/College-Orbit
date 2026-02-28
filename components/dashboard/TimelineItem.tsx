@@ -18,6 +18,7 @@ interface TimelineItemProps {
   onToggleComplete?: (item: TimelineItemType) => void;
   onItemClick?: (item: TimelineItemType) => void;
   onFileClick?: (file: { name: string; url: string; size: number }, allFiles: { name: string; url: string; size: number }[], index: number) => void;
+  onContextMenu?: (item: TimelineItemType, e: React.MouseEvent) => void;
 }
 
 export const TimelineItem: React.FC<TimelineItemProps> = ({
@@ -25,6 +26,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
   onToggleComplete,
   onItemClick,
   onFileClick,
+  onContextMenu,
 }) => {
   const settings = useAppStore((state) => state.settings);
   const { showCourseCode } = useFormatters();
@@ -91,6 +93,13 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
   return (
     <div
       onClick={handleClick}
+      onContextMenu={(e) => {
+        if (onContextMenu) {
+          e.preventDefault();
+          e.stopPropagation();
+          onContextMenu(item, e);
+        }
+      }}
       className="group flex items-center gap-3 rounded transition-colors hover:bg-[var(--panel-2)] cursor-pointer w-full"
       style={{
         padding: '8px 10px 8px 0',

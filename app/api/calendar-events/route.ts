@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUserId } from '@/lib/getAuthUserId';
 import { prisma } from '@/lib/prisma';
 import { withRateLimit } from '@/lib/withRateLimit';
+import { generateAllRecurringCalendarEventInstances } from '@/lib/recurringCalendarEventUtils';
 
 // GET all calendar events for authenticated user
 export const GET = withRateLimit(async function(request: NextRequest) {
@@ -11,6 +12,11 @@ export const GET = withRateLimit(async function(request: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: 'Please sign in to continue' }, { status: 401 });
     }
+
+    // Generate recurring event instances in the background
+    generateAllRecurringCalendarEventInstances(userId).catch(err => {
+      console.error('Error generating recurring calendar event instances:', err);
+    });
 
     const events = await prisma.calendarEvent.findMany({
       where: {
@@ -48,6 +54,56 @@ export const POST = withRateLimit(async function(req: NextRequest) {
 
     if (!data.startAt) {
       return NextResponse.json({ error: 'Start date/time is required' }, { status: 400 });
+    }
+
+    // If recurrence data is provided, create a recurring pattern instead
+    if (data.recurrence && data.recurrence.type && data.recurrence.type !== 'none') {
+      const { generateRecurringCalendarEventInstances } = await import('@/lib/recurringCalendarEventUtils');
+
+      // Extract time from startAt
+      const startDate = new Date(data.startAt);
+      const startTime = data.allDay ? null : `${startDate.getHours().toString().padStart(2, '0')}:${startDate.getMinutes().toString().padStart(2, '0')}`;
+      let endTime = null;
+      if (data.endAt && !data.allDay) {
+        const endDate = new Date(data.endAt);
+        endTime = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+      }
+
+      const pattern = await prisma.recurringCalendarEventPattern.create({
+        data: {
+          userId,
+          recurrenceType: data.recurrence.type,
+          intervalDays: data.recurrence.intervalDays || null,
+          daysOfWeek: data.recurrence.daysOfWeek || [],
+          daysOfMonth: data.recurrence.daysOfMonth || [],
+          startDate: new Date(data.startAt),
+          endDate: data.recurrence.endDate ? new Date(data.recurrence.endDate) : null,
+          occurrenceCount: data.recurrence.occurrenceCount || null,
+          eventTemplate: {
+            title: data.title.trim(),
+            description: data.description || '',
+            color: data.color || null,
+            location: data.location || null,
+            allDay: data.allDay || false,
+            startTime,
+            endTime,
+          },
+        },
+      });
+
+      await generateRecurringCalendarEventInstances({
+        patternId: pattern.id,
+        userId,
+      });
+
+      // Fetch generated events
+      const events = await prisma.calendarEvent.findMany({
+        where: { recurringPatternId: pattern.id },
+        orderBy: { startAt: 'asc' },
+        take: 1,
+      });
+
+      return NextResponse.json({ event: events[0] || null, pattern }, { status: 201 });
     }
 
     const event = await prisma.calendarEvent.create({

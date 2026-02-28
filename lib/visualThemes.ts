@@ -1943,9 +1943,19 @@ export function applyVisualTheme(
   if (themeColors.panel) {
     root.style.setProperty('--panel', themeColors.panel);
     // Create a solid (opaque) version of panel for modals and toasts
-    const rgbaMatch = themeColors.panel.match(/rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/);
+    // Composite panel over bg so modals match how cards look on the page
+    const rgbaMatch = themeColors.panel.match(/rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
     if (rgbaMatch) {
-      root.style.setProperty('--panel-solid', `rgb(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]})`);
+      const a = parseFloat(rgbaMatch[4]);
+      const bgColor = themeColors.bg || getComputedStyle(root).getPropertyValue('--bg').trim();
+      const bgHex = bgColor.match(/#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i);
+      const bgR = bgHex ? parseInt(bgHex[1], 16) : 0;
+      const bgG = bgHex ? parseInt(bgHex[2], 16) : 0;
+      const bgB = bgHex ? parseInt(bgHex[3], 16) : 0;
+      const r = Math.round(parseInt(rgbaMatch[1]) * a + bgR * (1 - a));
+      const g = Math.round(parseInt(rgbaMatch[2]) * a + bgG * (1 - a));
+      const b = Math.round(parseInt(rgbaMatch[3]) * a + bgB * (1 - a));
+      root.style.setProperty('--panel-solid', `rgb(${r}, ${g}, ${b})`);
     } else {
       root.style.setProperty('--panel-solid', themeColors.panel);
     }
@@ -2024,7 +2034,24 @@ export function clearVisualTheme(): void {
   root.style.setProperty('--theme-radius', '12px');
   root.style.setProperty('--theme-shadow', 'soft');
   root.style.setProperty('--theme-border-width', '1px');
-  root.style.removeProperty('--panel-solid');
+  // Re-compute --panel-solid from current --panel and --bg instead of removing it,
+  // so college color palettes keep a correct solid panel value
+  const currentPanel = getComputedStyle(root).getPropertyValue('--panel').trim();
+  const panelRgba = currentPanel.match(/rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+  if (panelRgba) {
+    const a = parseFloat(panelRgba[4]);
+    const currentBg = getComputedStyle(root).getPropertyValue('--bg').trim();
+    const bgHex = currentBg.match(/#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i);
+    const bgR = bgHex ? parseInt(bgHex[1], 16) : 0;
+    const bgG = bgHex ? parseInt(bgHex[2], 16) : 0;
+    const bgB = bgHex ? parseInt(bgHex[3], 16) : 0;
+    const r = Math.round(parseInt(panelRgba[1]) * a + bgR * (1 - a));
+    const g = Math.round(parseInt(panelRgba[2]) * a + bgG * (1 - a));
+    const b = Math.round(parseInt(panelRgba[3]) * a + bgB * (1 - a));
+    root.style.setProperty('--panel-solid', `rgb(${r}, ${g}, ${b})`);
+  } else {
+    root.style.setProperty('--panel-solid', currentPanel || '#101826');
+  }
   root.style.removeProperty('--accent-text');
   root.style.setProperty('--visual-theme', 'default');
   root.dataset.visualTheme = 'default';

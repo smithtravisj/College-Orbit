@@ -13,11 +13,16 @@ import EmptyState from '@/components/ui/EmptyState';
 import CourseForm from '@/components/CourseForm';
 import CourseList from '@/components/CourseList';
 import CollapsibleCard from '@/components/ui/CollapsibleCard';
-import { Plus, Crown } from 'lucide-react';
+import { Plus, Crown, X, FileIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useFormatters } from '@/hooks/useFormatters';
+import { useModalAnimation } from '@/hooks/useModalAnimation';
 import { FREE_TIER_LIMITS } from '@/lib/subscription-constants';
 import Link from 'next/link';
+import previewStyles from '@/components/ItemPreviewModal.module.css';
+import FilePreviewModal from '@/components/FilePreviewModal';
+import { Course } from '@/types';
 import BulkEditToolbar, { BulkAction } from '@/components/BulkEditToolbar';
 import {
   BulkChangeTermModal,
@@ -66,6 +71,12 @@ export default function CoursesPage() {
   const [showEnded, setShowEnded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Preview modal state
+  const [previewingCourse, setPreviewingCourse] = useState<Course | null>(null);
+  const courseAnim = useModalAnimation(previewingCourse);
+  const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
+  const { formatTimeString } = useFormatters();
+
   // Bulk selection state
   const bulkSelect = useBulkSelect();
   const [bulkModal, setBulkModal] = useState<BulkAction | null>(null);
@@ -110,6 +121,18 @@ export default function CoursesPage() {
       if (course) {
         setEditingId(courseId);
         // Clear the URL parameter to prevent reopening on close
+        router.replace('/courses', { scroll: false });
+      }
+    }
+  }, [searchParams, mounted, courses, router]);
+
+  // Check for preview ID in URL params to open preview modal
+  useEffect(() => {
+    const previewId = searchParams.get('preview');
+    if (previewId && mounted && courses.length > 0) {
+      const course = courses.find((c) => c.id === previewId);
+      if (course) {
+        setPreviewingCourse(course);
         router.replace('/courses', { scroll: false });
       }
     }
@@ -522,6 +545,10 @@ export default function CoursesPage() {
               <CourseList
                 courses={filteredCourses}
                 onEdit={(courseId) => { window.scrollTo({ top: 0, behavior: 'smooth' }); setEditingId(courseId); }}
+                onPreview={(courseId) => {
+                  const course = courses.find(c => c.id === courseId);
+                  if (course) setPreviewingCourse(course);
+                }}
                 showSemester={termFilter === 'all'}
                 isSelecting={bulkSelect.isSelecting}
                 selectedIds={bulkSelect.selectedIds}
@@ -579,6 +606,119 @@ export default function CoursesPage() {
       />
 
       {/* Upgrade Modal */}
+      {/* Course Preview Modal */}
+      {courseAnim.data && (() => { const course = courseAnim.data!; return (
+        <div className={courseAnim.closing ? previewStyles.backdropClosing : previewStyles.backdrop} onClick={() => setPreviewingCourse(null)}>
+          <div className={`${previewStyles.modal} ${courseAnim.closing ? previewStyles.modalClosing : ''}`} onClick={(e) => e.stopPropagation()}>
+            <div className={previewStyles.header}>
+              <div className={previewStyles.headerInfo}>
+                <h2 className={previewStyles.title}>
+                  {course.name || course.code}
+                </h2>
+                {course.code && course.name && (
+                  <div className={previewStyles.subtitle}>{course.code}</div>
+                )}
+              </div>
+              <button onClick={() => setPreviewingCourse(null)} className={previewStyles.closeButton}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className={previewStyles.content}>
+              {/* Row 1: Time | Days (for each meeting time) */}
+              {course.meetingTimes && course.meetingTimes.length > 0 && course.meetingTimes.map((mt, idx) => (
+                <div key={idx} style={{ display: 'grid', gridTemplateColumns: isMobile || !mt.days?.length ? '1fr' : '1fr 1fr', gap: isMobile ? '8px' : '12px' }}>
+                  <div className={previewStyles.section}>
+                    <div className={previewStyles.sectionLabel}>Time</div>
+                    <div className={previewStyles.sectionValue}>
+                      {formatTimeString(mt.start)} – {formatTimeString(mt.end)}
+                    </div>
+                  </div>
+                  {mt.days?.length > 0 && (
+                    <div className={previewStyles.section}>
+                      <div className={previewStyles.sectionLabel}>Days</div>
+                      <div className={previewStyles.sectionValue}>{mt.days.join(', ')}</div>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {/* Row: Location | Term | Credits */}
+              {(() => {
+                const location = course.meetingTimes?.find(mt => mt.location)?.location;
+                const items = [
+                  location ? { label: 'Location', value: location } : null,
+                  course.term ? { label: 'Term', value: course.term } : null,
+                  course.credits ? { label: 'Credits', value: String(course.credits) } : null,
+                ].filter(Boolean) as { label: string; value: string }[];
+                if (items.length === 0) return null;
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : items.map(() => '1fr').join(' '), gap: isMobile ? '8px' : '12px' }}>
+                    {items.map((item) => (
+                      <div key={item.label} className={previewStyles.section}>
+                        <div className={previewStyles.sectionLabel}>{item.label}</div>
+                        <div className={previewStyles.sectionValue}>{item.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+              {/* Links | Files */}
+              {((course.links && course.links.length > 0) || (course.files && (course.files?.length ?? 0) > 0)) && (
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile || !(course.links?.length > 0 && (course.files?.length ?? 0) > 0) ? '1fr' : '1fr 1fr', gap: isMobile ? '8px' : '12px' }}>
+                  {course.links && course.links.length > 0 && (
+                    <div className={previewStyles.section}>
+                      <div className={previewStyles.sectionLabel}>Links</div>
+                      <div className={previewStyles.linksList}>
+                        {course.links.map((link, idx) => (
+                          <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className={previewStyles.linkCard}>
+                            {link.label || link.url}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {course.files && course.files.length > 0 && (
+                    <div className={previewStyles.section}>
+                      <div className={previewStyles.sectionLabel}>Files</div>
+                      <div className={previewStyles.linksList}>
+                        {course.files.map((file, idx) => (
+                          <button
+                            key={`${file.url}-${idx}`}
+                            type="button"
+                            onClick={() => setPreviewingFile({ file, allFiles: course.files || [], index: idx })}
+                            className={previewStyles.fileCard}
+                          >
+                            <FileIcon size={14} className={previewStyles.fileIcon} />
+                            <span className={previewStyles.fileName}>{file.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className={previewStyles.footer}>
+              <Button variant="primary" size={isMobile ? 'sm' : 'md'} style={{ flex: 1 }} onClick={() => {
+                setPreviewingCourse(null);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setEditingId(course.id);
+              }}>
+                Edit Course
+              </Button>
+            </div>
+          </div>
+        </div>
+      ); })()}
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        file={previewingFile?.file ?? null}
+        files={previewingFile?.allFiles}
+        currentIndex={previewingFile?.index ?? 0}
+        onClose={() => setPreviewingFile(null)}
+        onNavigate={(file, index) => setPreviewingFile(prev => prev ? { ...prev, file, index } : null)}
+      />
+
       {showUpgradeModal && (
         <>
           <div

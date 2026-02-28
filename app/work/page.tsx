@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useMemo, startTransition } from 'react';
+import { useModalAnimation } from '@/hooks/useModalAnimation';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -17,6 +18,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import { Plus, Trash2, Edit2, Repeat, Hammer, Check, X, Upload, FileIcon, ChevronDown, Crown, StickyNote, Sparkles } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import Link from 'next/link';
+import previewStyles from '@/components/ItemPreviewModal.module.css';
 import CalendarPicker from '@/components/CalendarPicker';
 import TimePicker from '@/components/TimePicker';
 import RecurrenceSelector from '@/components/RecurrenceSelector';
@@ -165,6 +167,7 @@ export default function TasksPage() {
   const [importanceFilter, setImportanceFilter] = useState('');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [previewingTask, setPreviewingTask] = useState<any>(null);
+  const taskAnim = useModalAnimation(previewingTask);
   const [showBreakdownModal, setShowBreakdownModal] = useState(false);
   const [previewingFile, setPreviewingFile] = useState<{ file: { name: string; url: string; size: number }; allFiles: { name: string; url: string; size: number }[]; index: number } | null>(null);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
@@ -176,6 +179,15 @@ export default function TasksPage() {
   const [hideRecurringCompleted, setHideRecurringCompleted] = useState(false);
 
   const { courses, tasks, notes, settings, addTask, updateTask, deleteTask, toggleTaskDone, addRecurringTask, updateRecurringPattern, bulkUpdateTasks, bulkDeleteTasks, workItems, addWorkItem, updateWorkItem, deleteWorkItem, toggleWorkItemComplete, toggleWorkItemChecklistItem, addRecurringWorkItem, bulkUpdateWorkItems, bulkDeleteWorkItems, initialized: storeInitialized } = useAppStore();
+
+  const [duplicateWarningDismissed, setDuplicateWarningDismissed] = useState(false);
+
+  // Duplicate detection - build a set of existing work item titles
+  const existingWorkTitles = useMemo(() => {
+    const items = workItems.length > 0 ? workItems : tasks;
+    return new Set(items.map((item) => item.title.toLowerCase().trim()));
+  }, [workItems, tasks]);
+  const titleIsDuplicate = formData.title.trim().length > 0 && existingWorkTitles.has(formData.title.toLowerCase().trim());
 
   // Type filter for unified work items - start with 'all' to avoid hydration mismatch
   const [typeFilter, setTypeFilter] = useState<WorkItemType | 'all'>('all');
@@ -781,6 +793,15 @@ export default function TasksPage() {
     [tasks, workItems]
   );
 
+  // Tags from uncompleted items only (for filter sidebar)
+  const filterTags = useMemo(() =>
+    Array.from(new Set([
+      ...tasks.filter((t) => t.status !== 'done').flatMap((t) => t.tags || []),
+      ...workItems.filter((w) => w.status !== 'done').flatMap((w) => w.tags || []),
+    ])),
+    [tasks, workItems]
+  );
+
   // Bulk action handlers
   const handleBulkAction = (action: BulkAction) => {
     if (action === 'complete') {
@@ -1226,11 +1247,11 @@ export default function TasksPage() {
                     ]}
                   />
                 </div>
-                {allTags.length > 0 && (
+                {filterTags.length > 0 && (
                   <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
                     <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '8px' }}>Tags</label>
                     <div className="space-y-1">
-                      {allTags.map((tag) => (
+                      {filterTags.map((tag) => (
                         <label key={tag} className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)] hover:text-[var(--text)]">
                           <input
                             type="checkbox"
@@ -1319,11 +1340,11 @@ export default function TasksPage() {
                     ]}
                   />
                 </div>
-                {allTags.length > 0 && (
+                {filterTags.length > 0 && (
                   <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
                     <label className="block text-sm font-medium text-[var(--text)]" style={{ marginBottom: '6px' }}>Tags</label>
                     <div className="space-y-1">
-                      {allTags.map((tag) => (
+                      {filterTags.map((tag) => (
                         <label key={tag} className="flex items-center gap-2 cursor-pointer text-sm text-[var(--text-muted)] hover:text-[var(--text)]">
                           <input
                             type="checkbox"
@@ -1403,11 +1424,24 @@ export default function TasksPage() {
                   <Input
                     label={`${WORK_ITEM_TYPE_LABELS[formData.type]} title`}
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, title: e.target.value });
+                      setDuplicateWarningDismissed(false);
+                    }}
                     placeholder="What needs to be done?"
                     required
                   />
                 </div>
+
+                {/* Duplicate warning */}
+                {titleIsDuplicate && !duplicateWarningDismissed && !editingId && (
+                  <div style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '8px', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                    <p style={{ fontSize: '13px', color: 'rgb(234, 179, 8)', margin: 0 }}>A {formData.type} with this title already exists. Add anyway?</p>
+                    <button type="button" onClick={() => setDuplicateWarningDismissed(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgb(234, 179, 8)', padding: '2px', flexShrink: 0 }}>
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
 
                 {/* Type, Course, Priority row - full width */}
                 <div className="grid grid-cols-3 gap-2" style={{ overflow: 'visible', paddingTop: isMobile ? '4px' : '8px' }}>
@@ -2284,127 +2318,66 @@ export default function TasksPage() {
       />
 
       {/* Preview Modal */}
-      {previewingTask && (
+      {taskAnim.data && (() => { const previewingTask = taskAnim.data!; return (
         <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: isMobile ? '16px' : '24px',
-          }}
+          className={taskAnim.closing ? previewStyles.backdropClosing : previewStyles.backdrop}
           onClick={() => setPreviewingTask(null)}
         >
           <div
-            style={{
-              backgroundColor: 'var(--panel)',
-              borderRadius: 'var(--radius-card)',
-              width: '100%',
-              maxWidth: '600px',
-              maxHeight: '80vh',
-              overflow: 'hidden',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
+            className={`${previewStyles.modal} ${taskAnim.closing ? previewStyles.modalClosing : ''}`}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header - Sticky */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              padding: isMobile ? '16px' : '20px',
-              borderBottom: '1px solid var(--border)',
-              flexShrink: 0,
-              backgroundColor: 'var(--panel)',
-            }}>
-              <div style={{ flex: 1, paddingRight: '12px' }}>
-                <h2 style={{
-                  fontSize: isMobile ? '16px' : '18px',
-                  fontWeight: '600',
-                  color: 'var(--text)',
-                  margin: 0,
-                  wordBreak: 'break-word',
-                }}>
+            {/* Header */}
+            <div className={previewStyles.header}>
+              <div className={previewStyles.headerInfo}>
+                <h2 className={previewStyles.title}>
                   {previewingTask.title}
                 </h2>
-                {previewingTask.courseId && (
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    {courses.find(c => c.id === previewingTask.courseId)?.code || courses.find(c => c.id === previewingTask.courseId)?.name}
+                {(previewingTask.courseId || previewingTask.status === 'done') && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                    {previewingTask.courseId && (
+                      <span className={previewStyles.subtitle} style={{ margin: 0 }}>
+                        {courses.find(c => c.id === previewingTask.courseId)?.code || courses.find(c => c.id === previewingTask.courseId)?.name}
+                      </span>
+                    )}
+                    {previewingTask.status === 'done' && (
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 8px', borderRadius: '999px' }}>Completed</span>
+                    )}
                   </div>
                 )}
               </div>
               <button
                 onClick={() => setPreviewingTask(null)}
-                style={{
-                  padding: '4px',
-                  color: 'var(--text-muted)',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  borderRadius: '4px',
-                }}
+                className={previewStyles.closeButton}
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* Content - Scrollable */}
-            <div style={{ padding: isMobile ? '16px' : '20px', flex: 1, overflowY: 'auto' }}>
-              {/* Status & Importance */}
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
-                {previewingTask.status === 'done' && (
-                  <span style={{
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    backgroundColor: 'var(--success-bg)',
-                    color: 'var(--success)',
-                  }}>
-                    Completed
-                  </span>
-                )}
-                {showPriorityIndicators && previewingTask.importance && (
-                  <span style={{
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    backgroundColor: previewingTask.importance === 'high' ? 'var(--danger-bg)' :
-                      previewingTask.importance === 'medium' ? 'var(--warning-bg)' : 'rgba(107, 114, 128, 0.1)',
-                    color: previewingTask.importance === 'high' ? 'var(--danger)' :
-                      previewingTask.importance === 'medium' ? 'var(--warning)' : 'var(--text-muted)',
-                  }}>
-                    {previewingTask.importance.charAt(0).toUpperCase() + previewingTask.importance.slice(1)} Priority
-                  </span>
-                )}
-                {previewingTask.workingOn && (
-                  <span style={{
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    backgroundColor: 'var(--success-bg)',
-                    color: 'var(--success)',
-                  }}>
-                    Working On
-                  </span>
-                )}
-              </div>
+            {/* Content */}
+            <div className={previewStyles.content}>
+              {/* Importance & Working On */}
+              {((showPriorityIndicators && previewingTask.importance) || previewingTask.workingOn) && (
+                <div className={previewStyles.badges}>
+                  {showPriorityIndicators && previewingTask.importance && (
+                    <span className={`${previewStyles.badge} ${
+                      previewingTask.importance === 'high' ? previewStyles.badgeDanger :
+                      previewingTask.importance === 'medium' ? previewStyles.badgeWarning : previewStyles.badgeMuted
+                    }`}>
+                      {previewingTask.importance.charAt(0).toUpperCase() + previewingTask.importance.slice(1)} Priority
+                    </span>
+                  )}
+                  {previewingTask.workingOn && (
+                    <span className={`${previewStyles.badge} ${previewStyles.badgeSuccess}`}>Working On</span>
+                  )}
+                </div>
+              )}
 
               {/* Due Date */}
               {previewingTask.dueAt && (
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Due Date</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Due Date</div>
+                  <div className={previewStyles.sectionValue}>
                     {formatDate(previewingTask.dueAt)}
                     {(() => {
                       const dueDate = new Date(previewingTask.dueAt);
@@ -2421,9 +2394,9 @@ export default function TasksPage() {
 
               {/* Recurring Pattern */}
               {previewingTask.isRecurring && previewingTask.recurringPattern && (
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Recurring</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Recurring</div>
+                  <div className={previewStyles.sectionValue}>
                     {getRecurrenceText(previewingTask.recurringPattern)}
                   </div>
                 </div>
@@ -2431,10 +2404,10 @@ export default function TasksPage() {
 
               {/* Checklist */}
               {previewingTask.checklist && previewingTask.checklist.length > 0 && (
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span>Checklist</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.checklistHeader}>
+                    <span className={previewStyles.checklistCount}>Checklist</span>
+                    <div className={previewStyles.checklistActions}>
                       <button
                         onClick={() => {
                           if (useWorkItems) {
@@ -2445,29 +2418,18 @@ export default function TasksPage() {
                           setPreviewingTask((prev: any) => prev ? { ...prev, checklist: [] } : prev);
                         }}
                         title="Delete checklist"
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', opacity: 0.5 }}
-                        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; }}
+                        className={previewStyles.checklistDeleteBtn}
                       >
                         <Trash2 size={15} />
                       </button>
                       <span>{previewingTask.checklist.filter((i: any) => i.done).length}/{previewingTask.checklist.length}</span>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div className={previewStyles.checklistItems}>
                     {previewingTask.checklist.map((item: any) => (
                       <div
                         key={item.id}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          padding: '6px 8px',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                        className={previewStyles.checklistItem}
                         onClick={() => {
                           if (useWorkItems) {
                             toggleWorkItemChecklistItem(previewingTask.id, item.id);
@@ -2484,13 +2446,9 @@ export default function TasksPage() {
                           type="checkbox"
                           checked={item.done}
                           onChange={() => {}}
-                          style={{ width: '16px', height: '16px', cursor: 'pointer', flexShrink: 0 }}
+                          className={previewStyles.checklistCheckbox}
                         />
-                        <span style={{
-                          fontSize: '13px',
-                          color: item.done ? 'var(--text-muted)' : 'var(--text)',
-                          textDecoration: item.done ? 'line-through' : 'none',
-                        }}>
+                        <span className={item.done ? previewStyles.checklistTextDone : previewStyles.checklistText}>
                           {item.text}
                         </span>
                       </div>
@@ -2501,9 +2459,9 @@ export default function TasksPage() {
 
               {/* Notes */}
               {previewingTask.notes && (
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Notes</div>
-                  <div style={{ fontSize: '14px', color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Notes</div>
+                  <div className={previewStyles.sectionValuePrewrap}>
                     {previewingTask.notes}
                   </div>
                 </div>
@@ -2511,19 +2469,11 @@ export default function TasksPage() {
 
               {/* Tags */}
               {previewingTask.tags && previewingTask.tags.length > 0 && (
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Tags</div>
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <div>
+                  <div className={previewStyles.sectionLabel}>Tags</div>
+                  <div className={previewStyles.tags}>
                     {previewingTask.tags.map((tag: string) => (
-                      <span key={tag} style={{
-                        fontSize: '12px',
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        backgroundColor: 'var(--panel-2)',
-                        color: 'var(--text-muted)',
-                      }}>
-                        {tag}
-                      </span>
+                      <span key={tag} className={previewStyles.tag}>{tag}</span>
                     ))}
                   </div>
                 </div>
@@ -2531,20 +2481,16 @@ export default function TasksPage() {
 
               {/* Links */}
               {previewingTask.links && previewingTask.links.length > 0 && (
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Links</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Links</div>
+                  <div className={previewStyles.linksList}>
                     {previewingTask.links.map((link: { label: string; url: string }, i: number) => (
                       <a
                         key={i}
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{
-                          fontSize: '14px',
-                          color: 'var(--link)',
-                          textDecoration: 'underline',
-                        }}
+                        className={previewStyles.linkCard}
                         onClick={(e) => e.stopPropagation()}
                       >
                         {link.label || link.url}
@@ -2554,30 +2500,21 @@ export default function TasksPage() {
                 </div>
               )}
 
+              {/* Files */}
               {previewingTask.files && previewingTask.files.length > 0 && (
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '4px' }}>Files</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div className={previewStyles.section}>
+                  <div className={previewStyles.sectionLabel}>Files</div>
+                  <div className={previewStyles.linksList}>
                     {previewingTask.files.map((file: { name: string; url: string; size: number }, i: number) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <FileIcon size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); setPreviewingFile({ file, allFiles: previewingTask.files, index: i }); }}
-                          style={{
-                            fontSize: '14px',
-                            color: 'var(--link)',
-                            textDecoration: 'underline',
-                            background: 'none',
-                            border: 'none',
-                            padding: 0,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          {file.name}
-                        </button>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>({file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`})</span>
-                      </div>
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setPreviewingFile({ file, allFiles: previewingTask.files, index: i }); }}
+                        className={previewStyles.fileCard}
+                      >
+                        <FileIcon size={14} className={previewStyles.fileIcon} />
+                        <span className={previewStyles.fileName}>{file.name}</span>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -2592,29 +2529,18 @@ export default function TasksPage() {
                 );
                 if (relatedNotes.length === 0) return null;
                 return (
-                  <div style={{ marginBottom: '16px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-muted)', marginBottom: '8px' }}>Related Notes</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div>
+                    <div className={previewStyles.sectionLabel}>Related Notes</div>
+                    <div className={previewStyles.linksList}>
                       {relatedNotes.slice(0, 3).map((note) => (
                         <Link
                           key={note.id}
                           href={`/notes?note=${note.id}`}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '8px 12px',
-                            backgroundColor: 'var(--panel-2)',
-                            borderRadius: '6px',
-                            textDecoration: 'none',
-                            transition: 'background-color 150ms ease',
-                          }}
+                          className={previewStyles.noteCard}
                           onClick={(e) => e.stopPropagation()}
-                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--nav-active)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--panel-2)'; }}
                         >
-                          <StickyNote size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-                          <span style={{ fontSize: '13px', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <StickyNote size={14} className={previewStyles.noteIcon} />
+                          <span className={previewStyles.noteTitle}>
                             {note.title}
                           </span>
                         </Link>
@@ -2622,12 +2548,7 @@ export default function TasksPage() {
                       {relatedNotes.length > 3 && (
                         <Link
                           href={previewingTask.courseId ? `/notes?courseId=${previewingTask.courseId}` : '/notes'}
-                          style={{
-                            fontSize: '12px',
-                            color: 'var(--link)',
-                            textDecoration: 'none',
-                            paddingLeft: '4px',
-                          }}
+                          className={previewStyles.viewAllLink}
                           onClick={(e) => e.stopPropagation()}
                         >
                           View all {relatedNotes.length} related notes →
@@ -2639,16 +2560,8 @@ export default function TasksPage() {
               })()}
             </div>
 
-            {/* Footer - Sticky */}
-            <div style={{
-              display: 'flex',
-              flexDirection: isMobile ? 'column' : 'row',
-              gap: isMobile ? '6px' : '8px',
-              padding: isMobile ? '12px' : '20px',
-              borderTop: '1px solid var(--border)',
-              flexShrink: 0,
-              backgroundColor: 'var(--panel)',
-            }}>
+            {/* Footer */}
+            <div className={previewStyles.footer}>
               <Button
                 variant="secondary"
                 size={isMobile ? 'sm' : 'md'}
@@ -2711,10 +2624,11 @@ export default function TasksPage() {
             </div>
           </div>
         </div>
-      )}
+      ); })()}
 
       {showBreakdownModal && previewingTask && (
         <AIBreakdownModal
+          isOpen={true}
           existingTitle={previewingTask.title}
           existingDescription={previewingTask.notes || previewingTask.title}
           onClose={() => setShowBreakdownModal(false)}

@@ -36,7 +36,7 @@ const coreFeatures = [
   {
     icon: CalendarDays,
     title: 'Calendar',
-    description: 'See your schedule with month, week, and day views. Sync with Google Calendar or export to Apple Calendar.',
+    description: 'See your schedule with month, week, day, and agenda views. Sync with Google Calendar or export to Apple Calendar.',
   },
 ];
 

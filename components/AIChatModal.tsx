@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Sparkles, X, Send, Loader2, Lock, SquarePen } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useAnimatedOpen } from '@/hooks/useModalAnimation';
+import chatStyles from './AIChatModal.module.css';
 import useAppStore from '@/lib/store';
 import { usePomodoroContext } from '@/context/PomodoroContext';
 
@@ -37,21 +39,10 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
   const isMobile = useIsMobile();
   const pomodoro = usePomodoroContext();
 
-  // Drag state for desktop
-  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
-  const isDragging = useRef(false);
-  const dragOffset = useRef({ x: 0, y: 0 });
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Track visual viewport height for mobile keyboard
   const [viewportHeight, setViewportHeight] = useState<number | null>(null);
-
-  // Reset position when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setPosition(null);
-    }
-  }, [isOpen]);
 
   // Listen to visualViewport resize for mobile keyboard
   useEffect(() => {
@@ -68,50 +59,12 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
     return () => vv.removeEventListener('resize', handleResize);
   }, [isOpen, isMobile]);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (!panelRef.current) return;
-    isDragging.current = true;
-    const rect = panelRef.current.getBoundingClientRect();
-    dragOffset.current = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
-    e.preventDefault();
-  }, []);
-
   useEffect(() => {
-    if (!isOpen || isMobile) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging.current) return;
-      const x = e.clientX - dragOffset.current.x;
-      const y = e.clientY - dragOffset.current.y;
-      // Clamp to viewport
-      const maxX = window.innerWidth - 520;
-      const maxY = window.innerHeight - 100;
-      setPosition({
-        x: Math.max(0, Math.min(x, maxX)),
-        y: Math.max(0, Math.min(y, maxY)),
-      });
-    };
-
-    const handleMouseUp = () => {
-      isDragging.current = false;
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isOpen, isMobile]);
-
-  useEffect(() => {
-    if (isOpen && inputRef.current && !isMobile) {
-      inputRef.current.focus();
-    }
-  }, [isOpen, isMobile]);
+    if (!isOpen) return;
+    // Small delay to ensure modal animation completes before focusing
+    const timer = setTimeout(() => inputRef.current?.focus(), 250);
+    return () => clearTimeout(timer);
+  }, [isOpen]);
 
   // When AI replies, scroll to the user's question so both question + reply are visible
   // When user sends a message, scroll to the bottom
@@ -132,7 +85,8 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
     }
   }, [isLoading, isOpen]);
 
-  if (!isOpen) return null;
+  const { visible, closing } = useAnimatedOpen(isOpen);
+  if (!visible) return null;
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -363,24 +317,20 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
         flexDirection: 'column',
         height: '100%',
         maxHeight: isMobile ? undefined : '560px',
-        backgroundColor: 'var(--orbi-bg)',
+        backgroundColor: 'var(--panel-solid, var(--panel))',
         border: isMobile ? 'none' : '1px solid var(--border)',
         borderRadius: isMobile ? 0 : '12px',
         overflow: 'hidden',
       }}
     >
-      {/* Header — draggable on desktop */}
+      {/* Header */}
       <div
-        onMouseDown={!isMobile ? handleMouseDown : undefined}
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '14px 16px',
-          borderBottom: '1px solid var(--border)',
+          padding: '14px 16px 10px',
           flexShrink: 0,
-          cursor: isMobile ? undefined : 'grab',
-          userSelect: 'none',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -394,31 +344,12 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
             <button
               onClick={() => setMessages([])}
               title="New conversation"
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--text-muted)',
-                padding: '4px',
-                display: 'flex',
-                alignItems: 'center',
-              }}
+              className={chatStyles.iconButton}
             >
               <SquarePen size={16} />
             </button>
           )}
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--text-muted)',
-              padding: '4px',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
+          <button onClick={onClose} className={chatStyles.closeButton}>
             <X size={20} />
           </button>
         </div>
@@ -430,6 +361,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
         style={{
           flex: 1,
           overflowY: 'auto',
+          overscrollBehavior: 'contain',
           padding: '16px',
           display: 'flex',
           flexDirection: 'column',
@@ -647,8 +579,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            padding: '12px 16px',
-            borderTop: '1px solid var(--border)',
+            padding: '10px 16px 14px',
             flexShrink: 0,
           }}
         >
@@ -657,7 +588,6 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask anything..."
-            disabled={isLoading}
             style={{
               flex: 1,
               padding: '10px 14px',
@@ -709,6 +639,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
   if (isMobile) {
     return (
       <div
+        className={closing ? chatStyles.mobilePanelClosing : chatStyles.mobilePanel}
         style={{
           position: 'fixed',
           left: 0,
@@ -716,7 +647,7 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
           top: 0,
           height: viewportHeight ? `${viewportHeight}px` : '100dvh',
           zIndex: 1100,
-          backgroundColor: 'var(--orbi-bg)',
+          backgroundColor: 'var(--panel-solid, var(--panel))',
           overflow: 'hidden',
         }}
       >
@@ -725,40 +656,24 @@ export default function AIChatModal({ isOpen, onClose, messages, setMessages }: 
     );
   }
 
-  // Desktop: floating draggable panel with backdrop
-  const panelStyle: React.CSSProperties = position
-    ? {
-        position: 'fixed',
-        left: position.x,
-        top: position.y,
-        width: 520,
-        zIndex: 1100,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-        borderRadius: '12px',
-      }
-    : {
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: 520,
-        zIndex: 1100,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-        borderRadius: '12px',
-      };
-
+  // Desktop: centered floating panel with backdrop
   return (
     <>
+      <div className={closing ? chatStyles.backdropClosing : chatStyles.backdrop} onClick={onClose} />
       <div
+        ref={panelRef}
+        className={closing ? chatStyles.desktopPanelClosing : chatStyles.desktopPanel}
         style={{
           position: 'fixed',
-          inset: 0,
-          zIndex: 1099,
-          backgroundColor: 'rgba(0,0,0,0.3)',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 520,
+          zIndex: 1100,
+          boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+          borderRadius: '12px',
         }}
-        onClick={onClose}
-      />
-      <div ref={panelRef} style={panelStyle}>
+      >
         {modalContent}
       </div>
     </>

@@ -97,6 +97,8 @@ export function SpotifyProvider({ children }: { children: ReactNode }) {
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const positionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastTrackIdRef = useRef<string | null>(null);
+  const tokenExpiresAtRef = useRef<string | null>(null);
+  const refreshInFlightRef = useRef<Promise<boolean> | null>(null);
 
   // Load preferences from localStorage
   useEffect(() => {
@@ -184,6 +186,9 @@ export function SpotifyProvider({ children }: { children: ReactNode }) {
         setIsConnected(true);
         setUserProfile(data.user);
         setIsPremium(data.user?.product === 'premium');
+        if (data.tokenExpiresAt) {
+          tokenExpiresAtRef.current = data.tokenExpiresAt;
+        }
         if (data.preferences?.miniPlayerSize) {
           setMiniPlayerSizeState(data.preferences.miniPlayerSize);
         }
@@ -198,9 +203,42 @@ export function SpotifyProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Fetch playback state
+  // Deduplicated refresh — prevents multiple concurrent refresh calls
+  const doRefresh = useCallback(async (): Promise<boolean> => {
+    if (refreshInFlightRef.current) {
+      return refreshInFlightRef.current;
+    }
+    const promise = (async () => {
+      try {
+        const refreshResponse = await fetch('/api/spotify/refresh', { method: 'POST' });
+        if (!refreshResponse.ok) return false;
+        const data = await refreshResponse.json();
+        if (data.expiresAt) {
+          tokenExpiresAtRef.current = data.expiresAt;
+        }
+        return true;
+      } catch {
+        return false;
+      } finally {
+        refreshInFlightRef.current = null;
+      }
+    })();
+    refreshInFlightRef.current = promise;
+    return promise;
+  }, []);
+
+  // Fetch playback state with proactive refresh and retry
   const fetchPlaybackState = useCallback(async () => {
     if (!isConnected) return;
+
+    // Proactively refresh if token expires within 5 minutes
+    if (tokenExpiresAtRef.current) {
+      const expiresAt = new Date(tokenExpiresAtRef.current).getTime();
+      const fiveMinutes = 5 * 60 * 1000;
+      if (Date.now() + fiveMinutes >= expiresAt) {
+        await doRefresh();
+      }
+    }
 
     try {
       const response = await fetch('/api/spotify/playback');
@@ -208,14 +246,22 @@ export function SpotifyProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         if (response.status === 401) {
           // Try to refresh token
-          const refreshResponse = await fetch('/api/spotify/refresh', { method: 'POST' });
-          if (!refreshResponse.ok) {
+          const refreshed = await doRefresh();
+          if (!refreshed) {
             setIsConnected(false);
+            setUserProfile(null);
             return;
           }
-          // Retry playback fetch
+          // Retry playback fetch after refresh
           const retryResponse = await fetch('/api/spotify/playback');
-          if (!retryResponse.ok) return;
+          if (!retryResponse.ok) {
+            // If still failing after refresh, give up this poll cycle (don't disconnect)
+            if (retryResponse.status === 401) {
+              setIsConnected(false);
+              setUserProfile(null);
+            }
+            return;
+          }
           const data = await retryResponse.json();
           updatePlaybackState(data);
           return;
@@ -228,7 +274,7 @@ export function SpotifyProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to fetch playback state:', error);
     }
-  }, [isConnected]);
+  }, [isConnected, doRefresh]);
 
   const updatePlaybackState = (data: {
     isPlaying: boolean;

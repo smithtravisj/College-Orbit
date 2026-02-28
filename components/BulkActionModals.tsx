@@ -8,6 +8,12 @@ import TimePicker from '@/components/TimePicker';
 import TagInput from '@/components/notes/TagInput';
 import { Course, WorkItemType, WORK_ITEM_TYPE_LABELS } from '@/types';
 import { useFormatters } from '@/hooks/useFormatters';
+import { useAnimatedOpen } from '@/hooks/useModalAnimation';
+
+const backdropCls = (closing: boolean) =>
+  `fixed inset-0 bg-black/50 backdrop-blur-[4px] flex items-center justify-center z-[1001] p-4 overscroll-contain ${closing ? 'animate-[fadeOut_200ms_ease-in] pointer-events-none' : 'animate-[fadeIn_200ms_ease-out]'}`;
+const panelCls = (closing: boolean) =>
+  `bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-[0_20px_50px_rgba(0,0,0,0.3)] max-w-sm w-full ${closing ? 'animate-[scaleOut_200ms_ease-in]' : 'animate-[scaleIn_200ms_ease-out]'}`;
 
 interface BaseModalProps {
   isOpen: boolean;
@@ -30,7 +36,8 @@ export function BulkChangeCourseModal({
 }: BulkChangeCourseModalProps) {
   const [courseId, setCourseId] = useState('');
   const { getCourseDisplayName } = useFormatters();
-  if (!isOpen) return null;
+  const { visible, closing } = useAnimatedOpen(isOpen);
+  if (!visible) return null;
 
   const handleConfirm = () => {
     onConfirm(courseId || null);
@@ -39,8 +46,8 @@ export function BulkChangeCourseModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+    <div className={backdropCls(closing)}>
+      <div className={panelCls(closing)}>
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Course</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -99,7 +106,8 @@ export function BulkChangeTagsModal({
 }: BulkChangeTagsModalProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [mode, setMode] = useState<'add' | 'replace'>('add');
-  if (!isOpen) return null;
+  const { visible, closing } = useAnimatedOpen(isOpen);
+  if (!visible) return null;
 
   const handleConfirm = () => {
     onConfirm(tags, mode);
@@ -109,8 +117,8 @@ export function BulkChangeTagsModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+    <div className={backdropCls(closing)}>
+      <div className={panelCls(closing)}>
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Tags</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -178,7 +186,8 @@ export function BulkChangeTypeModal({
   onConfirm,
 }: BulkChangeTypeModalProps) {
   const [type, setType] = useState<WorkItemType>('task');
-  if (!isOpen) return null;
+  const { visible, closing } = useAnimatedOpen(isOpen);
+  if (!visible) return null;
 
   const handleConfirm = () => {
     onConfirm(type);
@@ -194,8 +203,8 @@ export function BulkChangeTypeModal({
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+    <div className={backdropCls(closing)}>
+      <div className={panelCls(closing)}>
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Type</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -250,7 +259,8 @@ export function BulkChangePriorityModal({
   onConfirm,
 }: BulkChangePriorityModalProps) {
   const [value, setValue] = useState('');
-  if (!isOpen) return null;
+  const { visible, closing } = useAnimatedOpen(isOpen);
+  if (!visible) return null;
 
   const handleConfirm = () => {
     onConfirm(value || null);
@@ -275,8 +285,8 @@ export function BulkChangePriorityModal({
       ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+    <div className={backdropCls(closing)}>
+      <div className={panelCls(closing)}>
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change {label}</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -319,7 +329,8 @@ interface BulkChangeDateModalProps extends BaseModalProps {
 
 export function BulkChangeDateModal({ isOpen, onClose, selectedCount, onConfirm }: BulkChangeDateModalProps) {
   const [date, setDate] = useState('');
-  if (!isOpen) return null;
+  const { visible, closing } = useAnimatedOpen(isOpen);
+  if (!visible) return null;
 
   const handleConfirm = () => {
     onConfirm(date || null);
@@ -334,8 +345,8 @@ export function BulkChangeDateModal({ isOpen, onClose, selectedCount, onConfirm 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4" style={{ overflow: 'visible' }}>
-      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full" style={{ overflow: 'visible' }}>
+    <div className={backdropCls(closing)} style={{ overflow: 'visible' }}>
+      <div className={panelCls(closing)} style={{ overflow: 'visible' }}>
         <div style={{ padding: '24px', overflow: 'visible' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Date</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -387,7 +398,8 @@ interface BulkChangeTimeModalProps extends BaseModalProps {
 
 export function BulkChangeTimeModal({ isOpen, onClose, selectedCount, onConfirm }: BulkChangeTimeModalProps) {
   const [time, setTime] = useState('');
-  if (!isOpen) return null;
+  const { visible, closing } = useAnimatedOpen(isOpen);
+  if (!visible) return null;
 
   const handleConfirm = () => {
     onConfirm(time || null);
@@ -402,8 +414,8 @@ export function BulkChangeTimeModal({ isOpen, onClose, selectedCount, onConfirm 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+    <div className={backdropCls(closing)}>
+      <div className={panelCls(closing)}>
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Time</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -456,7 +468,8 @@ interface BulkAddLinkModalProps extends BaseModalProps {
 export function BulkAddLinkModal({ isOpen, onClose, selectedCount, onConfirm }: BulkAddLinkModalProps) {
   const [label, setLabel] = useState('');
   const [url, setUrl] = useState('');
-  if (!isOpen) return null;
+  const { visible, closing } = useAnimatedOpen(isOpen);
+  if (!visible) return null;
 
   const handleConfirm = () => {
     const finalUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `https://${url}`;
@@ -467,8 +480,8 @@ export function BulkAddLinkModal({ isOpen, onClose, selectedCount, onConfirm }: 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+    <div className={backdropCls(closing)}>
+      <div className={panelCls(closing)}>
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Add Link</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -530,7 +543,8 @@ export function BulkChangeLocationModal({
   onConfirm,
 }: BulkChangeLocationModalProps) {
   const [location, setLocation] = useState('');
-  if (!isOpen) return null;
+  const { visible, closing } = useAnimatedOpen(isOpen);
+  if (!visible) return null;
 
   const handleConfirm = () => {
     onConfirm(location || null);
@@ -539,8 +553,8 @@ export function BulkChangeLocationModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+    <div className={backdropCls(closing)}>
+      <div className={panelCls(closing)}>
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Location</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -596,7 +610,8 @@ export function BulkChangeTermModal({
 }: BulkChangeTermModalProps) {
   const [term, setTerm] = useState('');
   const [customTerm, setCustomTerm] = useState('');
-  if (!isOpen) return null;
+  const { visible, closing } = useAnimatedOpen(isOpen);
+  if (!visible) return null;
 
   const handleConfirm = () => {
     const finalTerm = term === '__custom__' ? customTerm : term;
@@ -607,8 +622,8 @@ export function BulkChangeTermModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+    <div className={backdropCls(closing)}>
+      <div className={panelCls(closing)}>
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Change Term</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>
@@ -677,7 +692,8 @@ export function BulkDeleteModal({
   entityType,
   onConfirm,
 }: BulkDeleteModalProps) {
-  if (!isOpen) return null;
+  const { visible, closing } = useAnimatedOpen(isOpen);
+  if (!visible) return null;
 
   const handleConfirm = () => {
     onConfirm();
@@ -685,8 +701,8 @@ export function BulkDeleteModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
-      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+    <div className={backdropCls(closing)}>
+      <div className={panelCls(closing)}>
         <div style={{ padding: '24px' }}>
           <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Delete {entityType}s</h2>
           <p className="text-sm text-[var(--text-muted)]" style={{ marginBottom: '16px' }}>

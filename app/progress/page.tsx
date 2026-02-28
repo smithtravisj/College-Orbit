@@ -73,17 +73,8 @@ export default function ProgressPage() {
     return count > 0 ? 'var(--success)' : 'var(--border)';
   };
 
-  const getTierColors = (tier: string) => {
-    switch (tier) {
-      case 'platinum':
-        return { bg: 'var(--accent-2)', border: 'var(--accent)', text: 'var(--accent)' };
-      case 'gold':
-        return { bg: 'var(--warning-bg)', border: 'var(--warning)', text: 'var(--warning)' };
-      case 'silver':
-        return { bg: 'var(--border)', border: 'var(--text-muted)', text: 'var(--text-muted)' };
-      default:
-        return { bg: 'var(--warning-bg)', border: 'var(--warning)', text: 'var(--warning)' };
-    }
+  const getTierColors = (_tier: string) => {
+    return { bg: 'color-mix(in srgb, var(--link) 15%, transparent)', border: 'var(--link)', text: 'var(--link)' };
   };
 
   const getIconComponent = (icon: string, isUnlocked: boolean, tierColors: { text: string }) => {
@@ -838,7 +829,7 @@ export default function ProgressPage() {
                         borderRadius: isMobile ? '6px' : '8px',
                         backgroundColor: isUnlocked ? tierColors.bg : 'var(--panel)',
                         border: `1px solid ${isUnlocked ? tierColors.border : 'var(--border)'}`,
-                        opacity: isUnlocked ? 1 : 0.5,
+                        opacity: isUnlocked ? 1 : 0.7,
                         display: 'flex',
                         alignItems: 'center',
                         gap: isMobile ? '10px' : '12px',

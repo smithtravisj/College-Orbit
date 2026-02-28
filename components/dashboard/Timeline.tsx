@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTimelineData } from '@/hooks/useTimelineData';
 import { TimelineRange, TimelineItem as TimelineItemType, TimelineItemType as ItemType, TimelineDayData } from '@/types/timeline';
 import { TimelineDay } from './TimelineDay';
-import { TimelineItem } from './TimelineItem';
 import { TimelineProgress } from './TimelineProgress';
 import useAppStore from '@/lib/store';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -13,7 +12,10 @@ import EmptyState from '@/components/ui/EmptyState';
 import { Task, Deadline, Course, Exam, CalendarEvent, WorkItem } from '@/types';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import { getThemeColors } from '@/lib/visualThemes';
-import { Search } from 'lucide-react';
+import { Search, RefreshCw, Plus, Check, X as XIcon, Sparkles, ExternalLink, Trash2 } from 'lucide-react';
+import { QuickAddModal } from '@/components/QuickAddModal';
+import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
 
 interface TimelineProps {
   onTaskClick?: (task: Task) => void;
@@ -23,6 +25,8 @@ interface TimelineProps {
   onExamClick?: (exam: Exam) => void;
   onEventClick?: (event: CalendarEvent) => void;
   onFileClick?: (file: { name: string; url: string; size: number }, allFiles: { name: string; url: string; size: number }[], index: number) => void;
+  onBreakdown?: (item: TimelineItemType) => void;
+  onDeleteEvent?: (eventId: string) => void;
   defaultRange?: TimelineRange;
   showProgress?: boolean;
   showRangeToggle?: boolean;
@@ -38,6 +42,8 @@ export const Timeline: React.FC<TimelineProps> = ({
   onExamClick,
   onEventClick,
   onFileClick,
+  onBreakdown,
+  onDeleteEvent,
   defaultRange = 'today',
   showProgress = true,
   showRangeToggle = true,
@@ -49,6 +55,11 @@ export const Timeline: React.FC<TimelineProps> = ({
   const toggleTaskDone = useAppStore((state) => state.toggleTaskDone);
   const updateDeadline = useAppStore((state) => state.updateDeadline);
   const toggleWorkItemComplete = useAppStore((state) => state.toggleWorkItemComplete);
+  const deleteCalendarEvent = useAppStore((state) => state.deleteCalendarEvent);
+  const loadFromDatabase = useAppStore((state) => state.loadFromDatabase);
+  const router = useRouter();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ item: TimelineItemType; x: number; y: number } | null>(null);
 
   // Use specific selectors for settings that affect accent color
   const theme = useAppStore((state) => state.settings.theme) || 'dark';
@@ -92,6 +103,8 @@ export const Timeline: React.FC<TimelineProps> = ({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const refreshBtnRef = useRef<HTMLButtonElement>(null);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
   // Save range to localStorage when it changes
   useEffect(() => {
@@ -103,54 +116,7 @@ export const Timeline: React.FC<TimelineProps> = ({
     itemTypes,
   });
 
-  // Refs and state for smooth first day header scroll-away effect
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const firstDayHeaderRef = useRef<HTMLDivElement>(null);
-  const nextDayHeaderRef = useRef<HTMLDivElement>(null);
-  const [firstDayHeaderOffset, setFirstDayHeaderOffset] = useState(0);
-
-  const hasAutoScrolled = useRef(false);
-
-  // Attach scroll listener
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    const header = firstDayHeaderRef.current;
-    if (!scrollContainer || !header) return;
-
-    const handleScroll = () => {
-      const nextHeader = nextDayHeaderRef.current;
-
-      // If there's no next day header, don't hide the first day header
-      if (!nextHeader) {
-        setFirstDayHeaderOffset(0);
-        return;
-      }
-
-      // Use getBoundingClientRect for accurate visual positioning
-      const headerRect = header.getBoundingClientRect();
-      const nextHeaderRect = nextHeader.getBoundingClientRect();
-
-      // Calculate how much the next header overlaps with the first header
-      const overlap = headerRect.bottom - nextHeaderRect.top;
-
-      if (overlap > 0) {
-        // Next header is touching or overlapping - push the first header up
-        const offset = Math.min(overlap, headerRect.height);
-        setFirstDayHeaderOffset(offset);
-      } else {
-        setFirstDayHeaderOffset(0);
-      }
-    };
-
-    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-    return () => scrollContainer.removeEventListener('scroll', handleScroll);
-  }, [groupedData]);
-
-  // Reset offset when range changes
-  useEffect(() => {
-    setFirstDayHeaderOffset(0);
-    hasAutoScrolled.current = false; // Allow auto-scroll again when range changes
-  }, [range]);
 
   const handleToggleComplete = async (item: TimelineItemType) => {
     // Check if this item came from a WorkItem (has a type field like 'task', 'assignment', 'reading', 'project')
@@ -183,6 +149,96 @@ export const Timeline: React.FC<TimelineProps> = ({
     } else if (item.type === 'event' && onEventClick) {
       onEventClick(item.originalItem as CalendarEvent);
     }
+  };
+
+  const handleContextMenu = (item: TimelineItemType, e: React.MouseEvent) => {
+    // Clamp position to keep menu within viewport
+    const x = Math.min(e.clientX, window.innerWidth - 200);
+    const y = Math.min(e.clientY, window.innerHeight - 200);
+    setContextMenu({ item, x, y });
+  };
+
+  const handleContextMenuAction = (action: string) => {
+    if (!contextMenu) return;
+    const { item } = contextMenu;
+    setContextMenu(null);
+
+    switch (action) {
+      case 'complete':
+        handleToggleComplete(item);
+        break;
+      case 'breakdown':
+        onBreakdown?.(item);
+        break;
+      case 'viewInWork':
+        router.push(`/work?preview=${item.originalItem.id}`);
+        break;
+      case 'viewCourse':
+        router.push(`/courses?preview=${item.originalItem.id}`);
+        break;
+      case 'viewExam':
+        router.push(`/exams?preview=${item.originalItem.id}`);
+        break;
+      case 'openEvent':
+        if (onEventClick) onEventClick(item.originalItem as CalendarEvent);
+        break;
+      case 'deleteEvent':
+        if (onDeleteEvent) {
+          onDeleteEvent(item.originalItem.id);
+        } else {
+          deleteCalendarEvent(item.originalItem.id);
+        }
+        break;
+    }
+  };
+
+  const getContextMenuItems = (item: TimelineItemType) => {
+    const items: { key: string; label: string; icon: React.ReactNode; danger?: boolean }[] = [];
+    const type = item.type;
+
+    if (type === 'task' || type === 'deadline' || type === 'reading' || type === 'project') {
+      items.push({
+        key: 'complete',
+        label: item.isCompleted ? 'Mark Incomplete' : 'Mark Complete',
+        icon: item.isCompleted ? <XIcon size={14} /> : <Check size={14} />,
+      });
+      items.push({
+        key: 'breakdown',
+        label: 'AI Breakdown',
+        icon: <Sparkles size={14} />,
+      });
+      items.push({
+        key: 'viewInWork',
+        label: 'View in Work',
+        icon: <ExternalLink size={14} />,
+      });
+    } else if (type === 'class') {
+      items.push({
+        key: 'viewCourse',
+        label: 'View Course',
+        icon: <ExternalLink size={14} />,
+      });
+    } else if (type === 'exam') {
+      items.push({
+        key: 'viewExam',
+        label: 'View in Exams',
+        icon: <ExternalLink size={14} />,
+      });
+    } else if (type === 'event') {
+      items.push({
+        key: 'openEvent',
+        label: 'Edit Event',
+        icon: <ExternalLink size={14} />,
+      });
+      items.push({
+        key: 'deleteEvent',
+        label: 'Delete Event',
+        icon: <Trash2 size={14} />,
+        danger: true,
+      });
+    }
+
+    return items;
   };
 
   // Focus search input when opened
@@ -418,7 +474,7 @@ export const Timeline: React.FC<TimelineProps> = ({
         )}
 
         {/* Right side: search input, search icon, and progress */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '2px' : '8px' }}>
           {/* Search input (appears when open) */}
           {isSearchOpen && (
             <input
@@ -469,6 +525,62 @@ export const Timeline: React.FC<TimelineProps> = ({
             <Search size={15} />
           </button>
 
+          {/* Refresh button */}
+          <button
+            ref={(el) => { refreshBtnRef.current = el; }}
+            onClick={async () => {
+              if (isRefreshing) return;
+              setIsRefreshing(true);
+              try {
+                await loadFromDatabase();
+              } finally {
+                setIsRefreshing(false);
+                if (refreshBtnRef.current) {
+                  refreshBtnRef.current.style.color = 'var(--text-muted)';
+                }
+              }
+            }}
+            className={isRefreshing ? 'animate-spin' : ''}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: '4px',
+              cursor: isRefreshing ? 'default' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--text-muted)',
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={(e) => { if (!isRefreshing) e.currentTarget.style.color = 'var(--text)'; }}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+            title="Refresh timeline"
+            disabled={isRefreshing}
+          >
+            <RefreshCw size={14} />
+          </button>
+
+          {/* Quick add button */}
+          <button
+            onClick={() => setIsQuickAddOpen(true)}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: '4px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--text-muted)',
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+            title="Quick add"
+          >
+            <Plus size={16} />
+          </button>
+
           {/* Progress indicator */}
           {showProgress && groupedData.totalProgress.total > 0 && (
             <TimelineProgress
@@ -482,76 +594,22 @@ export const Timeline: React.FC<TimelineProps> = ({
 
       {/* Timeline content */}
       {hasAnyItems ? (
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          {filteredGroupedData.days.slice(0, 1).map((day) => (
-            <div key={day.dateKey} className="flex flex-col min-h-0 flex-1">
-              {/* First day header - smoothly scrolls away */}
-              <div
-                ref={firstDayHeaderRef}
-                className="flex items-center justify-between shrink-0"
-                style={{
-                  backgroundColor: 'var(--panel)',
-                  paddingBottom: '4px',
-                  transform: `translateY(-${firstDayHeaderOffset}px)`,
-                  marginBottom: -firstDayHeaderOffset,
-                }}
-              >
-                <span className="text-sm font-semibold uppercase tracking-wide text-[var(--text)]">
-                  {day.isToday ? 'Today' : day.dayName}, {day.dateStr}
-                </span>
-                {day.progress.total > 0 && (
-                  <span
-                    className="text-xs"
-                    style={{
-                      color:
-                        day.progress.percentage === 100
-                          ? 'var(--success)'
-                          : day.progress.hasOverdue
-                          ? 'var(--danger)'
-                          : 'var(--text-muted)',
-                    }}
-                  >
-                    {day.progress.completed}/{day.progress.total}
-                  </span>
-                )}
-              </div>
-              {/* Day items - scrollable */}
-              <div
-                ref={scrollContainerRef}
-                className="flex-1 overflow-y-auto min-h-0"
-                style={maxHeight ? { maxHeight: `${maxHeight - 30 + firstDayHeaderOffset}px` } : undefined}
-              >
-                  {day.items.length > 0 ? (
-                    <div className="flex flex-col">
-                      {day.items.map((item) => (
-                        <div key={item.id} data-timeline-item-id={item.id}>
-                          <TimelineItem
-                            item={item}
-                            onToggleComplete={handleToggleComplete}
-                            onItemClick={handleItemClick}
-                            onFileClick={onFileClick}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-[var(--text-muted)]">No items scheduled</p>
-                  )}
-                  {/* Render remaining days inside the scroll area */}
-                  {filteredGroupedData.days.slice(1).map((remainingDay, remainingIndex) => (
-                    <div key={remainingDay.dateKey} ref={remainingIndex === 0 ? nextDayHeaderRef : undefined}>
-                      <TimelineDay
-                        day={remainingDay}
-                        onToggleComplete={handleToggleComplete}
-                        onItemClick={handleItemClick}
-                        onFileClick={onFileClick}
-                        collapsible={isMobile && range === 'week' && !remainingDay.isToday}
-                        defaultCollapsed={isMobile && range === 'week' && !remainingDay.isToday && remainingIndex > 1}
-                      />
-                    </div>
-                  ))}
-                </div>
-            </div>
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto min-h-0"
+          style={maxHeight ? { maxHeight: `${maxHeight}px` } : undefined}
+        >
+          {filteredGroupedData.days.map((day, dayIndex) => (
+            <TimelineDay
+              key={day.dateKey}
+              day={day}
+              onToggleComplete={handleToggleComplete}
+              onItemClick={handleItemClick}
+              onFileClick={onFileClick}
+              onContextMenu={handleContextMenu}
+              collapsible={isMobile && range === 'week' && !day.isToday}
+              defaultCollapsed={isMobile && range === 'week' && !day.isToday && dayIndex > 2}
+            />
           ))}
         </div>
       ) : (
@@ -567,6 +625,71 @@ export const Timeline: React.FC<TimelineProps> = ({
             }
           />
         </div>
+      )}
+
+      {createPortal(
+        <QuickAddModal
+          isOpen={isQuickAddOpen}
+          onClose={() => setIsQuickAddOpen(false)}
+        />,
+        document.body
+      )}
+
+      {/* Context menu */}
+      {contextMenu && createPortal(
+        <>
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
+            onClick={() => setContextMenu(null)}
+            onContextMenu={(e) => { e.preventDefault(); setContextMenu(null); }}
+          />
+          <div
+            style={{
+              position: 'fixed',
+              top: contextMenu.y,
+              left: contextMenu.x,
+              backgroundColor: 'var(--panel-solid, var(--panel))',
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.1)',
+              zIndex: 9999,
+              minWidth: '180px',
+              padding: '4px 0',
+              animation: 'contextMenuIn 100ms ease-out',
+            }}
+          >
+            {getContextMenuItems(contextMenu.item).map((menuItem) => (
+              <button
+                key={menuItem.key}
+                onClick={() => handleContextMenuAction(menuItem.key)}
+                style={{
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '8px 12px',
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '13px',
+                  color: menuItem.danger ? 'var(--danger)' : 'var(--text)',
+                  transition: 'background-color 0.1s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--panel-2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', opacity: 0.7 }}>{menuItem.icon}</span>
+                {menuItem.label}
+              </button>
+            ))}
+          </div>
+        </>,
+        document.body
       )}
     </div>
   );

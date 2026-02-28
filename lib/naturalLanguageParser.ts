@@ -10,7 +10,7 @@ import { toLocalDateString } from '@/lib/utils';
 // TYPE DEFINITIONS
 // ============================================================================
 
-export type ItemType = 'task' | 'assignment' | 'reading' | 'project' | 'exam' | 'note' | 'course' | 'shopping';
+export type ItemType = 'task' | 'assignment' | 'reading' | 'project' | 'exam' | 'note' | 'course' | 'event' | 'shopping';
 
 export interface NoteFolder {
   id: string;
@@ -24,6 +24,7 @@ export interface ParsedInput {
   courseId: string | null;
   date: string | null; // ISO date YYYY-MM-DD
   time: string | null; // HH:mm 24-hour format
+  endTime: string | null; // HH:mm 24-hour format (for events with time ranges)
   location: string | null;
   importance: 'low' | 'medium' | 'high' | null; // For tasks
   effort: 'small' | 'medium' | 'large' | null; // For assignments
@@ -284,6 +285,7 @@ export function parseNaturalLanguage(
     courseId: null,
     date: null,
     time: null,
+    endTime: null,
     location: null,
     importance: null,
     effort: null,
@@ -651,47 +653,70 @@ export function parseNaturalLanguage(
     workingText = workingText.replace(/\bfor\s+(?=\s|$)/i, ' ');
   }
 
-  // Extract location (for exams) - check BEFORE dates since locations can contain words like "center"
-  if (itemType === 'exam') {
+  // Extract location (for exams/events) - check BEFORE dates since locations can contain words like "center"
+  if (itemType === 'exam' || itemType === 'event') {
     const locationPatterns = [
-      // Explicit location markers
-      /\b(?:in|at|@)\s+(room\s+\w+)/i,
-      /\b(?:in|at|@)\s+(building\s+\w+)/i,
-      /\b(?:in|at|@)\s+(hall\s+\w+)/i,
-      /\b(?:in|at|@)\s+(\w+\s+hall)/i,
-      /\b(?:in|at|@)\s+(\w+\s+building)/i,
-      /\b(?:in|at|@)\s+(\w+\s+center)/i,
-      /\b(?:in|at|@)\s+(\w+\s+library)/i,
-      /\b(?:in|at|@)\s+(the\s+\w+)/i,
-      // Common location types
-      /\b(room\s+\d+\w*)/i,
-      /\b(building\s+\w+)/i,
-      /\b(hall\s+\w+)/i,
-      /\b(\w+\s+center)\b/i,
-      /\b(\w+\s+library)\b/i,
+      // Explicit "location:" prefix — greedily captures everything after it
+      /\blocation[:\s]+(.+?)$/i,
+
+      // "in/at/@ [room number + building]" e.g. "at 3003L JKB", "at 101 Smith Hall"
+      /(?:\b(?:in|at)|@)\s+(\d+\w*\s+[A-Za-z][\w]*(?:\s+[A-Za-z][\w]*)?)/i,
+      // "in/at/@ room 101" or "in/at/@ rm 101"
+      /(?:\b(?:in|at)|@)\s+((?:room|rm\.?)\s+\w+)/i,
+      // "in/at/@ [building] [room]" e.g. "at JKB 3003L"
+      /(?:\b(?:in|at)|@)\s+([A-Z]{2,5}\s+\d+\w*)/i,
+      // "in/at/@ [multi-word place]" e.g. "at the Student Center", "at Smith Hall"
+      /(?:\b(?:in|at)|@)\s+((?:the\s+)?[A-Z][\w]*(?:\s+[A-Z][\w]*){0,3})/,
+      // "in/at/@ [any word(s)]" — catch-all for "at library", "at starbucks", etc.
+      /(?:\b(?:in|at)|@)\s+([\w][\w\s]*[\w])/i,
+
+      // Room/building patterns without preposition
+      /\b((?:room|rm\.?)\s+\d+\w*)/i,
+      /\b((?:building|bldg\.?)\s+\w+)/i,
+      // Room number + building abbreviation: "3003L JKB", "101A MARB"
+      /\b(\d{2,5}[A-Za-z]?\s+[A-Z]{2,5})\b/,
+      // Building abbreviation + room number: "JKB 3003L", "MARB 101"
+      /\b([A-Z]{2,5}\s+\d{2,5}[A-Za-z]?)\b/,
+
+      // Named place types
+      /\b([\w]+\s+hall)\b/i,
+      /\b(hall\s+[\w]+)\b/i,
+      /\b([\w]+\s+(?:building|bldg\.?))\b/i,
+      /\b([\w]+\s+center)\b/i,
+      /\b([\w]+\s+(?:centre))\b/i,
+      /\b([\w]+\s+library)\b/i,
+      /\b([\w]+\s+(?:stadium|arena|field|court|plaza|park|lounge|commons))\b/i,
       /\b(gym|gymnasium)\b/i,
-      /\b(auditorium|theater|theatre)\b/i,
-      /\b(lab(?:oratory)?\s+\w*)/i,
-      // Explicit location prefix
-      /\blocation[:\s]+([^\d]+?)(?=\s+\d|\s*$)/i,
-      /\b([A-Z]{2,4}\s+\d{3,4}[A-Z]?)\s*(?:room|rm)/i,
+      /\b(auditorium|amphitheater|amphitheatre|theater|theatre)\b/i,
+      /\b(lab(?:oratory)?\s+[\w]*)/i,
+      /\b(cafeteria|cafe|caf)\b/i,
+      /\b(chapel|church)\b/i,
+      /\b((?:student\s+)?union)\b/i,
     ];
 
     for (const pattern of locationPatterns) {
-      const match = workingText.match(pattern);
-      if (match) {
-        result.location = match[1].trim();
-        // Capitalize first letter of location
-        result.location = result.location.charAt(0).toUpperCase() + result.location.slice(1);
+      // Use global matching to skip rejected matches and try subsequent ones
+      const globalPattern = new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g');
+      let match;
+      while ((match = globalPattern.exec(workingText)) !== null) {
+        let loc = match[1].trim();
+        // Don't match pure numbers or single letters that could be other data
+        if (/^\d+$/.test(loc) || loc.length < 2) continue;
+        // Don't match time-like strings: "2pm", "3:00", "2pm to 3pm"
+        if (/\d{1,2}\s*(am|pm)/i.test(loc) || /^\d{1,2}:\d{2}/.test(loc)) continue;
+        // Capitalize first letter
+        loc = loc.charAt(0).toUpperCase() + loc.slice(1);
+        result.location = loc;
         extractedParts.push(match[0]);
         workingText = workingText.replace(match[0], ' ');
         break;
       }
+      if (result.location) break;
     }
   }
 
-  // Extract date (for tasks, assignments, exams)
-  if (itemType === 'task' || itemType === 'assignment' || itemType === 'exam') {
+  // Extract date (for tasks, assignments, exams, events)
+  if (itemType === 'task' || itemType === 'assignment' || itemType === 'exam' || itemType === 'event') {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -839,15 +864,80 @@ export function parseNaturalLanguage(
       }
     }
 
-    // Extract time
-    for (const [keyword, time] of Object.entries(TIME_KEYWORDS)) {
-      const pattern = new RegExp(`\\b${keyword}\\b`, 'i');
+    // Helper to convert parsed hour/minute/meridiem to 24h "HH:mm"
+    const toTimeString = (hours: number, minutes: number, meridiem?: string): string | null => {
+      if (meridiem === 'pm' && hours !== 12) hours += 12;
+      else if (meridiem === 'am' && hours === 12) hours = 0;
+      else if (!meridiem && hours <= 12 && hours >= 1 && hours < 8) hours += 12;
+      if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      }
+      return null;
+    };
+
+    // Try time ranges first: "2pm to 3pm", "at 2pm to 3pm", "2:00pm-3:30pm", "from 2pm to 3pm"
+    const timeRangePatterns = [
+      // "2:00pm to 3:30pm" or "at 2:00pm - 3:30pm"
+      /\b(?:(?:at|@)\s+)?(?:from\s+)?(\d{1,2}):(\d{2})\s*(am|pm)\s*(?:to|-|–)\s*(\d{1,2}):(\d{2})\s*(am|pm)\b/i,
+      // "2pm to 3pm" or "at 2pm-3pm"
+      /\b(?:(?:at|@)\s+)?(?:from\s+)?(\d{1,2})\s*(am|pm)\s*(?:to|-|–)\s*(\d{1,2})\s*(am|pm)\b/i,
+      // "2 to 3pm" (end has meridiem, start inherits) or "at 2 to 3pm"
+      /\b(?:(?:at|@)\s+)?(?:from\s+)?(\d{1,2})\s*(?:to|-|–)\s*(\d{1,2})\s*(am|pm)\b/i,
+      // "2:00 to 3:00pm" or "at 2:00 to 3:00"
+      /\b(?:(?:at|@)\s+)?(?:from\s+)?(\d{1,2}):(\d{2})\s*(?:to|-|–)\s*(\d{1,2}):(\d{2})\s*(am|pm)?\b/i,
+    ];
+
+    let timeRangeFound = false;
+    for (const pattern of timeRangePatterns) {
       const match = workingText.match(pattern);
       if (match) {
-        result.time = time;
-        extractedParts.push(match[0]);
-        workingText = workingText.replace(pattern, ' ');
-        break;
+        let startH: number, startM: number, startMer: string | undefined;
+        let endH: number, endM: number, endMer: string | undefined;
+
+        if (pattern === timeRangePatterns[0]) {
+          // "2:00pm to 3:30pm"
+          startH = parseInt(match[1]); startM = parseInt(match[2]); startMer = match[3]?.toLowerCase();
+          endH = parseInt(match[4]); endM = parseInt(match[5]); endMer = match[6]?.toLowerCase();
+        } else if (pattern === timeRangePatterns[1]) {
+          // "2pm to 3pm"
+          startH = parseInt(match[1]); startM = 0; startMer = match[2]?.toLowerCase();
+          endH = parseInt(match[3]); endM = 0; endMer = match[4]?.toLowerCase();
+        } else if (pattern === timeRangePatterns[2]) {
+          // "2 to 3pm" — start inherits end's meridiem
+          endMer = match[3]?.toLowerCase();
+          startH = parseInt(match[1]); startM = 0; startMer = endMer;
+          endH = parseInt(match[2]); endM = 0;
+        } else {
+          // "2:00 to 3:00pm"
+          startH = parseInt(match[1]); startM = parseInt(match[2]); startMer = match[5]?.toLowerCase();
+          endH = parseInt(match[3]); endM = parseInt(match[4]); endMer = match[5]?.toLowerCase();
+        }
+
+        const startStr = toTimeString(startH, startM, startMer);
+        const endStr = toTimeString(endH, endM, endMer);
+
+        if (startStr) {
+          result.time = startStr;
+          if (endStr) result.endTime = endStr;
+          extractedParts.push(match[0]);
+          workingText = workingText.replace(match[0], ' ');
+          timeRangeFound = true;
+          break;
+        }
+      }
+    }
+
+    // Extract single time (if no range found)
+    if (!timeRangeFound) {
+      for (const [keyword, time] of Object.entries(TIME_KEYWORDS)) {
+        const pattern = new RegExp(`\\b${keyword}\\b`, 'i');
+        const match = workingText.match(pattern);
+        if (match) {
+          result.time = time;
+          extractedParts.push(match[0]);
+          workingText = workingText.replace(pattern, ' ');
+          break;
+        }
       }
     }
 
@@ -877,14 +967,9 @@ export function parseNaturalLanguage(
           const extracted = extract(match);
           if (!extracted) continue;
 
-          let { hours, minutes, meridiem } = extracted;
-
-          if (meridiem === 'pm' && hours !== 12) hours += 12;
-          else if (meridiem === 'am' && hours === 12) hours = 0;
-          else if (!meridiem && hours <= 12 && hours >= 1 && hours < 8) hours += 12;
-
-          if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
-            result.time = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+          const timeStr = toTimeString(extracted.hours, extracted.minutes, extracted.meridiem);
+          if (timeStr) {
+            result.time = timeStr;
             extractedParts.push(match[0]);
             workingText = workingText.replace(match[0], ' ');
             break;
@@ -983,6 +1068,7 @@ export const NLP_PLACEHOLDERS: Record<ItemType, string> = {
   exam: 'e.g. Calc midterm Feb 2 1pm Room 102',
   note: 'e.g. Meeting notes: key points from today',
   course: 'e.g. CS 101 Intro to Computer Science Winter 2026',
+  event: 'e.g. Study group Monday 3pm Library',
   shopping: 'e.g. 2 gallons milk, 3 apples produce',
 };
 

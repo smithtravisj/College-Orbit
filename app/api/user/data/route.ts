@@ -30,6 +30,7 @@ export const DELETE = withRateLimit(async function(req: NextRequest) {
       prisma.workItem.deleteMany({ where: { userId } }),
       prisma.recurringWorkPattern.deleteMany({ where: { userId } }),
       prisma.shoppingItem.deleteMany({ where: { userId } }),
+      prisma.recurringCalendarEventPattern.deleteMany({ where: { userId } }),
       prisma.calendarEvent.deleteMany({ where: { userId } }),
       prisma.customQuickLink.deleteMany({ where: { userId } }),
       prisma.userStreak.deleteMany({ where: { userId } }),

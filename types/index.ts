@@ -486,6 +486,7 @@ export interface AppData {
   calendarEvents?: CalendarEvent[];
   workItems?: WorkItem[];
   recurringWorkPatterns?: RecurringWorkPattern[];
+  recurringCalendarEventPatterns?: any[];
   customQuickLinks?: { id: string; label: string; url: string; icon?: string; position?: number }[];
   flashcardDecks?: FlashcardDeck[];
   dailyChallengeRewards?: DailyChallengeReward[];
@@ -503,6 +504,8 @@ export interface CalendarEvent {
   location: string | null;
   createdAt: string;
   updatedAt: string;
+  recurringPatternId?: string | null;
+  instanceDate?: string | null;
   // Canvas LMS Integration
   canvasEventId?: string | null;
   // Blackboard LMS Integration

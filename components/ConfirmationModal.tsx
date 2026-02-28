@@ -2,6 +2,8 @@
 
 import { createPortal } from 'react-dom';
 import Button from '@/components/ui/Button';
+import { useAnimatedOpen } from '@/hooks/useModalAnimation';
+import previewStyles from '@/components/ItemPreviewModal.module.css';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -24,42 +26,31 @@ export default function ConfirmationModal({
   cancelText = 'Cancel',
   isDangerous = false,
 }: ConfirmationModalProps) {
-  if (!isOpen) return null;
+  const { visible, closing } = useAnimatedOpen(isOpen);
+  if (!visible) return null;
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
-      <div className="bg-[var(--panel-solid,var(--panel))] border border-[var(--border)] rounded-[var(--radius-card)] shadow-lg max-w-sm w-full">
+    <div
+      className={closing ? previewStyles.backdropClosing : previewStyles.backdrop}
+      style={{ zIndex: 9999 }}
+      onClick={onCancel}
+    >
+      <div
+        className={`${previewStyles.modal} ${previewStyles.modalNarrow} ${closing ? previewStyles.modalClosing : ''}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div style={{ padding: '24px' }}>
-          <h2 className="text-lg font-semibold text-[var(--text)] mb-2">{title}</h2>
-          <p className="text-sm text-[var(--text-muted)] mb-6">{message}</p>
-
-          <div className="flex gap-3 justify-end">
-            <Button
-              variant="secondary"
-              size="md"
-              type="button"
-              onClick={onCancel}
-              style={{
-                paddingLeft: '16px',
-                paddingRight: '16px',
-              }}
-            >
-              {cancelText}
-            </Button>
-            <Button
-              variant={isDangerous ? 'danger' : 'primary'}
-              size="md"
-              type="button"
-              onClick={onConfirm}
-              style={{
-                paddingLeft: '16px',
-                paddingRight: '16px',
-              }}
-            >
-              {confirmText}
-            </Button>
-          </div>
+          <h2 className={previewStyles.title} style={{ marginBottom: '8px' }}>{title}</h2>
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>{message}</p>
+        </div>
+        <div className={previewStyles.footer}>
+          <Button variant="secondary" style={{ flex: 1 }} type="button" onClick={onCancel}>
+            {cancelText}
+          </Button>
+          <Button variant={isDangerous ? 'danger' : 'primary'} style={{ flex: 1 }} type="button" onClick={onConfirm}>
+            {confirmText}
+          </Button>
         </div>
       </div>
     </div>,

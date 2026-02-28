@@ -30,12 +30,6 @@ export default function ExcludedDatesCard() {
     }
   };
 
-  const getCourseName = (courseId: string | null) => {
-    if (!courseId) return 'All Courses';
-    const course = courses.find((c) => c.id === courseId);
-    return course ? `${course.code} - ${course.name}` : 'Unknown Course';
-  };
-
   const formatDate = (dateStr: string) => {
     try {
       // Extract just the date part if it's an ISO datetime string
@@ -122,11 +116,7 @@ export default function ExcludedDatesCard() {
         </Button>
       </div>
 
-      {showForm && (
-        <div style={{ marginBottom: isMobile ? '16px' : '24px', padding: isMobile ? '10px' : '16px', backgroundColor: 'var(--background-secondary)', borderRadius: '8px' }}>
-          <ExcludedDateForm onClose={() => setShowForm(false)} />
-        </div>
-      )}
+      <ExcludedDateForm isOpen={showForm} onClose={() => setShowForm(false)} />
 
       {groupedDates.length === 0 ? (
         <EmptyState
@@ -134,11 +124,11 @@ export default function ExcludedDatesCard() {
           description="Add holidays or days with no classes to keep your calendar organized"
         />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '2px' : '2px', maxHeight: isMobile ? '200px' : '260px', overflowY: 'auto', overscrollBehavior: 'contain' }}>
           {groupedDates.map((group) => {
             const isRange = group.dates.length > 1;
             const dateDisplay = isRange
-              ? `${formatDate(group.startDate)} - ${formatDate(group.endDate)}`
+              ? `${formatDate(group.startDate)} – ${formatDate(group.endDate)}`
               : formatDate(group.startDate);
             const anyDeleting = group.dates.some(d => isDeleting.has(d.id));
 
@@ -146,36 +136,31 @@ export default function ExcludedDatesCard() {
               <div
                 key={group.dates[0].id}
                 style={{
-                  padding: isMobile ? '8px 10px' : '12px 16px',
-                  backgroundColor: 'var(--background-secondary)',
-                  borderRadius: '8px',
+                  padding: isMobile ? '6px 8px' : '8px 12px',
+                  borderRadius: '6px',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: isMobile ? 'flex-start' : 'center',
-                  gap: isMobile ? '6px' : '0px',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'background-color 150ms ease',
                 }}
+                className="hover:bg-[var(--panel-2)]"
               >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '4px' : '12px', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: isMobile ? '2px' : '4px' }}>
-                    <span style={{ fontSize: isMobile ? '11px' : '13px', color: 'var(--text)', whiteSpace: 'nowrap' }}>
-                      {getCourseName(group.courseId)}
-                    </span>
-                    <span style={{ fontSize: isMobile ? '10px' : '12px', backgroundColor: 'var(--border)', padding: isMobile ? '1px 6px' : '2px 8px', borderRadius: '4px', color: 'var(--text)' }}>
-                      {dateDisplay}
-                    </span>
-                    {isRange && (
-                      <span style={{ fontSize: isMobile ? '9px' : '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                        ({group.dates.length} days)
-                      </span>
-                    )}
-                  </div>
-                  <p style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: '500', margin: 0, color: settings.theme === 'light' ? 'var(--text)' : '#e6edf6', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '10px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: 500, color: settings.theme === 'light' ? 'var(--text)' : '#e6edf6', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {group.description}
-                  </p>
+                  </span>
+                  <span style={{ fontSize: isMobile ? '11px' : '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                    {dateDisplay}{isRange ? ` (${group.dates.length}d)` : ''}
+                  </span>
+                  {group.courseId && (
+                    <span style={{ fontSize: isMobile ? '10px' : '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                      · {courses.find(c => c.id === group.courseId)?.code || 'Unknown'}
+                    </span>
+                  )}
                 </div>
                 <button
                   onClick={() => {
-                    // Delete all dates in the group
                     group.dates.forEach(date => handleDelete(date.id));
                   }}
                   disabled={anyDeleting}
@@ -183,10 +168,10 @@ export default function ExcludedDatesCard() {
                     background: 'none',
                     border: 'none',
                     cursor: anyDeleting ? 'not-allowed' : 'pointer',
-                    padding: isMobile ? '4px' : '8px',
+                    padding: '4px',
                     color: 'var(--text-muted)',
-                    opacity: anyDeleting ? 0.5 : 1,
-                    transition: 'color 0.2s',
+                    opacity: anyDeleting ? 0.5 : 0.4,
+                    transition: 'all 150ms ease',
                     display: 'flex',
                     alignItems: 'center',
                     flexShrink: 0,
@@ -194,15 +179,17 @@ export default function ExcludedDatesCard() {
                   onMouseEnter={(e) => {
                     if (!anyDeleting) {
                       (e.target as HTMLElement).style.color = '#ef4444';
+                      (e.target as HTMLElement).style.opacity = '1';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!anyDeleting) {
                       (e.target as HTMLElement).style.color = 'var(--text-muted)';
+                      (e.target as HTMLElement).style.opacity = '0.4';
                     }
                   }}
                 >
-                  <Trash2 size={isMobile ? 14 : 16} />
+                  <Trash2 size={isMobile ? 13 : 14} />
                 </button>
               </div>
             );
