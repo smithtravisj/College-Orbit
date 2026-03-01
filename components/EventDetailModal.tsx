@@ -735,7 +735,7 @@ export default function EventDetailModal({
                   >
                     {event.title}
                   </h2>
-                  {(event.courseCode || (localStatus || (fullData && 'status' in fullData && (fullData as any).status)) === 'done') && (
+                  {(event.courseCode || (localStatus || (fullData && 'status' in fullData && (fullData as any).status)) === 'done' || (fullData && 'workingOn' in fullData && (fullData as any).workingOn)) && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       {event.courseCode && (
                         <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
@@ -752,6 +752,18 @@ export default function EventDetailModal({
                           borderRadius: '999px',
                         }}>
                           Completed
+                        </span>
+                      )}
+                      {(fullData && 'workingOn' in fullData && (fullData as any).workingOn) && (localStatus || (fullData && 'status' in fullData && (fullData as any).status)) !== 'done' && (
+                        <span style={{
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          color: 'var(--success)',
+                          backgroundColor: 'var(--success-bg)',
+                          padding: '2px 8px',
+                          borderRadius: '999px',
+                        }}>
+                          Working On
                         </span>
                       )}
                     </div>

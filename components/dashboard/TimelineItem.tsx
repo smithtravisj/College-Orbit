@@ -5,12 +5,6 @@ import { TimelineItem as TimelineItemType, TimelineItemType as ItemType } from '
 import { useFormatters } from '@/hooks/useFormatters';
 import useAppStore from '@/lib/store';
 import { formatTimeString, TimeFormat } from '@/lib/utils';
-import { CanvasBadge } from '@/components/CanvasBadge';
-import { BlackboardBadge } from '@/components/BlackboardBadge';
-import { MoodleBadge } from '@/components/MoodleBadge';
-import { BrightspaceBadge } from '@/components/BrightspaceBadge';
-import { CanvasExtBadge } from '@/components/CanvasExtBadge';
-import { LearningSuiteBadge } from '@/components/LearningSuiteBadge';
 import { getEventTypeColors } from '@/lib/collegeColors';
 
 interface TimelineItemProps {
@@ -235,33 +229,6 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
             </span>
           )}
 
-          {/* Canvas badge for assignments synced from Canvas */}
-          {item.type === 'deadline' && item.originalItem?.canvasAssignmentId && (
-            <CanvasBadge size="sm" />
-          )}
-
-          {/* Blackboard badge for assignments synced from Blackboard */}
-          {item.type === 'deadline' && item.originalItem?.blackboardColumnId && (
-            <BlackboardBadge size="sm" />
-          )}
-
-          {/* Moodle badge for assignments synced from Moodle */}
-          {item.type === 'deadline' && item.originalItem?.moodleAssignmentId && (
-            <MoodleBadge size="sm" />
-          )}
-
-          {/* Brightspace badge for assignments synced from Brightspace */}
-          {item.type === 'deadline' && item.originalItem?.brightspaceActivityId && (
-            <BrightspaceBadge size="sm" />
-          )}
-
-          {/* Extension badges (added via browser extension, detected by link labels) */}
-          {item.type === 'deadline' && !item.originalItem?.canvasAssignmentId && (item.originalItem?.links || []).some((l: any) => l.label === 'Canvas') && (
-            <CanvasExtBadge size="sm" />
-          )}
-          {item.type === 'deadline' && (item.originalItem?.links || []).some((l: any) => l.label === 'Learning Suite') && (
-            <LearningSuiteBadge size="sm" />
-          )}
         </div>
 
         {/* Meta info */}

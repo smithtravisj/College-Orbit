@@ -1843,35 +1843,35 @@ export default function TasksPage() {
                           title={t.status === 'done' ? 'Mark as incomplete' : 'Mark as complete'}
                         />
                         <div className="flex-1 min-w-0" style={{ lineHeight: 1.4 }}>
-                          <div className="flex items-center" style={{ gap: isMobile ? '2px' : '6px' }}>
-                            <div
+                          <div>
+                            <span
                               className={`font-medium ${
                                 t.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'
                               }`}
                               style={{ fontSize: isMobile ? '12px' : '14px' }}
                             >
                               {t.title}
-                            </div>
-                            {(t as any).canvasAssignmentId && <CanvasBadge />}
-                            {(t as any).blackboardColumnId && <BlackboardBadge />}
-                            {(t as any).moodleAssignmentId && <MoodleBadge />}
-                            {(t as any).brightspaceActivityId && <BrightspaceBadge />}
-                            {!(t as any).canvasAssignmentId && ((t as any).links || []).some((l: any) => l.label === 'Canvas') && <CanvasExtBadge />}
-                            {((t as any).links || []).some((l: any) => l.label === 'Learning Suite') && <LearningSuiteBadge />}
+                            </span>
+                            {(t as any).canvasAssignmentId && <>{' '}<CanvasBadge /></>}
+                            {(t as any).blackboardColumnId && <>{' '}<BlackboardBadge /></>}
+                            {(t as any).moodleAssignmentId && <>{' '}<MoodleBadge /></>}
+                            {(t as any).brightspaceActivityId && <>{' '}<BrightspaceBadge /></>}
+                            {!(t as any).canvasAssignmentId && ((t as any).links || []).some((l: any) => l.label === 'Canvas') && <>{' '}<CanvasExtBadge /></>}
+                            {((t as any).links || []).some((l: any) => l.label === 'Learning Suite') && <>{' '}<LearningSuiteBadge /></>}
                             {t.isRecurring && (
-                              <Repeat
+                              <>{' '}<Repeat
                                 size={14}
-                                style={{ color: 'var(--text-muted)', flexShrink: 0 }}
+                                style={{ color: 'var(--text-muted)', display: 'inline-block', verticalAlign: 'middle', position: 'relative' as const, top: '-1px' }}
                                 aria-label="Recurring task"
-                              />
+                              /></>
                             )}
-                            {t.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
-                            {isOverdueTask && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'var(--danger-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
+                            {t.workingOn && <>{' '}<span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap', verticalAlign: 'middle', position: 'relative' as const, top: '-1px' }}>Working On</span></>}
+                            {isOverdueTask && <>{' '}<span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'var(--danger-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap', verticalAlign: 'middle', position: 'relative' as const, top: '-1px' }}>Overdue</span></>}
                             {notes.some(n => n.taskId === t.id || (t.recurringPatternId && n.recurringTaskPatternId === t.recurringPatternId)) && (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: '600', color: 'var(--link)', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
+                              <>{' '}<span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: '600', color: 'var(--link)', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap', verticalAlign: 'middle', position: 'relative' as const, top: '-1px' }}>
                                 <StickyNote size={10} />
                                 Note
-                              </span>
+                              </span></>
                             )}
                           </div>
                           {t.notes && (
@@ -2064,35 +2064,35 @@ export default function TasksPage() {
                         title={t.status === 'done' ? 'Mark as incomplete' : 'Mark as complete'}
                       />
                       <div className="flex-1 min-w-0" style={{ lineHeight: 1.4 }}>
-                        <div className="flex items-center" style={{ gap: isMobile ? '2px' : '6px' }}>
-                          <div
+                        <div>
+                          <span
                             className={`font-medium ${
                               t.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'
                             }`}
                             style={{ fontSize: isMobile ? '12px' : '14px' }}
                           >
                             {t.title}
-                          </div>
-                          {(t as any).canvasAssignmentId && <CanvasBadge />}
-                          {(t as any).blackboardColumnId && <BlackboardBadge />}
-                          {(t as any).moodleAssignmentId && <MoodleBadge />}
-                          {(t as any).brightspaceActivityId && <BrightspaceBadge />}
-                          {!(t as any).canvasAssignmentId && ((t as any).links || []).some((l: any) => l.label === 'Canvas') && <CanvasExtBadge />}
-                          {((t as any).links || []).some((l: any) => l.label === 'Learning Suite') && <LearningSuiteBadge />}
+                          </span>
+                          {(t as any).canvasAssignmentId && <>{' '}<CanvasBadge /></>}
+                          {(t as any).blackboardColumnId && <>{' '}<BlackboardBadge /></>}
+                          {(t as any).moodleAssignmentId && <>{' '}<MoodleBadge /></>}
+                          {(t as any).brightspaceActivityId && <>{' '}<BrightspaceBadge /></>}
+                          {!(t as any).canvasAssignmentId && ((t as any).links || []).some((l: any) => l.label === 'Canvas') && <>{' '}<CanvasExtBadge /></>}
+                          {((t as any).links || []).some((l: any) => l.label === 'Learning Suite') && <>{' '}<LearningSuiteBadge /></>}
                           {t.isRecurring && (
-                            <Repeat
+                            <>{' '}<Repeat
                               size={14}
-                              style={{ color: 'var(--text-muted)', flexShrink: 0 }}
+                              style={{ color: 'var(--text-muted)', display: 'inline-block', verticalAlign: 'middle', position: 'relative' as const, top: '-1px' }}
                               aria-label="Recurring task"
-                            />
+                            /></>
                           )}
-                          {t.workingOn && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Working On</span>}
-                          {isOverdueTask && <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'var(--danger-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>Overdue</span>}
+                          {t.workingOn && <>{' '}<span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap', verticalAlign: 'middle', position: 'relative' as const, top: '-1px' }}>Working On</span></>}
+                          {isOverdueTask && <>{' '}<span style={{ display: 'inline-block', fontSize: '11px', fontWeight: '600', color: 'var(--danger)', backgroundColor: 'var(--danger-bg)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap', verticalAlign: 'middle', position: 'relative' as const, top: '-1px' }}>Overdue</span></>}
                           {notes.some(n => n.taskId === t.id || (t.recurringPatternId && n.recurringTaskPatternId === t.recurringPatternId)) && (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: '600', color: 'var(--link)', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
+                            <>{' '}<span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: '600', color: 'var(--link)', backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap', verticalAlign: 'middle', position: 'relative' as const, top: '-1px' }}>
                               <StickyNote size={10} />
                               Note
-                            </span>
+                            </span></>
                           )}
                         </div>
                         {t.notes && (
@@ -2335,7 +2335,7 @@ export default function TasksPage() {
                 <h2 className={previewStyles.title}>
                   {previewingTask.title}
                 </h2>
-                {(previewingTask.courseId || previewingTask.status === 'done') && (
+                {(previewingTask.courseId || previewingTask.status === 'done' || previewingTask.workingOn) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                     {previewingTask.courseId && (
                       <span className={previewStyles.subtitle} style={{ margin: 0 }}>
@@ -2344,6 +2344,9 @@ export default function TasksPage() {
                     )}
                     {previewingTask.status === 'done' && (
                       <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 8px', borderRadius: '999px' }}>Completed</span>
+                    )}
+                    {previewingTask.workingOn && previewingTask.status !== 'done' && (
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 8px', borderRadius: '999px' }}>Working On</span>
                     )}
                   </div>
                 )}
@@ -2358,20 +2361,15 @@ export default function TasksPage() {
 
             {/* Content */}
             <div className={previewStyles.content}>
-              {/* Importance & Working On */}
-              {((showPriorityIndicators && previewingTask.importance) || previewingTask.workingOn) && (
+              {/* Importance */}
+              {showPriorityIndicators && previewingTask.importance && (
                 <div className={previewStyles.badges}>
-                  {showPriorityIndicators && previewingTask.importance && (
-                    <span className={`${previewStyles.badge} ${
-                      previewingTask.importance === 'high' ? previewStyles.badgeDanger :
-                      previewingTask.importance === 'medium' ? previewStyles.badgeWarning : previewStyles.badgeMuted
-                    }`}>
-                      {previewingTask.importance.charAt(0).toUpperCase() + previewingTask.importance.slice(1)} Priority
-                    </span>
-                  )}
-                  {previewingTask.workingOn && (
-                    <span className={`${previewStyles.badge} ${previewStyles.badgeSuccess}`}>Working On</span>
-                  )}
+                  <span className={`${previewStyles.badge} ${
+                    previewingTask.importance === 'high' ? previewStyles.badgeDanger :
+                    previewingTask.importance === 'medium' ? previewStyles.badgeWarning : previewStyles.badgeMuted
+                  }`}>
+                    {previewingTask.importance.charAt(0).toUpperCase() + previewingTask.importance.slice(1)} Priority
+                  </span>
                 </div>
               )}
 

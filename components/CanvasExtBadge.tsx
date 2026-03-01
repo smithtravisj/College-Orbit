@@ -36,6 +36,9 @@ export function CanvasExtBadge({ size = 'sm', className = '' }: CanvasExtBadgePr
         fontWeight: 500,
         lineHeight: 1,
         flexShrink: 0,
+        verticalAlign: 'middle',
+        position: 'relative' as const,
+        top: '-1px',
         letterSpacing: '0.2px',
       }}
     >

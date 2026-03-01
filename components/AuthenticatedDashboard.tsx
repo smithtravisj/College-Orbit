@@ -451,7 +451,7 @@ export default function AuthenticatedDashboard() {
             <div className={previewStyles.header}>
               <div className={previewStyles.headerInfo}>
                 <h2 className={previewStyles.title}>{previewingTask.title}</h2>
-                {(previewingTask.courseId || previewingTask.status === 'done') && (
+                {(previewingTask.courseId || previewingTask.status === 'done' || previewingTask.workingOn) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                     {previewingTask.courseId && (
                       <span className={previewStyles.subtitle} style={{ margin: 0 }}>
@@ -460,6 +460,9 @@ export default function AuthenticatedDashboard() {
                     )}
                     {previewingTask.status === 'done' && (
                       <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 8px', borderRadius: '999px' }}>Completed</span>
+                    )}
+                    {previewingTask.workingOn && previewingTask.status !== 'done' && (
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 8px', borderRadius: '999px' }}>Working On</span>
                     )}
                   </div>
                 )}
@@ -645,13 +648,13 @@ export default function AuthenticatedDashboard() {
           <div className={`${previewStyles.modal} ${deadlineAnim.closing ? previewStyles.modalClosing : ''}`} onClick={(e) => e.stopPropagation()}>
             <div className={previewStyles.header}>
               <div className={previewStyles.headerInfo}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  <h2 className={previewStyles.title}>{previewingDeadline.title}</h2>
-                  {previewingDeadline.canvasAssignmentId && <CanvasBadge />}
-                  {!previewingDeadline.canvasAssignmentId && ((previewingDeadline as any).links || []).some((l: any) => l.label === 'Canvas') && <CanvasExtBadge />}
-                  {((previewingDeadline as any).links || []).some((l: any) => l.label === 'Learning Suite') && <LearningSuiteBadge />}
-                </div>
-                {(previewingDeadline.courseId || previewingDeadline.status === 'done') && (
+                <h2 className={previewStyles.title}>
+                  {previewingDeadline.title}
+                  {previewingDeadline.canvasAssignmentId && <>{' '}<CanvasBadge /></>}
+                  {!previewingDeadline.canvasAssignmentId && ((previewingDeadline as any).links || []).some((l: any) => l.label === 'Canvas') && <>{' '}<CanvasExtBadge /></>}
+                  {((previewingDeadline as any).links || []).some((l: any) => l.label === 'Learning Suite') && <>{' '}<LearningSuiteBadge /></>}
+                </h2>
+                {(previewingDeadline.courseId || previewingDeadline.status === 'done' || (previewingDeadline as any).workingOn) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                     {previewingDeadline.courseId && (
                       <span className={previewStyles.subtitle} style={{ margin: 0 }}>
@@ -660,6 +663,9 @@ export default function AuthenticatedDashboard() {
                     )}
                     {previewingDeadline.status === 'done' && (
                       <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 8px', borderRadius: '999px' }}>Completed</span>
+                    )}
+                    {(previewingDeadline as any).workingOn && previewingDeadline.status !== 'done' && (
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 8px', borderRadius: '999px' }}>Working On</span>
                     )}
                   </div>
                 )}
@@ -848,7 +854,7 @@ export default function AuthenticatedDashboard() {
             <div className={previewStyles.header}>
               <div className={previewStyles.headerInfo}>
                 <h2 className={previewStyles.title}>{previewingWorkItem.title}</h2>
-                {(previewingWorkItem.courseId || previewingWorkItem.status === 'done') && (
+                {(previewingWorkItem.courseId || previewingWorkItem.status === 'done' || previewingWorkItem.workingOn) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                     {previewingWorkItem.courseId && (
                       <span className={previewStyles.subtitle} style={{ margin: 0 }}>
@@ -857,6 +863,9 @@ export default function AuthenticatedDashboard() {
                     )}
                     {previewingWorkItem.status === 'done' && (
                       <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 8px', borderRadius: '999px' }}>Completed</span>
+                    )}
+                    {previewingWorkItem.workingOn && previewingWorkItem.status !== 'done' && (
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '2px 8px', borderRadius: '999px' }}>Working On</span>
                     )}
                   </div>
                 )}
