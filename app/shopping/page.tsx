@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useAppStore from '@/lib/store';
+import { parseSearchQuery, matchesSearchTerms } from '@/lib/searchFilter';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
@@ -714,12 +715,8 @@ export default function ShoppingPage() {
     })
     .filter((item) => {
       if (!searchQuery.trim()) return true;
-      const query = searchQuery.toLowerCase();
-      return (
-        item.name.toLowerCase().includes(query) ||
-        item.notes.toLowerCase().includes(query) ||
-        item.category.toLowerCase().includes(query)
-      );
+      const terms = parseSearchQuery(searchQuery);
+      return matchesSearchTerms([item.name, item.notes, item.category], terms);
     })
     .sort((a, b) => {
       // Unchecked first, then by creation date
@@ -778,7 +775,7 @@ export default function ShoppingPage() {
           label="Search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search items..."
+          placeholder="Search items... (-term to exclude)"
         />
       </div>
       <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>

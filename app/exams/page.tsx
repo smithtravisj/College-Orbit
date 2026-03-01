@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { useModalAnimation } from '@/hooks/useModalAnimation';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
+import { parseSearchQuery, matchesSearchTerms } from '@/lib/searchFilter';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useBulkSelect } from '@/hooks/useBulkSelect';
@@ -479,9 +480,6 @@ export default function ExamsPage() {
     ];
   };
 
-  // Collect all unique tags from exams
-  const allTags = Array.from(new Set(exams.flatMap((e) => e.tags || [])));
-
   // Tags from upcoming/scheduled exams only (for filter sidebar)
   const filterTags = Array.from(new Set(
     exams.filter((e) => e.status === 'scheduled').flatMap((e) => e.tags || [])
@@ -620,20 +618,21 @@ export default function ExamsPage() {
     .filter((exam) => {
       if (!searchQuery.trim()) return true;
 
-      const query = searchQuery.toLowerCase();
+      const terms = parseSearchQuery(searchQuery);
       const course = courses.find((c) => c.id === exam.courseId);
-      const dateSearchStrings = getDateSearchStrings(exam.examAt);
-      const timeSearchStrings = getTimeSearchStrings(exam.examAt);
+      const searchable = [
+        exam.title,
+        exam.notes,
+        ...(exam.location ? [exam.location] : []),
+        ...(exam.tags || []),
+        ...(course ? [course.code] : []),
+        ...exam.links.flatMap((link) => [link.label, link.url]),
+        ...(exam.files || []).map((f) => f.name),
+        ...getDateSearchStrings(exam.examAt),
+        ...getTimeSearchStrings(exam.examAt),
+      ];
 
-      return (
-        exam.title.toLowerCase().includes(query) ||
-        exam.notes.toLowerCase().includes(query) ||
-        (exam.location && exam.location.toLowerCase().includes(query)) ||
-        (course && course.code.toLowerCase().includes(query)) ||
-        exam.links.some((link) => link.label.toLowerCase().includes(query) || link.url.toLowerCase().includes(query)) ||
-        dateSearchStrings.some((dateStr) => dateStr.includes(query)) ||
-        timeSearchStrings.some((timeStr) => timeStr.includes(query))
-      );
+      return matchesSearchTerms(searchable, terms);
     })
     .sort((a, b) => {
       const aTime = a.examAt ? new Date(a.examAt).getTime() : 0;
@@ -700,7 +699,7 @@ export default function ExamsPage() {
                     label="Search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search exams..."
+                    placeholder="Search exams... (-term to exclude)"
                   />
                 </div>
                 <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
@@ -776,7 +775,7 @@ export default function ExamsPage() {
                     label="Search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search exams..."
+                    placeholder="Search exams... (-term to exclude)"
                   />
                 </div>
                 <div style={{ marginBottom: '14px' }}>
@@ -1012,7 +1011,7 @@ export default function ExamsPage() {
                     <TagInput
                       tags={formData.tags}
                       onTagsChange={(tags) => setFormData({ ...formData, tags })}
-                      allAvailableTags={allTags}
+                      allAvailableTags={filterTags}
                       placeholder="Add tags..."
                     />
                   </div>
@@ -1434,7 +1433,7 @@ export default function ExamsPage() {
         isOpen={bulkModal === 'tags'}
         onClose={() => setBulkModal(null)}
         selectedCount={bulkSelect.selectedIds.size}
-        allTags={allTags}
+        allTags={filterTags}
         onConfirm={handleBulkTagsChange}
       />
       <BulkChangeDateModal

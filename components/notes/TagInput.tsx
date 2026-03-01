@@ -21,34 +21,48 @@ export default function TagInput({
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Update suggestions based on input
+  // Close dropdown when clicking outside
   useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Update suggestions based on input and focus state
+  useEffect(() => {
+    const available = allAvailableTags.filter((tag) => !tags.includes(tag));
+
     if (inputValue.trim().length === 0) {
-      setSuggestions([]);
+      // Show all available tags when focused with empty input
+      setSuggestions(isFocused ? available.slice(0, 8) : []);
       setSelectedSuggestionIndex(-1);
       return;
     }
 
     const lowerInput = inputValue.toLowerCase();
-    const filtered = allAvailableTags.filter(
-      (tag) =>
-        tag.toLowerCase().startsWith(lowerInput) &&
-        !tags.includes(tag) // Don't suggest already added tags
+    const filtered = available.filter((tag) =>
+      tag.toLowerCase().startsWith(lowerInput)
     );
 
-    setSuggestions(filtered.slice(0, 5)); // Limit to 5 suggestions
+    setSuggestions(filtered.slice(0, 8));
     setSelectedSuggestionIndex(-1);
-  }, [inputValue, tags, allAvailableTags]);
+  }, [inputValue, tags, allAvailableTags, isFocused]);
 
   const addTag = (tag: string) => {
     const trimmedTag = tag.trim();
     if (trimmedTag && !tags.includes(trimmedTag)) {
       onTagsChange([...tags, trimmedTag]);
       setInputValue('');
-      setSuggestions([]);
+      inputRef.current?.focus();
     }
   };
 
@@ -81,9 +95,9 @@ export default function TagInput({
   };
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div ref={containerRef} style={{ position: 'relative' }}>
       <div
-        onClick={() => inputRef.current?.focus()}
+        onClick={() => { inputRef.current?.focus(); setIsFocused(true); }}
         style={{
           display: 'flex',
           flexWrap: 'wrap',
@@ -121,6 +135,7 @@ export default function TagInput({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
+          onFocus={() => setIsFocused(true)}
           placeholder={tags.length === 0 ? placeholder : ''}
           style={{
             flex: 1,

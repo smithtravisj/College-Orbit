@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import useAppStore from '@/lib/store';
+import { parseSearchQuery, matchesSearchTerms } from '@/lib/searchFilter';
 import { Note } from '@/types';
 import { getCollegeColorPalette } from '@/lib/collegeColors';
 import { getThemeColors } from '@/lib/visualThemes';
@@ -504,18 +505,18 @@ export default function NotesPage() {
       if (selectedTags.size > 0 && !note.tags?.some((t) => selectedTags.has(t))) return false;
       if (!searchQuery.trim()) return true;
 
-      const query = searchQuery.toLowerCase();
+      const terms = parseSearchQuery(searchQuery);
       const course = courses.find((c) => c.id === note.courseId);
       const folder = folders.find((f) => f.id === note.folderId);
+      const searchable = [
+        note.title,
+        ...(note.plainText ? [note.plainText] : []),
+        ...(note.tags || []),
+        ...(course ? [course.code, course.name] : []),
+        ...(folder ? [folder.name] : []),
+      ];
 
-      return (
-        note.title.toLowerCase().includes(query) ||
-        note.plainText?.toLowerCase().includes(query) ||
-        note.tags?.some((t) => t.toLowerCase().includes(query)) ||
-        course?.code.toLowerCase().includes(query) ||
-        course?.name.toLowerCase().includes(query) ||
-        folder?.name.toLowerCase().includes(query)
-      );
+      return matchesSearchTerms(searchable, terms);
     })
     .sort((a, b) => {
       // Pinned first, then by updated date
@@ -591,7 +592,7 @@ export default function NotesPage() {
                   label="Search notes"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search"
+                  placeholder="Search... (-term to exclude)"
                 />
               </div>
 
@@ -715,7 +716,7 @@ export default function NotesPage() {
                     label="Search notes"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search"
+                    placeholder="Search... (-term to exclude)"
                   />
                 </div>
 

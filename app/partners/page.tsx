@@ -2,31 +2,30 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Handshake, Gift, Link2, Sparkles, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Handshake, Link2, Sparkles, ArrowLeft, CheckCircle } from 'lucide-react';
 
 const partnerTypes = [
   {
     icon: Sparkles,
     title: 'Tutors & Academic Coaches',
-    description: 'Help your students stay organized with premium access codes they can use alongside your sessions.',
+    description: 'Recommend a tool that helps your students stay on top of assignments alongside your sessions.',
   },
   {
     icon: Link2,
     title: 'Content Creators',
-    description: 'Share a referral link with your audience. They get premium free, you help them succeed.',
+    description: 'Share College Orbit with your audience using a referral link and earn commission on signups.',
   },
   {
     icon: Handshake,
     title: 'Organization Leaders',
-    description: 'Running a study group, honor society, or student org? Get bulk codes for your members.',
+    description: 'Running a study group, honor society, or student org? Get discounted access for your members.',
   },
 ];
 
 const benefits = [
-  'Free premium codes for your audience',
-  'Optional referral link for tracking',
+  'Referral link with commission on signups',
+  'Discounted premium for your audience',
   'No calls or meetings required',
-  'We handle everything after you share once',
 ];
 
 export default function PartnersPage() {
@@ -37,6 +36,7 @@ export default function PartnersPage() {
     role: '',
     audience: '',
     website: '',
+    message: '',
   });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -60,6 +60,7 @@ export default function PartnersPage() {
           role: form.role,
           audienceSize: form.audience,
           website: form.website,
+          message: form.message,
         }),
       });
 
@@ -238,6 +239,8 @@ export default function PartnersPage() {
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 16px;
           transition: all 0.3s ease;
+          position: relative;
+          z-index: 2;
         }
 
         .partner-type-card:hover {
@@ -282,6 +285,8 @@ export default function PartnersPage() {
           background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.04) 100%);
           border: 1px solid rgba(99, 102, 241, 0.15);
           border-radius: 20px;
+          position: relative;
+          z-index: 2;
         }
 
         .benefits-title {
@@ -294,7 +299,7 @@ export default function PartnersPage() {
         .benefits-list {
           list-style: none;
           padding: 0;
-          margin: 0 0 28px 0;
+          margin: 0;
           display: flex;
           flex-direction: column;
           gap: 16px;
@@ -313,24 +318,13 @@ export default function PartnersPage() {
           flex-shrink: 0;
         }
 
-        .no-call-note {
-          padding: 16px;
-          background: rgba(34, 197, 94, 0.1);
-          border: 1px solid rgba(34, 197, 94, 0.2);
-          border-radius: 12px;
-        }
-
-        .no-call-text {
-          font-size: 14px;
-          color: #86efac;
-          font-weight: 500;
-        }
-
         .form-section {
           background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 20px;
           padding: 32px;
+          position: relative;
+          z-index: 2;
         }
 
         .form-title {
@@ -628,15 +622,6 @@ export default function PartnersPage() {
             color: #374151;
           }
 
-          .no-call-note {
-            background: rgba(34, 197, 94, 0.08);
-            border-color: rgba(34, 197, 94, 0.15);
-          }
-
-          .no-call-text {
-            color: #16a34a;
-          }
-
           .form-label {
             color: #374151;
           }
@@ -644,6 +629,7 @@ export default function PartnersPage() {
           input.form-input,
           input.form-input[type="text"],
           input.form-input[type="email"],
+          textarea.form-input,
           select.form-select {
             background-color: #ffffff !important;
             border: 1px solid #d1d5db !important;
@@ -714,15 +700,15 @@ export default function PartnersPage() {
       <section className="hero-section">
         <div className="hero-content">
           <div className="hero-badge">
-            <Gift size={16} />
+            <Handshake size={16} />
             Partner Program
           </div>
           <h1 className="hero-title">
-            Free Premium for <span>Your Audience</span>
+            Grow With Us <span>As a Partner</span>
           </h1>
           <p className="hero-subtitle">
-            Whether you&apos;re a tutor, coach, creator, or org leader, we&apos;ll give you
-            free premium codes to share. No meetings required.
+            Whether you&apos;re a tutor, coach, creator, or org leader, partner with us
+            to bring College Orbit to your audience.
           </p>
         </div>
       </section>
@@ -751,11 +737,6 @@ export default function PartnersPage() {
                   </li>
                 ))}
               </ul>
-              <div className="no-call-note">
-                <p className="no-call-text">
-                  No calls needed. Just fill out the form and we&apos;ll email you everything you need.
-                </p>
-              </div>
             </div>
 
             <div className="form-section">
@@ -764,10 +745,10 @@ export default function PartnersPage() {
                   <div className="success-icon">
                     <CheckCircle size={32} />
                   </div>
-                  <h3 className="success-title">You&apos;re In!</h3>
+                  <h3 className="success-title">Request Received!</h3>
                   <p className="success-text">
-                    We&apos;ll send your partner pack within 24-48 hours. It includes
-                    premium codes, a shareable message, and your referral link.
+                    We&apos;ll reach out within 24-48 hours with details on
+                    your partnership and referral link.
                   </p>
                 </div>
               ) : (
@@ -836,7 +817,9 @@ export default function PartnersPage() {
                         <option value="1-10">1-10 people</option>
                         <option value="11-50">11-50 people</option>
                         <option value="51-100">51-100 people</option>
-                        <option value="100+">100+ people</option>
+                        <option value="100-999">100-999 people</option>
+                        <option value="1000-9999">1,000-9,999 people</option>
+                        <option value="10000+">10,000+ people</option>
                       </select>
                     </div>
 
@@ -854,8 +837,22 @@ export default function PartnersPage() {
                       <p className="form-helper">Optional - helps us understand your audience</p>
                     </div>
 
+                    <div className="form-group">
+                      <label className="form-label">
+                        Message
+                      </label>
+                      <textarea
+                        className="form-input"
+                        placeholder="Anything else you'd like us to know?"
+                        value={form.message}
+                        onChange={(e) => setForm({ ...form, message: e.target.value })}
+                        rows={3}
+                        style={{ resize: 'vertical' }}
+                      />
+                    </div>
+
                     <button type="submit" className="submit-btn" disabled={submitting}>
-                      {submitting ? 'Sending...' : 'Request Partner Pack'}
+                      {submitting ? 'Sending...' : 'Apply to Partner'}
                     </button>
                   </form>
                 </>

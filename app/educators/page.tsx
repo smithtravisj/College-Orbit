@@ -17,8 +17,8 @@ const keyPoints = [
   },
   {
     icon: GraduationCap,
-    title: 'Not Selling to Universities',
-    description: 'We\'re not trying to sell anything to your institution. This is simply a student resource.',
+    title: 'Built for Students',
+    description: 'Designed as a student resource first. We partner with educators to make it even more accessible.',
   },
 ];
 
@@ -38,6 +38,7 @@ export default function EducatorsPage() {
     role: '',
     school: '',
     studentCount: '',
+    message: '',
   });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -61,6 +62,7 @@ export default function EducatorsPage() {
           role: form.role,
           school: form.school,
           audienceSize: form.studentCount,
+          message: form.message,
         }),
       });
 
@@ -240,6 +242,8 @@ export default function EducatorsPage() {
           border-radius: 16px;
           text-align: center;
           transition: all 0.3s ease;
+          position: relative;
+          z-index: 2;
         }
 
         .key-point-card:hover {
@@ -284,6 +288,8 @@ export default function EducatorsPage() {
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 20px;
           padding: 32px;
+          position: relative;
+          z-index: 2;
         }
 
         .info-title {
@@ -326,6 +332,8 @@ export default function EducatorsPage() {
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 20px;
           padding: 32px;
+          position: relative;
+          z-index: 2;
         }
 
         .form-title {
@@ -620,6 +628,7 @@ export default function EducatorsPage() {
           input.form-input,
           input.form-input[type="text"],
           input.form-input[type="email"],
+          textarea.form-input,
           select.form-select {
             background-color: #ffffff !important;
             border: 1px solid #d1d5db !important;
@@ -694,7 +703,7 @@ export default function EducatorsPage() {
           </h1>
           <p className="hero-subtitle">
             College Orbit helps students stay organized with their coursework.
-            We&apos;re not selling anything to your institution.
+            Partner with us to bring it to your students.
           </p>
         </div>
       </section>
@@ -822,8 +831,24 @@ export default function EducatorsPage() {
                         <option value="1-25">1-25 students</option>
                         <option value="26-50">26-50 students</option>
                         <option value="51-100">51-100 students</option>
-                        <option value="100+">100+ students</option>
+                        <option value="100-999">100-999 students</option>
+                        <option value="1000-9999">1,000-9,999 students</option>
+                        <option value="10000+">10,000+ students</option>
                       </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
+                        Message
+                      </label>
+                      <textarea
+                        className="form-input"
+                        placeholder="Anything else you'd like us to know?"
+                        value={form.message}
+                        onChange={(e) => setForm({ ...form, message: e.target.value })}
+                        rows={3}
+                        style={{ resize: 'vertical' }}
+                      />
                     </div>
 
                     <button type="submit" className="submit-btn" disabled={submitting}>

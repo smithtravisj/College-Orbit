@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useMemo, startTransition } from 'react';
 import { useModalAnimation } from '@/hooks/useModalAnimation';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
+import { parseSearchQuery, matchesSearchTerms } from '@/lib/searchFilter';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import { getThemeColors } from '@/lib/visualThemes';
@@ -785,14 +786,7 @@ export default function TasksPage() {
     ];
   };
 
-  // Collect all unique tags from tasks and work items (memoized)
-  const allTags = useMemo(() =>
-    Array.from(new Set([
-      ...tasks.flatMap((t) => t.tags || []),
-      ...workItems.flatMap((w) => w.tags || []),
-    ])),
-    [tasks, workItems]
-  );
+
 
   // Tags from uncompleted items only (for filter sidebar)
   const filterTags = useMemo(() =>
@@ -805,7 +799,16 @@ export default function TasksPage() {
 
   // Bulk action handlers
   const handleBulkAction = (action: BulkAction) => {
-    if (action === 'complete') {
+    if (action === 'working-on') {
+      const ids = Array.from(bulkSelect.selectedIds);
+      if (useWorkItems) {
+        bulkUpdateWorkItems(ids, { workingOn: true });
+      } else {
+        bulkUpdateTasks(ids, { workingOn: true });
+      }
+      bulkSelect.clearSelection();
+      return;
+    } else if (action === 'complete') {
       // Mark all selected as done with fade effect (same as individual completion)
       const ids = Array.from(bulkSelect.selectedIds);
       // Add to toggledTasks SYNCHRONOUSLY to keep them visible (prevent flicker)
@@ -1033,19 +1036,23 @@ export default function TasksPage() {
       .filter((t) => {
         if (!searchQuery.trim()) return true;
 
-        const query = searchQuery.toLowerCase();
+        const terms = parseSearchQuery(searchQuery);
         const course = courses.find((c) => c.id === t.courseId);
-        const dateSearchStrings = getDateSearchStrings(t.dueAt);
-        const timeSearchStrings = getTimeSearchStrings(t.dueAt);
+        const searchable = [
+          t.title,
+          t.notes,
+          t.type,
+          WORK_ITEM_TYPE_LABELS[t.type],
+          ...(t.workingOn ? ['working on'] : []),
+          ...(t.tags || []),
+          ...(course ? [course.code] : []),
+          ...t.links.flatMap((link) => [link.label, link.url]),
+          ...(t.files || []).map((f) => f.name),
+          ...getDateSearchStrings(t.dueAt),
+          ...getTimeSearchStrings(t.dueAt),
+        ];
 
-        return (
-          t.title.toLowerCase().includes(query) ||
-          t.notes.toLowerCase().includes(query) ||
-          (course && course.code.toLowerCase().includes(query)) ||
-          t.links.some((link) => link.label.toLowerCase().includes(query) || link.url.toLowerCase().includes(query)) ||
-          dateSearchStrings.some((dateStr) => dateStr.includes(query)) ||
-          timeSearchStrings.some((timeStr) => timeStr.includes(query))
-        );
+        return matchesSearchTerms(searchable, terms);
       })
       .sort((a, b) => {
         // For completed tasks, sort by most recently completed (updatedAt descending)
@@ -1223,7 +1230,7 @@ export default function TasksPage() {
                     label="Search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={typeFilter === 'all' ? 'Search work...' : `Search ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()}s...`}
+                    placeholder={typeFilter === 'all' ? 'Search work... (-term to exclude)' : `Search ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()}s... (-term to exclude)`}
                   />
                 </div>
                 <div style={{ marginBottom: isMobile ? '12px' : '20px' }}>
@@ -1316,7 +1323,7 @@ export default function TasksPage() {
                     label="Search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={typeFilter === 'all' ? 'Search work...' : `Search ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()}s...`}
+                    placeholder={typeFilter === 'all' ? 'Search work... (-term to exclude)' : `Search ${WORK_ITEM_TYPE_LABELS[typeFilter].toLowerCase()}s... (-term to exclude)`}
                   />
                 </div>
                 <div style={{ marginBottom: isMobile ? '12px' : '14px' }}>
@@ -1569,7 +1576,7 @@ export default function TasksPage() {
                         <TagInput
                           tags={formData.tags}
                           onTagsChange={(tags) => setFormData({ ...formData, tags })}
-                          allAvailableTags={allTags}
+                          allAvailableTags={filterTags}
                           placeholder="Add tag..."
                         />
                       </div>
@@ -2277,7 +2284,7 @@ export default function TasksPage() {
         isOpen={bulkModal === 'tags'}
         onClose={() => setBulkModal(null)}
         selectedCount={bulkSelect.selectedIds.size}
-        allTags={allTags}
+        allTags={filterTags}
         onConfirm={handleBulkTagsChange}
       />
       <BulkChangeTypeModal

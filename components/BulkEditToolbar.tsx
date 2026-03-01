@@ -1,6 +1,6 @@
 'use client';
 
-import { X, FolderOpen, Tag, Gauge, Calendar, Clock, Link, CheckCircle, Trash2, MapPin, Check, Layers } from 'lucide-react';
+import { FolderOpen, Tag, Gauge, Calendar, Clock, Link, CheckCircle, Trash2, MapPin, Check, Layers, Hammer } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import Button from '@/components/ui/Button';
 
@@ -17,7 +17,8 @@ export type BulkAction =
   | 'delete'
   | 'location'
   | 'term'
-  | 'type';
+  | 'type'
+  | 'working-on';
 
 interface BulkEditToolbarProps {
   selectedCount: number;
@@ -28,8 +29,8 @@ interface BulkEditToolbarProps {
 }
 
 const actionConfig: Record<EntityType, BulkAction[]> = {
-  task: ['type', 'course', 'tags', 'priority', 'date', 'time', 'link', 'complete', 'delete'],
-  deadline: ['type', 'course', 'tags', 'priority', 'date', 'time', 'link', 'complete', 'delete'],
+  task: ['type', 'course', 'tags', 'priority', 'working-on', 'date', 'time', 'link', 'complete', 'delete'],
+  deadline: ['type', 'course', 'tags', 'priority', 'working-on', 'date', 'time', 'link', 'complete', 'delete'],
   exam: ['course', 'tags', 'date', 'time', 'location', 'link', 'delete'],
   course: ['term', 'link', 'delete'],
 };
@@ -42,6 +43,7 @@ const actionLabels: Record<BulkAction, { label: string; mobileLabel: string; ico
   date: { label: 'Date', mobileLabel: 'Date', icon: Calendar },
   time: { label: 'Time', mobileLabel: 'Time', icon: Clock },
   link: { label: 'Add Link', mobileLabel: 'Link', icon: Link },
+  'working-on': { label: 'Working On', mobileLabel: 'Working', icon: Hammer },
   complete: { label: 'Mark Done', mobileLabel: 'Done', icon: CheckCircle },
   delete: { label: 'Delete', mobileLabel: 'Delete', icon: Trash2 },
   location: { label: 'Location', mobileLabel: 'Location', icon: MapPin },
@@ -89,43 +91,45 @@ export default function BulkEditToolbar({
       <div
         style={{
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          flexDirection: 'column',
+          gap: isMobile ? '8px' : '10px',
           maxWidth: '1400px',
           margin: '0 auto',
-          gap: isMobile ? '8px' : '16px',
         }}
       >
-        {/* Selected count */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-          <span
-            style={{
-              fontSize: isMobile ? '13px' : '14px',
-              fontWeight: 600,
-              color: 'var(--text)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {selectedCount} selected
-          </span>
-          {onSelectAll && (
-            <button
-              onClick={onSelectAll}
+        {/* Row 1: Selected count + Select all + Done */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span
               style={{
-                fontSize: isMobile ? '12px' : '13px',
-                color: 'var(--link)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
+                fontSize: isMobile ? '13px' : '14px',
+                fontWeight: 600,
+                color: 'var(--text)',
+                whiteSpace: 'nowrap',
               }}
             >
-              Select all
-            </button>
-          )}
+              {selectedCount} selected
+            </span>
+            {onSelectAll && (
+              <button
+                onClick={onSelectAll}
+                style={{
+                  fontSize: isMobile ? '12px' : '13px',
+                  color: 'var(--link)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                Select all
+              </button>
+            )}
+          </div>
+
         </div>
 
-        {/* Action buttons */}
+        {/* Row 2: Action buttons */}
         <div
           style={{
             display: 'flex',
@@ -133,12 +137,12 @@ export default function BulkEditToolbar({
             gap: isMobile ? '4px' : '6px',
             flexWrap: 'nowrap',
             overflow: 'auto',
+            justifyContent: 'flex-end',
           }}
         >
           {availableActions.filter(a => a !== 'delete').map((action) => {
             const config = actionLabels[action];
             const Icon = config.icon;
-            // Use entity-specific labels for priority
             let label = config.label;
             if (action === 'priority') {
               label = entityType === 'task' ? 'Importance' : 'Effort';
@@ -187,21 +191,6 @@ export default function BulkEditToolbar({
           >
             <Check size={isMobile ? 14 : 16} />
             {!isMobile && 'Done'}
-          </Button>
-
-          {/* Close button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onCancel}
-            style={{
-              flexShrink: 0,
-              padding: isMobile ? '6px' : '8px',
-              minWidth: 'auto',
-            }}
-            title="Close"
-          >
-            <X size={isMobile ? 14 : 16} />
           </Button>
         </div>
       </div>

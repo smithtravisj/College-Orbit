@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Users, Gift, Megaphone, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Users, Percent, Megaphone, CheckCircle, ArrowLeft } from 'lucide-react';
 
 const benefits = [
   {
-    icon: Gift,
-    title: 'Free Premium Codes',
-    description: 'Get premium access codes for all your club members at no cost.',
+    icon: Percent,
+    title: 'Exclusive Discounts',
+    description: 'Get discounted premium access for your club members.',
   },
   {
     icon: Users,
@@ -17,8 +17,8 @@ const benefits = [
   },
   {
     icon: Megaphone,
-    title: 'Zero Effort Required',
-    description: 'You post once, we handle everything else. No ongoing commitments.',
+    title: 'Help Your Members',
+    description: 'Give your club a tool to stay on top of assignments, exams, and deadlines.',
   },
 ];
 
@@ -30,6 +30,7 @@ export default function ClubsPage() {
     email: '',
     memberCount: '',
     platform: '',
+    message: '',
   });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -53,6 +54,7 @@ export default function ClubsPage() {
           school: form.school,
           memberCount: form.memberCount,
           platform: form.platform,
+          message: form.message,
         }),
       });
 
@@ -239,6 +241,8 @@ export default function ClubsPage() {
           display: flex;
           flex-direction: column;
           justify-content: center;
+          position: relative;
+          z-index: 2;
         }
 
         .benefit-card:hover {
@@ -276,6 +280,8 @@ export default function ClubsPage() {
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 20px;
           padding: 32px;
+          position: relative;
+          z-index: 2;
         }
 
         .form-title {
@@ -304,6 +310,7 @@ export default function ClubsPage() {
         input.form-input,
         input.form-input[type="text"],
         input.form-input[type="email"],
+        textarea.form-input,
         select.form-select {
           width: 100%;
           padding: 12px 16px;
@@ -633,11 +640,11 @@ export default function ClubsPage() {
             For Student Clubs
           </div>
           <h1 className="hero-title">
-            Free Premium for <span>Your Entire Club</span>
+            Partner With Us <span>For Your Club</span>
           </h1>
           <p className="hero-subtitle">
             We partner with student organizations to help your members stay organized.
-            You share once, your club benefits all semester.
+            Get discounted premium access for your club.
           </p>
         </div>
       </section>
@@ -664,13 +671,13 @@ export default function ClubsPage() {
                 </div>
                 <h3 className="success-title">Request Received!</h3>
                 <p className="success-text">
-                  We&apos;ll reach out within 24-48 hours with your club&apos;s premium codes
-                  and a ready-to-post message for your members.
+                  We&apos;ll reach out within 24-48 hours with details on your club&apos;s
+                  discount and a ready-to-share message for your members.
                 </p>
               </div>
             ) : (
               <>
-                <h3 className="form-title">Get Premium Codes for Your Club</h3>
+                <h3 className="form-title">Get a Club Discount</h3>
                 <form onSubmit={handleSubmit}>
                   <div className="form-group">
                     <label className="form-label">
@@ -728,7 +735,9 @@ export default function ClubsPage() {
                       <option value="1-25">1-25 members</option>
                       <option value="26-50">26-50 members</option>
                       <option value="51-100">51-100 members</option>
-                      <option value="100+">100+ members</option>
+                      <option value="100-999">100-999 members</option>
+                      <option value="1000-9999">1,000-9,999 members</option>
+                      <option value="10000+">10,000+ members</option>
                     </select>
                   </div>
 
@@ -752,8 +761,22 @@ export default function ClubsPage() {
                     </select>
                   </div>
 
+                  <div className="form-group">
+                    <label className="form-label">
+                      Message
+                    </label>
+                    <textarea
+                      className="form-input"
+                      placeholder="Anything else you'd like us to know?"
+                      value={form.message}
+                      onChange={(e) => setForm({ ...form, message: e.target.value })}
+                      rows={3}
+                      style={{ resize: 'vertical' }}
+                    />
+                  </div>
+
                   <button type="submit" className="submit-btn" disabled={submitting}>
-                    {submitting ? 'Sending...' : 'Request Club Pack'}
+                    {submitting ? 'Sending...' : 'Request Club Discount'}
                   </button>
                 </form>
               </>

@@ -5,7 +5,7 @@ import { sendPartnerInquiryNotification } from '@/lib/email';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { type, email, name, clubName, school, memberCount, platform, role, audienceSize, website } = body;
+    const { type, email, name, clubName, school, memberCount, platform, role, audienceSize, website, message } = body;
 
     // Validate required fields
     if (!type || !email) {
@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
         role: role || null,
         audienceSize: audienceSize || null,
         website: website || null,
+        notes: message || null,
       },
     });
 
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
         role,
         audienceSize,
         website,
+        message,
       });
     } catch (emailError) {
       // Log but don't fail the request if email fails

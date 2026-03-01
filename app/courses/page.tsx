@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useAppStore from '@/lib/store';
+import { parseSearchQuery, matchesSearchTerms } from '@/lib/searchFilter';
 import { useBulkSelect } from '@/hooks/useBulkSelect';
 import { getCollegeColorPalette, getCustomColorSetForTheme, CustomColors } from '@/lib/collegeColors';
 import { getThemeColors } from '@/lib/visualThemes';
@@ -304,27 +305,24 @@ export default function CoursesPage() {
 
   // Apply search filter
   if (searchQuery.trim()) {
-    const query = searchQuery.toLowerCase();
+    const terms = parseSearchQuery(searchQuery);
     filteredCourses = filteredCourses.filter((course) => {
-      const startDateSearchStrings = getDateSearchStrings(course.startDate);
-      const endDateSearchStrings = getDateSearchStrings(course.endDate);
-      const meetingTimesSearchStrings = course.meetingTimes
-        .flatMap((mt) => [
+      const searchable = [
+        course.code,
+        course.name,
+        course.term,
+        ...course.links.flatMap((link) => [link.label, link.url]),
+        ...getDateSearchStrings(course.startDate),
+        ...getDateSearchStrings(course.endDate),
+        ...course.meetingTimes.flatMap((mt) => [
           ...mt.days.flatMap((day) => getDayVariations(day)),
           ...getTimeSearchStrings(mt.start),
           ...getTimeSearchStrings(mt.end),
-          ...(mt.location ? [mt.location.toLowerCase()] : []),
-        ]);
+          ...(mt.location ? [mt.location] : []),
+        ]),
+      ];
 
-      return (
-        course.code.toLowerCase().includes(query) ||
-        course.name.toLowerCase().includes(query) ||
-        course.term.toLowerCase().includes(query) ||
-        course.links.some((link) => link.label.toLowerCase().includes(query) || link.url.toLowerCase().includes(query)) ||
-        startDateSearchStrings.some((dateStr) => dateStr.includes(query)) ||
-        endDateSearchStrings.some((dateStr) => dateStr.includes(query)) ||
-        meetingTimesSearchStrings.some((str) => str.includes(query))
-      );
+      return matchesSearchTerms(searchable, terms);
     });
   }
 
@@ -367,7 +365,7 @@ export default function CoursesPage() {
                   label="Search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search courses..."
+                  placeholder="Search courses... (-term to exclude)"
                 />
               </div>
               <div className="space-y-1" style={{ marginBottom: '14px' }}>
@@ -450,7 +448,7 @@ export default function CoursesPage() {
                     label="Search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search courses..."
+                    placeholder="Search courses... (-term to exclude)"
                   />
                 </div>
                 <div className="space-y-2" style={{ marginBottom: isMobile ? '8px' : '16px' }}>

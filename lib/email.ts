@@ -1442,6 +1442,7 @@ interface SendPartnerInquiryNotificationParams {
   role?: string;
   audienceSize?: string;
   website?: string;
+  message?: string;
 }
 
 /**
@@ -1458,6 +1459,7 @@ export async function sendPartnerInquiryNotification({
   role,
   audienceSize,
   website,
+  message,
 }: SendPartnerInquiryNotificationParams): Promise<void> {
   const typeLabels: Record<string, string> = {
     club: 'Club Partnership',
@@ -1507,6 +1509,13 @@ export async function sendPartnerInquiryNotification({
       <tr><td style="padding: 8px 0; color: #71717a;">Students:</td><td style="padding: 8px 0; color: #fafafa; font-weight: 500;">${audienceSize || 'N/A'}</td></tr>
     `;
     detailsText = `Role: ${role || 'N/A'}\nSchool: ${school || 'N/A'}\nStudents: ${audienceSize || 'N/A'}`;
+  }
+
+  if (message) {
+    detailsHtml += `
+      <tr><td style="padding: 8px 0; color: #71717a; vertical-align: top;">Message:</td><td style="padding: 8px 0; color: #fafafa; font-weight: 500;">${message}</td></tr>
+    `;
+    detailsText += `\nMessage: ${message}`;
   }
 
   const htmlContent = `
